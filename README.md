@@ -28,17 +28,36 @@ then deployed, either as exectuables or .py files which attempt to connect back 
 # Getting Started
 ## Prerequisites
 - Python 2.x
+- Python 2.x pip
 - Git
-## Setup
-Using git run the following commands.
+## Setup(Linux)
+Run the following commands as root user.
 
 ```git clone https://github.com/angus-y/pyIris-backdoor```
 
 ```cd pyIris-backdoor```
 
-```pip install -r linux_requirements.txt/windows_requirements.txt```
+```pip3 install python3-xlib```
 
-Pip install either the Windows or Linux requirements.txt depending on which operating system you have.
+```sudo apt-get install scrot```
+
+```sudo apt-get install python3-tk```
+
+```sudo apt-get install python3-dev```
+
+```pip install -r linux_requirements.txt```
+
+## Setup(Windows)
+To git clone on windows you need to have the [Git bash shell](https://www.atlassian.com/git/tutorials/install-git) installed.
+
+```git clone https://github.com/angus-y/pyIris-backdoor```
+
+```cd pyIris-backdoor```
+
+```C:\Python27\Scripts\pip install -r windows_requirements.txt```
+
+The path does not have to be the one mentioned above, use the absolute path to your version of pip2.
+
 ## Updating PyIris
 PyIris is a project undergoing heavy development and debugging, make sure to update often by running thess commands in the PyIris
 folder.
