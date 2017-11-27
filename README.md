@@ -31,6 +31,7 @@ then deployed, either as exectuables or .py files which attempt to connect back 
 - Git
 ## Setup
 Using git run the following commands.
+
 ```git clone https://github.com/angus-y/pyIris-backdoor```
 
 ```cd pyIris-backdoor```
@@ -40,6 +41,7 @@ Pip install either the Windows or Linux requirements.txt depending on which oper
 ## Updating PyIris
 PyIris is a project undergoing heavy development and debugging, make sure to update often by running thess commands in the PyIris
 folder.
+
 ```git pull```
 
 ```pip install -r linux_requirements.txt/windows_requirements.txt```
