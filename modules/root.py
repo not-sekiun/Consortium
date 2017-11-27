@@ -95,5 +95,5 @@ def root_console():
 				cleanup()
 		except KeyboardInterrupt:
 			cleanup()
-		#except Exception as e:
-		#	print cfg.err+'Error running command "'+command+'" : '+str(e)
+		except Exception as e:
+			print cfg.err+'Error running command "'+command+'" : '+str(e)

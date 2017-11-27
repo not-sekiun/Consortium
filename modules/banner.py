@@ -1,13 +1,28 @@
-from termcolor import colored
+from random import choice
+
 
 def display_banner():
-	print colored('\n                          ---===[ ','white',attrs=['bold'])+colored('Version : 0.1.0','red',attrs=['bold'])+colored(' ]===---\n','white',attrs=['bold'])
-	
-	print colored("""                     dBBBBBb  dBp   dBp dBP dBBBBBb    dBP .dBBBBP
+    version = '0.2.0'
+    sample_space = [(
+                    '\x1b[1m\x1b[37m\n                          ---===[ \x1b[0m' + '\x1b[1m\x1b[31mVersion : ' + version + '\x1b[0m' + '\x1b[1m\x1b[37m ]===---\n\n\x1b[0m' +
+                    """\x1b[1m\x1b[36m                     dBBBBBb  dBp   dBp dBP dBBBBBb    dBP .dBBBBP
                           dB'  dBp dBP          dBP        BP     
                       dBBBP'     dBP  dBp  dBBBBK'   dBP   `BBBBb 
                      dBP        dBP  dBp  dBP   BB  dBP       dBP 
-                    dBP        dBP  dBp  dBP   dB' dBP   dBBBBP'""",'cyan',attrs=['bold'])
-	print colored('\n                        Full Fledged Reverse Shell Toolkit    ','red',attrs=['bold'])
-	print colored('\n               Developer : ','white',attrs=['bold'])+colored('Angus, at https://www.github.com/angus-y','red',attrs=['bold'])
-	print colored('               Name      : ','white',attrs=['bold'])+colored('Python-Iris(PyIris)\n','red',attrs=['bold'])
+                    dBP        dBP  dBp  dBP   dB' dBP   dBBBBP'\n\x1b[0m""" +
+                    '\x1b[1m\x1b[31m\n                        Full Fledged Reverse Shell Toolkit    \n\x1b[0m' +
+                    '\x1b[1m\x1b[37m\n               Developer : \x1b[0m' + '\x1b[1m\x1b[31mAngus, at https://www.github.com/angus-y\x1b[0m\n' +
+                    '\x1b[1m\x1b[37m               Name      : \x1b[0m' + '\x1b[1m\x1b[31mPython-Iris(PyIris)\n\n\x1b[0m'),
+                    (
+                    '\x1b[1m\x1b[37m\n                          ---===[ \x1b[0m' + '\x1b[1m\x1b[31mVersion : ' + version + '\x1b[0m' + '\x1b[1m\x1b[37m ]===---\n\n\x1b[0m' +
+                    '''                          __________________________
+                              |___o___|
+                                 | |
+                             ____|_|____________
+                            |__________________/_
+                            |      CCTV     /____|
+                            |______________/\n''' +
+                    '\x1b[1m\x1b[31m\n                        PyIris, the virtual spy camera    \n\x1b[0m' +
+                    '\x1b[1m\x1b[37m\n               Developer : \x1b[0m' + '\x1b[1m\x1b[31mAngus, at https://www.github.com/angus-y\x1b[0m\n' +
+                    '\x1b[1m\x1b[37m               Name      : \x1b[0m' + '\x1b[1m\x1b[31mPython-Iris(PyIris)\n\n\x1b[0m')]
+    print choice(sample_space)

@@ -1,16 +1,14 @@
-from termcolor import colored
-
 def global_variables():
-	scouts_id=0
-	listeners_id=0
-	prompt_default=colored('PyIris > ','white',attrs=['bold'])
-	prompt_listener=colored('PyIris (','white',attrs=['bold'])+colored('Listener','blue',attrs=['bold'])+colored(') > ','white',attrs=['bold'])
-	prompt_scouts=colored('PyIris (','white',attrs=['bold'])+colored('Scouts','blue',attrs=['bold'])+colored(') > ','white',attrs=['bold'])
-	err=colored('[-]','red',attrs=['bold'])
-	note=colored('[*]','blue',attrs=['bold'])
-	pos=colored('[+]','green',attrs=['bold'])
-	shutdown=colored('[!]User requested shutdown...','red',attrs=['bold'])
-	help_root='''\nPyIris Help Menu
+    scouts_id = 0
+    listeners_id = 0
+    prompt_default = '\x1b[1m\x1b[37mPyIris > \x1b[0m'
+    prompt_listener = '\x1b[1m\x1b[37mPyIris (\x1b[0m' + '\x1b[1m\x1b[34mListeners\x1b[0m' + '\x1b[1m\x1b[37m) > \x1b[0m'
+    prompt_scouts = '\x1b[1m\x1b[37mPyIris (\x1b[0m' + '\x1b[1m\x1b[34mScouts\x1b[0m' + '\x1b[1m\x1b[37m) > \x1b[0m'
+    err = '\x1b[1m\x1b[31m[-]\x1b[0m'
+    note = '\x1b[1m\x1b[34m[*]\x1b[0m'
+    pos = '\x1b[1m\x1b[32m[+]\x1b[0m'
+    shutdown = '\x1b[1m\x1b[31m[!]User requested shutdown...\x1b[0m'
+    help_root = '''\nPyIris Help Menu
 ===================
 
    Global Commands :
@@ -26,7 +24,7 @@ def global_variables():
       scouts                            Change to scouts menu
       show                              Show IP whitelist and blacklist
       wipe                              Reset global blacklist and whitelist\n'''
-	help_listener='''\nListener Help Menu
+    help_listener = '''\nListener Help Menu
 ==================
    
    Global Commands :
@@ -41,7 +39,7 @@ def global_variables():
       kill_all                          Kill all listeners
       show                              Show all active listeners
       start <port number>               Start a listener\n'''
-	help_scouts='''\nScouts Help Menu
+    help_scouts = '''\nScouts Help Menu
 ================
    
    Global Commands :
@@ -56,10 +54,10 @@ def global_variables():
       kill <ID>                         Kill a scout by its ID
       kill_all                          Kill all connected scouts
       show                              Show all online scouts\n'''
-	blacklisted_ip=[]
-	whitelisted_ip=[]
-	db_scouts=[]
-	db_listeners=[]
-	key='LdtwGvWUNeuRqrxCjpMyFEhnOPsISzBbTfQKVAZkDiomlJHgcX'
-	End='vfyNAiIeoLbExRYCMWzJtXqcDFZlrapVTKgBmUshSjPkGQHdnu'
-	globals().update(locals())
+    blacklisted_ip = []
+    whitelisted_ip = []
+    db_scouts = []
+    db_listeners = []
+    key = 'LdtwGvWUNeuRqrxCjpMyFEhnOPsISzBbTfQKVAZkDiomlJHgcX'
+    End = 'vfyNAiIeoLbExRYCMWzJtXqcDFZlrapVTKgBmUshSjPkGQHdnu'
+    globals().update(locals())
