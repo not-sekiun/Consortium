@@ -56,9 +56,8 @@ Run these in the PyIris folder
 ## Running the server in Linux terminal
 ```python2 PyIris.py```
 ## Setting up the listener
-Setting up a listener is simple, naviaget to the listeners handler and start a listener on a free port. Run ```show``` to list all 
-active listeners. To view all commands in any of the handlers(listeners,scouts or payload) run ```help```. The scouts by default connect 
-to port 9999 but this can be changed in the port variable.
+Setting up a listener is simple, navigate to the listeners handler and start a listener on a free port. Run ```show``` to list all 
+active listeners. To view all commands in any of the handlers(listeners,scouts or payload) run ```help```.
 
 ```
 PyIris > listeners
@@ -74,9 +73,11 @@ ID      Port
 1       9999
 ```
 
+The scouts by default connect to port 9999 but this can be changed in the port variable.
+
 ## Managing and interacting with Scouts
-To return to the default mode, run ```back```. Then enter the scouts handler by running ```scouts```. Once a scout connects back, run 
-```show``` to view all connected scouts and stats. Use ```help``` to view the full help menu.
+To return to the default/root mode, run ```back```. Then enter the scouts handler by running ```scouts```. Once a scout connects back, 
+run ```show``` to view all connected scouts and stats. Use ```help``` to view the full help menu.
 
 ```
 PyIris (Listeners) > back
