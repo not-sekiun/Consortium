@@ -13,7 +13,8 @@ detection even after being compiled into executable files.
 # PyIris' Arsenal
 ## Handler
 The handler is the command and control server of PyIris, it manages listeners and scouts. It's aim is to provide an easy to use 
-interface to allow the user to communicate and command the various payloads deployed onto remote systems.
+interface to allow the user to communicate and command the various payloads deployed onto remote systems and the various active 
+listeners.
 ## Listener
 The main aim of the listener is to sit and wait for the payloads to connect back to the command and control server. The listener 
 refers to a "server key" that each payload is outfitted with. If the payload sends the correct key to the server it is granted access, 
