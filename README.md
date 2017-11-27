@@ -32,21 +32,24 @@ then deployed, either as exectuables or .py files which attempt to connect back 
 ## Setup
 Using git run the following commands.
 ```git clone https://github.com/angus-y/pyIris-backdoor```
+
 ```cd pyIris-backdoor```
+
 ```pip install -r linux_requirements.txt/windows_requirements.txt```
 Pip install either the Windows or Linux requirements.txt depending on which operating system you have.
 ## Updating PyIris
 PyIris is a project undergoing heavy development and debugging, make sure to update often by running thess commands in the PyIris
 folder.
 ```git pull```
+
 ```pip install -r linux_requirements.txt/windows_requirements.txt```
 Again, the pip install depends on your operating system.
 
 # Basic Usage
 Run these in the PyIris folder
-## Running the server in Windows
+## Running the server in Windows cmd/powershell
 ```py -2 PyIris.py```
-## Running the server in Linux
+## Running the server in Linux terminal
 ```python2 PyIris.py```
 ## Setting up the listener
 Setting up a listener is simple, naviaget to the listeners handler and start a listener on a free port. Run ```show``` to list all 
