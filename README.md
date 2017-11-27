@@ -37,6 +37,7 @@ Using git run the following commands.
 ```cd pyIris-backdoor```
 
 ```pip install -r linux_requirements.txt/windows_requirements.txt```
+
 Pip install either the Windows or Linux requirements.txt depending on which operating system you have.
 ## Updating PyIris
 PyIris is a project undergoing heavy development and debugging, make sure to update often by running thess commands in the PyIris
@@ -45,6 +46,7 @@ folder.
 ```git pull```
 
 ```pip install -r linux_requirements.txt/windows_requirements.txt```
+
 Again, the pip install depends on your operating system.
 
 # Basic Usage
@@ -57,6 +59,7 @@ Run these in the PyIris folder
 Setting up a listener is simple, naviaget to the listeners handler and start a listener on a free port. Run ```show``` to list all 
 active listeners. To view all commands in any of the handlers(listeners,scouts or payload) run ```help```. The scouts by default connect 
 to port 9999 but this can be changed in the port variable.
+
 ```
 PyIris > listeners
 [+]Switching...
@@ -70,9 +73,11 @@ ID      Port
 ==      ====
 1       9999
 ```
+
 ## Managing and interacting with Scouts
 To return to the default mode, run ```back```. Then enter the scouts handler by running ```scouts```. Once a scout connects back, run 
 ```show``` to view all connected scouts and stats. Use ```help``` to view the full help menu.
+
 ```
 PyIris (Listeners) > back
 
@@ -88,7 +93,9 @@ ID      IP              User info               Type of scout   Operating System
 1       127.0.0.1       DELL-LAPTOP/angus       Command Shell   Windows-10-10.0.15063
 2       192.168.0.100   ubuntu/angus            Input Injector  Linux-4.10.0-38-generic-x86_64-with-Ubuntu-16.04-xenial
 ```
+
 To interact with a scout run ```bridge <ID of scout>``` in the scouts handler.
+
 ```
 PyIris (Scouts) > bridge 1
 [+]Bridged to scout of ID : 1
@@ -119,6 +126,7 @@ Command Shell Menu
       upload <filepath>                 Upload a file
       web_download <url>                Download a file through a url
 ```
+
 Once an interaction with a scout has been started you can run ```help``` to view the scouts help menu.
 
 # Built with
