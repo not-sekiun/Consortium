@@ -1,27 +1,129 @@
 # PyIris
-PyIris (shortened version of Python-Iris), is a post exploitation reverse shell toolkit used in order to gain access onto remote systems. 
-PyIris utilises multi-platform, reverse TCP payloads that can effectively evade antivirus, firewalls and user detection even after being 
-compiled into executable files. At it's core PyIris' payloads are reverse shells, however these "reverse shells" contain much more 
-functionality than just remote command execution. They can transfer files, download from the web, inject user input and do more than a 
-normal backdoor payload.
+PyIris (the shortened name of Python-Iris), is a post exploitation reverse shell toolkit used in order to gain access onto remote 
+systems stealthily. PyIris utilises multi-platform, reverse TCP payloads that can effectively evade modern antivirus, firewalls and user 
+detection even after being compiled into executable files.
+
+# Features
+- Remote command execution
+- File transfers
+- Remote Keystroke injection
+- Remote clipboard manipulation
+- Mouse movement and clicking manipulation
 
 # PyIris' Arsenal
 ## Handler
-The handler is the command and control server of PyIris, it manages listeners and scouts. It's aim is to provide an easy to use interface 
-to allow the user to communicate and command the various payloads deployed onto remote systems.
+The handler is the command and control server of PyIris, it manages listeners and scouts. It's aim is to provide an easy to use 
+interface to allow the user to communicate and command the various payloads deployed onto remote systems.
 ## Listener
 The main aim of the listener is to sit and wait for the payloads to connect back to the command and control server. The listener 
 refers to a "server key" that each payload is outfitted with. If the payload sends the correct key to the server it is granted access, 
 otherwise the connection is torn down and rejected.
 ## Scouts
-These are the payloads that connect back to the handler. They are scripted in python and can be compiled into stealthy evasive executable 
-files. Each payload has its own core function such as remote code execution, input injection, cyber reconnaissance and so on. These scouts 
-can be easily deployed, each has an ip and port variable that tell it where to connect back to, these are modified and then deployed, 
-either as exectuables or .py files which attempt to connect back to the server.
+These are the payloads that connect back to the handler. They are scripted in python and can be compiled into stealthy evasive 
+executable files. Each payload has its own core function such as remote code execution, input injection, cyber reconnaissance and so on. 
+These scouts can be easily deployed, each has an ip_addr and port variable that tell it where to connect back to, these are modified and 
+then deployed, either as exectuables or .py files which attempt to connect back to the server.
 
-# PyIris' Features
-- Remote command execution
-- File transfers
-- Remote Keystroke injection
-- Remote clipboard manipulation
-- Mouse movement and input manipulation
+# Getting Started
+## Prerequisites
+- Python 2.x
+- Git
+## Setup
+Using git run the following commands.
+```git clone https://github.com/angus-y/pyIris-backdoor```
+```cd pyIris-backdoor```
+```pip install -r linux_requirements.txt/windows_requirements.txt```
+Pip install either the Windows or Linux requirements.txt depending on which operating system you have.
+## Updating PyIris
+PyIris is a project undergoing heavy development and debugging, make sure to update often by running thess commands in the PyIris
+folder.
+```git pull```
+```pip install -r linux_requirements.txt/windows_requirements.txt```
+Again, the pip install depends on your operating system.
+
+# Basic Usage
+Run these in the PyIris folder
+## Running the server in Windows
+```py -2 PyIris.py```
+## Running the server in Linux
+```python2 PyIris.py```
+## Setting up the listener
+Setting up a listener is simple, naviaget to the listeners handler and start a listener on a free port. Run ```show``` to list all 
+active listeners. To view all commands in any of the handlers(listeners,scouts or payload) run ```help```. The scouts by default connect 
+to port 9999 but this can be changed in the port variable.
+```
+PyIris > listeners
+[+]Switching...
+PyIris (Listeners) > start 9999
+[+]Listener started and bound to port : 9999
+PyIris (Listeners) > show
+
+[*]Currently active listeners :
+
+ID      Port
+==      ====
+1       9999
+```
+## Managing and interacting with Scouts
+To return to the default mode, run ```back```. Then enter the scouts handler by running ```scouts```. Once a scout connects back, run 
+```show``` to view all connected scouts and stats. Use ```help``` to view the full help menu.
+```
+PyIris (Listeners) > back
+
+[+]Returning...
+PyIris > scouts
+[+]Switching...
+PyIris (Scouts) > show
+
+[*]Currently active scouts :
+
+ID      IP              User info               Type of scout   Operating System
+==      ==              =========               =============   ================
+1       127.0.0.1       DELL-LAPTOP/angus       Command Shell   Windows-10-10.0.15063
+2       192.168.0.100   ubuntu/angus            Input Injector  Linux-4.10.0-38-generic-x86_64-with-Ubuntu-16.04-xenial
+```
+To interact with a scout run ```bridge <ID of scout>``` in the scouts handler.
+```
+PyIris (Scouts) > bridge 1
+[+]Bridged to scout of ID : 1
+PyIris (Command Shell) > help
+
+Command Shell Menu
+==================
+
+   Global Commands :
+      banner                            Display a banner
+      help                              Show the help menu
+      quit                              Quit the console
+      clear                             Clear the screen
+
+   Connection commands :
+      disconnect                        Make the scout disconnect and try to reconnect
+      terminate                         Kill tbe scout process
+      sleep <seconds>                   Disconnect the scout and make it sleep for some time
+
+   Command Shell Commands :
+      exec <shell command>              Executes shell command and returns output
+      exec_file <file/executable>       Executes a file/executable without blocking
+      toggle                            toggle whether commands are run by powershell or cmd
+
+   File Commands :
+      download <filepath>               Download file
+      dump <filepath>                   Dump and view file content(supports .docx file)
+      upload <filepath>                 Upload a file
+      web_download <url>                Download a file through a url
+```
+Once an interaction with a scout has been started you can run ```help``` to view the scouts help menu.
+
+# Built with
+- [PyCharm IDE](https://www.jetbrains.com/pycharm/)
+
+# Bugs, suggestions or inquiries?
+- Create an issue
+- Email me at 1010angusx@gmail.com
+
+# Credits
+- Inspired by [Powershell Empire](https://github.com/EmpireProject/Empire) and [Brain Damage](https://github.com/mehulj94/BrainDamage)
+
+# License
+Licensed under Mozilla Public License Version 2.0.
