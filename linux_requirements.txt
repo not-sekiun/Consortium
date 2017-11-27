@@ -1,0 +1,2 @@
+docx==0.2.4
+pyautogui==0.9.36

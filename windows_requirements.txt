@@ -1,0 +1,4 @@
+colorama==0.3.9
+docx==0.2.4
+pyautogui==0.9.36
+pypiwin32==219
