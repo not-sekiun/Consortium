@@ -28,6 +28,7 @@ then deployed, either as exectuables or .py files which attempt to connect back 
 # Getting Started
 ## Prerequisites
 - Python 2.x
+- Python 3.x(You only need python 3.x if your on linux)
 - Python 2.x pip
 - Git
 ## Setup(Linux)
