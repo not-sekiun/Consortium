@@ -14,6 +14,7 @@ detection even after being compiled into executable files.
 </p>
 
 # Features
+- Cross-platform
 - Remote command execution
 - File transfers
 - Remote Keystroke injection
