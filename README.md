@@ -164,6 +164,7 @@ Once an interaction with a scout has been started you can run ```help``` to view
 
 # Built with
 - [PyCharm IDE](https://www.jetbrains.com/pycharm/)
+- Logo made with [Adobe Illustrator CC 2018](http://www.adobe.com/sea/products/illustrator.html)
 
 # Bugs, suggestions or inquiries?
 - Create an issue
