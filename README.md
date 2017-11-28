@@ -72,7 +72,7 @@ To git clone on windows you need to have the [Git bash shell](https://www.atlass
 The path does not have to be the one mentioned above, use the absolute path to your version of pip2.
 
 ## Updating PyIris
-PyIris is a project undergoing heavy development and debugging, make sure to update often by running thess commands in the PyIris
+PyIris is a project undergoing heavy development and debugging, make sure to update often by running these commands in the PyIris
 folder.
 
 ```git pull```
