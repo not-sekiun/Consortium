@@ -48,8 +48,6 @@ Run the following commands as root user.
 
 ```git clone https://github.com/angus-y/pyIris-backdoor```
 
-```cd pyIris-backdoor```
-
 ```pip3 install python3-xlib```
 
 ```sudo apt-get install scrot```
@@ -57,6 +55,8 @@ Run the following commands as root user.
 ```sudo apt-get install python3-tk```
 
 ```sudo apt-get install python3-dev```
+
+```cd pyIris-backdoor```
 
 ```pip install -r linux_requirements.txt```
 
@@ -82,7 +82,7 @@ folder. Check out CHANGELOG.md in the repo to see whats new, whats removed and w
 Again, the pip install depends on your operating system.
 
 # Basic Usage
-Run these in the PyIris folder
+Change directory to the PyIris root folder first.
 ## Running the server in Windows cmd/powershell
 ```py -2 PyIris.py```
 ## Running the server in Linux terminal
