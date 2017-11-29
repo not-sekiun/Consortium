@@ -73,7 +73,7 @@ The path does not have to be the one mentioned above, use the absolute path to y
 
 ## Updating PyIris
 PyIris is a project undergoing heavy development and debugging, make sure to update often by running these commands in the PyIris
-folder.
+folder. Check out CHANGELOG.md in the repo to see whats new, whats removed and whats fixed.
 
 ```git pull```
 
