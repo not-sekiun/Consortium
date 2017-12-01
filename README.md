@@ -88,8 +88,8 @@ Change directory to the PyIris root folder first.
 ## Running the server in Linux terminal
 ```python2 PyIris.py```
 ## Setting up the listener
-Setting up a listener is simple, navigate to the listeners handler and start a listener on a free port. Run ```show``` to list all 
-active listeners. To view all commands in any of the handlers(listeners,scouts or payload) run ```help```.
+Setting up a listener is simple, navigate to the listeners handler and start a listener on a free port. Run ```start <port number>``` to 
+set up a listener. To view any active listeners run ```show``` . Use ```help``` to view all available commands.
 
 ```
 PyIris > listeners
@@ -109,7 +109,7 @@ The scouts by default connect to port 9999 but this can be changed in the port v
 
 ## Managing and interacting with Scouts
 To return to the default/root mode, run ```back```. Then enter the scouts handler by running ```scouts```. Once a scout connects back, 
-run ```show``` to view all connected scouts and stats. Use ```help``` to view the full help menu.
+run ```show``` to view all connected scouts and stats. Use ```help``` to view all available commands.
 
 ```
 PyIris (Listeners) > back
@@ -128,6 +128,7 @@ ID      IP              User info               Type of scout   Operating System
 ```
 
 To interact with a scout run ```bridge <ID of scout>``` in the scouts handler.
+Once an interaction with a scout has been started you can run ```help``` to view all of the payloads available commands.
 
 ```
 PyIris (Scouts) > bridge 1
@@ -159,8 +160,6 @@ Command Shell Menu
       upload <filepath>                 Upload a file
       web_download <url>                Download a file through a url
 ```
-
-Once an interaction with a scout has been started you can run ```help``` to view the scouts help menu.
 
 # Built with
 - [PyCharm IDE](https://www.jetbrains.com/pycharm/)
