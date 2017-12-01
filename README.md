@@ -1,5 +1,5 @@
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/32593795/33316662-a7429c60-d46f-11e7-8e05-211e8baa0f26.png" width="200" />
+  <img src="https://user-images.githubusercontent.com/32593795/33462532-0d3538a2-d673-11e7-9c1d-e97ab112d0ef.png" width="200" />
 </p>
 
 # PyIris
