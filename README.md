@@ -3,9 +3,9 @@
 </p>
 
 # PyIris
-PyIris (the shortened name of Python-Iris), is a post exploitation reverse shell toolkit used in order to gain access onto remote 
-systems stealthily. PyIris utilises multi-platform, reverse TCP payloads that can effectively evade modern antivirus, firewalls and user 
-detection even after being compiled into executable files.
+PyIris (the shortened name of Python-Iris), is a post exploitation, reverse shell, backdoor toolkit used in order to gain access onto 
+remote systems stealthily. PyIris utilises multi-platform, reverse TCP payloads that can effectively evade modern antivirus, firewalls 
+and user detection even after being compiled into executable files.
 
 # Screenshots
 <p float="left">
