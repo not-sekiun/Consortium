@@ -2,7 +2,7 @@ from random import choice
 
 
 def display_banner():
-    version = '0.2.0'
+    version = '0.3.0'
     sample_space = [(
                     '\x1b[1m\x1b[37m\n                          ---===[ \x1b[0m' + '\x1b[1m\x1b[31mVersion : ' + version + '\x1b[0m' + '\x1b[1m\x1b[37m ]===---\n\n\x1b[0m' +
                     """\x1b[1m\x1b[36m                     dBBBBBb  dBp   dBp dBP dBBBBBb    dBP .dBBBBP

