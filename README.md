@@ -14,12 +14,25 @@ detection even after being compiled into executable files.
 </p>
 
 # Features
-- Cross-platform
+- Cross-platform support
 - Remote command execution
 - File transfers
-- Remote Keystroke injection
-- Remote clipboard manipulation
-- Mouse movement and clicking manipulation
+- Dump the contents of a word document(view the typed text)
+- Control victims keyboard
+- Disable victims keyboard/mouse
+- View, clear and edit victims clipboard
+- Control Mouse movement and Mouse clicks of victim
+- Screenshotting
+- Keylogging
+- List all currently open windows
+- List all connected drives
+- Record audio from victims computer
+- Set audio levels without user noticing
+- Get screen dimensions
+- Get current mouse position
+- toggle whether cmd/powershell executes shell command(Windows)
+- choose which system shell executes shell command eg. /bin/bash, /bin/sh, /bin/ksh...(Linux)
+- Kill/disconnect/sleep scout payloads
 
 # PyIris' Arsenal
 ## Handler
