@@ -51,10 +51,8 @@ then deployed, either as exectuables or .py files which attempt to connect back 
 
 # Getting Started
 ## Prerequisites
-- Python 2.x
-- Python 2.x pip
-- Python 3.x(You only need python 3.x if you use linux)
-- Python 3.x pip(You only need python 3.x pip if you use linux)
+- Python 2.7
+- Python pip
 - Git
 ## Setup(Linux)
 Run the following commands as root user.
