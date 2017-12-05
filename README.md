@@ -92,6 +92,14 @@ folder. Check out CHANGELOG.md in the repo to see whats new, whats removed and w
 
 Again, the pip install depends on your operating system.
 
+## Recommended OS
+PyIris was installed succesfully on the following Operating Systems.
+
+- Windows 10
+- Ubuntu 16.04
+- Kali Linux 2017.2
+
+If you are runnning a different operating system and have trouble installing please contact me and let me know. (See title below Bugs, Suggestions or inquiries)
 # Basic Usage
 Change directory to the PyIris root folder first.
 ## Running the server in Windows cmd/powershell
