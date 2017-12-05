@@ -90,7 +90,7 @@ folder. Check out CHANGELOG.md in the repo to see whats new, whats removed and w
 
 ```pip install -r linux_requirements.txt/windows_requirements.txt```
 
-Again, the pip install depends on your operating system.
+The pip install depends on your operating system(Windows/Linux).
 
 ## Recommended OS
 PyIris was installed succesfully on the following Operating Systems.
