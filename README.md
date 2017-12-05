@@ -57,9 +57,9 @@ then deployed, either as exectuables or .py files which attempt to connect back 
 ## Setup(Linux)
 Run the following commands as root user.
 
-```git clone https://github.com/angus-y/pyIris-backdoor```
+```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```pip3 install python3-xlib```
+```pip install python3-xlib```
 
 ```sudo apt-get install scrot```
 
@@ -67,16 +67,16 @@ Run the following commands as root user.
 
 ```sudo apt-get install python3-dev```
 
-```cd pyIris-backdoor```
+```cd PyIris-backdoor```
 
 ```pip install -r linux_requirements.txt```
 
 ## Setup(Windows)
 To git clone on windows you need to have the [Git bash shell](https://www.atlassian.com/git/tutorials/install-git) installed.
 
-```git clone https://github.com/angus-y/pyIris-backdoor```
+```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```cd pyIris-backdoor```
+```cd PyIris-backdoor```
 
 ```C:\Python27\Scripts\pip install -r windows_requirements.txt```
 
