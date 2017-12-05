@@ -55,17 +55,17 @@ then deployed, either as exectuables or .py files which attempt to connect back 
 - Python pip
 - Git
 ## Setup(Linux)
-Run the following commands as root user.
+Run the following commands as root user, try running ```sudo -i``` first to become root.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
 ```pip install python3-xlib```
 
-```sudo apt-get install scrot```
+```apt-get install scrot```
 
-```sudo apt-get install python3-tk```
+```apt-get install python3-tk```
 
-```sudo apt-get install python3-dev```
+```apt-get install python3-dev```
 
 ```cd PyIris-backdoor```
 
