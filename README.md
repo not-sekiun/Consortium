@@ -1,5 +1,5 @@
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/32593795/33462532-0d3538a2-d673-11e7-9c1d-e97ab112d0ef.png" width="200" />
+  <img src="https://user-images.githubusercontent.com/32593795/33884151-8f69ad80-df79-11e7-846e-3b766d4a9f0d.png" width="200" />
 </p>
 
 # PyIris
@@ -66,6 +66,12 @@ Run the following commands as root user, try running ```sudo -i``` first to beco
 ```apt-get install python3-tk```
 
 ```apt-get install python3-dev```
+
+```apt-get install portaudio19-dev```
+
+```apt-get install python-alsaaudio```
+
+```apt-get install python-wnck```
 
 ```cd PyIris-backdoor```
 
