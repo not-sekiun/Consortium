@@ -1,3 +1,6 @@
 colorama==0.3.9
 docx==0.2.4
-pyautogui==0.9.36
+mss==3.1.1
+PyAudio==0.2.11
+PyAutoGUI==0.9.36
+pyxhook==1.0.0

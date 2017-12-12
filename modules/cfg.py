@@ -13,9 +13,10 @@ def global_variables():
 
    Global Commands :
       banner                            Display a banner
-      help                              Show the help menu
-      quit                              Quit the console
       clear                             Clear the screen
+      help                              Show the help menu
+      local <system command>            Locally execute a system command
+      quit                              Quit the console
 
    PyIris Commands :
       global_add <wh_list/bl_list> <IP> Add IP to global blacklist/whitelist
@@ -29,9 +30,10 @@ def global_variables():
    
    Global Commands :
       banner                            Display a banner
-      help                              Show the help menu
-      quit                              Quit the console
       clear                             Clear the screen
+      help                              Show the help menu
+      local <system command>            Locally execute a system command
+      quit                              Quit the console
 
    Listener Commands :
       back                              Move back a mode
@@ -44,9 +46,10 @@ def global_variables():
    
    Global Commands :
       banner                            Display a banner
-      help                              Show the help menu
-      quit                              Quit the console
       clear                             Clear the screen
+      help                              Show the help menu
+      local <system command>            Locally execute a system command
+      quit                              Quit the console
 
    Scout Commands :
       back                              Move back a mode
@@ -60,4 +63,5 @@ def global_variables():
     db_listeners = []
     key = 'LdtwGvWUNeuRqrxCjpMyFEhnOPsISzBbTfQKVAZkDiomlJHgcX'
     End = 'vfyNAiIeoLbExRYCMWzJtXqcDFZlrapVTKgBmUshSjPkGQHdnu'
+    toolkit_version = '0.4.0'
     globals().update(locals())
