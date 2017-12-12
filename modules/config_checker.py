@@ -25,8 +25,8 @@ def test():
     except:
         try:
             default_modules = ['sys','os','socket','time','platform','random','datetime','pickle','subprocess','getpass']
-            external_win_modules = ['colorama','comtypes','docx','mss','pyaudio','pyautogui','pycaw','pyHook','win32api']
-            external_lin_modules = ['colorama','pyautogui','docx']
+            external_win_modules = ['colorama','comtypes','docx','mss','pyaudio','pyautogui','pycaw','pyHook','win32api','wave']
+            external_lin_modules = ['colorama','pyautogui','docx','mss','pyaudio','wave','pyxhook','alsaaudio']
 
             for i in default_modules:
                 try:
