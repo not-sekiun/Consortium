@@ -1,3 +1,16 @@
+# Winter Update 0.4.0
+- added local system command execution
+- new banner
+- added config checker
+- added persistent data
+- changed upload and download, now you can upload and download things with duplicate end marker
+- renamed files
+- banner detects when file was last updated
+- changed data layout when displaying scout data
+- added alert to show when scout reports back
+- ported recon payload to linux
+- refactored code yet again
+
 # Update 0.3.0
 - added the new windows recon payload(new capabilities and features)
 - refactored code(grouped together repeating blocks of code)
