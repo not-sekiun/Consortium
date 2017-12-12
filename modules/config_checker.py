@@ -68,7 +68,7 @@ def test():
                         print '[*]Imported third party module : '+i
                     except ImportError:
                         print '\n[-]Failed when importing third party lib : '+i
-                        print '[*]Note : If you have not done so yet run the following as root : \n[1]pip install python3-xlib\n[2]apt-get install scrot\n[3]apt-get install python3-tk\n[4]apt-get install python3-dev\n[5]apt-get install portaudio19-dev\n[6]apt-get install python-alsaaudio\n[7]apt-get install python-wnck[8]pip2 install -r linux_requirements.txt'
+                        print '[*]Note : If you have not done so yet run the following as root : \n[1]pip install python3-xlib\n[2]apt-get install scrot\n[3]apt-get install python3-tk\n[4]apt-get install python3-dev\n[5]apt-get install portaudio19-dev\n[6]apt-get install python-alsaaudio\n[7]apt-get install python-wnck\n[8]pip2 install -r linux_requirements.txt'
                         exit_program()
                 print '[+]Passed : Third party linux modules installed'
 
