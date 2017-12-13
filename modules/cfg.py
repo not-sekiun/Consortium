@@ -63,5 +63,5 @@ def global_variables():
     db_listeners = []
     key = 'LdtwGvWUNeuRqrxCjpMyFEhnOPsISzBbTfQKVAZkDiomlJHgcX'
     End = 'vfyNAiIeoLbExRYCMWzJtXqcDFZlrapVTKgBmUshSjPkGQHdnu'
-    toolkit_version = '0.4.0'
+    toolkit_version = '0.4.1'
     globals().update(locals())

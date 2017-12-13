@@ -72,10 +72,7 @@ def scout_console():
                     l = [len(max(i, key=len)) for i in zip(*scout_data)]
                     print('\n'.join('  '.join(item[i].ljust(l[i]) for i in range(len(l)))
                                     for item in scout_data))
-                    #col_width = max(len(word) for row in scout_data for word in row) + 2
-                    #for row in scout_data:
-                    #    print "".join(word.ljust(col_width) for word in row)
-                    #print '\n'
+                    print '\n'
             elif command == 'local':
                 try:
                     execute = input[1]

