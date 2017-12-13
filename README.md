@@ -14,6 +14,7 @@ and user detection even after being compiled into executable files.
 </p>
 
 # Features
+- Can bypass firewalls and antivirus
 - Cross-platform support
 - Remote command execution
 - File transfers
