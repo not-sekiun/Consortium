@@ -1,3 +1,6 @@
+# Winter update 0.4.1
+- fixed an issue with sleeping the scouts
+
 # Winter Update 0.4.0
 - added local system command execution
 - new banner
