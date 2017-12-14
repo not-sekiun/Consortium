@@ -93,7 +93,7 @@ The path does not have to be the one mentioned above, use the absolute path to y
 PyIris is a project undergoing heavy development and debugging, make sure to update often by running these commands in the PyIris
 folder. Check out CHANGELOG.md in the repo to see whats new, whats removed and whats fixed.
 
-```git pull```
+```sudo git pull```
 
 ```pip install -r linux_requirements.txt/windows_requirements.txt```
 
@@ -112,7 +112,7 @@ Change directory to the PyIris root folder first.
 ## Running the server in Windows cmd/powershell
 ```py -2 PyIris.py```
 ## Running the server in Linux terminal
-```python2 PyIris.py```
+```sudo python2 PyIris.py```
 ## Setting up the listener
 Setting up a listener is simple, navigate to the listeners handler and start a listener on a free port. Run ```start <port number>``` to 
 set up a listener. To view any active listeners run ```show``` . Use ```help``` to view all available commands.
