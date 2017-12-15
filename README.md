@@ -34,6 +34,9 @@ and user detection even after being compiled into executable files.
 - toggle whether cmd/powershell executes shell command(Windows)
 - choose which system shell executes shell command eg. /bin/bash, /bin/sh, /bin/ksh...(Linux)
 - Kill/disconnect/sleep scout payloads
+- Manage and connect to multiple scout payloads
+- Locally run system shell commands
+- Robust built-in scout payload failsafes to recover from network connection loss
 
 # PyIris' Arsenal
 ## Handler
