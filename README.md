@@ -9,8 +9,8 @@ and user detection even after being compiled into executable files.
 
 # Screenshots
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/32593795/33306044-b6bf0986-d44b-11e7-86ed-5c2037e2fbe0.png" /> 
-  <img src="https://user-images.githubusercontent.com/32593795/33306347-29be83fc-d44d-11e7-91f4-b1a514ec0353.png" />
+  <img src="https://user-images.githubusercontent.com/32593795/34034428-6cd68a44-e1b9-11e7-9dd0-ddc548742a1b.png" /> 
+  <img src="https://user-images.githubusercontent.com/32593795/34034429-6d0f375e-e1b9-11e7-9069-ad39fe13194e.png" />
 </p>
 
 # Features
