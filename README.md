@@ -115,6 +115,9 @@ specified IP and port.
 
 ## Setup(Windows)
 
+Run the first command in gitbash before navigating to the folder where the PyIris-backdoor folder is downloaded and running the rest of 
+the commands
+
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
 ```cd PyIris-backdoor/setup```
