@@ -1,17 +1,13 @@
 <p float="left">
   <img src="https://user-images.githubusercontent.com/32593795/33884151-8f69ad80-df79-11e7-846e-3b766d4a9f0d.png" width="200" />
 </p>
-
+<p float="left">
+  <img src="https://user-images.githubusercontent.com/32593795/34318519-fe0c560a-e804-11e7-8320-868bc551912c.png" width="200" />
+</p>
 # PyIris
 PyIris (the shortened name of Python-Iris), is a post exploitation, reverse shell, backdoor toolkit used in order to gain access onto 
 remote systems stealthily. PyIris utilises cross-platform, reverse TCP payloads that can effectively evade modern antivirus, firewalls 
 and user detection even after being compiled into executable files.
-
-# Screenshots
-<p float="left">
-  <img src="https://user-images.githubusercontent.com/32593795/34034428-6cd68a44-e1b9-11e7-9dd0-ddc548742a1b.png" /> 
-  <img src="https://user-images.githubusercontent.com/32593795/34034429-6d0f375e-e1b9-11e7-9069-ad39fe13194e.png" />
-</p>
 
 # Features
 - Can bypass firewalls and antivirus
