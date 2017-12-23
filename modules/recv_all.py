@@ -5,6 +5,7 @@ cfg.global_variables()
 End = cfg.End
 
 def recvall(tar_socket):
+    tar_socket.settimeout(None)
     data = tar_socket.recv(9999)
     if not data:
         return ''

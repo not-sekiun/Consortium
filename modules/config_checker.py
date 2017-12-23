@@ -1,3 +1,6 @@
+import platform
+import pickle
+import time
 import cfg
 
 cfg.global_variables()
@@ -9,34 +12,23 @@ def exit_program():
 
 def test():
     try:
-        f = open('persistent_data.txt','r')
-        data = f.read()
-        data = data.split('\n')
-        if data[0] == 'Passed':
-            version = data[2]
-            if version == cfg.toolkit_version:
+        exec('import pickle')
+        f = open('persistent_data.pkl','rb')
+        data = pickle.loads(f.read())
+        f.close()
+        if data['test_status'] == 'Passed':
+            if data['current_version'] == cfg.framework_version:
                 return
             else:
                 print '[*]New version detected, re-running config checker'
                 raise SyntaxError
         else:
-            print '[-]persistent_data.txt seems to have been tampered with, re-running config checker'
+            print '[-]persistent_data file seems to have been tampered with, re-running config checker'
             raise SyntaxError
     except:
         try:
-            default_modules = ['sys','os','socket','time','platform','random','datetime','pickle','subprocess','getpass']
-            external_win_modules = ['colorama','comtypes','docx','mss','pyaudio','pyautogui','pycaw','pyHook','win32api','wave']
-            external_lin_modules = ['colorama','pyautogui','docx','mss','pyaudio','wave','pyxhook','alsaaudio']
-
-            for i in default_modules:
-                try:
-                    exec('import '+i)
-                    print '[*]Imported default python module : '+i
-                except ImportError:
-                    print ('\n[-]Failed when importing default module: ' + i)
-                    print ('[*]Note : Unable to Import default python module : '+i+'. Try reinstalling your system version of python 2.X')
-                    exit_program()
-            print ('[+]Passed : Imported default python modules, no anomalies with your python install')
+            external_win_modules = ['colorama','comtypes','docx','mss','pyaudio','pyautogui','pycaw','pyHook','win32api','wave','cv2']
+            external_lin_modules = ['colorama','pyautogui','docx','mss','pyaudio','wave','pyxhook','alsaaudio','clipboard','cv2']
 
             if platform.uname()[0] == 'Windows':
                 print '[*]Detected : ' + '-'.join(platform.uname())
@@ -57,7 +49,7 @@ def test():
                         print '[*]Imported third party module : '+i
                     except ImportError:
                         print '\n[-]Failed when importing third party lib : '+i
-                        print '[*]Note : If you have not, run pip C:\python27\scripts\pip install -r windows_requirements.txt in cmd.'
+                        print '[*]Note : If you have not, run C:\python27\scripts\pip install -r windows_requirements.txt in cmd.'
                         print 'Your path may not have to have python27 but python 2.7 is the most preferred version of python to use'
                         exit_program()
                 print '[+]Passed : Third party Windows modules installed'
@@ -68,35 +60,21 @@ def test():
                         print '[*]Imported third party module : '+i
                     except ImportError:
                         print '\n[-]Failed when importing third party lib : '+i
-                        print '[*]Note : If you have not done so yet run the following as root : \n[1]pip install python3-xlib\n[2]apt-get install scrot\n[3]apt-get install python3-tk\n[4]apt-get install python3-dev\n[5]apt-get install portaudio19-dev\n[6]apt-get install python-alsaaudio\n[7]apt-get install python-wnck\n[8]pip2 install -r linux_requirements.txt'
+                        print 'Note : please pip install the required modules from either lin_requirements.txt or win_requirements.txt.'
+                        print 'P.S  : run linux_set_pip.py before pip installing'
                         exit_program()
                 print '[+]Passed : Third party linux modules installed'
-
-            subfolders = [name for name in os.listdir(os.getcwd()) if os.path.isdir(os.path.join(os.getcwd(), name))]
-            if 'modules' in subfolders:
-                print '[*]Located modules folder'
-                if 'payloads' in subfolders:
-                    print '[*]Located payloads folder'
-                else:
-                    print '\n[-]Failed, cannot find subfolder payloads'
-                    print '[*]Note : Do not modify the subfolders please reinstall PyIris from github.'
-                    exit_program()
-            else:
-                print '\n[-]Failed, cannot find subfolder modules'
-                print '[*]Note : Do not modify the subfolders please reinstall PyIris from github.'
-                exit_program()
-            print '[+]Passed : Default directory subfolders detected'
-
             end_test = raw_input('[*]Passed all requirements, thanks for installing [Enter to continue]')
-            f=open('persistent_data.txt','w')
-            f.write('Passed'+'\n'+time.strftime('%d/%m/%Y')+'\n'+cfg.toolkit_version)
+            config_dict = {'test_status':'Passed','time_downloaded':time.strftime('%d/%m/%Y'),'current_version':cfg.framework_version}
+            f=open('persistent_data.pkl','wb')
+            f.write(pickle.dumps(config_dict))
             f.close()
         except KeyboardInterrupt:
-            print '[-]Config check interrupted'
+            print '[!]User requested shutdown...'
             exit_program()
         except EOFError:
-            print '[-]Config check interrupted'
+            print '[!]User requested shutdown...'
             try:
-                exit_program()
+                time.sleep(2)
             except KeyboardInterrupt:
                 exit_program()

