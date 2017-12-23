@@ -89,6 +89,8 @@ specified IP and port.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
+```chmod -R a-x,o-w,+X PyIris-backdoor```
+
 ```cd PyIris-backdoor/setup```
 
 ```sudo python linux_set_pip.py```
@@ -100,6 +102,8 @@ specified IP and port.
 ## Setup(Kali Linux)
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
+
+```chmod -R a-x,o-w,+X PyIris-backdoor```
 
 ```cd PyIris-backdoor/setup```
 
