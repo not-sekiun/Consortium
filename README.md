@@ -11,7 +11,7 @@ and user detection even after being compiled into executable files.
 # Demo Screenshots
 ## Main Handler
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/32593795/34318519-fe0c560a-e804-11e7-8320-868bc551912c.png" />
+  <img src="https://user-images.githubusercontent.com/32593795/34318673-a3cd4a14-e809-11e7-97d4-1e0a6154b56d.png" />
 </p>
 
 ## Listener Handler
