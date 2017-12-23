@@ -161,3 +161,7 @@ Change into the PyIris-backdoor directory
 
 # License
 Licensed under Mozilla Public License Version 2.0, see LICENESE.md for more details
+
+# Disclaimer
+I do not support the illegal or unethical use of this framework. This was developed for research purposes only and should not be used
+without the full consent of the target.
