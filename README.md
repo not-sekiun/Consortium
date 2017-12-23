@@ -2,7 +2,7 @@
   <img src="https://user-images.githubusercontent.com/32593795/33884151-8f69ad80-df79-11e7-846e-3b766d4a9f0d.png" width="200" />
 </p>
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/32593795/34318519-fe0c560a-e804-11e7-8320-868bc551912c.png" width="200" />
+  <img src="https://user-images.githubusercontent.com/32593795/34318519-fe0c560a-e804-11e7-8320-868bc551912c.png" />
 </p>
 # PyIris
 PyIris (the shortened name of Python-Iris), is a post exploitation, reverse shell, backdoor toolkit used in order to gain access onto 
