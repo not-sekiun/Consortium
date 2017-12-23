@@ -117,7 +117,7 @@ specified IP and port.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```cd PyIris-backdoor\setup```
+```cd PyIris-backdoor/setup```
 
 ```pip install -r windows_requirements.txt```
 
