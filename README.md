@@ -124,7 +124,7 @@ the commands
 
 ```pip install -r windows_requirements.txt```
 
-```py -2 set_creds.py```
+```set_creds.py```
 
 ## Updating PyIris
 PyIris is a project undergoing heavy development and debugging, make sure to update often by running these commands in the PyIris
