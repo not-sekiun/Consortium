@@ -1,7 +1,26 @@
-# Winter update 0.4.1
+# Christmas update 0.5.2 :)
+- Refactored and debugged handler code
+- Added new payloads
+- Added the ability to locally enter python interpreter
+- Added payload generator handler
+- Chaged the how listeners are created
+- Added fake replies
+- Turned payloads into payload templates
+- Slightly changed the banners
+- Added persistent credentials
+- More global default variables can be set
+- Added the ability to reset the framework
+- Added splash screen at startup
+- Renamed a bunch of files
+- Changed how files are imported
+- Made some reused code into a seperate module altogether
+- Changed the scout authentication protocol
+- Added the Scout key
+
+# Update 0.4.1
 - fixed an issue with sleeping the scouts
 
-# Winter Update 0.4.0
+# Update 0.4.0
 - added local system command execution
 - new banner
 - added config checker
