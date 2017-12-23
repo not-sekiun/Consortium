@@ -37,6 +37,8 @@ and user detection even after being compiled into executable files.
 - Manage and connect to multiple scout payloads
 - Locally run system shell commands
 - Robust built-in scout payload failsafes to recover from network connection loss
+- Take a webcam snapshot
+- Generate payloads
 
 # PyIris' Arsenal
 ## Handler
@@ -56,39 +58,42 @@ then deployed, either as exectuables or .py files which attempt to connect back 
 # Getting Started
 ## Prerequisites
 - Python 2.7
+- Python 3.X (Only for linux)
 - Python pip
-- Git
-## Setup(Linux)
-Run the following commands as root user, try running ```sudo -i``` first to become root.
+- Git/Git bash
+## Setup(Ubuntu)
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```pip install python3-xlib```
+```cd PyIris-backdoor\setup```
 
-```apt-get install scrot```
+```sudo python linux_set_pip.py```
 
-```apt-get install python3-tk```
+```sudo pip install -r linux_requirements.txt```
 
-```apt-get install python3-dev```
+```python set_creds.py```
 
-```apt-get install portaudio19-dev```
+## Setup(Kali Linux)
 
-```apt-get install python-alsaaudio```
+```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```apt-get install python-wnck```
+```cd PyIris-backdoor\setup```
 
-```cd PyIris-backdoor```
+```python linux_set_pip.py```
 
 ```pip install -r linux_requirements.txt```
 
+```python set_creds.py```
+
 ## Setup(Windows)
-To git clone on windows you need to have the [Git bash shell](https://www.atlassian.com/git/tutorials/install-git) installed.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```cd PyIris-backdoor```
+```cd PyIris-backdoor\setup```
 
-```C:\Python27\Scripts\pip install -r windows_requirements.txt```
+```pip install -r windows_requirements.txt```
+
+```py -2 set_creds.py```
 
 The path does not have to be the one mentioned above, use the absolute path to your version of pip2.
 
@@ -111,84 +116,18 @@ PyIris was installed succesfully on the following Operating Systems.
 
 If you are runnning a different operating system and have trouble installing please contact me and let me know. (See title below Bugs, Suggestions or inquiries)
 # Basic Usage
-Change directory to the PyIris root folder first.
+Change into the PyIris-backdoor directory
 ## Running the server in Windows cmd/powershell
 ```py -2 PyIris.py```
 ## Running the server in Linux terminal
-```sudo python2 PyIris.py```
+```sudo python PyIris.py```
 ## Setting up the listener
-Setting up a listener is simple, navigate to the listeners handler and start a listener on a free port. Run ```start <port number>``` to 
-set up a listener. To view any active listeners run ```show``` . Use ```help``` to view all available commands.
+Setting up a listener is simple, navigate to the listeners handler by running ```listener``` and start a listener on a free port. Use 
+the ```set``` command to set the variables for the listener, ```configs``` to view the set variables and ```start``` to start the 
+listener.
 
-```
-PyIris > listeners
-[+]Switching...
-PyIris (Listeners) > start 9999
-[+]Listener started and bound to port : 9999
-PyIris (Listeners) > show
-
-[*]Currently active listeners :
-
-ID      Port
-==      ====
-1       9999
-```
-
-The scouts by default connect to port 9999 but this can be changed in the port variable.
 
 ## Managing and interacting with Scouts
-To return to the default/root mode, run ```back```. Then enter the scouts handler by running ```scouts```. Once a scout connects back, 
-run ```show``` to view all connected scouts and stats. Use ```help``` to view all available commands.
-
-```
-PyIris (Listeners) > back
-
-[+]Returning...
-PyIris > scouts
-[+]Switching...
-PyIris (Scouts) > show
-
-[*]Currently active scouts :
-
-ID      IP              User info               Type of scout   Operating System
-==      ==              =========               =============   ================
-1       127.0.0.1       DELL-LAPTOP/angus       Command Shell   Windows-10-10.0.15063
-2       192.168.0.100   ubuntu/angus            Input Injector  Linux-4.10.0-38-generic-x86_64-with-Ubuntu-16.04-xenial
-```
-
-To interact with a scout run ```bridge <ID of scout>``` in the scouts handler.
-Once an interaction with a scout has been started you can run ```help``` to view all of the payloads available commands.
-
-```
-PyIris (Scouts) > bridge 1
-[+]Bridged to scout of ID : 1
-PyIris (Command Shell) > help
-
-Command Shell Menu
-==================
-
-   Global Commands :
-      banner                            Display a banner
-      help                              Show the help menu
-      quit                              Quit the console
-      clear                             Clear the screen
-
-   Connection commands :
-      disconnect                        Make the scout disconnect and try to reconnect
-      terminate                         Kill tbe scout process
-      sleep <seconds>                   Disconnect the scout and make it sleep for some time
-
-   Command Shell Commands :
-      exec <shell command>              Executes shell command and returns output
-      exec_file <file/executable>       Executes a file/executable without blocking
-      toggle                            toggle whether commands are run by powershell or cmd
-
-   File Commands :
-      download <filepath>               Download file
-      dump <filepath>                   Dump and view file content(supports .docx file)
-      upload <filepath>                 Upload a file
-      web_download <url>                Download a file through a url
-```
 
 # Built with
 - [PyCharm IDE](https://www.jetbrains.com/pycharm/)
