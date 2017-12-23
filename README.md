@@ -156,4 +156,4 @@ Change into the PyIris-backdoor directory
 - Inspired by [Powershell Empire](https://github.com/EmpireProject/Empire) and [Brain Damage](https://github.com/mehulj94/BrainDamage)
 
 # License
-Licensed under Mozilla Public License Version 2.0.
+Licensed under Mozilla Public License Version 2.0, see LICENESE.md for more details
