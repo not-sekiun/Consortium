@@ -150,10 +150,10 @@ Suggestions or inquiries)
 Change into the PyIris-backdoor directory
 
 ## Running the server in Windows
-```py -2 PyIris.py```
+```PyIris.py```
 
 ## Running the server in Linux
-```sudo python PyIris.py```
+```python PyIris.py```
 
 # Built with
 - [PyCharm IDE](https://www.jetbrains.com/pycharm/)
