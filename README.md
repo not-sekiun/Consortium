@@ -89,7 +89,7 @@ specified IP and port.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```cd PyIris-backdoor\setup```
+```cd PyIris-backdoor/setup```
 
 ```sudo python linux_set_pip.py```
 
@@ -101,7 +101,7 @@ specified IP and port.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```cd PyIris-backdoor\setup```
+```cd PyIris-backdoor/setup```
 
 ```python linux_set_pip.py```
 
