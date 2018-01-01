@@ -93,11 +93,11 @@ specified IP and port.
 
 ```cd PyIris-backdoor/setup```
 
-```sudo python linux_set_pip.py```
+```sudo python2 linux_set_pip.py```
 
 ```sudo pip install -r linux_requirements.txt```
 
-```python set_creds.py```
+```python2 set_creds.py```
 
 ## Setup(Kali Linux)
 
@@ -107,11 +107,11 @@ specified IP and port.
 
 ```cd PyIris-backdoor/setup```
 
-```python linux_set_pip.py```
+```python2 linux_set_pip.py```
 
 ```pip install -r linux_requirements.txt```
 
-```python set_creds.py```
+```python2 set_creds.py```
 
 ## Setup(Windows)
 
@@ -124,7 +124,7 @@ the commands
 
 ```pip install -r windows_requirements.txt```
 
-```set_creds.py```
+```py -2 set_creds.py```
 
 ## Updating PyIris
 PyIris is a project undergoing heavy development and debugging, make sure to update often by running these commands in the PyIris
@@ -150,10 +150,10 @@ Suggestions or inquiries)
 Change into the PyIris-backdoor directory
 
 ## Running the server in Windows
-```PyIris.py```
+```py -2 PyIris.py```
 
 ## Running the server in Linux
-```python PyIris.py```
+```python2 PyIris.py```
 
 # Built with
 - [PyCharm IDE](https://www.jetbrains.com/pycharm/)
