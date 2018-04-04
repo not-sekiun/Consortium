@@ -56,4 +56,6 @@ Inspired by [Powershell Empire](https://github.com/EmpireProject/Empire) and [Br
 Licensed under Mozilla Public License Version 2.0 - See the "LICENESE.md" file for more details
 
 # Disclaimer
-I am not held reponsible for anything illegal that you do with this framework, this framework was developed for ethical hackers, pentesters and for research purposes. Please do not use it without the full consent of the victim
+I am not held reponsible for anything illegal that you do with this framework, this framework was developed for ethical hackers, 
+pentesters and for research purposes. Please do not use it without the full consent of the victim. Use this framework to break stuff but 
+legally please :)
