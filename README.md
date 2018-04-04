@@ -19,7 +19,7 @@ detect the scout all while giving you a huge amount of flexiblity to customise p
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
 ## Updating PyIris
-Change into the PyIris-backdoor folder first
+Change into the PyIris-backdoor folder first, then run
 
 ```git pull```
 
