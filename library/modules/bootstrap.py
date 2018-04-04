@@ -8,7 +8,6 @@ def main():
         if sys.version_info[0] == 2:
             print '[+]Python Version 2 - OK'
             import platform
-            import library.interfaces.home_interface as home_interface
             import library.modules.keygen as keygen
             print '[+]All local files imported - OK'
             if platform.uname()[0] == 'Windows':
@@ -35,5 +34,5 @@ def main():
     except ImportError as e:
         print '[-]Could not import : ' + str(e) + ' - Error, missing packages or packages not installed'
         return False
-    except Exception as e:
-        print '[!]Unexpected error when bootstrapping : ' + str(e)
+    #except Exception as e:
+    #    print '[!]Unexpected error when bootstrapping : ' + str(e)

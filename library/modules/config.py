@@ -2,9 +2,12 @@ import os
 
 def main():
     started_at = os.getcwd()
-    f = open('PyIris.cred')
-    key = f.read()
-    f.close()
+    try:
+        f = open('PyIris.cred')
+        key = f.read()
+        f.close()
+    except:
+        pass
     listener_values = {'Interface':['0.0.0.0','The local interface to start a listener'],
                        'Port':['9999','The local port to start a listener'],
                        'Name':['Listener','Name of the listener'],}
