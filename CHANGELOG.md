@@ -1,3 +1,10 @@
+# Update 0.6.2
+- Rewrote the pyiris framework
+- Changed generator commands
+- Added support for completely customised payloads
+- Changed up the interfaces
+- Renamed to project iris (permanent codename)
+
 # Christmas update 0.5.2 :)
 - Refactored and debugged handler code
 - Added new payloads
