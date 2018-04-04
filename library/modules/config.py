@@ -1,0 +1,25 @@
+import os
+
+def main():
+    started_at = os.getcwd()
+    f = open('PyIris.cred')
+    key = f.read()
+    f.close()
+    listener_values = {'Interface':['0.0.0.0','The local interface to start a listener'],
+                       'Port':['9999','The local port to start a listener'],
+                       'Name':['Listener','Name of the listener'],}
+    scout_values = {'Host':['127.0.0.1','The local hostname to connect back to'],
+                    'Port':['9999','The local port to connect back on'],
+                    'Timeout':['5','The timeout value for the scout'],
+                    'Windows':['True','When "True", will generate a windows scout, else a linux scout'],
+                    'Path':[started_at + '\payload.py','Path to generate payload to']}
+    incremented_listener_id = 0
+    incremented_scout_id = 0
+    listener_database = {}
+    scout_database = {}
+    black_list = []
+    white_list = []
+    win_components = ['windows/' + i[:-3] for i in os.listdir(os.getcwd() + '/components/windows') if i.endswith('.py') and i != '__init__.py' and i != 'base_component.py']
+    lin_components = ['linux/' + i[:-3] for i in os.listdir(os.getcwd() + '/components/linux') if i.endswith('.py') and i != '__init__.py' and i != 'base_component.py']
+    loaded_components = []
+    globals().update(locals())
