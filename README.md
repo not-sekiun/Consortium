@@ -20,8 +20,6 @@ detect the scout.
 
 ```cd PyIris-backdoor```
 
-If prompted to generate a key, either press enter or enter a key that you want to use.
-
 ## Updating PyIris
 Change into the PyIris-backdoor folder first
 
@@ -39,6 +37,8 @@ Change into the PyIris-backdoor folder first
 
 ## Linux
 ```python2 PyIris.py```
+
+If prompted to generate a key, either press enter or enter a key that you want to use.
 
 ## Starting out
 The ```help``` command is your friend! Simply run ```help``` to get a list of all commands you can use on a specific interface. For more 
