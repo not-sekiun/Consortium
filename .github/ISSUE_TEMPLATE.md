@@ -1,9 +1,9 @@
-## Exact version of PyIris.
+# Exact version of PyIris.
 
-## Exact version of OS and Python.
+# Exact version of OS and Python.
 
-## Description of error, including any commands run before the error.
+# Description of error, including any commands run before the error.
 
-## Screenshots, links, text of the full traceback.
+# Screenshots, links, text of the full traceback.
 
-## Miscellaneous information.
+# Miscellaneous information.
