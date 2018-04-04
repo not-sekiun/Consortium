@@ -18,8 +18,6 @@ detect the scout all while giving you a huge amount of flexiblity to customise p
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
-```cd PyIris-backdoor```
-
 ## Updating PyIris
 Change into the PyIris-backdoor folder first
 
