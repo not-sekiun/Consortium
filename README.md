@@ -2,9 +2,9 @@
   <img src="https://user-images.githubusercontent.com/32593795/34319106-163c3eac-e814-11e7-921c-9a9c73697bea.png" width="200" />
 </p>
 
-# Python-Iris(PyIris)
+# PyIris
 
-PyIris (the shortened name of Python-Iris), is a remote-access-toolkit used in order to gain access onto 
+PyIris also refered to as Python-Iris, is a remote-access-toolkit used in order to gain access onto 
 remote systems stealthily. PyIris utilises cross-platform, reverse TCP payloads that can effectively evade modern antivirus, firewalls 
 and user detection even after being compiled into executable files.
 

@@ -26,7 +26,6 @@ def main():
             else:
                 print '[-]OS ' + platform.uname()[0] + ' - Error, Not Supported'
                 return False
-            print '[+]Started Successfully'
         else:
             print ('[-]Python Version 3 - Error, Run in Python 2')
             return False
@@ -34,5 +33,5 @@ def main():
     except ImportError as e:
         print '[-]Could not import : ' + str(e) + ' - Error, missing packages or packages not installed'
         return False
-    #except Exception as e:
-    #    print '[!]Unexpected error when bootstrapping : ' + str(e)
+    except Exception as e:
+        print '[!]Unexpected error when bootstrapping : ' + str(e)

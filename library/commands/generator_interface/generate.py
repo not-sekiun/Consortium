@@ -1,3 +1,4 @@
+import time
 import library.modules.config as config
 
 config.main()
@@ -12,6 +13,8 @@ tmp_lin.append('linux/base_component')
 for i in tmp_lin:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
 print '[+]Loaded all linux components - OK'
+print '[+]Started Successfully'
+time.sleep(3)
 
 def main():
     if config.scout_values['Windows'][0] == 'True':

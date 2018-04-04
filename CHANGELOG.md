@@ -2,7 +2,7 @@
 - Refactored code
 - Rewrote the PyIris framework, changed commands and interface
 - Changed payload generation
-- Added support for completely customisable payloads
+- Added support for completely customizable payloads
 - Changed up the interfaces
 - Will now slowly start migrating all other scout features to the components you can load onto scouts during payload generation
 
@@ -11,7 +11,7 @@
 - Added new payloads
 - Added the ability to locally enter python interpreter
 - Added payload generator handler
-- Chaged the how listeners are created
+- Changed the how listeners are created
 - Added fake replies
 - Turned payloads into payload templates
 - Slightly changed the banners
@@ -31,7 +31,7 @@
 # Update 0.4.0
 - added local system command execution
 - new banner
-- added config checker
+- added the config checker
 - added persistent data
 - changed upload and download, now you can upload and download things with duplicate end marker
 - renamed files
