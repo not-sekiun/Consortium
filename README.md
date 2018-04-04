@@ -2,9 +2,9 @@
 The PyIris project is an attempt at creating a modular, stealthy and flexible remote-access-toolkit. This toolkit allows users to 
 dynamically build remote-access payloads (referred to as scouts) by loading and unloading specific modules (referred to as components), 
 that grant scouts specific features and functions. Want a keylogger that also supports remote command execution? No problem, just load 
-on a keylogger module and a remote command execution module onto the scout and hit "generate".This will generate a scout for you that 
-does just that. This allows a user to cut down on file size and get rid of useless features making it less likely for antivirus to 
-detect the scout all while giving them a huge amount of flexiblity to customise payloads.
+on a keylogger module and a remote command execution module onto the scout and hit "generate". This generates a payload that 
+does just that. This allows you to cut down on file size and get rid of useless features making it less likely for antivirus to 
+detect the scout all while giving you a huge amount of flexiblity to customise payloads.
 
 # Features
 - None as of now, planning to migrate them soon
