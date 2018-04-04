@@ -7,7 +7,7 @@ does just that. This allows a user to cut down on file size and get rid of usele
 detect the scout.
 
 # Features
-- None as of now, planning to migrate them to here
+- None as of now, planning to migrate them soon
 
 # Getting Started
 ## Prerequisites
