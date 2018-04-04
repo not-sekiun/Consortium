@@ -4,6 +4,7 @@
 - Changed payload generation
 - Added support for completely customisable payloads
 - Changed up the interfaces
+- Will now slowly start migrating all other scout features to the components you can load onto scouts during payload generation
 
 # Christmas update 0.5.2 :)
 - Refactored and debugged handler code
