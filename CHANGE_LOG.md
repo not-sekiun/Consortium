@@ -1,3 +1,10 @@
+# Update 0.6.3
+- New contributor ev-ev
+- Changed up the payload generator
+- Fixed a few bugs in the generate function and load function
+- Added a registry persistence module
+- Curently added a "test" remote command execution module, will be adding new modules soon and completing the remote command execution module
+
 # Update 0.6.2
 - Refactored code
 - Rewrote the PyIris framework, changed commands and interface
