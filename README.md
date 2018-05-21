@@ -1,4 +1,4 @@
-# The PyIris project
+# The PyIris Project
 The PyIris project is an attempt at creating a modular, stealthy and flexible remote-access-toolkit. This toolkit allows users to 
 dynamically build remote-access payloads (referred to as scouts) by loading and unloading specific modules (referred to as components), 
 that grant scouts specific features and functions. Want a keylogger that also supports remote command execution? No problem, just load 
@@ -7,7 +7,10 @@ does just that. This allows you to cut down on file size and get rid of useless 
 detect the scout all while giving you a huge amount of flexiblity to customise payloads.
 
 # Features
-- None as of now, planning to migrate them soon
+- Dynamic generation of scouts
+- Windows registry persistence
+- Sleep, kill and disconnect scouts
+- Robust error handling
 
 # Getting Started
 ## Prerequisites
