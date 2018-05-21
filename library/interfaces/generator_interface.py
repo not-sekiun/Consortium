@@ -1,4 +1,5 @@
 import time
+import library.modules.generator_append as generator_append
 import library.commands.global_interface.clear as clear
 import library.commands.global_interface.quit as quit
 import library.commands.global_interface.python as python
@@ -10,11 +11,13 @@ import library.commands.generator_interface.set as set
 import library.commands.generator_interface.load as load
 import library.commands.generator_interface.unload as unload
 import library.commands.generator_interface.generate as generate
+import library.commands.generator_interface.more as more
 
 
 def main():
     while True:
         try:
+            generator_append.main()
             prompt = raw_input('PyIris (Generator) > ').strip()
             command = prompt.split(' ',1)[0]
             if command == 'back':
@@ -30,6 +33,8 @@ def main():
                 load.main(prompt)
             elif command in ('!' ,'local'):
                 local.main(prompt)
+            elif command == 'more':
+                more.main(prompt)
             elif command == 'python':
                 python.main()
             elif command == 'quit':

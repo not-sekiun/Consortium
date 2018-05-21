@@ -8,4 +8,4 @@ def main(command):
         config.loaded_components.remove(load_off)
         print '[+]Unloaded : ' + load_off
     except (IndexError, ValueError):
-        print '[-]Please specify a valid component to load'
+        print '[-]Please specify a valid component to unload, note : the default loaded modules cannot be unloaded'

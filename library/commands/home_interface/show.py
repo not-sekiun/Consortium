@@ -23,7 +23,9 @@ def main(command):
             for i in config.black_list:
                 print '   ' + i
             print '\n'
+        elif list_type == 'key':
+            print '[*]Currently used key : \n   ' + config.key
         else:
             raise IndexError
     except IndexError:
-        print '[-]Please specify a valid object to show, ["wh"|"bl"|"all"]'
+        print '[-]Please specify a valid object to show, ["wh"|"bl"|"all"|"key"]'

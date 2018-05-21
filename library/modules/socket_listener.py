@@ -50,4 +50,7 @@ def main(host, port, name):
                 continue
     except Exception as e:
         print '\n[!]Error in listener thread : ' + str(e) + ', killing thread...'
-        del(config.listener_database[str(local_copy_of_id)])
+        try:
+            del(config.listener_database[str(local_copy_of_id)])
+        except:
+            pass

@@ -77,6 +77,7 @@ Home Interface Help Menu
    
    Generator Commands :
       load              Load a component in the generator
+      more              Show more info for a component
       reset             Reset an option to the default value
       set               Set an option to a value
       show              Show all loadable components or options
@@ -149,11 +150,12 @@ def home(command):
         print '\nUsage       : scouts' \
               '\nDescription : Switch to the scout interface\n'
     elif command == 'show':
-        print '\nUsage       : show ["wh"|"bl"|"all"]' \
-              '\nDescription : Show the hostname blacklist, whitelist or both' \
+        print '\nUsage       : show ["wh"|"bl"|"all"|"key"]' \
+              '\nDescription : Show the hostname blacklist, whitelist, both, or listener key' \
               '\nOptions     : "wh"  : Show the hostname whitelist' \
               '\n              "bl"  : Show the hostname blacklist' \
-              '\n              "all" : Show both the hostname blacklist and whitelist\n'
+              '\n              "all" : Show both the hostname blacklist and whitelist' \
+              '\n              "key" : Show the currently used listener key'
     elif command == '?':
         print '\nAn alias for the command "help"\n'
     elif command == '!':
@@ -308,6 +310,10 @@ def generator(command):
         print '\nUsage       : local <c>' \
               '\nDescription : Locally executes a shell command and displays the output' \
               '\nOptions     : <c> : A command to execute locally on the system\n'
+    elif command == 'more':
+        print '\nUsage       : more <c>' \
+              '\nDescription : Show more advanced info for a scout component' \
+              '\nOptions     : <c> : The component to show more info for\n'
     elif command == 'python':
         print '\nUsage       : python' \
               '\nDescription : Enters the systems local python interpreter\n'

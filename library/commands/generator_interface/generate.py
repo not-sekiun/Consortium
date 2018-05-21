@@ -1,35 +1,36 @@
-import time
 import library.modules.config as config
 
 config.main()
-
 tmp_win = config.win_components
-tmp_win.append('windows/base_component')
+tmp_win.append('windows/base')
 for i in tmp_win:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
-print '[+]Loaded all windows components - OK'
+print '[+]Loaded all windows components into generator - OK'
 tmp_lin = config.lin_components
-tmp_lin.append('linux/base_component')
+tmp_lin.append('linux/base')
 for i in tmp_lin:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
-print '[+]Loaded all linux components - OK'
-print '[+]Started Successfully'
-time.sleep(3)
+print '[+]Loaded all linux components into generator - OK'
 
 def main():
-    if config.scout_values['Windows'][0] == 'True':
-        print '[+]Filtering out invalid components (Filtering out linux/* components)...'
-        load_on = [i for i in config.loaded_components if i.startswith('windows/')]
-        load_on.append('windows/base_component')
-        for i in load_on:
-            print '[+]Loaded : ' + i
-            exec(i.replace('/', '_') + '.main()')
-        print '[*]Finished generating scout'
-    else:
-        print '[+]Filtering out invalid components (Filtering out windows/* components)...'
-        load_on = [i for i in config.loaded_components if not i.startswith('windows/')]
-        load_on.append('linux/base_component')
-        for i in load_on:
-            print '[+]Loaded : ' + i
-            exec (i.replace('/', '_') + '.main()')
-        print '[*]Finished generating scout'
+    for i in config.loaded_components:
+        print '[+]Loaded : ' + i
+        exec(i.replace('/', '_') + '.main("generate")')
+    print '[*]Reading contents from written file...'
+    f = open(config.scout_values['Path'][0], 'r')
+    save_data = f.read()
+    f.close()
+    f = open(config.scout_values['Path'][0],'w')
+    print '[*]Writing in imports...'
+    for i in config.import_statements:
+        f.write(i + '\n')
+    print '[*]Writing in functions...'
+    for i in config.functions:
+        f.write(i + '\n')
+    print '[*]Writing in base component'
+    for i in config.logics:
+        save_data = save_data.replace('#Statements#','#Statements#\n' + i)
+    f.write(save_data)
+    f.close()
+    config.import_statements = []
+    print '[*]Finished generating scout'

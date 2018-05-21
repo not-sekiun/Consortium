@@ -4,6 +4,7 @@ linux_modules = []
 def main():
     try:
         import sys
+        import time
         print ('[*]Starting...')
         if sys.version_info[0] == 2:
             print '[+]Python Version 2 - OK'

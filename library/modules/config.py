@@ -22,7 +22,16 @@ def main():
     scout_database = {}
     black_list = []
     white_list = []
-    win_components = ['windows/' + i[:-3] for i in os.listdir(os.getcwd() + '/components/windows') if i.endswith('.py') and i != '__init__.py' and i != 'base_component.py']
-    lin_components = ['linux/' + i[:-3] for i in os.listdir(os.getcwd() + '/components/linux') if i.endswith('.py') and i != '__init__.py' and i != 'base_component.py']
+    win_components = []
+    for i in os.listdir(os.getcwd() + '/components/windows'):
+        if i.endswith('.py') and i != '__init__.py' and i != 'base.py':
+            win_components.append('windows/' + i[:-3])
+    lin_components = []
+    for i in os.listdir(os.getcwd() + '/components/linux'):
+        if i.endswith('.py') and i != '__init__.py' and i != 'base.py':
+            lin_components.append('linux/' + i[:-3])
     loaded_components = []
+    import_statements = []
+    functions = []
+    logics = []
     globals().update(locals())

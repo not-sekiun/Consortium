@@ -1,4 +1,4 @@
-#Version 0.6.2
+#Version 0.6.3
 import library.modules.bootstrap as bootstrap
 import time
 
@@ -19,3 +19,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print '[!]User aborted bootstrap, requesting shutdown...'
         quit()
+    except Exception as e:
+        print '[!]Error : ' + str(e)

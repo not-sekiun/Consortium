@@ -14,18 +14,16 @@ def main(command):
             print('\n'.join('     '.join(item[i].ljust(l[i]) for i in range(len(l)))
                             for item in header)) + '\n'
         elif to_show == 'components':
-            print '[*]All windows components : \n'
+            print '\n[*]All loadable windows components :'
             for i in config.win_components:
                 print i
-            print '[*]All linux components : \n'
+            print '\n'
+            print '[*]All loadable linux components :'
             for i in config.lin_components:
                 print i
+            print '\n'
         elif to_show == 'loaded':
             print '[*]Loaded modules : '
-            if config.scout_values['Windows'][0] == 'True':
-                print '   windows/base_component(Default loaded module)'
-            else:
-                print '   linux/base_component(Default loaded module)'
             for i in config.loaded_components:
                 print '   ' + i
         else:
