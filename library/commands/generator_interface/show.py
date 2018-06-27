@@ -30,3 +30,23 @@ def main(command):
             print '[-]Please specify a valid argument, ["options"|"components"|"loaded"]'
     except IndexError:
         print '[-]Please specify what to show, ["options"|"components"|"loaded"]'
+
+def mainGUI(to_show):
+    if to_show == 'options':
+        data={}
+        for o, v in config.scout_values.items():
+            data[o]=v[0]
+        return data
+    elif to_show == 'components':
+        if config.scout_values['Windows'][0]=='True':
+            unloaded=[]
+            for module in config.win_components:
+                if module not in config.loaded_components:
+                        unloaded.append(module)
+            return [config.loaded_components,unloaded]
+        else:
+            unloaded=[]
+            for module in config.lin_components:
+                if module not in config.loaded_components:
+                        unloaded.append(module)
+            return [config.loaded_components,unloaded]

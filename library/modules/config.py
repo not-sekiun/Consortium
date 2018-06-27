@@ -34,4 +34,10 @@ def main():
     import_statements = []
     functions = []
     logics = []
+
+
+
+    #GUI variables
+    max_cmp_title=0
+
     globals().update(locals())

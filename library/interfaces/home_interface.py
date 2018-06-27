@@ -58,3 +58,49 @@ def main():
                 quit.main()
         except KeyboardInterrupt:
             quit.main()
+def mainGUI(app):
+
+    while True:
+        try:
+            prompt = raw_input('PyIris (Home) > ').strip()
+            command = prompt.split(' ',1)[0]
+            if command == 'add':
+                add.main(prompt)
+            elif command == 'clear':
+                clear.main()
+            elif command == 'generator':
+                print '[*]Switching...'
+                generator_interface.main()
+            elif command in ('?','help'):
+                help.main('home',prompt)
+            elif command == 'listeners':
+                print '[*]Switching...'
+                listener_interface.main()
+            elif command in ('!' ,'local'):
+                local.main(prompt)
+            elif command == 'python':
+                python.main()
+            elif command == 'quit':
+                quit.main()
+            elif command == 'regen':
+                regen.main()
+            elif command == 'reset':
+                reset.main(prompt)
+            elif command == 'rm':
+                rm.main(prompt)
+            elif command == 'scouts':
+                print '[*]Switching...'
+                scout_interface.main()
+            elif command == 'show':
+                show.main(prompt)
+            elif not command:
+                pass
+            else:
+                print '[-]Invalid command, run "help" for help menu'
+        except EOFError:
+            try:
+                time.sleep(2)
+            except KeyboardInterrupt:
+                quit.main()
+        except KeyboardInterrupt:
+            quit.main()
