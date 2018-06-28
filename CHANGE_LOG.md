@@ -1,3 +1,7 @@
+# GUI Update 0.02
+- Added a GUI
+
+
 # Update 0.6.3
 - New contributor ev-ev
 - Changed up the payload generator
