@@ -8,3 +8,5 @@ def main(command):
         print '[+]Set "' + command.split(' ')[1] + '" to "' + command.split(' ', 2)[2] + '"'
     except (IndexError, KeyError):
         print '[-]Please specify a valid option and value'
+def mainGUI(command):
+    config.scout_values[command.split(' ')[1]][0] = command.split(' ', 2)[2]

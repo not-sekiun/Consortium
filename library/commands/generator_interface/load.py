@@ -20,3 +20,9 @@ def main(command):
                 raise IndexError
     except IndexError:
         print '[-]Please specify a valid component to load'
+def mainGUI(command):
+    load_on = command.split(' ',1)[1]
+    if load_on in config.win_components or load_on in config.lin_components:
+        config.loaded_components.append(load_on)
+    else:
+        raise IndexError
