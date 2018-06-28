@@ -1,8 +1,9 @@
-# Version 0.0.1 By ev-ev
+# Version 0.0.2 By ev-ev currently not working
 import library.modules.bootstrap as bootstrap
 from appJar import gui
 import os
 import library.modules.config as config
+config.main()
 import library.interfaces.home_interface as home_interface
 import library.modules.generator_append as generator_append
 import library.commands.global_interface.clear as clear
@@ -167,7 +168,7 @@ def button_press(button):
         generate_gen.main()
         refresh(app)
         app.addLabel('Completed sucessfully')
-        app.setLabelBg('Completed sucessfully','blue')
+        app.setLabelBg('Completed sucessfully','green')
 
 
 if __name__ == "__main__":
