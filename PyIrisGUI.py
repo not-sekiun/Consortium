@@ -14,7 +14,7 @@ import library.commands.generator_interface.reset as reset
 import library.commands.generator_interface.set as set_gen
 import library.commands.generator_interface.load as load_gen
 import library.commands.generator_interface.unload as unload_gen
-import library.commands.generator_interface.generate as generate
+import library.commands.generator_interface.generate as generate_gen
 import library.commands.generator_interface.more as more
 
 def label(app):
@@ -101,6 +101,7 @@ def main(app):
     app.stopPanedFrame()
 
     app.stopPanedFrame()
+    app.addNamedButton('Generate!','gen_active', button_press)
     app.stopTab()
 
     app.startTab("Listeners")
@@ -162,6 +163,11 @@ def button_press(button):
         refresh(app)
         res=local.mainGUI('local '+code).replace('\n','')
         app.setMessage('exec_cmd_code_output',res)
+    if button == "gen_active":
+        generate_gen.main()
+        refresh(app)
+        app.addLabel('Completed sucessfully')
+        app.setLabelBg('Completed sucessfully','blue')
 
 
 if __name__ == "__main__":

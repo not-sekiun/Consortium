@@ -32,10 +32,10 @@ def main():
             elif command == 'load': #GUI done
                 load.main(prompt)
             elif command in ('!' ,'local'):
-                local.main(prompt)
+                local.main(prompt) #GUI done
             elif command == 'more':
                 more.main(prompt)
-            elif command == 'python':
+            elif command == 'python': #GUI done
                 python.main()
             elif command == 'quit':
                 quit.main()
