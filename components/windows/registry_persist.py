@@ -4,7 +4,6 @@ config.main()
 
 def main(option):
     if option == 'generate':
-        filepath = config.scout_values['Path'][0]
         config.import_statements.append('import _winreg')
         config.import_statements.append('import sys')
         config.functions.append('''
