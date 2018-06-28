@@ -29,7 +29,7 @@ def main():
                 generate.main()
             elif command in ('?','help'):
                 help.main('generator',prompt)
-            elif command == 'load':
+            elif command == 'load': #GUI done
                 load.main(prompt)
             elif command in ('!' ,'local'):
                 local.main(prompt)
@@ -41,11 +41,11 @@ def main():
                 quit.main()
             elif command == 'reset':
                 reset.main(prompt)
-            elif command == 'set':
+            elif command == 'set': #GUI done
                 set.main(prompt)
-            elif command == 'show':
+            elif command == 'show': #GUI done
                 show.main(prompt)
-            elif command == 'unload':
+            elif command == 'unload': #GUI done
                 unload.main(prompt)
             elif not command:
                 pass

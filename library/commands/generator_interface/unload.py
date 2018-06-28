@@ -9,3 +9,9 @@ def main(command):
         print '[+]Unloaded : ' + load_off
     except (IndexError, ValueError):
         print '[-]Please specify a valid component to unload, note : the default loaded modules cannot be unloaded'
+def mainGUI(command):
+    try:
+        load_off = command.split(' ', 1)[1]
+        config.loaded_components.remove(load_off)
+    except (IndexError, ValueError):
+        pass

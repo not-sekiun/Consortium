@@ -1,12 +1,12 @@
 # Version 0.0.1 By ev-ev
 import library.modules.bootstrap as bootstrap
 from appJar import gui
+import os
 import library.modules.config as config
 import library.interfaces.home_interface as home_interface
 import library.modules.generator_append as generator_append
 import library.commands.global_interface.clear as clear
 import library.commands.global_interface.quit as quit
-import library.commands.global_interface.python as python
 import library.commands.global_interface.local as local
 import library.commands.global_interface.help as help
 import library.commands.generator_interface.show as show_gen
@@ -24,6 +24,7 @@ def label(app):
     app.getLabelWidget("title").config(font=("Times", "50", "bold"))
 
 def main(app):
+
     app.startTabbedFrame("TabbedFrame")
     app.startTab("Home")
     app.addLabel("Home menu")
@@ -75,7 +76,24 @@ def main(app):
     app.stopPanedFrame()
 
     app.startPanedFrame("p2")
-    app.addLabel("pf2", "Inside Pane 2")
+    app.setBg('orange')
+    app.addLabel("Execute python and batch")
+
+    app.startPanedFrame("aaa")
+    app.addLabel('py',"Python 2")
+    app.addNamedButton('Start python 2 interpreter','exec_py_code',button_press)
+
+
+    app.startPanedFrame("bbb")
+    app.addLabel("Local")
+    app.addEntry("exec_cmd_code_input")
+    app.setEntryDefault('exec_cmd_code_input','Enter cmd code here')
+    app.addMessage("exec_cmd_code_output",'')
+    #app.setMessageWidth('exec_cmd_code_output', 1000)
+    app.addNamedButton('Execute code', 'exec_cmd_code', button_press)
+    app.stopPanedFrame()
+
+    app.stopPanedFrame()
     app.stopPanedFrame()
 
     app.startPanedFrame("p3")
@@ -129,20 +147,25 @@ def button_press(button):
         refresh(app)
     if button == "save_gen_components":
         cbs=app.getAllCheckBoxes()
-        dic={}
         for o,v in cbs.items():
             if 'windows/' in o or 'linux/' in o:
                 if v == True:
                     load_gen.mainGUI('load '+o)
-                if v == False:
+                else:
                     unload_gen.mainGUI('unload '+o)
         refresh(app)
-
-
+    if button == "exec_py_code":
+        os.system('start py -2')
+        refresh(app)
+    if button == "exec_cmd_code":
+        code=app.getEntry('exec_cmd_code_input')
+        refresh(app)
+        res=local.mainGUI('local '+code).replace('\n','')
+        app.setMessage('exec_cmd_code_output',res)
 
 
 if __name__ == "__main__":
-    app = gui('PyIris','900x600')
+    app = gui('PyIris','1000x800')
     app.addLabel("title", "PyIris GUI")
     app.setLabelBg("title", "green")
     app.getLabelWidget("title").config(font=("Times","50", "bold"))
