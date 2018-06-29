@@ -4,6 +4,8 @@ import library.commands.global_interface.quit as quit
 import library.commands.global_interface.python as python
 import library.commands.global_interface.local as local
 import library.commands.global_interface.help as help
+import library.commands.direct_interface.send_raw as send_raw
+import library.commands.direct_interface.interact_user_gui as IUG
 import library.modules.config as config
 
 config.main()
@@ -36,6 +38,10 @@ def main(scout_id):
                 python.main()
             elif command == 'quit':
                 quit.main()
+            elif command == 'send_raw':
+                send_raw(scout_id,prompt)
+            elif command == 'interact_user_gui':
+                IUG.main(scout_id)
             elif not command:
                 pass
             else:
