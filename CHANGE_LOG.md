@@ -1,3 +1,10 @@
+# Update 0.6.4
+- Rewrote persistence module
+- Added remote code execution, file execution, file upload, file download and file download from web capabailities to scout as components
+- Refactored more code
+- Addded error handling for socket timeout in direct handler
+- Generalized error handling in scouts to reduce file space
+
 # Update 0.6.3
 - Changed up the payload generator
 - Fixed a few bugs in the generate function and load function
