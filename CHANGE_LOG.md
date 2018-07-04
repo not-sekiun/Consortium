@@ -1,5 +1,4 @@
 # Update 0.6.3
-- New contributor ev-ev
 - Changed up the payload generator
 - Fixed a few bugs in the generate function and load function
 - Added a registry persistence module
