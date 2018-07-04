@@ -53,7 +53,8 @@ detail about a specific command, run ```help <name of command>``` to get more in
 Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
 
 # Credits
-Inspired by [Powershell Empire](https://github.com/EmpireProject/Empire) and [Brain Damage](https://github.com/mehulj94/BrainDamage)
+- Inspired by [Powershell Empire](https://github.com/EmpireProject/Empire) and [Brain Damage](https://github.com/mehulj94/BrainDamage)
+- Thanks to ev-ev for helping me in the earliest stages of the project and in helping me to create PyIris
 
 # License
 Licensed under Mozilla Public License Version 2.0 - See the "LICENESE.md" file for more details
