@@ -11,6 +11,10 @@ detect the scout all while giving you a huge amount of flexiblity to customise p
 - Windows registry persistence
 - Sleep, kill and disconnect scouts
 - Robust error handling
+- Remote Command Execution
+- File transfer and data exfiltration
+- Shutdown, restart, lock, logoff user
+- Download files through url
 
 # Getting Started
 ## Prerequisites
