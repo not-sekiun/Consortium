@@ -15,6 +15,7 @@ detect the scout all while giving you a huge amount of flexiblity to customise p
 - File transfer and data exfiltration
 - Shutdown, restart, lock, logoff user
 - Download files through url
+- Execute and open files remotely
 
 # Getting Started
 ## Prerequisites
@@ -65,5 +66,5 @@ Licensed under Mozilla Public License Version 2.0 - See the "LICENESE.md" file f
 
 # Disclaimer
 I am not held reponsible for anything illegal that you do with this framework, this framework was developed for ethical hackers, 
-pentesters and for research purposes. Please do not use it without the full consent of the victim. Use this framework to break stuff but 
-legally please :)
+pentesters and for research purposes. Please do not use this without the full consent of the victim. Use this framework to break stuff 
+but legally please :)
