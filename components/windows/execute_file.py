@@ -17,5 +17,5 @@ def execute_file(file):
         print '\nName             : Execute file component' \
               '\nOS               : Windows' \
               '\nRequired Modules : os' \
-              '\nCommands         : exec_file' \
+              '\nCommands         : exec_file <file path>' \
               '\nDescription      : Will open and execute any file that is specified as the argument\n'

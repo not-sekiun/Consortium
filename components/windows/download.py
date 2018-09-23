@@ -1,7 +1,8 @@
-#verified
+# verified
 import library.modules.config as config
 
 config.main()
+
 
 def main(option):
     if option == 'generate':
@@ -17,8 +18,8 @@ def download(data):
             elif command == "download":
                 download(data)''')
     elif option == 'info':
-        print '\nName             : Upload File component' \
+        print '\nName             : Download File component' \
               '\nOS               : Windows' \
               '\nRequired Modules : pickle' \
-              '\nCommands         : upload' \
+              '\nCommands         : download <remote file path>' \
               '\nDescription      : Remotely download a file to local current working directory of PyIris\n'
