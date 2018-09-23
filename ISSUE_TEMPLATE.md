@@ -12,7 +12,7 @@
 - What was modified in the framework files (If any were modified)
 
 ## Step 3 : Evidence and description
-- Descripton of the error
+- Description of the error
 - Screenshot of the error
 - Raw text of the error
 - Videos or gifs
