@@ -1,7 +1,8 @@
-#verified
+# verified
 import library.modules.config as config
 
 config.main()
+
 
 def main(option):
     if option == 'generate':
