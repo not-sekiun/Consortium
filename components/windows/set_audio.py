@@ -21,8 +21,7 @@ def set_audio(data):
     data += '[*]Max decibel number(100%) : ' + str(range_vol[1])
     data += '\\n[*]Minimum decibel number(0%) : ' + str(range_vol[0])
     data += '\\n[+]Set volume to : ' + str(number)
-    s.sendall(data)
-''')
+    s.sendall(data)''')
         config.logics.append('''
             elif command == "set_audio":
                 set_audio(data)''')

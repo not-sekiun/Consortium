@@ -1,4 +1,5 @@
 import library.modules.config as config
+import library.modules.clean_import_data as clean_import_data
 
 config.main()
 tmp_win = config.win_components
@@ -17,27 +18,30 @@ def main():
     for i in config.loaded_components:
         print '[+]Loading and executing : ' + i
         exec (i.replace('/', '_') + '.main("generate")')
-    print '[*]Reading contents from written file...'
+    print '[*]Reading contents from temporary written file...'
     f = open(config.scout_values['Path'][0], 'r')
     save_data = f.read()
     f.close()
+    config.functions = list(set(config.functions))
+    config.import_statements = list(set(config.import_statements))
+    config.global_vars = list(set(config.global_vars))
+    config.logics = list(set(config.logics))
     f = open(config.scout_values['Path'][0], 'w')
     print '[*]Writing in imports...'
-    for i in config.import_statements:
-        f.write(i + '\n')
-    print '[*]Writing in global varibals'
+    f.write(clean_import_data.main(config.import_statements) + '\n\n')
+    print '[*]Writing in global variables...'
     for i in config.global_vars:
         f.write(i + '\n')
     print '[*]Writing in functions...'
     for i in config.functions:
         f.write(i + '\n')
-    print '[*]Writing in base component'
+    print '[*]Writing in base component...'
     for i in config.logics:
-        save_data = save_data.replace('#Statements#', '#Statements#\n' + i)
-    save_data = save_data.replace('#Statements#\n', '')
+        save_data = save_data.replace('#Statements#', '#Statements#' + i)
+    save_data = save_data.replace('#Statements#', '')
     f.write(save_data)
     f.close()
-    print '[*]Finished generating scout'
+    print '[+]Finished generating scout'
     config.functions = []
     config.import_statements = []
     config.global_vars = []

