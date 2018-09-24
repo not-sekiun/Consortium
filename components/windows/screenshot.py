@@ -11,10 +11,13 @@ def main(option):
 def screenshot():
     im = ImageGrab.grab()
     bytes = pickle.dumps(im)
+    return bytes
 ''')
         config.logics.append('''
 elif command == "screenshot":
-            screenshot()''')
+    global img = ''
+    img = screenshot()
+            ''')
 
     elif option == 'info':
         print '\nName             : In-memory Screenshot component' \
