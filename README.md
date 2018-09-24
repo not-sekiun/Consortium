@@ -24,6 +24,7 @@ the scout never writes anything to the disk.
 - Clear, set, dump clipboard data
 - Check to see if scout is running with admin privileges
 - See all currently open windows on the target
+- Dump saved chrome passwords
 
 # Features (Linux)
 - Coming soon
