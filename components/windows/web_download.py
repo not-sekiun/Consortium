@@ -1,7 +1,8 @@
-#verified
+# verified
 import library.modules.config as config
 
 config.main()
+
 
 def main(option):
     if option == 'generate':
@@ -23,5 +24,5 @@ def web_download(command):
         print '\nName             : Web download component' \
               '\nOS               : Windows' \
               '\nRequired Modules : urllib2' \
-              '\nCommands         : web_download' \
+              '\nCommands         : web_download <url>' \
               '\nDescription      : Allows you to download a file from a url supplied\n'

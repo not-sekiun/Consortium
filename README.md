@@ -1,28 +1,45 @@
 # The PyIris Project
-The PyIris project is an attempt at creating a modular, stealthy and flexible remote-access-toolkit. This toolkit allows users to 
+The PyIris project is an attempt at creating a modular, stealthy and flexible remote-access-toolkit. It allows users to 
 dynamically build remote-access payloads (referred to as scouts) by loading and unloading specific modules (referred to as components), 
-that grant scouts specific features and functions. Want a keylogger that also supports remote command execution? No problem, just load 
-on a keylogger module and a remote command execution module onto the scout and hit "generate". This generates a payload that 
-does just that. This allows you to cut down on file size and get rid of useless features making it less likely for antivirus to 
-detect the scout all while giving you a huge amount of flexiblity to customise payloads.
+that grant scouts specific features. This allows you to cut down on file size and only use essential features making it
+less likely for antivirus to detect the scout. It also allows for highly customisable payloads that have low hard drive footprints as 
+the scout never writes anything to the disk.
 
-# Features
+# Features (Windows)
 - Dynamic generation of scouts
 - Windows registry persistence
 - Sleep, kill and disconnect scouts
 - Robust error handling
-- Remote Command Execution
+- Remote Command Execution through CMD
+- Remote Command Execution through Powershell
 - File transfer and data exfiltration
 - Shutdown, restart, lock, logoff user
 - Download files through url
 - Execute and open files remotely
+- Keylogging in memory
+- Taking screenshots in memory
+- Setting audio
+- Displaying system information
+- Getting user idle time
+- Clear, set, dump clipboard data
+- Check to see if scout is running with admin privileges
+- See all currently open windows on the target
+
+# Features (Linux)
+- Coming soon
 
 # Getting Started
 ## Prerequisites
 - Python 2.7
 - Git
 
-## Setting up PyIris
+## Setting up PyIris (Windows)
+
+```git clone https://github.com/angus-y/PyIris-backdoor```
+```pip install https://github.com/AndreMiras/pycaw/archive/master.zip```
+```pip install -r windows_requirements.txt```
+
+## Setting up PyIris (Linux)
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
@@ -34,12 +51,14 @@ Change into the PyIris-backdoor folder first, then run
 ## Recommended OS
 ### PyIris was succesfully installed on the following operating systems
 - Windows 10
-- Kali Linux 2017.2
-- Ubuntu 16.04
+- Kali Linux
+- Ubuntu
 
 # Basic Usage
 ## Windows
-```py -2 PyIris.py```
+```PyIris.py```
+
+If prompted to generate a key, either press enter or enter a key that you want to use.
 
 ## Linux
 ```python2 PyIris.py```

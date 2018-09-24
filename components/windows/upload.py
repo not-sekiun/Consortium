@@ -1,7 +1,8 @@
-#verified
+# verified
 import library.modules.config as config
 
 config.main()
+
 
 def main(option):
     if option == 'generate':
@@ -18,8 +19,8 @@ def upload():
             elif command == "upload":
                 upload()''')
     elif option == 'info':
-        print '\nName             : Download File component' \
+        print '\nName             : Upload File component' \
               '\nOS               : Windows' \
               '\nRequired Modules : pickle' \
-              '\nCommands         : download' \
+              '\nCommands         : upload <local file path>' \
               '\nDescription      : Remotely upload a file to remote current working directory of scout\n'

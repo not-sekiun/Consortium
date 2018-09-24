@@ -307,9 +307,10 @@ def generator(command):
               '\nDescription : Displays the help for a command or the general help menu if no value is provided' \
               '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n'
     elif command == 'load':
-        print '\nUsage       : load <c>' \
+        print '\nUsage       : load [<c>|"all"]' \
               '\nDescription : Load a component to generate a scout with' \
-              '\nOptions     : <c> : A valid component to load\n'
+              '\nOptions     : <c>   : A valid component to load' \
+              '\n              "all" : Load all components\n'
     elif command == 'local':
         print '\nUsage       : local <c>' \
               '\nDescription : Locally executes a shell command and displays the output' \
@@ -339,11 +340,12 @@ def generator(command):
               '\nDescription : Show all mutable options or loadable components' \
               '\nOptions     : "options"    : Options that can be changed' \
               '\n              "components" : All loadable scout components' \
-              '\n              "loaded"     : All currently loaded scout components'
+              '\n              "loaded"     : All currently loaded scout components\n'
     elif command == 'unload':
-        print '\nUsage       : unload <c>' \
+        print '\nUsage       : unload [<c>|"all"]' \
               '\nDescription : Unload a component to generate a scout with' \
-              '\nOptions     : <c> : A valid component to unload\n'
+              '\nOptions     : <c>   : A valid component to unload' \
+              '\n              "all" : Unload all components\n'
     elif command == '?':
         print '\nAn alias for the command "help"\n'
     elif command == '!':

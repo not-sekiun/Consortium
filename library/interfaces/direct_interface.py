@@ -5,8 +5,9 @@ import library.commands.global_interface.quit as quit
 import library.commands.global_interface.python as python
 import library.commands.global_interface.local as local
 import library.commands.global_interface.help as help
-import library.commands.deployed_scout_commands.download as download
-import library.commands.deployed_scout_commands.upload as upload
+import library.commands.direct_commands.download as download
+import library.commands.direct_commands.upload as upload
+import library.commands.direct_commands.screen as screen
 import library.modules.recv_all as recv_all
 import library.modules.config as config
 import library.commands.scout_interface.ping as ping
@@ -64,6 +65,9 @@ def main(scout_id):
                 download.main(config.scout_database[scout_id][0])
             elif command == 'upload':
                 upload.main(config.scout_database[scout_id][0],prompt)
+            elif command == 'screen':
+                config.scout_database[scout_id][0].sendall(command)
+                screen.main(config.scout_database[scout_id][0])
             elif command == 'ping':
                 ping.main(prompt)
             elif not command:

@@ -1,3 +1,10 @@
+# Update 0.6.5 (I'm not dead)
+- Added TONS of new scout features
+- Debugged the generator interface where the generate command was writing duplicate functions
+- Added a requirements file, now modules are beginning to require third party libraries
+- Also starting to plan to add support for linux based scouts
+
+
 # Update 0.6.4
 - Rewrote persistence module
 - Added remote code execution, file execution, file upload, file download and file download from web capabailities to scout as components
