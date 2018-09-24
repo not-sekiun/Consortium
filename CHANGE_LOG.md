@@ -1,3 +1,8 @@
+# Update 0.6.6
+- Added the ability to dump saved chrome passwords
+- Fixed minor bug with keylogger
+- Improved scout generation by reducing duplicate or similar import statements
+
 # Update 0.6.5 (I'm not dead)
 - Added TONS of new scout features
 - Debugged the generator interface where the generate command was writing duplicate functions
