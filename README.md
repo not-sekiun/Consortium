@@ -37,13 +37,37 @@ the scout never writes anything to the disk.
 
 ## Setting up PyIris (Windows)
 
+First, clone this repository, make sure you have git installed.
+
 ```git clone https://github.com/angus-y/PyIris-backdoor```
+
+Next, pip install pycaw, which can't be installed the standard way, so you'll need to install pycaw from this separate github repository
+
 ```pip install https://github.com/AndreMiras/pycaw/archive/master.zip```
+
+Then, go to [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and look for the file titled "pyHook-1.5.1-cp27-cp27m-
+win_amd64.whl" which is the wheel for pyHook. Change into the directory of that wheel and run the following command to install pyHook. 
+(Note: Install the correct wheel for your python installation. My python installation is 64 bit so I used the "win_amd64" version of the 
+wheel)
+
+```pip install pyHook-1.5.1-cp27-cp27m-win_amd64.whl```
+
+Finally, install the rest of the required modules the standard way. Only install modules from the "windows_requirements.txt" file as
+this section is for running the Windows edition of PyIris.
+
 ```pip install -r windows_requirements.txt```
+
+Upon running it the first time you should be greeted with the option to generate a key, this indicated everything has been installed
+correctly.
 
 ## Setting up PyIris (Linux)
 
+First, clone this repository, make sure you have git installed.
+
 ```git clone https://github.com/angus-y/PyIris-backdoor```
+
+Upon running it the first time you should be greeted with the option to generate a key, this indicated everything has been installed
+correctly.
 
 ## Updating PyIris
 Change into the PyIris-backdoor folder first, then run
@@ -58,11 +82,13 @@ Change into the PyIris-backdoor folder first, then run
 
 # Basic Usage
 ## Windows
+
 ```PyIris.py```
 
 If prompted to generate a key, either press enter or enter a key that you want to use.
 
 ## Linux
+
 ```python2 PyIris.py```
 
 If prompted to generate a key, either press enter or enter a key that you want to use.
