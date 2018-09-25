@@ -25,6 +25,7 @@ the scout never writes anything to the disk.
 - Check to see if scout is running with admin privileges
 - See all currently open windows on the target
 - Dump saved chrome passwords
+- Webcam shots
 
 # Features (Linux)
 - Coming soon
