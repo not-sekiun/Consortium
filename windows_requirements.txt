@@ -1,3 +1,5 @@
 mss==3.3.1
 pyHook==1.5.1
 pypiwin32==223
+cv2
+PIL
