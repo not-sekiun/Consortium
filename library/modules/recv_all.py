@@ -1,4 +1,8 @@
 import socket
+import PIL
+import uuid
+import pickle
+
 
 def main(sock):
     sock.settimeout(None)
@@ -11,4 +15,11 @@ def main(sock):
                 raise socket.error
             data += tmp_data
         except (socket.error, socket.timeout):
-            return data
+            if data.startswith('png:'):
+                data = data[4:]
+                img = pickle.loads(data)
+                id = str(uuid.uuid4())
+                img.save(id+'.png', 'PNG')
+                return 'Your data was an image!'
+            else:
+                return data
