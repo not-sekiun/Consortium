@@ -1,3 +1,4 @@
+import library.modules.compiler as compiler
 import library.modules.config as config
 import library.modules.clean_import_data as clean_import_data
 
@@ -41,6 +42,9 @@ def main():
     save_data = save_data.replace('#Statements#', '')
     f.write(save_data)
     f.close()
+    if config.scout_values['Compile'][0] == 'True':
+        print '[*]Compiling scout...'
+        compiler.main(config.scout_values['Path'][0])
     print '[+]Finished generating scout'
     config.functions = []
     config.import_statements = []

@@ -13,12 +13,11 @@ import library.commands.scout_interface.ping as ping
 import library.commands.scout_interface.disconnect as disconnect
 import library.interfaces.direct_interface as direct_interface
 
-
 def main():
     while True:
         try:
             prompt = raw_input('PyIris (Scouts) > ').strip()
-            command = prompt.split(' ', 1)[0]
+            command = prompt.split(' ',1)[0]
             if command == 'back':
                 print '[*]Returning...'
                 return
@@ -30,11 +29,11 @@ def main():
                 clear.main()
             elif command == 'disconnect':
                 disconnect.main(prompt)
-            elif command in ('?', 'help'):
-                help.main('scout', prompt)
+            elif command in ('?','help'):
+                help.main('scout',prompt)
             elif command == 'kill':
                 kill.main(prompt)
-            elif command in ('!', 'local'):
+            elif command in ('!','local'):
                 local.main(prompt)
             elif command == 'rename':
                 rename.main(prompt)

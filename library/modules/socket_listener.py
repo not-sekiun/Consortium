@@ -6,7 +6,6 @@ from datetime import datetime
 
 config.main()
 
-
 def main(host, port, name):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -14,15 +13,13 @@ def main(host, port, name):
         s.listen(1)
         s.settimeout(2)
         local_copy_of_id = config.incremented_listener_id
-        config.listener_database[str(config.incremented_listener_id)] = [
-            host, str(port), name, datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+        config.listener_database[str(config.incremented_listener_id)] = [host,str(port),name,datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
         config.incremented_listener_id += 1
         print '[+]Successfully started listener thread at : ' + host + ':' + str(port)
         while True:
             try:
                 if should_listener_die.main(str(local_copy_of_id)):
-                    print '\n[+]Listener at : ' + host + ':' + \
-                        str(port) + ' , received kill message, exiting...'
+                    print '\n[+]Listener at : ' + host + ':' + str(port) + ' , received kill message, exiting...'
                     return
                 else:
                     try:
@@ -42,10 +39,8 @@ def main(host, port, name):
                         await_key = conn.recv(9999999)
                         conn.settimeout(None)
                         if await_key == config.key:
-                            print '\n[+]Connection received from scout : ' + addr[0] + \
-                                ':' + str(addr[1]) + ' -> ' + host + ':' + str(port)
-                            config.scout_database[str(config.incremented_scout_id)] = [conn, addr[0], str(
-                                addr[1]), host + ':' + str(port), return_random_string.main(5), datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+                            print '\n[+]Connection received from scout : ' + addr[0] + ':' + str(addr[1]) + ' -> ' + host + ':' + str(port)
+                            config.scout_database[str(config.incremented_scout_id)] = [conn, addr[0], str(addr[1]), host + ':' + str(port), return_random_string.main(5), datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
                             config.incremented_scout_id += 1
                         else:
                             conn.close()
