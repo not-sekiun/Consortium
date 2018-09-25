@@ -107,6 +107,7 @@ Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
 # Credits
 - Inspired by [Powershell Empire](https://github.com/EmpireProject/Empire) and [Brain Damage](https://github.com/mehulj94/BrainDamage)
 - Thanks to ev-ev for helping me in the earliest stages of the project and in helping me to create PyIris
+- Thanks to Dharshan2004 for helping build a part of the in-memory webcam module
 
 # License
 Licensed under Mozilla Public License Version 2.0 - See the "LICENESE.md" file for more details
