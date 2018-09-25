@@ -1,3 +1,7 @@
+# Update 0.6.7
+- Added the ability to take pictures from webcam
+- Added the option to auto compile windows scouts into portable executables that are either windowed or packed
+
 # Update 0.6.6
 - Added the ability to dump saved chrome passwords
 - Fixed minor bug with keylogger
