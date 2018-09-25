@@ -8,8 +8,7 @@ def main(option):
     if option == 'generate':
         config.import_statements.append('import _winreg')
         config.import_statements.append('from sys import argv')
-        config.import_statements.append('from os import getcwd')
-        config.import_statements.append('from os import path')
+        config.import_statements.append('from os import getcwd, path')
         config.functions.append('''
 def registry_persist(path):
     try:
