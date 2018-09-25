@@ -18,8 +18,14 @@ def main(sock):
             if data.startswith('png:'):
                 data = data[4:]
                 img = pickle.loads(data)
-                id = str(uuid.uuid4())
+                id = 'webcam' + str(uuid.uuid4())
                 img.save(id+'.png', 'PNG')
-                return 'Your data was an image!'
+                return 'Your data was a webcam shot!'
+            elif data.startswith('screen:'):
+                data = data[7:]
+                img = pickle.loads(data)
+                id = 'screen-' + str(uuid.uuid4())
+                img.save(id+'.png', 'PNG')
+                return 'Your data was a screenshot!'
             else:
                 return data
