@@ -57,7 +57,7 @@ this section is for running the Windows edition of PyIris.
 
 ```pip install -r windows_requirements.txt```
 
-Upon running it the first time you should be greeted with the option to generate a key, this indicated everything has been installed
+Upon running it the first time you should be greeted with the option to generate a key, this indicates everything has been installed
 correctly.
 
 ## Setting up PyIris (Linux)
