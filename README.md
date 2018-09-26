@@ -98,7 +98,7 @@ The ```help``` command is your friend! Simply run ```help``` to get a list of al
 detail about a specific command, run ```help <name of command>``` to get more in depth help about it. Alternatively you can use the 
 ```?``` command which is an alias for the help command. 
 
-## FAQ
+# FAQ
 
 <details>
 <summary>Why cant the compiled scout I generated in Linux run on Windows? (Or vice versa)</summary>
@@ -123,7 +123,7 @@ Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
 # License
 Licensed under Mozilla Public License Version 2.0 - See the "LICENESE.md" file for more details
 
-# Disclaimer
+# Disclaimer!
 I am not held reponsible for anything illegal that you do with this framework, this framework was developed for ethical hackers, 
 pentesters and for research purposes. Please do not use this without the full consent of the victim. Use this framework to break stuff 
 but legally please :)
