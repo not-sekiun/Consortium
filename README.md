@@ -106,9 +106,9 @@ detail about a specific command, run ```help <name of command>``` to get more in
 PyIris utilizes Pyinstaller to compile its payloads
 <br><br>
 <pre>
-It is therefore not possible to cross-compile binaries. That means if you generate and compile a scout in Linux the binary only runs 
-in Linux, it works the same for Windows. If you want to cross-compile Windows scouts for Linux I suggest you use wine and run PyIris 
-from there.
+It is therefore not possible to cross-compile binaries. That means if you generate and compile a scout 
+in Linux the binary only runs in Linux, it works the same for Windows. 
+If you want to cross-compile Windows scouts for Linux I suggest you use wine and run PyIris from there.
 </pre>
 </details>
 
