@@ -1,3 +1,5 @@
+# Things May Still Not Work Properly, Many Changes Are Being Made, This Is Still In Early Alpha. Please Make Issues If You Find Any Bugs
+
 # The PyIris Project
 The PyIris project is a modular, stealthy and flexible remote-access-toolkit. It allows users to dynamically build remote-access 
 payloads (referred to as scouts) by loading and unloading specific modules (referred to as components), that grant scouts specific 
