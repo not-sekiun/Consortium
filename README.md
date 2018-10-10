@@ -26,7 +26,7 @@ disk.
 - See all currently open windows on the target
 - Dump saved chrome passwords
 - Take pictures from webcam without writing to disk
-- Compile payloads into Windows EXE or Linux ELF
+- Compile payloads into Windows EXE
 
 # Features (Linux)
 - Coming soon
