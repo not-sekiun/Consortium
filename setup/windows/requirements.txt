@@ -1,0 +1,7 @@
+pywin32==223
+opencv_python==3.4.3.18
+comtypes==1.1.7
+mss==3.3.1
+Pillow==5.2.0
+PyInstaller==3.4
+pyHook-1.5.1-cp27-cp27m-win_amd64.whl

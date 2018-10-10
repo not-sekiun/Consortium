@@ -1,3 +1,5 @@
+import collections
+import library.modules.key_from_val as key_from_val
 import library.modules.config as config
 
 config.main()
@@ -7,31 +9,38 @@ def main(command):
     try:
         load_on = command.split(' ', 1)[1]
         if load_on == 'all':
-            if config.scout_values['Windows'][0] != 'True':
-                config.loaded_components = []
-                for i in config.lin_components:
-                    config.loaded_components.append(i)
-                    print '[+]Loaded : ' + i
-                print '[+]Loaded all linux components'
-            elif config.scout_values['Windows'][0] == 'True':
-                config.loaded_components = []
-                for i in config.win_components:
-                    config.loaded_components.append(i)
+            if config.scout_values['Windows'][0] == 'True':
+                for i in config.win_components.values():
+                    config.loaded_components[key_from_val.main(config.win_components, i)] = i
                     print '[+]Loaded : ' + i
                 print '[+]Loaded all windows components'
-        else:
-            if load_on.startswith('windows') and config.scout_values['Windows'][0] != 'True':
-                print '[-]Can\'t load a windows module when scout is set to linux'
-            elif load_on.startswith('linux') and config.scout_values['Windows'][0] == 'True':
-                print '[-]Can\'t load a linux module when scout is set to windows'
             else:
-                if load_on in config.win_components or load_on in config.lin_components:
-                    if load_on in config.loaded_components:
-                        print '[-]Component already loaded'
-                    else:
-                        config.loaded_components.append(load_on)
-                        print '[+]Loaded : ' + load_on
+                for i in config.lin_components.values():
+                    config.loaded_components[key_from_val.main(config.lin_components, i)] = i
+                    print '[+]Loaded : ' + i
+                print '[+]Loaded all linux components'
+        else:
+            if config.scout_values['Windows'][0] == 'True':
+                if load_on in config.win_components.keys():
+                    load_on = config.win_components[load_on]
+                if load_on in config.loaded_components.values():
+                    print '[-]Component already loaded'
                 else:
-                    raise IndexError
-    except IndexError:
-        print '[-]Please specify a valid component to load or "all" to load all components'
+                    id = key_from_val.main(config.win_components, load_on)
+                    if not id:
+                        raise KeyError
+                    config.loaded_components[id] = load_on
+                    print '[+]Loaded : ' + load_on
+            else:
+                if load_on in config.lin_components.keys():
+                    load_on = config.lin_components[load_on]
+                if load_on in config.loaded_components.values():
+                    print '[-]Component already loaded'
+                else:
+                    id = key_from_val.main(config.lin_components, load_on)
+                    if not id:
+                        raise KeyError
+                    config.loaded_components[id] = load_on
+                    print '[+]Loaded : ' + load_on
+    except KeyError:
+        print '[-]Please specify a valid component to load or "all" to load all components. Note : the default component, */base is loaded by default'

@@ -1,4 +1,4 @@
-#Version 0.6.7
+#Version 0.6.8
 import library.modules.bootstrap as bootstrap
 import time
 
@@ -10,7 +10,7 @@ if __name__ == '__main__':
             import library.commands.global_interface.clear as clear
             clear.main()
             home_interface.main()
-    except IndexError:
+    except EOFError:
         try:
             time.sleep(2)
         except KeyboardInterrupt:

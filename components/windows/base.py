@@ -40,12 +40,14 @@ while True:
         except (socket.timeout,socket.error):
             continue
     while True:
-        try:    
+        try:
             data = recv_all(s)
             command = data.split(' ',1)[0]
             if command == 'kill':
                 s.sendall('[*]Scout is killing itself...')
                 _exit(1)
+            elif command in ('help','?'):
+                s.sendall(help_menu)
             elif command == 'ping':
                 s.sendall('[+]Scout is alive')
             elif command == 'sleep':

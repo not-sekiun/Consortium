@@ -17,7 +17,7 @@ def main():
     while True:
         try:
             prompt = raw_input('PyIris (Home) > ').strip()
-            command = prompt.split(' ',1)[0]
+            command = prompt.split(' ',1)[0].lower()
             if command == 'add':
                 add.main(prompt)
             elif command == 'clear':

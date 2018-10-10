@@ -25,6 +25,7 @@ def set_audio(data):
         config.logics.append('''
             elif command == "set_audio":
                 set_audio(data)''')
+        config.help_menu['set_audio <number>'] = 'Set system wide audio level by decibel'
     elif option == 'info':
         print '\nName             : Set Audio component' \
               '\nOS               : Windows' \

@@ -87,20 +87,7 @@ Home Interface Help Menu
    Interface Commands :
       back              Return to the home interface
 '''
-direct_help = '''
-Direct Interface Help Menu
-==========================
-   Global Commands :
-      clear             Clear the screen
-      help              Show the help menu or help for specific command, alias of the command is "?"
-      local             Locally execute a command, alias of the command is "!"
-      python            Open up a local python interpreter
-      quit              Quit the framework
-   
-   Interface Commands :
-      back              Return to the scout interface
-      main              Return to the home interface
-   '''
+
 
 def home(command):
     if command == 'add':
@@ -164,6 +151,7 @@ def home(command):
     else:
         print '[-]Please enter a valid command'
 
+
 def listener(command):
     if command == 'back':
         print '\nUsage       : back' \
@@ -224,6 +212,7 @@ def listener(command):
         print '\nAn alias for the command "local"\n'
     else:
         print '[-]Please enter a valid command'
+
 
 def scout(command):
     if command == 'back':
@@ -292,6 +281,7 @@ def scout(command):
     else:
         print '[-]Please enter a valid command'
 
+
 def generator(command):
     if command == 'back':
         print '\nUsage       : back' \
@@ -307,18 +297,20 @@ def generator(command):
               '\nDescription : Displays the help for a command or the general help menu if no value is provided' \
               '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n'
     elif command == 'load':
-        print '\nUsage       : load [<c>|"all"]' \
+        print '\nUsage       : load [<n>|<i>|"all"]' \
               '\nDescription : Load a component to generate a scout with' \
-              '\nOptions     : <c>   : A valid component to load' \
+              '\nOptions     : <n>   : Name of a valid component to load' \
+              '\n              <i>   : ID of a valid component to load' \
               '\n              "all" : Load all components\n'
     elif command == 'local':
         print '\nUsage       : local <c>' \
               '\nDescription : Locally executes a shell command and displays the output' \
               '\nOptions     : <c> : A command to execute locally on the system\n'
     elif command == 'more':
-        print '\nUsage       : more <c>' \
+        print '\nUsage       : more [<n>|<i>]' \
               '\nDescription : Show more advanced info for a scout component' \
-              '\nOptions     : <c> : The component to show more info for\n'
+              '\nOptions     : <n> : The name of the component to show more info for' \
+              '\n              <i> : The ID of the component to shoe more info for\n'
     elif command == 'python':
         print '\nUsage       : python' \
               '\nDescription : Enters the systems local python interpreter\n'
@@ -342,9 +334,10 @@ def generator(command):
               '\n              "components" : All loadable scout components' \
               '\n              "loaded"     : All currently loaded scout components\n'
     elif command == 'unload':
-        print '\nUsage       : unload [<c>|"all"]' \
+        print '\nUsage       : unload [<n>|<i>|"all"]' \
               '\nDescription : Unload a component to generate a scout with' \
-              '\nOptions     : <c>   : A valid component to unload' \
+              '\nOptions     : <n>   : Name of a valid component to unload' \
+              '\n              <i>   : ID of a valid component to unload' \
               '\n              "all" : Unload all components\n'
     elif command == '?':
         print '\nAn alias for the command "help"\n'
@@ -353,60 +346,28 @@ def generator(command):
     else:
         print '[-]Please enter a valid command'
 
-def direct(command):
-    if command == 'back':
-        print '\nUsage       : back' \
-              '\nDescription : Return to the scout interface\n'
-    elif command == 'main':
-        print '\nUsage       : main' \
-              '\nDescription : Return to the home interface\n'
-    elif command == 'clear':
-        print '\nUsage       : clear' \
-              '\nDescription : Clears the screen\n'
-    elif command == 'help':
-        print '\nUsage       : help [opt : <c>]' \
-              '\nDescription : Displays the help for a command or the general help menu if no value is provided' \
-              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n'
-    elif command == 'local':
-        print '\nUsage       : local <c>' \
-              '\nDescription : Locally executes a shell command and displays the output' \
-              '\nOptions     : <c> : A command to execute locally on the system\n'
-    elif command == 'python':
-        print '\nUsage       : python' \
-              '\nDescription : Enters the systems local python interpreter\n'
-    elif command == 'quit':
-        print '\nUsage       : quit' \
-              '\nDescription : Quits the framework\n'
-    elif command == '?':
-        print '\nAn alias for the command "help"\n'
-    elif command == '!':
-        print '\nAn alias for the command "local"\n'
-    else:
-        print '[-]Please enter a valid command'
 
-def main(interface,command):
+def main(interface, command):
+    command = command.split(' ')
+    filter(lambda a: a != '', command)
+    print command
     if interface == 'home':
         try:
-            home(command.split(' ',1)[1])
+            home(command[1])
         except IndexError:
             print home_help
     elif interface == 'listener':
         try:
-            listener(command.split(' ', 1)[1])
+            listener(command[1])
         except IndexError:
             print listener_help
     elif interface == 'scout':
         try:
-            scout(command.split(' ', 1)[1])
+            scout(command[1])
         except IndexError:
             print scout_help
     elif interface == 'generator':
         try:
-            generator(command.split(' ', 1)[1])
+            generator(command[1])
         except IndexError:
             print generator_help
-    elif interface == 'direct':
-        try:
-            direct(command.split(' ',1)[1])
-        except IndexError:
-            print direct_help

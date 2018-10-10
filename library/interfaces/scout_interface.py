@@ -17,7 +17,7 @@ def main():
     while True:
         try:
             prompt = raw_input('PyIris (Scouts) > ').strip()
-            command = prompt.split(' ',1)[0]
+            command = prompt.split(' ',1)[0].lower()
             if command == 'back':
                 print '[*]Returning...'
                 return

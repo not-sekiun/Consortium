@@ -1,4 +1,5 @@
 import os
+import collections
 import library.modules.get_all_modules as get_all_modules
 
 
@@ -25,19 +26,24 @@ def main():
     scout_database = {}
     black_list = []
     white_list = []
-    win_components = []
+    win_components = collections.OrderedDict()
+    tmp_counter = 0
     for i in list(get_all_modules.main(os.getcwd() + '/components/windows')):
         i = i.replace('\\', '/')
         if i.endswith('.py') and not i.endswith('__init__.py') and not i.endswith('base.py'):
-            win_components.append(i[len(os.getcwd() + '/components') + 1:][:-3])
-    lin_components = []
+            win_components[str(tmp_counter)] = i[len(os.getcwd() + '/components') + 1:][:-3]
+            tmp_counter += 1
+    lin_components = collections.OrderedDict()
+    tmp_counter = 0
     for i in list(get_all_modules.main(os.getcwd() + '/components/linux')):
         i = i.replace('\\', '/')
         if i.endswith('.py') and not i.endswith('__init__.py') and not i.endswith('base.py'):
-            lin_components.append(i[len(os.getcwd() + '/components') + 1:][:-3])
-    loaded_components = []
+            lin_components[str(tmp_counter)] = i[len(os.getcwd() + '/components') + 1:][:-3]
+            tmp_counter += 1
+    loaded_components = collections.OrderedDict()
     import_statements = []
     functions = []
     logics = []
     global_vars = []
+    help_menu = {}
     globals().update(locals())

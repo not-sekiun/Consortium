@@ -25,6 +25,10 @@ def system_stat(option):
         config.logics.append('''
             elif command in ('lock','logout','restart','shutdown'):
                 system_stat(command)''')
+        config.help_menu['lock'] = 'Allows you to gracefully lock the target system'
+        config.help_menu['logout'] = 'Allows you to gracefully log the user out of the target system'
+        config.help_menu['restart'] = 'Allows you to gracefully restart the target system'
+        config.help_menu['shutdown'] = 'Allows you to gracefully shutdown the target system'
     elif option == 'info':
         print '\nName             : System status changer component' \
               '\nOS               : Windows' \
