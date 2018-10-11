@@ -67,9 +67,13 @@ First, clone this repository, make sure you have git installed.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
-Next install an external dependency required by pyperclip.
+Next install an external dependency, xlib, required by pyperclip.
 
 ```sudo apt-get install xclip```
+
+Then install pyalsaaudio through apt-get
+
+```sudo apt-get install python-alsaaudio```
 
 Finally, install the rest of the required modules the standard way. Only install modules from the "setup/linux/requirements.txt" file as
 this section is for running the Linux edition of PyIris.
