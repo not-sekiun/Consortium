@@ -53,10 +53,10 @@ wheel)
 
 ```pip install pyHook-1.5.1-cp27-cp27m-win_amd64.whl```
 
-Finally, install the rest of the required modules the standard way. Only install modules from the "windows_requirements.txt" file as
-this section is for running the Windows edition of PyIris.
+Finally, install the rest of the required modules the standard way. Only install modules from the "setup/windows/requirements.txt" file 
+as this section is for running the Windows edition of PyIris.
 
-```pip install -r windows_requirements.txt```
+```pip install -r setup/windows/requirements.txt```
 
 Upon running it the first time you should be greeted with the option to generate a key, this indicates everything has been installed
 correctly.
@@ -66,6 +66,15 @@ correctly.
 First, clone this repository, make sure you have git installed.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
+
+Next install an external dependency required by pyperclip.
+
+```sudo apt-get install xclip```
+
+Finally, install the rest of the required modules the standard way. Only install modules from the "setup/linux/requirements.txt" file as
+this section is for running the Linux edition of PyIris.
+
+```pip install -r setup/linux/requirements.txt```
 
 Upon running it the first time you should be greeted with the option to generate a key, this indicated everything has been installed
 correctly.
