@@ -29,6 +29,7 @@ disk.
 - Compile payloads into Windows EXE
 
 # Features (Linux)
+- Dynamic generation of scouts
 - Sleep, kill and disconnect scouts
 - Robust error handling
 - Remote Command Execution through bash shell
