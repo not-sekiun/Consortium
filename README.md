@@ -100,6 +100,7 @@ Change into the PyIris-backdoor folder first, then run
 - Windows 10
 - Kali Linux
 - Ubuntu
+- Debian (Tested by Dharshan2004)
 
 # Basic Usage
 ## Windows
