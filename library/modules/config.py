@@ -19,7 +19,8 @@ def main():
                     'Timeout': ['5', 'The timeout value for the scout'],
                     'Windows': ['True', 'When "True", will generate a windows scout, else a linux scout'],
                     'Path': [os.path.join(started_at, 'payload.py'), 'Path to generate payload to'],
-                    'Compile': ['False', 'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
+                    'Compile': ['False',
+                                'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
     incremented_listener_id = 0
     incremented_scout_id = 0
     listener_database = {}
@@ -28,14 +29,18 @@ def main():
     white_list = []
     win_components = collections.OrderedDict()
     tmp_counter = 0
-    for i in list(get_all_modules.main(os.getcwd() + '/components/windows')):
+    iterdir = list(get_all_modules.main(os.getcwd() + '/components/windows'))
+    iterdir.sort()
+    for i in iterdir:
         i = i.replace('\\', '/')
         if i.endswith('.py') and not i.endswith('__init__.py') and not i.endswith('base.py'):
             win_components[str(tmp_counter)] = i[len(os.getcwd() + '/components') + 1:][:-3]
             tmp_counter += 1
     lin_components = collections.OrderedDict()
     tmp_counter = 0
-    for i in list(get_all_modules.main(os.getcwd() + '/components/linux')):
+    iterdir = list(get_all_modules.main(os.getcwd() + '/components/linux'))
+    iterdir.sort()
+    for i in iterdir:
         i = i.replace('\\', '/')
         if i.endswith('.py') and not i.endswith('__init__.py') and not i.endswith('base.py'):
             lin_components[str(tmp_counter)] = i[len(os.getcwd() + '/components') + 1:][:-3]
