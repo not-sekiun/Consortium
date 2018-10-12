@@ -29,7 +29,20 @@ disk.
 - Compile payloads into Windows EXE
 
 # Features (Linux)
-- Coming soon
+- Sleep, kill and disconnect scouts
+- Robust error handling
+- Remote Command Execution through bash shell
+- File transfer and data exfiltration
+- Download files through url
+- Keylogging in memory
+- Taking screenshots in memory
+- Setting audio
+- Displaying system information
+- Clear, set, dump clipboard data
+- Check to see if scout is running as root
+- See all currently open windows on the target
+- Take pictures from webcam without writing to disk
+- Compile payloads into Linux ELF
 
 # Getting Started
 ## Prerequisites
