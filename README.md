@@ -46,13 +46,6 @@ Next, pip install pycaw, which can't be installed the standard way, so you'll ne
 
 ```pip install https://github.com/AndreMiras/pycaw/archive/master.zip```
 
-Then, go to [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and look for the file titled "pyHook-1.5.1-cp27-cp27m-
-win_amd64.whl" which is the wheel for pyHook. Change into the directory of that wheel and run the following command to install pyHook. 
-(Note: Install the correct wheel for your python installation. My python installation is 64 bit so I used the "win_amd64" version of the 
-wheel)
-
-```pip install pyHook-1.5.1-cp27-cp27m-win_amd64.whl```
-
 Finally, install the rest of the required modules the standard way. Only install modules from the "setup/windows/requirements.txt" file 
 as this section is for running the Windows edition of PyIris.
 
@@ -120,6 +113,18 @@ detail about a specific command, run ```help <name of command>``` to get more in
 PyIris utilizes Pyinstaller to compile its payloads. It is therefore not possible to cross-compile binaries. That means if you 
 generate and compile a scout in Linux the binary only runs in Linux, it works the same for Windows. If you want to cross-compile 
 Windows scouts for Linux I suggest you use wine and run PyIris from there.
+<br><br>
+</details>
+<details>
+<summary>PyHook isnt installing on my Windows OS!</summary>
+<br>
+I have already included a PyHook wheel file in the setup/windows folder however that wheel works only for 64 bit versions of Windows.
+You may have to manually install PyHook yourself. Go to [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and search for the PyHook wheel file that works for your Windows
+version and download it. Next, pip install using the name of that wheel file
+  
+ ```pip install <name of pyhook wheel file```
+ 
+If you downloaded the correct pyhook wheel file it should install succesfully.
 <br><br>
 </details>
 
