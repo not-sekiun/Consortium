@@ -18,8 +18,8 @@ def set_audio(data):
     range_vol = volume.GetVolumeRange()
     volume.SetMasterVolumeLevel(float(number), None)
     data = ''
-    data += '[*]Max decibel number(100%) : ' + str(range_vol[1])
-    data += '\\n[*]Minimum decibel number(0%) : ' + str(range_vol[0])
+    data += '[*]Max decibel level(100%) : ' + str(range_vol[1])
+    data += '\\n[*]Minimum decibel level(0%) : ' + str(range_vol[0])
     data += '\\n[+]Set volume to : ' + str(number)
     s.sendall(data)''')
         config.logics.append('''

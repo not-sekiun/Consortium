@@ -23,7 +23,7 @@ def download_web(command):
         config.help_menu['download_web <url> <Remote file path>'] = 'Allows you to download a file from a url supplied to a specified remote file path'
     elif option == 'info':
         print '\nName             : Download web component' \
-              '\nOS               : Windows' \
+              '\nOS               : Linux' \
               '\nRequired Modules : urllib2' \
               '\nCommands         : download_web <url> <Remote file path>' \
               '\nDescription      : Allows you to download a file from a url supplied\n'

