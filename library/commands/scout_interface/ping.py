@@ -12,6 +12,8 @@ def main(scout_id):
                     print '[*]Pinging scout of ID : ' + i
                     config.scout_database[i][0].sendall('ping')
                     data = config.scout_database[i][0].recv(999999)
+                    if not data:
+                        raise socket.error
                     print data
                 except socket.error:
                     print '[-]Scout is dead, removing from database...'
