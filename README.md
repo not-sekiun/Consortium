@@ -107,12 +107,12 @@ detail about a specific command, run ```help <name of command>``` to get more in
 
 # FAQ
 
-## Why cant the compiled scout I generated in Linux run on Windows? (Or vice versa)
+### Why cant the compiled scout I generated in Linux run on Windows? (Or vice versa)
 PyIris utilizes Pyinstaller to compile its payloads. It is therefore not possible to cross-compile binaries. That means if you 
 generate and compile a scout in Linux the binary only runs in Linux, it works the same for Windows. If you want to cross-compile 
 Windows scouts for Linux I suggest you use wine and run PyIris from there.
 
-## PyHook isnt installing on my Windows OS!
+### PyHook isnt installing on my Windows OS!
 I have already included a PyHook wheel file in the setup/windows folder however that wheel works only for 64 bit versions of Windows.
 You may have to manually install PyHook yourself. Go to [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and search for the 
 PyHook wheel file that works for your Windows version and download it. Next, pip install using the name of that wheel file.
