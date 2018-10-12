@@ -51,4 +51,5 @@ def main():
     logics = []
     global_vars = []
     help_menu = {}
+    generator_prompt = 'PyIris (Generator@Windows) > '
     globals().update(locals())

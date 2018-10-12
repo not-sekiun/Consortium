@@ -22,7 +22,7 @@ def main():
     while True:
         try:
             generator_append.main()
-            prompt = raw_input('PyIris (Generator) > ').strip()
+            prompt = raw_input(config.generator_prompt).strip()
             command = prompt.split(' ',1)[0].lower()
             if command == 'back':
                 print '[*]Returning...'

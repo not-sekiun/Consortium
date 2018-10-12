@@ -28,5 +28,9 @@ def main(command):
             print '[+]Reset all options'
         else:
             print '[-]Please specify a valid option to reset'
+        if config.scout_values['Windows'][0] == 'True':
+            config.generator_prompt = 'PyIris (Generator@Windows) > '
+        else:
+            config.generator_prompt = 'PyIris (Generator@Linux) > '
     except IndexError:
         print '[-]Please specify a valid option to reset'
