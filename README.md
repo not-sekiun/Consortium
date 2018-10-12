@@ -119,11 +119,11 @@ Windows scouts for Linux I suggest you use wine and run PyIris from there.
 <summary>PyHook isnt installing on my Windows OS!</summary>
 <br>
 I have already included a PyHook wheel file in the setup/windows folder however that wheel works only for 64 bit versions of Windows.
-You may have to manually install PyHook yourself. Go to [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and search for the PyHook wheel file that works for your Windows
-version and download it. Next, pip install using the name of that wheel file
-  
- ```pip install <name of pyhook wheel file```
- 
+You may have to manually install PyHook yourself. Go to [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and search for the 
+PyHook wheel file that works for your Windows version and download it. Next, pip install using the name of that wheel file.
+
+```pip install <name of pyhook wheel file```
+
 If you downloaded the correct pyhook wheel file it should install succesfully.
 <br><br>
 </details>
