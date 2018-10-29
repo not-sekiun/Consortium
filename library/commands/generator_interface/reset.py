@@ -1,4 +1,5 @@
 import library.modules.config as config
+import os
 
 config.main()
 
@@ -10,8 +11,10 @@ def main(command):
                                'Timeout': ['5', 'The timeout value for the scout'],
                                'Windows': ['True',
                                            'When "True", will generate a windows scout, else a linux scout'],
-                               'Path': [config.started_at + '\payload.py', 'Path to generate payload to'],
-                               'Compile': ['False', 'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
+                               'Path': [os.path.join(config.started_at, 'generated', 'payload.py'),
+                                        'Path to generate payload to'],
+                               'Compile': ['False',
+                                           'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
         option = command.split(' ', 1)[1]
         if option in local_static_values:
             config.scout_values[option] = local_static_values[option]
@@ -22,9 +25,10 @@ def main(command):
                                    'Timeout': ['5', 'The timeout value for the scout'],
                                    'Windows': ['True',
                                                'When "True", will generate a windows scout, else a linux scout'],
-                                   'Path': [config.started_at + '\payload.py', 'Path to generate payload to'],
-                                   'Compile': ['False',
-                                               'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
+                                   'Path': [os.path.join(config.started_at, 'generated', 'payload.py'),
+                                            'Path to generate payload to'],
+                                  'Compile': ['False',
+                                              'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
             print '[+]Reset all options'
         else:
             print '[-]Please specify a valid option to reset'

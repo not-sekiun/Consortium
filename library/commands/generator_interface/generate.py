@@ -18,7 +18,6 @@ print '[+]Loaded all linux components into generator - OK'
 
 
 def main():
-
     comp_list = sorted([i for i in config.loaded_components.values() if not i.endswith('/base')])
     for i in config.loaded_components.values():
         if i.endswith('/base'):
@@ -54,7 +53,8 @@ def main():
     if config.scout_values['Compile'][0] == 'True':
         print '[*]Compiling scout...'
         compiler.main(config.scout_values['Path'][0])
-    print '[+]Successfully generated scout python file to : ' + os.path.join(os.getcwd(), config.scout_values['Path'][0])
+    print '[+]Successfully generated scout python file to : ' + os.path.join(os.getcwd(),
+                                                                             config.scout_values['Path'][0])
     config.functions = []
     config.import_statements = []
     config.global_vars = []

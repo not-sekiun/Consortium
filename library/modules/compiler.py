@@ -1,8 +1,10 @@
-import shutil
 import os
+import ntpath
+import shutil
 
 
 def main(path):
+    filename = ntpath.basename(path)[:-2] + 'exe'
     print '[*]Initiating compilation of scout : ' + path
     tags = []
     while True:
@@ -23,16 +25,14 @@ def main(path):
             break
         else:
             continue
-    continue_on = raw_input(
-        '[!]Reminder : compiling a scout deletes any other compiled scouts already in the "compiled" directory [Enter to continue]')
     command = 'pyinstaller ' + ' '.join(tags) + ' ' + path
     print '[*]Removing residue folders...'
     if os.path.isdir(os.path.join(os.getcwd(), 'build')):
         shutil.rmtree('build')
     if os.path.isdir(os.path.join(os.getcwd(), 'dist')):
         shutil.rmtree('dist')
-    if os.path.isdir(os.path.join(os.getcwd(), 'compiled')):
-        shutil.rmtree('compiled')
+    if not os.path.isdir(os.path.join(os.getcwd(), 'generated')):
+        os.makedirs(os.path.join(os.getcwd(), 'generated'))
     for i in os.listdir(os.getcwd()):
         if i.endswith('.spec'):
             os.remove(i)
@@ -44,11 +44,12 @@ def main(path):
         print '[-]Error, could not successfully compile scout (Is "pyinstaller" installed and visible in your PATH?)'
         return
     if os.path.isdir(os.path.join(os.getcwd(), 'dist')):
-        os.rename(os.path.join(os.getcwd(), 'dist'), 'compiled')
+        shutil.copy(os.path.join(os.getcwd(), 'dist', filename), os.path.join(os.getcwd(), 'generated', filename))
+        shutil.rmtree('dist')
     else:
         print '[-]Error, could not successfully compile scout (Is "pyinstaller" installed and visible in your PATH?)'
         return
     for i in os.listdir(os.getcwd()):
         if i.endswith('.spec'):
             os.remove(i)
-    print '[+]Successfully compiled scout to : ' + os.path.join(os.getcwd(), 'compiled')
+    print '[+]Successfully compiled scout to : ' + os.path.join(os.getcwd(), 'generated', filename)

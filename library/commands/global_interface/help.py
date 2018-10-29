@@ -350,7 +350,6 @@ def generator(command):
 def main(interface, command):
     command = command.split(' ')
     filter(lambda a: a != '', command)
-    print command
     if interface == 'home':
         try:
             home(command[1])
