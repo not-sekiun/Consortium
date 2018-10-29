@@ -161,6 +161,6 @@ Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
 Licensed under Mozilla Public License Version 2.0 - See the "LICENESE.md" file for more details
 
 # Disclaimer!
-I am not held reponsible for anything illegal that you do with this framework, this framework was developed for ethical hackers, 
-pentesters and for research purposes. Please do not use this without the full consent of the victim. Use this framework to break stuff 
-but legally please :)
+I am not held reponsible for anything illegal or unethical that you do with this framework, this framework was developed for ethical 
+hackers, pentesters and for research purposes as a cyber security project. Please do NOT use this without the full consent of the 
+victim. Use this framework to break stuff but legally please :).
