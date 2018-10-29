@@ -1,10 +1,17 @@
+# WHOO Update 0.7.0 not like anyone will ever see this...
+- Added keystroke injection, you can now force your victim to type things by generating keyboard events in linux and windows
+- Changed up the generation of scouts by a bit
+- Added windows only interface locking, you can now selectively disable or enable your targets keyboard or mouse
+- Removed some left behind debug statements
+
+
 # Update 0.6.9
 - Ported most of the windows components to linux some werent ported due to the fact that linux bash shell is much more versatile than windows cmd, eg. you can get user idle time from the terminal alone
 - Fixed a small issue with pinging scouts and detecting dead scouts
 
 # Update 0.6.8
 - Added remote python interpreter code execution component
-- You can now reference a component by id, instead of loading through "load windows/component" you can laod it as "load 1"
+- You can now reference a component by id, instead of loading through "load windows/component" you can load it as "load 1"
 - Refactored some code in the show load and unload part for generator
 - Removed case sensitivity for commands
 
