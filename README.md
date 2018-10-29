@@ -147,7 +147,8 @@ Lastly is the fact that the terminal is much more powerful than cmd, therefore a
 than from cmd so there is no need to add extra components, your trusty linux/execute_command_bash will do the job for you
 
 # Built with
-[PyCharm IDE](https://www.jetbrains.com/pycharm/)
+- [PyCharm IDE](https://www.jetbrains.com/pycharm/)
+- My brain
 
 # Want to report a bug?
 Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
@@ -156,6 +157,7 @@ Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
 - Inspired by [Powershell Empire](https://github.com/EmpireProject/Empire) and [Brain Damage](https://github.com/mehulj94/BrainDamage)
 - Thanks to ev-ev for helping me in the earliest stages of the project and in helping me to create PyIris
 - Thanks to Dharshan2004 for helping build a part of the in-memory webcam module and test PyIris on Debian
+- Thanks to my brain for formulating this whole project
 
 # License
 Licensed under Mozilla Public License Version 2.0 - See the "LICENESE.md" file for more details
