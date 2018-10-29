@@ -27,6 +27,8 @@ disk.
 - Dump saved chrome passwords
 - Take pictures from webcam without writing to disk
 - Compile payloads into Windows EXE
+- Inject keystrokes
+- Disbale/ Enable the targets keyboard/mouse
 
 # Features (Linux)
 - Dynamic generation of scouts
@@ -44,6 +46,7 @@ disk.
 - See all currently open windows on the target
 - Take pictures from webcam without writing to disk
 - Compile payloads into Linux ELF
+- Inject keystrokes
 
 # Getting Started
 ## Prerequisites
