@@ -13,29 +13,29 @@ import library.commands.generator_interface.unload as unload
 import library.commands.generator_interface.generate as generate
 import library.commands.generator_interface.more as more
 
-
 import library.modules.config as config
 
 config.main()
+
 
 def main():
     while True:
         try:
             generator_append.main()
             prompt = raw_input(config.generator_prompt).strip()
-            command = prompt.split(' ',1)[0].lower()
+            command = prompt.split(' ', 1)[0].lower()
             if command == 'back':
-                print '[*]Returning...'
+                print config.inf + 'Returning...'
                 return
             elif command == 'clear':
                 clear.main()
             elif command == 'generate':
                 generate.main()
-            elif command in ('?','help'):
-                help.main('generator',prompt)
+            elif command in ('?', 'help'):
+                help.main('generator', prompt)
             elif command == 'load':
                 load.main(prompt)
-            elif command in ('!' ,'local'):
+            elif command in ('!', 'local'):
                 local.main(prompt)
             elif command == 'more':
                 more.main(prompt)
@@ -54,7 +54,7 @@ def main():
             elif not command:
                 pass
             else:
-                print '[-]Invalid command, run "help" for help menu'
+                print config.neg + 'Invalid command, run "help" for help menu'
         except EOFError:
             try:
                 time.sleep(2)

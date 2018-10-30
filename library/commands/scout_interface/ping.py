@@ -9,22 +9,22 @@ def main(scout_id):
         if scout_id == 'all':
             for i in config.scout_database.keys():
                 try:
-                    print '[*]Pinging scout of ID : ' + i
+                    print config.inf + 'Pinging scout of ID : ' + i
                     config.scout_database[i][0].sendall('ping')
                     data = config.scout_database[i][0].recv(999999)
                     if not data:
                         raise socket.error
                     print data
                 except socket.error:
-                    print '[-]Scout is dead, removing from database...'
+                    print config.neg + 'Scout is dead, removing from database...'
                     del (config.scout_database[i])
         else:
             config.scout_database[scout_id][0].sendall('ping')
             data = config.scout_database[scout_id][0].recv(999999)
             print data
     except (IndexError, KeyError):
-        print '[-]Please enter a valid scout ID'
+        print config.neg + 'Please enter a valid scout ID'
         return
     except socket.error:
-        print '[-]Scout is dead, removing from database...'
+        print config.neg + 'Scout is dead, removing from database...'
         del(config.scout_database[scout_id])

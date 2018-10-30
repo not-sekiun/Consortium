@@ -1,3 +1,7 @@
+import library.modules.config as config
+
+config.main()
+
 home_help = '''
 Home Interface Help Menu
 ========================
@@ -149,7 +153,7 @@ def home(command):
     elif command == '!':
         print '\nAn alias for the command "local"\n'
     else:
-        print '[-]Please enter a valid command'
+        print config.neg + 'Please enter a valid command'
 
 
 def listener(command):
@@ -211,7 +215,7 @@ def listener(command):
     elif command == '!':
         print '\nAn alias for the command "local"\n'
     else:
-        print '[-]Please enter a valid command'
+        print config.neg + 'Please enter a valid command'
 
 
 def scout(command):
@@ -279,7 +283,7 @@ def scout(command):
     elif command == '!':
         print '\nAn alias for the command "local"\n'
     else:
-        print '[-]Please enter a valid command'
+        print config.neg + 'Please enter a valid command'
 
 
 def generator(command):
@@ -344,7 +348,7 @@ def generator(command):
     elif command == '!':
         print '\nAn alias for the command "local"\n'
     else:
-        print '[-]Please enter a valid command'
+        print config.neg + 'Please enter a valid command'
 
 
 def main(interface, command):

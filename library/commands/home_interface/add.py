@@ -9,12 +9,12 @@ def main(command):
         if list_type == 'wh':
             config.white_list.append(hostname)
             config.white_list = list(set(config.white_list))
-            print '[+]Added to whitelist'
+            print config.pos + 'Added to whitelist'
         elif list_type == 'bl':
             config.black_list.append(hostname)
             config.black_list = list(set(config.black_list))
-            print '[+]Added to blacklist'
+            print config.pos + 'Added to blacklist'
         else:
             raise IndexError
     except IndexError:
-        print '[-]Please specify a valid list and a hostname to add to the list'
+        print config.neg + 'Please specify a valid list and a hostname to add to the list'

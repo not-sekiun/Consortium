@@ -12,25 +12,29 @@ import library.commands.home_interface.reset as reset
 import library.interfaces.listener_interface as listener_interface
 import library.interfaces.scout_interface as scout_interface
 import library.interfaces.generator_interface as generator_interface
+import library.modules.config as config
+
+config.main()
+
 
 def main():
     while True:
         try:
-            prompt = raw_input('PyIris (Home) > ').strip()
-            command = prompt.split(' ',1)[0].lower()
+            prompt = raw_input('\x1b[1m\x1b[37mPyIris (Home) >  \x1b[0m').strip()
+            command = prompt.split(' ', 1)[0].lower()
             if command == 'add':
                 add.main(prompt)
             elif command == 'clear':
                 clear.main()
             elif command == 'generator':
-                print '[*]Switching...'
+                print config.inf + 'Switching...'
                 generator_interface.main()
-            elif command in ('?','help'):
-                help.main('home',prompt)
+            elif command in ('?', 'help'):
+                help.main('home', prompt)
             elif command == 'listeners':
-                print '[*]Switching...'
+                print config.inf + 'Switching...'
                 listener_interface.main()
-            elif command in ('!' ,'local'):
+            elif command in ('!', 'local'):
                 local.main(prompt)
             elif command == 'python':
                 python.main()
@@ -43,14 +47,14 @@ def main():
             elif command == 'rm':
                 rm.main(prompt)
             elif command == 'scouts':
-                print '[*]Switching...'
+                print config.inf + 'Switching...'
                 scout_interface.main()
             elif command == 'show':
                 show.main(prompt)
             elif not command:
                 pass
             else:
-                print '[-]Invalid command, run "help" for help menu'
+                print config.neg + 'Invalid command, run "help" for help menu'
         except EOFError:
             try:
                 time.sleep(2)

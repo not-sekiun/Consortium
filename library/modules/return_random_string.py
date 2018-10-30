@@ -1,5 +1,6 @@
 import random
 
+
 def main(length):
     sample_space = '1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
     chosen = []

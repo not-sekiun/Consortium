@@ -1,10 +1,13 @@
 import os
+import library.modules.config as config
+
+config.main()
 
 
 def main():
     try:
-        print '[*]Opening python interpreter on local system'
+        print config.inf + 'Opening python interpreter on local system'
         os.system('python')
     except KeyboardInterrupt:
         pass
-    print '[*]Exiting...'
+    print config.inf + 'Exiting...'

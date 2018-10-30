@@ -17,11 +17,12 @@ def main(host, port, name):
         config.listener_database[str(config.incremented_listener_id)] = [host, str(port), name,
                                                                          datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
         config.incremented_listener_id += 1
-        print '[+]Successfully started listener thread at : ' + host + ':' + str(port)
+        print config.pos + 'Successfully started listener thread at : ' + host + ':' + str(port)
         while True:
             try:
                 if should_listener_die.main(str(local_copy_of_id)):
-                    print '\n[+]Listener at : ' + host + ':' + str(port) + ' , received kill message, exiting...'
+                    print '\n' + config.pos + 'Listener at : ' + host + ':' + str(
+                        port) + ' , received kill message, exiting...'
                     return
                 else:
                     try:
@@ -41,7 +42,7 @@ def main(host, port, name):
                         await_key = conn.recv(9999999)
                         conn.settimeout(None)
                         if await_key == config.key:
-                            print '\n[+]Connection received from scout : ' + addr[0] + ':' + str(
+                            print '\n' + config.pos + 'Connection received from scout : ' + addr[0] + ':' + str(
                                 addr[1]) + ' -> ' + host + ':' + str(port)
                             config.scout_database[str(config.incremented_scout_id)] = [conn, addr[0], str(addr[1]),
                                                                                        host + ':' + str(port),
@@ -56,7 +57,7 @@ def main(host, port, name):
             except socket.error:
                 continue
     except Exception as e:
-        print '\n[!]Error in listener thread : ' + str(e) + ', killing thread...'
+        print '\n' + config.war + 'Error in listener thread : ' + str(e) + ', killing thread...'
         try:
             del (config.listener_database[str(local_copy_of_id)])
         except:

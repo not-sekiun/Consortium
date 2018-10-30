@@ -1,4 +1,3 @@
-import library.modules.key_from_val as key_from_val
 import library.modules.config as config
 
 config.main()
@@ -7,12 +6,12 @@ tmp_win = config.win_components.values()
 tmp_win.append('windows/base')
 for i in tmp_win:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
-print '[+]Loaded all windows components info - OK'
+print config.pos + 'Loaded all windows components info - OK'
 tmp_lin = config.lin_components.values()
 tmp_lin.append('linux/base')
 for i in tmp_lin:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
-print '[+]Loaded all linux components info - OK'
+print config.pos + 'Loaded all linux components info - OK'
 
 
 def main(command):
@@ -33,4 +32,4 @@ def main(command):
                 load_on = dict(config.lin_components.items() + config.loaded_components.items())[load_on]
                 exec (load_on.replace('/', '_') + '.main("info")')
     except (IndexError, KeyError):
-        print '[-]Please specify a valid component to show more info for'
+        print config.neg + 'Please specify a valid component to show more info for'

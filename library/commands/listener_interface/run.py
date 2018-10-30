@@ -15,4 +15,4 @@ def main():
         t.start()
         time.sleep(3)
     except (IndexError, ValueError):
-        print '[-]Please use valid values'
+        print config.neg + 'Please use valid values'

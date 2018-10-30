@@ -9,7 +9,7 @@ def main(command):
             keys.sort()
             for i in keys:
                 info = config.listener_database[i]
-                print '[*]Advanced Info for : ' + i
+                print config.inf + 'Advanced Info for : ' + i
                 print '\n   ID            : ' + i
                 print '   Interface     : ' + info[0]
                 print '   Port          : ' + info[1]
@@ -18,7 +18,7 @@ def main(command):
                 print '\n'
         else:
             info = config.listener_database[command.split(' ',1)[1]]
-            print '[*]Advanced Info : '
+            print config.inf + 'Advanced Info : '
             print '\n   ID            : ' + command.split(' ',1)[1]
             print '   Interface     : ' + info[0]
             print '   Port          : ' + str(info[1])
@@ -26,4 +26,4 @@ def main(command):
             print '   Started on    : ' + info[3]
             print '\n'
     except (IndexError, KeyError):
-        print '[-]Please specify a valid listener ID to show more info for'
+        print config.neg + 'Please specify a valid listener ID to show more info for'

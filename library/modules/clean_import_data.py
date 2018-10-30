@@ -2,7 +2,7 @@ def main(list_item):
     tmp_dict = {}
     total_imps = []
     for i in list_item:
-        filtered_import = i.replace(',','')
+        filtered_import = i.replace(',', '')
         split_import = filtered_import.split(' ')
         if len(split_import) >= 4:
             if split_import[1] in tmp_dict:

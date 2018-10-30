@@ -12,14 +12,19 @@ import library.commands.scout_interface.sleep as sleep
 import library.commands.scout_interface.ping as ping
 import library.commands.scout_interface.disconnect as disconnect
 import library.interfaces.direct_interface as direct_interface
+import library.modules.config as config
+
+config.main()
+
 
 def main():
     while True:
         try:
-            prompt = raw_input('PyIris (Scouts) > ').strip()
-            command = prompt.split(' ',1)[0].lower()
+            prompt = raw_input(
+                '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[94m\033[91mScouts\033[1m\033[0m\x1b[1m\x1b[37m) > \x1b[0m').strip()
+            command = prompt.split(' ', 1)[0].lower()
             if command == 'back':
-                print '[*]Returning...'
+                print config.inf + 'Returning...'
                 return
             elif command == 'bridge':
                 stat = direct_interface.main(prompt)
@@ -29,11 +34,11 @@ def main():
                 clear.main()
             elif command == 'disconnect':
                 disconnect.main(prompt)
-            elif command in ('?','help'):
-                help.main('scout',prompt)
+            elif command in ('?', 'help'):
+                help.main('scout', prompt)
             elif command == 'kill':
                 kill.main(prompt)
-            elif command in ('!','local'):
+            elif command in ('!', 'local'):
                 local.main(prompt)
             elif command == 'rename':
                 rename.main(prompt)
@@ -52,7 +57,7 @@ def main():
             elif not command:
                 pass
             else:
-                print '[-]Invalid command, run "help" for help menu'
+                print config.neg + 'Invalid command, run "help" for help menu'
         except EOFError:
             try:
                 time.sleep(2)

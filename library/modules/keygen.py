@@ -8,25 +8,25 @@ def main(condition):
     if condition == 'system_initiated':
         dir = os.listdir(os.getcwd())
         if 'PyIris.cred' in dir:
-            print '[+]PyIris.cred key file located - OK'
+            print config.pos + 'PyIris.cred key file located - OK'
             pass
         else:
-            print '[-]PyIris.cred key file not found/generated - ERROR, AUTO-GENERATING KEY'
-            prompt = raw_input('[>]Listener key [Enter to generate a random 50 length key] : ')
+            print config.neg + 'PyIris.cred key file not found/generated - ERROR, AUTO-GENERATING KEY'
+            prompt = raw_input(config.pro + 'Listener key [Enter to generate a random 50 length key] : ')
             if not prompt:
                 prompt = return_random_string.main(50)
             f = open('PyIris.cred','w')
             f.write(prompt)
             f.close()
-            print '[+]Generated PyIris.cred key file with key as : ' + prompt
+            print config.pos + 'Generated PyIris.cred key file with key as : ' + prompt
     elif condition == 'user_initiated':
-        continue_on = raw_input('[!]This will overwrite existing key, continue? [y|n] : ')
+        continue_on = raw_input(config.war + 'This will overwrite existing key, continue? [y|n] : ')
         if continue_on == 'y':
-            prompt = raw_input('[>]Listener key [Enter to generate a random 50 length key] : ')
+            prompt = raw_input(config.pro + 'Listener key [Enter to generate a random 50 length key] : ')
             if not prompt:
                 prompt = return_random_string.main(50)
             f = open('PyIris.cred', 'w')
             f.write(prompt)
             f.close()
-            print '[+]Generated PyIris.cred key file with key as : ' + prompt
+            print config.pos + 'Generated PyIris.cred key file with key as : ' + prompt
             config.key = prompt

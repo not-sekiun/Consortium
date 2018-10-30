@@ -9,7 +9,7 @@ def main(command):
             keys.sort()
             for i in keys:
                 info = config.scout_database[i]
-                print '[*]Advanced Info for : ' + i
+                print config.inf + 'Advanced Info for : ' + i
                 print '\n   Connection Object : ' + str(info[0])
                 print '   Remote Scout Host : ' + info[1]
                 print '   Remote Scout Port : ' + info[2]
@@ -19,7 +19,7 @@ def main(command):
                 print '\n'
         else:
             info = config.scout_database[command.split(' ',1)[1]]
-            print '[*]Advanced Info for : ' + command.split(' ',1)[1]
+            print config.inf + 'Advanced Info for : ' + command.split(' ',1)[1]
             print '\n   Socket Object     : ' + str(info[0])
             print '   Remote Scout Host : ' + info[1]
             print '   Remote Scout Port : ' + info[2]
@@ -28,4 +28,4 @@ def main(command):
             print '   Connected at      : ' + info[5]
             print '\n'
     except (IndexError, KeyError):
-        print '[-]Please specify a valid listener ID to show more info for'
+        print config.neg + 'Please specify a valid listener ID to show more info for'

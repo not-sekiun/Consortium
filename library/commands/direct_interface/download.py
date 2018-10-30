@@ -1,21 +1,23 @@
 import library.modules.recv_all as recv_all
 import pickle
 from ntpath import basename
+import library.modules.config as config
 
+config.main()
 
 def main(sock):
     try:
-        print '[*]Receiving data...'
+        print config.inf + 'Receiving data...'
         pickle_data = recv_all.main(sock)
         data = pickle.loads(pickle_data)
-        print '[+]Done, writing file...'
+        print config.pos + 'Done, writing file...'
         name = basename(data[0])
         contents = data[1]
         f = open(name, 'wb')
         f.write(contents)
         f.close()
-        print '[+]Downloaded file : ' + name
+        print config.pos + 'Downloaded file : ' + name
     except (TypeError, KeyError):
         print pickle_data
     except Exception as e:
-        print '[-]Error while downloading file : ' + str(e)
+        print config.neg + 'Error while downloading file : ' + str(e)

@@ -11,6 +11,6 @@ def main(scout_id):
         print data
         return True
     except socket.error:
-        print '[-]Scout is dead, removing from database...'
+        print config.neg + 'Scout is dead, removing from database...'
         del (config.scout_database[scout_id])
         return False

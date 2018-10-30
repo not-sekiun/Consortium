@@ -11,22 +11,27 @@ import library.commands.listener_interface.kill as kill
 import library.commands.listener_interface.more as more
 import library.commands.listener_interface.reset as reset
 import library.commands.listener_interface.rename as rename
+import library.modules.config as config
+
+config.main()
+
 
 def main():
     while True:
         try:
-            prompt = raw_input('PyIris (Listeners) > ').strip()
-            command = prompt.split(' ',1)[0].lower()
+            prompt = raw_input(
+                '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[94mListeners\033[1m\033[0m\x1b[1m\x1b[37m) > \x1b[0m').strip()
+            command = prompt.split(' ', 1)[0].lower()
             if command == 'back':
-                print '[*]Returning...'
+                print config.inf + 'Returning...'
                 return
             elif command == 'clear':
                 clear.main()
-            elif command in ('?','help'):
-                help.main('listener',prompt)
+            elif command in ('?', 'help'):
+                help.main('listener', prompt)
             elif command == 'kill':
                 kill.main(prompt)
-            elif command in ('!','local'):
+            elif command in ('!', 'local'):
                 local.main(prompt)
             elif command == 'more':
                 more.main(prompt)
@@ -47,7 +52,7 @@ def main():
             elif not command:
                 pass
             else:
-                print '[-]Invalid command, run "help" for help menu'
+                print config.neg + 'Invalid command, run "help" for help menu'
         except EOFError:
             try:
                 time.sleep(2)

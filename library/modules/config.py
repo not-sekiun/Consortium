@@ -1,6 +1,7 @@
 import os
 import collections
 import library.modules.get_all_modules as get_all_modules
+import library.modules.get_private_ip as get_private_ip
 
 
 def main():
@@ -11,10 +12,11 @@ def main():
         f.close()
     except:
         pass
+    private_ip = get_private_ip.main()
     listener_values = {'Interface': ['0.0.0.0', 'The local interface to start a listener'],
                        'Port': ['9999', 'The local port to start a listener'],
                        'Name': ['Listener', 'Name of the listener'], }
-    scout_values = {'Host': ['127.0.0.1', 'The local hostname to connect back to'],
+    scout_values = {'Host': [private_ip, 'The local hostname to connect back to'],
                     'Port': ['9999', 'The local port to connect back on'],
                     'Timeout': ['5', 'The timeout value for the scout'],
                     'Windows': ['True', 'When "True", will generate a windows scout, else a linux scout'],
@@ -51,5 +53,13 @@ def main():
     logics = []
     global_vars = []
     help_menu = {}
-    generator_prompt = 'PyIris (Generator@Windows) > '
+    if os.name == 'nt':
+        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92mGenerator\033[92m\x1b[1m\x1b[37m\x1b[1m\x1b[37m@\x1b[0m\033[92mWindows\033[92m\x1b[1m\x1b[37m) > \x1b[0m'
+    else:
+        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92mGenerator\033[92m\x1b[1m\x1b[37m\x1b[1m\x1b[37m@\x1b[0m\033[92mLinux\033[92m\x1b[1m\x1b[37m) > \x1b[0m'
+    neg = '\033[91m[-]\033[1m\033[0m'
+    pos = '\033[92m[+]\033[1m\033[0m'
+    war = '\033[93m[!]\033[1m\033[0m'
+    inf = '\033[94m[*]\033[1m\033[0m'
+    pro = '\033[95m[>]\033[1m\033[0m'
     globals().update(locals())

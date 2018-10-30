@@ -1,21 +1,25 @@
 import os
 import subprocess
 import time
+import library.modules.config as config
+
+config.main()
+
 
 def main(prompt):
     try:
         try:
-            prompt = prompt.split(' ',1)[1]
+            prompt = prompt.split(' ', 1)[1]
         except IndexError:
-            print '[-]Please supply an argument as the command to execute locally'
+            print config.neg + 'Please supply an argument as the command to execute locally'
             return
-        print '\n[*]Executing locally...\n'
+        print '\n' + config.inf + 'Executing locally...\n'
         if prompt[:3] == 'cd ':
             try:
                 os.chdir(prompt[3:])
-                print '[+]Changed to directory : ' + prompt[3:] + '\n'
+                print config.pos + 'Changed to directory : ' + prompt[3:] + '\n'
             except (WindowsError, OSError):
-                print '[-]Could not change to directory : ' + prompt[3:] + '\n'
+                print config.neg + 'Could not change to directory : ' + prompt[3:] + '\n'
         else:
             result = subprocess.Popen(prompt, shell=True, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE,
@@ -26,6 +30,6 @@ def main(prompt):
         try:
             time.sleep(2)
         except KeyboardInterrupt:
-            print '[*]Cancelled local command execution'
+            print config.inf + 'Cancelled local command execution'
     except KeyboardInterrupt:
-        print '[*]Cancelled local command execution'
+        print config.inf + 'Cancelled local command execution'

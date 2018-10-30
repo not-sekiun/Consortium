@@ -9,13 +9,13 @@ def main(scout_id):
         if scout_id == 'all':
             for i in config.scout_database.keys():
                 try:
-                    print '[*]Disconnecting scout of ID : ' + i
+                    print config.inf + 'Disconnecting scout of ID : ' + i
                     config.scout_database[i][0].sendall('disconnect')
                     data = config.scout_database[i][0].recv(999999)
                     print data
                     del (config.scout_database[i])
                 except socket.error:
-                    print '[-]Scout is dead, removing from database...'
+                    print config.neg + 'Scout is dead, removing from database...'
                     del (config.scout_database[i])
         else:
             config.scout_database[scout_id][0].sendall('disconnect')
@@ -23,8 +23,8 @@ def main(scout_id):
             print data
             del (config.scout_database[scout_id])
     except (IndexError, KeyError):
-        print '[-]Please enter a valid scout ID'
+        print config.neg + 'Please enter a valid scout ID'
         return
     except socket.error:
-        print '[-]Scout is dead, removing from database...'
+        print config.neg + 'Scout is dead, removing from database...'
         del(config.scout_database[scout_id])

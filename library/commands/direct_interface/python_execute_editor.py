@@ -2,7 +2,7 @@ import time
 
 
 def main():
-    print '[!]You are currently in the python executor scripter, script a chain of python instructions to run, enter for a newline, CTRL-C to finish ' \
+    print config.war + 'You are currently in the python executor scripter, script a chain of python instructions to run, enter for a newline, CTRL-C to finish ' \
           '\n(only works if python execute component is loaded)'
     try:
         command = ''
@@ -13,8 +13,8 @@ def main():
         try:
             time.sleep(2)
         except KeyboardInterrupt:
-            print '\n[+]Done'
+            print '\n' + config.pos + 'Done'
             return command
     except KeyboardInterrupt:
-        print '\n[+]Done'
+        print '\n' + config.pos + 'Done'
         return command

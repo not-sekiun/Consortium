@@ -19,6 +19,6 @@ def main(command):
             print('\n'.join('     '.join(item[i].ljust(l[i]) for i in range(len(l)))
                             for item in header)) + '\n'
         else:
-            print '[-]Please specify a valid argument, ["scouts"]'
+            print config.neg + 'Please specify a valid argument, ["scouts"]'
     except IndexError:
-        print '[-]Please specify what to show, ["scouts"]'
+        print config.neg + 'Please specify what to show, ["scouts"]'

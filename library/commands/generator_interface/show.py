@@ -17,23 +17,23 @@ def main(command):
                             for item in header)) + '\n'
         elif to_show == 'components':
             if config.scout_values['Windows'][0] == 'True':
-                print '\n[*]Generator is set to generate Windows scout'
-                print '[*]All loadable Windows components :'
+                print '\n' + config.inf + 'Generator is set to generate Windows scout'
+                print config.inf + 'All loadable Windows components :'
                 for i in config.win_components:
                     print '   [' + i + '] ' + config.win_components[i]
                 print '   [-] windows/base\n'
             else:
-                print '\n[*]Generator is set to generate Linux scout'
-                print '[*]All loadable Linux components :'
+                print '\n' + config.inf + 'Generator is set to generate Linux scout'
+                print config.inf + 'All loadable Linux components :'
                 for i in config.lin_components:
                     print '   [' + i + '] ' + config.lin_components[i]
                 print '   [-] linux/base\n'
         elif to_show == 'loaded':
             if config.scout_values['Windows'][0] == 'True':
-                print '\n[*]Generator is set to generate Windows specific scout'
+                print '\n' + config.inf + 'Generator is set to generate Windows specific scout'
             else:
-                print '[*]Generator is set to generate Linux specific scout'
-            print '[*]Loaded library : '
+                print config.inf + 'Generator is set to generate Linux specific scout'
+            print config.inf + 'Loaded library : '
             for i in config.loaded_components.values():
                 if i.endswith('/base'):
                     print '   [-] ' + i
@@ -41,6 +41,6 @@ def main(command):
                     print '   [' + str(key_from_val.main(config.loaded_components, i)) + '] ' + i
             print ''
         else:
-            print '[-]Please specify a valid argument, ["options"|"components"|"loaded"]'
+            print config.neg + 'Please specify a valid argument, ["options"|"components"|"loaded"]'
     except IndexError:
-        print '[-]Please specify what to show, ["options"|"components"|"loaded"]'
+        print config.neg + 'Please specify what to show, ["options"|"components"|"loaded"]'
