@@ -1,4 +1,4 @@
-#Version 0.7.0
+# Version 0.7.1
 import library.modules.bootstrap as bootstrap
 import time
 
@@ -8,6 +8,7 @@ if __name__ == '__main__':
         if start:
             import library.interfaces.home_interface as home_interface
             import library.commands.global_interface.clear as clear
+
             clear.main()
             home_interface.main()
     except EOFError:
@@ -19,5 +20,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print '[!]User aborted bootstrap, requesting shutdown...'
         quit()
-    #except Exception as e:
-    #    print '[!]Error : ' + str(e)
+    except Exception as e:
+        print '[!]Error : ' + str(e)
