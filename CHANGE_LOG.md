@@ -1,3 +1,9 @@
+# Update 0.7.1 (wow this came pretty quickly)
+- Added colored output, now all text will have color with the exception of scout sent data
+- Prompts also have color
+- Added global error handling to catch fatal program errors
+
+
 # WHOO Update 0.7.0 not like anyone will ever see this...
 - Added keystroke injection, you can now force your victim to type things by generating keyboard events in linux and windows
 - Changed up the generation of scouts by a bit
@@ -33,7 +39,8 @@
 
 # Update 0.6.4
 - Rewrote persistence module
-- Added remote code execution, file execution, file upload, file download and file download from web capabailities to scout as components
+- Added remote code execution, file execution, file upload, file download and file download from web capabailities to scout as 
+components
 - Refactored more code
 - Addded error handling for socket timeout in direct handler
 - Generalized error handling in scouts to reduce file space
@@ -42,7 +49,8 @@
 - Changed up the payload generator
 - Fixed a few bugs in the generate function and load function
 - Added a registry persistence module
-- Curently added a "test" remote command execution module, will be adding new modules soon and completing the remote command execution module
+- Curently added a "test" remote command execution module, will be adding new modules soon and completing the remote command execution 
+module
 
 # Update 0.6.2
 - Refactored code
