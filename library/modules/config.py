@@ -54,12 +54,13 @@ def main():
     global_vars = []
     help_menu = {}
     if os.name == 'nt':
-        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92mGenerator\033[92m\x1b[1m\x1b[37m\x1b[1m\x1b[37m@\x1b[0m\033[92mWindows\033[92m\x1b[1m\x1b[37m) > \x1b[0m'
+        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' + '\x1b[1m\x1b[32mGenerator\x1b[0m' + '\x1b[1m\x1b[37m@\x1b[0m\033[92m' + '\x1b[1m\x1b[32mWindows\x1b[0m' + '\x1b[1m\x1b[37m) > \x1b[0m'
     else:
-        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92mGenerator\033[92m\x1b[1m\x1b[37m\x1b[1m\x1b[37m@\x1b[0m\033[92mLinux\033[92m\x1b[1m\x1b[37m) > \x1b[0m'
-    neg = '\033[91m[-]\033[1m\033[0m'
-    pos = '\033[92m[+]\033[1m\033[0m'
-    war = '\033[93m[!]\033[1m\033[0m'
-    inf = '\033[94m[*]\033[1m\033[0m'
-    pro = '\033[95m[>]\033[1m\033[0m'
+        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' + '\x1b[1m\x1b[32mGenerator\x1b[0m' + '\x1b[1m\x1b[37m@\x1b[0m\033[92m' + '\x1b[1m\x1b[32mLinux\x1b[0m' + '\x1b[1m\x1b[37m) > \x1b[0m'
+    neg = '\x1b[1m\x1b[31m[-]\x1b[0m'
+    pos = '\x1b[1m\x1b[32m[+]\x1b[0m'
+    war = '\x1b[1m\x1b[33m[!]\x1b[0m'
+    inf = '\x1b[1m\x1b[34m[*]\x1b[0m'
+    pro = '\x1b[1m\x1b[35m[>]\x1b[0m'
+    lod = '\x1b[1m\x1b[34m[...]\x1b[0m'
     globals().update(locals())

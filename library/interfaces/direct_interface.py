@@ -52,7 +52,7 @@ def main(scout_id):
     while True:
         try:
             prompt = raw_input(
-                '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[1m\033[0m\033[91mScout\033[1m\033[0m\x1b[1m\x1b[37m@\x1b[0m\033[1m\033[0m\033[91m' + scout_prompt + '\033[1m\033[0m\x1b[1m\x1b[37m) > \x1b[0m').strip()
+                '\x1b[1m\x1b[37mPyIris (\x1b[0m\x1b[1m\x1b[31m' + 'Scout\x1b[0m' + '\x1b[1m\x1b[37m@\x1b[0m\x1b[1m\x1b[31m' + scout_prompt + '\x1b[0m\x1b[1m\x1b[37m) > \x1b[0m').strip()
             command = prompt.split(' ', 1)[0].lower()
             if command == 'back':
                 print config.inf + 'Returning to scout interface...'
