@@ -20,7 +20,7 @@ config.main()
 def main():
     while True:
         try:
-            prompt = raw_input('\x1b[1m\x1b[37mPyIris (Home) >  \x1b[0m').strip()
+            prompt = raw_input('\x1b[1m\x1b[37mPyIris (Home) > \x1b[0m').strip()
             command = prompt.split(' ', 1)[0].lower()
             if command == 'add':
                 add.main(prompt)
