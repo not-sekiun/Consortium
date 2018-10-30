@@ -10,8 +10,10 @@ def main():
     try:
         import sys
         import time
-        import colorama
-        colorama.init()
+        import os
+        if os.name == 'nt':
+            import colorama
+            colorama.init()
         print (config.inf + 'Starting...')
         if sys.version_info[0] == 2:
             print config.pos + 'Python Version 2 - OK'
