@@ -39,7 +39,7 @@ def main():
             return False
         return True
     except ImportError as e:
-        print config.neg + 'Could not import : ' + str(e) + ' - Error, missing packages or packages not installed'
+        print '[-]Could not import : ' + str(e) + ' - Error, missing packages or packages not installed'
         return False
     except Exception as e:
         print config.war + 'Unexpected error when bootstrapping : ' + str(e)
