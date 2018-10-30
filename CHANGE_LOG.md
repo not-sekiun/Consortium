@@ -3,6 +3,7 @@
 - Prompts also have color
 - Added global error handling to catch fatal program errors
 - Added defaulting of Windows scouts for windows system and defaulting of Linux scouts for linux systems
+- By default Host option of scout generation is no longer 127.0.0.1 it is now your detected primary private IP
 
 
 # WHOO Update 0.7.0 not like anyone will ever see this...
