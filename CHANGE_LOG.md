@@ -2,6 +2,7 @@
 - Added colored output, now all text will have color with the exception of scout sent data
 - Prompts also have color
 - Added global error handling to catch fatal program errors
+- Added defaulting of Windows scouts for windows system and defaulting of Linux scouts for linux systems
 
 
 # WHOO Update 0.7.0 not like anyone will ever see this...
