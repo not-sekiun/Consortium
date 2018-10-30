@@ -5,6 +5,10 @@ features. This allows you to cut down on file size and only use essential featur
 scout. It also allows for highly customisable payloads that have low hard drive footprints as the scout never writes anything to the 
 disk.
 
+# Demos of PyIris in action on multiple operating systems (Windows and Linux)
+## Dynamically generating a payload in Windows
+![Windows Generator Demo](https://user-images.githubusercontent.com/32593795/47714521-0f8ec080-dc78-11e8-8004-490eaff4f4f2.png)
+
 # Features (Windows)
 - Dynamic generation of scouts
 - Windows registry persistence
