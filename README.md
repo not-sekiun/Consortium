@@ -101,7 +101,7 @@ this section is for running the Linux edition of PyIris.
 
 ```pip install -r setup/linux/requirements.txt```
 
-Upon running it the first time you should be greeted with the option to generate a key, this indicated everything has been installed
+Upon running it the first time you should be greeted with the option to generate a key, this indicates everything has been installed
 correctly.
 
 ## Updating PyIris
