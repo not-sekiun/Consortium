@@ -9,28 +9,28 @@ def main(option):
     if option == 'generate':
         config.import_statements.append('import sys')
         config.import_statements.append('from StringIO import StringIO')
-        print '[!]Manual intervention required for python_execute component'
+        print config.war + 'Manual intervention required for python_execute component'
         while True:
             try:
                 module_to_load = raw_input(
-                    '[>]Input name of other modules to package into python_execute [CTRL-C to quit] : ')
+                    config.inf + 'Input name of other modules to package into python_execute [CTRL-C to quit] : ')
                 if not module_to_load:
-                    print '[-]Input the name of a module'
+                    print config.err + 'Input the name of a module'
                     continue
                 try:
                     exec ('import ' + module_to_load)
-                    print '[+]Valid module, loaded on'
+                    print config.pos + 'Valid module, loaded on'
                     config.import_statements.append('import ' + module_to_load)
                 except ImportError:
-                    print '[-]Invalid module, not loaded on'
+                    print config.err + 'Invalid module, not loaded on'
             except EOFError:
                 try:
                     time.sleep(2)
                 except KeyboardInterrupt:
-                    print '\n[+]Done...'
+                    print '\n' + config.pos + 'Done...'
                     break
             except KeyboardInterrupt:
-                print '[+]Done...'
+                print config.pos + 'Done...'
                 break
         config.functions.append('''
 def exec_py(command):
