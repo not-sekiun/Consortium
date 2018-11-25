@@ -151,11 +151,11 @@ PyHook wheel file that works for your Windows version and download it. Next, pip
 If you downloaded the correct pyhook wheel file it should install succesfully.
 
 ### Why are there more linux components (backdoor functions) than windows components...
-Well this is due to several reasons. First, is the problem of open source code. Linux has many distrubutions each linux operating 
-system may be different or have different system structure than each other linux system. Creating components to cover all of them is 
-incredibly difficult. Second, is support, simply put some linux systems just dont support some functions out of the box for python. 
-Lastly is the fact that the terminal is much more powerful than cmd, therefore a lot more actions can be accomplished from the terminal 
-than from cmd so there is no need to add extra components, your trusty linux/execute_command_bash will do the job for you
+Well this is due to several reasons. First, is the problem of open source code and mulitple distros. Linux has many distrubutions each 
+linux distro may be different or have a different system structure than each other linux system. Creating components to cover all of 
+them is incredibly difficult. Secondly, is support, simply put some linux systems just dont support some functions out of the box for 
+python. Lastly is the fact that the terminal is much more powerful than cmd, therefore a lot more actions can be accomplished from the 
+terminal than from cmd so there is no need to add extra components, your trusty linux/execute_command_bash will do the job for you
 
 # Built with
 - [PyCharm IDE](https://www.jetbrains.com/pycharm/)
