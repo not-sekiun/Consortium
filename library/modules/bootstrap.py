@@ -40,6 +40,15 @@ def main():
             print (config.neg + 'Python Version 3 - Error, Run in Python 2')
             return False
         return True
+    except EOFError:
+        try:
+            time.sleep(2)
+        except KeyboardInterrupt:
+            print '\n' + config.war + 'User aborted bootstrap, requesting shutdown...'
+            quit()
+    except KeyboardInterrupt:
+        print '\n' + config.war + 'User aborted bootstrap, requesting shutdown...'
+        quit()
     except ImportError as e:
         print '[-]Could not import : ' + str(e) + ' - Error, missing packages or packages not installed'
         return False
