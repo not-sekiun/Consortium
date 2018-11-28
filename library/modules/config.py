@@ -10,7 +10,7 @@ def main():
         f = open('PyIris.cred')
         key = f.read()
         f.close()
-    except:
+    except IOError:
         pass
     private_ip = get_private_ip.main()
     listener_values = {'Interface': ['0.0.0.0', 'The local interface to start a listener'],
@@ -22,7 +22,8 @@ def main():
                     'Windows': ['True', 'When "True", will generate a windows scout, else a linux scout'],
                     'Path': [os.path.join(started_at, 'generated', 'payload.py'), 'Path to generate payload to'],
                     'Compile': ['False',
-                                'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
+                                'When "True", will compile scout to EXE (windows) or ELF (Linux), '
+                                'else it will not compile']}
     incremented_listener_id = 0
     incremented_scout_id = 0
     listener_database = {}
@@ -51,12 +52,21 @@ def main():
     import_statements = []
     functions = []
     logics = []
-    global_vars = []
+    global_objs = []
+    startup = []
     help_menu = {}
     if os.name == 'nt':
-        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' + '\x1b[1m\x1b[32mGenerator\x1b[0m' + '\x1b[1m\x1b[37m@\x1b[0m\033[92m' + '\x1b[1m\x1b[32mWindows\x1b[0m' + '\x1b[1m\x1b[37m) > \x1b[0m'
+        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' +\
+                           '\x1b[1m\x1b[32mGenerator\x1b[0m' + \
+                           '\x1b[1m\x1b[37m@\x1b[0m\033[92m' + \
+                           '\x1b[1m\x1b[32mWindows\x1b[0m' + \
+                           '\x1b[1m\x1b[37m) > \x1b[0m'
     else:
-        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' + '\x1b[1m\x1b[32mGenerator\x1b[0m' + '\x1b[1m\x1b[37m@\x1b[0m\033[92m' + '\x1b[1m\x1b[32mLinux\x1b[0m' + '\x1b[1m\x1b[37m) > \x1b[0m'
+        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' + \
+                           '\x1b[1m\x1b[32mGenerator\x1b[0m' + \
+                           '\x1b[1m\x1b[37m@\x1b[0m\033[92m' + \
+                           '\x1b[1m\x1b[32mLinux\x1b[0m' + \
+                           '\x1b[1m\x1b[37m) > \x1b[0m'
         scout_values['Windows'] = ['False', 'When "True", will generate a windows scout, else a linux scout']
     neg = '\x1b[1m\x1b[31m[-]\x1b[0m'
     pos = '\x1b[1m\x1b[32m[+]\x1b[0m'

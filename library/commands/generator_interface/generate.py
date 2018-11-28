@@ -31,7 +31,7 @@ def main():
     f.close()
     config.functions = list(set(config.functions))
     config.import_statements = list(set(config.import_statements))
-    config.global_vars = list(set(config.global_vars))
+    config.global_objs = list(set(config.global_objs))
     config.logics = list(set(config.logics))
     f = open(config.scout_values['Path'][0], 'w')
     print config.inf + 'Writing in imports...'
@@ -39,10 +39,13 @@ def main():
     print config.inf + 'Writing in help menu...'
     f.write('help_menu = ' + "'''" + dynamic_help_generator.main() + "'''" + '\n')
     print config.inf + 'Writing in global variables...'
-    for i in config.global_vars:
+    for i in config.global_objs:
         f.write(i + '\n')
-    print config.inf + 'Writing in functions...'
+    print config.inf + 'Writing in components...'
     for i in config.functions:
+        f.write(i + '\n')
+    print config.inf + 'Writing in startup components...'
+    for i in config.startup:
         f.write(i + '\n')
     print config.inf + 'Writing in base component...'
     for i in config.logics:
@@ -57,6 +60,7 @@ def main():
                                                                                        config.scout_values['Path'][0])
     config.functions = []
     config.import_statements = []
-    config.global_vars = []
+    config.global_objs = []
     config.logics = []
+    config.startup = []
     config.help_menu = {}
