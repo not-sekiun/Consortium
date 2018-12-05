@@ -8,7 +8,7 @@ def main(option):
     if option == 'generate':
         config.import_statements.append('import ctypes')
         config.import_statements.append('import sys')
-        config.startup.append('req_admin()')
+        config.startup.append('req_admin_startup()')
         config.functions.append('''
 def is_admin():
     try:
@@ -16,7 +16,7 @@ def is_admin():
     except:
         return False
 
-def req_admin():
+def req_admin_startup():
     if is_admin():
         return
     else:
