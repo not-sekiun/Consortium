@@ -15,7 +15,7 @@ def main(option):
                 module_to_load = raw_input(
                     config.inf + 'Input name of other library to package into python_execute [CTRL-C to quit] : ')
                 if not module_to_load:
-                    print config.err + 'Input the name of a module'
+                    print config.neg + 'Input the name of a module'
                     continue
                 try:
                     exec ('import ' + module_to_load)
