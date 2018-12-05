@@ -1,3 +1,33 @@
+# Yearly update (0.7.2)
+Its been about a year since PyIris has come out (WOW happy 1 year anniversary) so heres a quick consolidation of what I've done and 
+plan to do.
+
+## First up the changelog
+- murdered a few bugs 
+- replaced the names of the startup functions
+- fixed a path writing error in the persistence module
+- updated requirements file to use a new version of cv2 that solves a bug within the webcam module where webcam light would not turn off
+
+## Next up, the roadmap
+- Planning on adding encryption between communications? Details are very hazy. There may be more than 1 base component users can choose 
+to use should it happen!
+- Planning to add 1337 45cii b4n3r5 cause even metasploit has them. Just for fun and some eye candy its no hard so they'll come out 
+pretty quickly 
+- Of course I will continue to build on my database of components planning on adding some to help in pivoting through networks and 
+lateral movement
+- Writing a wiki is also on the agenda, unfortunately PyIris' "help" may not be enough.
+- Code obfuscation and encryption, to circumbent AV I need to create custom encoders for scouts that could be layered on top of each 
+other, eg XOR on top of base64 on top of AES encryption. This will be part of the genretor interface
+- Thinking of adding powershell/bash script support so scouts can execute uploaded bash/powershell scripts
+- Oh yeah also PyIris is still in Alpha I'm thinking of moving it to BETA bug testing and eventual OFFICIAL RELEASE (v1.0.0) after
+completing all the roadmap objectives here, that will take time though, Im still a student and have middle school stuff to deal with...
+
+## Conclusion
+I dont expect development of PyIris to be moved to beta until late June maybe??? I still have tons of cool ideas for this project that 
+may be put in during development. Dont expect a definite release date or anything. I doubt anyone will read this far but if so MERRY 
+CHRISTMAS and thank you for supporting the development of PyIris, seriously just cloning it or star-ing it gives me life.
+
+
 # Update 0.7.1 (wow this came pretty quickly)
 - Added colored output, now all text will have color with the exception of scout sent data
 - Prompts also have color
