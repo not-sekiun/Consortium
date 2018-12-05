@@ -109,6 +109,14 @@ Change into the PyIris-backdoor folder first, then run
 
 ```git pull```
 
+On windows to install any newly added third party modules or update then run
+
+```pip install -r setup/windows/requirements.txt```
+
+On linux to install any newly added third party modules or update then run
+
+```pip install -r setup/linux/requirements.txt```
+
 ## Recommended OS
 ### PyIris was succesfully installed on the following operating systems
 - Windows 10
