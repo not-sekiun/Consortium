@@ -165,6 +165,13 @@ them is incredibly difficult. Secondly, is support, simply put some linux system
 python. Lastly is the fact that the terminal is much more powerful than cmd, therefore a lot more actions can be accomplished from the 
 terminal than from cmd so there is no need to add extra components, your trusty linux/execute_command_bash will do the job for you
 
+### Why are you using a raw text protocol isn't something like HTTP less suspicious to network analyst
+Yes it is I should probably be using HTTP buuuuut I am just lazy. Perhaps in a future update but that requires rewriting a lot of the 
+listener-scout protocol which could take some time.
+
+### Hey I am a 1337 H4X0R and need to DDOS NSA and The Pentagon can you add a 1337 DDOS component
+No lol
+
 # Built with
 - [PyCharm IDE](https://www.jetbrains.com/pycharm/)
 - My brain
