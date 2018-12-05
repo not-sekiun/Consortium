@@ -109,6 +109,14 @@ Change into the PyIris-backdoor folder first, then run
 
 ```git pull```
 
+On windows to install any newly added third party modules or update then run
+
+```pip install -r setup/windows/requirements.txt```
+
+On linux to install any newly added third party modules or update then run
+
+```pip install -r setup/linux/requirements.txt```
+
 ## Recommended OS
 ### PyIris was succesfully installed on the following operating systems
 - Windows 10
@@ -156,6 +164,13 @@ linux distro may be different or have a different system structure than each oth
 them is incredibly difficult. Secondly, is support, simply put some linux systems just dont support some functions out of the box for 
 python. Lastly is the fact that the terminal is much more powerful than cmd, therefore a lot more actions can be accomplished from the 
 terminal than from cmd so there is no need to add extra components, your trusty linux/execute_command_bash will do the job for you
+
+### Why are you using a raw text protocol isn't something like HTTP less suspicious to network analyst
+Yes it is I should probably be using HTTP buuuuut I am just lazy. Perhaps in a future update but that requires rewriting a lot of the 
+listener-scout protocol which could take some time.
+
+### Hey I am a 1337 H4X0R and need to DDOS NSA and The Pentagon can you add a 1337 DDOS component
+No lol
 
 # Built with
 - [PyCharm IDE](https://www.jetbrains.com/pycharm/)
