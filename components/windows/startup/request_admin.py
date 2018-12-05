@@ -8,6 +8,7 @@ def main(option):
     if option == 'generate':
         config.import_statements.append('import ctypes')
         config.import_statements.append('import sys')
+        config.import_statements.append('import os')
         config.startup.append('req_admin_startup()')
         config.functions.append('''
 def is_admin():
@@ -21,7 +22,7 @@ def req_admin_startup():
         return
     else:
         ctypes.windll.shell32.ShellExecuteW(None, u"runas", unicode(sys.executable), unicode(__file__), None, 1)
-        exit()
+        os._exit(1)
 ''')
     elif option == 'info':
         print '\nName             : Request admin startup component' \

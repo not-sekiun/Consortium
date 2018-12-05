@@ -18,6 +18,8 @@ print config.pos + 'Loaded all linux components into generator - OK'
 
 
 def main():
+    original = os.getcwd()
+    os.chdir(config.started_at)
     comp_list = sorted([i for i in config.loaded_components.values() if not i.endswith('/base')])
     for i in config.loaded_components.values():
         if i.endswith('/base'):
@@ -67,3 +69,4 @@ def main():
     config.startup = []
     config.startup_end = []
     config.help_menu = {}
+    os.chdir(original)

