@@ -54,6 +54,7 @@ def main():
     logics = []
     global_objs = []
     startup = []
+    startup_end = []
     help_menu = {}
     if os.name == 'nt':
         generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' +\

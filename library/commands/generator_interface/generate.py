@@ -47,6 +47,8 @@ def main():
     print config.inf + 'Writing in startup components...'
     for i in config.startup:
         f.write(i + '\n')
+    for i in config.startup_end:
+        f.write(i + '\n')
     print config.inf + 'Writing in base component...'
     for i in config.logics:
         save_data = save_data.replace('#Statements#', '#Statements#' + i)
@@ -63,4 +65,5 @@ def main():
     config.global_objs = []
     config.logics = []
     config.startup = []
+    config.startup_end = []
     config.help_menu = {}

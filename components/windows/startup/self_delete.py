@@ -8,7 +8,7 @@ def main(option):
     if option == 'generate':
         config.import_statements.append('from os import path, remove')
         config.import_statements.append('from sys import argv')
-        config.startup.append('self_delete_startup()')
+        config.startup_end.append('self_delete_startup()')
         config.functions.append('''
 def self_delete_startup():
     remove(path.abspath(argv[0]))
