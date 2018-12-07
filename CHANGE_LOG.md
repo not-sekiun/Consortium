@@ -18,7 +18,7 @@ plan to do.
 ## Next up, the roadmap
 - Planning on adding encryption between communications? Details are very hazy. There may be more than 1 base component users can choose 
 to use should it happen!
-- Planning to add 1337 45cii b4n3r5 cause even metasploit has them. Just for fun and some eye candy its no hard so they'll come out 
+- Planning to add 1337 45cii b4n3r5 cause even metasploit has them. Just for fun and some eye candy its not hard so they'll come out 
 pretty quickly 
 - Of course I will continue to build on my database of components planning on adding some to help in pivoting through networks and 
 lateral movement
