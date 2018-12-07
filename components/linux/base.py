@@ -1,4 +1,4 @@
-# verified
+
 import library.modules.config as config
 import library.modules.safe_open as safe_open
 

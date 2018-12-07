@@ -1,4 +1,3 @@
-# verified
 import library.modules.config as config
 
 config.main()
