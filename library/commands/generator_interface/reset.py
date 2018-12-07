@@ -12,7 +12,7 @@ def main(command):
                                'Windows': ['True',
                                            'When "True", will generate a windows scout, else a linux scout'],
                                'Path': [os.path.join(config.started_at, 'generated', 'payload.py'),
-                                        'Path to generate payload to'],
+                                        'Path to generate payload python file to'],
                                'Compile': ['False',
                                            'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
         option = command.split(' ', 1)[1]
@@ -26,7 +26,7 @@ def main(command):
                                    'Windows': ['True',
                                                'When "True", will generate a windows scout, else a linux scout'],
                                    'Path': [os.path.join(config.started_at, 'generated', 'payload.py'),
-                                            'Path to generate payload to'],
+                                            'Path to generate payload python file to'],
                                   'Compile': ['False',
                                               'When "True", will compile scout to EXE (windows) or ELF (Linux), else it will not compile']}
             print config.pos + 'Reset all options'

@@ -20,7 +20,7 @@ def main():
                     'Port': ['9999', 'The local port to connect back on'],
                     'Timeout': ['5', 'The timeout value for the scout'],
                     'Windows': ['True', 'When "True", will generate a windows scout, else a linux scout'],
-                    'Path': [os.path.join(started_at, 'generated', 'payload.py'), 'Path to generate payload to'],
+                    'Path': [os.path.join(started_at, 'generated', 'payload.py'), 'Path to generate payload python file to'],
                     'Compile': ['False',
                                 'When "True", will compile scout to EXE (windows) or ELF (Linux), '
                                 'else it will not compile']}
