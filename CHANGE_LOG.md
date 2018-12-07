@@ -1,3 +1,10 @@
+# Update 0.7.4
+- Small but crucial update to the compiler so it now supports pyinstaller compilations that DONT have the --onefile option leading to 
+non-packed binaries
+- Added a new custom prompt for components that require manual intervention from users
+- Reworded some stuff for accuracy
+
+
 # Yearly update (0.7.2)
 Its been about a year since PyIris has come out (WOW happy 1 year anniversary) so heres a quick consolidation of what I've done and 
 plan to do.
