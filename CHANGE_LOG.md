@@ -23,7 +23,7 @@ pretty quickly
 - Of course I will continue to build on my database of components planning on adding some to help in pivoting through networks and 
 lateral movement
 - Writing a wiki is also on the agenda, unfortunately PyIris' "help" may not be enough.
-- Code obfuscation and encryption, to circumbent AV I need to create custom encoders for scouts that could be layered on top of each 
+- Code obfuscation and encryption, to circumvent AV I need to create custom encoders for scouts that could be layered on top of each 
 other, eg XOR on top of base64 on top of AES encryption. This will be part of the genretor interface
 - Thinking of adding powershell/bash script support so scouts can execute uploaded bash/powershell scripts
 - Oh yeah also PyIris is still in Alpha I'm thinking of moving it to BETA bug testing and eventual OFFICIAL RELEASE (v1.0.0) after
