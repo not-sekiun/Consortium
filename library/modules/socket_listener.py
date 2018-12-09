@@ -48,7 +48,8 @@ def main(host, port, name):
                                                                                        host + ':' + str(port),
                                                                                        return_random_string.main(5),
                                                                                        datetime.now().strftime(
-                                                                                           '%Y-%m-%d %H:%M:%S')]
+                                                                                           '%Y-%m-%d %H:%M:%S'),
+                                                                                       'Reverse']
                             config.incremented_scout_id += 1
                         else:
                             conn.close()

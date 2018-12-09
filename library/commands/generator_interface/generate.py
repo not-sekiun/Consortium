@@ -6,12 +6,12 @@ import os
 
 config.main()
 tmp_win = config.win_components.values()
-tmp_win.append('windows/base')
+tmp_win.append('windows/bases/reverse_tcp_base')
 for i in tmp_win:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
 print config.pos + 'Loaded all windows components into generator - OK'
 tmp_lin = config.lin_components.values()
-tmp_lin.append('linux/base')
+tmp_lin.append('linux/bases/reverse_tcp_base')
 for i in tmp_lin:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
 print config.pos + 'Loaded all linux components into generator - OK'

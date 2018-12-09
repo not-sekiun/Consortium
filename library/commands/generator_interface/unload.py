@@ -11,14 +11,15 @@ def main(command):
         if load_off == 'all':
             if config.scout_values['Windows'][0] == 'True':
                 config.loaded_components = collections.OrderedDict()
-                config.loaded_components['-'] = 'windows/base'
+                config.loaded_components['base'] = config.win_base_to_use
                 print config.pos + 'Unloaded all loaded windows components'
             else:
                 config.loaded_components = collections.OrderedDict()
-                config.loaded_components['-'] = 'linux/base'
+                config.loaded_components['base'] = config.lin_base_to_use
                 print config.pos + 'Unloaded all loaded linux components'
         else:
-            if key_from_val.main(config.loaded_components, load_off) == '-' or load_off == '-':
+            if key_from_val.main(config.loaded_components, load_off) == 'base' or load_off == 'base':
+                print config.war + 'Do not unload base components, loading another base component will automatically replaces the already loaded base components as there can only be one base components'
                 raise KeyError
             try:
                 name = config.loaded_components[load_off]
@@ -31,4 +32,4 @@ def main(command):
                 return
             raise KeyError
     except KeyError:
-        print config.neg + 'Please specify a valid component to unload or "all" to load all components. Note : the default component, */base cannot be unloaded'
+        print config.neg + 'Please specify a valid component to unload or "all" to load all components. Note : "base" component cannot be unloaded'

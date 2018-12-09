@@ -21,13 +21,13 @@ def main(command):
                 print config.inf + 'All loadable Windows components :'
                 for i in config.win_components:
                     print '   [' + i + '] ' + config.win_components[i]
-                print '   [-] windows/base\n'
+                print ''
             else:
                 print '\n' + config.inf + 'Generator is set to generate Linux scout'
                 print config.inf + 'All loadable Linux components :'
                 for i in config.lin_components:
                     print '   [' + i + '] ' + config.lin_components[i]
-                print '   [-] linux/base\n'
+                print ''
         elif to_show == 'loaded':
             if config.scout_values['Windows'][0] == 'True':
                 print '\n' + config.inf + 'Generator is set to generate Windows specific scout'

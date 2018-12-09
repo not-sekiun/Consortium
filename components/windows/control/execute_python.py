@@ -23,7 +23,7 @@ def main(option):
                     print config.pos + 'Valid module, loaded on'
                     config.import_statements.append('import ' + module_to_load)
                 except ImportError:
-                    print config.err + 'Invalid module, not loaded on'
+                    print config.neg + 'Invalid module, not loaded on'
             except EOFError:
                 try:
                     time.sleep(2)

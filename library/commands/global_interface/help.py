@@ -35,6 +35,7 @@ Listener Interface Help Menu
       quit              Quit the framework
 
    Listener Commands :
+      bind              Connect to a scout that is using a bind connection
       kill              Kill a listener
       more              Show more information for a listener
       rename            Rename a listener by its ID
@@ -160,6 +161,11 @@ def listener(command):
     if command == 'back':
         print '\nUsage       : back' \
               '\nDescription : Return to the home interface\n'
+    elif command == 'bind':
+        print '\nUsage       : bind <host> <port>' \
+              '\nDescription : Connects to a scout using a bind connection protocol' \
+              '\nOptions     : <host> : Hostname of scout' \
+              '\n              <port> : Port number that remote scout has opened\n'
     elif command == 'clear':
         print '\nUsage       : clear' \
               '\nDescription : Clears the screen\n'

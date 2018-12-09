@@ -3,12 +3,10 @@ import library.modules.config as config
 config.main()
 
 tmp_win = config.win_components.values()
-tmp_win.append('windows/base')
 for i in tmp_win:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
 print config.pos + 'Loaded all windows components info - OK'
 tmp_lin = config.lin_components.values()
-tmp_lin.append('linux/base')
 for i in tmp_lin:
     exec ('import components.' + i.replace('/', '.') + ' as ' + i.replace('/', '_'))
 print config.pos + 'Loaded all linux components info - OK'

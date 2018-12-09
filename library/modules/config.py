@@ -36,7 +36,7 @@ def main():
     iterdir.sort()
     for i in iterdir:
         i = i.replace('\\', '/')
-        if i.endswith('.py') and not i.endswith('__init__.py') and not i.endswith('base.py'):
+        if i.endswith('.py') and not i.endswith('__init__.py'):
             win_components[str(tmp_counter)] = i[len(os.getcwd() + '/components') + 1:][:-3]
             tmp_counter += 1
     lin_components = collections.OrderedDict()
@@ -45,7 +45,7 @@ def main():
     iterdir.sort()
     for i in iterdir:
         i = i.replace('\\', '/')
-        if i.endswith('.py') and not i.endswith('__init__.py') and not i.endswith('base.py'):
+        if i.endswith('.py') and not i.endswith('__init__.py'):
             lin_components[str(tmp_counter)] = i[len(os.getcwd() + '/components') + 1:][:-3]
             tmp_counter += 1
     loaded_components = collections.OrderedDict()
@@ -55,6 +55,8 @@ def main():
     global_objs = []
     startup = []
     startup_end = []
+    win_base_to_use = 'windows/bases/reverse_tcp_base'
+    lin_base_to_use = 'linux/bases/reverse_tcp_base'
     help_menu = {}
     if os.name == 'nt':
         generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' +\

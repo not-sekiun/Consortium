@@ -11,6 +11,7 @@ import library.commands.listener_interface.kill as kill
 import library.commands.listener_interface.more as more
 import library.commands.listener_interface.reset as reset
 import library.commands.listener_interface.rename as rename
+import library.modules.socket_connector as socket_connector
 import library.modules.config as config
 
 config.main()
@@ -25,6 +26,9 @@ def main():
             if command == 'back':
                 print config.inf + 'Returning...'
                 return
+            elif command == 'bind':
+                print config.inf + 'Binding...'
+                socket_connector.main(prompt)
             elif command == 'clear':
                 clear.main()
             elif command in ('?', 'help'):
