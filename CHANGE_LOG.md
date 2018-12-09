@@ -1,3 +1,7 @@
+# Update 0.7.5
+- Added option to choose multiple bases
+- Now supports bind tcp scouts, access it with the new "bind" option
+
 # Update 0.7.4
 - Small but crucial update to the compiler so it now supports pyinstaller compilations that DONT have the --onefile option leading to 
 non-packed binaries
