@@ -15,8 +15,8 @@ def main():
     listener_values = {'Interface': ['0.0.0.0', 'The local interface to start a listener'],
                        'Port': ['9999', 'The local port to start a listener'],
                        'Name': ['Listener', 'Name of the listener'], }
-    scout_values = {'Host': [private_ip, 'The local hostname to connect back to'],
-                    'Port': ['9999', 'The local port to connect back on'],
+    scout_values = {'Host': [private_ip, 'The local hostname to connect back to (Reverse) or the interface to listen on (Bind)'],
+                    'Port': ['9999', 'The local port to connect back on (Reverse) or the remote port to listen on (Bind)'],
                     'Timeout': ['5', 'The timeout value for the scout'],
                     'Windows': ['True', 'When "True", will generate a windows scout, else a linux scout'],
                     'Path': [os.path.join(started_at, 'generated', 'payload.py'),

@@ -22,57 +22,61 @@ print config.pos + 'Loaded all encoders into generator - OK'
 
 
 def main():
-    original = os.getcwd()
-    os.chdir(config.started_at)
-    comp_list = sorted([i for i in config.loaded_components.values() if not i.endswith('/base')])
-    for i in config.loaded_components.values():
-        if i.endswith('/base'):
-            comp_list.insert(0, i)
-    for i in comp_list:
-        print config.pos + 'Loading and executing : ' + i
-        exec (i.replace('/', '_') + '.main("generate")')
-    print config.inf + 'Reading contents from temporary written file...'
-    with open(config.scout_values['Path'][0], 'r') as f:
-        save_data = f.read()
-    config.functions = list(set(config.functions))
-    config.import_statements = list(set(config.import_statements))
-    config.global_objs = list(set(config.global_objs))
-    config.logics = list(set(config.logics))
-    with open(config.scout_values['Path'][0], 'w') as f:
-        print config.inf + 'Writing in imports...'
-        f.write(clean_import_data.main(config.import_statements) + '\n\n')
-        print config.inf + 'Writing in help menu...'
-        f.write('help_menu = ' + "'''" + dynamic_help_generator.main() + "'''" + '\n')
-        print config.inf + 'Writing in global variables...'
-        for i in config.global_objs:
-            f.write(i + '\n')
-        print config.inf + 'Writing in components...'
-        for i in config.functions:
-            f.write(i + '\n')
-        print config.inf + 'Writing in startup components...'
-        for i in config.startup:
-            f.write(i + '\n')
-        for i in config.startup_end:
-            f.write(i + '\n')
-        print config.inf + 'Writing in base component...'
-        for i in config.logics:
-            save_data = save_data.replace('#Statements#', '#Statements#' + i)
-        save_data = save_data.replace('#Statements#', '')
-        f.write(save_data)
-    if config.loaded_encoders:
-        for i in config.loaded_encoders:
-            print config.pos + 'Encoding with encoder : ' + i
-            exec(i + '.main("encode")')
-    if config.scout_values['Compile'][0] == 'True':
-        print config.inf + 'Compiling scout...'
-        compiler.main(config.scout_values['Path'][0])
-    print config.pos + 'Successfully generated scout python file to : ' + os.path.join(os.getcwd(),
-                                                                                       config.scout_values['Path'][0])
-    config.functions = []
-    config.import_statements = []
-    config.global_objs = []
-    config.logics = []
-    config.startup = []
-    config.startup_end = []
-    config.help_menu = {}
-    os.chdir(original)
+    try:
+        original = os.getcwd()
+        os.chdir(config.started_at)
+        comp_list = sorted([i for i in config.loaded_components.values() if not i.endswith('/base')])
+        for i in config.loaded_components.values():
+            if i.endswith('/base'):
+                comp_list.insert(0, i)
+        for i in comp_list:
+            print config.pos + 'Loading and executing : ' + i
+            exec (i.replace('/', '_') + '.main("generate")')
+        print config.inf + 'Reading contents from temporary written file...'
+        with open(config.scout_values['Path'][0], 'r') as f:
+            save_data = f.read()
+        config.functions = list(set(config.functions))
+        config.import_statements = list(set(config.import_statements))
+        config.global_objs = list(set(config.global_objs))
+        config.logics = list(set(config.logics))
+        with open(config.scout_values['Path'][0], 'w') as f:
+            print config.inf + 'Writing in imports...'
+            f.write(clean_import_data.main(config.import_statements) + '\n\n')
+            print config.inf + 'Writing in help menu...'
+            f.write('help_menu = ' + "'''" + dynamic_help_generator.main() + "'''" + '\n')
+            print config.inf + 'Writing in global variables...'
+            for i in config.global_objs:
+                f.write(i + '\n')
+            print config.inf + 'Writing in components...'
+            for i in config.functions:
+                f.write(i + '\n')
+            print config.inf + 'Writing in startup components...'
+            for i in config.startup:
+                f.write(i + '\n')
+            for i in config.startup_end:
+                f.write(i + '\n')
+            print config.inf + 'Writing in base component...'
+            for i in config.logics:
+                save_data = save_data.replace('#Statements#', '#Statements#' + i)
+            save_data = save_data.replace('#Statements#', '')
+            f.write(save_data)
+        if config.loaded_encoders:
+            for i in config.loaded_encoders:
+                print config.pos + 'Encoding with encoder : ' + i
+                exec (i + '.main("encode")')
+        if config.scout_values['Compile'][0] == 'True':
+            print config.inf + 'Compiling scout...'
+            compiler.main(config.scout_values['Path'][0])
+        print config.pos + 'Successfully generated scout python file to : ' + os.path.join(os.getcwd(),
+                                                                                           config.scout_values['Path'][
+                                                                                               0])
+        config.functions = []
+        config.import_statements = []
+        config.global_objs = []
+        config.logics = []
+        config.startup = []
+        config.startup_end = []
+        config.help_menu = {}
+        os.chdir(original)
+    except IOError:
+        print config.err + 'File error (Is another process using a file of the same filepath?)'

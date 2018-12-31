@@ -284,9 +284,11 @@ def scout(command):
               '\n              <t>   : An integer in seconds to specify how long to sleep the scout' \
               '\n              "all" : Sleep all scouts for a specific amount of time\n'
     elif command == 'show':
-        print '\nUsage       : show ["scouts"]' \
+        print '\nUsage       : show ["bind"|"reverse"|"scouts"]' \
               '\nDescription : Show all scouts that are connected' \
-              '\nOptions     : "scouts" : Show all scouts that are connected\n'
+              '\nOptions     : "bind"    : Show all scouts that are connected through a bind TCP connection' \
+              '\n              "reverse" : Show all scouts that are connected through a reverse TCP connection' \
+              '\n              "scouts"  : Show all scouts that are connected\n'
     elif command == '?':
         print '\nAn alias for the command "help"\n'
     elif command == '!':

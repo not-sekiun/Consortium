@@ -6,8 +6,8 @@ config.main()
 
 def main(command):
     try:
-        local_static_values = {'Host': [config.private_ip, 'The local hostname to connect back to'],
-                               'Port': ['9999', 'The local port to connect back on'],
+        local_static_values = {'Host': [config.private_ip, 'The local hostname to connect back to (Reverse) or the interface to listen on (Bind)'],
+                               'Port': ['9999', 'The local port to connect back on (Reverse) or the remote port to listen on (Bind)'],
                                'Timeout': ['5', 'The timeout value for the scout'],
                                'Windows': ['True',
                                            'When "True", will generate a windows scout, else a linux scout'],
@@ -20,8 +20,8 @@ def main(command):
             config.scout_values[option] = local_static_values[option]
             print config.pos + 'Reset option : ' + option
         elif option == 'all':
-            config.scout_values = {'Host': [config.private_ip, 'The local hostname to connect back to'],
-                                   'Port': ['9999', 'The local port to connect back on'],
+            config.scout_values = {'Host': [config.private_ip, 'The local hostname to connect back to (Reverse) or the interface to listen on (Bind)'],
+                                   'Port': ['9999', 'The local port to connect back on (Reverse) or the remote port to listen on (Bind)'],
                                    'Timeout': ['5', 'The timeout value for the scout'],
                                    'Windows': ['True',
                                                'When "True", will generate a windows scout, else a linux scout'],
