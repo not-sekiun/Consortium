@@ -11,12 +11,11 @@ def main(sock, filepath):
     try:
         filepath = filepath.split(' ', 1)[1]
         print config.inf + 'Reading file...'
-        f = open(filepath, 'rb')
         print config.inf + 'Initiating file upload with scout...'
         sock.sendall('upload')
         time.sleep(3)
-        data = f.read()
-        f.close()
+        with open(filepath, 'rb') as f:
+            data = f.read()
         pickle_data = pickle.dumps([basename(filepath), data])
         print config.pos + 'Done, uploading file...'
         sock.sendall(pickle_data)

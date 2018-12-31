@@ -15,9 +15,8 @@ def main(condition):
             prompt = raw_input(config.pro + 'Listener key [Enter to generate a random 50 length key] : ')
             if not prompt:
                 prompt = return_random_string.main(50)
-            f = open('PyIris.cred','w')
-            f.write(prompt)
-            f.close()
+            with open('PyIris.cred','w') as f:
+                f.write(prompt)
             print config.pos + 'Generated PyIris.cred key file with key as : ' + prompt
     elif condition == 'user_initiated':
         continue_on = raw_input(config.war + 'This will overwrite existing key, continue? [y|n] : ')
@@ -25,8 +24,7 @@ def main(condition):
             prompt = raw_input(config.pro + 'Listener key [Enter to generate a random 50 length key] : ')
             if not prompt:
                 prompt = return_random_string.main(50)
-            f = open('PyIris.cred', 'w')
-            f.write(prompt)
-            f.close()
+            with open('PyIris.cred', 'w') as f:
+                f.write(prompt)
             print config.pos + 'Generated PyIris.cred key file with key as : ' + prompt
             config.key = prompt

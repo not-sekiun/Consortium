@@ -8,11 +8,13 @@ import library.commands.global_interface.help as help
 import library.commands.generator_interface.show as show
 import library.commands.generator_interface.reset as reset
 import library.commands.generator_interface.set as set
-import library.commands.generator_interface.load as load
-import library.commands.generator_interface.unload as unload
+import library.commands.generator_interface.load_com as load_com
+import library.commands.generator_interface.unload_com as unload_com
 import library.commands.generator_interface.generate as generate
-import library.commands.generator_interface.more as more
-
+import library.commands.generator_interface.more_com as more_com
+import library.commands.generator_interface.load_enc as load_enc
+import library.commands.generator_interface.unload_enc as unload_enc
+import library.commands.generator_interface.more_enc as more_enc
 import library.modules.config as config
 
 config.main()
@@ -33,12 +35,16 @@ def main():
                 generate.main()
             elif command in ('?', 'help'):
                 help.main('generator', prompt)
-            elif command == 'load':
-                load.main(prompt)
+            elif command == 'load_com':
+                load_com.main(prompt)
+            elif command == 'load_enc':
+                load_enc.main(prompt)
             elif command in ('!', 'local'):
                 local.main(prompt)
-            elif command == 'more':
-                more.main(prompt)
+            elif command == 'more_com':
+                more_com.main(prompt)
+            elif command == 'more_enc':
+                more_enc.main(prompt)
             elif command == 'python':
                 python.main()
             elif command == 'quit':
@@ -49,8 +55,10 @@ def main():
                 set.main(prompt)
             elif command == 'show':
                 show.main(prompt)
-            elif command == 'unload':
-                unload.main(prompt)
+            elif command == 'unload_com':
+                unload_com.main(prompt)
+            elif command == 'unload_enc':
+                unload_enc.main(prompt)
             elif not command:
                 pass
             else:

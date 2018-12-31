@@ -12,8 +12,7 @@ def main(sock):
     if raw_bytes.startswith(config.war + 'Error in scout : '):
         print raw_bytes
     else:
-        f = open(file_name, 'wb')
-        f.write(raw_bytes)
-        f.close()
+        with open(file_name, 'wb') as f:
+            f.write(raw_bytes)
         print config.pos + 'Wrote file to : ' + os.path.join(os.getcwd(), file_name)
         print config.pos + 'Done'

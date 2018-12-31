@@ -71,7 +71,7 @@ Scout Interface Help Menu
       back              Return to the home interface
 '''
 generator_help = '''
-Home Interface Help Menu
+Generator Interface Help Menu
 ========================
    Global Commands :
       clear             Clear the screen
@@ -82,12 +82,15 @@ Home Interface Help Menu
    
    Generator Commands :
       generate          Start the scout generation
-      load              Load a component in the generator
-      more              Show more info for a component
+      load_com          Load a component in the generator
+      load_enc          Load an encoder in the generator
+      more_com          Show more info for a component
+      more_enc          Show more info for an encoder
       reset             Reset an option to the default value
       set               Set an option to a value
       show              Show all loadable components or options
-      unload            Unload a component in the generator
+      unload_com        Unload a component in the generator
+      unload_enc        Unload an encoder in the generator
    
    Interface Commands :
       back              Return to the home interface
@@ -306,21 +309,30 @@ def generator(command):
         print '\nUsage       : help [opt : <c>]' \
               '\nDescription : Displays the help for a command or the general help menu if no value is provided' \
               '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n'
-    elif command == 'load':
-        print '\nUsage       : load [<n>|<i>|"all"]' \
+    elif command == 'load_com':
+        print '\nUsage       : load_com [<n>|<i>|"all"]' \
               '\nDescription : Load a component to generate a scout with' \
               '\nOptions     : <n>   : Name of a valid component to load' \
               '\n              <i>   : ID of a valid component to load' \
               '\n              "all" : Load all components\n'
+    elif command == 'load_enc':
+        print '\nUsage       : load_enc [<n>|<i>|"all"]' \
+              '\nDescription : Load an encoder to encode and encrypt a scout with' \
+              '\nOptions     : <n>   : Name of a valid component to load' \
+              '\n              <i>   : ID of a valid component to load\n'
     elif command == 'local':
         print '\nUsage       : local <c>' \
               '\nDescription : Locally executes a shell command and displays the output' \
               '\nOptions     : <c> : A command to execute locally on the system\n'
-    elif command == 'more':
-        print '\nUsage       : more [<n>|<i>]' \
+    elif command == 'more_com':
+        print '\nUsage       : more_com [<n>|<i>]' \
               '\nDescription : Show more advanced info for a scout component' \
               '\nOptions     : <n> : The name of the component to show more info for' \
               '\n              <i> : The ID of the component to shoe more info for\n'
+    elif command == 'more_enc':
+        print '\nUsage       : more_enc [<n>|<i>]' \
+              '\nDescription : Show more advanced info for a scout encoder' \
+              '\nOptions     : <n> : The name of the component to show more info for\n'
     elif command == 'python':
         print '\nUsage       : python' \
               '\nDescription : Enters the systems local python interpreter\n'
@@ -338,14 +350,21 @@ def generator(command):
               '\nOptions     : <o> : The valid option of a listener that can be set' \
               '\n              <v> : The value to set that option to\n'
     elif command == 'show':
-        print '\nUsage       : show ["options"|"components"|"loaded"]' \
+        print '\nUsage       : show ["options"|"components"|"loaded"|"encoders"]' \
               '\nDescription : Show all mutable options or loadable components' \
               '\nOptions     : "options"    : Options that can be changed' \
               '\n              "components" : All loadable scout components' \
-              '\n              "loaded"     : All currently loaded scout components\n'
-    elif command == 'unload':
-        print '\nUsage       : unload [<n>|<i>|"all"]' \
+              '\n              "loaded"     : All currently loaded scout components' \
+              '\n              "encoders"   : All useable encoders\n'
+    elif command == 'unload_com':
+        print '\nUsage       : unload_com [<n>|<i>|"all"]' \
               '\nDescription : Unload a component to generate a scout with' \
+              '\nOptions     : <n>   : Name of a valid component to unload' \
+              '\n              <i>   : ID of a valid component to unload' \
+              '\n              "all" : Unload all components\n'
+    elif command == 'unload_enc':
+        print '\nUsage       : unload_enc [<n>|<i>|"all"]' \
+              '\nDescription : Unload an encoder that encodes and encrypts a scout' \
               '\nOptions     : <n>   : Name of a valid component to unload' \
               '\n              <i>   : ID of a valid component to unload' \
               '\n              "all" : Unload all components\n'

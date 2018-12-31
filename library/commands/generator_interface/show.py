@@ -28,19 +28,28 @@ def main(command):
                 for i in config.lin_components:
                     print '   [' + i + '] ' + config.lin_components[i]
                 print ''
+        elif to_show == 'encoders':
+            print ''
+            print config.inf + 'All encoders :'
+            for i in config.encoders:
+                print '   [' + i + '] ' + config.encoders[i]
+            print ''
         elif to_show == 'loaded':
             if config.scout_values['Windows'][0] == 'True':
                 print '\n' + config.inf + 'Generator is set to generate Windows specific scout'
             else:
                 print config.inf + 'Generator is set to generate Linux specific scout'
-            print config.inf + 'Loaded library : '
-            for i in config.loaded_components.values():
-                if i.endswith('/base'):
+            print config.inf + 'Loaded compoonents : '
+            for i in config.loaded_components:
+                if config.loaded_components[i].endswith('/base'):
                     print '   [-] ' + i
                 else:
-                    print '   [' + str(key_from_val.main(config.loaded_components, i)) + '] ' + i
+                    print '   [' + i + '] ' + config.loaded_components[i]
+            print '\n' + config.inf + 'Encoder stack (Scout is encoded by the top encoder first then the next all the way to the bottom) : '
+            for i in range(len(config.loaded_encoders)):
+                print '   [' + str(i) + '] ' + config.loaded_encoders[i]
             print ''
         else:
-            print config.neg + 'Please specify a valid argument, ["options"|"components"|"loaded"]'
+            print config.neg + 'Please specify a valid argument, ["options"|"components"|"loaded"|"encoders"]'
     except IndexError:
-        print config.neg + 'Please specify what to show, ["options"|"components"|"loaded"]'
+        print config.neg + 'Please specify what to show, ["options"|"components"|"loaded"|"encoders"]'

@@ -13,9 +13,8 @@ def main(sock):
         print config.pos + 'Done, writing file...'
         name = basename(data[0])
         contents = data[1]
-        f = open(name, 'wb')
-        f.write(contents)
-        f.close()
+        with open(name, 'wb') as f:
+            f.write(contents)
         print config.pos + 'Downloaded file : ' + name
     except (TypeError, KeyError):
         print pickle_data

@@ -7,9 +7,8 @@ import library.modules.get_private_ip as get_private_ip
 def main():
     started_at = os.getcwd()
     try:
-        f = open('PyIris.cred')
-        key = f.read()
-        f.close()
+        with open('PyIris.cred', 'r') as f:
+            key = f.read()
     except IOError:
         pass
     private_ip = get_private_ip.main()
@@ -20,7 +19,8 @@ def main():
                     'Port': ['9999', 'The local port to connect back on'],
                     'Timeout': ['5', 'The timeout value for the scout'],
                     'Windows': ['True', 'When "True", will generate a windows scout, else a linux scout'],
-                    'Path': [os.path.join(started_at, 'generated', 'payload.py'), 'Path to generate payload python file to'],
+                    'Path': [os.path.join(started_at, 'generated', 'payload.py'),
+                             'Path to generate payload python file to'],
                     'Compile': ['False',
                                 'When "True", will compile scout to EXE (windows) or ELF (Linux), '
                                 'else it will not compile']}
@@ -48,7 +48,17 @@ def main():
         if i.endswith('.py') and not i.endswith('__init__.py'):
             lin_components[str(tmp_counter)] = i[len(os.getcwd() + '/components') + 1:][:-3]
             tmp_counter += 1
+    encoders = collections.OrderedDict()
+    tmp_counter = 0
+    iterdir = list(get_all_modules.main(os.getcwd() + '/encoders'))
+    iterdir.sort()
+    for i in iterdir:
+        i = i.replace('\\', '/')
+        if i.endswith('.py') and not i.endswith('__init__.py'):
+            encoders[str(tmp_counter)] = i[len(os.getcwd() + '/encoders') + 1:][:-3]
+            tmp_counter += 1
     loaded_components = collections.OrderedDict()
+    loaded_encoders = []
     import_statements = []
     functions = []
     logics = []
@@ -59,7 +69,7 @@ def main():
     lin_base_to_use = 'linux/bases/reverse_tcp_base'
     help_menu = {}
     if os.name == 'nt':
-        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' +\
+        generator_prompt = '\x1b[1m\x1b[37mPyIris (\x1b[0m\033[92m' + \
                            '\x1b[1m\x1b[32mGenerator\x1b[0m' + \
                            '\x1b[1m\x1b[37m@\x1b[0m\033[92m' + \
                            '\x1b[1m\x1b[32mWindows\x1b[0m' + \

@@ -41,6 +41,6 @@ def main(args):
             print config.neg + 'Invalid key was supplied from scout, denying connection...'
             s.close()
     except (socket.timeout, socket.error):
-        print config.neg + 'Unable to establish bind TCP connection to ' + host + ':' + str(port)
+       print config.neg + 'Unable to establish bind TCP connection to ' + host + ':' + str(port)
     except (IndexError, ValueError):
         print config.neg + 'Please specify a valid hostname and port number'
