@@ -5,6 +5,9 @@
 - New concept known as the "Encoder stack" its a stack based encoding format where encoding traverses downwards
 - Loop encoding works as well so you can encode one scout with the same encoder multiple times not sure if it helps but cool to have, 
 nothing says I'm a FUD payload then a python file base64 encoded 100 times
+- Made the scout show command more useful now it displays and filters whether scouts are connects through reverse or bind TCP
+- changed the load command to load_com (component) command so I can include a load_enc (encoder) command same for unload commands. The 
+show command remains the same (show components, show encoders)
 
 # Update 0.7.5
 - Added option to choose multiple bases
