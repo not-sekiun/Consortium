@@ -1,5 +1,6 @@
-# Update 0.7.6
-- HAPPY NEW YEEEAAARRRR, NEW YEAR NEW ME AMIRITE (no im not)
+# Update 0.7.6 
+:fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks:
+- ^Those are fireworks. HAPPY NEW YEEEAAARRRR, NEW YEAR NEW ME AMIRITE (no im not)
 - Added new encoders after so long, so far only one, the base64 encoder
 - New concept known as the "Encoder stack" its a stack based encoding format where encoding traverses downwards
 - Loop encoding works as well so you can encode one scout with the same encoder multiple times not sure if it helps but cool to have, 
