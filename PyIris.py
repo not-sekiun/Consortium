@@ -1,4 +1,4 @@
-# Version 0.7.7.5
+# Version 0.7.8
 import library.modules.bootstrap as bootstrap
 import time
 

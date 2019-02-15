@@ -1,4 +1,5 @@
 import library.modules.config as config
+import library.modules.generator_id_parser as generator_id_parser
 
 config.main()
 
@@ -8,16 +9,27 @@ for i in tmp_enc:
 print config.pos + 'Loaded all encoders info - OK'
 
 
+def more_enc(load_on):
+    if load_on in config.encoders:
+        load_on = config.encoders[load_on]
+    else:
+        if load_on in config.encoders.values():
+            pass
+        else:
+            raise KeyError
+    exec (load_on.replace('/', '_') + '.main("info")')
+
+
 def main(command):
     try:
         load_on = command.split(' ', 1)[1]
-        if load_on in config.encoders:
-            load_on = config.encoders[load_on]
+        load_on = generator_id_parser.main(load_on, 'encoders')
+        load_on = map(str, load_on)
+        if type(load_on) == list:
+            for i in load_on:
+                print config.pos + 'Info for component of ID : ' + i
+                more_enc(str(i))
         else:
-            if load_on in config.encoders.values():
-                pass
-            else:
-                raise KeyError
-        exec (load_on.replace('/', '_') + '.main("info")')
+            print load_on
     except (IndexError, KeyError):
         print config.neg + 'Please specify a valid encoder to show more info for'

