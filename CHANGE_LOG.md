@@ -2,6 +2,9 @@
 Whoopsies, skipped 0.7.7 and 0.7.7.5 changelog entry
 - Added a small minor update to the way generator IDs are selected. Now you can use commas to select multiple IDs and dashes for ranges
 eg . load_com 1,2,3-5 loads components of ID 1,2,3,4,5
+- minor update to loading interface the ID of the components/encoder are displayed in brackets when showing whether loading was 
+successful or not
+- refactored the load_com, load_enc, more_com, more_enc modules to be more modular
 
 # Update 0.7.6 
 :fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks:
