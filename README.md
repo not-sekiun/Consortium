@@ -120,8 +120,8 @@ On linux to install any newly added third party modules or update then run
 ## Recommended OS
 ### PyIris was succesfully installed on the following operating systems
 - Windows 10
-- Kali Linux
-- Ubuntu
+- Kali Linux Rolling releases
+- Ubuntu 16.04 and future releases
 - Debian
 
 # Basic Usage
