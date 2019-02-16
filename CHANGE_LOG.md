@@ -1,3 +1,8 @@
+# Update 0.7.8
+Whoopsies, skipped 0.7.7 and 0.7.7.5 changelog entry
+- Added a small minor update to the way generator IDs are selected. Now you can use commas to select multiple IDs and dashes for ranges
+eg . load_com 1,2,3-5 loads components of ID 1,2,3,4,5
+
 # Update 0.7.6 
 :fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks:
 - ^Those are fireworks. HAPPY NEW YEEEAAARRRR, NEW YEAR NEW ME AMIRITE (no im not)
