@@ -1,3 +1,7 @@
+# Update 0.7.8.5
+- The new generator ID system was slightly shaky so I changed it up and fixed it a bit with some reworks to the UI
+- We're getting close to official release, 80% through alpha :)
+
 # Update 0.7.8
 Whoopsies, skipped 0.7.7 and 0.7.7.5 changelog entry
 - Added a small minor update to the way generator IDs are selected. Now you can use commas to select multiple IDs and dashes for ranges
