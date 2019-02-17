@@ -20,5 +20,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print '[!]User aborted bootstrap, requesting shutdown...'
         quit()
-    except Exception as e:
-        print '[!]Error : ' + str(e)
+    # except Exception as e:
+    #     print '[!]Error : ' + str(e)

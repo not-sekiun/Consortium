@@ -35,11 +35,7 @@ def main(command):
         load_on = command.split(' ', 1)[1]
         load_on = generator_id_parser.main(load_on)
         load_on = map(str, load_on)
-        if type(load_on) == list:
-            for i in load_on:
-                print config.pos + 'Info for component of ID : ' + i
-                more_com(str(i))
-        else:
-            print load_on
+        for i in load_on:
+            more_com(str(i))
     except (IndexError, KeyError):
         print config.neg + 'Please specify a valid component to show more info for'

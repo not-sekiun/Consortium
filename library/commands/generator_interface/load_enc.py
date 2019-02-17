@@ -5,7 +5,6 @@ config.main()
 
 
 def load_enc(load_on):
-    id = load_on
     if load_on in config.encoders:
         load_on = config.encoders[load_on]
     else:
@@ -13,7 +12,7 @@ def load_enc(load_on):
             pass
         else:
             raise KeyError
-    print config.pos + 'Loaded : ' + load_on + ' (' + id + ')'
+    print config.pos + 'Loaded : ' + load_on
     config.loaded_encoders.append(load_on)
 
 
@@ -22,10 +21,8 @@ def main(command):
         load_on = command.split(' ', 1)[1]
         load_on = generator_id_parser.main(load_on, 'encoders')
         load_on = map(str, load_on)
-        if type(load_on) == list:
-            for i in load_on:
-                load_enc(str(i))
-        else:
-            print load_on
+        for i in load_on:
+            print config.inf + 'Loading : ' + i
+            load_enc(str(i))
     except (KeyError, IndexError):
         print config.neg + 'Please specify a valid encoder to load'

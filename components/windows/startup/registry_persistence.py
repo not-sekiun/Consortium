@@ -24,4 +24,4 @@ def registry_persist_startup(path):
               '\nOS               : Windows' \
               '\nRequired Modules : _winreg, sys, os' \
               '\nCommands         : NIL (Runs at startup)' \
-              '\nDescription      : This module creates a new key in the HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run registry path'
+              '\nDescription      : This module creates a new key in the HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run registry path\n'

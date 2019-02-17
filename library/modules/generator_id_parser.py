@@ -3,16 +3,18 @@ import library.modules.config as config
 config.main()
 
 
-def main(data, context='components'):
+def main(data, context_type='components', operation='load'):
     try:
         data = data.replace(' ', '')
-        if data == 'all':
-            if context == 'components':
+        if data == 'all': # filter special phrase
+            if context_type == 'components' and operation == 'load': # filter special context
                 if config.scout_values['Windows'][0] == 'True':
                     return [str(i) for i in config.win_components.keys() if not config.win_components[str(i)].startswith('windows/bases/')]
                 else:
                     return [str(i) for i in config.lin_components.keys() if not config.lin_components[str(i)].startswith('linux/bases/')]
-            elif context == 'encoders':
+            elif data == 'all' and operation == 'unload':
+                return ['all']
+            elif context_type == 'encoders' and operation == 'load':
                 return config.encoders.keys()
         try: # only ints seperated with ","
             id_storage = data.split(',')
@@ -47,4 +49,4 @@ def main(data, context='components'):
                             list_of_ids.append(int(i))
                     return list(set(list_of_ids))
     except:
-        return '[-]Invalid ID syntax usage'
+        return [data]

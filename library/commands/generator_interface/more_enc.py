@@ -25,11 +25,7 @@ def main(command):
         load_on = command.split(' ', 1)[1]
         load_on = generator_id_parser.main(load_on, 'encoders')
         load_on = map(str, load_on)
-        if type(load_on) == list:
-            for i in load_on:
-                print config.pos + 'Info for component of ID : ' + i
-                more_enc(str(i))
-        else:
-            print load_on
+        for i in load_on:
+            more_enc(str(i))
     except (IndexError, KeyError):
         print config.neg + 'Please specify a valid encoder to show more info for'
