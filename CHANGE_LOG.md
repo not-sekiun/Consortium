@@ -1,3 +1,7 @@
+# Update 0.7.8.6
+- Fixed a small OPSEC issue with chromepass dump where a random black window would pop up due to improper piping when task killing 
+chrome.exe to gain access to the chrome password SQL database.
+
 # Update 0.7.8.5
 - The new generator ID system was slightly shaky so I changed it up and fixed it a bit with some reworks to the UI
 - We're getting close to official release, 80% through alpha :)
