@@ -25,7 +25,11 @@ def main(args):
                 print config.neg + 'Connection was aborted because host was in blacklist'
                 return
         s.settimeout(5)
-        await_key = s.recv(9999999)
+        try:
+            await_key = s.recv(9999999)
+        except (socket.timeout, socket.error):
+            print config.neg + 'Established connection to ' + host + ':' + str(port) + ' but no data received!'
+            return
         s.settimeout(None)
         if await_key == config.key:
             print config.pos + 'Key from scout matches, connection is allowed'
