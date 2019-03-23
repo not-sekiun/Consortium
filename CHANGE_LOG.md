@@ -1,3 +1,9 @@
+# Update 0.7.8.7
+- Fixed a problem with the bind to scout system. Binding to a scout that sends no data would lead to the binding client (PyIris) to 
+assume that the connection was not successful when it actually was but just didnt receive any data
+- Fixed an issue with still shaky but less shaky ID system for generator/encoder component loading and unloading
+- Fixed some formatting issues within the terminal TUI
+
 # Update 0.7.8.6
 - Fixed a small OPSEC issue with chromepass dump where a random black window would pop up due to improper piping when task killing 
 chrome.exe to gain access to the chrome password SQL database.
