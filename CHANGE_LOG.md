@@ -3,6 +3,9 @@
 assume that the connection was not successful when it actually was but just didnt receive any data
 - Fixed an issue with still shaky but less shaky ID system for generator/encoder component loading and unloading
 - Fixed some formatting issues within the terminal TUI
+- The AES encoder that was added to the encoder components doesnt actually work lol, I was kinda lazy to take it out, its a work in 
+progress need to figure out how to use the AES Steram Cipher rather than the AES block cipher to avoid coming up with a padding 
+system.... (oh yeah I may (gotta figure out how) also add an XOR encoding option soon :3)
 
 # Update 0.7.8.6
 - Fixed a small OPSEC issue with chromepass dump where a random black window would pop up due to improper piping when task killing 
@@ -33,7 +36,7 @@ show command remains the same (show components, show encoders)
 
 # Update 0.7.5
 - Added option to choose multiple bases
-- Now supports bind tcp scouts, access it with the new "bind" option
+- Now supports bind tcp scouts, access it with the new "bind" command
 
 # Update 0.7.4
 - Small but crucial update to the compiler so it now supports pyinstaller compilations that DONT have the --onefile option leading to 
