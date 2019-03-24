@@ -19,10 +19,10 @@ def main(option, filepath=None):
             obfuscated = ';'.join(imported_modules) + ';exec(b64decode("' + b64encode('\n'.join(source)) + '"))'
             with open(filepath, 'w') as f:
                 f.write(obfuscated)
-                print '   ' + config.inf + 'Encoded scout and overwrote raw file with AES encoded file contents'
+                print '   ' + config.inf + 'Encoded scout and overwrote raw file with AES stream cipher encrypted file contents'
         except SyntaxError:
             print '   ' + config.neg + 'Could not encode scout'
     elif option == 'info':
         print '\nName             : AES Encoder' \
               '\nRequired Modules : pycryptodome' \
-              '\nDescription      : Uses the standard AES algorithm to symmetrically encrypt the scout source\n'
+              '\nDescription      : Uses the AES stream cipher to symmetrically encrypt the scout\n'

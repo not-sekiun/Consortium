@@ -4,8 +4,6 @@ config.main()
 
 
 def main(data, context_type='components', operation='load'):
-    print len(config.win_components)
-    print config.win_components
     try:
         data = data.replace(' ', '')
         if data == 'all':  # filter special phrase
