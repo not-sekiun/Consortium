@@ -68,6 +68,8 @@ other, eg XOR on top of base64 on top of AES encryption. This will be part of th
 - Thinking of adding powershell/bash script support so scouts can execute uploaded bash/powershell scripts
 - Oh yeah also PyIris is still in Alpha I'm thinking of moving it to BETA bug testing and eventual OFFICIAL RELEASE (v1.0.0) after
 completing all the roadmap objectives here, that will take time though, Im still a student and have high school stuff to deal with...
+- Gotta add support for other compilers like py2exe or nutika wine pyinstaller exes get falsely flagged by AV, also gonna add the 
+ability to change the compiled exes file icon
 
 ## Conclusion
 I dont expect development of PyIris to be moved to beta until late June maybe??? I still have tons of cool ideas for this project that 
