@@ -1,3 +1,7 @@
+# Update 0.7.8.8
+- Added ability to change the file icon of the scout that is to be compiled
+- Added a new resource folder where PyIris.cred and the default ico file will be stored
+
 # Update 0.7.8.7
 - Fixed a problem with the bind to scout system. Binding to a scout that sends no data would lead to the binding client (PyIris) to 
 assume that the connection was not successful when it actually was but just didnt receive any data
