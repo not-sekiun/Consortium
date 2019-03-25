@@ -25,7 +25,7 @@ successful or not
 
 # Update 0.7.6 
 :fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks::fireworks:
-- ^Those are fireworks. HAPPY NEW YEEEAAARRRR, NEW YEAR NEW ME AMIRITE (no im not)
+- HAPPY NEW YEEEAAARRRR, NEW YEAR NEW PYIRIS YEET
 - Added new encoders after so long, so far only one, the base64 encoder
 - New concept known as the "Encoder stack" its a stack based encoding format where encoding traverses downwards
 - Loop encoding works as well so you can encode one scout with the same encoder multiple times not sure if it helps but cool to have, 
@@ -70,6 +70,8 @@ other, eg XOR on top of base64 on top of AES encryption. This will be part of th
 completing all the roadmap objectives here, that will take time though, Im still a student and have high school stuff to deal with...
 - Gotta add support for other compilers like py2exe or nutika wine pyinstaller exes get falsely flagged by AV, also gonna add the 
 ability to change the compiled exes file icon
+- In order to bamboozle AV even more Im thinking of adding a trash code generator that generates useless code in python and comments
+that will still change the file signature even more
 
 ## Conclusion
 I dont expect development of PyIris to be moved to beta until late June maybe??? I still have tons of cool ideas for this project that 
@@ -77,7 +79,7 @@ may be put in during development. Dont expect a definite release date or anythin
 CHRISTMAS and thank you for supporting the development of PyIris, seriously just cloning it or star-ing it gives me life.
 
 
-# Update 0.7.1 (wow this came pretty quickly)
+# Update 0.7.1
 - Added colored output, now all text will have color with the exception of scout sent data
 - Prompts also have color
 - Added global error handling to catch fatal program errors
@@ -85,7 +87,7 @@ CHRISTMAS and thank you for supporting the development of PyIris, seriously just
 - By default Host option of scout generation is no longer 127.0.0.1 it is now your detected primary private IP
 
 
-# WHOO Update 0.7.0 not like anyone will ever see this...
+# Update 0.7.0
 - Added keystroke injection, you can now force your victim to type things by generating keyboard events in linux and windows
 - Changed up the generation of scouts by a bit
 - Added windows only interface locking, you can now selectively disable or enable your targets keyboard or mouse
@@ -111,7 +113,7 @@ CHRISTMAS and thank you for supporting the development of PyIris, seriously just
 - Fixed minor bug with keylogger
 - Improved scout generation by reducing duplicate or similar import statements
 
-# Update 0.6.5 (I'm not dead)
+# Update 0.6.5
 - Added TONS of new scout features
 - Debugged the generator interface where the generate command was writing duplicate functions
 - Added a requirements file, now modules are beginning to require third party libraries
