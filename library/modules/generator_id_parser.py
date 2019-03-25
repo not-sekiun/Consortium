@@ -28,7 +28,7 @@ def main(data, context_type='components', operation='load'):
                         tmp_data = range(int(ranges[0]) + int(ranges[1]))
                         id_storage += tmp_data
                 except (ValueError, IndexError):
-                    print config.err
+                    print config.neg
             return list(set(id_storage))
         except (ValueError, IndexError):  # no commas check for singular value
             try:

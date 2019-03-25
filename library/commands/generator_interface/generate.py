@@ -79,4 +79,4 @@ def main():
         config.help_menu = {}
         os.chdir(original)
     except IOError:
-        print config.err + 'File error (Is another process using a file of the same filepath?)'
+        print config.neg + 'File error (Is another process using a file of the same filepath?)'

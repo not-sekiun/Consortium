@@ -6,8 +6,7 @@ config.main()
 
 def main(condition):
     if condition == 'system_initiated':
-        dir = os.listdir(os.getcwd())
-        if 'PyIris.cred' in dir:
+        if os.path.isfile(os.path.join(os.getcwd(), 'resources', 'PyIris.cred')):
             print config.pos + 'PyIris.cred key file located - OK'
             pass
         else:
@@ -15,7 +14,7 @@ def main(condition):
             prompt = raw_input(config.pro + 'Listener key [Enter to generate a random 50 length key] : ')
             if not prompt:
                 prompt = return_random_string.main(50)
-            with open('PyIris.cred','w') as f:
+            with open('resources/PyIris.cred', 'w') as f:
                 f.write(prompt)
             print config.pos + 'Generated PyIris.cred key file with key as : ' + prompt
     elif condition == 'user_initiated':
@@ -24,7 +23,7 @@ def main(condition):
             prompt = raw_input(config.pro + 'Listener key [Enter to generate a random 50 length key] : ')
             if not prompt:
                 prompt = return_random_string.main(50)
-            with open('PyIris.cred', 'w') as f:
+            with open('resources/PyIris.cred', 'w') as f:
                 f.write(prompt)
             print config.pos + 'Generated PyIris.cred key file with key as : ' + prompt
             config.key = prompt

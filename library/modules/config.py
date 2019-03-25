@@ -7,7 +7,7 @@ import library.modules.get_private_ip as get_private_ip
 def main():
     started_at = os.getcwd()
     try:
-        with open('PyIris.cred', 'r') as f:
+        with open('resources/PyIris.cred', 'r') as f:
             key = f.read()
     except IOError:
         pass
