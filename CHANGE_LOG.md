@@ -1,3 +1,9 @@
+# Update 0.7.9
+- Added a UAC bypass method that takes advantage of the sdclt.exe process it is not OPSEC safe however since it opens a blank cmd prompt 
+that (thankfully) wont cause the elevated process to be killed when it is closed. Problem is I cant kill that blank cmd prompt using the 
+scout because the scout is usually not elevated while the prompt is elevated so the scout is unable to kill it the user will have to 
+click the gui "x" button to kill it instead ;-;
+
 # Update 0.7.8.8
 - Added ability to change the file icon of the scout that is to be compiled
 - Added a new resource folder where PyIris.cred and the default ico file will be stored
