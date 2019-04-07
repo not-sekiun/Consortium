@@ -10,13 +10,10 @@ def main(option):
         config.functions.append('''
 def set_audio(data):
     vol_level = data.split(' ',1)[1]
-    vol = alsaaudio.Mixer(alsaaudio.mixers[0])
+    vol = alsaaudio.Mixer(alsaaudio.mixers()[0])
     vol.setvolume(int(vol_level))
     volume_range = vol.getrange()
-    data = '[*]Max level : ' + str(volume_range[0])
-    data += '\\n[*]Mininum level : ' + str(volume_range[1])
-    data += '\\n[+]Set volume to : ' + str(vol_level)
-    s.sendall(data)''')
+    s.sendall('[+]Set volume to : ' + str(vol_level))''')
         config.logics.append('''
             elif command == "set_audio":
                 set_audio(data)''')

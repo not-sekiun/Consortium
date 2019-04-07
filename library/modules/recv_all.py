@@ -3,7 +3,7 @@ import socket
 def main(sock):
     sock.settimeout(None)
     data = sock.recv(999999)
-    sock.settimeout(2)
+    sock.settimeout(5)
     while True:
         try:
             tmp_data = sock.recv(999999)

