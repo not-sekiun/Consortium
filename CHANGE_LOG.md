@@ -3,6 +3,7 @@
 that (thankfully) wont cause the elevated process to be killed when it is closed. Problem is I cant kill that blank cmd prompt using the 
 scout because the scout is usually not elevated while the prompt is elevated so the scout is unable to kill it the user will have to 
 click the gui "x" button to kill it instead ;-;
+- Fixed a small bug with the socket_listener module that was not catching an UnboundLocalError exception
 
 # Update 0.7.8.8
 - Added ability to change the file icon of the scout that is to be compiled
