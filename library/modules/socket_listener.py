@@ -61,5 +61,5 @@ def main(host, port, name):
         print '\n' + config.war + 'Error in listener thread : ' + str(e) + ', killing thread...'
         try:
             del (config.listener_database[str(local_copy_of_id)])
-        except (IndexError, ValueError):
+        except (IndexError, ValueError, UnboundLocalError):
             pass
