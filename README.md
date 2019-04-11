@@ -40,6 +40,7 @@ disk.
 - Compile payloads into Windows EXE
 - Inject keystrokes
 - Disbale/ Enable the targets keyboard/mouse
+- Bypass UAC through sdclt.exe
 
 # Features (Linux)
 - Dynamic generation of scouts
