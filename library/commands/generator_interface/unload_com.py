@@ -41,4 +41,4 @@ def main(command):
             print config.inf + 'Unloading : ' + str(i)
             unload_com(str(i))
     except (KeyError, IndexError):
-        print config.neg + 'Please specify a valid component to unload or "all" to load all components. Note : "base" component cannot be unloaded'
+        print config.neg + 'Please specify a valid component to unload or "all" to load all components. \x1b[1m\x1b[31mNote : "base" component cannot be unloaded\x1b[0m'

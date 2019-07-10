@@ -60,4 +60,4 @@ def main(command):
             print config.inf + 'Loading : ' + i
             load_com(str(i))
     except (KeyError, IndexError):
-        print config.neg + 'Please specify a valid component to load or "all" to load all components. Note : the default component, */base is loaded by default'
+        print config.neg + 'Please specify a valid component to load or "all" to load all components. \x1b[1m\x1b[31mNote : the default component, */base is loaded by default\x1b[0m'
