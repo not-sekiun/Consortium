@@ -54,7 +54,7 @@ def load_com(load_on):
 def main(command):
     try:
         load_on = command.split(' ', 1)[1]
-        load_on = generator_id_parser.main(load_on)
+        load_on = generator_id_parser.main(load_on, 'components', 'load')
         load_on = map(str, load_on)
         for i in load_on:
             print config.inf + 'Loading : ' + i

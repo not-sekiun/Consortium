@@ -35,7 +35,7 @@ def unload_com(load_off):
 def main(command):
     try:
         load_off = command.split(' ', 1)[1]
-        load_off = generator_id_parser.main(load_off, operation='unload')
+        load_off = generator_id_parser.main(load_off, 'components', 'unload')
         load_off = map(str, load_off)
         for i in load_off:
             print config.inf + 'Unloading : ' + str(i)

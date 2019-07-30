@@ -1,3 +1,7 @@
+# Update 0.7.9.5
+- Finally fixed my extremely buggy generator ID parser system
+- minor interface changes with regard to new ID parser system
+
 # Update 0.7.9
 - Added a UAC bypass method that takes advantage of the sdclt.exe process it is not OPSEC safe however since it opens a blank cmd prompt 
 that (thankfully) wont cause the elevated process to be killed when it is closed. Problem is I cant kill that blank cmd prompt using the 

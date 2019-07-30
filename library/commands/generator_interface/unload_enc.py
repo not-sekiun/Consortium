@@ -28,7 +28,7 @@ def unload_enc(load_off, loaded_encoders):
 def main(command):
     try:
         load_off = command.split(' ', 1)[1]
-        load_off = generator_id_parser.main(load_off, operation='unload')
+        load_off = generator_id_parser.main(load_off, 'encoders', 'unload')
         load_off = map(str, load_off)
         snapshot = config.loaded_encoders
         snapshot_dict = OrderedDict()
