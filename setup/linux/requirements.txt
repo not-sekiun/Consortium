@@ -7,3 +7,4 @@ pyperclip==1.7.0
 pyxhook==1.0.0
 python-crontab==2.3.5
 PyInstaller==3.4
+cryptography==2.6.1

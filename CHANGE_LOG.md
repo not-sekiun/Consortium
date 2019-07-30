@@ -1,3 +1,6 @@
+# Update 0.8.0
+- ok that came faster than expected, finally added a functioning aes encoder using fernet from cryptography module
+
 # Update 0.7.9.5
 - Finally fixed my extremely buggy generator ID parser system
 - minor interface changes with regard to new ID parser system

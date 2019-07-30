@@ -16,7 +16,8 @@ def main(option, filepath=None):
             for i in source:
                 if 'import' in i and i != 'from base64 import b64decode':
                     imported_modules.append(i)
-            obfuscated = ';'.join(imported_modules) + ';exec(b64decode("' + b64encode('\n'.join(source)) + '"))'
+            encoded_soure = b64encode('\n'.join(source))
+            obfuscated = ';'.join(imported_modules) + ';exec(b64decode("' + encoded_soure + '"))'
             with open(filepath, 'w') as f:
                 f.write(obfuscated)
                 print '   ' + config.inf + 'Encoded scout and overwrote raw file with Base64 encoded file contents'
