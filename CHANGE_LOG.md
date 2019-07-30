@@ -1,6 +1,9 @@
 # Update 0.7.9.5
 - Finally fixed my extremely buggy generator ID parser system
 - minor interface changes with regard to new ID parser system
+Inactivity update: Due to sch and other commitments pyiris has received very little updates, have no fear i WILL NOT let this passion 
+project die and will continually improve pyiris to be the best it can be. Still scratching my head about the encoders though i may be 
+getting close...
 
 # Update 0.7.9
 - Added a UAC bypass method that takes advantage of the sdclt.exe process it is not OPSEC safe however since it opens a blank cmd prompt 
