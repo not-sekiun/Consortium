@@ -41,6 +41,8 @@ disk.
 - Inject keystrokes
 - Disbale/ Enable the targets keyboard/mouse
 - Bypass UAC through sdclt.exe
+- Stackable encryption of scout payload source code, aes on aes on base64 source encryption in a theoretically infinite stack in 
+infinite variations 
 
 # Features (Linux)
 - Dynamic generation of scouts
@@ -59,6 +61,8 @@ disk.
 - Take pictures from webcam without writing to disk
 - Compile payloads into Linux ELF
 - Inject keystrokes
+- Stackable encryption of scout payload source code, aes on aes on base64 source encryption in a theoretically infinite stack in 
+infinite variations 
 
 # Getting Started
 ## Prerequisites
