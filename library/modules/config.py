@@ -64,6 +64,7 @@ def main():
     logics = []
     global_objs = []
     startup = []
+    startup_start = []
     startup_end = []
     win_base_to_use = 'windows/bases/reverse_tcp_base'
     lin_base_to_use = 'linux/bases/reverse_tcp_base'

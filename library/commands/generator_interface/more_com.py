@@ -33,7 +33,7 @@ def more_com(load_on):
 def main(command):
     try:
         load_on = command.split(' ', 1)[1]
-        load_on = generator_id_parser.main(load_on)
+        load_on = generator_id_parser.main(load_on, 'components', None)
         load_on = map(str, load_on)
         for i in load_on:
             more_com(str(i))

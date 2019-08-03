@@ -13,7 +13,7 @@ def main(option):
         while True:
             try:
                 module_to_load = raw_input('\x1b[1m\x1b[37m[\x1b[0m\033[92m' +
-                            '\x1b[1m\x1b[31mwindows/startup/execute_python\x1b[0m' +
+                            '\x1b[1m\x1b[31mwindows/control/execute_python\x1b[0m' +
                             '\x1b[1m\x1b[37m > ]\x1b[0m ' +'Input name of other library to package into python_execute [CTRL-C to quit] : ')
                 if not module_to_load:
                     print config.neg + 'Input the name of a module'

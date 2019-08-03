@@ -51,6 +51,8 @@ def main():
             for i in config.functions:
                 f.write(i + '\n')
             print config.inf + 'Writing in startup components...'
+            for i in config.startup_start:
+                f.write(i + '\n')
             for i in config.startup:
                 f.write(i + '\n')
             for i in config.startup_end:

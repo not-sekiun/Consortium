@@ -20,4 +20,4 @@ def startup_persist_startup(filepath):
               '\nOS               : Windows' \
               '\nRequired Modules : shutil, sys, os' \
               '\nCommands         : NIL (Runs at startup)' \
-              '\nDescription      : This module copies the scout to the windows startup folder'
+              '\nDescription      : This module copies the scout to the windows startup folder\n'

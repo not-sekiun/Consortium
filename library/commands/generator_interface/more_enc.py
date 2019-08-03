@@ -23,7 +23,7 @@ def more_enc(load_on):
 def main(command):
     try:
         load_on = command.split(' ', 1)[1]
-        load_on = generator_id_parser.main(load_on, 'encoders')
+        load_on = generator_id_parser.main(load_on, 'encoders', None)
         load_on = map(str, load_on)
         for i in load_on:
             more_enc(str(i))
