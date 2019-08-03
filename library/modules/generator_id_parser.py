@@ -25,6 +25,7 @@ def main(inp_data, context_type, operation):
     output_list = []  # final list of individual sorted values
     ranges = []  # ranges to process later
     non_ranges = []
+    inp_data = inp_data.strip()  # strip input data of all leading and ending whitespace
     data = inp_data.split(',')  # split by comma
     data = list(set(data))  # remove all duplicates after comma split
 
@@ -79,4 +80,4 @@ def main(inp_data, context_type, operation):
     print config.pos + 'Generator ID formatting successful'
     if type(output_list) is list:
         return output_list
-    return [output_list] # final function iterates through output
+    return [output_list]  # final function iterates through output

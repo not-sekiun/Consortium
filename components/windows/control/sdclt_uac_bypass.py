@@ -38,5 +38,6 @@ def sdclt_uac(data):
               '\nOS               : Windows 7 and above' \
               '\nRequired Modules : _winreg, os, time' \
               '\nCommands         : sdclt_uac <full remote filepath>' \
-              '\nDescription      : This module takes advantage of the sdclt.exe\'s auto elevation to run executables (.exe only) as admin processes bypassing uac' \
-              '\nNote             : This module is NOT op-sec safe. A blank command prompt window is opened and remains open until the victim closes it, however the process continues running'
+              '\nDescription      : This module takes advantage of the sdclt.exe\'s auto elevation to run executables (.exe only) as admin processes, bypassing UAC permission' \
+              '\nNote             : This module is NOT op-sec safe. A blank command prompt window is opened and remains open until the victim closes it, however the process continues running' \
+              '                     UAC notification also cannot be set to "always notify" or the user can deny the elevation'
