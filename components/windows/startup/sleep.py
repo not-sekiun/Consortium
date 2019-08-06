@@ -11,8 +11,8 @@ def main(option):
         while True:
             try:
                 sleep_duration = raw_input('\x1b[1m\x1b[37m[\x1b[0m\033[92m' +
-                            '\x1b[1m\x1b[31mwindows/startup/sleep\x1b[0m' +
-                            '\x1b[1m\x1b[37m > ]\x1b[0m ' +'Input duration (in seconds) for scout to sleep for before starting [CTRL-C /ENTER for default sleep of 60 seconds] : ')
+                                           '\x1b[1m\x1b[31mwindows/startup/sleep\x1b[0m' +
+                                           '\x1b[1m\x1b[37m > ]\x1b[0m ' + 'Input duration (in seconds) for scout to sleep for before starting [CTRL-C /ENTER for default sleep of 60 seconds] : ')
                 if not sleep_duration:
                     print config.pos + 'Sleep duration set to 60 seconds'
                     sleep_duration = 60
@@ -38,4 +38,4 @@ def main(option):
               '\nOS               : Windows' \
               '\nRequired Modules : time' \
               '\nCommands         : NIL (Runs at startup)' \
-              '\nDescription      : Sleeps the scout before running any other processes to avoid and timeout malware detection systems' \
+              '\nDescription      : Sleeps the scout before running any other processes to avoid and timeout malware detection systems'

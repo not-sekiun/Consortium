@@ -1,3 +1,6 @@
+# Update 0.8.1
+- Added the XOR Encoder and added a sleep module for windows and linux variant scouts
+
 # Update 0.8.0
 - ok that came faster than expected, finally added a functioning aes encoder using fernet from cryptography module
 

@@ -29,5 +29,5 @@ def main(option, filepath=None):
             print '   ' + config.neg + 'Could not encode scout'
     elif option == 'info':
         print '\nName             : AES Encoder' \
-              '\nRequired Modules : cryptography (Fernet function from cryptography module)' \
+              '\nRequired Modules : cryptography' \
               '\nDescription      : Uses Fernet to AES encrypt the scout\n'
