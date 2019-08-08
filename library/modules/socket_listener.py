@@ -7,7 +7,7 @@ from datetime import datetime
 config.main()
 
 
-def main(host, port, name):
+def main(host, port, name, reply):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((host, port))
@@ -31,10 +31,12 @@ def main(host, port, name):
                         continue
                     if config.white_list:
                         if addr[0] not in config.white_list:
+                            conn.send(reply)
                             conn.close()
                             continue
                     elif config.black_list:
                         if addr[0] in config.black_list:
+                            conn.send(reply)
                             conn.close()
                             continue
                     if conn:
@@ -52,6 +54,7 @@ def main(host, port, name):
                                                                                        'Reverse']
                             config.incremented_scout_id += 1
                         else:
+                            conn.send(reply)
                             conn.close()
                     else:
                         conn.close()

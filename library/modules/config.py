@@ -14,7 +14,8 @@ def main():
     private_ip = get_private_ip.main()
     listener_values = {'Interface': ['0.0.0.0', 'The local interface to start a listener'],
                        'Port': ['9999', 'The local port to start a listener'],
-                       'Name': ['Listener', 'Name of the listener'], }
+                       'Name': ['Listener', 'Name of the listener'],
+                       'Reply': ['', 'The reply to send back in the case of a failed listener authentication/ connection']}
     scout_values = {'Host': [private_ip, 'The local hostname to connect back to (Reverse) or the interface to listen on (Bind). You can set multiple hostnames to connect back to by separating them with commas'],
                     'Port': ['9999', 'The local port to connect back on (Reverse) or the remote port to listen on (Bind)'],
                     'Timeout': ['5', 'The timeout value for the scout'],
