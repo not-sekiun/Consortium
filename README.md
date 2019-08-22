@@ -1,9 +1,6 @@
 # The PyIris Project
-The PyIris project is a modular, stealthy and flexible remote-access-toolkit. It allows users to dynamically build remote-access-trojan 
-payloads (referred to as scouts) by loading and unloading specific modules (referred to as components), that grant scouts specific 
-features. This allows you to cut down on file size and only use essential features making it less likely for antivirus to detect the 
-scout. It also allows for highly customisable payloads that have low hard drive footprints as the scout never writes anything to the 
-disk.
+The PyIris project is a modular, stealthy and flexible remote-access-toolkit. It allows users to dynamically build, generate and encode 
+remote-access-trojan payloads for remote control of other compromised hosts.
 
 # Demo of PyIris in action on multiple operating systems (Windows and Linux)
 ## Dynamically generating a payload in Windows
