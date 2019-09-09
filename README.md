@@ -1,4 +1,4 @@
-# The PyIris Project
+# The PyIris Project (CURRENTLY BEING COMPLETELY PORTED FROM PYTHON2 TO PYTHON3)
 The PyIris project is a modular, stealthy and flexible remote-access-toolkit. It allows users to dynamically build, generate and encode 
 remote-access-trojan payloads for remote control of other compromised hosts.
 
