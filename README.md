@@ -39,7 +39,7 @@ control of other compromised hosts.
 # Features (Windows)
 - Acheive persistence through the windows registry (HKEY_CURRENT_USER)
 - Acheive persistence through the windows startup folder
-- Remote Command Execution through cmd.exe or powershell.exe
+- Remote Command Execution through cmd.exe or powershell.exe (provided it is not blocked)
 - Open URLs from native browser (internet explorer ewww)
 - Shutdown, restart, lock, logoff user gracefully without connection hanging from scout payload
 - Execute or open files remotely
