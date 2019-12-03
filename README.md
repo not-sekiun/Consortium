@@ -51,7 +51,7 @@ scouts
 - Bypass UAC through sdclt.exe (Has already been patched in recent windows updates)
 
 # Features (Linux)
-- Acheive persistence through cron jobs (crontab)
+- Achieve persistence through cron jobs (crontab)
 - Remote Command Execution through the bash shell
 
 # Getting Started
