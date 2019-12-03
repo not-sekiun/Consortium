@@ -11,7 +11,7 @@ All thats left to do is to add the other less important "peripheral features". T
 development started (well actually I wanted a fancy GUI and everything but Im scrapping the GUI idea, python is terrible with GUIs). Due to the fact that I have added mostly
 what I wanted to add and the fact that the project is coming very close to my original vision I have decided to bring the project into beta out of the alpha feature adding phase. BUT this does
 not mean that PyIris will undergone a feature freeze, Im putting it in perpetual beta, adding in new minor features as time passes (eg new components, encoders, etc.). Therefore, you
-can expect more minor updates in the future along with bug fixes. ALSO the PyIris framework is about to hit its 2nd anniversary (2017 11 NOV was the original creation date) so thats cool
+can expect more minor updates in the future along with bug fixes. ALSO the PyIris framework just hit its 2nd anniversary (2017 11 NOV was the original creation date) so thats cool
 and all. Anyways enough from me, heres the changelog.
 
 - fixed the active commands byte to string issue...
