@@ -41,6 +41,7 @@ and all. Anyways enough from me, heres the changelog.
 - added basic tab completion to all interfaces except the direct interface whose commands are influenced by the generated scout itself
 - finished refactoring all files in all folders and tested most commands
 - fixed an encoding error in the encoders byte to string and vice versa conversion was added
+- fixed an issue with the bootstrap module to now reject python 2 interpreters if running using them
 
 **Note:** currently there is a color formatting error in windows cmd when generating a new key during bootstrap this is caused by the way colorama works, essentially colorama color input doesnt work for input() in python due to some encoding issues with the interpreter
 so until colorama is patched this issue will persist. A small hack to fix this is to run os.system() which changes the encoding of the terminal so color works again but meh its not a big deal.
