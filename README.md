@@ -31,7 +31,8 @@ control of other compromised hosts.
 - Setting audio
 - Take pictures from webcam without writing to disk
 - Stackable encryption of scout payload source code, in a theoretically infinite stack in infinite variations
-- execute arbitrary python code and read the results even if the python interpreter is not installed on the target machine from compiled scouts
+- execute arbitrary python code and read the results even if the python interpreter is not installed on the target machine from compiled 
+scouts
 - request for admin/root
 - sleep for an arbitrary length of time before running (To bypass AV dynamic program analysis)
 - self delete (only works for scripts)
@@ -85,11 +86,14 @@ Next install an external dependency, xlib, required by pyperclip through apt-get
 
 ```sudo apt-get install xclip```
 
-Then install pyalsaaudio through apt-get
+Then install pyalsaaudio through apt-get, if you're installing on **ubuntu** please read the below note
 
 ```sudo apt-get install python3-alsaaudio```
 
-**NOTE : For some reason there exists no python3-alsaaudio package on ubuntu ALTHOUGH the package can be installed just fine on kali linux. PyIris
+**NOTE : For some reason there exists no python3-alsaaudio package for ubuntu that can be installed through apt/apt-get ALTHOUGH the 
+python3-alsaaudio package can be installed just fine on kali linux. This means that on ubuntu PyIris will NOT run due to it being unable 
+to import alsaaudio in the 3rd party library import testing phase of its bootstrap. Installing from pypi fails as well. You need to 
+build the python3-alsaaudio package from source to get PyIris to work on Ubuntu it seems.
 
 Finally, install the rest of the required modules with pip. Only install modules from the ```setup/linux/requirements.txt``` file as
 this section is for running the Linux edition of PyIris.
@@ -112,11 +116,12 @@ On linux to install any newly added third party modules or update then run
 
 ```pip3 install -r setup/linux/requirements.txt```
 
-## Recommended OS
+## Supported OS
 ### PyIris was successfully installed on the following operating systems
 - Windows 10
 - Kali Linux Rolling releases
-- Ubuntu 16.04 and future releases
+- Ubuntu 16.04 and future releases (TECHNICALLY supported, although python3-alsaaudio cannot be installed conventionally, see the note 
+above at the linux PyIris install section
 - Debian
 
 # Basic Usage
@@ -155,16 +160,20 @@ PyHook wheel file that works for your Windows version and download it. Next, pip
 If you downloaded the correct pyhook wheel file it should install succesfully.
 
 ### I correctly created my listeners and scouts why are the scouts not connecting to my listeners?
-Since the listeners actually open ports on your machine you may have to allow the python 3 interpreter (python.exe) through your firewall
-so that it can actually receive connections.
+Since the listeners actually open ports on your machine you may have to allow the python 3 interpreter (python.exe) through your 
+firewall so that it can actually receive connections. Another reason the scouts are not connecting is that your key could have changed 
+the pre generated key prompted during a new PyIris install and run is used to authenticate and connect to the listeners. The scout could 
+have been generated with a different key than the one that the listener is expecting, the ```regen``` command at the main home interface 
+would have changed the key, alternatively you may have directly edited the resources/PyIris.cred file that contains the key
 
 ### Why are there more linux components (backdoor functions) than windows components...
 Well this is due to several reasons. First, is the problem of open source code and mulitple distros. Linux has many distrubutions each 
 linux distro may be different or have a different system structure than each other linux system. Creating components to cover all of 
 them is incredibly difficult. Secondly, is support, simply put some linux systems just dont support some functions out of the box for 
-python. Lastly is the fact that the terminal in linux is much more powerful than cmd in windows, therefore a lot more things can be accomplished from the
-terminal than from cmd so there is no need to add extra components, your trusty linux/execute_command_bash will do the job for you. For example rather
-than adding a linux/browser component you can use the xdg-open command to open URLs its supported out of the box
+python. Lastly is the fact that the terminal in linux is much more powerful than cmd in windows, therefore a lot more things can be 
+accomplished from the terminal than from cmd so there is no need to add extra components, your trusty linux/execute_command_bash will do 
+the job for you. For example rather than adding a linux/browser component you can use the xdg-open command to open URLs its supported 
+out of the box
 
 ### Why are you using a raw text protocol isn't something like HTTP less suspicious to network analyst
 Yes it is I should probably be using HTTP buuuuut I am just lazy. Perhaps in a future update but that requires rewriting a lot of the 
