@@ -5,13 +5,14 @@ control of other compromised hosts.
 
 # Demo of PyIris in action on multiple operating systems (Windows and Linux)
 ## Dynamically generating a payload in Windows
-![Windows Generator Demo](https://user-images.githubusercontent.com/32593795/47714521-0f8ec080-dc78-11e8-8004-490eaff4f4f2.png)
+![Windows Generator Demo](https://user-images.githubusercontent.com/32593795/70084865-1db4ca80-164a-11ea-8837-461fdc39a770.png)
 
-## Remotely controlling a Windows system through a scout in Ubuntu
-![Ubuntu Scout Demo](https://user-images.githubusercontent.com/32593795/47714519-0dc4fd00-dc78-11e8-93b2-8e6811036910.png)
+## Remotely controlling a Windows system through a scout in Ubuntu (screenshot of victims machine is of the ubuntu attacker machine 
+since I'm running the ubuntu machine in a VM)
+![Ubuntu Scout Demo](https://user-images.githubusercontent.com/32593795/70084859-1ab9da00-164a-11ea-867f-2fb6e36106e5.png)
 
 ## Creating listeners that will receive connections from the scouts in Kali Linux 
-![Kali listener Demo](https://user-images.githubusercontent.com/32593795/47714529-11f11a80-dc78-11e8-81e7-6f18b3608948.png)
+![Kali listener Demo](https://user-images.githubusercontent.com/32593795/70084874-1f7e8e00-164a-11ea-96fb-50fcfd396f11.png)
 
 # Features (Both Windows and Linux)
 - Tab completion for most commands
