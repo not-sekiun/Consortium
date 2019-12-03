@@ -89,6 +89,8 @@ Then install pyalsaaudio through apt-get
 
 ```sudo apt-get install python3-alsaaudio```
 
+**NOTE : For some reason there exists no python3-alsaaudio package on ubuntu ALTHOUGH the package can be installed just fine on kali linux. PyIris
+
 Finally, install the rest of the required modules with pip. Only install modules from the ```setup/linux/requirements.txt``` file as
 this section is for running the Linux edition of PyIris.
 
