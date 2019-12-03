@@ -3,10 +3,10 @@ Well hello, its been a while and we've jumped from v0.8.1 to v1.0.0 all of sudde
 Well the reason we are now in 1.0.0 is because of the fact that the PyIris framework has undergone a relatively major update. It has undergone quite a bit of an overhaul mostly
 during the process of porting it over from Python 2.x to python 3.x. During this porting process I was able to iron out many bugs and make quite a few changes to
 the interface and underlying code. For example, the underlying wire protocol of the PyIris framework, particularly the file transfer protocol, has been updated
-to now utilize base64 rather than pickles to transfer data. Due to these "major" changes, PyIris 1.0.0 is no longer compatible with 0.8.1 PyIris and its scouts. Hence, the increment of
+to now utilize base64 rather than pickles to transfer data. Due to these "major" changes, PyIris 1.0.0 is no longer compatible with 0.8.1 PyIris (now a legacy version) and its scouts. Hence, the increment of
 the major semantic versioning number to signify a non backward compatible version of the new framework.
 
-At this point Im pretty sure that I have more or less cemented into place all the features that I want PyIris to have (the so called essential features).
+At this point Im pretty sure that I have more or less cemented into place all the core features that I want PyIris to have (the so called essential features).
 All thats left to do is to add the other less important "peripheral features". The 1.0.0 version is close enough to my original vision of what this framework would be like 2 years ago when
 development started (well actually I wanted a fancy GUI and everything but Im scrapping the GUI idea, python is terrible with GUIs). Due to the fact that I have added mostly
 what I wanted to add and the fact that the project is coming very close to my original vision I have decided to bring the project into beta out of the alpha feature adding phase. BUT this does
