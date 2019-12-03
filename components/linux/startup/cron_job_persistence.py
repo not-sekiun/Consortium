@@ -21,8 +21,8 @@ def cron_persist_startup():
     cron.write()
 ''')
     elif option == 'info':
-        print '\nName             : Cron job persistence startup component' \
+        print('\nName             : Cron job persistence startup component' \
               '\nOS               : Linux' \
               '\nRequired Modules : python-crontab (External), getpass, os, sys' \
               '\nCommands         : NIL (Runs at startup)' \
-              '\nDescription      : Create a cron job of the scout so it runs at startup\n'
+              '\nDescription      : Create a cron job of the scout so it runs at startup\n')

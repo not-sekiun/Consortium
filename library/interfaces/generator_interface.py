@@ -17,17 +17,36 @@ import library.commands.generator_interface.unload_enc as unload_enc
 import library.commands.generator_interface.more_enc as more_enc
 import library.modules.config as config
 
+try:
+    import readline
+except ImportError:
+    import gnureadline as readline
+
+
 config.main()
+generator_commands = ['clear', 'help', 'local', 'python', 'quit', 'generate', 'load_com', 'unload_com', 'load_enc',
+                      'unload_enc', 'more_com', 'more_enc', 'reset', 'set', 'show', 'back']
+
+
+def generator_completer(text, state):
+    for cmd in generator_commands:
+        if cmd.startswith(text):
+            if not state:
+                return cmd
+            else:
+                state -= 1
 
 
 def main():
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(generator_completer)
     while True:
         try:
             generator_append.main()
-            prompt = raw_input(config.generator_prompt).strip()
+            prompt = input(config.generator_prompt).strip()
             command = prompt.split(' ', 1)[0].lower()
             if command == 'back':
-                print config.inf + 'Returning...'
+                print(config.inf + 'Returning...')
                 return
             elif command == 'clear':
                 clear.main()
@@ -62,7 +81,7 @@ def main():
             elif not command:
                 pass
             else:
-                print config.neg + 'Invalid command, run "help" for help menu'
+                print(config.neg + 'Invalid command, run "help" for help menu')
         except EOFError:
             try:
                 time.sleep(2)

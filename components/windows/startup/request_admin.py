@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -25,8 +24,8 @@ def req_admin_startup():
         os._exit(1)
 ''')
     elif option == 'info':
-        print '\nName             : Request admin startup component' \
+        print('\nName             : Request admin startup component' \
               '\nOS               : Windows' \
               '\nRequired Modules : ctypes, sys' \
               '\nCommands         : NIL (Runs at startup)' \
-              '\nDescription      : Makes the script request for admin before running\n'
+              '\nDescription      : Makes the script request for admin before running\n')

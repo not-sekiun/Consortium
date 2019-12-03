@@ -1,10 +1,13 @@
 pywin32==223
 opencv-python==3.4.4.19
+pyperclip==1.7.0
 comtypes==1.1.7
 mss==3.3.1
-Pillow==6.2.0
+Pillow==5.2.0
 PyAutoGUI==0.9.38
-PyInstaller==3.4
+PyInstaller==3.5
 colorama==0.3.9
 cryptography==2.6.1
-pyHook-1.5.1-cp27-cp27m-win_amd64.whl
+pyHook-1.5.1-cp37-cp37m-win_amd64.whl
+pycaw==20181226
+pyreadline==2.1

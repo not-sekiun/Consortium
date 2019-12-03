@@ -4,7 +4,7 @@ config.main()
 
 
 def main(id):
-    if id in config.listener_database.keys():
+    if id in list(config.listener_database.keys()):
         return False
     else:
         return True

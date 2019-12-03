@@ -9,15 +9,15 @@ def main(inp_data, context_type, operation):
     if data == 'all':  # filter special cases
         if context_type == 'components' and operation == 'load':
             if config.scout_values['Windows'][0] == 'True':
-                return [str(i) for i in config.win_components.keys() if
+                return [str(i) for i in list(config.win_components.keys()) if
                         not config.win_components[str(i)].startswith('windows/bases/')]
             else:
-                return [str(i) for i in config.lin_components.keys() if
+                return [str(i) for i in list(config.lin_components.keys()) if
                         not config.lin_components[str(i)].startswith('linux/bases/')]
         elif data == 'all' and operation == 'unload':
             return ['all']
         elif context_type == 'encoders' and operation == 'load':
-            return config.encoders.keys()
+            return list(config.encoders.keys())
 
     # Actual formatting occurs here
 
@@ -27,11 +27,12 @@ def main(inp_data, context_type, operation):
     non_ranges = []
     inp_data = inp_data.strip()  # strip input data of all leading and ending whitespace
     data = inp_data.split(',')  # split by comma
-    data = list(set(data))  # remove all duplicates after comma split
+    if context_type == 'components':
+        data = list(set(data))  # remove all duplicates after comma split
 
     for i in data:
         if re.match('^[0-9]+\-[0-9]+$',
-                    i):  # initialize regex match to format of range IDs, matches "positive number-positive"
+                    i):  # initialize regex match to format of range IDs, matches "positive number-positive number"
             ranges.append(i)
         else:
             non_ranges.append(i)
@@ -43,10 +44,10 @@ def main(inp_data, context_type, operation):
             error = True  # indicate formatting error
             break
     if error and output_list:  # we hit an error however we still hit a match indicating invalid format
-        print 'Invalid generator ID formatting : String detected while sorting for integer IDs'
-        return
+        print(config.neg + 'Invalid generator ID formatting : String detected while sorting for integer IDs')
+        return []
     elif error and not output_list and not ranges:  # nothing in non ranges is an integer and there are no proper ranges meaning string based input only
-        print config.neg + 'Generator found no IDs'
+        print(config.inf + 'Generator found no IDs')
         if type(inp_data) is list:
             return inp_data
         return [inp_data]  # most probably a direct call for the component which we return
@@ -66,18 +67,18 @@ def main(inp_data, context_type, operation):
             s_val = int(s_val)
             # f_val and s_val are never negative since regex matches "positive number-positive number"
             if f_val > s_val:
-                print config.neg + 'Invalid generator ID formatting : First range value is larger than second range value'
-                return
+                print(config.neg + 'Invalid generator ID formatting : First range value is larger than second range value')
+                return []
             else:  # 0 < f < s
-                mini_range = range(f_val, s_val + 1)  # add 1 to account for the final val
+                mini_range = list(range(f_val, s_val + 1))  # add 1 to account for the final val
                 output_list += mini_range  # fill each value in range of f and s into output
     except OverflowError:
-        print config.neg + 'Invalid generator ID formatting : Range value is too large'
+        print(config.neg + 'Invalid generator ID formatting : Range value is too large')
         return []
-
-    output_list = list(set(output_list))  # remove all duplicates in the range addition section ^
-    output_list.sort()  # sort for better eyecandy when loading components
-    print config.pos + 'Generator ID formatting successful'
+    if context_type == 'components':
+        output_list = list(set(output_list))  # remove all duplicates in the range addition section ^
+        output_list.sort()  # sort for better eyecandy when loading components
+    print(config.pos + 'Generator ID formatting successful')
     if type(output_list) is list:
         return output_list
     return [output_list]  # final function iterates through output

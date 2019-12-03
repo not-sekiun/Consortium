@@ -14,20 +14,39 @@ import library.commands.listener_interface.rename as rename
 import library.modules.socket_connector as socket_connector
 import library.modules.config as config
 
+try:
+    import readline
+except ImportError:
+    import gnureadline as readline
+
 config.main()
+listener_commands = ['clear', 'help', 'local', 'python', 'quit', 'bind', 'kill', 'more', 'rename', 'reset', 'run',
+                     'set', 'show',
+                     'back']
+
+
+def listener_completer(text, state):
+    for cmd in listener_commands:
+        if cmd.startswith(text):
+            if not state:
+                return cmd
+            else:
+                state -= 1
 
 
 def main():
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(listener_completer)
     while True:
         try:
-            prompt = raw_input(
+            prompt = input(
                 '\x1b[1m\x1b[37mPyIris (\x1b[0m' + '\x1b[1m\x1b[34mListeners\x1b[0m' + '\x1b[1m\x1b[37m) > \x1b[0m').strip()
             command = prompt.split(' ', 1)[0].lower()
             if command == 'back':
-                print config.inf + 'Returning...'
+                print(config.inf + 'Returning...')
                 return
             elif command == 'bind':
-                print config.inf + 'Binding...'
+                print(config.inf + 'Binding...')
                 socket_connector.main(prompt)
             elif command == 'clear':
                 clear.main()
@@ -56,7 +75,7 @@ def main():
             elif not command:
                 pass
             else:
-                print config.neg + 'Invalid command, run "help" for help menu'
+                print(config.neg + 'Invalid command, run "help" for help menu')
         except EOFError:
             try:
                 time.sleep(2)

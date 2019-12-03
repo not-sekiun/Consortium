@@ -16,7 +16,7 @@ def wallpaper(data):
     RegSetValueEx(key, "WallpaperStyle", 0, REG_SZ, "0")
     RegSetValueEx(key, "CenterWallpaper", 0, REG_SZ, "0")
     SystemParametersInfo(SPI_SETDESKWALLPAPER, path, 1+2)
-    s.sendall('[+]Set wallpaper to : ' + path)
+    s.sendall(('[+]Set wallpaper to : ' + path).encode())
 ''')
         config.logics.append('''
             elif command == "wallpaper":
@@ -24,8 +24,8 @@ def wallpaper(data):
         config.help_menu[
             'wallpaper <Remote path of picture>'] = 'Set the targets wallpaper to a specified image file on the remote system'
     elif option == 'info':
-        print '\nName             : Wallpaper Changer' \
+        print('\nName             : Wallpaper Changer' \
               '\nOS               : Windows' \
               '\nRequired Modules : win32api (External), win32con (External), win32gui (External)' \
               '\nCommands         : wallpaper <Remote path of picture>' \
-              '\nDescription      : Set the targets wallpaper to a specified image file on the remote system\n'
+              '\nDescription      : Set the targets wallpaper to a specified image file on the remote system\n')

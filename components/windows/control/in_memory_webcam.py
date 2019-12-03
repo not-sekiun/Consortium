@@ -23,8 +23,8 @@ def webcam():
         config.help_menu[
             'webcam'] = 'Snaps a picture from the webcam and saves it as an in memory pickle before sending it to PyIris to decode and download'
     elif option == 'info':
-        print '\nName             : In-memory webcam component' \
+        print('\nName             : In-memory webcam component' \
               '\nOS               : Windows' \
               '\nRequired Modules : PIL (external), cv2 (external), io, pickle' \
               '\nCommands         : webcam' \
-              '\nDescription      : Snaps a picture from the webcam and saves it as an in memory pickle before sending it to PyIris to decode and download\n'
+              '\nDescription      : Snaps a picture from the webcam and saves it as an in memory pickle before sending it to PyIris to decode and download\n')

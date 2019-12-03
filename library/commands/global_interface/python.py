@@ -6,8 +6,8 @@ config.main()
 
 def main():
     try:
-        print config.inf + 'Opening python interpreter on local system'
+        print(config.inf + 'Opening python interpreter on local system')
         os.system('python')
     except KeyboardInterrupt:
         pass
-    print config.inf + 'Exiting...'
+    print(config.inf + 'Exiting...')

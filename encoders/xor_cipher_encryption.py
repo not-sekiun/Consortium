@@ -26,16 +26,17 @@ def main(option, filepath=None):
                 if 'import' in i and i != 'from itertools import cycle':
                     imported_modules.append(i)
             key = return_random_string.main(50)
-            print '   ' + config.inf + 'Random 50 length XOR cipher key : ' + key
-            encoded_source = base64.b64encode(xor_encoder('\n'.join(source), key))
-            obfuscated = ';'.join(imported_modules) + ';exec("".join(chr(ord(c1)^ord(c2)) for (c1,c2) in zip(b64decode("' + encoded_source + '"),cycle("' + key + '"))))'
+            print('   ' + config.inf + 'Random 50 length XOR cipher key : ' + key)
+            encoded_source = base64.b64encode((xor_encoder('\n'.join(source), key)).encode()).decode()
+            obfuscated = ';'.join(
+                imported_modules) + ';exec("".join(chr(ord(c1)^ord(c2)) for (c1,c2) in zip(b64decode("' + encoded_source + '").decode(),cycle("' + key + '"))))'
             with open(filepath, 'w') as f:
                 f.write(obfuscated)
-                print '   ' + config.inf + 'Encoded scout and overwrote raw file with XOR encoded file contents'
+                print('   ' + config.inf + 'Encoded scout and overwrote raw file with XOR encoded file contents')
         except SyntaxError:
-            print '   ' + config.neg + 'Could not encode scout'
+            print('   ' + config.neg + 'Could not encode scout')
     elif option == 'info':
-        print '\nName             : XOR Cipher Encoder' \
+        print('\nName             : XOR Cipher Encoder' \
               '\nRequired Modules : itertools, base64' \
               '\nDescription      : Uses XOR cipher encryption to obfuscate the scout source' \
-              '\nNote             : Requires base64 module to encode raw bytes as text so the scout is able to base64 decode itself into raw bytes to XOR decrypt itself\n'
+              '\nNote             : Requires base64 module to encode raw bytes as text so the scout is able to base64 decode itself into raw bytes to XOR decrypt itself\n')

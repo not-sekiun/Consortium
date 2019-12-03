@@ -15,14 +15,14 @@ def main(host, port, name, reply):
         s.settimeout(2)
         local_copy_of_id = config.incremented_listener_id
         config.listener_database[str(config.incremented_listener_id)] = [host, str(port), name,
-                                                                         datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+                                                                         datetime.now().strftime('%Y-%m-%d %H:%M:%S'), []]
         config.incremented_listener_id += 1
-        print config.pos + 'Successfully started listener thread at : ' + host + ':' + str(port)
+        print(config.pos + 'Successfully started listener thread at : ' + host + ':' + str(port))
         while True:
             try:
                 if should_listener_die.main(str(local_copy_of_id)):
-                    print '\n' + config.pos + 'Listener at : ' + host + ':' + str(
-                        port) + ' , received kill message, exiting...'
+                    print('\n' + config.pos + 'Listener at : ' + host + ':' + str(
+                        port) + ' , received kill message, exiting...')
                     return
                 else:
                     try:
@@ -31,37 +31,38 @@ def main(host, port, name, reply):
                         continue
                     if config.white_list:
                         if addr[0] not in config.white_list:
-                            conn.send(reply)
+                            conn.send(reply.encode())
                             conn.close()
                             continue
                     elif config.black_list:
                         if addr[0] in config.black_list:
-                            conn.send(reply)
+                            conn.send(reply.encode())
                             conn.close()
                             continue
                     if conn:
                         conn.settimeout(5)
-                        await_key = conn.recv(9999999)
+                        await_key = conn.recv(9999999).decode()
                         conn.settimeout(None)
                         if await_key == config.key:
-                            print '\n' + config.pos + 'Connection received from scout : ' + addr[0] + ':' + str(
-                                addr[1]) + ' -> ' + host + ':' + str(port)
+                            print('\n' + config.pos + 'Connection received from scout : ' + addr[0] + ':' + str(
+                                addr[1]) + ' -> ' + host + ':' + str(port))
                             config.scout_database[str(config.incremented_scout_id)] = [conn, addr[0], str(addr[1]),
                                                                                        host + ':' + str(port),
                                                                                        return_random_string.main(5),
                                                                                        datetime.now().strftime(
                                                                                            '%Y-%m-%d %H:%M:%S'),
                                                                                        'Reverse']
+                            config.listener_database[str(local_copy_of_id)][4].append(addr[0] + ':' + str(addr[1]))
                             config.incremented_scout_id += 1
                         else:
-                            conn.send(reply)
+                            conn.send(reply.encode())
                             conn.close()
                     else:
                         conn.close()
             except socket.error:
                 continue
     except Exception as e:
-        print '\n' + config.war + 'Error in listener thread : ' + str(e) + ', killing thread...'
+        print('\n' + config.war + 'Error in listener thread : ' + str(e) + ', killing thread...')
         try:
             del (config.listener_database[str(local_copy_of_id)])
         except (IndexError, ValueError, UnboundLocalError):

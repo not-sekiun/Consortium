@@ -1,3 +1,53 @@
+# Update 1.0.0 (Out of Alpha into (probably) Perpetual Beta!!!!) [Written on Nov 12 2019]
+Well hello, its been a while and we've jumped from v0.8.1 to v1.0.0 all of sudden. You may be wondering, why are we in 1.0.0? What were the major changes that have been made to the framework?
+Well the reason we are now in 1.0.0 is because of the fact that the PyIris framework has undergone a relatively major update. It has undergone quite a bit of an overhaul mostly
+during the process of porting it over from Python 2.x to python 3.x. During this porting process I was able to iron out many bugs and make quite a few changes to
+the interface and underlying code. For example, the underlying wire protocol of the PyIris framework, particularly the file transfer protocol, has been updated
+to now utilize base64 rather than pickles to transfer data. Due to these "major" changes, PyIris 1.0.0 is no longer compatible with 0.8.1 PyIris and its scouts. Hence, the increment of
+the major semantic versioning number to signify a non backward compatible version of the new framework.
+
+At this point Im pretty sure that I have more or less cemented into place all the features that I want PyIris to have (the so called essential features).
+All thats left to do is to add the other less important "peripheral features". The 1.0.0 version is close enough to my original vision of what this framework would be like 2 years ago when
+development started (well actually I wanted a fancy GUI and everything but Im scrapping the GUI idea, python is terrible with GUIs). Due to the fact that I have added mostly
+what I wanted to add and the fact that the project is coming very close to my original vision I have decided to bring the project into beta out of the alpha feature adding phase. BUT this does
+not mean that PyIris will undergone a feature freeze, Im putting it in perpetual beta, adding in new minor features as time passes (eg new components, encoders, etc.). Therefore, you
+can expect more minor updates in the future along with bug fixes. ALSO the PyIris framework is about to hit its 2nd anniversary (2017 11 NOV was the original creation date) so thats cool
+and all. Anyways enough from me, heres the changelog.
+
+- fixed the active commands byte to string issue...
+- patched set_audio added new windows command set_audio_range, linux audio ranges default from 0-100 due to alsaaudio this information has been appended to the set_audio linux help page
+- patched download_web, urllib2 in python 2 has been replaced with urllib
+- patched execute python, StringIO in python 2 is now io in python 3
+- patched reg_persist, startup reg_persist and sdclt_uac_bypass. We are now using winreg in python3 rather than _winreg in python 2
+- fixed bytestring errors with chromedump, patched chromedump
+- fixed byte conversion problems with pickles and strings, added new module for download file transfers "recv_all_download_file", patched download_file
+- fixed an error with keyboard interrupting for windows/startup/sleep
+- fixed an issue with exec_file in windows
+- fixed a python3 type error about dictionary sizes changing during iteration and removal of key value pairs within the dictionary
+- fixed a bug with the generator parser and added the ability to do "more_com all" and "more_enc all"
+- fixed the reset command that was resetting old values that i forgot to update
+- fixed FileNotFoundError being confused with socket.error in the download component through taking into account of exception hierarchies in error handling for scouts (this has slighlty increased the base modules filesize)
+- compacted recv_all_download_file with recv_all
+- fixed upload_file, rewrote the upload_file wire protocol to utilize base64 to send binary data as ascii since the pyiris wire protocol is text based purely. pickles no longer needed
+- fixed download file, rewrote the download file wire protocol to utilize base64 as well, pickles no longer needed.
+- fixed the download invalid file error being confused with socket error due to exception hierarchies
+- fixed an index error with exec_py_file in direct interface when running the command without a file parameter so direct interface will now catch the error
+- fixed screenshotting in linux and windows
+- fixed a code sequence bug that affected the robust connection handling of scouts
+- removed the python 2 to 3 "six" module from the porting process
+- Migrated clip_logger of windows to use pyperclip, same as the linux version to standardize. This change was also made due to the fact that win32clipboard was slightly buggy and would sometimes mess up the clipboard when using clip_clear
+- in the bootstrap.py file I added an area that checks to see if the required third party libraries (in their respective OSes) are installed and can be imported
+- added history log that show history of scout connections on a specific listener
+- added basic tab completion to all interfaces except the direct interface whose commands are influenced by the generated scout itself
+- finished refactoring all files in all folders and tested most commands
+- fixed an encoding error in the encoders byte to string and vice versa conversion was added
+
+**Note:** currently there is a color formatting error in windows cmd when generating a new key during bootstrap this is caused by the way colorama works, essentially colorama color input doesnt work for input() in python due to some encoding issues with the interpreter
+so until colorama is patched this issue will persist. A small hack to fix this is to run os.system() which changes the encoding of the terminal so color works again but meh its not a big deal.
+
+**Another Note:** Also tested PyIris in cmder under a windows box and I got a weird bug regarding text colors this is due to the encoding of the cmder terminal itself so again a patch to cmder needs
+to be made. The framework is still usable however.
+
 # Update 0.8.1
 - Added the XOR Encoder and added a sleep module for windows and linux variant scouts
 - Reimplemented server response spoofing for listeners for unauthenticated clients
@@ -83,25 +133,32 @@ plan to do.
 ## Next up, the roadmap
 - Planning on adding encryption between communications? Details are very hazy. There may be more than 1 base component users can choose 
 to use should it happen!
-- Planning to add 1337 45cii b4n3r5 cause even metasploit has them. Just for fun and some eye candy its not hard so they'll come out 
-pretty quickly 
-- Of course I will continue to build on my database of components planning on adding some to help in pivoting through networks and 
-lateral movement
+- ~~Planning to add 1337 45cii b4n3r5 cause even metasploit has them. Just for fun and some eye candy its not hard so they'll come out
+pretty quickly~~ (Lmao "quickly" still not added yet. Ill save these for official release.)
+- ~~Of course I will continue to build on my database of components planning on adding some to help in pivoting through networks and
+lateral movement~~ (Added most of what I really wanted to add. Even after 1.0.0 I will continue adding so this is off the map now)
 - Writing a wiki is also on the agenda, unfortunately PyIris' "help" may not be enough.
-- Code obfuscation and encryption, to circumvent AV I need to create custom encoders for scouts that could be layered on top of each 
-other, eg XOR on top of base64 on top of AES encryption. This will be part of the genretor interface
-- Thinking of adding powershell/bash script support so scouts can execute uploaded bash/powershell scripts
-- Oh yeah also PyIris is still in Alpha I'm thinking of moving it to BETA bug testing and eventual OFFICIAL RELEASE (v1.0.0) after
-completing all the roadmap objectives here, that will take time though, Im still a student and have high school stuff to deal with...
+- ~~Code obfuscation and encryption, to circumvent AV I need to create custom encoders for scouts that could be layered on top of each
+other, eg XOR on top of base64 on top of AES encryption. This will be part of the genretor interface~~ (DONE, now the only work I need to
+do is to add even MOAR types of encoders)
+- ~~Thinking of adding powershell/bash script support so scouts can execute uploaded bash/powershell scripts, time to live off the land~~ (Sort
+of bamboozled on how to do this I know you can execute files on disk with exec_c/exec_b but I want this to be in memory, will need to do more
+research i guess its off the map for now)
+- ~~Oh yeah also PyIris is still in ALPHA I'm thinking of moving it to BETA bug testing and eventual OFFICIAL RELEASE (v1.0.0) after
+completing all the roadmap objectives here, that will take time though, Im still a student and have high school stuff to deal with...~~ (Finally in perpetual beta after 2 years)
 - Gotta add support for other compilers like py2exe or nutika wine pyinstaller exes get falsely flagged by AV, also gonna add the 
 ability to change the compiled exes file icon
 - In order to bamboozle AV even more Im thinking of adding a trash code generator that generates useless code in python and comments
-that will still change the file signature even more
+that will still change the file signature even more wont help against heuristic behavioral detection but we can bamboozle static 
+detection
+- ~~planning to add tab completion so I dont have to type as much (pyreadline, gnureadline)~~ (DONE)
 
 ## Conclusion
-I dont expect development of PyIris to be moved to beta until late June maybe??? I still have tons of cool ideas for this project that 
-may be put in during development. Dont expect a definite release date or anything. I doubt anyone will read this far but if so MERRY 
-CHRISTMAS and thank you for supporting the development of PyIris, seriously just cloning it or star-ing it gives me life.
+I dont expect development of PyIris to be moved to beta until late June maybe??? (Hi this is me from the future, development is taking 
+even longer due to external commitments and school ;-; beta will come maybe by the end of the year now that I am free) I still have tons 
+of cool ideas for this project that may be put in during development. Dont expect a definite release date or anything. I doubt anyone 
+will read this far but if so MERRY CHRISTMAS and thank you for supporting the development of PyIris, seriously just cloning it or 
+staring it gives me life.
 
 
 # Update 0.7.1

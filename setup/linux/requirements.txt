@@ -1,10 +1,11 @@
 opencv-python==3.4.4.19
 mss==3.3.1
-Pillow==6.2.0
+Pillow==5.3.0
 Xlib==0.21
 PyAutoGUI==0.9.38
 pyperclip==1.7.0
 pyxhook==1.0.0
 python-crontab==2.3.5
-PyInstaller==3.4
+PyInstaller==3.5
 cryptography==2.6.1
+gnureadline==8.0.0

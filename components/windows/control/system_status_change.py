@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -11,16 +10,16 @@ def main(option):
         config.functions.append('''
 def system_stat(option):
     if option == 'lock':
-        s.sendall('[*]Locking user...')
+        s.sendall('[*]Locking user...'.encode())
         windll.user32.LockWorkStation()
     elif option == 'logout':
-        s.sendall('[*]Logging user out...')
+        s.sendall('[*]Logging user out...'.encode())
         os.system('shutdown /l')
     elif option == 'restart':
-        s.sendall('[*]System restarting...')
+        s.sendall('[*]System restarting...'.encode())
         os.system('shutdown /r /t 0')
     elif option == 'shutdown':
-        s.sendall('[*]System shutting down...')
+        s.sendall('[*]System shutting down...'.encode())
         os.system('shutdown /s /t 0')''')
         config.logics.append('''
             elif command in ('lock','logout','restart','shutdown'):
@@ -30,8 +29,8 @@ def system_stat(option):
         config.help_menu['restart'] = 'Allows you to gracefully restart the target system'
         config.help_menu['shutdown'] = 'Allows you to gracefully shutdown the target system'
     elif option == 'info':
-        print '\nName             : System status changer component' \
+        print('\nName             : System status changer component' \
               '\nOS               : Windows' \
               '\nRequired Modules : os, ctypes' \
               '\nCommands         : lock, logout, restart, shutdown' \
-              '\nDescription      : Allows you to gracefully lock, logout, restart or shutdown a computer\n'
+              '\nDescription      : Allows you to gracefully lock, logout, restart or shutdown a computer\n')

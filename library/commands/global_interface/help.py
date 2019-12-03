@@ -94,310 +94,323 @@ Generator Interface Help Menu
    
    Interface Commands :
       back              Return to the home interface
+      
+
+ID Formatting when loading modules and encoders
+===============================================
+    Shortcuts exist when loading modules by their IDs in bulk. To load a range of IDs use "-" between the ID ranges to load from
+    to load separate ID elements use "," to denote separate elements. Ranges can also be nested as elements. When loading components
+    the final ID's will be formatted in order and stripped of duplicates, when loading encoders ID's of encoders remain in the
+    order they originally were in duplicates remain since encoders can be stacked
+
+    eg.
+    load_com 1-10 - loads components of IDs 1,2,3,4,5,6,7,8,9,10
+    unload_com 2,4 - unloads components of ID's 2 and 4
+    load_enc 0,1,2,0-2 loads encoders of ID 0,1,2,0,1,2 in order
 '''
 
 
 def home(command):
     if command == 'add':
-        print '\nUsage       : add ["wh"|"bl"] <h>' \
+        print('\nUsage       : add ["wh"|"bl"] <h>' \
               '\nDescription : Add a hostname to the hostname blacklist or whitelist' \
               '\nOptions     : "wh"  : Add to the hostname whitelist' \
               '\n              "bl"  : Add to the hostname blacklist' \
-              '\n              <h>   : The hostname to add to the lists\n'
+              '\n              <h>   : The hostname to add to the lists\n')
     elif command == 'clear':
-        print '\nUsage       : clear' \
-              '\nDescription : Clears the screen\n'
+        print('\nUsage       : clear' \
+              '\nDescription : Clears the screen\n')
     elif command == 'generator':
-        print '\nUsage       : generator' \
-              '\nDescription : Switch to the generator interface\n'
+        print('\nUsage       : generator' \
+              '\nDescription : Switch to the generator interface\n')
     elif command == 'help':
-        print '\nUsage       : help [opt : <c>]' \
+        print('\nUsage       : help [opt : <c>]' \
               '\nDescription : Displays the help for a command or the general help menu if no value is provided' \
-              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n'
+              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n')
     elif command == 'listeners':
-        print '\nUsage       : listeners' \
-              '\nDescription : Switch to the listener interface\n'
+        print('\nUsage       : listeners' \
+              '\nDescription : Switch to the listener interface\n')
     elif command == 'local':
-        print '\nUsage       : local <c>' \
+        print('\nUsage       : local <c>' \
               '\nDescription : Locally executes a shell command and displays the output' \
-              '\nOptions     : <c> : A command to execute locally on the system\n'
+              '\nOptions     : <c> : A command to execute locally on the system\n')
     elif command == 'python':
-        print '\nUsage       : python' \
-              '\nDescription : Enters the systems local python interpreter\n'
+        print('\nUsage       : python' \
+              '\nDescription : Enters the systems local python interpreter\n')
     elif command == 'quit':
-        print '\nUsage       : quit' \
-              '\nDescription : Quits the framework\n'
+        print('\nUsage       : quit' \
+              '\nDescription : Quits the framework\n')
     elif command == 'regen':
-        print '\nUsage       : regen' \
-              '\nDescription : Manually initiate a key generation, overwriting existing key file\n'
+        print('\nUsage       : regen' \
+              '\nDescription : Manually initiate a key generation, overwriting existing key file\n')
     elif command == 'reset':
-        print '\nUsage       : reset ["wh"|"bl"|"all"]' \
+        print('\nUsage       : reset ["wh"|"bl"|"all"]' \
               '\nDescription : Reset and clear the hostname blacklist or whitelist' \
               '\nOptions     : "wh"  : Reset the hostname whitelist' \
               '\n              "bl"  : Reset the hostname blacklist' \
-              '\n              "all" : Reset both hostname blacklist and whitelist\n'
+              '\n              "all" : Reset both hostname blacklist and whitelist\n')
     elif command == 'rm':
-        print '\nUsage       : rm ["wh"|"bl"] <h>' \
+        print('\nUsage       : rm ["wh"|"bl"] <h>' \
               '\nDescription : Remove a hostname from the hostname blacklist or whitelist' \
               '\nOptions     : "wh"  : Remove from the hostname whitelist' \
               '\n              "bl"  : Remove from the hostname blacklist' \
-              '\n              <h>   : The hostname to remove from the lists\n'
+              '\n              <h>   : The hostname to remove from the lists\n')
     elif command == 'scouts':
-        print '\nUsage       : scouts' \
-              '\nDescription : Switch to the scout interface\n'
+        print('\nUsage       : scouts' \
+              '\nDescription : Switch to the scout interface\n')
     elif command == 'show':
-        print '\nUsage       : show ["wh"|"bl"|"all"|"key"]' \
+        print('\nUsage       : show ["wh"|"bl"|"all"|"key"]' \
               '\nDescription : Show the hostname blacklist, whitelist, both, or listener key' \
               '\nOptions     : "wh"  : Show the hostname whitelist' \
               '\n              "bl"  : Show the hostname blacklist' \
               '\n              "all" : Show both the hostname blacklist and whitelist' \
-              '\n              "key" : Show the currently used listener key'
+              '\n              "key" : Show the currently used listener key')
     elif command == '?':
-        print '\nAn alias for the command "help"\n'
+        print('\nAn alias for the command "help"\n')
     elif command == '!':
-        print '\nAn alias for the command "local"\n'
+        print('\nAn alias for the command "local"\n')
     else:
-        print config.neg + 'Please enter a valid command'
+        print(config.neg + 'Please enter a valid command')
 
 
 def listener(command):
     if command == 'back':
-        print '\nUsage       : back' \
-              '\nDescription : Return to the home interface\n'
+        print('\nUsage       : back' \
+              '\nDescription : Return to the home interface\n')
     elif command == 'bind':
-        print '\nUsage       : bind <host> <port>' \
+        print('\nUsage       : bind <host> <port>' \
               '\nDescription : Connects to a scout using a bind connection protocol' \
               '\nOptions     : <host> : Hostname of scout' \
-              '\n              <port> : Port number that remote scout has opened\n'
+              '\n              <port> : Port number that remote scout has opened\n')
     elif command == 'clear':
-        print '\nUsage       : clear' \
-              '\nDescription : Clears the screen\n'
+        print('\nUsage       : clear' \
+              '\nDescription : Clears the screen\n')
     elif command == 'help':
-        print '\nUsage       : help [opt : <c>]' \
+        print('\nUsage       : help [opt : <c>]' \
               '\nDescription : Displays the help for a command or the general help menu if no value is provided' \
-              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n'
+              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n')
     elif command == 'kill':
-        print '\nUsage       : kill [<i>|"all"]' \
+        print('\nUsage       : kill [<i>|"all"]' \
               '\nDescription : Kills a listener by its ID' \
               '\nOptions     : <i>   : ID of listener to kill' \
-              '\n              "all" : Kill all listeners\n'
+              '\n              "all" : Kill all listeners\n')
     elif command == 'local':
-        print '\nUsage       : local <c>' \
+        print('\nUsage       : local <c>' \
               '\nDescription : Locally executes a shell command and displays the output' \
-              '\nOptions     : <c> : A command to execute locally on the system\n'
+              '\nOptions     : <c> : A command to execute locally on the system\n')
     elif command == 'more':
-        print '\nUsage       : more [<i>|"all"]' \
+        print('\nUsage       : more [<i>|"all"]' \
               '\nDescription : Show more information for a listener by its ID or for all listeners' \
               '\nOptions     : <i>   : ID of the listener to show more information of' \
-              '\n              "all" : Show information for all listeners\n'
+              '\n              "all" : Show information for all listeners\n')
     elif command == 'python':
-        print '\nUsage       : python' \
-              '\nDescription : Enters the systems local python interpreter\n'
+        print('\nUsage       : python' \
+              '\nDescription : Enters the systems local python interpreter\n')
     elif command == 'quit':
-        print '\nUsage       : quit' \
-              '\nDescription : Quits the framework\n'
+        print('\nUsage       : quit' \
+              '\nDescription : Quits the framework\n')
     elif command == 'rename':
-        print '\nUsage       : rename <i> <n>' \
+        print('\nUsage       : rename <i> <n>' \
               '\nDescription : Rename a listener by ID' \
               '\nOptions     : <i> : ID of listener to rename' \
-              '\n              <n> : New name of the listener\n'
+              '\n              <n> : New name of the listener\n')
     elif command == 'reset':
-        print '\nUsage       : reset [<o>|"all"]' \
+        print('\nUsage       : reset [<o>|"all"]' \
               '\nDescription : Reset a set option to the default value' \
               '\nOptions     : <o>   : Option to reset the value for' \
-              '\n              "all" : Reset all options\n'
+              '\n              "all" : Reset all options\n')
     elif command == 'run':
-        print '\nUsage       : run' \
-              '\nDescription : Starts a listener with the options the user has set using the "set" command\n'
+        print('\nUsage       : run' \
+              '\nDescription : Starts a listener with the options the user has set using the "set" command\n')
     elif command == 'set':
-        print '\nUsage       : set <o> <v>' \
+        print('\nUsage       : set <o> <v>' \
               '\nDescription : Set an option to a specific value' \
               '\nOptions     : <o> : The valid option of a listener that can be set' \
-              '\n              <v> : The value to set that option to\n'
+              '\n              <v> : The value to set that option to\n')
     elif command == 'show':
-        print '\nUsage       : show ["options"|"listeners"]' \
+        print('\nUsage       : show ["options"|"listeners"]' \
               '\nDescription : Show the current configurations of a listener that is being set' \
               '\nOptions     : "options"   : Show the currently set options of a listener' \
-              '\n              "listeners" : Show all active listeners\n'
+              '\n              "listeners" : Show all active listeners\n')
     elif command == '?':
-        print '\nAn alias for the command "help"\n'
+        print('\nAn alias for the command "help"\n')
     elif command == '!':
-        print '\nAn alias for the command "local"\n'
+        print('\nAn alias for the command "local"\n')
     else:
-        print config.neg + 'Please enter a valid command'
+        print(config.neg + 'Please enter a valid command')
 
 
 def scout(command):
     if command == 'back':
-        print '\nUsage       : back' \
-              '\nDescription : Return to the home interface\n'
+        print('\nUsage       : back' \
+              '\nDescription : Return to the home interface\n')
     elif command == 'bridge':
-        print '\nUsage       : bridge <i>' \
+        print('\nUsage       : bridge <i>' \
               '\nDescription : Bridge to a scout and directly interact with it' \
-              '\nOptions     : <i> : The ID of the scout to show more info for\n'
+              '\nOptions     : <i> : The ID of the scout to show more info for\n')
     elif command == 'clear':
-        print '\nUsage       : clear' \
-              '\nDescription : Clears the screen\n'
+        print('\nUsage       : clear' \
+              '\nDescription : Clears the screen\n')
     elif command == 'disconnect':
-        print '\nUsage       : disconnect (<i>|"all")' \
+        print('\nUsage       : disconnect (<i>|"all")' \
               '\nDescription : Disconnect a scout from the listeners' \
               '\nOptions     : <i>   : The ID of the scout to disconnect (scout sleeps for 3 seconds before reconnecting)' \
-              '\n              "all" : Disconnect all scouts (all sleep for 3 seconds before reconnecting)\n'
+              '\n              "all" : Disconnect all scouts (all sleep for 3 seconds before reconnecting)\n')
     elif command == 'help':
-        print '\nUsage       : help [opt : <c>]' \
+        print('\nUsage       : help [opt : <c>]' \
               '\nDescription : Displays the help for a command or the general help menu if no value is provided' \
-              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n'
+              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n')
     elif command == 'kill':
-        print '\nUsage       : kill (<i>|"all")' \
+        print('\nUsage       : kill (<i>|"all")' \
               '\nDescription : Kill a scout, force it to exit and terminate itself remotely' \
               '\nOptions     : <i>   : The ID of the scout to kill' \
-              '\n              "all" : Kill all scouts\n'
+              '\n              "all" : Kill all scouts\n')
     elif command == 'local':
-        print '\nUsage       : local <c>' \
+        print('\nUsage       : local <c>' \
               '\nDescription : Locally executes a shell command and displays the output' \
-              '\nOptions     : <c> : A command to execute locally on the system\n'
+              '\nOptions     : <c> : A command to execute locally on the system\n')
     elif command == 'more':
-        print '\nUsage       : more [<i>|"all"]' \
+        print('\nUsage       : more [<i>|"all"]' \
               '\nDescription : Show more information for a scout by its ID or for all scoutsmore ' \
               '\nOptions     : <i>   : ID of the scout to show more information of' \
-              '\n              "all" : Show information for all scouts\n'
+              '\n              "all" : Show information for all scouts\n')
     elif command == 'ping':
-        print '\nUsage       : ping (<i>|"all")' \
+        print('\nUsage       : ping (<i>|"all")' \
               '\nDescription : Ping a scout' \
               '\nOptions     : <i>   : The ID of the scout to ping' \
-              '\n              "all" : Ping all scouts'
+              '\n              "all" : Ping all scouts')
     elif command == 'python':
-        print '\nUsage       : python' \
-              '\nDescription : Enters the systems local python interpreter\n'
+        print('\nUsage       : python' \
+              '\nDescription : Enters the systems local python interpreter\n')
     elif command == 'quit':
-        print '\nUsage       : quit' \
-              '\nDescription : Quits the framework\n'
+        print('\nUsage       : quit' \
+              '\nDescription : Quits the framework\n')
     elif command == 'rename':
-        print '\nUsage       : rename <i> <n>' \
+        print('\nUsage       : rename <i> <n>' \
               '\nDescription : Rename a scout by ID' \
               '\nOptions     : <i> : ID of scout to rename' \
-              '\n              <n> : New name of the scout\n'
+              '\n              <n> : New name of the scout\n')
     elif command == 'sleep':
-        print '\nUsage       : sleep (<i>|"all") <t>' \
+        print('\nUsage       : sleep (<i>|"all") <t>' \
               '\nDescription : Scout will disconnect and sleep for a specified amount of time before reconnecting to the listeeners' \
               '\nOptions     : <i>   : The ID of the scout to sleep' \
               '\n              <t>   : An integer in seconds to specify how long to sleep the scout' \
-              '\n              "all" : Sleep all scouts for a specific amount of time\n'
+              '\n              "all" : Sleep all scouts for a specific amount of time\n')
     elif command == 'show':
-        print '\nUsage       : show ["bind"|"reverse"|"scouts"]' \
+        print('\nUsage       : show ["bind"|"reverse"|"scouts"]' \
               '\nDescription : Show all scouts that are connected' \
               '\nOptions     : "bind"    : Show all scouts that are connected through a bind TCP connection' \
               '\n              "reverse" : Show all scouts that are connected through a reverse TCP connection' \
-              '\n              "scouts"  : Show all scouts that are connected\n'
+              '\n              "scouts"  : Show all scouts that are connected\n')
     elif command == '?':
-        print '\nAn alias for the command "help"\n'
+        print('\nAn alias for the command "help"\n')
     elif command == '!':
-        print '\nAn alias for the command "local"\n'
+        print('\nAn alias for the command "local"\n')
     else:
-        print config.neg + 'Please enter a valid command'
+        print(config.neg + 'Please enter a valid command')
 
 
 def generator(command):
     if command == 'back':
-        print '\nUsage       : back' \
-              '\nDescription : Return to the home interface\n'
+        print('\nUsage       : back' \
+              '\nDescription : Return to the home interface\n')
     elif command == 'clear':
-        print '\nUsage       : clear' \
-              '\nDescription : Clears the screen\n'
+        print('\nUsage       : clear' \
+              '\nDescription : Clears the screen\n')
     elif command == 'generate':
-        print '\nUsage       : generate' \
-              '\nDescription : Start scout generation after loading on desired library\n'
+        print('\nUsage       : generate' \
+              '\nDescription : Start scout generation after loading on desired library\n')
     elif command == 'help':
-        print '\nUsage       : help [opt : <c>]' \
+        print('\nUsage       : help [opt : <c>]' \
               '\nDescription : Displays the help for a command or the general help menu if no value is provided' \
-              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n'
+              '\nOptions     : <c> : The valid name of a command that can be executed in the current handler\n')
     elif command == 'load_com':
-        print '\nUsage       : load_com [<n>|<i>|"all"]' \
+        print('\nUsage       : load_com [<n>|<i>|"all"]' \
               '\nDescription : Load a component to generate a scout with' \
               '\nOptions     : <n>   : Name of a valid component to load' \
               '\n              <i>   : ID of a valid component to load' \
-              '\n              "all" : Load all components\n'
+              '\n              "all" : Load all components\n')
     elif command == 'load_enc':
-        print '\nUsage       : load_enc [<n>|<i>|"all"]' \
+        print('\nUsage       : load_enc [<n>|<i>|"all"]' \
               '\nDescription : Load an encoder to encode and encrypt a scout with' \
               '\nOptions     : <n>   : Name of a valid component to load' \
-              '\n              <i>   : ID of a valid component to load\n'
+              '\n              <i>   : ID of a valid component to load\n')
     elif command == 'local':
-        print '\nUsage       : local <c>' \
+        print('\nUsage       : local <c>' \
               '\nDescription : Locally executes a shell command and displays the output' \
-              '\nOptions     : <c> : A command to execute locally on the system\n'
+              '\nOptions     : <c> : A command to execute locally on the system\n')
     elif command == 'more_com':
-        print '\nUsage       : more_com [<n>|<i>]' \
+        print('\nUsage       : more_com [<n>|<i>]' \
               '\nDescription : Show more advanced info for a scout component' \
               '\nOptions     : <n> : The name of the component to show more info for' \
-              '\n              <i> : The ID of the component to shoe more info for\n'
+              '\n              <i> : The ID of the component to shoe more info for\n')
     elif command == 'more_enc':
-        print '\nUsage       : more_enc [<n>|<i>]' \
+        print('\nUsage       : more_enc [<n>|<i>]' \
               '\nDescription : Show more advanced info for a scout encoder' \
-              '\nOptions     : <n> : The name of the component to show more info for\n'
+              '\nOptions     : <n> : The name of the component to show more info for\n')
     elif command == 'python':
-        print '\nUsage       : python' \
-              '\nDescription : Enters the systems local python interpreter\n'
+        print('\nUsage       : python' \
+              '\nDescription : Enters the systems local python interpreter\n')
     elif command == 'quit':
-        print '\nUsage       : quit' \
-              '\nDescription : Quits the framework\n'
+        print('\nUsage       : quit' \
+              '\nDescription : Quits the framework\n')
     elif command == 'reset':
-        print '\nUsage       : reset [<o>|"all"]' \
+        print('\nUsage       : reset [<o>|"all"]' \
               '\nDescription : Reset a set option to the default value' \
               '\nOptions     : <o>   : Option to reset the value for' \
-              '\n              "all" : Reset all options\n'
+              '\n              "all" : Reset all options\n')
     elif command == 'set':
-        print '\nUsage       : set <o> <v>' \
+        print('\nUsage       : set <o> <v>' \
               '\nDescription : Set an option to a specific value' \
               '\nOptions     : <o> : The valid option of a listener that can be set' \
-              '\n              <v> : The value to set that option to\n'
+              '\n              <v> : The value to set that option to\n')
     elif command == 'show':
-        print '\nUsage       : show ["options"|"components"|"loaded"|"encoders"]' \
+        print('\nUsage       : show ["options"|"components"|"loaded"|"encoders"]' \
               '\nDescription : Show all mutable options or loadable components' \
               '\nOptions     : "options"    : Options that can be changed' \
               '\n              "components" : All loadable scout components' \
               '\n              "loaded"     : All currently loaded scout components' \
-              '\n              "encoders"   : All useable encoders\n'
+              '\n              "encoders"   : All useable encoders\n')
     elif command == 'unload_com':
-        print '\nUsage       : unload_com [<n>|<i>|"all"]' \
+        print('\nUsage       : unload_com [<n>|<i>|"all"]' \
               '\nDescription : Unload a component to generate a scout with' \
               '\nOptions     : <n>   : Name of a valid component to unload' \
               '\n              <i>   : ID of a valid component to unload' \
-              '\n              "all" : Unload all components\n'
+              '\n              "all" : Unload all components\n')
     elif command == 'unload_enc':
-        print '\nUsage       : unload_enc [<n>|<i>|"all"]' \
+        print('\nUsage       : unload_enc [<n>|<i>|"all"]' \
               '\nDescription : Unload an encoder that encodes and encrypts a scout' \
               '\nOptions     : <n>   : Name of a valid component to unload' \
               '\n              <i>   : ID of a valid component to unload' \
-              '\n              "all" : Unload all components\n'
+              '\n              "all" : Unload all components\n')
     elif command == '?':
-        print '\nAn alias for the command "help"\n'
+        print('\nAn alias for the command "help"\n')
     elif command == '!':
-        print '\nAn alias for the command "local"\n'
+        print('\nAn alias for the command "local"\n')
     else:
-        print config.neg + 'Please enter a valid command'
+        print(config.neg + 'Please enter a valid command')
 
 
 def main(interface, command):
     command = command.split(' ')
-    filter(lambda a: a != '', command)
+    [a for a in command if a != '']
     if interface == 'home':
         try:
             home(command[1])
         except IndexError:
-            print home_help
+            print(home_help)
     elif interface == 'listener':
         try:
             listener(command[1])
         except IndexError:
-            print listener_help
+            print(listener_help)
     elif interface == 'scout':
         try:
             scout(command[1])
         except IndexError:
-            print scout_help
+            print(scout_help)
     elif interface == 'generator':
         try:
             generator(command[1])
         except IndexError:
-            print generator_help
+            print(generator_help)

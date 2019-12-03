@@ -5,6 +5,7 @@ import library.modules.socket_listener as socket_listener
 
 config.main()
 
+
 def main():
     try:
         host = config.listener_values['Interface'][0]
@@ -16,4 +17,4 @@ def main():
         t.start()
         time.sleep(3)
     except (IndexError, ValueError):
-        print config.neg + 'Please use valid values'
+        print(config.neg + 'Please use valid values')
