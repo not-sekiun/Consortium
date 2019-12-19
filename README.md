@@ -7,8 +7,7 @@ control of other compromised hosts.
 ## Dynamically generating a payload in Windows
 ![Windows Generator Demo](https://user-images.githubusercontent.com/32593795/70084865-1db4ca80-164a-11ea-8837-461fdc39a770.png)
 
-## Remotely controlling a Windows system through a scout in Ubuntu (screenshot of victims machine is of the ubuntu attacker machine 
-since I'm running the ubuntu machine in a VM)
+## Remotely controlling a Windows system through a scout in Ubuntu (screenshot of victims machine is of the ubuntu attacker machine since I'm running the ubuntu machine in a VM)
 ![Ubuntu Scout Demo](https://user-images.githubusercontent.com/32593795/70084859-1ab9da00-164a-11ea-867f-2fb6e36106e5.png)
 
 ## Creating listeners that will receive connections from the scouts in Kali Linux 
