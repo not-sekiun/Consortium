@@ -1,3 +1,6 @@
+# Update 1.0.1
+- small bug fix patched another unicode issue with the windows request_admin component. Thanks to Ani152 for finding this bug.
+
 # Update 1.0.0 (Out of Alpha into (probably) Perpetual Beta!!!!) [Written on Nov 12 2019]
 Well hello, its been a while and we've jumped from v0.8.1 to v1.0.0 all of sudden. You may be wondering, why are we in 1.0.0? What were the major changes that have been made to the framework?
 Well the reason we are now in 1.0.0 is because of the fact that the PyIris framework has undergone a relatively major update. It has undergone quite a bit of an overhaul mostly

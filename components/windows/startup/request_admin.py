@@ -20,7 +20,7 @@ def req_admin_startup():
     if is_admin():
         return
     else:
-        ctypes.windll.shell32.ShellExecuteW(None, u"runas", unicode(sys.executable), unicode(__file__), None, 1)
+        ctypes.windll.shell32.ShellExecuteW(None, u"runas", sys.executable, __file__, None, 1)
         os._exit(1)
 ''')
     elif option == 'info':

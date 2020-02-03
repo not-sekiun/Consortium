@@ -8,7 +8,7 @@ def main(option, filepath=None):
     if not filepath:
         filepath = config.scout_values['Path'][0]
     if option == 'encode':
-        try:
+        try:    
             imported_modules = ['from cryptography.fernet import Fernet']
             with open(filepath, 'r') as f:
                 data = f.read().replace(';', '\n')
