@@ -3,6 +3,7 @@ import library.modules.config as config
 import library.modules.key_from_val as key_from_val
 import library.modules.generator_id_parser as generator_id_parser
 
+
 config.main()
 
 
@@ -29,7 +30,6 @@ def unload_com(load_off):
             del (config.loaded_components[key_from_val.main(config.loaded_components, load_off)])
             print(config.pos + 'Unloaded : ' + load_off)
             return
-        raise KeyError
 
 
 def main(command):

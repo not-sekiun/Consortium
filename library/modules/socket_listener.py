@@ -2,6 +2,7 @@ import socket
 import library.modules.config as config
 import library.modules.should_listener_die as should_listener_die
 import library.modules.return_random_string as return_random_string
+import library.modules.recv_all as recv_all
 from datetime import datetime
 
 config.main()
@@ -31,17 +32,17 @@ def main(host, port, name, reply):
                         continue
                     if config.white_list:
                         if addr[0] not in config.white_list:
-                            conn.send(reply.encode())
+                            conn.sendall(reply.encode()) # masquerade as ordinary server without showing length byte and seperator
                             conn.close()
                             continue
                     elif config.black_list:
                         if addr[0] in config.black_list:
-                            conn.send(reply.encode())
+                            conn.sendall(reply.encode()) # masquerade as ordinary server without showing length byte and seperator
                             conn.close()
                             continue
                     if conn:
                         conn.settimeout(5)
-                        await_key = conn.recv(9999999).decode()
+                        await_key = recv_all.main(conn)
                         conn.settimeout(None)
                         if await_key == config.key:
                             print('\n' + config.pos + 'Connection received from scout : ' + addr[0] + ':' + str(
@@ -55,7 +56,7 @@ def main(host, port, name, reply):
                             config.listener_database[str(local_copy_of_id)][4].append(addr[0] + ':' + str(addr[1]))
                             config.incremented_scout_id += 1
                         else:
-                            conn.send(reply.encode())
+                            conn.sendall(reply.encode()) # masquerade as ordinary server without showing length byte and seperator
                             conn.close()
                     else:
                         conn.close()

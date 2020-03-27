@@ -1,3 +1,8 @@
+# Update 1.0.2 (Major performance update)
+- rewrote communication protocol between scouts and server to use message length bytes which drastically reduces the waiting time between sending messages and receiving responses
+- old protocol waited for timeout, new protocol reads header length bytes to determine length of sent message which drastically reduces the waiting time for messages to be sent
+- commands are now instantaneous and no longer have that disgusting 4 second window between you sending and receiving data. File transfers are also now noticeably much quicker
+
 # Update 1.0.1
 - small bug fix patched another unicode issue with the windows request_admin component. Thanks to Ani152 for finding this bug.
 

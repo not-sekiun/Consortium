@@ -20,7 +20,7 @@ def active():
         if win.get_wm_name():
             tmp_list.append('   - ' + win.get_wm_name())
     tmp_list = list(set(tmp_list))
-    s.sendall((data + '\\n'.join(tmp_list) + '\\n').encode())''')
+    send_all(s,(data + '\\n'.join(tmp_list) + '\\n'))''')
         config.logics.append('''
             elif command == "active":
                 active()''')

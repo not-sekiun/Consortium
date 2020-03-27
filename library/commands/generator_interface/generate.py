@@ -25,9 +25,9 @@ def main():
     try:
         original = os.getcwd()
         os.chdir(config.started_at)
-        comp_list = sorted([i for i in config.loaded_components.values() if not i.endswith('/base')])
+        comp_list = sorted([i for i in config.loaded_components.values() if not i.endswith('_base')]) # this looks for *_base which is our base network components, appends them to the top  of the list
         for i in config.loaded_components.values():
-            if i.endswith('/base'):
+            if i.endswith('_base'): # this looks for *_base which is our base network components, appends them to the top  of the list
                 comp_list.insert(0, i)
         for i in comp_list:
             print(config.pos + 'Loading and executing : ' + i)

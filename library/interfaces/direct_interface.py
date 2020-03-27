@@ -12,6 +12,7 @@ import library.commands.direct_interface.python_execute_file as python_execute_f
 import library.commands.direct_interface.webcam as webcam
 import library.commands.direct_interface.ping as ping
 import library.modules.recv_all as recv_all
+import library.modules.send_all as send_all
 import library.modules.config as config
 import library.modules.send_and_recv as send_and_recv
 import library.modules.grid_format as grid_format
@@ -93,15 +94,15 @@ def main(scout_id):
                     print(config.inf + 'Returning...')
                     return
             elif command == 'download':
-                config.scout_database[scout_id][0].sendall(prompt.encode())
+                send_all.main(config.scout_database[scout_id][0], prompt)
                 download.main(config.scout_database[scout_id][0])
             elif command == 'upload':
                 upload.main(config.scout_database[scout_id][0], prompt)
             elif command == 'screen':
-                config.scout_database[scout_id][0].sendall(command.encode())
+                send_all.main(config.scout_database[scout_id][0], command)
                 screen.main(config.scout_database[scout_id][0])
             elif command == 'webcam':
-                config.scout_database[scout_id][0].sendall(command.encode())
+                send_all.main(config.scout_database[scout_id][0], command)
                 webcam.main(config.scout_database[scout_id][0])
             elif command == 'ping':
                 alive_bool = ping.main(scout_id)
@@ -123,7 +124,7 @@ def main(scout_id):
             elif not command:
                 pass
             else:
-                config.scout_database[scout_id][0].sendall(prompt.encode())
+                send_all.main(config.scout_database[scout_id][0], prompt)
                 data = recv_all.main(config.scout_database[scout_id][0])
                 print(data)
         except EOFError:

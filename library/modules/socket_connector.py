@@ -1,5 +1,6 @@
 import library.modules.return_random_string as return_random_string
 import library.modules.config as config
+import library.modules.recv_all as recv_all
 import socket
 from datetime import datetime
 
@@ -26,7 +27,7 @@ def main(args):
                 return
         s.settimeout(5)
         try:
-            await_key = s.recv(9999999).decode()
+            await_key = recv_all.main(s)
         except (socket.timeout, socket.error):
             print(config.neg + 'Established connection to ' + host + ':' + str(port) + ' but no data received!')
             return

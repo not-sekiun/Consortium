@@ -16,7 +16,7 @@ def wallpaper(data):
     RegSetValueEx(key, "WallpaperStyle", 0, REG_SZ, "0")
     RegSetValueEx(key, "CenterWallpaper", 0, REG_SZ, "0")
     SystemParametersInfo(SPI_SETDESKWALLPAPER, path, 1+2)
-    s.sendall(('[+]Set wallpaper to : ' + path).encode())
+    send_all(s,'[+]Set wallpaper to : ' + path)
 ''')
         config.logics.append('''
             elif command == "wallpaper":

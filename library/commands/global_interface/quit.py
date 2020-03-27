@@ -3,6 +3,8 @@ import time
 import socket
 import threading
 import library.modules.config as config
+import library.modules.send_all as send_all
+import library.modules.recv_all as recv_all
 
 config.main()
 
@@ -24,9 +26,9 @@ def main():
                 print(config.lod + 'Disconnecting all scouts')
                 for i in config.scout_database:
                     try:
-                        config.scout_database[i][0].send('disconnect'.encode())
+                        send_all.main(config.scout_database[i][0], 'disconnect')
                         config.scout_database[i][0].settimeout(5)
-                        buffer_out_reply = config.scout_database[i][0].recv(999999999).decode()
+                        buffer_out_reply = recv_all.main(config.scout_database[i][0])
                         config.scout_database[i][0].close()
                         print(config.pos + 'Closed connection to scout of ID : ' + i)
                     except (socket.error, socket.timeout):

@@ -1,5 +1,7 @@
 import socket
 import library.modules.config as config
+import library.modules.send_all as send_all
+import library.modules.recv_all as recv_all
 
 config.main()
 
@@ -11,8 +13,8 @@ def main(scout_id):
             for i in list(config.scout_database.keys()):
                 try:
                     print(config.inf + 'Pinging scout of ID : ' + i)
-                    config.scout_database[i][0].sendall('ping'.encode())
-                    data = config.scout_database[i][0].recv(999999).decode()
+                    send_all.main(config.scout_database[i][0], 'ping')
+                    data = recv_all.main(config.scout_database[i][0])
                     if not data:
                         raise socket.error
                     print(data)
@@ -20,8 +22,8 @@ def main(scout_id):
                     print(config.neg + 'Scout is dead, removing from database...')
                     del (config.scout_database[i])
         else:
-            config.scout_database[scout_id][0].sendall('ping'.encode())
-            data = config.scout_database[scout_id][0].recv(999999).decode()
+            send_all.main(config.scout_database[scout_id][0], 'ping')
+            data = recv_all.main(config.scout_database[scout_id][0])
             print(data)
     except (IndexError, KeyError):
         print(config.neg + 'Please enter a valid scout ID')

@@ -1,13 +1,15 @@
 import socket
 import library.modules.config as config
+import library.modules.send_all as send_all
+import library.modules.recv_all as recv_all
 
 config.main()
 
 
 def main(scout_id):
     try:
-        config.scout_database[scout_id][0].sendall('ping'.encode())
-        data = config.scout_database[scout_id][0].recv(999999).decode()
+        send_all.main(config.scout_database[scout_id][0], 'ping')
+        data = recv_all.main(config.scout_database[scout_id][0])
         print(data)
         return True
     except socket.error:

