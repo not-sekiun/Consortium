@@ -1,6 +1,6 @@
 # The Future of PyIris
 A short collection of ideas and concepts I have planned for PyIris in the future upcoming updates. I'm pretty busy with life so theres no 
-set date on when these goals will be fulfilled, could be finished in a duration of months to years. 
+set date on when these goals will be fulfilled, could be finished in a duration of weeks to years. 
 
 ## Short Term Goals
 - Port all the webcam based operations, over from using cv2 to just using PIL, because its stupid getting people to import a computer 
