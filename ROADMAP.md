@@ -5,8 +5,8 @@ set date on when these goals will be fulfilled, could be finished in a duration 
 ## Short Term Goals
 - Port all the webcam based operations, over from using cv2 to just using PIL, because its stupid getting people to import a computer 
 vision library for the sole purpose of watching people through their webcams [Added 4/26/2020]
-- Implement a webcam streaming feature (!!!). [Added 4/26/2020]
-- Fix some instability issues with the recv_all() network protocol. (rate limiting is not working) [Added 4/26/2020]
+- Implement a webcam streaming feature (!!!). [Added 4/26/2020] :white_check_mark: [done 7/18/2020]
+- Fix some instability issues with the recv_all() network protocol. (rate limiting is not working) [Added 4/26/2020] :white_check_mark: [done 7/18/2020]
 - Possibly implement a screen recording function as well. [Added 4/26/2020]
 - Look into audio streaming/ recording if possible. [Added 4/26/2020]
 - Possibly get scouts to provide more data upon connecting back [Added 4/26/2020]
