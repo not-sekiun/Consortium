@@ -41,8 +41,7 @@ def main(host, port, name, reply):
                             conn.close()
                             continue
                     if conn:
-                        conn.settimeout(5)
-                        await_key = recv_all.main(conn)
+                        await_key = recv_all.main(conn, 5)
                         conn.settimeout(None)
                         if await_key == config.key:
                             print('\n' + config.pos + 'Connection received from scout : ' + addr[0] + ':' + str(

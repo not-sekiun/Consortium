@@ -21,7 +21,7 @@ def main(option):
                     exec ('import ' + module_to_load)
                     print(config.pos + 'Valid module, loaded on')
                     config.import_statements.append('import ' + module_to_load)
-                except ImportError:
+                except (ImportError, SyntaxError):
                     print(config.neg + 'Invalid module, not loaded on')
             except EOFError:
                 try:

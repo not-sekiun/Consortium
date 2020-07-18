@@ -1,3 +1,12 @@
+# Update 1.0.3 (Webcam streaming update)
+- Had a lot of stuff going on with my life regarding school so I couldn't work on this project but I finally added webcam streaming over sockets. As of now the streaming is 
+implemented using TCP sockets rather than UDP but its relatively stable. I will probably add in a UDP version sooner or later. Havent tested it on linux but 
+it should probably work on linux since im using the cv2 library.
+- Also the webcam streaming is not multithreaded it probably should be but if anything this module is a bit of a POC. Ill have to come up with a model to handle the multithreaded
+webcam streaming
+- Oh yeah it is highly advised not to CTRL-C while streaming the webcam. It may kill everything while frames are being received which will destroy the network protocol continuity
+established between the scout and the server
+
 # Update 1.0.2 (Major performance update)
 - rewrote communication protocol between scouts and server to use message length bytes which drastically reduces the waiting time between sending messages and receiving responses
 - old protocol waited for timeout, new protocol reads header length bytes to determine length of sent message which drastically reduces the waiting time for messages to be sent

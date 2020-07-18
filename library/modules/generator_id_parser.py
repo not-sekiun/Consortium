@@ -31,8 +31,7 @@ def main(inp_data, context_type, operation):
         data = list(set(data))  # remove all duplicates after comma split
 
     for i in data:
-        if re.match('^[0-9]+\-[0-9]+$',
-                    i):  # initialize regex match to format of range IDs, matches "positive number-positive number"
+        if re.match('^[0-9]+\-[0-9]+$',i):  # initialize regex match to format of range IDs, matches "positive number-positive number"
             ranges.append(i)
         else:
             non_ranges.append(i)

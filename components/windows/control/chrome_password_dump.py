@@ -59,4 +59,5 @@ def chromedump(arg):
               '\nOS               : Windows' \
               '\nRequired Modules : pypiwin32 (external), os' \
               '\nCommands         : chromedump ["active"|"passive"]' \
-              '\nDescription      : Dumps chrome passwords. If "active" kills chrome.exe first, if "passive" will not run if chrome.exe is running \n')
+              '\nDescription      : Dumps chrome passwords. If "active" kills chrome.exe first, if "passive" will not run if chrome.exe is running' \
+              '\nNote             : As of chrome version 80 and ABOVE this module WILL NOT work as chrome switched encryption schemes\n')

