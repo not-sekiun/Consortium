@@ -51,7 +51,7 @@ scouts
 - Shutdown, restart, lock, logoff user gracefully without connection hanging from scout payload
 - Execute or open files remotely
 - Check the user idle time
-- Dump saved chrome passwords
+- Dump saved chrome passwords (wont work with the latest chrome browsers since they changed encryption methods and Im kinda lazy to update this lol)
 - Disbale/ Enable the targets keyboard/mouse
 - Bypass UAC through sdclt.exe (Has already been patched in recent windows updates)
 
