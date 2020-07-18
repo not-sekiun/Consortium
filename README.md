@@ -4,8 +4,9 @@ It allows users to dynamically build, generate and encode/encrypt remote-access-
 control of other compromised hosts.
 
 # Why should you use this project?
-You should'nt lol, this was a passion project made purely for fun. It was never intended or designed to be used professionally in any 
-pen-testing or red teaming scenarios. Feel free to poke around with it to see what it can do.
+You shouldn't lol, this was a passion project made purely for fun. It was never intended or designed to be used professionally in any pen-testing or red teaming scenarios. Feel 
+free to poke around with it to see what it can do. However what it can offer (in an amateurish manner) is a strictly in memory backdoor framework that has a somewhat high 
+degree of flexibility and functionality.
 
 # Demo of PyIris in action on multiple operating systems (Windows and Linux)
 ## Dynamically generating a payload in Windows
