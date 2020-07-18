@@ -17,7 +17,7 @@ vision library for the sole purpose of watching people through their webcams [Ad
 - Add support for more scout bases (An HTTP base maybe could be possible, Discord base, Telegram base, Twitter Base, Reddit. I even have 
 an absurd idea for scout communication using roblox will look into and do more research about this) [Added 4/26/2020]
 - Continue to add more advanced features, I have a few more features I want to implement for the scouts relating to machine persistence, 
-command and control functioanlity, credential exfiltration and even some social engineering elements. The ideas are vague so I need to 
+command and control functionality, credential exfiltration and even some social engineering elements. The ideas are vague so I need to 
 sketch them out fully before moving them to short term. [Added 4/26/2020]
 - Currently working on implementing a GUI/ web interface in collaboration with a close friend of mine (more like hes doing all the front 
 end lol). Details are still hazy although the prototype is mostly finished I may need to ensure backend stability/ optimization before 
