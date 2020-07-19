@@ -9,6 +9,11 @@ config.main()
 
 def main(sock):
     print(config.inf + 'Streaming clients webcam, press "q" in the live stream window to exit')
+    message = recv_all.main(sock)
+    if message.startswith('[-]'):
+        print(message)
+        return
+    print(message)
     while True:
         data = recv_all.main(sock)
         if type(data) == str:
