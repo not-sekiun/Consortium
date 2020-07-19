@@ -1,4 +1,4 @@
-# Update 1.0.3 (Webcam streaming update)
+# Update 1.1.2 (Webcam streaming update)
 - Had a lot of stuff going on with my life regarding school so I couldn't work on this project but I finally added webcam streaming over sockets. As of now the streaming is 
 implemented using TCP sockets rather than UDP but its relatively stable. I will probably add in a UDP version sooner or later. Havent tested it on linux but 
 it should probably work on linux since im using the cv2 library.
