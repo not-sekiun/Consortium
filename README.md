@@ -96,6 +96,10 @@ Then install pyalsaaudio through apt-get, if you're installing on **ubuntu** ple
 
 ```sudo apt-get install python3-alsaaudio```
 
+After than install canberra-gtk-module for cv2 to use to display webcam live streams
+
+```sudo apt-get install libcanberra-gtk-module```
+
 Finally, install the rest of the required modules with pip. Only install modules from the ```setup/linux/requirements.txt``` file as
 this section is for running the Linux edition of PyIris.
 
