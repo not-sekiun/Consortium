@@ -1,6 +1,6 @@
 import time
 import socket
-import threading
+import readline
 import library.commands.global_interface.clear as clear
 import library.commands.global_interface.quit as quit
 import library.commands.global_interface.python as python
@@ -19,10 +19,6 @@ import library.modules.config as config
 import library.modules.send_and_recv as send_and_recv
 import library.modules.grid_format as grid_format
 
-try:
-    import readline
-except ImportError:
-    import gnureadline as readline
 
 config.main()
 
