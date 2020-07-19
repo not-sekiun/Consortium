@@ -4,8 +4,10 @@ implemented using TCP sockets rather than UDP but its relatively stable. I will 
 it should probably work on linux since im using the cv2 library.
 - Also the webcam streaming is not multithreaded it probably should be but if anything this module is a bit of a POC. Ill have to come up with a model to handle the multithreaded
 webcam streaming
-- Oh yeah it is highly advised not to CTRL-C while streaming the webcam. It may kill everything while frames are being received which will destroy the network protocol continuity
-established between the scout and the server
+- Oh yeah it is highly advised not to CTRL-C while streaming the webcam. It may kill everything while frames are being received which will destroy the network protocol 
+continuity established between the scout and the server
+- Fixed an issue with recv_all to compensate for less data being received than anticipated
+- Webcam streaming now supports multiple webcams even usb connected ones
 
 # Update 1.0.2 (Major performance update)
 - rewrote communication protocol between scouts and server to use message length bytes which drastically reduces the waiting time between sending messages and receiving responses
