@@ -38,4 +38,4 @@ def main(option):
               '\nOS               : Linux' \
               '\nRequired Modules : time' \
               '\nCommands         : NIL (Runs at startup)' \
-              '\nDescription      : Sleeps the scout before running any other processes to avoid and timeout malware detection systems\n') \
+              '\nDescription      : Sleeps the scout before running any other processes to avoid and timeout malware detection systems\n')
