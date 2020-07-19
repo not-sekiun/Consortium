@@ -96,11 +96,6 @@ Then install pyalsaaudio through apt-get, if you're installing on **ubuntu** ple
 
 ```sudo apt-get install python3-alsaaudio```
 
-**NOTE** : For some reason there exists no python3-alsaaudio package for ubuntu that can be installed through apt/apt-get ALTHOUGH the 
-python3-alsaaudio package can be installed just fine on kali linux. This means that on ubuntu PyIris will NOT run due to it being unable 
-to import alsaaudio in the 3rd party library import testing phase of its bootstrap. Installing from pypi fails as well. You need to 
-build the python3-alsaaudio package from source to get PyIris to work on Ubuntu it seems.
-
 Finally, install the rest of the required modules with pip. Only install modules from the ```setup/linux/requirements.txt``` file as
 this section is for running the Linux edition of PyIris.
 
