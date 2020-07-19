@@ -125,8 +125,7 @@ On linux to install any newly added third party modules or update then run
 ### PyIris was successfully installed on the following operating systems
 - Windows 10
 - Kali Linux Rolling releases
-- Ubuntu 16.04 and future releases (TECHNICALLY supported, although python3-alsaaudio cannot be installed conventionally, see the note 
-above at the linux PyIris install section
+- Ubuntu
 - Debian
 
 # Basic Usage
