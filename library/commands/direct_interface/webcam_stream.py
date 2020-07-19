@@ -10,7 +10,7 @@ config.main()
 def main(sock):
     print(config.inf + 'Streaming clients webcam, press "q" in the live stream window to exit')
     message = recv_all.main(sock)
-    if message.startswith('[-]'):
+    if message != '[+]Successfully opened camera!':
         print(message)
         return
     print(message)

@@ -103,7 +103,7 @@ def main(scout_id):
                 send_all.main(config.scout_database[scout_id][0], command)
                 webcam.main(config.scout_database[scout_id][0])
             elif command == 'webcam_stream':
-                send_all.main(config.scout_database[scout_id][0], command)
+                send_all.main(config.scout_database[scout_id][0], prompt)
                 webcam_stream.main(config.scout_database[scout_id][0])
             elif command == 'ping':
                 alive_bool = ping.main(scout_id)

