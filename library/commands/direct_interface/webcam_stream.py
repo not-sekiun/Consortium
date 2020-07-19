@@ -12,6 +12,7 @@ def main(sock):
     while True:
         data = recv_all.main(sock)
         if type(data) == str:
+            print (data)
             return
         else:
             frame = pickle.loads(data)
