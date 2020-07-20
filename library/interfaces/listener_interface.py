@@ -76,10 +76,5 @@ def main():
                 pass
             else:
                 print(config.neg + 'Invalid command, run "help" for help menu')
-        except EOFError:
-            try:
-                time.sleep(2)
-            except KeyboardInterrupt:
-                quit.main()
         except KeyboardInterrupt:
             quit.main()

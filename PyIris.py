@@ -1,6 +1,7 @@
-# Version 1.1.2
+# Version 1.1.3
 import library.modules.bootstrap as bootstrap
 import time
+import logging
 
 if __name__ == '__main__':
     try:
@@ -21,4 +22,4 @@ if __name__ == '__main__':
         print('[!]User aborted bootstrap, requesting shutdown...')
         quit()
     except Exception as e:
-        print('[!]Unexpected Error : ' + str(e))
+        logging.critical("Critical Error occurred please inform developer, dumping stack trace and exiting...", exc_info=True)

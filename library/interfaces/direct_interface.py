@@ -128,11 +128,6 @@ def main(scout_id):
                 send_all.main(config.scout_database[scout_id][0], prompt)
                 data = recv_all.main(config.scout_database[scout_id][0])
                 print(data)
-        except EOFError:
-            try:
-                time.sleep(2)
-            except KeyboardInterrupt:
-                quit.main()
         except KeyboardInterrupt:
             quit.main()
         except (socket.error, socket.timeout):
