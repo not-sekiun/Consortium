@@ -41,7 +41,7 @@ scouts
 - request for admin/root
 - sleep for an arbitrary length of time before running (To bypass AV dynamic program analysis)
 - self delete (only works for scripts)
-- Stream webcam over TCP sockets
+- Stream webcam over TCP sockets (pretty laggy will work on a UDP version)
 
 # Features (Windows)
 - Acheive persistence through the windows registry (HKEY_CURRENT_USER)
