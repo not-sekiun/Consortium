@@ -6,8 +6,10 @@
 # Update 1.1.2 (Webcam streaming update)
 - Had a lot of stuff going on with my life regarding school so I couldn't work on this project but I finally added webcam streaming over sockets. As of now the streaming is 
 implemented using TCP sockets rather than UDP but its relatively stable. I will probably add in a UDP version sooner or later. Havent tested it on linux but 
-it should probably work on linux since im using the cv2 library.
-- Also the webcam streaming is not multithreaded it probably should be but if anything this module is a bit of a POC. Ill have to come up with a model to handle the multithreaded
+it should probably work on linux since im using the cv2 library. EDIT: NO THE TCP STREAM IS NOT STABLE, TCP IS GARBAGE FOR STREAMING. It was streaming in seconds per frame 
+rather than frames per second, will add UDP as a streaming option
+- Also the webcam streaming is not multithreaded it probably should be but if anything this module is a bit of a POC. Ill have to come up with a model to handle the 
+multithreaded
 webcam streaming
 - Oh yeah it is highly advised not to CTRL-C while streaming the webcam. It may kill everything while frames are being received which will destroy the network protocol 
 continuity established between the scout and the server
@@ -15,7 +17,8 @@ continuity established between the scout and the server
 - Webcam streaming now supports multiple webcams even usb connected ones
 
 # Update 1.0.2 (Major performance update)
-- rewrote communication protocol between scouts and server to use message length bytes which drastically reduces the waiting time between sending messages and receiving responses
+- rewrote communication protocol between scouts and server to use message length bytes which drastically reduces the waiting time between sending messages and receiving 
+responses
 - old protocol waited for timeout, new protocol reads header length bytes to determine length of sent message which drastically reduces the waiting time for messages to be sent
 - commands are now instantaneous and no longer have that disgusting 4 second window between you sending and receiving data. File transfers are also now noticeably much quicker
 
@@ -23,12 +26,13 @@ continuity established between the scout and the server
 - small bug fix patched another unicode issue with the windows request_admin component. Thanks to Ani152 for finding this bug.
 
 # Update 1.0.0 (Out of Alpha into (probably) Perpetual Beta!!!!) [Written on Nov 12 2019]
-Well hello, its been a while and we've jumped from v0.8.1 to v1.0.0 all of sudden. You may be wondering, why are we in 1.0.0? What were the major changes that have been made to the framework?
+Well hello, its been a while and we've jumped from v0.8.1 to v1.0.0 all of sudden. You may be wondering, why are we in 1.0.0? What were the major changes that have been made to 
+the framework?
 Well the reason we are now in 1.0.0 is because of the fact that the PyIris framework has undergone a relatively major update. It has undergone quite a bit of an overhaul mostly
 during the process of porting it over from Python 2.x to python 3.x. During this porting process I was able to iron out many bugs and make quite a few changes to
 the interface and underlying code. For example, the underlying wire protocol of the PyIris framework, particularly the file transfer protocol, has been updated
-to now utilize base64 rather than pickles to transfer data. Due to these "major" changes, PyIris 1.0.0 is no longer compatible with 0.8.1 PyIris (now a legacy version) and its scouts. Hence, the increment of
-the major semantic versioning number to signify a non backward compatible version of the new framework.
+to now utilize base64 rather than pickles to transfer data. Due to these "major" changes, PyIris 1.0.0 is no longer compatible with 0.8.1 PyIris (now a legacy version) and its 
+scouts. Hence, the increment of the major semantic versioning number to signify a non backward compatible version of the new framework.
 
 At this point Im pretty sure that I have more or less cemented into place all the core features that I want PyIris to have (the so called essential features).
 All thats left to do is to add the other less important "peripheral features". The 1.0.0 version is close enough to my original vision of what this framework would be like 2 years ago when
