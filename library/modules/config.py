@@ -20,8 +20,8 @@ def main():
                     'Port': ['9999', 'The local port to connect back on (Reverse) or the remote port to listen on (Bind)'],
                     'Timeout': ['5', 'The timeout value for the scout'],
                     'Windows': ['True', 'When "True", will generate a windows scout, else a linux scout'],
-                    'Path': [os.path.join(started_at, 'generated', 'payload.py'),
-                             'Path to generate payload python file to'],
+                    'Dir': [os.path.join(started_at, 'generated'),
+                             'Directory to generate payload in'],
                     'Compile': ['False',
                                 'When "True", will compile scout to EXE (windows) or ELF (Linux), '
                                 'else it will not compile']}
@@ -89,4 +89,5 @@ def main():
     inf = '\x1b[1m\x1b[34m[*]\x1b[0m'
     pro = '\x1b[1m\x1b[35m[>]\x1b[0m'
     lod = '\x1b[1m\x1b[34m[...]\x1b[0m'
+    local_time_dir = ''
     globals().update(locals())

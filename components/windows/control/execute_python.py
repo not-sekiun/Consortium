@@ -23,12 +23,6 @@ def main(option):
                     config.import_statements.append('import ' + module_to_load)
                 except (ImportError, SyntaxError):
                     print(config.neg + 'Invalid module, not loaded on')
-            except EOFError:
-                try:
-                    time.sleep(2)
-                except KeyboardInterrupt:
-                    print('\n' + config.pos + 'Done...')
-                    break
             except KeyboardInterrupt:
                 print('\n' + config.pos + 'Done...')
                 break

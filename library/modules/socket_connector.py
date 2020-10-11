@@ -25,9 +25,8 @@ def main(args):
                 s.close()
                 print(config.neg + 'Connection was aborted because host was in blacklist')
                 return
-        s.settimeout(5)
         try:
-            await_key = recv_all.main(s)
+            await_key = recv_all.main(s, 5)
         except (socket.timeout, socket.error):
             print(config.neg + 'Established connection to ' + host + ':' + str(port) + ' but no data received!')
             return

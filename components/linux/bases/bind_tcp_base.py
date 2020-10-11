@@ -1,5 +1,7 @@
 import library.modules.config as config
 import library.modules.safe_open as safe_open
+import os
+from datetime import datetime
 
 config.main()
 
@@ -10,7 +12,8 @@ def main(option):
         port = config.scout_values['Port'][0]
         key = config.key
         timeout = config.scout_values['Timeout'][0]
-        filepath = config.scout_values['Path'][0]
+        config.local_time_dir = os.path.join(config.scout_values['Dir'][0], datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+        filepath = os.path.join(config.local_time_dir, 'payload.py')
         config.import_statements.append('import socket')
         config.import_statements.append('from os import _exit')
         config.import_statements.append('from time import sleep')
