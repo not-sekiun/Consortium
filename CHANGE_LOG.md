@@ -1,3 +1,7 @@
+# Update 1.1.4
+- Minor change to scout generation, now scouts are packaged in extra directories specifying the time of generation this prevents any accidental overwriting of existing payloads.
+- also just recently finished my finals so I can finally continue working on this project after a long hiatus :>
+
 # Update 1.1.3
 - refactored interface code by removing redundant exceptions
 - added logging only for critical errors 
