@@ -7,6 +7,7 @@ generation system
 - Changed the text formatting of inj_valid to show valid keys for keystroke injection previous one looked too ugly tbh. As a result library/modules/grid_format.py was removed
 - Removed some redundant imports, time imports in interfaces were removed along with datetime imports in generate.py
 - Dropped the usage of pyHook for the maintained pyWinhook for keystroke logging and injection on windows
+- Fixed bug with compiling folder scouts, folders scouts for some reason were not handled in the if else logic branches and were mistaken as single file scouts (--onefile)
 
 # Update 1.1.4
 - Minor change to scout generation, now scouts are packaged in extra directories specifying the time of generation this prevents any accidental overwriting of existing payloads.

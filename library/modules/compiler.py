@@ -59,10 +59,12 @@ def main():
     else:
         print(config.neg + 'Error, could not successfully compile scout (Is "pyinstaller" installed and visible in your PATH?)')
         return
-    if os.path.isdir(os.path.join(os.getcwd(), 'dist')):
+    if os.path.exists(os.path.join(os.getcwd(), 'dist', filename)): # single file scout compiled
         shutil.copy(os.path.join(os.getcwd(), 'dist', filename), os.path.join(os.getcwd(), filename))
         shutil.rmtree('dist')
         print(config.pos + 'Successfully compiled single file scout to : ' + os.path.join(os.getcwd(), filename))
+    elif os.path.isdir(os.path.join(os.getcwd(), 'dist', 'payload')): # folder scout
+        print(config.pos + 'Successfully compiled scout, scout folder is located at : ' + os.path.join(os.getcwd(), 'dist', 'payload'))
     else:
         print(config.neg + 'Error, could not successfully compile scout (Is "pyinstaller" installed and visible in your PATH?)')
         return
