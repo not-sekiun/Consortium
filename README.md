@@ -66,23 +66,23 @@ scouts
 
 ## Setting up PyIris (Windows)
 
-First, clone this repository and cd into the directory, make sure you have git installed.
+First, clone this repository (make sure you have git installed), CD into the root folder.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
 ```cd PyIris-backdoor```
 
-Next, install the rest of the required modules with pip. Only install modules from the ```setup/windows/requirements.txt``` file
+Next install the rest of the required modules with pip3. Only install modules from the ```setup/windows/requirements.txt``` file
 as this section is for running the Windows edition of PyIris.
 
 ```pip3 install -r setup/windows/requirements.txt```
 
-Upon running it the first time you should be greeted with the option to generate a key, this indicates everything has been installed
+Upon running ```PyIris.py``` in the root folder for the first time you should be greeted with the option to generate a key, this indicates everything has been installed
 correctly.
 
 ## Setting up PyIris (Linux)
 
-First, clone this repository, make sure you have git installed.
+First, clone this repository (make sure you have git installed), CD into the root folder.
 
 ```git clone https://github.com/angus-y/PyIris-backdoor```
 
@@ -100,7 +100,7 @@ After than install canberra-gtk-module for cv2 to use to display webcam live str
 
 ```sudo apt-get install libcanberra-gtk-module```
 
-Finally, install the rest of the required modules with pip. Only install modules from the ```setup/linux/requirements.txt``` file as
+Finally, install the rest of the required modules with pip3. Only install modules from the ```setup/linux/requirements.txt``` file as
 this section is for running the Linux edition of PyIris.
 
 ```pip3 install -r setup/linux/requirements.txt```
@@ -115,11 +115,15 @@ Change into the PyIris-backdoor folder first, then run
 
 On windows to install any newly added third party modules or update then run
 
-```pip3 install -r setup/windows/requirements.txt```
+```cd setup/windows```
+
+```pip3 install -r requirements.txt```
 
 On linux to install any newly added third party modules or update then run
 
-```pip3 install -r setup/linux/requirements.txt```
+```cd setup/linux```
+
+```pip3 install -r requirements.txt```
 
 ## Supported OS
 ### PyIris was successfully installed on the following operating systems

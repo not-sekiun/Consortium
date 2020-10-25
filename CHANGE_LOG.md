@@ -1,3 +1,13 @@
+# Update 1.1.5
+- Fixed an error where the 'Dir' arg for scout generation would cause an IOerror in compilation when there was a space in the path name due to pyinstaller misinterpreting the 
+path name
+- Fixed an an error with the encoders because i forgot to update them to use the new datetime based directory payload generation system over the old direct filepath payload 
+generation system 
+- Updated dependencies to use the latest dependency versions. Helps with bug fixes and eliminates and security concerns in older dependency versions
+- Changed the text formatting of inj_valid to show valid keys for keystroke injection previous one looked too ugly tbh. As a result library/modules/grid_format.py was removed
+- Removed some redundant imports, time imports in interfaces were removed along with datetime imports in generate.py
+- Dropped the usage of pyHook for the maintained pyWinhook for keystroke logging and injection on windows
+
 # Update 1.1.4
 - Minor change to scout generation, now scouts are packaged in extra directories specifying the time of generation this prevents any accidental overwriting of existing payloads.
 - also just recently finished my finals so I can finally continue working on this project after a long hiatus :>

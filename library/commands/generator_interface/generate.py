@@ -3,7 +3,6 @@ import library.modules.compiler as compiler
 import library.modules.config as config
 import library.modules.clean_import_data as clean_import_data
 import os
-from datetime import datetime
 
 config.main()
 tmp_win = list(config.win_components.values())

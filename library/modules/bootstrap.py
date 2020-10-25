@@ -3,7 +3,7 @@ import library.modules.config as config
 config.main()
 
 windows_modules = ['pyperclip', 'win32crypt', 'cv2', 'pythoncom', 'mss', 'PIL', 'pyautogui', 'colorama',
-                   'cryptography', 'pyHook', 'pycaw', 'readline']
+                   'cryptography', 'pyWinhook', 'pycaw', 'readline']
 linux_modules = ['cv2', 'mss', 'PIL', 'Xlib', 'pyautogui', 'pyperclip', 'pyxhook', 'crontab', 'cryptography',
                  'readline', 'alsaaudio']
 

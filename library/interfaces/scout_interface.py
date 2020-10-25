@@ -1,4 +1,3 @@
-import time
 import library.commands.global_interface.clear as clear
 import library.commands.global_interface.quit as quit
 import library.commands.global_interface.python as python

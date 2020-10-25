@@ -37,7 +37,7 @@ def main():
             option = input(config.pro + 'Path to file ico or press [enter] to use the default PyIris provided windows service icon (resources/windows_service.ico) : ')
             if not option:
                 option = os.path.join(config.started_at, 'resources', 'windows_service.ico')
-            tags.append('--icon ' + option)
+            tags.append('--icon "' + option + '"')
             break
         elif option == 'n':
             break

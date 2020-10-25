@@ -1,4 +1,3 @@
-import time
 import library.modules.generator_append as generator_append
 import library.commands.global_interface.clear as clear
 import library.commands.global_interface.quit as quit

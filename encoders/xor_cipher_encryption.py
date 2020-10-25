@@ -13,13 +13,11 @@ def xor_encoder(plaintext, cipher):
     return "".join(encrypted)
 
 
-def main(option, filepath=None):
-    if not filepath:
-        filepath = config.scout_values['Path'][0]
+def main(option):
     if option == 'encode':
         try:
             imported_modules = ['from itertools import cycle', 'from base64 import b64decode']
-            with open(filepath, 'r') as f:
+            with open('payload.py', 'r') as f:
                 data = f.read().replace(';', '\n')
             source = data.split('\n')
             for i in source:
@@ -30,7 +28,7 @@ def main(option, filepath=None):
             encoded_source = base64.b64encode((xor_encoder('\n'.join(source), key)).encode()).decode()
             obfuscated = ';'.join(
                 imported_modules) + ';exec("".join(chr(ord(c1)^ord(c2)) for (c1,c2) in zip(b64decode("' + encoded_source + '").decode(),cycle("' + key + '"))))'
-            with open(filepath, 'w') as f:
+            with open('payload.py', 'w') as f:
                 f.write(obfuscated)
                 print('   ' + config.inf + 'Encoded scout and overwrote raw file with XOR encoded file contents')
         except SyntaxError:

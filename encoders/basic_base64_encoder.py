@@ -4,13 +4,11 @@ from base64 import b64encode
 config.main()
 
 
-def main(option, filepath=None):
-    if not filepath:
-        filepath = config.scout_values['Path'][0]
+def main(option):
     if option == 'encode':
         try:
             imported_modules = ['from base64 import b64decode']
-            with open(filepath, 'r') as f:
+            with open('payload.py', 'r') as f:
                 data = f.read().replace(';', '\n')
             source = data.split('\n')
             for i in source:
@@ -18,7 +16,7 @@ def main(option, filepath=None):
                     imported_modules.append(i)
             encoded_soure = b64encode(('\n'.join(source)).encode()).decode()
             obfuscated = ';'.join(imported_modules) + ';exec(b64decode("' + encoded_soure + '").decode())'
-            with open(filepath, 'w') as f:
+            with open('payload.py', 'w') as f:
                 f.write(obfuscated)
                 print('   ' + config.inf + 'Encoded scout and overwrote raw file with Base64 encoded file contents')
         except SyntaxError:
