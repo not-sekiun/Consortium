@@ -8,6 +8,8 @@ generation system
 - Removed some redundant imports, time imports in interfaces were removed along with datetime imports in generate.py
 - Dropped the usage of pyHook for the maintained pyWinhook for keystroke logging and injection on windows
 - Fixed bug with compiling folder scouts, folders scouts for some reason were not handled in the if else logic branches and were mistaken as single file scouts (--onefile)
+- Added new command, flush to direct interface to allow for PyIris to flush scout socket buffers that may be out of sync in communication with PyIris
+- Made scouts more resilient to abrupt closure of connections by getting them to handle ConnectionResetError
 
 # Update 1.1.4
 - Minor change to scout generation, now scouts are packaged in extra directories specifying the time of generation this prevents any accidental overwriting of existing payloads.

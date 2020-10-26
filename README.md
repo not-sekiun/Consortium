@@ -96,9 +96,14 @@ Then install pyalsaaudio through apt-get, if you're installing on **ubuntu** ple
 
 ```sudo apt-get install python3-alsaaudio```
 
-After than install canberra-gtk-module for cv2 to use to display webcam live streams
+After that install canberra-gtk-module for cv2 to use to display webcam live streams
 
 ```sudo apt-get install libcanberra-gtk-module```
+
+Pyautogui refuses to be imported in linux if tkinter is not installed so we must install it. However, we are not actually using tkinter
+for any of the scouts
+
+```sudo apt-get install python3-tk python3-dev``` 
 
 Finally, install the rest of the required modules with pip3. Only install modules from the ```setup/linux/requirements.txt``` file as
 this section is for running the Linux edition of PyIris.

@@ -8,6 +8,7 @@ def main():
 ===============
    Base Commands :'''
     base_help_menu = {'disconnect': 'Disconnects the scout',
+                      'flush <timeout>': 'Flush the socket buffer, the socket timeout argument is optional and defaults to 5 for the socket timeout in flushing',
                       'help': 'Show the help menu or help for specific command, alias of the command is "?"',
                       'kill': 'Kills the scout',
                       'ping': 'Ping the scout',
