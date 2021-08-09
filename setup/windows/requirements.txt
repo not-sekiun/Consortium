@@ -1,4 +1,4 @@
-pywin32==228
+pywin32==301
 opencv-python==4.4.0.44
 pyperclip==1.8.1
 comtypes==1.1.7
