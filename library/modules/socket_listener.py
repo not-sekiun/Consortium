@@ -4,6 +4,7 @@ import library.modules.should_listener_die as should_listener_die
 import library.modules.return_random_string as return_random_string
 import library.modules.recv_all as recv_all
 from datetime import datetime
+import logging
 
 config.main()
 
@@ -63,6 +64,7 @@ def main(host, port, name, reply):
                 continue
     except Exception as e:
         print('\n' + config.war + 'Error in listener thread : ' + str(e) + ', killing thread...')
+        logging.warning("Dumping stack trace and exiting...", exc_info=True)
         try:
             del (config.listener_database[str(local_copy_of_id)])
         except (IndexError, ValueError, UnboundLocalError):

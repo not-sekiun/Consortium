@@ -2,6 +2,7 @@ import library.modules.recv_all as recv_all
 from ntpath import basename
 from base64 import b64decode
 import library.modules.config as config
+import logging
 
 config.main()
 
@@ -23,3 +24,5 @@ def main(sock):
         print(data)
     except Exception as e:
         print(config.neg + 'Error while downloading file : ' + str(e))
+        logging.warning("Dumping stack trace and exiting...", exc_info=True)
+

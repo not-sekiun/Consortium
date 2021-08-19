@@ -1,4 +1,5 @@
 import library.modules.config as config
+import logging
 
 config.main()
 
@@ -57,4 +58,5 @@ def main():
             e) + ' - Error, missing packages or packages not installed from setup folder')
         return False
     except Exception as e:
-        print(config.war + 'Unexpected error when bootstrapping : ' + str(e))
+        logging.critical("Unexpected error when bootstrapping, dumping stack trace and exiting...",
+                         exc_info=True)
