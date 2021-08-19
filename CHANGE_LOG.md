@@ -1,3 +1,6 @@
+# Update 1.1.6
+- fixed an issue with vague error handling, moved away from print(str(e)) from Exception as e error cases to logging with stack dump
+
 # Update 1.1.5
 - Fixed an error where the 'Dir' arg for scout generation would cause an IOerror in compilation when there was a space in the path name due to pyinstaller misinterpreting the 
 path name
