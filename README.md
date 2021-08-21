@@ -210,7 +210,7 @@ Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
 - Thanks to my brain for formulating this whole project
 
 # License
-Licensed under Mozilla Public License Version 2.0 - See the "LICENESE.md" file for more details
+Licensed under Mozilla Public License Version 2.0 - See the "LICENSE.md" file for more details
 
 # Disclaimer!
 I am not held reponsible for anything illegal or unethical that you do with this framework, this framework was developed for ethical 
