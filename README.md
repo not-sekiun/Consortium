@@ -206,7 +206,7 @@ Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
 - Inspired by [Powershell Empire](https://github.com/EmpireProject/Empire) and [Brain Damage](https://github.com/mehulj94/BrainDamage)
 - Thanks to EV-EV for helping me in the earliest stages of the project and in helping me to create PyIris from its infancy
 - Thanks to Dharshan2004 for helping build a part of the in-memory webcam module and testing PyIris on Debian
-- Thanks to Ani152 for being my unwilling test subject in testing the PyIris framework
+- Thanks to Ani152 for being my (legally) unwilling test subject in testing the PyIris framework
 - Thanks to my brain for formulating this whole project
 
 # License
