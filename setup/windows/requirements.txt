@@ -3,7 +3,7 @@ opencv-python==4.4.0.44
 pyperclip==1.8.1
 comtypes==1.1.7
 mss==6.0.0
-Pillow==8.0.1
+Pillow==8.2.0
 PyAutoGUI==0.9.52
 PyInstaller==4.0
 colorama==0.4.4
