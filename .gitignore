@@ -1,4 +1,4 @@
 /.idea/
-*.pyc
 /resources/PyIris.cred
 /generated/
+*.pyc
