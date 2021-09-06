@@ -1,4 +1,4 @@
-# The PyIris Project (BIG UPDATES COMING I JUST NEED TO FINISH MY EXAMS FIRST REFER TO ROADMAP.md)
+# The PyIris Project (Updates coming soon refer to ROADMAP.md)
 The PyIris project is a modular, stealthy and flexible remote-access-toolkit written **completely in python**.
 It allows users to dynamically build, generate and encode/encrypt remote-access-trojan payloads for remote
 control of other compromised hosts.
