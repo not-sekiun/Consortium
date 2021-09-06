@@ -41,4 +41,4 @@ sketch them out fully before moving them to short term. [Added 4/26/2020]
 end lol). Details are still hazy although the prototype is mostly finished I may need to ensure backend stability/ optimization before 
 rolling out the release [Added 4/26/2020]~~ This is kinda screwed since im changing a whole bunch of stuff at once. I may or may not decide to add a GUI at this point I dont know.
 - Figure out how to dynamically load python modules. Not sure if this is possible at all. If so, it may completely change the entire 
-course of this project. Will do more research and look into it. [Added 4/26/2020]
+course of this project. Will do more research and look into it. [Added 4/26/2020] update [9/6/2021] : distributed computing with rpyc might be the answer here 
