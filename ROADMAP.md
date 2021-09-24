@@ -2,7 +2,7 @@
 A short collection of ideas and concepts I have planned for PyIris in the future upcoming updates. I'm pretty busy with life so theres no 
 set date on when these goals will be fulfilled, could be finished in a duration of weeks to years. 
 
-## 2021 update [Added 9/6/2021]
+## 2021 update (Non backward compatible essentially a major update to the entire system) [Added 9/6/2021]
 So I havent worked on this project in a while mainly due to school and life stuff so that kind of sucks. Im finishing my exams soon so I will very soon have time to work on the
 project. Ive decided to make a bunch of code changes with regards to the internal functioning of PyIris, ie with how the in memory database is managed, how listeners are set
 etc. I dont have much time to write this so here are a few new things I want to do with the project moving forward
