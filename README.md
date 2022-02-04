@@ -159,6 +159,13 @@ PyIris utilizes Pyinstaller to compile its payloads. It is therefore not possibl
 generate and compile a scout in Linux the binary only runs in Linux, it works the same for Windows. If you want to cross-compile 
 Windows scouts for Linux I suggest you use wine and run PyIris from there otherwise your options are very limited.
 
+### Why am I getting an attribute error "enum has no module 'IntFlag' during compilation of scouts?
+This is most probably due to a redundant library you have installed called enum34 which has already been deprecated. Uninstall the library with the command 
+
+```pip uninstall -y enum34```
+
+If you get this error while compiling with pyinstalled the compiled executable will not run. See [here](https://stackoverflow.com/questions/43124775/why-python-3-6-1-throws-attributeerror-module-enum-has-no-attribute-intflag) for more information
+
 ### PyHook isn't installing on my Windows OS!
 I have already included a PyHook wheel file in the setup/windows folder however that wheel works only for 64 bit versions of Windows.
 You may have to manually install PyHook yourself. Go to [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/) and search for the 
