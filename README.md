@@ -216,7 +216,6 @@ Create an issue, but before that please read the "ISSUE_TEMPLATE.md" file first
 Licensed under Mozilla Public License Version 2.0 - See the "LICENSE.md" file for more details
 
 # Disclaimer!
-I write stuff like this for FUN and to LEARN. The purpose of this project is to challenge myself to solve problems in creative ways,
+I write stuff like this for fun and mainly to become a better at python. The purpose of this project is to challenge myself to solve problems in creative ways,
 teach myself to be better at coding and have some fun creating something cool in the process. I DO NOT CONDONE the usage of this project 
-in any unethical or unlawful manner. As such I am not held reponsible for anything illegal or unethical done with this framework. Do not use this 
-without the full consent of the subject. Besides this framework isnt even that good anyways.
+in any unethical or unlawful manner. Do not use this without the full consent of the subject. Besides this framework isnt even that good anyways.
