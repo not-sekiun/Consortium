@@ -1,3 +1,5 @@
+# The project is currently undergoing a major rewrite for version 3, the current version, version 2 will be made obsolete
+
 # The PyIris Project (Updates coming soon refer to ROADMAP.md)
 The PyIris project is a modular remote access trojan toolkit written completely in python.
 It allows users to dynamically build, generate and encode/encrypt remote access trojan payloads for remote
