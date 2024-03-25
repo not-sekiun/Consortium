@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "consortium"
+version = "0.1.0"
+description = ""
+authors = ["not-sekiun <1010angusx@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "consortium" },
+    { include = "consortium.py" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+prompt-toolkit = "^3.0.41"
+loguru = "^0.7.2"
+fastapi = "^0.104.1"
+rich = "^13.7.0"
+jsonschema = "^4.20.0"
+uvicorn = "^0.24.0.post1"
+pyjwt = "^2.8.0"
+python-multipart = "^0.0.6"
+requests = "^2.31.0"
+aiohttp = "^3.9.3"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+isort = "^5.13.2"
+autoflake = "^2.3.1"
+add-trailing-comma = "^3.1.0"
+ruff = "^0.3.4"
+pre-commit = "^3.6.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
