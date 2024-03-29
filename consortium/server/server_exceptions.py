@@ -220,7 +220,7 @@ class ServiceUnavailableError(ServerException):
         )
 
 
-# Errors for the api endpoint /api/user_accounts
+# Errors for the api endpoint /api/user-accounts.
 class UserAccountNotFoundError(ServerException):
     def __init__(
         self,
@@ -307,7 +307,7 @@ class IdenticalUserAccountRoleError(ServerException):
         )
 
 
-# Errors for the api endpoint /api/login
+# Errors for the api endpoint /api/login.
 class AlreadyLoggedInError(ServerException):
     def __init__(
         self,
@@ -343,7 +343,7 @@ class UserNotFoundError(ServerException):
         )
 
 
-# Errors for the api endpoint /api/listener_templates.
+# Errors for the api endpoint /api/listener-templates.
 class ListenerTemplateNotFoundError(ServerException):
     def __init__(
         self,
@@ -447,23 +447,63 @@ class InvalidListenerOptionValueError(ServerException):
         )
 
 
-# class ListenerUpdateError(ServerException):
-#     def __init__(
-#         self, message: str = "Listener could not be updated", detail: Any = None
-#     ) -> None:
-#         super().__init__(
-#             status_code=422,
-#             code="LISTENER_UPDATE_ERROR",
-#             message=message,
-#             detail=detail,
-#         )
-
-
 class ListenerStillRunningError(ServerException):
     def __init__(self, message: str = "", detail: Any = None) -> None:
         super().__init__(
             status_code=409,
             code="LISTENER_STILL_RUNNING_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+# Errors for the endpoint /api/agent-generator-templates.
+class AgentGeneratorTemplateNotFoundError(ServerException):
+    def __init__(
+        self,
+        message: str = (
+            "The requested agent generator template was not found. (Check that the "
+            "agent_generator_template_id URL parameter is correct.)"
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=404,
+            code="AGENT_GENERATOR_TEMPLATE_NOT_FOUND_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class InvalidAgentGeneratorTemplateOptionNameError(ServerException):
+    def __init__(
+        self,
+        message: str = (
+            "The provided agent generator template option name is invalid. (Check that "
+            "the option name exists.)"
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=422,
+            code="INVALID_AGENT_GENERATOR_TEMPLATE_OPTION_NAME_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class InvalidAgentGeneratorTemplateOptionValueError(ServerException):
+    def __init__(
+        self,
+        message: str = (
+            "The provided agent generator template option value is invalid. (Check that "
+            "the type and format of the option's value is valid.)"
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=422,
+            code="INVALID_AGENT_GENERATOR_TEMPLATE_OPTION_VALUE_ERROR",
             message=message,
             detail=detail,
         )

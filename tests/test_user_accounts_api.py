@@ -1,10 +1,13 @@
 import uuid
 
+import pytest
+import requests
+
 from tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
     SUCCESS_RESPONSE_JSON_SCHEMA,
 )
-from tests.utils import validate_response
+from tests.utils import get_all_user_account_ids, validate_response
 
 USER_ACCOUNT_RESPONSE_JSON_SCHEMA = {
     "type": "object",
@@ -60,388 +63,315 @@ DUPLICATE_USER_ACCOUNT_CREATION_ERROR_RESPONSE_JSON_SCHEMA = {
 }
 
 
-def test_create_and_delete_user_account(
-    admin_session,
-    operator_session,
-    spectator_session,
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
+@pytest.mark.parametrize(
+    # test_user_account is a tuple of (username, password, role)
+    "test_user_account",
+    [
+        (uuid.uuid4().hex, uuid.uuid4().hex, "ADMIN"),
+        (uuid.uuid4().hex, uuid.uuid4().hex, "OPERATOR"),
+        (uuid.uuid4().hex, uuid.uuid4().hex, "SPECTATOR"),
+    ],
+)
+def test_create_user_account(
+    admin_session: requests.Session,
+    session: requests.Session,
+    test_user_account: tuple[str, str, str],
 ):
-    username = uuid.uuid4().hex
-    password = uuid.uuid4().hex
-
-    # admin_session test
-    user_account_id = validate_response(
-        test_response=admin_session.post(
-            "http://localhost:9999/api/user_accounts",
-            json={"username": username, "password": password, "role": "ADMIN"},
-        ),
-        expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
-        expected_status_code=201,
-    ).json()["user_account_id"]
-    validate_response(
-        test_response=admin_session.get(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}",
-        ),
-        expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-        # Don't call it response because it will shadow the response variable from the
-        # outer scope
-        validator_function=lambda response: all(
-            (
-                response.json()["username"] == username,
-                response.json()["password"] == password,
-                response.json()["role"] == "ADMIN",
+    if session == admin_session:
+        # Test for admin sessions.
+        user_account = validate_response(
+            test_response=admin_session.post(
+                "http://localhost:9999/api/user-accounts",
+                json={
+                    "username": test_user_account[0],
+                    "password": test_user_account[1],
+                    "role": test_user_account[2],
+                },
             ),
-        ),
-    )
-
-    # Test the deletion of the randomly created temporary user account
-    validate_response(
-        test_response=admin_session.delete(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}",
-        ),
-        expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-    )
-    validate_response(
-        test_response=admin_session.get(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}",
-        ),
-        expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
-        expected_status_code=404,
-    )
-
-    # Test the creation of a user account with a duplicate username
-    validate_response(
-        test_response=admin_session.post(
-            "http://localhost:9999/api/user_accounts",
-            json={"username": "admin", "password": "admin", "role": "ADMIN"},
-        ),
-        expected_json_schema=DUPLICATE_USER_ACCOUNT_CREATION_ERROR_RESPONSE_JSON_SCHEMA,
-        expected_status_code=409,
-    )
-
-    # operator_session and spectator_session test
-    def run_session_test(session):
+            expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+            expected_status_code=201,
+        ).json()
         validate_response(
-            test_response=session.post(
-                "http://localhost:9999/api/user_accounts",
-                json={"username": username, "password": password, "role": "ADMIN"},
+            test_response=admin_session.get(
+                f"http://localhost:9999/api/user-accounts/{user_account["user_account_id"]}",
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-            expected_status_code=403,
-        )
-
-    run_session_test(operator_session)
-    run_session_test(spectator_session)
-
-
-def test_get_own_user_account_info(admin_session, operator_session, spectator_session):
-    def run_session_test(session):
-        validate_response(
-            test_response=session.get("http://localhost:9999/api/user_accounts/me"),
             expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
             expected_status_code=200,
+            # Don't call the lambda variable response because it will shadow the
+            # response variable from the outer scope
+            validator_function=lambda response: all(
+                (
+                    response.json()["username"] == test_user_account[0],
+                    response.json()["password"] == test_user_account[1],
+                    response.json()["role"] == test_user_account[2],
+                ),
+            ),
         )
-
-    run_session_test(admin_session)
-    run_session_test(operator_session)
-    run_session_test(spectator_session)
-
-
-def test_get_all_user_accounts_info(admin_session, operator_session, spectator_session):
-    def run_session_test(session):
+    else:
+        # Test for operator and spectator sessions.
         validate_response(
-            test_response=session.get("http://localhost:9999/api/user_accounts/all"),
+            test_response=session.post(
+                "http://localhost:9999/api/user-accounts",
+                json={
+                    "username": test_user_account[0],
+                    "password": test_user_account[1],
+                    "role": test_user_account[2],
+                },
+            ),
             expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
             expected_status_code=403,
         )
 
+
+def test_get_own_user_account_info(session: requests.Session):
     validate_response(
-        test_response=admin_session.get("http://localhost:9999/api/user_accounts/all"),
-        expected_json_schema=ALL_USER_ACCOUNTS_RESPONSE_JSON_SCHEMA,
+        test_response=session.get("http://localhost:9999/api/user-accounts/me"),
+        expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
         expected_status_code=200,
     )
-    run_session_test(operator_session)
-    run_session_test(spectator_session)
+
+
+def test_get_all_user_accounts_info(
+    admin_session: requests.Session,
+    session: requests.Session,
+):
+    if session == admin_session:
+        # Test for admin sessions.
+        validate_response(
+            test_response=session.get("http://localhost:9999/api/user-accounts/all"),
+            expected_json_schema=ALL_USER_ACCOUNTS_RESPONSE_JSON_SCHEMA,
+            expected_status_code=200,
+        )
+    else:
+        # Test for operator and spectator sessions.
+        validate_response(
+            test_response=session.get("http://localhost:9999/api/user-accounts/all"),
+            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_status_code=403,
+        )
 
 
 def test_get_user_account_info_by_user_account_id(
-    admin_session,
-    operator_session,
-    spectator_session,
+    admin_session: requests.Session,
+    session: requests.Session,
 ):
-    all_user_account_user_account_ids = [
-        user_account["user_account_id"]
-        for user_account in admin_session.get(
-            "http://localhost:9999/api/user_accounts/all",
-        ).json()
-    ]
-
-    def run_session_test(session):
-        validate_response(
-            test_response=session.get(
-                f"http://localhost:9999/api/user_accounts/{user_account_id}",
-            ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-            expected_status_code=403,
-        )
-
-    for user_account_id in all_user_account_user_account_ids:
-        validate_response(
-            test_response=admin_session.get(
-                f"http://localhost:9999/api/user_accounts/{user_account_id}",
-            ),
-            expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
-            expected_status_code=200,
-        )
-        run_session_test(operator_session)
-        run_session_test(spectator_session)
+    if session == admin_session:
+        for user_account_id in get_all_user_account_ids(admin_session):
+            validate_response(
+                test_response=session.get(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                ),
+                expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+                expected_status_code=200,
+            )
+    else:
+        for user_account_id in get_all_user_account_ids(admin_session):
+            validate_response(
+                test_response=session.get(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_status_code=403,
+            )
 
 
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
 def test_update_own_user_account_password(
-    admin_session,
-    operator_session,
-    spectator_session,
+    spectator_session: requests.Session,
+    session: requests.Session,
 ):
-    password = uuid.uuid4().hex
+    new_password = uuid.uuid4().hex
 
-    # admin_session and operator_session test
-    def run_session_test(session):
+    if session != spectator_session:
+        # Test for admin sessions and operator sessions.
         validate_response(
             session.patch(
-                f"http://localhost:9999/api/user_accounts/me/password",
-                json={"password": password},
+                "http://localhost:9999/api/user-accounts/me/password",
+                json={"password": new_password},
             ),
             expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
             expected_status_code=200,
         )
         validate_response(
-            test_response=session.get(f"http://localhost:9999/api/user_accounts/me"),
+            test_response=session.get("http://localhost:9999/api/user-accounts/me"),
             expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
             expected_status_code=200,
-            validator_function=lambda response: response.json()["password"] == password,
+            validator_function=lambda response: response.json()["password"]
+            == new_password,
         )
-
-    run_session_test(admin_session)
-    run_session_test(operator_session)
-
-    # spectator_session test
-    validate_response(
-        spectator_session.patch(
-            f"http://localhost:9999/api/user_accounts/me/password",
-            json={"password": password},
-        ),
-        expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-        expected_status_code=403,
-    )
-
-    # restore the original default passwords for the modified accounts
-    admin_session.patch(
-        f"http://localhost:9999/api/user_accounts/me/password",
-        json={"password": "admin"},
-    )
-    operator_session.patch(
-        f"http://localhost:9999/api/user_accounts/me/password",
-        json={"password": "operator"},
-    )
-
-
-def test_update_user_account_password_by_user_account_id(
-    admin_session,
-    operator_session,
-    spectator_session,
-):
-    username = uuid.uuid4().hex
-    old_password = uuid.uuid4().hex
-    new_password = uuid.uuid4().hex
-
-    # admin_session test
-    user_account_id = admin_session.post(
-        "http://localhost:9999/api/user_accounts",
-        json={"username": username, "password": old_password, "role": "ADMIN"},
-    ).json()["user_account_id"]
-    validate_response(
-        test_response=admin_session.patch(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}/password",
-            json={"password": new_password},
-        ),
-        expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-    )
-    validate_response(
-        test_response=admin_session.get(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}",
-        ),
-        expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-        validator_function=lambda response: response.json()["password"] == new_password,
-    )
-
-    # operator_session and spectator_session test
-    admin_session.post(
-        f"http://localhost:9999/api/user_accounts/{user_account_id}/password",
-        json={"password": old_password},
-    )
-
-    def run_session_test(session):
+    else:
+        # Test for spectator sessions.
         validate_response(
-            test_response=session.patch(
-                f"http://localhost:9999/api/user_accounts/{user_account_id}/password",
+            spectator_session.patch(
+                "http://localhost:9999/api/user-accounts/me/password",
                 json={"password": new_password},
             ),
             expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
             expected_status_code=403,
         )
 
-    run_session_test(operator_session)
-    run_session_test(spectator_session)
 
-    admin_session.delete(f"http://localhost:9999/api/user_accounts/{user_account_id}")
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
+def test_update_user_account_password_by_user_account_id(
+    admin_session: requests.Session,
+    session: requests.Session,
+):
+    new_password = uuid.uuid4().hex
+
+    if session == admin_session:
+        # Test for admin sessions.
+        # Changing the password of a user account will not log the user out from the
+        # associated account.
+        for user_account_id in get_all_user_account_ids(admin_session):
+            validate_response(
+                test_response=admin_session.patch(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}/password",
+                    json={"password": new_password},
+                ),
+                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_status_code=200,
+            )
+            validate_response(
+                test_response=admin_session.get(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                ),
+                expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+                expected_status_code=200,
+                validator_function=lambda response: response.json()["password"]
+                == new_password,
+            )
+    else:
+        # Test for operator and spectator sessions.
+        for user_account_id in get_all_user_account_ids(admin_session):
+            validate_response(
+                test_response=session.patch(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}/password",
+                    json={"password": new_password},
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_status_code=403,
+            )
 
 
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
 def test_update_user_account_role_by_user_account_id(
-    admin_session,
-    operator_session,
-    spectator_session,
+    admin_session: requests.Session,
+    session: requests.Session,
 ):
-    username = uuid.uuid4().hex
-    password = uuid.uuid4().hex
-    old_role = "ADMIN"
-    new_role = "OPERATOR"
+    old_role_to_new_role_map = {
+        "ADMIN": "OPERATOR",
+        "OPERATOR": "SPECTATOR",
+        "SPECTATOR": "ADMIN",
+    }
 
-    # admin_session test
-    user_account_id = admin_session.post(
-        "http://localhost:9999/api/user_accounts",
-        json={"username": username, "password": password, "role": old_role},
-    ).json()["user_account_id"]
-    validate_response(
-        test_response=admin_session.patch(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}/role",
-            json={"role": new_role},
-        ),
-        expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-    )
-    validate_response(
-        test_response=admin_session.get(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}",
-        ),
-        expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-        validator_function=lambda response: response.json()["role"] == new_role,
-    )
-
-    # operator_session and spectator_session test
-    admin_session.post(
-        f"http://localhost:9999/api/user_accounts/{user_account_id}/role",
-        json={"role": old_role},
-    )
-
-    def run_session_test(session):
-        validate_response(
-            test_response=session.patch(
-                f"http://localhost:9999/api/user_accounts/{user_account_id}/role",
-                json={"role": new_role},
-            ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-            expected_status_code=403,
-        )
-
-    run_session_test(operator_session)
-    run_session_test(spectator_session)
-
-    admin_session.delete(f"http://localhost:9999/api/user_accounts/{user_account_id}")
+    if session == admin_session:
+        # Test for admin sessions.
+        for user_account_id in get_all_user_account_ids(admin_session):
+            old_role = admin_session.get(
+                f"http://localhost:9999/api/user-accounts/{user_account_id}",
+            ).json()["role"]
+            new_role = old_role_to_new_role_map[old_role]
+            validate_response(
+                test_response=admin_session.patch(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}/role",
+                    json={"role": new_role},
+                ),
+                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_status_code=200,
+            )
+            validate_response(
+                test_response=admin_session.get(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                ),
+                expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+                expected_status_code=200,
+                validator_function=lambda response: response.json()["role"] == new_role,
+            )
+    else:
+        # Test for operator and spectator sessions.
+        for user_account_id in get_all_user_account_ids(admin_session):
+            old_role = admin_session.get(
+                f"http://localhost:9999/api/user-accounts/{user_account_id}",
+            ).json()["role"]
+            new_role = old_role_to_new_role_map[old_role]
+            validate_response(
+                test_response=session.patch(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}/role",
+                    json={"role": new_role},
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_status_code=403,
+            )
 
 
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
 def test_delete_user_account_by_user_account_id(
-    admin_session,
-    operator_session,
-    spectator_session,
+    admin_session: requests.Session,
+    session: requests.Session,
 ):
-    username = uuid.uuid4().hex
-    password = uuid.uuid4().hex
+    if session == admin_session:
+        # Test for admin sessions.
+        # Deleting a user account will not log a user out from the associated account.
+        for user_account_id in get_all_user_account_ids(admin_session):
+            validate_response(
+                test_response=session.delete(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                ),
+                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_status_code=200,
+            )
+            validate_response(
+                test_response=session.get(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                ),
+                expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_status_code=404,
+            )
+    else:
+        # Test for operator and spectator sessions.
+        for user_account_id in get_all_user_account_ids(admin_session):
+            validate_response(
+                test_response=session.delete(
+                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_status_code=403,
+            )
 
-    # admin_session test
-    user_account_id = admin_session.post(
-        "http://localhost:9999/api/user_accounts",
-        json={"username": username, "password": password, "role": "ADMIN"},
-    ).json()["user_account_id"]
-    validate_response(
-        test_response=admin_session.get(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}",
-        ),
-        expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-    )
-    validate_response(
-        test_response=admin_session.delete(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}",
-        ),
-        expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-    )
-    validate_response(
-        test_response=admin_session.get(
-            f"http://localhost:9999/api/user_accounts/{user_account_id}",
-        ),
-        expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
-        expected_status_code=404,
-    )
 
-    # operator_session and spectator_session test
-    user_account_id = admin_session.post(
-        "http://localhost:9999/api/user_accounts",
-        json={"username": username, "password": password, "role": "ADMIN"},
-    ).json()["user_account_id"]
-
-    def run_session_test(session):
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
+def test_delete_own_user_account(
+    admin_session: requests.Session,
+    spectator_session: requests.Session,
+    session: requests.Session,
+):
+    if session != spectator_session:
+        # Test for admin sessions and operator sessions.
+        user_account = session.get("http://localhost:9999/api/user-accounts/me").json()
         validate_response(
-            test_response=session.delete(
-                f"http://localhost:9999/api/user_accounts/{user_account_id}",
-            ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-            expected_status_code=403,
-        )
-
-    run_session_test(operator_session)
-    run_session_test(spectator_session)
-
-    admin_session.delete(f"http://localhost:9999/api/user_accounts/{user_account_id}")
-
-
-def test_delete_own_user_account(admin_session, operator_session, spectator_session):
-    def run_session_test(session):
-        user = session.get("http://localhost:9999/api/user_accounts/me").json()
-        validate_response(
-            test_response=session.delete(f"http://localhost:9999/api/user_accounts/me"),
+            test_response=session.delete("http://localhost:9999/api/user-accounts/me"),
             expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
             expected_status_code=200,
         )
         validate_response(
-            test_response=session.get(f"http://localhost:9999/api/user_accounts/me"),
+            test_response=session.get("http://localhost:9999/api/user-accounts/me"),
             expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
             expected_status_code=404,
         )
-        # restore the deleted account
-        (
-            admin_session.post(
-                "http://localhost:9999/api/user_accounts",
-                json={
-                    "username": user["username"],
-                    "password": user["password"],
-                    "role": user["role"],
-                },
+        validate_response(
+            test_response=admin_session.get(
+                f"http://localhost:9999/api/user-accounts/{user_account["user_account_id"]}",
             ),
+            expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_status_code=404,
         )
-
-    run_session_test(admin_session)
-    run_session_test(operator_session)
-
-    # spectator_session test
-    validate_response(
-        test_response=spectator_session.delete(
-            f"http://localhost:9999/api/user_accounts/me",
-        ),
-        expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-        expected_status_code=403,
-    )
+    else:
+        # Test for spectator sessions.
+        validate_response(
+            test_response=spectator_session.delete(
+                "http://localhost:9999/api/user-accounts/me",
+            ),
+            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_status_code=403,
+        )

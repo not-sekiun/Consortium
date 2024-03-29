@@ -1,3 +1,4 @@
+import copy
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
@@ -5,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.framework.framework_exceptions import (
+    ListenerCancellationError,
     ListenerStartError,
     ListenerStopError,
 )
@@ -33,6 +35,7 @@ router = APIRouter(
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 listeners_service = server_singletons.listeners_service
+listener_templates_service = server_singletons.listener_templates_service
 
 
 @router.get(
@@ -44,7 +47,7 @@ listeners_service = server_singletons.listeners_service
 def get_all_listeners_info(
     _: Annotated[
         None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENERS_INFO)),
+        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENERS)),
     ],
 ):
     return [
@@ -65,7 +68,7 @@ def get_listener_info_by_listener_id(
     _: Annotated[
         None,
         Depends(
-            AuthorizeUserRequest(UserPermissions.READ_LISTENER_INFO_BY_LISTENER_ID),
+            AuthorizeUserRequest(UserPermissions.READ_LISTENER_BY_LISTENER_ID),
         ),
     ],
 ):
@@ -73,7 +76,7 @@ def get_listener_info_by_listener_id(
         return ListenerModel(
             **listeners_service.get_listener_by_listener_id(listener_id).to_json(),
         )
-    except KeyError:
+    except ValueError:
         raise ListenerNotFoundError
 
 
@@ -98,7 +101,7 @@ async def start_listener_by_listener_id(
         # is caught by the exception handler at server_exception_handlers.py
         await listener.start_listener()
         return SuccessResponseModel()
-    except KeyError:
+    except ValueError:
         raise ListenerNotFoundError
 
 
@@ -123,7 +126,33 @@ async def stop_listener_by_listener_id(
         # caught by the exception handler at server_exception_handlers.py
         await listener.stop_listener()
         return SuccessResponseModel()
-    except KeyError:
+    except ValueError:
+        raise ListenerNotFoundError(listener_id)
+
+
+@router.post(
+    "/{listener_id}/cancel",
+    responses={
+        200: {"model": SuccessResponseModel},
+        400: {"model": ListenerCancellationError(message="string").to_pydantic_model()},
+        404: {"model": ListenerNotFoundError().to_pydantic_model()},
+    },
+)
+async def cancel_listener_by_listener_id(
+    listener_id: str,
+    _: Annotated[
+        None,
+        Depends(AuthorizeUserRequest(UserPermissions.CANCEL_LISTENER_BY_LISTENER_ID)),
+    ],
+):
+    try:
+        listener = listeners_service.get_listener_by_listener_id(listener_id)
+        # if cancel_listener fails, it will automatically raise
+        # ListenerCancellationError which is caught by the exception handler at
+        # server_exception_handlers.py
+        await listener.cancel_listener()
+        return SuccessResponseModel()
+    except ValueError:
         raise ListenerNotFoundError(listener_id)
 
 
@@ -141,11 +170,14 @@ async def stop_listener_by_listener_id(
 def update_listener_by_listener_id(
     listener_id: str,
     new_listener_options: dict[str, Any],
-    _: Annotated[None, Depends(AuthorizeUserRequest)],
+    _: Annotated[
+        None,
+        Depends(AuthorizeUserRequest(UserPermissions.UPDATE_LISTENER_BY_LISTENER_ID)),
+    ],
 ):
     try:
         listener = listeners_service.get_listener_by_listener_id(listener_id)
-    except KeyError:
+    except ValueError:
         raise ListenerNotFoundError
 
     previous_listener_options = {
@@ -162,17 +194,51 @@ def update_listener_by_listener_id(
                 previous_option_value,
             )
 
-    for option_name, option_value in new_listener_options.items():
-        try:
-            listener.options[option_name].set_option_value(option_value)
-        except KeyError:
-            revert_to_previous_listener_options()
-            raise InvalidListenerOptionNameError(
-                detail=f'Listener option "{option_name}" does not exist',
-            )
-        except ValueError as exc:
-            revert_to_previous_listener_options()
-            raise InvalidListenerOptionValueError(detail=str(exc))
+    try:
+        # It should be impossible for this for loop to break out without finding
+        # the listener template that matches the target listener or to trip up on a
+        # false positive based on listener type because all listener types are
+        # unique to their respective listener
+        for (
+            listener_template
+        ) in listener_templates_service.get_all_listener_templates():
+            if listener_template.listener_type == listener.listener_type:
+                new_option_values = {}
+                # Preserve values that are not to be modified in the new listener
+                for option_name, option in listener.options.items():
+                    if option_name not in new_listener_options:
+                        new_option_values[option_name] = option.get_option_value()
+
+                # Add in the new values, checking for invalid values
+                for option_name, option_value in new_listener_options.items():
+                    if option_name not in listener_template.options:
+                        revert_to_previous_listener_options()
+                        raise InvalidListenerOptionNameError(
+                            detail=f'Listener option "{option_name}" does not exist',
+                        )
+                    new_option_values[option_name] = option_value
+
+                # Attempt to assign the updated values to the options within the
+                # listener template to ensure that the new values are valid
+                for option_name, option_value in new_option_values.items():
+                    listener_template.options[option_name].set_option_value(
+                        option_value,
+                    )
+
+                # Create a temporary listener whose attributes we copy over to the
+                # existing listener. This allows us to perform the name and
+                # endpoint resolution required to update the attribute without
+                # inadvertently overwriting any existing state within the existing
+                # listener
+                temporary_listener = listener_template.create_listener()
+                listener.name = temporary_listener.name
+                listener.endpoint = temporary_listener.endpoint
+                listener.options = copy.deepcopy(temporary_listener.options)
+
+                break
+    except ValueError as exc:
+        revert_to_previous_listener_options()
+        raise InvalidListenerOptionValueError(detail=str(exc))
     return SuccessResponseModel()
 
 
@@ -186,7 +252,10 @@ def update_listener_by_listener_id(
 )
 def delete_listener_by_listener_id(
     listener_id: str,
-    _: Annotated[None, Depends(AuthorizeUserRequest)],
+    _: Annotated[
+        None,
+        Depends(AuthorizeUserRequest(UserPermissions.DELETE_LISTENER_BY_LISTENER_ID)),
+    ],
 ):
     try:
         listener = listeners_service.get_listener_by_listener_id(listener_id)
@@ -196,5 +265,5 @@ def delete_listener_by_listener_id(
             )
         listeners_service.remove_listener(listener)
         return SuccessResponseModel()
-    except KeyError:
+    except ValueError:
         raise ListenerNotFoundError(listener_id)

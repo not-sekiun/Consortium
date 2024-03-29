@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from types import SimpleNamespace
 from typing import Any
 
+from loguru import logger
+
 import consortium.server.server_singletons as server_singletons
 from consortium.server.framework.framework_exceptions import (
     ListenerCancellationError,
@@ -11,13 +13,13 @@ from consortium.server.framework.framework_exceptions import (
     ListenerStartError,
     ListenerStopError,
 )
+from consortium.server.framework.framework_types import ListenerType
 from consortium.server.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
     ListValueOption,
     SingleValueOption,
 )
-from consortium.server.framework.types import ListenerType
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.listener_objects import ListenerState, ListenerStatus
 
@@ -46,24 +48,27 @@ class BaseListener(ABC):
         self.options = options
         self.status = ListenerStatus()
 
-        # state is used to store any state information that the listener may need to
-        # store and share amongst its user defined methods
+        # self.state is used to store any state information that the listener may need
+        # to store and share amongst its user defined methods.
         self.state = SimpleNamespace()
-        # event used to signal to the listener runtime loop to exit. the implementation
-        # of the listener runtime loop should check this event periodically and exit if
-        # it is set
+        # self.stop_listener_event used to signal to the listener runtime loop to exit.
+        # The implementation of the listener runtime loop should check this event
+        # periodically and exit if it is set.
         self.stop_listener_event = asyncio.Event()
-        # local storage of agents that have registered with this listener for easy
-        # access, for access of agents outside of this listener within the framework the
-        # AgentsService service should be used instead
+        # self.agents is a local storage of agents that have registered with this
+        # listener for access within the listener.
         self.agents = {}
+        # self.listener_logger is an internal logger to use for logging within the
+        # listener to standard output and log files.
+        self.listener_logger = logger.bind(
+            logger_name=f'Consortium Listener "{self.name}" ({self.listener_id})',
+        )
 
         # asyncio type tasks are held by a weak reference by default, so they can be
         # garbage collected at any time mid-execution, to prevent this we have to store
         # a reference of the task in a variable. We declare the variable here and assign
         # it in start_listener() later on
         self._task = None
-        self._agents_service = server_singletons.agents_service
 
     @abstractmethod
     async def on_listener_started(self) -> None: ...
@@ -80,11 +85,12 @@ class BaseListener(ABC):
     @abstractmethod
     async def on_listener_errored(self, exc: Exception) -> None: ...
 
-    def register_new_agent(self) -> Agent:
-        agent = Agent()
-        self._agents_service.add_agent(agent)
-        self.agents[str(agent.agent_id)] = agent
-        return agent
+    # To avoid exposing the internal workings of the AgentsService service to the
+    # implementer we instead provide a create_agent() method that can be used to create
+    # a new agent in the publicly exposed framework.
+    @staticmethod
+    def create_agent() -> Agent:
+        return server_singletons.agents_service.create_agent()
 
     async def _run_listener(self):
         try:
@@ -143,4 +149,5 @@ class BaseListener(ABC):
                 for option_name, option in self.options.items()
             },
             "status": self.status.to_json(),
+            "agent_ids": [str(agent.agent_id) for agent in self.agents.values()],
         }

@@ -84,6 +84,7 @@ class UserAccountsService:
             raise ValueError(
                 f'User account with the user account ID "{user_account_id}" does not exist',
             )
+
         self._user_accounts_service_logger.debug(
             f'Retrieved user account "{user_account.username}" ({user_account_id})',
         )
@@ -118,6 +119,7 @@ class UserAccountsService:
             raise ValueError(
                 f'User account "{user_account.username}" ({user_account.user_account_id}) does not exist',
             )
+
         # We don't need to explicitly update the self._user_accounts dictionary because
         # the user_account object is a reference to the object in the dictionary.
         user_account.password = password
@@ -135,6 +137,7 @@ class UserAccountsService:
             raise ValueError(
                 f'User account "{user_account.username}" ({user_account.user_account_id}) does not exist',
             )
+
         user_account.role = role
         self._user_accounts_service_logger.info(
             f'Updated user account "{user_account.username}"\'s ({user_account.user_account_id}) role',
@@ -148,6 +151,7 @@ class UserAccountsService:
             raise ValueError(
                 f'User account "{user_account.username}" ({user_account.user_account_id}) does not exist',
             )
+
         self._user_accounts_service_logger.info(
             f'Deleted user account "{user_account.username}" ({user_account.user_account_id})',
         )

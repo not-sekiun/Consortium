@@ -29,3 +29,8 @@ class Agent:
 
     def get_all_results(self) -> list[AgentResultModel]:
         return list(self._results.values())
+
+    def to_json(self) -> dict:
+        return {
+            "agent_id": str(self.agent_id),
+        }

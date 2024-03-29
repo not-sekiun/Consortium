@@ -1,10 +1,15 @@
-# conftest is a special file name that pytest automatically looks for in the
-# tests directory. It is used to define fixtures that can be used in all tests.
+# conftest is a special file name that pytest automatically looks for in the tests
+# directory. It is used to define fixtures that can be used in all tests.
 import json
 
-import jsonschema
 import pytest
 import requests
+
+from tests.utils import (
+    get_all_listener_template_ids,
+    get_all_user_account_ids,
+    validate_response,
+)
 
 _JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA = {
     "type": "object",
@@ -76,18 +81,14 @@ def admin_session():
     # login as an admin using form data to get a JSON web token, then create a session
     # that automatically adds the JSON web token to all requests
     session = requests.Session()
-    response = session.post(
-        "http://localhost:9999/api/login",
-        data={"username": "admin", "password": "admin"},
+    response = validate_response(
+        test_response=session.post(
+            "http://localhost:9999/api/login",
+            data={"username": "admin", "password": "admin"},
+        ),
+        expected_status_code=200,
+        expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
     )
-
-    assert response.status_code == 200
-
-    try:
-        jsonschema.validate(response.json(), _JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA)
-    except jsonschema.exceptions.ValidationError as exc:
-        pytest.fail(exc.message)
-
     session.headers.update(
         {"Authorization": f"Bearer {response.json()["access_token"]}"},
     )
@@ -99,18 +100,14 @@ def operator_session():
     # login as an operator using form data to get a JSON web token, then create a
     # session that automatically adds the JSON web token to all requests
     session = requests.Session()
-    response = session.post(
-        "http://localhost:9999/api/login",
-        data={"username": "operator", "password": "operator"},
+    response = validate_response(
+        test_response=session.post(
+            "http://localhost:9999/api/login",
+            data={"username": "operator", "password": "operator"},
+        ),
+        expected_status_code=200,
+        expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
     )
-
-    assert response.status_code == 200
-
-    try:
-        jsonschema.validate(response.json(), _JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA)
-    except jsonschema.exceptions.ValidationError as exc:
-        pytest.fail(exc.message)
-
     session.headers.update(
         {"Authorization": f"Bearer {response.json()["access_token"]}"},
     )
@@ -122,22 +119,104 @@ def spectator_session():
     # login as an operator using form data to get a JSON web token, then create a
     # session that automatically adds the JSON web token to all requests
     session = requests.Session()
-    response = session.post(
-        "http://localhost:9999/api/login",
-        data={"username": "spectator", "password": "spectator"},
+    response = validate_response(
+        test_response=session.post(
+            "http://localhost:9999/api/login",
+            data={"username": "spectator", "password": "spectator"},
+        ),
+        expected_status_code=200,
+        expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
     )
-
-    assert response.status_code == 200
-
-    try:
-        jsonschema.validate(response.json(), _JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA)
-    except jsonschema.exceptions.ValidationError as exc:
-        pytest.fail(exc.message)
-
     session.headers.update(
         {"Authorization": f"Bearer {response.json()["access_token"]}"},
     )
     return session
+
+
+@pytest.fixture(params=["admin_session", "operator_session", "spectator_session"])
+def session(admin_session, operator_session, spectator_session, request):
+    str_to_session_map = {
+        "admin_session": admin_session,
+        "operator_session": operator_session,
+        "spectator_session": spectator_session,
+    }
+    return str_to_session_map[request.param]
+
+
+# Create one listener with default values for each available listener template before
+# the test starts.
+@pytest.fixture
+def create_listeners_before_test(
+    admin_session: requests.Session,
+):
+    for listener_template_id in get_all_listener_template_ids(admin_session):
+        admin_session.post(
+            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+            json={
+                option_name: option["default_value"]
+                for option_name, option in admin_session.get(
+                    f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+                )
+                .json()["options"]
+                .items()
+            },
+        )
+
+    yield None
+
+
+# Delete all listeners after the test finishes.
+@pytest.fixture
+def delete_listeners_after_test(
+    admin_session: requests.Session,
+):
+    yield None
+
+    all_listener_ids = [
+        listener["listener_id"]
+        for listener in admin_session.get(
+            "http://localhost:9999/api/listeners/all",
+        ).json()
+    ]
+    for listener_id in all_listener_ids:
+        admin_session.delete(f"http://localhost:9999/api/listeners/{listener_id}")
+
+
+# We do not write directly to the user_accounts.json file because that will not
+# automatically update the user accounts information that is stored in memory on the
+# still running server.
+@pytest.fixture
+def restore_default_user_accounts_after_test(admin_session):
+    yield None
+
+    for user_account_id in get_all_user_account_ids(admin_session):
+        admin_session.delete(
+            f"http://localhost:9999/api/user-accounts/{user_account_id}",
+        )
+    admin_session.post(
+        "http://localhost:9999/api/user-accounts",
+        json={
+            "username": "admin",
+            "password": "admin",
+            "role": "ADMIN",
+        },
+    )
+    admin_session.post(
+        "http://localhost:9999/api/user-accounts",
+        json={
+            "username": "operator",
+            "password": "operator",
+            "role": "OPERATOR",
+        },
+    )
+    admin_session.post(
+        "http://localhost:9999/api/user-accounts",
+        json={
+            "username": "spectator",
+            "password": "spectator",
+            "role": "SPECTATOR",
+        },
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)

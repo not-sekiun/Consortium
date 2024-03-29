@@ -73,7 +73,7 @@ def test_unauthorized_error_response():
             )
 
 
-def test_not_found_error_response(admin_session):
+def test_not_found_error_response(admin_session: requests.Session):
     validate_response(
         test_response=admin_session.get("http://localhost:9999/does-not-exist"),
         expected_json_schema=NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
@@ -82,7 +82,7 @@ def test_not_found_error_response(admin_session):
 
 
 def test_method_not_allowed_error_response(
-    admin_session,
+    admin_session: requests.Session,
 ):
     method_to_function_map = {
         _HTTPMethod.GET: admin_session.get,
@@ -100,9 +100,9 @@ def test_method_not_allowed_error_response(
 
                 # 404s will occur when a test path coincidentally matches a
                 # parameterized path. For example, consider the two valid endpoints,
-                # GET /api/user_accounts/all and DELETE
-                # /api/user_accounts/{user_id}. When we attempt to test GET
-                # /api/user_accounts/all with an invalid DELETE method, the server
+                # GET /api/user-accounts/all and DELETE
+                # /api/user-accounts/{user_id}. When we attempt to test GET
+                # /api/user-accounts/all with an invalid DELETE method, the server
                 # is interpreting it as a DELETE request with "all" as the path
                 # parameter. This will result in a 404 error or 422 where data
                 # needs to be POSTed in the request body.

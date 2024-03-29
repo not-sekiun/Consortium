@@ -26,7 +26,7 @@ from consortium.server.server_exceptions import (
 )
 
 router = APIRouter(
-    prefix="/api/user_accounts",
+    prefix="/api/user-accounts",
     responses={
         401: {"model": UnauthorizedError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},

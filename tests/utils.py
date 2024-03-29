@@ -24,34 +24,39 @@ def validate_response(
     return test_response
 
 
-def create_listeners(
-    num_listeners: int,
-    listener_template_endpoint: str,
-    admin_session: requests.Session,
-) -> list[str]:
-    listener_ids = []
-    for i in range(num_listeners):
-        listener = admin_session.post(
-            listener_template_endpoint,
-            json={
-                option_name: option["default_value"]
-                for option_name, option in admin_session.get(
-                    listener_template_endpoint,
-                )
-                .json()["options"]
-                .items()
-            },
-        )
-        listner_ids.append(listener["listener_id"])
-    return listener_ids
+def get_all_listener_template_ids(admin_session: requests.Session) -> list[str]:
+    return [
+        listener_template["listener_template_id"]
+        for listener_template in admin_session.get(
+            "http://localhost:9999/api/listener-templates/all",
+        ).json()
+    ]
 
 
-def delete_all_listeners(admin_session: requests.Session):
-    all_listener_ids = [
+def get_all_listener_ids(admin_session: requests.Session) -> list[str]:
+    return [
         listener["listener_id"]
         for listener in admin_session.get(
             "http://localhost:9999/api/listeners/all",
         ).json()
     ]
-    for listener_id in all_listener_ids:
-        admin_session.delete(f"http://localhost:9999/api/listeners/{listener_id}")
+
+
+def get_all_user_account_ids(admin_session: requests.Session) -> list[str]:
+    return [
+        user_account["user_account_id"]
+        for user_account in admin_session.get(
+            "http://localhost:9999/api/user-accounts/all",
+        ).json()
+    ]
+
+
+def get_all_agent_generator_template_ids(
+    admin_session: requests.Session,
+) -> list[str]:
+    return [
+        agent_generator_template["agent_generator_template_id"]
+        for agent_generator_template in admin_session.get(
+            "http://localhost:9999/api/agent-generator-templates/all",
+        ).json()
+    ]

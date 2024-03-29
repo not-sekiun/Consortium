@@ -23,3 +23,9 @@ CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH = (
 CONSORTIUM_LOGS_DIRECTORY_PATH = (
     CONSORTIUM_HOME_DIRECTORY_PATH / "data" / "server" / "logs"
 )
+CONSORTIUM_LISTENERS_DIRECTORY_PATH = (
+    CONSORTIUM_HOME_DIRECTORY_PATH / "consortium" / "server" / "framework" / "listeners"
+)
+CONSORTIUM_AGENTS_DIRECTORY_PATH = (
+    CONSORTIUM_HOME_DIRECTORY_PATH / "consortium" / "server" / "framework" / "agents"
+)

@@ -34,7 +34,7 @@ class Listener(BaseListener):
         self.state.shutdown_signal = asyncio.Event()
 
         async def handle_registration(_):
-            agent = self.register_new_agent()
+            agent = self.create_agent()
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
         async def handle_tasks(_):
@@ -50,18 +50,27 @@ class Listener(BaseListener):
         for url_path in results_url_paths:
             app.add_routes([web.post(url_path, handle_results)])
 
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, local_host, local_port)
+        self.state.runner = web.AppRunner(app)
+        await self.state.runner.setup()
+        site = web.TCPSite(self.state.runner, local_host, local_port)
         await site.start()
         await self.state.shutdown_signal.wait()
-        await runner.cleanup()
+        await self.state.runner.cleanup()
 
     async def on_listener_stopped(self) -> None:
         self.state.shutdown_signal.set()
 
     async def on_listener_cancelled(self) -> None:
-        pass
+        # On cancellation, we need to stop the web server, but we may cancel the
+        # listener task before the web server is fully set up.
+        try:
+            self.state.shutdown_signal.set()
+            try:
+                await self.state.runner.cleanup()
+            except AttributeError:
+                pass
+        except AttributeError:
+            pass
 
     async def on_listener_errored(self, exc: Exception) -> None:
         pass

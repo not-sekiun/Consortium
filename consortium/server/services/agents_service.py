@@ -13,16 +13,23 @@ class AgentsService:
     def create_agent(self) -> Agent:
         agent = Agent()
         self._agents[str(agent.agent_id)] = agent
+        self._agents_service_logger.info(
+            f'Agent "{agent.agent_id}" was created',
+        )
         return agent
 
-    #  def add_agent(self, agent: Agent) -> None:
-    #  self._agents[str(agent.agent_id)] = agent
-
     def remove_agent_by_agent_id(self, agent_id: str) -> None:
-        del self._agents[agent_id]
+        try:
+            del self._agents[agent_id]
+        except KeyError:
+            raise ValueError(f'Agent "{agent_id}" does not exist')
 
     def get_agent_by_agent_id(self, agent_id: str) -> Agent:
         return self._agents[agent_id]
 
     def get_all_agents(self) -> list[Agent]:
-        return list(self._agents.values())
+        all_agents = list(self._agents.values())
+        self._agents_service_logger.debug(
+            f"Retrieved all agents ({len(all_agents)} retrieved)",
+        )
+        return all_agents

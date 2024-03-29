@@ -1,7 +1,9 @@
 from consortium.server.framework.base_listener_template import BaseListenerTemplate
+from consortium.server.framework.listeners.consortium.http.listener import Listener
+from consortium.server.framework.listeners.consortium.http.listener_type import (
+    LISTENER_TYPE,
+)
 from consortium.server.framework.options import ListValueOption, SingleValueOption
-from consortium.server.listeners.consortium.http.listener import Listener
-from consortium.server.listeners.consortium.http.listener_type import LISTENER_TYPE
 
 
 def _check_all_url_endpoints_unique(

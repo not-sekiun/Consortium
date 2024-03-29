@@ -1,17 +1,18 @@
 import uuid
+from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
 
 from consortium.server.framework.base_agent_generator import BaseAgentGenerator
+from consortium.server.framework.framework_types import AgentType
 from consortium.server.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
     ListValueOption,
     SingleValueOption,
 )
-from consortium.server.framework.types import AgentType
 
 
-class BaseAgentGeneratorTemplate:
+class BaseAgentGeneratorTemplate(ABC):
     def __init__(
         self,
         agent_generator: Type[BaseAgentGenerator],
@@ -19,22 +20,22 @@ class BaseAgentGeneratorTemplate:
         name: str = "",
         description: str = "",
         authors: list[str] | None = None,
-        options: (
-            list[
-                SingleValueOption
-                | ListValueOption
-                | ChoiceValueOption
-                | DictionaryValueOption
-            ]
-            | None
-        ) = None,
-        options_validation_function: Callable | None = None,
+        options: list[
+            SingleValueOption
+            | ListValueOption
+            | ChoiceValueOption
+            | DictionaryValueOption
+        ]
+        | None = None,
+        validating_function: Callable | None = None,
     ):
-        self.agent_type = agent_type
-        self.agent_generator = agent_generator
         self.name = name
         self.description = description
-        self.authors = authors
+        self.agent_type = agent_type
+        if authors is None:
+            self.authors = []
+        else:
+            self.authors = authors
         names = []
         for option in options:
             if option.name in names:
@@ -43,52 +44,53 @@ class BaseAgentGeneratorTemplate:
                 )
             names.append(option.name)
         if options is None:
-            options = []
-        self.options = {option.name: option for option in options}
-        self.options_validation_function = options_validation_function
-
+            self.options = {}
+        else:
+            self.options = {option.name: option for option in options}
         self.agent_template_id = uuid.uuid4().hex
+        self.validating_function = validating_function
+        self.agent_generator = agent_generator
 
-    def set_option_value(self, name: str, value: Any) -> None:
-        if option := self.options.get(name):
-            option.set_option_value(value)
-            return
-        raise ValueError(f"Invalid option name: {name}")
+    @abstractmethod
+    def resolve_agent_generator_name(self) -> str:
+        """
+        Function that resolves the name of the agent generator. The name typically
+        should be provided as an SingleOption object within the options list parameter
+        of the __init__ method of the agent generator template.
+        """
 
-    def clear_option_value(self, name: str) -> None:
-        if option := self.options.get(name):
-            option.clear_option_value()
-            return
-        raise ValueError(f"Invalid option name: {name}")
+    def set_option_value(self, option_name: str, option_value: Any) -> None:
+        self.options[option_name].set_option_value(option_value)
 
-    def clear_all_options_values(self):
+    def clear_option_value(self, option_name: str) -> None:
+        self.options[option_name].clear_option_value()
+
+    def clear_all_option_values(self) -> None:
         for option in self.options.values():
             option.clear_option_value()
 
     def create_agent_generator(self) -> BaseAgentGenerator:
-        if self.options_validation_function:
-            self.options_validation_function(self.options)
+        if self.validating_function:
+            self.validating_function(self.options)
+        created_agent_generator = self.agent_generator(
+            agent_type=self.agent_type,
+            name=self.resolve_agent_generator_name(),
+            options=self.options,
+        )
+        return created_agent_generator
 
-        return self.agent_generator(options=self.options)
-
-    def to_json(self):
-        agent_template_json = {
-            "agent_template_id": self.agent_template_id,
-            "agent_type": self.agent_type.to_json(),
+    def to_json(self) -> dict[str, Any]:
+        return {
             "name": self.name,
             "description": self.description,
+            "agent_type": self.agent_type,
             "authors": self.authors,
-            "options_validation_function_present": (
-                True if self.options_validation_function else False
-            ),
-            "options_validation_function_description": (
-                self.options_validation_function.__doc__
-                if self.options_validation_function
-                else None
-            ),
             "options": {
                 option_name: option.to_json()
                 for option_name, option in self.options.items()
             },
+            "agent_template_id": self.agent_template_id,
+            "validating_function": self.validating_function.__doc__
+            if self.validating_function
+            else None,
         }
-        return agent_template_json

@@ -3,13 +3,13 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
 
 from consortium.server.framework.base_listener import BaseListener
+from consortium.server.framework.framework_types import ListenerType
 from consortium.server.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
     ListValueOption,
     SingleValueOption,
 )
-from consortium.server.framework.types import ListenerType
 
 
 class BaseListenerTemplate(ABC):
@@ -91,7 +91,7 @@ class BaseListenerTemplate(ABC):
             options=self.options,
         )
 
-    def to_json(self) -> dict[str, str | list[str] | list[dict[str, str]]]:
+    def to_json(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "description": self.description,

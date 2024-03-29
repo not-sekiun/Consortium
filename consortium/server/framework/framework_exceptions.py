@@ -30,7 +30,11 @@ from consortium.server.server_exceptions import ServerException
 
 
 class ListenerStartError(ServerException):
-    def __init__(self, message: str, detail: Any = None):
+    def __init__(
+        self,
+        message: str = "The listener could not be started due to an error.",
+        detail: Any = None,
+    ) -> None:
         super().__init__(
             status_code=400,
             code="LISTENER_START_ERROR",
@@ -40,7 +44,11 @@ class ListenerStartError(ServerException):
 
 
 class ListenerRuntimeError(ServerException):
-    def __init__(self, message: str = "", detail: Any = None):
+    def __init__(
+        self,
+        message: str = "The listener encountered a runtime error.",
+        detail: Any = None,
+    ) -> None:
         super().__init__(
             status_code=400,
             code="LISTENER_RUNTIME_ERROR",
@@ -50,7 +58,11 @@ class ListenerRuntimeError(ServerException):
 
 
 class ListenerStopError(ServerException):
-    def __init__(self, message: str = "", detail: Any = None):
+    def __init__(
+        self,
+        message: str = "The listener could not be stopped due to an error.",
+        detail: Any = None,
+    ) -> None:
         super().__init__(
             status_code=400,
             code="LISTENER_STOP_ERROR",
@@ -60,7 +72,11 @@ class ListenerStopError(ServerException):
 
 
 class ListenerCancellationError(ServerException):
-    def __init__(self, message: str = "", detail: Any = None):
+    def __init__(
+        self,
+        message: str = "The listener could not be cancelled due to an error.",
+        detail: Any = None,
+    ) -> None:
         super().__init__(
             status_code=400,
             code="LISTENER_CANCELLATION_ERROR",
@@ -69,17 +85,53 @@ class ListenerCancellationError(ServerException):
         )
 
 
-# class AgentGeneratorQueueError(DetailedHTTPException):
-#     pass
-#
-#
-# class AgentGeneratorBuildError(DetailedHTTPException):
-#     pass
-#
-#
-# class AgentGeneratorCompletionError(DetailedHTTPException):
-#     pass
-#
-#
-# class AgentGeneratorCancellationError(DetailedHTTPException):
-#     pass
+class AgentGeneratorQueueError(ServerException):
+    def __init__(
+        self,
+        message: str = "The agent generator could not be queued due to an error.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=400,
+            code="AGENT_GENERATOR_QUEUE_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorBuildError(ServerException):
+    def __init__(self, message: str = "", detail: Any = None):
+        super().__init__(
+            status_code=400,
+            code="AGENT_GENERATOR_BUILD_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorCompletionError(ServerException):
+    def __init__(
+        self,
+        message: str = "The agent generator could not be completed due to an error.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=400,
+            code="AGENT_GENERATOR_COMPLETION_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorCancellationError(ServerException):
+    def __init__(
+        self,
+        message: str = "The agent generator could not be cancelled due to an error.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=400,
+            code="AGENT_GENERATOR_CANCELLATION_ERROR",
+            message=message,
+            detail=detail,
+        )

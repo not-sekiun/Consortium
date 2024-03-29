@@ -33,7 +33,7 @@ async def get_own_user_info(
     user: Annotated[UserModel, Depends(get_current_user)],
     _: Annotated[
         None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_OWN_USER_INFO)),
+        Depends(AuthorizeUserRequest(UserPermissions.READ_OWN_USER)),
     ],
 ) -> UserModel:
     return UserModel(**user.to_json())
@@ -49,7 +49,7 @@ async def get_own_user_info(
 async def get_all_users_info(
     _: Annotated[
         None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_USERS_INFO)),
+        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_USERS)),
     ],
 ) -> list[UserModel]:
     return [UserModel(**user.to_json()) for user in users_service.get_all_users()]
@@ -72,7 +72,7 @@ async def get_user_info_by_user_id(
     user_id: str,
     _: Annotated[
         None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_USER_INFO_BY_USER_ID)),
+        Depends(AuthorizeUserRequest(UserPermissions.READ_USER_BY_USER_ID)),
     ],
 ) -> UserModel:
     try:

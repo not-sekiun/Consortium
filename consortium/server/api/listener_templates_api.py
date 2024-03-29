@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.models.common_models import SuccessResponseModel
+from consortium.server.models.listener_models import ListenerModel
 from consortium.server.models.listener_template_models import ListenerTemplateModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
@@ -19,7 +19,7 @@ from consortium.server.server_exceptions import (
 )
 
 router = APIRouter(
-    prefix="/api/listener_templates",
+    prefix="/api/listener-templates",
     responses={
         401: {"model": UnauthorizedError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
@@ -34,7 +34,7 @@ listeners_service = server_singletons.listeners_service
 @router.post(
     "/{listener_template_id}",
     responses={
-        201: {"model": SuccessResponseModel},
+        201: {"model": ListenerModel},
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
@@ -52,7 +52,7 @@ def create_listener_through_listener_template_by_listener_template_id(
     listener_template_id: str,
     listener_template_options: Dict[str, Any],
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.CREATE_LISTENER))],
-):
+) -> ListenerModel:
     try:
         listener_template = (
             listener_templates_service.get_listener_template_by_listener_template_id(
@@ -79,7 +79,7 @@ def create_listener_through_listener_template_by_listener_template_id(
     listener_template.clear_all_options_values()
     listeners_service.add_listener(listener)
 
-    return SuccessResponseModel(success=True)
+    return ListenerModel(**listener.to_json())
 
 
 @router.get(
@@ -89,7 +89,7 @@ def create_listener_through_listener_template_by_listener_template_id(
 def get_all_listener_templates_info(
     _: Annotated[
         None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENER_TEMPLATES_INFO)),
+        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENER_TEMPLATES)),
     ],
 ):
     return [
@@ -116,7 +116,7 @@ def get_listener_template_info_by_listener_templates_id(
         None,
         Depends(
             AuthorizeUserRequest(
-                UserPermissions.READ_LISTENER_TEMPLATE_INFO_BY_LISTENER_TEMPLATE_ID,
+                UserPermissions.READ_LISTENER_TEMPLATE_BY_LISTENER_TEMPLATE_ID,
             ),
         ),
     ],

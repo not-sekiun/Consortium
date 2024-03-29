@@ -1,8 +1,9 @@
-from tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-    SUCCESS_RESPONSE_JSON_SCHEMA,
-)
-from tests.utils import delete_all_listeners, validate_response
+import pytest
+import requests
+
+from tests.common_json_response_schemas import FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA
+from tests.test_listeners_api import LISTENER_RESPONSE_JSON_SCHEMA
+from tests.utils import get_all_listener_template_ids, validate_response
 
 LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA = {
     "type": "object",
@@ -58,128 +59,78 @@ LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
 
 
 def test_get_all_listener_templates_info(
-    admin_session,
-    operator_session,
-    spectator_session,
+    session: requests.Session,
 ):
-    def run_session_test(session):
-        validate_response(
-            test_response=session.get(
-                "http://localhost:9999/api/listener_templates/all",
-            ),
-            expected_json_schema=ALL_LISTENER_TEMPLATES_RESPONSE_JSON_SCHEMA,
-            expected_status_code=200,
-        )
-
-    run_session_test(admin_session)
-    run_session_test(operator_session)
-    run_session_test(spectator_session)
+    validate_response(
+        test_response=session.get(
+            "http://localhost:9999/api/listener-templates/all",
+        ),
+        expected_json_schema=ALL_LISTENER_TEMPLATES_RESPONSE_JSON_SCHEMA,
+        expected_status_code=200,
+    )
 
 
 def test_get_listener_template_info_by_listener_template_id(
-    admin_session,
-    operator_session,
-    spectator_session,
+    admin_session: requests.Session,
+    session: requests.Session,
 ):
-    all_listener_template_ids = [
-        listener_template["listener_template_id"]
-        for listener_template in operator_session.get(
-            "http://localhost:9999/api/listener_templates/all",
-        ).json()
-    ]
-
-    def run_session_test(session):
-        for listener_template_id in all_listener_template_ids:
-            validate_response(
-                test_response=session.get(
-                    f"http://localhost:9999/api/listener_templates/{listener_template_id}",
-                ),
-                expected_json_schema=LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA,
-                expected_status_code=200,
-            )
-
+    for listener_template_id in get_all_listener_template_ids(admin_session):
         validate_response(
             test_response=session.get(
-                f"http://localhost:9999/api/listener_templates/invalid-listener-template-id",
+                f"http://localhost:9999/api/listener-templates/{listener_template_id}",
             ),
-            expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
-            expected_status_code=404,
+            expected_json_schema=LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA,
+            expected_status_code=200,
         )
 
-    run_session_test(admin_session)
-    run_session_test(operator_session)
-    run_session_test(spectator_session)
+    validate_response(
+        test_response=session.get(
+            "http://localhost:9999/api/listener-templates/invalid-listener-template-id",
+        ),
+        expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+        expected_status_code=404,
+    )
 
 
+@pytest.mark.usefixtures("delete_listeners_after_test")
 def test_create_listener_through_listener_template_by_listener_template_id(
-    admin_session,
-    operator_session,
-    spectator_session,
+    admin_session: requests.Session,
+    spectator_session: requests.Session,
+    session: requests.Session,
 ):
-    all_listener_template_ids = [
-        listener_template["listener_template_id"]
-        for listener_template in admin_session.get(
-            "http://localhost:9999/api/listener_templates/all",
-        ).json()
-    ]
-
-    # admin_session and operator_session tests
-    def run_session_test(session):
-        for listener_template_id in all_listener_template_ids:
+    if session != spectator_session:
+        # Test for admin sessions and operator sessions.
+        for listener_template_id in get_all_listener_template_ids(admin_session):
             validate_response(
                 test_response=session.post(
-                    f"http://localhost:9999/api/listener_templates/{listener_template_id}",
+                    f"http://localhost:9999/api/listener-templates/{listener_template_id}",
                     json={
                         option_name: option["default_value"]
                         for option_name, option in session.get(
-                            f"http://localhost:9999/api/listener_templates/{listener_template_id}",
+                            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
                         )
                         .json()["options"]
                         .items()
                     },
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=LISTENER_RESPONSE_JSON_SCHEMA,
                 expected_status_code=201,
             )
-
-        validate_response(
-            test_response=session.post(
-                f"http://localhost:9999/api/listener_templates/invalid-listener-template-id",
-                json={},
-            ),
-            expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
-            expected_status_code=404,
-        )
-
-        # perform test cleanup
-        delete_all_listeners(admin_session)
-
-    run_session_test(admin_session)
-    run_session_test(operator_session)
-
-    # spectator_session tests
-    for listener_template_id in all_listener_template_ids:
-        validate_response(
-            test_response=spectator_session.post(
-                f"http://localhost:9999/api/listener_templates/{listener_template_id}",
-                json={
-                    option_name: option["default_value"]
-                    for option_name, option in spectator_session.get(
-                        f"http://localhost:9999/api/listener_templates/{listener_template_id}",
-                    )
-                    .json()["options"]
-                    .items()
-                },
-            ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-            expected_status_code=403,
-        )
-
-    validate_response(
-        test_response=spectator_session.post(
-            f"http://localhost:9999/api/listener_templates/invalid-listener-template-id",
-            json={},
-        ),
-        expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-        expected_status_code=403,
-    )
+    else:
+        # Test for spectator sessions.
+        for listener_template_id in get_all_listener_template_ids(admin_session):
+            validate_response(
+                test_response=session.post(
+                    f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+                    json={
+                        option_name: option["default_value"]
+                        for option_name, option in session.get(
+                            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+                        )
+                        .json()["options"]
+                        .items()
+                    },
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_status_code=403,
+            )

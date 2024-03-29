@@ -2,7 +2,6 @@ import asyncio
 import uuid
 from abc import ABC, abstractmethod
 from types import SimpleNamespace
-from typing import Any
 
 from consortium.server.framework.framework_exceptions import (
     AgentGeneratorBuildError,
@@ -10,18 +9,39 @@ from consortium.server.framework.framework_exceptions import (
     AgentGeneratorCompletionError,
     AgentGeneratorQueueError,
 )
-from consortium.server.objects.agent_generator_objects import AgentGeneratorStatus
+from consortium.server.framework.framework_types import AgentType
+from consortium.server.framework.options import (
+    ChoiceValueOption,
+    DictionaryValueOption,
+    ListValueOption,
+    SingleValueOption,
+)
+from consortium.server.objects.agent_generator_objects import (
+    AgentGeneratorState,
+    AgentGeneratorStatus,
+)
 
 
 class BaseAgentGenerator(ABC):
     def __init__(
         self,
-        options: dict[str, Any],
+        agent_type: AgentType,
+        name: str = "",
+        options: dict[
+            str,
+            ChoiceValueOption
+            | DictionaryValueOption
+            | ListValueOption
+            | SingleValueOption,
+        ]
+        | None = None,
     ):
+        self.agent_generator_id = uuid.uuid4()
+        self.name = name
+        self.agent_type = agent_type
         self.options = options
         # agent generator status is initialized with a state of QUEUED
         self.status = AgentGeneratorStatus()
-        self.agent_generator_id = uuid.uuid4()
 
         # state is used to store any state information that the agent generator may
         # need to store and share amongst its user defined methods
@@ -80,24 +100,26 @@ class BaseAgentGenerator(ABC):
         except Exception as exc:
             self.status.transition_to_fatal(exc)
 
-    async def stop_agent_generator(self) -> None:
-        if self.status.state != AgentGeneratorStatus.AgentGeneratorState.BUILDING:
-            raise ValueError("Cannot stop agent generator that has not been started.")
-
-        self._agent_generator_run_task.cancel()
-
     async def start_agent_generator(self) -> None:
-        if self.status.state == AgentGeneratorStatus.AgentGeneratorState.BUILDING:
+        if self.status.state == AgentGeneratorState.BUILDING:
             raise ValueError("Cannot start agent generator that is already running.")
 
         self._agent_generator_run_task = asyncio.create_task(
             self._run_agent_generator(),
         )
 
+    async def stop_agent_generator(self) -> None:
+        if self.status.state != AgentGeneratorState.BUILDING:
+            raise ValueError("Cannot stop agent generator that has not been started.")
+
+        self._agent_generator_run_task.cancel()
+
     def to_json(self):
         return {
             "agent_generator_id": str(self.agent_generator_id),
+            "name": self.name,
             "status": self.status.to_json(),
+            "agent_type": self.agent_type.to_json(),
             "options": {
                 option_name: option.to_json()
                 for option_name, option in self.options.items()

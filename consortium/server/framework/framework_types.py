@@ -1,5 +1,3 @@
-# this modules name shadows the types stdlib module, it shouldn't be a problem though
-# but keep that in mind
 import uuid
 
 
