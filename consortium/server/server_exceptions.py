@@ -507,3 +507,31 @@ class InvalidAgentGeneratorTemplateOptionValueError(ServerException):
             message=message,
             detail=detail,
         )
+
+
+# Errors for the endpoint /api/agent-generators.
+class AgentGeneratorNotFoundError(ServerException):
+    def __init__(
+        self,
+        message: str = (
+            "The requested agent generator was not found. (Check that the agent_generator_id "
+            "URL parameter is correct.)"
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=404,
+            code="AGENT_GENERATOR_NOT_FOUND_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorStillRunningError(ServerException):
+    def __init__(self, message: str = "", detail: Any = None) -> None:
+        super().__init__(
+            status_code=409,
+            code="AGENT_GENERATOR_STILL_RUNNING_ERROR",
+            message=message,
+            detail=detail,
+        )

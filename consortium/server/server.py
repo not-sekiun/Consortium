@@ -10,6 +10,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from consortium.server.api.agent_generator_templates_api import (
     router as agent_generator_templates_api_router,
 )
+from consortium.server.api.agent_generators_api import (
+    router as agent_generators_api_router,
+)
 from consortium.server.api.listener_templates_api import (
     router as listener_templates_api_router,
 )
@@ -21,6 +24,7 @@ from consortium.server.api.user_accounts_api import router as user_accounts_api_
 from consortium.server.api.users_api import router as users_api_router
 from consortium.server.models.server_models import ServerConfigModel, ServerReleaseModel
 from consortium.server.objects.server_objects import ServerStatus
+from consortium.server.server_config import CONSORTIUM_RELEASE_JSON_FILE_PATH
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
@@ -41,9 +45,8 @@ class Server:
         self.server_config = server_config
 
         # Load server release file
-        with open("data/release.json", "r") as f:
-            data = f.read()
-        json_data = json.loads(data)
+        with open(str(CONSORTIUM_RELEASE_JSON_FILE_PATH), "r") as file:
+            json_data = json.load(fp=file)
         self.server_release = ServerReleaseModel(**json_data)
         self.status = ServerStatus.STOPPED
 
@@ -62,6 +65,7 @@ class Server:
         self._app.include_router(listener_templates_api_router)
         self._app.include_router(listeners_api_router)
         self._app.include_router(agent_generator_templates_api_router)
+        self._app.include_router(agent_generators_api_router)
 
         # configure middleware, order matters, the last middleware added will be the
         # first to be executed on the request and the last to be executed on the

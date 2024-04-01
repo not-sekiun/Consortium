@@ -2,31 +2,37 @@ from typing import Any
 
 from consortium.server.server_exceptions import ServerException
 
-# class _DetailedException(Exception):
-#     def __init__(
-#         self, message: str = "", detail: Any | None = None, *args: list[Any]
-#     ) -> None:
-#         super().__init__(*args)
-#         error_name = type(self).__name__
-#         # it is conventional to use SCREAMING_SNAKE_CASE for error names in REST APIs
-#         # over python's convention of using PascalCase for class names, so we do the
-#         # conversion here once in the __init__ method. Name shadowing of type() will not
-#         # occur here
-#         self.type = ""
-#         for char_index, char_value in enumerate(error_name):
-#             if char_value.isupper() and char_index not in (0, len(error_name) - 1):
-#                 self.type += "_" + char_value
-#             else:
-#                 self.type += char_value.upper()
-#         self.message = message
-#         self.detail = detail
-#
-#     def to_json(self) -> dict[str, Any]:
-#         return {
-#             "type": self.type,
-#             "message": self.message,
-#             "detail": self.detail,
-#         }
+
+# Framework exceptions encapsulate the same data as server exceptions, but will not
+# automatically run in the server exception handler when raised. Server exceptions
+# should only be used when an immediate response is to be expected since raising a
+# server exception will also return a response to the client. Framework exceptions are
+# raised when the error is not expected to be immediately handled by the server most
+# notably during asynchronous runtime.
+class FrameworkException(Exception):
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str = "",
+        detail: Any = None,
+        headers: dict[str, Any] | None = None,
+    ) -> None:
+        self.code = code
+        self.message = message
+        self.detail = detail
+
+        self.status_code = status_code
+        self.headers = headers
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "error": {
+                "code": self.code,
+                "message": self.message,
+                "detail": self.detail,
+            },
+        }
 
 
 class ListenerStartError(ServerException):
@@ -43,7 +49,7 @@ class ListenerStartError(ServerException):
         )
 
 
-class ListenerRuntimeError(ServerException):
+class ListenerRuntimeError(FrameworkException):
     def __init__(
         self,
         message: str = "The listener encountered a runtime error.",
@@ -99,7 +105,7 @@ class AgentGeneratorQueueError(ServerException):
         )
 
 
-class AgentGeneratorBuildError(ServerException):
+class AgentGeneratorBuildError(FrameworkException):
     def __init__(self, message: str = "", detail: Any = None):
         super().__init__(
             status_code=400,

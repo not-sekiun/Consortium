@@ -1,7 +1,9 @@
 import argparse
+import asyncio
 
 import consortium.client.start_client as start_client
 import consortium.server.start_server as start_server
+from consortium.client.utils.data_structure_utils import argparse_epilog_formatter
 
 
 def main():
@@ -9,11 +11,13 @@ def main():
         prog="consortium",
         description="Start the consortium server or client",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-    consortium server -h
-    consortium client -h
-""",
+        epilog=argparse_epilog_formatter(
+            """
+            Examples:
+                consortium server -h
+                consortium client -h
+            """,
+        ),
     )
     subparsers = parser.add_subparsers(
         help="Commands for invoking either the server or client",
@@ -25,11 +29,13 @@ Examples:
         name="server",
         help="Start the consortium server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-    consortium server
-    consortium server -d
-""",
+        epilog=argparse_epilog_formatter(
+            """
+            Examples:
+                consortium server
+                consortium server -d
+            """,
+        ),
     )
     parser_server.add_argument(
         "-d",
@@ -42,11 +48,13 @@ Examples:
         name="client",
         help="Start the consortium client",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-    consortium client
-    consortium client -d
-""",
+        epilog=argparse_epilog_formatter(
+            """
+            Examples:
+                consortium client
+                consortium client -d
+            """,
+        ),
     )
     parser_client.add_argument(
         "-d",
@@ -59,7 +67,7 @@ Examples:
     if args.command == "server":
         start_server.main(args)
     elif args.command == "client":
-        start_client.main(args)
+        asyncio.run(start_client.main(args))
 
 
 if __name__ == "__main__":

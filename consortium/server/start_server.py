@@ -6,13 +6,16 @@ from datetime import datetime
 from loguru import logger
 
 from consortium.server.models.server_models import ServerConfigModel
+from consortium.server.server_config import (
+    CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH,
+    CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH,
+)
 
 
 def main(args: argparse.Namespace) -> None:
     # Load server configuration file
-    with open("data/server/config.json", "r") as f:
-        data = f.read()
-    json_data = json.loads(data)
+    with open(str(CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH), "r") as file:
+        json_data = json.load(fp=file)
     server_config = ServerConfigModel(**json_data)
 
     # Configure logging.
@@ -20,7 +23,7 @@ def main(args: argparse.Namespace) -> None:
     logger.add(
         # ":" is invalid in filenames, so we replace it with the URL safe character
         # "-"
-        f"data/server/logs/{datetime.now().isoformat().replace(":", "-")}.log",
+        f"{CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH}/{datetime.now().isoformat().replace(":", "-")}.log",
         colorize=False,
         format="[{time:YYYY-MM-DDTHH:mm:ssZ}] {level:<8} {message}",
         level="DEBUG" if args.debug else "INFO",

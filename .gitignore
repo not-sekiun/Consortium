@@ -1,6 +1,6 @@
 *.pyc
-data/
 __pycache__/
+data/
 .idea/
 .pytest_cache/
 .ruff_cache/

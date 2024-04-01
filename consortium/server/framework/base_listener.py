@@ -40,7 +40,7 @@ class BaseListener(ABC):
             ]
             | None
         ) = None,
-    ):
+    ) -> None:
         self.listener_id = uuid.uuid4()
         self.name = name
         self.endpoint = endpoint
@@ -68,22 +68,57 @@ class BaseListener(ABC):
         # garbage collected at any time mid-execution, to prevent this we have to store
         # a reference of the task in a variable. We declare the variable here and assign
         # it in start_listener() later on
-        self._task = None
+        self._listener_task = None
 
     @abstractmethod
-    async def on_listener_started(self) -> None: ...
+    async def on_listener_started(self) -> None:
+        """
+        This method is called when the listener is started. This method should be used
+        to perform any setup or checks that are required before the listener is
+        started. This method should raise a ListenerStartError if the listener cannot be
+        started.
+        """
 
     @abstractmethod
-    async def on_listener_running(self) -> None: ...
+    async def on_listener_running(self) -> None:
+        """
+        This method is called to run the listener. This method should be used to perform
+        any actions that are required while the listener is running and should be a
+        blocking coroutine that has some mechanism in place to check if the
+        self.stop_listener_event asynchronous event flag is set to know when to stop
+        running. This method should raise a ListenerRuntimeError if the  listener
+        encounters an error while running.
+        """
 
     @abstractmethod
-    async def on_listener_stopped(self) -> None: ...
+    async def on_listener_stopped(self) -> None:
+        """
+        This method is called when the listener is stopped. This method should be used
+        to perform any cleanup or actions that are required before the listener is
+        stopped such as gracefully disconnecting any agents or releasing any held
+        resources. This method should raise a ListenerStopError if the listener cannot
+        be stopped.
+        """
 
     @abstractmethod
-    async def on_listener_cancelled(self) -> None: ...
+    async def on_listener_cancelled(self) -> None:
+        """
+        This method is called when the listener is cancelled forcefully without setting
+        the self.stop_listener_event asynchronous event flag. This method should be used
+        to perform any cleanup or actions that are required before the listener is
+        cancelled such as gracefully disconnecting any agents or releasing any held
+        resources. This method should raise a ListenerCancellationError if the listener
+        cannot be cancelled.
+        """
 
     @abstractmethod
-    async def on_listener_errored(self, exc: Exception) -> None: ...
+    async def on_listener_errored(self, exc: Exception) -> None:
+        """
+        This method is called when the listener encounters an unexpected error while
+        running. If any error apart from ListenerStartError, ListenerStopError,
+        ListenerCancellationError or ListenerRuntimeError is raised, this method is
+        called.
+        """
 
     # To avoid exposing the internal workings of the AgentsService service to the
     # implementer we instead provide a create_agent() method that can be used to create
@@ -99,8 +134,9 @@ class BaseListener(ABC):
                 await self.on_listener_running()
 
                 self.status.transition_to_stopped()
+                await self.on_listener_stopped()
 
-                self._task = None
+                self._listener_task = None
             except asyncio.CancelledError:
                 try:
                     self.status.transition_to_cancelled()
@@ -113,7 +149,7 @@ class BaseListener(ABC):
         except Exception as exc:
             self.status.transition_to_fatal(exc)
 
-    async def start_listener(self):
+    async def start_listener(self) -> None:
         if self.status.state == ListenerState.STARTED:
             raise ListenerStartError(detail="Listener is already running")
 
@@ -122,21 +158,19 @@ class BaseListener(ABC):
         self.status.transition_to_started()
         await self.on_listener_started()
 
-        self._task = asyncio.create_task(self._run_listener())
+        self._listener_task = asyncio.create_task(self._run_listener())
 
-    async def stop_listener(self):
+    async def stop_listener(self) -> None:
         if self.status.state != ListenerState.RUNNING:
             raise ListenerStopError(detail="Listener is not running")
 
-        await self.on_listener_stopped()
-
         self.stop_listener_event.set()
 
-    async def cancel_listener(self):
+    async def cancel_listener(self) -> None:
         if self.status.state != ListenerState.RUNNING:
             raise ListenerCancellationError(detail="Listener is not running")
-        self._task.cancel()
-        self._task = None
+        self._listener_task.cancel()
+        self._listener_task = None
 
     def to_json(self) -> dict[str, Any]:
         return {

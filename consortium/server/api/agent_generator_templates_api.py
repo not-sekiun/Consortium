@@ -70,7 +70,7 @@ def create_agent_generator_through_agent_generator_template_by_agent_generator_t
     # /api/agent-generators endpoint.
     agent_generator = agent_generator_template.create_agent_generator()
     agent_generator_template.clear_all_option_values()
-    agent_generator_templates_service.add_agent_generator(agent_generator)
+    agent_generators_service.add_agent_generator(agent_generator)
 
     return AgentGeneratorModel(**agent_generator.to_json())
 

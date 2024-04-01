@@ -260,10 +260,8 @@ def delete_listener_by_listener_id(
     try:
         listener = listeners_service.get_listener_by_listener_id(listener_id)
         if listener.status.state == ListenerState.RUNNING:
-            raise ListenerStillRunningError(
-                detail="Stop the listener before attempting to delete it.",
-            )
+            raise ListenerStillRunningError
         listeners_service.remove_listener(listener)
         return SuccessResponseModel()
     except ValueError:
-        raise ListenerNotFoundError(listener_id)
+        raise ListenerNotFoundError

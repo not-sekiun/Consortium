@@ -1,0 +1,6 @@
+{
+    "username": "admin",
+    "password": "admin",
+    "remote_host": "127.0.0.1",
+    "remote_port": 9999
+}
