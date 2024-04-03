@@ -1,4 +1,5 @@
 import json
+import queue
 import traceback
 
 import prompt_toolkit
@@ -32,14 +33,10 @@ from consortium.client.utils.standard_io_utils import print_error, print_red
 class BaseInterpreter:
     _prompt_session = prompt_toolkit.PromptSession()
 
-    # Command history is used by the interpreter to store the commands that have been
-    # executed. The local command references the command history to determine the
-    # original command that was executed for a crucial string replacement operation.
-    command_history = []
     # Resource commands are used to store the commands that are loaded from resource
     # files. These commands are executed in the interpreter in a FIFO manner. Resource
     # commands are shared across all interpreters.
-    resource_commands = []
+    resource_interpreter_commands = queue.Queue()
 
     def __init__(
         self,
@@ -202,11 +199,6 @@ class BaseInterpreter:
                 tokenized_string.tokens = (
                     expanded_alias_tokenized_string.tokens + tokenized_string.tokens[1:]
                 )
-                # aliased_string = aliased_string.replace(
-                #     alias_token,
-                #     self.command_aliases[alias_token],
-                #     1,
-                # )
                 alias_token = tokenized_string.tokens[0]
             else:
                 break
@@ -214,7 +206,7 @@ class BaseInterpreter:
         return tokenized_string
 
     @staticmethod
-    async def parse_tokenized_string_to_interpreter_command(
+    def parse_tokenized_string_to_interpreter_command(
         tokenized_string: TokenizedString,
     ) -> InterpreterCommand:
         if not tokenized_string.tokens:
@@ -264,22 +256,11 @@ class BaseInterpreter:
                 f"Command '{interpreter_command.command}' not found.",
             )
 
-    def add_command_to_resource_commands(
-        self,
-        interpreter_command: InterpreterCommand,
-    ) -> None:
-        self.resource_commands.append(interpreter_command)
-
-    def get_next_resource_command(self) -> InterpreterCommand | None:
-        if self.resource_commands:
-            return self.resource_commands.pop(0)
-        return None
-
     async def run_interpreter(self) -> CommandReturnStatus:
         while True:
             # Check if there are any resource commands to execute. If there are no
             # resource commands, we will prompt the user for input.
-            if not (interpreter_command := self.get_next_resource_command()):
+            if self.resource_interpreter_commands.empty():
                 # Read input from the user with the prompt that is specific to the
                 # interpreter.
                 input_string = await self.read_input_from_interpreter()
@@ -311,10 +292,12 @@ class BaseInterpreter:
 
                 # Convert tokens to an interpreter command object.
                 interpreter_command = (
-                    await self.parse_tokenized_string_to_interpreter_command(
+                    self.parse_tokenized_string_to_interpreter_command(
                         tokenized_string=tokenized_string,
                     )
                 )
+            else:
+                interpreter_command = self.resource_interpreter_commands.get()
 
             # Execute the command, accounting for any exceptions that arise, and
             # returning the command return status if required.

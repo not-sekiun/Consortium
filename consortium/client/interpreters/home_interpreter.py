@@ -1,37 +1,31 @@
-import consortium_old.core.client.commands.global_commands.agents as agents
-import consortium_old.core.client.commands.global_commands.generator as generator
-import consortium_old.core.client.commands.global_commands.listeners as listeners
-import consortium_old.core.client.commands.home_interpreter_commands.connect as connect
-import consortium_old.core.client.commands.home_interpreter_commands.disconnect as disconnect
-import consortium_old.core.client.commands.home_interpreter_commands.info_server as info_server
-import consortium_old.core.client.commands.home_interpreter_commands.interact_server as interact_server
-import consortium_old.core.client.commands.home_interpreter_commands.list_servers as list_servers
-import consortium_old.utils.standard_io.return_color as return_color
-from consortium_old.core.client.base_classes.base_interpreter import BaseInterpreter
-from consortium_old.core.client.client_database import ClientDatabase
-from consortium_old.core.client.client_rest import ClientREST
+from consortium.client.commands.global_commands.agents import AgentsCommand
+from consortium.client.commands.global_commands.alias import AliasCommand
+from consortium.client.commands.global_commands.banner import BannerCommand
+from consortium.client.commands.global_commands.clear import ClearCommand
+from consortium.client.commands.global_commands.exit import ExitCommand
+from consortium.client.commands.global_commands.generator import GeneratorCommand
+from consortium.client.commands.global_commands.help import HelpCommand
+from consortium.client.commands.global_commands.home import HomeCommand
+from consortium.client.commands.global_commands.listeners import ListenersCommand
+from consortium.client.commands.global_commands.local import LocalCommand
+from consortium.client.commands.global_commands.resource import ResourceCommand
+from consortium.client.interpreters.base_interpreter import BaseInterpreter
+from consortium.client.utils.standard_io_utils import color_white
 
-
-class HomeInterpreter(BaseInterpreter):
-    def __init__(
-        self,
-        client: "Client",
-        remote_server: ClientREST,
-        client_database: ClientDatabase,
-    ):
-        super().__init__(
-            return_color.color_white("Consortium (Home) > ", bold=True),
-            [
-                listeners.GlobalCommand(),
-                agents.GlobalCommand(),
-                generator.GlobalCommand(),
-                info_server.HomeCommand(),
-                disconnect.HomeCommand(),
-                connect.HomeCommand(),
-                interact_server.HomeCommand(),
-                list_servers.HomeCommand(),
-            ],
-            client,
-            remote_server,
-            client_database,
-        )
+home_interpreter = BaseInterpreter(
+    prompt=color_white("Consortium (Home) > "),
+    commands=[
+        AgentsCommand(),
+        AliasCommand(),
+        BannerCommand(),
+        ClearCommand(),
+        ExitCommand(),
+        GeneratorCommand(),
+        HelpCommand(),
+        HomeCommand(),
+        ListenersCommand(),
+        LocalCommand(),
+        ResourceCommand(),
+    ],
+    client_session=None,
+)

@@ -15,6 +15,17 @@ files = [
 tokenize-rt = ">=3.0.1"
 
 [[package]]
+name = "aioconsole"
+version = "0.7.0"
+description = "Asynchronous console and interfaces for asyncio"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "aioconsole-0.7.0-py3-none-any.whl", hash = "sha256:ee799435f77e8c3a2a7207c465feae2343a2aa537c38e8f56b629c8a321a02d0"},
+    {file = "aioconsole-0.7.0.tar.gz", hash = "sha256:c702d24406378d37d9873f91e03ce71520bac503d5ab03f81d8b563ff010bd54"},
+]
+
+[[package]]
 name = "aiohttp"
 version = "3.9.3"
 description = "Async http client/server framework (asyncio)"
@@ -1487,4 +1498,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "e77ea3efe5b19a6c65af0f1976b36159d31840fc6c6d790b0dda2c9561714467"
+content-hash = "bdce1b6914b760fbf825eb8cadc8bdea9d7e085d4bfe096d7c92d49be59f881f"

@@ -7,12 +7,12 @@ AGENT_GENERATOR_TEMPLATE_RESPONSE_JSON_SCHEMA = {
     "properties": {
         "name": {"type": "string"},
         "description": {"type": "string"},
-        "listener_type": {
+        "agent_type": {
             "type": "object",
             "properties": {
                 "name": {"type": "string"},
                 "description": {"type": "string"},
-                "listener_type_id": {"type": "string"},
+                "agent_type_id": {"type": "string"},
             },
         },
         "authors": {"type": "array", "items": {"type": "string"}},
@@ -23,7 +23,7 @@ AGENT_GENERATOR_TEMPLATE_RESPONSE_JSON_SCHEMA = {
     "required": [
         "name",
         "description",
-        "listener_type",
+        "agent_type",
         "authors",
         "options",
         "agent_generator_template_id",

@@ -113,14 +113,14 @@ class AgentGeneratorTemplatesService:
 
         instantiated_agent_generator_template = agent_generator_template()
         self._agent_generator_templates[
-            str(instantiated_agent_generator_template.agent_template_id)
+            str(instantiated_agent_generator_template.agent_generator_template_id)
         ] = instantiated_agent_generator_template
 
         # Although we are explicitly loading the agent generator template here, the
         # loading of an agent generator template represents the framework loading an
         # entire agent.
         self._agent_generator_templates_service_logger.debug(
-            f"Loaded agent: {instantiated_agent_generator_template.name} ({instantiated_agent_generator_template.agent_template_id})",
+            f"Loaded agent: {instantiated_agent_generator_template.name} ({instantiated_agent_generator_template.agent_generator_template_id})",
         )
 
     def get_agent_generator_template_by_agent_generator_template_id(

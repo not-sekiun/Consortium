@@ -24,10 +24,19 @@ class IncompleteEscapeError(Exception):
     pass
 
 
-# Interpreter command execution exceptions
+# Interpreter command execution exceptions.
 class InvalidCommandError(Exception):
     pass
 
 
 class InvalidCommandReturnStatusError(Exception):
+    pass
+
+
+# Resource command exceptions.
+class ResourceFileAccessError(Exception):
+    pass
+
+
+class ResourceFileParseError(Exception):
     pass

@@ -22,6 +22,7 @@ router = APIRouter(
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 agent_generator_templates_service = server_singletons.agent_generator_templates_service
+agent_generators_service = server_singletons.agent_generators_service
 
 
 @router.post(

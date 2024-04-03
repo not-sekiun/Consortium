@@ -65,7 +65,7 @@ def validate_server_config_json_file_before_tests():
         "server_banner": "Apache",
     }
 
-    with open("data/server/config.json") as file:
+    with open("data/server/server_config.json") as file:
         server_config_json_data = json.load(file)
 
     # The order of the server configurations in the JSON file does not matter

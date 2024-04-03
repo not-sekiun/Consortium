@@ -39,7 +39,7 @@ class ClearCommand(BaseCommand):
             _ = self._parser.parse_args(interpreter_command.arguments)
             if platform.system() == "Windows":
                 subprocess.run("cls", shell=True)
-            # Darwin for macOS and Linux for nix systems
+            # platform.system returns "Darwin" for macOS and "Linux" for nix systems.
             else:
                 subprocess.run("clear", shell=True)
         except SystemExit:

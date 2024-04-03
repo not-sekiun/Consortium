@@ -54,12 +54,10 @@ async def main(args: argparse.Namespace) -> None:
     from consortium.client.commands.global_commands.home import HomeCommand
     from consortium.client.commands.global_commands.listeners import ListenersCommand
     from consortium.client.commands.global_commands.local import LocalCommand
+    from consortium.client.commands.global_commands.resource import ResourceCommand
     from consortium.client.interpreters.base_interpreter import BaseInterpreter
     from consortium.client.utils.standard_io_utils import color_red, color_white
 
-    # from consortium.client.commands.global_commands.resource import (
-    #     GlobalCommand as ResourceCommand,
-    # )
     # Attempt to log in to server.
     try:
         client_session = ClientSession(
@@ -86,6 +84,7 @@ async def main(args: argparse.Namespace) -> None:
             GeneratorCommand(),
             ClearCommand(),
             AliasCommand(),
+            ResourceCommand(),
         ],
         client_session=client_session,
     )

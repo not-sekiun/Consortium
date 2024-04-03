@@ -47,7 +47,7 @@ class BaseAgentGeneratorTemplate(ABC):
             self.options = {}
         else:
             self.options = {option.name: option for option in options}
-        self.agent_template_id = uuid.uuid4().hex
+        self.agent_generator_template_id = uuid.uuid4().hex
         self.validating_function = validating_function
         self.agent_generator = agent_generator
 
@@ -83,13 +83,13 @@ class BaseAgentGeneratorTemplate(ABC):
         return {
             "name": self.name,
             "description": self.description,
-            "agent_type": self.agent_type,
+            "agent_type": self.agent_type.to_json(),
             "authors": self.authors,
             "options": {
                 option_name: option.to_json()
                 for option_name, option in self.options.items()
             },
-            "agent_template_id": self.agent_template_id,
+            "agent_generator_template_id": self.agent_generator_template_id,
             "validating_function": self.validating_function.__doc__
             if self.validating_function
             else None,
