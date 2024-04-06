@@ -11,15 +11,17 @@ from consortium.client.client_exceptions import (
     IncompleteEscapeError,
     IncompleteSingleQuoteError,
     InvalidCommandError,
-    InvalidCommandReturnStatusError,
+    InvalidReturnStatus,
 )
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.base_command import BaseCommand
 from consortium.client.objects.command_objects import (
-    CommandReturnStatus,
     ContinueReturnStatus,
+    ExitClientSessionReturnStatus,
     ExitProgramReturnStatus,
     InterpreterCommand,
+    ReturnStatus,
+    SwitchClientSessionReturnStatus,
     SwitchInterpreterReturnStatus,
 )
 from consortium.client.objects.interpreter_objects import (
@@ -40,10 +42,13 @@ class BaseInterpreter:
 
     def __init__(
         self,
-        prompt: str,
-        commands: list[BaseCommand],
+        prompt: str = "",
+        commands: list[BaseCommand] = None,
         client_session: ClientSession | None = None,
     ) -> None:
+        if commands is None:
+            commands = []
+
         self.prompt = prompt
         self.commands = {command.name: command for command in commands}
         self.client_session = client_session
@@ -225,7 +230,7 @@ class BaseInterpreter:
     async def execute_command(
         self,
         interpreter_command: InterpreterCommand,
-    ) -> CommandReturnStatus:
+    ) -> ReturnStatus:
         if not interpreter_command.command:
             return ContinueReturnStatus()
         elif interpreter_command.command in self.commands:
@@ -237,87 +242,98 @@ class BaseInterpreter:
                 interpreter=self,
             )
 
-            if isinstance(command_return_status, ContinueReturnStatus):
-                pass
-            elif isinstance(
-                command_return_status,
-                ExitProgramReturnStatus,
-            ) or isinstance(
-                command_return_status,
-                SwitchInterpreterReturnStatus,
-            ):
-                return command_return_status
-            else:
-                raise InvalidCommandReturnStatusError(
-                    f"Invalid command return status: {command_return_status}",
-                )
+            return command_return_status
         else:
             raise InvalidCommandError(
                 f"Command '{interpreter_command.command}' not found.",
             )
 
-    async def run_interpreter(self) -> CommandReturnStatus:
+    async def run_interpreter(
+        self,
+    ) -> (
+        ExitProgramReturnStatus
+        | SwitchInterpreterReturnStatus
+        | ExitClientSessionReturnStatus
+        | SwitchClientSessionReturnStatus
+    ):
         while True:
-            # Check if there are any resource commands to execute. If there are no
-            # resource commands, we will prompt the user for input.
-            if self.resource_interpreter_commands.empty():
-                # Read input from the user with the prompt that is specific to the
-                # interpreter.
-                input_string = await self.read_input_from_interpreter()
+            try:
+                # Check if there are any resource commands to execute. If there are no
+                # resource commands, we will prompt the user for input.
+                if self.resource_interpreter_commands.empty():
+                    # Read input from the user with the prompt that is specific to the
+                    # interpreter.
+                    input_string = await self.read_input_from_interpreter()
 
-                # Attempt to tokenize the string, if the tokenization is invalid due to
-                # some form of incomplete input, we will prompt the user for more input
-                # and then attempt to parse the string again.
-                while True:
-                    try:
-                        tokenized_string = self.tokenize_string(
-                            input_string=input_string,
-                        )
-                        break
-                    # Incomplete quote strings are concatenated with a newline
-                    # character.
-                    except (IncompleteDoubleQuoteError, IncompleteSingleQuoteError):
-                        input_string += "\n" + await self.read_input("... ")
-                        continue
-                    # Incomplete escape characters are concatenated without a newline.
-                    except IncompleteEscapeError:
-                        input_string += await self.read_input("... ")
-                        continue
+                    # Attempt to tokenize the string, if the tokenization is invalid due
+                    # to some form of incomplete input, we will prompt the user for more
+                    # input and then attempt to parse the string again.
+                    while True:
+                        try:
+                            tokenized_string = self.tokenize_string(
+                                input_string=input_string,
+                            )
+                            break
+                        # Incomplete quote strings are concatenated with a newline
+                        # character.
+                        except (IncompleteDoubleQuoteError, IncompleteSingleQuoteError):
+                            input_string += "\n" + await self.read_input("... ")
+                            continue
+                        # Incomplete escape characters are concatenated without a
+                        # newline.
+                        except IncompleteEscapeError:
+                            input_string += await self.read_input("... ")
+                            continue
 
-                # Resolve any command aliases in the tokens. Only the first token is
-                # resolved.
-                tokenized_string = self.resolve_token_aliases(
-                    tokenized_string=tokenized_string,
-                )
-
-                # Convert tokens to an interpreter command object.
-                interpreter_command = (
-                    self.parse_tokenized_string_to_interpreter_command(
+                    # Resolve any command aliases in the tokens. Only the first token is
+                    # resolved.
+                    tokenized_string = self.resolve_token_aliases(
                         tokenized_string=tokenized_string,
                     )
-                )
-            else:
-                interpreter_command = self.resource_interpreter_commands.get()
 
-            # Execute the command, accounting for any exceptions that arise, and
-            # returning the command return status if required.
-            try:
-                command_return_status = await self.execute_command(
-                    interpreter_command=interpreter_command,
-                )
-                if isinstance(
-                    command_return_status,
-                    ExitProgramReturnStatus,
-                ) or isinstance(
-                    command_return_status,
-                    SwitchInterpreterReturnStatus,
-                ):
-                    return command_return_status
-            # InvalidCommandReturnStatusError can also be raised, but should not be
-            # caught here as it is a programming error for the developer to address.
-            except InvalidCommandError:
-                print_error(f'Command "{interpreter_command.command}" not found.')
-                continue
+                    # Convert tokens to an interpreter command object.
+                    interpreter_command = (
+                        self.parse_tokenized_string_to_interpreter_command(
+                            tokenized_string=tokenized_string,
+                        )
+                    )
+                else:
+                    interpreter_command = self.resource_interpreter_commands.get()
+
+                # Execute the command, accounting for any exceptions that arise, and
+                # return the command return status if required.
+                try:
+                    command_return_status = await self.execute_command(
+                        interpreter_command=interpreter_command,
+                    )
+                    if (
+                        isinstance(
+                            command_return_status,
+                            ExitProgramReturnStatus,
+                        )
+                        or isinstance(
+                            command_return_status,
+                            SwitchInterpreterReturnStatus,
+                        )
+                        or isinstance(
+                            command_return_status,
+                            ExitClientSessionReturnStatus,
+                        )
+                        or isinstance(
+                            command_return_status,
+                            SwitchClientSessionReturnStatus,
+                        )
+                    ):
+                        return command_return_status
+                    elif isinstance(command_return_status, ContinueReturnStatus):
+                        pass
+                    else:
+                        raise InvalidReturnStatus(
+                            f"Invalid return status received from command: {command_return_status}",
+                        )
+                except InvalidCommandError:
+                    print_error(f'Command "{interpreter_command.command}" not found.')
+                    continue
             except KeyboardInterrupt:
                 print_error('CTRL+C captured, use "exit" to exit the interpreter.')
                 continue

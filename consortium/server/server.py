@@ -1,4 +1,3 @@
-import json
 import socket
 import traceback
 
@@ -22,9 +21,9 @@ from consortium.server.api.logout_api import router as logout_api_router
 from consortium.server.api.server_api import router as server_api_router
 from consortium.server.api.user_accounts_api import router as user_accounts_api_router
 from consortium.server.api.users_api import router as users_api_router
-from consortium.server.models.server_models import ServerConfigModel, ServerReleaseModel
+from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
-from consortium.server.server_config import CONSORTIUM_RELEASE_JSON_FILE_PATH
+from consortium.server.server_config import SERVER_RELEASE
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
@@ -44,10 +43,6 @@ class Server:
     ):
         self.server_config = server_config
 
-        # Load server release file
-        with open(str(CONSORTIUM_RELEASE_JSON_FILE_PATH), "r") as file:
-            json_data = json.load(fp=file)
-        self.server_release = ServerReleaseModel(**json_data)
         self.status = ServerStatus.STOPPED
 
         self._server_logger = logger.bind(logger_name="Consortium Server")
@@ -126,12 +121,13 @@ class Server:
         # manually start the server with the uvicorn backend and disable the uvicorn
         # logger
         self._server_logger.info(
-            f'Starting server (v{self.server_release.version} "{self.server_release.codename}") at {self.server_config.local_host}:{self.server_config.local_port}...',
+            f'Starting server (v{SERVER_RELEASE.version} "{SERVER_RELEASE.codename}") at {self.server_config.local_host}:{self.server_config.local_port}...',
         )
         self.status = ServerStatus.RUNNING
 
-        # uvicorn will ordinarily warn of an already bound socket through its logger but we
-        # disabled it so we need to do our own socket check to see if the address is bindable
+        # uvicorn will ordinarily warn of an already bound socket through its logger,
+        # but we disabled it, so we need to do our own socket check to see if the
+        # address is bindable
         try:
             test_sock = socket.socket()
             test_sock.bind(

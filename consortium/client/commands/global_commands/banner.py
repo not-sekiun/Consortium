@@ -1,7 +1,7 @@
 import argparse
 import random
-from typing import Type
 
+from consortium.client.client_config import CLIENT_RELEASE
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.base_command import BaseCommand
 from consortium.client.interpreters.base_interpreter import BaseInterpreter
@@ -37,32 +37,7 @@ class BannerCommand(BaseCommand):
 
     @staticmethod
     async def _print_banner(client_session: ClientSession) -> None:
-        flavor_text = [
-            # color_white(
-            #     "Audentes fortuna adiuvat | Fortune favors the bold", bold=True
-            # ),
-            # color_white("Cogito, ergo sum", bold=True),
-            # color_white("Powered by prompt-toolkit", bold=True),
-            # color_white("CTRL-C resistant", bold=True),
-            # color_white("No shortage of spaghetti code", bold=True),
-            # color_white("∫E.da = qenc/ε0", bold=True),
-            # color_white("RIP Fluxnotes, 2018-2018", bold=True),
-            # color_magenta(
-            #     "Inazuma shines eternal ⛩️ 稲光、すなわち永遠なり。", bold=True
-            # ),
-            # "".join(
-            #     random.choice(
-            #         [
-            #             color_white,
-            #             color_red,
-            #             color_green,
-            #             color_blue,
-            #             color_cyan,
-            #             color_magenta,
-            #         ]
-            #     )(char, bold=True)
-            #     for char in "Full color support on all major OSes!"
-            # ),
+        banner_text = [
             color_white("Hint: Press tab to autocomplete commands", bold=True),
             color_white(
                 "Hint: Access the command history with the up or down arrow keys",
@@ -91,7 +66,7 @@ class BannerCommand(BaseCommand):
         ]
 
         # fmt: off
-        star_banner = \
+        star_banner_art = \
             "\n" + color_white("        .        x      ", bold=True) + color_red("------", bold=True) + color_white("+             `        .          *   `     --.", bold=True) + "\n" + \
             color_white("  <<o>>            `     .          +               o         ", bold=True) + color_red("----------", bold=True) + color_white("X", bold=True) + "\n" + \
             color_white("             x                       ,        +++       -<o>-       x" + "\n" + "    `   o          =      '    -o        .         `     x      o  ", bold=True) + "\n" + \
@@ -104,7 +79,7 @@ class BannerCommand(BaseCommand):
             color_white("   x    ", bold=True) + color_red("--------", bold=True) + color_white("+", bold=True) + color_white("    .              <o>         X          ", bold=True) + color_red("--------", bold=True) + color_white("x * <<o>>", bold=True) + "\n" + \
             color_white("      x              -x-       o          <o>        ,        ' `" + "\n" + " <o>      .--+x   .          ", bold=True) + color_red("--------", bold=True) + color_white("+ .        `     --.    x  ", bold=True) + color_cyan("   [Ad astra!]") + "\n"
         # fmt: on
-        banner_art = [star_banner]
+        banner_art = [star_banner_art]
 
         if client_session is None:
             number_of_listeners = "N/A"
@@ -114,24 +89,12 @@ class BannerCommand(BaseCommand):
             connection_status_banner = (
                 color_white("    Status         - ", bold=True)
                 + color_red("Disconnected", bold=True)
-                + color_white(f" | Logged in as ? (role: {role})", bold=True)
+                + color_white(f" | Logged in as N/A (role: {role})", bold=True)
             )
         else:
-            server_release = await (
-                await client_session.authorized_session.get(
-                    f"{client_session.api_url}/server/release",
-                )
-            ).json()
-            listeners = await (
-                await client_session.authorized_session.get(
-                    f"{client_session.api_url}/listeners/all",
-                )
-            ).json()
-            own_user = await (
-                await client_session.authorized_session.get(
-                    f"{client_session.api_url}/users/me",
-                )
-            ).json()
+            server_release = await client_session.get_server_release()
+            listeners = await client_session.get_all_listeners()
+            own_user = await client_session.get_own_user_info()
             # TODO: Add agent API endpoint
             agents = []
 
@@ -173,7 +136,7 @@ class BannerCommand(BaseCommand):
             bold=True,
         )
         client_version_banner = color_white(
-            f'    Client Release - v{client_session.client_release.version} "{client_session.client_release.codename}"',
+            f'    Client Release - v{CLIENT_RELEASE.version} "{CLIENT_RELEASE.codename}"',
             bold=True,
         )
         server_version_banner = color_white(
@@ -185,7 +148,7 @@ class BannerCommand(BaseCommand):
             + color_white(number_of_listeners + " Active listener(s) | ", bold=True)
             + color_white(number_of_agents + " Active agent(s)", bold=True)
         )
-        quote_banner = "    " + random.choice(flavor_text)
+        quote_banner = "    " + random.choice(banner_text)
 
         print_plain(banner_art)
         print_plain(author_banner)
@@ -200,8 +163,8 @@ class BannerCommand(BaseCommand):
     async def run_command(
         self,
         interpreter_command: InterpreterCommand,
-        client_session: ClientSession,
-        interpreter: Type[BaseInterpreter],
+        client_session: ClientSession | None = None,
+        interpreter: BaseInterpreter | None = None,
     ) -> ContinueReturnStatus:
         try:
             _ = self._parser.parse_args(interpreter_command.arguments)

@@ -18,22 +18,20 @@ client_sessions_service = client_singletons.client_sessions_service
 class DisconnectCommand(BaseCommand):
     def __init__(self):
         parser = argparse.ArgumentParser(
-            description="Disconnect from the current client session or a specific client session.",
+            description="Disconnect a specific client session.",
             prog="disconnect",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=argparse_epilog_formatter(
                 """
                 Example:
-                    disconnect  # Disconnect the current client session
                     disconnect 123e4567-e89b-12d3-a456-42661417400  # Disconnect the client session with client session ID 123e4567-e89b-12d3-a456-42661417400
                 """,
             ),
         )
         parser.add_argument(
             "client_session_id",
-            help="Client session ID of the client session to disconnect. If no client session ID is provided, the current client session is disconnected.",
-            nargs="?",
-            default=None,
+            help="Client session ID of the client session to disconnect.",
+            nargs=1,
         )
         super().__init__(parser)
 
@@ -48,11 +46,11 @@ class DisconnectCommand(BaseCommand):
                 interpreter_command.arguments,
             )
 
-            if parsed_args.client_session_id:
+            if parsed_args.client_session_id[0]:
                 try:
                     target_client_session = (
                         client_sessions_service.get_client_session_by_client_session_id(
-                            parsed_args.client_session_id,
+                            parsed_args.client_session_id[0],
                         )
                     )
                 except ValueError as exc:

@@ -124,7 +124,7 @@ class ForbiddenError(ServerException):
     def __init__(
         self,
         message: str = (
-            "Access to the requested resource is forbidden. (Check if the role of your"
+            "Access to the requested resource is forbidden. (Check if the role of your "
             "account has sufficient permissions to access the requested resource.)"
         ),
         detail: Any = None,
@@ -141,7 +141,7 @@ class NotFoundError(ServerException):
     def __init__(
         self,
         message: str = (
-            "The requested resource could not be found. (Check that the requested"
+            "The requested resource could not be found. (Check that the requested "
             "resource URL exists.)"
         ),
         detail: Any = None,
@@ -496,8 +496,8 @@ class InvalidAgentGeneratorTemplateOptionValueError(ServerException):
     def __init__(
         self,
         message: str = (
-            "The provided agent generator template option value is invalid. (Check that "
-            "the type and format of the option's value is valid.)"
+            "The provided agent generator template option value is invalid. (Check "
+            "that the type and format of the option's value is valid.)"
         ),
         detail: Any = None,
     ) -> None:
@@ -514,8 +514,8 @@ class AgentGeneratorNotFoundError(ServerException):
     def __init__(
         self,
         message: str = (
-            "The requested agent generator was not found. (Check that the agent_generator_id "
-            "URL parameter is correct.)"
+            "The requested agent generator was not found. (Check that the "
+            "agent_generator_id URL parameter is correct.)"
         ),
         detail: Any = None,
     ) -> None:

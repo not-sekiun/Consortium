@@ -1,112 +1,166 @@
 import argparse
 import json
-from typing import Union
 
-import consortium_old.utils.standard_io.print_status as print_status
 import jsonschema
-from consortium_old.core.client.client_database import ClientDatabase
-from consortium_old.core.client.client_rest import ClientREST
-from consortium_old.core.client.interpreters.disconnected_interpreter import (  # TODO: Truthfully I do not know why this import is not circular. Investigate later on and see if I can change the type hinting to not use string literals
-    DisconnectedInterpreter,
-)
-from consortium_old.core.client.objects.interpreter_exit_signal import (
-    InterpreterExitSignal,
-)
-from consortium_old.core.client.objects.parsed_consortium_command import (
-    ParsedConsortiumCommand,
-)
 
+import consortium.client.client_singletons as client_singletons
+from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH
+from consortium.client.client_exceptions import FailedToLoginError
+from consortium.client.client_session import ClientSession
 from consortium.client.commands.base_command import BaseCommand
+from consortium.client.interpreters.base_interpreter import BaseInterpreter
+from consortium.client.objects.client_objects import ClientConfig
+from consortium.client.objects.command_objects import (
+    ContinueReturnStatus,
+    InterpreterCommand,
+)
+from consortium.client.utils.data_structure_utils import argparse_epilog_formatter
+from consortium.client.utils.standard_io_utils import print_error, print_success
+
+client_sessions_service = client_singletons.client_sessions_service
 
 
-class HomeCommand(BaseCommand):
+class ConnectCommand(BaseCommand):
     def __init__(self):
-        # TODO: Add the ability to specify the value of specific keys from the config.json file through argument parameters
         parser = argparse.ArgumentParser(
-            description="connect to a server",
+            description="Connect to a server to create a new server session.",
             prog="connect",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog=argparse_epilog_formatter(
+                """
+                Example:
+                    connect -c my/path/to/client_config.json  # Connect using config file
+                    connect -u username -p password -rh server.com -rp 1234  # Connect manually
+                """,
+            ),
         )
+
         parser.add_argument(
             "-c",
             "--config",
-            help="config filepath to load server config data from. by default data is loaded from local/server/config.json",
-            default="local/client/config.json",
+            help="Filepath of client config JSON file to load client config data from. By default, the client config JSON file is loaded from the client data folder.",
+            nargs="?",
+            const=str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH),
         )
+
+        parser.add_argument(
+            "-rh",
+            "--remote-host",
+            help="The remote host to connect to.",
+        )
+        parser.add_argument(
+            "-rp",
+            "--remote-port",
+            help="The remote port to connect to.",
+        )
+        parser.add_argument(
+            "-u",
+            "--username",
+            help="The username to authenticate with.",
+        )
+        parser.add_argument(
+            "-p",
+            "--password",
+            help="The password to authenticate with.",
+        )
+
         super().__init__(parser)
 
     async def run_command(
         self,
-        _remote_server: ClientREST,
-        client: "Client",
-        client_database: ClientDatabase,
-        parsed_consortium_command: ParsedConsortiumCommand,
-        interpreter: Union[
-            "HomeInterpreter",
-            "DisconnectedInterpreter",
-            "ListenersInterpreter",
-            "GeneratorInterpreter",
-            "AgentsInterpreter",
-        ],  # TODO: Gradually fill this out with more interpreters
-    ) -> Union[None, InterpreterExitSignal]:
+        interpreter_command: InterpreterCommand,
+        client_session: ClientSession | None = None,
+        interpreter: BaseInterpreter | None = None,
+    ) -> ContinueReturnStatus:
         try:
             parsed_args = self._parser.parse_args(
-                parsed_consortium_command.command_args,
+                interpreter_command.arguments,
             )
-            client_config_json_schema = {
-                "type": "object",
-                "properties": {
-                    "remote_host": {"type": "string"},
-                    "remote_port": {"type": "number"},
-                    "username": {"type": "string"},
-                    "password": {"type": "string"},
-                },
-                "required": ["remote_host", "remote_port", "username", "password"],
-            }
-            try:
-                with open(parsed_args.config, "r") as f:
-                    config_data = json.loads(f.read())
-                jsonschema.validate(config_data, client_config_json_schema)
-            except FileNotFoundError as e:
-                print(f"The config filepath supplied does not exist: {e}")
-                return
-            except PermissionError as e:
-                print(f"Insufficient permissions to read the config file: {e}")
-                return
-            except json.decoder.JSONDecodeError:
-                print("The config file does not contain valid JSON data")
-                return
-            except jsonschema.ValidationError as e:
-                print(
-                    f"The config file's JSON data is not of a valid server config format: {e}",
-                )
-                return
 
-            success, new_remote_server = await client.connect_to_server(
-                config_data["remote_host"],
-                config_data["remote_port"],
-                config_data["username"],
-                config_data["password"],
-            )
-            if success:
-                client_database.register_remote_server(new_remote_server)
-                print_status.print_success(
-                    f'Authenticated as user {config_data["username"]} to {config_data["remote_host"]}:{config_data["remote_port"]}',
+            # Perform custom checking of arguments
+            if (
+                not parsed_args.config
+                and not all(
+                    [
+                        parsed_args.remote_host,
+                        parsed_args.remote_port,
+                        parsed_args.username,
+                        parsed_args.password,
+                    ],
                 )
-                if isinstance(
-                    interpreter,
-                    DisconnectedInterpreter,
-                ):  # if we ran this command in the disconnected interpreter we automatically switch to the home interpreter
-                    print_status.print_info(
-                        "Valid server connection acquired, automatically switching back to home interpreter...",
+                or parsed_args.config
+                and all(
+                    [
+                        parsed_args.remote_host,
+                        parsed_args.remote_port,
+                        parsed_args.username,
+                        parsed_args.password,
+                    ],
+                )
+            ):
+                self._parser.error(
+                    "Either -c/--config or all of -rh/--remote-host, -rp/--remote-port, -u/--username, and -p/--password must be provided but not both at the same time.",
+                )
+
+            if parsed_args.config:
+                client_config_file_json_schema = {
+                    "type": "object",
+                    "properties": {
+                        "username": {"type": "string"},
+                        "password": {"type": "string"},
+                        "remote_host": {"type": "string"},
+                        "remote_port": {"type": "number"},
+                    },
+                    "required": ["remote_host", "remote_port", "username", "password"],
+                }
+
+                try:
+                    with open(parsed_args.config, "r") as file:
+                        config_data = json.load(fp=file)
+                    jsonschema.validate(config_data, client_config_file_json_schema)
+                except FileNotFoundError as exc:
+                    print_error(f"The config filepath supplied does not exist: {exc}")
+                    return ContinueReturnStatus()
+                except PermissionError as exc:
+                    print_error(
+                        f"Insufficient permissions to read the config file: {exc}",
                     )
-                    return InterpreterExitSignal(
-                        exit_client=False,
-                        switch_interpreter=True,
-                        new_interpreter_str="home",
-                        switch_server=True,
-                        new_server_id=new_remote_server.server_id,
+                    return ContinueReturnStatus()
+                except json.decoder.JSONDecodeError:
+                    print_error("The config file does not contain valid JSON data")
+                    return ContinueReturnStatus()
+                except jsonschema.ValidationError as exc:
+                    print_error(
+                        f"The config file's JSON data is not of a valid server config format: {exc}",
                     )
+                    return ContinueReturnStatus()
+
+                client_config = ClientConfig(
+                    remote_host=config_data["remote_host"],
+                    remote_port=config_data["remote_port"],
+                    username=config_data["username"],
+                    password=config_data["password"],
+                )
             else:
-                print_status.print_error("Connection failed")
+                client_config = ClientConfig(
+                    remote_host=parsed_args.remote_host,
+                    remote_port=parsed_args.remote_port,
+                    username=parsed_args.username,
+                    password=parsed_args.password,
+                )
+
+            try:
+                client_session = ClientSession(client_config=client_config)
+                await client_session.login()
+            except FailedToLoginError as exc:
+                print_error(f"Failed to login: {exc}")
+                return ContinueReturnStatus()
+
+            client_sessions_service.add_client_session(client_session)
+            print_success(
+                f"Successfully logged in to server: {client_config.remote_host}:{client_config.remote_port}",
+            )
         except SystemExit:
             pass
+
+        return ContinueReturnStatus()

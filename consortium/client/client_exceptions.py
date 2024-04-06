@@ -29,7 +29,7 @@ class InvalidCommandError(Exception):
     pass
 
 
-class InvalidCommandReturnStatusError(Exception):
+class InvalidReturnStatus(Exception):
     pass
 
 

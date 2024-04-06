@@ -2,12 +2,9 @@ import argparse
 import asyncio
 import os
 import platform
-import signal
 import subprocess
-import sys
-from typing import Type
 
-import aioconsole
+import prompt_toolkit
 
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.base_command import BaseCommand
@@ -20,13 +17,12 @@ from consortium.client.utils.data_structure_utils import argparse_epilog_formatt
 from consortium.client.utils.filesystem_utils import (
     parse_system_environment_variables_in_filepaths,
 )
-from consortium.client.utils.standard_io_utils import (  # print_indented,
+from consortium.client.utils.standard_io_utils import (
     print_error,
+    print_indented,
     print_info,
     print_plain,
 )
-
-# import prompt_toolkit
 
 
 class LocalCommand(BaseCommand):
@@ -127,312 +123,64 @@ class LocalCommand(BaseCommand):
 
     async def _run_interactive_local_shell(
         self,
-        interpreter: BaseInterpreter,
+        blocking: bool,
+        parse_system_environment_variables: bool,
+        timeout: int | None,
     ) -> None:
-        if platform.system() == "Windows":
-            cmd = "cmd.exe"
-        else:
-            cmd = "bash"
-
-        process = await asyncio.create_subprocess_shell(
-            cmd=cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
-            stdin=asyncio.subprocess.PIPE,
+        print_info('Type "exit" to exit out of interactive shell.')
+        print_indented(
+            f"Executing while blocking: {blocking}",
+            print_func=print_info,
         )
-        process.stdin.write(b"\n")
-        await process.stdin.drain()
+        print_indented(
+            f"Executing with system environment variable filepath parsing: {parse_system_environment_variables}",
+            print_func=print_info,
+        )
+        if timeout is None:
+            print_indented(
+                f"Executing with subprocess timeout: {timeout} (Do not launch blocking processes with no timeout or the shell will block indefinitely)",
+                print_func=print_info,
+            )
+        else:
+            print_indented(
+                f"Executing with subprocess timeout: {timeout}",
+                print_func=print_info,
+            )
 
-        async def read_stdout() -> None:
-            while True:
-                line = await process.stdout.readline()
-                if not line:
-                    break
-                print(line.decode().rstrip())
-
-        read_stdout_task = asyncio.create_task(read_stdout())
-
+        shell_session = prompt_toolkit.PromptSession()
         while True:
             try:
-                stdin = await aioconsole.ainput("") + "\n"
-                process.stdin.write(stdin.encode())
-                await process.stdin.drain()
-            except EOFError:
-                process.stdin.write_eof()
-                await process.stdin.drain()
-                break
-            except KeyboardInterrupt:
-                break
-            except asyncio.CancelledError:
-                break
-            finally:
-                read_stdout_task.cancel()
-                process.terminate()
+                current_dir = os.getcwd()
+                # Emulating the native shell's prompt.
+                if platform.system() == "Windows":
+                    command = await shell_session.prompt_async(f"{current_dir}> ")
+                else:
+                    command = await shell_session.prompt_async(f"{current_dir}$ ")
 
-        # process.stdin.write(b"\n")
-        # await process.stdin.drain()
-        #
-        # async def print_stdout_and_stderr(process: asyncio.subprocess.Process):
-        #     while True:
-        #         try:
-        #             stdout_and_stderr = await process.stdout.readline()
-        #             print(stdout_and_stderr.decode(), end="")
-        #         except asyncio.CancelledError:
-        #             break
-        #
-        # # # Stderr is redirected to stdout so that both can be read concurrently.
-        # print_stdout_and_stderr_task = asyncio.create_task(print_stdout_and_stderr(process))
-        #
-        # async def kill_process(process: asyncio.subprocess.Process):
-        #     await process.wait()
-        #     process.terminate()
-        #     print_stdout_and_stderr_task.cancel()
-        #
-        # _kill_process_task = asyncio.create_task(kill_process(process))
-        #
-        # while True:
-        #     stdin = await aioconsole.ainput("")
-        #     process.stdin.write((stdin + "\n").encode())
-        #     await process.stdin.drain()
-        #
-        #     if stdin.strip() == "exit":
-        #         break
-        #
-        # print(1)
-
-        # while True:
-        #     try:
-        #         stdin = await aioconsole.ainput("")
-        #         process.stdin.write((stdin + "\n").encode())
-        #         await process.stdin.drain()
-        #     except KeyboardInterrupt:
-        #         break
-        #     except asyncio.CancelledError:
-        #         break
-        #     finally:
-        #         print_stdout_and_stderr_task.cancel()
-        #         process.terminate()
-
-        # print_stdout_and_stderr_task = asyncio.create_task(print_stdout_and_stderr(process))
-
-        # while True:
-        #     try:
-        #         stdout_or_stderr_line = await process.stdout.readline()
-        #
-        #         stdin = "whoami"
-        #
-        #         # Read input from the user
-        #         # stdin = await interpreter.read_input("> ")
-        #         # Send the input to the subprocess
-        #         process.stdin.write((stdin + "\n").encode())
-        #         await process.stdin.drain()
-        #     except KeyboardInterrupt:
-        #         process.terminate()
-        #         break
-        #     except asyncio.CancelledError:
-        #         process.terminate()
-        #         break
-        #     finally:
-        #         print_stdout_and_stderr_task.cancel()
-
-        # if platform.system() == "Windows":
-        #     cmd = "cmd.exe"
-        # # platform.system returns "Darwin" for macOS and "Linux" for nix systems.
-        # else:
-        #     cmd = "bash"
-        #
-        # process = await asyncio.create_subprocess_shell(
-        #     cmd=cmd,
-        #     stdout=asyncio.subprocess.PIPE,
-        #     stderr=asyncio.subprocess.STDOUT,
-        #     stdin=asyncio.subprocess.PIPE,
-        # )
-        #
-        # # process.stdin.write(b"")
-        # # await process.stdin.drain()
-        #
-        # # async def _consume_stdout(process: asyncio.subprocess.Process):
-        # #     while True:
-        # #         try:
-        # #             stdout = await process.stdout.readline()
-        # #             if stdout:
-        # #                 print(stdout.decode(), end="")
-        # #             else:
-        # #                 break
-        # #         except asyncio.CancelledError:
-        # #             break
-        #
-        # # _consume_stdout_task = asyncio.create_task(_consume_stdout(process))
-        #
-        # while True:
-        #     try:
-        #         stdin = await interpreter.read_input("> ")
-        #         process.stdin.write((stdin + "\n").encode())
-        #         await process.stdin.drain()
-        #     except KeyboardInterrupt:
-        #         process.terminate()
-        #         break
-        #     except asyncio.CancelledError:
-        #         process.terminate()
-        #         break
-
-        # await process.stdin.drain()
-
-        # while True:
-        #     try:
-        #         # command = await interpreter.read_input("")
-        #         process.stdin.write(command.encode())
-        #         await process.stdin.drain()
-        #     except KeyboardInterrupt:
-        #         process.terminate()
-        #         break
-        #     except asyncio.CancelledError:
-        #         process.terminate()
-        #         break
-
-        # _consume_stdout_task.cancel()
-
-        # print(stdout.decode(), stderr.decode())
-
-        # while True:
-        #     try:
-        #         # Read input from the user
-        #         stdin = await interpreter.read_input(stdout.decode() + stderr.decode())
-        #         # Send the input to the subprocess
-        #         process.stdin.write(stdin.encode())
-        #         await process.stdin.drain()
-        #         # Read the output of the subprocess
-        #         stdout, stderr = await process.communicate()
-        #         print(stdout.decode(), stderr.decode())
-        #     except KeyboardInterrupt:
-        #         process.terminate()
-        #         break
-        #     except subprocess.TimeoutExpired:
-        #         process.terminate()
-        #         break
-
-        # stdout, stderr = await process.communicate()
-        # print(stdout.decode(), stderr.decode())
-        # while True:
-        #     try:
-        #         stdin = await interpreter.read_input("")
-        #         stdout, stderr = await process.communicate(stdin.encode())
-        #         print(stdout, stderr)
-        #     except KeyboardInterrupt:
-        #         process.terminate()
-        #         break
-        #     except subprocess.TimeoutExpired:
-        #         process.terminate()
-        #         break
-
-        # def terminate_process(signal, frame):
-        #     process.terminate()
-        #     process.stdout.
-        #     process.stderr.close()
-        #
-        # signal.signal(signal.SIGINT, terminate_process)
-        #
-        # try:
-        #     await process.wait()
-        # except KeyboardInterrupt:
-        #     print("Caught KeyboardInterrupt, cleaning up...")
-        #     process.terminate()
-
-        # process = subprocess.Popen(shell, shell=True, process_group=0)
-        # try:
-        #     process.wait()
-        # except KeyboardInterrupt:
-        #     process.terminate()
-
-        # while True:
-        #     try:
-        #         process.wait(0)
-        #         break
-        #     except subprocess.TimeoutExpired:
-        #         await asyncio.sleep(0.5)
-        #     except KeyboardInterrupt:
-        #         process.send_signal(SIGINT)
-        #         break
-        #     except asyncio.CancelledError:
-        #         process.send_signal(SIGINT)
-        #         break
-
-        # process = await asyncio.create_subprocess_exec(shell, process_group=0)
-        #
-        # while True:
-        #     try:
-        #         await process.wait()
-        #     except KeyboardInterrupt:
-        #         # Catch keyboard interrupt when running the shell.
-        #         pass
-        #     except asyncio.CancelledError:
-        #         # Catch asyncio cancellation error when running the shell.
-        #         pass
-
-        # TODO: Figure out if this is require to play nice with asyncio.
-        # print_error(
-        #     'Caught KeyboardInterrupt (possibly from a running process). Use "exit" to exit out of the interactive shell.',
-        # )
-
-    # TODO: Figure out if this is require to play nice with asyncio.
-    # async def _run_interactive_local_shell(
-    #     self,
-    #     blocking: bool,
-    #     parse_system_environment_variables: bool,
-    #     timeout: int | None,
-    # ) -> None:
-    #     print_info('Type "exit" to exit out of interactive shell.')
-    #     print_indented(
-    #         f"Executing while blocking: {blocking}",
-    #         print_func=print_info,
-    #     )
-    #     print_indented(
-    #         f"Executing with system environment variable filepath parsing: {parse_system_environment_variables}",
-    #         print_func=print_info,
-    #     )
-    #     if timeout is None:
-    #         print_indented(
-    #             f"Executing with subprocess timeout: {timeout} (Do not launch blocking processes with no timeout or the shell will block indefinitely)",
-    #             print_func=print_info,
-    #         )
-    #     else:
-    #         print_indented(
-    #             f"Executing with subprocess timeout: {timeout}",
-    #             print_func=print_info,
-    #         )
-    #
-    #     shell_session = prompt_toolkit.PromptSession()
-    #     while True:
-    #         try:
-    #             current_dir = os.getcwd()
-    #             # Emulating the native shell's prompt.
-    #             if platform.system() == "Windows":
-    #                 command = await shell_session.prompt_async(f"{current_dir}> ")
-    #             else:
-    #                 command = await shell_session.prompt_async(f"{current_dir}$ ")
-    #
-    #             if command.lower() == "exit":
-    #                 break
-    #             else:
-    #                 self._execute_command_in_shell(
-    #                     command=command,
-    #                     timeout=timeout,
-    #                     parse_system_environment_variables=parse_system_environment_variables,
-    #                     blocking=blocking,
-    #                 )
-    #         except (KeyboardInterrupt, asyncio.CancelledError):
-    #             print_error(
-    #                 'Caught KeyboardInterrupt (possibly from a running process). Use "exit" to exit out of the interactive shell.',
-    #             )
-    #         except subprocess.TimeoutExpired:
-    #             print_error("Command timed out.")
-    #     print_info("Exiting out of shell...")
+                if command.lower() == "exit":
+                    break
+                elif not command:
+                    pass
+                else:
+                    self._execute_command_in_shell(
+                        command=command,
+                        timeout=timeout,
+                        parse_system_environment_variables=parse_system_environment_variables,
+                        blocking=blocking,
+                    )
+            except (KeyboardInterrupt, asyncio.CancelledError):
+                print_error(
+                    'Caught KeyboardInterrupt (possibly from a running process). Use "exit" to exit out of the interactive shell.',
+                )
+            except subprocess.TimeoutExpired:
+                print_error("Command timed out.")
+        print_info("Exiting out of shell...")
 
     async def run_command(
         self,
         interpreter_command: InterpreterCommand,
-        client_session: ClientSession,
-        interpreter: Type[BaseInterpreter],
+        client_session: ClientSession | None = None,
+        interpreter: BaseInterpreter | None = None,
     ) -> ContinueReturnStatus:
         try:
             # The string can be tokenized without raising an exception because the
@@ -482,14 +230,11 @@ class LocalCommand(BaseCommand):
             parsed_args = self._parser.parse_args(interpreter_command.arguments)
 
             if parsed_args.interactive:
-                await self._run_interactive_local_shell(interpreter=interpreter)
-
-                # TODO: Figure out if this is require to play nice with asyncio.
-                # await self._run_interactive_local_shell(
-                #     blocking=not parsed_args.non_blocking,
-                #     parse_system_environment_variables=parsed_args.envparse,
-                #     timeout=parsed_args.timeout,
-                # )
+                await self._run_interactive_local_shell(
+                    blocking=not parsed_args.non_blocking,
+                    parse_system_environment_variables=parsed_args.envparse,
+                    timeout=parsed_args.timeout,
+                )
             else:
                 self._execute_command_in_shell(
                     command=parsed_args.command[0],

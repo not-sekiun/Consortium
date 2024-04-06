@@ -50,7 +50,7 @@ def create_agent_generator_through_agent_generator_template_by_agent_generator_t
     ],
 ) -> AgentGeneratorModel:
     try:
-        agent_generator_template = agent_generator_templates_service.create_agent_generator_through_agent_generator_template_by_agent_generator_template_id(
+        agent_generator_template = agent_generator_templates_service.get_agent_generator_template_by_agent_generator_template_id(
             agent_generator_template_id,
         )
     except ValueError:

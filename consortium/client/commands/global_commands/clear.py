@@ -32,8 +32,8 @@ class ClearCommand(BaseCommand):
     async def run_command(
         self,
         interpreter_command: InterpreterCommand,
-        client_session: ClientSession | None,
-        interpreter: Type[BaseInterpreter],
+        client_session: ClientSession | None = None,
+        interpreter: BaseInterpreter | None = None,
     ) -> ContinueReturnStatus:
         try:
             _ = self._parser.parse_args(interpreter_command.arguments)

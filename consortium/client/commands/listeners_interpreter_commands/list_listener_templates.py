@@ -1,45 +1,50 @@
 import argparse
 
-import consortium_old.utils.standard_io.print_status as print_status
-import consortium_old.utils.standard_io.return_table as return_table
-from consortium_old.core.client.client_database import ClientDatabase
-from consortium_old.core.client.client_rest import ClientREST
-from consortium_old.core.client.objects.parsed_consortium_command import (
-    ParsedConsortiumCommand,
+from rich.console import Console
+from rich.table import Table
+
+import consortium.client.client_singletons as client_singletons
+from consortium.client.client_session import ClientSession
+from consortium.client.commands.base_command import BaseCommand
+from consortium.client.interpreters.base_interpreter import BaseInterpreter
+from consortium.client.objects.command_objects import (
+    ContinueReturnStatus,
+    InterpreterCommand,
 )
 
-from consortium.client.commands.base_command import BaseCommand
+client_sessions_service = client_singletons.client_sessions_service
 
 
-class ListenerCommand(BaseCommand):
+class ListListenerTemplatesCommand(BaseCommand):
     def __init__(self):
         parser = argparse.ArgumentParser(
-            description="list all listener templates on the server",
+            description="List all listener templates.",
             prog="list_listener_templates",
         )
         super().__init__(parser)
 
     async def run_command(
         self,
-        remote_server: ClientREST,
-        _client: "Client",
-        _client_database: ClientDatabase,
-        parsed_consortium_command: ParsedConsortiumCommand,
-        _interpreter: "ListenersInterpreter",
-    ) -> None:
+        interpreter_command: InterpreterCommand,
+        client_session: ClientSession | None = None,
+        interpreter: BaseInterpreter | None = None,
+    ) -> ContinueReturnStatus:
         try:
-            _ = self._parser.parse_args(parsed_consortium_command.command_args)
-            listener_template_entries = []
-            response = await remote_server.get_listener_templates()
-            for listener_template_entry in response["listener_templates"]:
-                listener_template_entries.append(
-                    [
-                        str(listener_template_entry["listener_template_id"]),
-                        listener_template_entry["name"],
-                    ],
+            _ = self._parser.parse_args(interpreter_command.arguments)
+            all_listener_templates = await client_session.get_all_listener_templates()
+
+            table = Table(title="Listener Templates")
+            table.add_column("Listener Template ID")
+            table.add_column("Name")
+
+            for listener_template in all_listener_templates:
+                table.add_row(
+                    listener_template["listener_template_id"],
+                    listener_template["name"],
                 )
-            print_status.print_plain(
-                f"\n{return_table.main([['Listener Template ID', 'Listener Template Name'], ['==================', '====================='], *listener_template_entries])}\n",
-            )
+
+            Console().print(table)
         except SystemExit:
             pass
+
+        return ContinueReturnStatus()

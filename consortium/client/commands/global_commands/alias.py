@@ -63,7 +63,7 @@ class AliasCommand(BaseCommand):
         super().__init__(parser)
 
     @staticmethod
-    def _print_alias_table(interpreter: Type[BaseInterpreter]) -> None:
+    def _print_alias_table(interpreter: BaseInterpreter) -> None:
         table = Table(title="Command Aliases")
         table.add_column("Alias")
         table.add_column("Command")
@@ -77,7 +77,7 @@ class AliasCommand(BaseCommand):
         Console().print(table)
 
     @staticmethod
-    def _remove_alias(interpreter: Type[BaseInterpreter], aliases: list[str]) -> None:
+    def _remove_alias(interpreter: BaseInterpreter, aliases: list[str]) -> None:
         for alias_to_remove in aliases:
             if alias_to_remove in interpreter.command_aliases:
                 print_success(
@@ -88,12 +88,12 @@ class AliasCommand(BaseCommand):
                 print_error(f'Alias "{alias_to_remove}" does not exist, cannot remove.')
 
     @staticmethod
-    def _reset_aliases(interpreter: Type[BaseInterpreter]) -> None:
+    def _reset_aliases(interpreter: BaseInterpreter) -> None:
         interpreter.command_aliases = {"!": "local -c", "?": "help"}
         print_success("Reset command aliases to the default settings.")
 
     @staticmethod
-    def _clear_aliases(interpreter: Type[BaseInterpreter]) -> None:
+    def _clear_aliases(interpreter: BaseInterpreter) -> None:
         interpreter.command_aliases = {}
         print_success("Cleared all command aliases.")
 
@@ -103,7 +103,7 @@ class AliasCommand(BaseCommand):
     # argument in the parsed_args object is  treated as an alias to command mapping
     @staticmethod
     def _add_alias(
-        interpreter: Type[BaseInterpreter],
+        interpreter: BaseInterpreter,
         alias_to_command_mappings: list[str],
     ) -> None:
         for alias_to_command_mapping in alias_to_command_mappings:
@@ -144,8 +144,8 @@ class AliasCommand(BaseCommand):
     async def run_command(
         self,
         interpreter_command: InterpreterCommand,
-        client_session: ClientSession | None,
-        interpreter: Type[BaseInterpreter],
+        client_session: ClientSession | None = None,
+        interpreter: BaseInterpreter | None = None,
     ) -> ContinueReturnStatus:
         try:
             parsed_args = self._parser.parse_args(

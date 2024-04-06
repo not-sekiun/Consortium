@@ -1,5 +1,4 @@
 import argparse
-from typing import Type
 
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.base_command import BaseCommand
@@ -33,8 +32,8 @@ class AgentsCommand(BaseCommand):
     async def run_command(
         self,
         interpreter_command: InterpreterCommand,
-        client_session: ClientSession | None,
-        interpreter: Type[BaseInterpreter],
+        client_session: ClientSession | None = None,
+        interpreter: BaseInterpreter | None = None,
     ) -> SwitchInterpreterReturnStatus | ContinueReturnStatus:
         try:
             _ = self._parser.parse_args(interpreter_command.arguments)

@@ -1,8 +1,5 @@
 import argparse
 
-from rich.console import Console
-from rich.table import Table
-
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.base_command import BaseCommand
@@ -10,28 +7,30 @@ from consortium.client.interpreters.base_interpreter import BaseInterpreter
 from consortium.client.objects.command_objects import (
     ContinueReturnStatus,
     InterpreterCommand,
+    SwitchClientSessionReturnStatus,
 )
 from consortium.client.utils.data_structure_utils import argparse_epilog_formatter
+from consortium.client.utils.standard_io_utils import print_error, print_success
 
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class InfoListenerCommand(BaseCommand):
+class InteractClientSessionCommand(BaseCommand):
     def __init__(self):
         parser = argparse.ArgumentParser(
-            description="List all info for a specific listener.",
-            prog="info_listener",
+            description="Interact with a specific client session.",
+            prog="interact_client_session",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=argparse_epilog_formatter(
                 """
                 Example:
-                    info_listener 123e4567-e89b-12d3-a456-42661417400  # Display info for the listener with listener ID 123e4567-e89b-12d3-a456-42661417400
+                    interact_client_session 123e4567-e89b-12d3-a456-42661417400  # Interact with client session with client session ID 123e4567-e89b-12d3-a456-42661417400
                 """,
             ),
         )
         parser.add_argument(
-            "listener_id",
-            help="Listener ID of the listener to display info for.",
+            "client_session_id",
+            help="Client session ID of the client session to interact with.",
             nargs=1,
         )
         super().__init__(parser)
@@ -41,22 +40,28 @@ class InfoListenerCommand(BaseCommand):
         interpreter_command: InterpreterCommand,
         client_session: ClientSession | None = None,
         interpreter: BaseInterpreter | None = None,
-    ) -> ContinueReturnStatus:
+    ) -> ContinueReturnStatus | SwitchClientSessionReturnStatus:
         try:
             parsed_args = self._parser.parse_args(
                 interpreter_command.arguments,
             )
 
-            listener = await client_session.get_listener_by_listener_id(
-                parsed_args.listener_template_id[0],
-            )
-            print(listener)
-
-            table = Table(title="Listener Info")
-            table.add_column("Information")
-            table.add_column("Data")
-
-            Console().print(table)
+            try:
+                target_client_session = (
+                    client_sessions_service.get_client_session_by_client_session_id(
+                        parsed_args.client_session_id[0],
+                    )
+                )
+                print_success(
+                    f"Interacting with client session: {target_client_session}",
+                )
+                return SwitchClientSessionReturnStatus(
+                    client_session_id=parsed_args.client_session_id[0],
+                )
+            except ValueError:
+                print_error(
+                    f"Invalid client session ID: {parsed_args.client_session_id[0]}",
+                )
         except SystemExit:
             pass
 

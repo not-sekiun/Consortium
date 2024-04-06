@@ -6,8 +6,8 @@ from consortium.client.commands.base_command import BaseCommand
 from consortium.client.interpreters.base_interpreter import BaseInterpreter
 from consortium.client.objects.command_objects import (
     ContinueReturnStatus,
-    ExitClientSessionReturnStatus,
     InterpreterCommand,
+    SwitchClientSessionReturnStatus,
 )
 from consortium.client.utils.data_structure_utils import argparse_epilog_formatter
 from consortium.client.utils.standard_io_utils import print_error, print_success
@@ -15,25 +15,23 @@ from consortium.client.utils.standard_io_utils import print_error, print_success
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class DisconnectCommand(BaseCommand):
+class InteractClientSessionCommand(BaseCommand):
     def __init__(self):
         parser = argparse.ArgumentParser(
-            description="Disconnect from the current client session or a specific client session.",
-            prog="disconnect",
+            description="Interact with a specific client session.",
+            prog="interact_client_session",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=argparse_epilog_formatter(
                 """
                 Example:
-                    disconnect  # Disconnect the current client session
-                    disconnect 123e4567-e89b-12d3-a456-42661417400  # Disconnect the client session with client session ID 123e4567-e89b-12d3-a456-42661417400
+                    interact_client_session 123e4567-e89b-12d3-a456-42661417400  # Interact with client session with client session ID 123e4567-e89b-12d3-a456-42661417400
                 """,
             ),
         )
         parser.add_argument(
             "client_session_id",
-            help="Client session ID of the client session to disconnect. If no client session ID is provided, the current client session is disconnected.",
-            nargs="?",
-            default=None,
+            help="Client session ID of the client session to interact with.",
+            nargs=1,
         )
         super().__init__(parser)
 
@@ -42,36 +40,35 @@ class DisconnectCommand(BaseCommand):
         interpreter_command: InterpreterCommand,
         client_session: ClientSession | None = None,
         interpreter: BaseInterpreter | None = None,
-    ) -> ContinueReturnStatus | ExitClientSessionReturnStatus:
+    ) -> ContinueReturnStatus | SwitchClientSessionReturnStatus:
         try:
             parsed_args = self._parser.parse_args(
                 interpreter_command.arguments,
             )
 
-            if parsed_args.client_session_id:
+            if parsed_args.client_session_id[0] == str(
+                client_session.client_session_id,
+            ):
+                print_error(
+                    "Already interacting with that client session",
+                )
+            else:
                 try:
                     target_client_session = (
                         client_sessions_service.get_client_session_by_client_session_id(
-                            parsed_args.client_session_id,
+                            parsed_args.client_session_id[0],
                         )
                     )
-                except ValueError as exc:
-                    print_error(str(exc))
-                    return ContinueReturnStatus()
-            else:
-                target_client_session = client_session
-
-            try:
-                await target_client_session.logout()
-                client_sessions_service.remove_client_session(target_client_session)
-                print_success(
-                    f"Disconnected client session: {target_client_session}",
-                )
-                if target_client_session == client_session:
-                    return ExitClientSessionReturnStatus()
-            except ValueError as exc:
-                print_error(str(exc))
-                return ContinueReturnStatus()
+                    print_success(
+                        f"Interacting with client session: {target_client_session}",
+                    )
+                    return SwitchClientSessionReturnStatus(
+                        client_session_id=parsed_args.client_session_id[0],
+                    )
+                except ValueError:
+                    print_error(
+                        f"Invalid client session ID: {parsed_args.client_session_id[0]}",
+                    )
         except SystemExit:
             pass
 

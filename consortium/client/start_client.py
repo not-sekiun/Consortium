@@ -5,6 +5,7 @@ from datetime import datetime
 
 from loguru import logger
 
+from consortium.client.client import Client
 from consortium.client.client_config import (
     CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH,
     CONSORTIUM_CLIENT_LOGS_DIRECTORY_PATH,
@@ -43,50 +44,4 @@ async def main(args: argparse.Namespace) -> None:
         level="DEBUG" if args.debug else "INFO",
     )
 
-    from consortium.client.client_session import ClientSession
-    from consortium.client.commands.global_commands.agents import AgentsCommand
-    from consortium.client.commands.global_commands.alias import AliasCommand
-    from consortium.client.commands.global_commands.banner import BannerCommand
-    from consortium.client.commands.global_commands.clear import ClearCommand
-    from consortium.client.commands.global_commands.exit import ExitCommand
-    from consortium.client.commands.global_commands.generator import GeneratorCommand
-    from consortium.client.commands.global_commands.help import HelpCommand
-    from consortium.client.commands.global_commands.home import HomeCommand
-    from consortium.client.commands.global_commands.listeners import ListenersCommand
-    from consortium.client.commands.global_commands.local import LocalCommand
-    from consortium.client.commands.global_commands.resource import ResourceCommand
-    from consortium.client.interpreters.base_interpreter import BaseInterpreter
-    from consortium.client.utils.standard_io_utils import color_red, color_white
-
-    # Attempt to log in to server.
-    try:
-        client_session = ClientSession(
-            client_config=client_config,
-        )
-        await client_session.login_session()
-    except Exception as exc:
-        print(f"Failed to login to server: {str(exc)}")
-        return
-
-    # Create and run the interpreter.
-    test_interpreter = BaseInterpreter(
-        prompt=color_white("Consortium (", bold=True)
-        + color_red("Test", bold=True)
-        + color_white(") > ", bold=True),
-        commands=[
-            BannerCommand(),
-            ExitCommand(),
-            LocalCommand(),
-            HelpCommand(),
-            HomeCommand(),
-            ListenersCommand(),
-            AgentsCommand(),
-            GeneratorCommand(),
-            ClearCommand(),
-            AliasCommand(),
-            ResourceCommand(),
-        ],
-        client_session=client_session,
-    )
-
-    await test_interpreter.run_interpreter()
+    await Client(client_config=client_config).run_client()

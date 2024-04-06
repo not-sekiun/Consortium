@@ -35,7 +35,7 @@ class HelpCommand(BaseCommand):
 
     @staticmethod
     def _print_summarized_help_menu(
-        interpreter: Type[BaseInterpreter],
+        interpreter: BaseInterpreter,
     ) -> None:
         table = Table(title="Commands")
         table.add_column("Command")
@@ -53,8 +53,8 @@ class HelpCommand(BaseCommand):
     async def run_command(
         self,
         interpreter_command: InterpreterCommand,
-        client_session: ClientSession | None,
-        interpreter: Type[BaseInterpreter],
+        client_session: ClientSession | None = None,
+        interpreter: BaseInterpreter | None = None,
     ) -> ContinueReturnStatus:
         try:
             parsed_args = self._parser.parse_args(
