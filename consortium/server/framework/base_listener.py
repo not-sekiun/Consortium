@@ -185,3 +185,9 @@ class BaseListener(ABC):
             "status": self.status.to_json(),
             "agent_ids": [str(agent.agent_id) for agent in self.agents.values()],
         }
+
+    def __str__(self) -> str:
+        return f'"{self.name}" ({str(self.listener_id)})'
+
+    def __repr__(self) -> str:
+        return f"Listener(listener_type={self.listener_type!r}, name={self.name!r}, endpoint={self.endpoint!r}, options={self.options!r})"

@@ -1,4 +1,13 @@
 import textwrap
+from typing import Any, Dict
+
+
+def get_dictionary_keys_from_value(dictionary: Dict, target: Any) -> list:
+    keys = []
+    for key, val in dictionary.items():
+        if val == target:
+            keys.append(key)
+    return keys
 
 
 # Provides a wrapper around textwrap.dedent to allow for formatting of argparse epilog

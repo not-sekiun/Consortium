@@ -1,7 +1,9 @@
 import importlib
-import pathlib
+import json
+from pathlib import Path
 from typing import Type
 
+import jsonschema
 from loguru import logger
 
 from consortium.server.framework.base_listener import BaseListener
@@ -34,9 +36,11 @@ class ListenerTemplatesService:
             except ValueError:
                 pass
 
+    # TODO: Write better error messages for the ValueError exceptions + figure out when
+    #  to log vs raise exceptions
     def _load_listener_project_folder(
         self,
-        listener_project_folder_path: pathlib.Path,
+        listener_project_folder_path: Path,
     ) -> None:
         # A listener project folder is a folder that represents a valid listener that
         # can be loaded into the server. It is defined as a folder that contains a
@@ -64,7 +68,7 @@ class ListenerTemplatesService:
             or "__init__.py" not in files_in_directory
         ):
             raise ValueError(
-                f"The folder {listener_project_folder_path} is not a valid listener project folder. It must contain the following files: listener.py, listener_template.py, listener_type.py, __init__.py",
+                f"The directory at {listener_project_folder_path} does not meet the requirements of a valid listener project folder. It must contain the following files: listener.py, listener_template.py, listener_type.py, and __init__.py",
             )
 
         relative_path = listener_project_folder_path.relative_to(
@@ -96,22 +100,22 @@ class ListenerTemplatesService:
             listener_type = listener_type_module.LISTENER_TYPE
         except AttributeError:
             self._listener_templates_service_logger.error(
-                f"Failed to load listener from {listener_project_folder_path} due to missing classes",
+                f"Failed to load listener from {listener_project_folder_path} due to missing required classes or constants. Ensure that the files listener.py, listener_template.py, and listener_type.py contain the classes Listener, ListenerTemplate, and the constant LISTENER_TYPE respectively.",
             )
             return
 
         # check that classes inherit from the correct base classes
         if not issubclass(listener_template, BaseListenerTemplate):
             raise ValueError(
-                f"Invalid listener project folder: {listener_project_folder_path}. The ListenerTemplate class does not inherit from BaseListenerTemplate",
+                f"The directory at {listener_project_folder_path} is not a valid listener project folder. The ListenerTemplate class in listener_template.py must inherit from BaseListenerTemplate.",
             )
         if not issubclass(listener, BaseListener):
             raise ValueError(
-                f"Invalid listener project folder: {listener_project_folder_path}. The Listener class does not inherit from BaseListener",
+                f"The directory at {listener_project_folder_path} is not a valid listener project folder. The Listener class in listener.py must inherit from BaseListener.",
             )
         if not isinstance(listener_type, ListenerType):
             raise ValueError(
-                f"Invalid listener project folder: {listener_project_folder_path}. The LISTENER_TYPE object is not of the ListenerType class",
+                f"The directory at {listener_project_folder_path} is not a valid listener project folder. The LISTENER_TYPE constant in listener_type.py must be an instance of the ListenerType class.",
             )
 
         instantiated_listener_template = listener_template()
@@ -122,7 +126,7 @@ class ListenerTemplatesService:
         # Although we are explicitly loading the listener template here, the loading of
         # a listener template represents the framework loading an entire listener.
         self._listener_templates_service_logger.debug(
-            f'Loaded listener: "{instantiated_listener_template.name}" ({instantiated_listener_template.listener_template_id})',
+            f"Loaded listener: {instantiated_listener_template!r}",
         )
 
     def get_listener_template_by_listener_template_id(
@@ -133,17 +137,17 @@ class ListenerTemplatesService:
             listener_template = self._listener_templates[listener_template_id]
         except KeyError:
             raise ValueError(
-                f'Listener template with the listener template ID "{listener_template_id}" does not exist',
+                f"No listener template exists with the listener template ID: {listener_template_id}",
             )
 
         self._listener_templates_service_logger.debug(
-            f'Retrieved listener template "{listener_template.name}" ({listener_template_id})',
+            f"Retrieved listener template: {listener_template!r}",
         )
         return listener_template
 
     def get_all_listener_templates(self) -> list[Type[BaseListenerTemplate]]:
         all_listener_templates = list(self._listener_templates.values())
         self._listener_templates_service_logger.debug(
-            f"Retrieved all listener templates ({len(all_listener_templates)} retrieved)",
+            f"Retrieved all listener templates ({len(all_listener_templates)} retrieved).",
         )
         return all_listener_templates

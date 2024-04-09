@@ -31,7 +31,6 @@ class Listener(BaseListener):
         ].get_option_value()
 
         app = web.Application()
-        self.state.shutdown_signal = asyncio.Event()
 
         async def handle_registration(_):
             agent = self.create_agent()
@@ -54,21 +53,17 @@ class Listener(BaseListener):
         await self.state.runner.setup()
         site = web.TCPSite(self.state.runner, local_host, local_port)
         await site.start()
-        await self.state.shutdown_signal.wait()
+        await self.stop_listener_event.wait()
         await self.state.runner.cleanup()
 
     async def on_listener_stopped(self) -> None:
-        self.state.shutdown_signal.set()
+        pass
 
     async def on_listener_cancelled(self) -> None:
         # On cancellation, we need to stop the web server, but we may cancel the
         # listener task before the web server is fully set up.
         try:
-            self.state.shutdown_signal.set()
-            try:
-                await self.state.runner.cleanup()
-            except AttributeError:
-                pass
+            await self.state.runner.cleanup()
         except AttributeError:
             pass
 

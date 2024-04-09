@@ -1,5 +1,4 @@
 import argparse
-import asyncio
 import json
 import sys
 from datetime import datetime
@@ -14,7 +13,7 @@ from consortium.client.client_config import (
 from consortium.client.objects.client_objects import ClientConfig
 
 
-async def _start_client(arguments: argparse.Namespace) -> None:
+async def main(args: argparse.Namespace) -> None:
     # Load client configuration file
     with open(str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH), "r") as file:
         json_data = json.load(fp=file)
@@ -28,7 +27,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
         f"{CONSORTIUM_CLIENT_LOGS_DIRECTORY_PATH}/{datetime.now().isoformat().replace(":", "-")}.log",
         colorize=False,
         format="[{time:YYYY-MM-DDTHH:mm:ssZ}] {level:<8} {message}",
-        level="DEBUG" if arguments.debug else "INFO",
+        level="DEBUG" if args.debug else "INFO",
     )
     logger.level("DEBUG", color="<bold><green>")
     logger.level("INFO", color="<bold><blue>")
@@ -42,11 +41,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
             "<dim><white>[{time:YYYY-MM-DDTHH:mm:ssZ}]</></> <level>{level:<8}</> "
             "<dim><white>{extra[logger_name]}</></>: {message}"
         ),
-        level="DEBUG" if arguments.debug else "INFO",
+        level="DEBUG" if args.debug else "INFO",
     )
 
-    await Client(client_config=client_config).start_client()
-
-
-def main(arguments: argparse.Namespace) -> None:
-    asyncio.run(_start_client(arguments))
+    await Client(client_config=client_config).run_client()

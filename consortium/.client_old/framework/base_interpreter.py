@@ -44,14 +44,12 @@ class BaseInterpreter:
         self,
         prompt: str = "",
         commands: list[BaseCommand] = None,
-        client_session: ClientSession | None = None,
     ) -> None:
         if commands is None:
             commands = []
 
         self.prompt = prompt
         self.commands = {command.name: command for command in commands}
-        self.client_session = client_session
 
         with open(CONSORTIUM_COMMAND_ALIASES_JSON_FILE_PATH, "r") as file:
             self.command_aliases = json.load(fp=file)
@@ -230,6 +228,7 @@ class BaseInterpreter:
     async def execute_command(
         self,
         interpreter_command: InterpreterCommand,
+        client_session: ClientSession | None = None,
     ) -> ReturnStatus:
         if not interpreter_command.command:
             return ContinueReturnStatus()
@@ -238,7 +237,7 @@ class BaseInterpreter:
                 interpreter_command.command
             ].run_command(
                 interpreter_command=interpreter_command,
-                client_session=self.client_session,
+                client_session=client_session,
                 interpreter=self,
             )
 
@@ -250,6 +249,7 @@ class BaseInterpreter:
 
     async def run_interpreter(
         self,
+        client_session: ClientSession | None = None,
     ) -> (
         ExitProgramReturnStatus
         | SwitchInterpreterReturnStatus
@@ -305,6 +305,7 @@ class BaseInterpreter:
                 try:
                     command_return_status = await self.execute_command(
                         interpreter_command=interpreter_command,
+                        client_session=client_session,
                     )
                     if (
                         isinstance(

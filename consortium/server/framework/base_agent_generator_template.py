@@ -94,3 +94,9 @@ class BaseAgentGeneratorTemplate(ABC):
             if self.validating_function
             else None,
         }
+
+    def __str__(self) -> str:
+        return f'"{self.name}" ({str(self.agent_generator_template_id)})'
+
+    def __repr__(self) -> str:
+        return f"AgentGeneratorTemplate(agent_generator={self.agent_generator!r}, agent_type={self.agent_type!r}, name={self.name!r}, description={self.description!r}, authors={self.authors!r}, options={self.options!r}, validating_function={self.validating_function!r})"

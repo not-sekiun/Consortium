@@ -25,12 +25,13 @@ from consortium.client.interpreters.base_interpreter import BaseInterpreter
 from consortium.client.utils.standard_io_utils import color_blue, color_white
 
 
-class ListenersInterpreter(BaseInterpreter):
-    def __init__(self, client_session: ClientSession | None = None):
+class CreateListenerInterpreter(BaseInterpreter):
+    def __init__(self, listener_template_id: str):
+        self.listener_template_id = listener_template_id
         super().__init__(
             prompt=(
                 color_white("Consortium (", bold=True)
-                + color_blue("Listeners", bold=True)
+                + color_blue("Listeners: ", bold=True)
                 + color_white(") > ", bold=True)
             ),
             commands=[
@@ -49,5 +50,4 @@ class ListenersInterpreter(BaseInterpreter):
                 ListListenersCommand(),
                 InfoListenerCommand(),
             ],
-            client_session=client_session,
         )

@@ -15,25 +15,22 @@ class ListenersService:
     def add_listener(self, listener: BaseListener) -> None:
         if str(listener.listener_id) in self._listeners:
             raise ValueError(
-                f'Listener "{listener.name}" ({listener.listener_id}) already exists',
+                f"Cannot add listener to service because a listener with the same listener ID already exists: {listener.listener_id}",
             )
 
         self._listeners[str(listener.listener_id)] = listener
-        self._listeners_service_logger.info(
-            f'Listener "{listener.name}" ({listener.listener_id}) was created',
-        )
+        self._listeners_service_logger.debug(f"Added listener: {listener!r}")
+        self._listeners_service_logger.info(f"Added listener: {listener}")
 
     def get_listener_by_listener_id(self, listener_id: str) -> BaseListener:
         try:
             listener = self._listeners[listener_id]
         except KeyError:
             raise ValueError(
-                f'Listener with the listener ID "{listener_id}" does not exist',
+                f"No listener exists with the provided listener ID: {listener_id}",
             )
 
-        self._listeners_service_logger.debug(
-            f'Retrieved listener "{listener.name}" ({listener_id})',
-        )
+        self._listeners_service_logger.debug(f"Retrieved listener: {listener!r}")
         return listener
 
     def get_all_listeners(self) -> list[BaseListener]:
@@ -47,10 +44,7 @@ class ListenersService:
         try:
             del self._listeners[str(listener.listener_id)]
         except KeyError:
-            raise ValueError(
-                f'Listener "{listener.name}" ({listener.listener_id}) does not exist',
-            )
+            raise ValueError(f"Listener does not exist: {listener}")
 
-        self._listeners_service_logger.info(
-            f'Listener "{listener.name}" ({listener.listener_id}) was removed',
-        )
+        self._listeners_service_logger.debug(f"Removed listener: {listener!r}")
+        self._listeners_service_logger.info(f"Removed listener: {listener}")

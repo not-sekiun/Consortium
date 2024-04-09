@@ -13,19 +13,43 @@ class AgentsService:
     def create_agent(self) -> Agent:
         agent = Agent()
         self._agents[str(agent.agent_id)] = agent
+        self._agents_service_logger.debug(
+            f"Created agent: {agent!r}",
+        )
         self._agents_service_logger.info(
-            f'Agent "{agent.agent_id}" was created',
+            f"Created agent: {agent}",
         )
         return agent
 
     def remove_agent_by_agent_id(self, agent_id: str) -> None:
         try:
-            del self._agents[agent_id]
+            agent = self._agents[agent_id]
         except KeyError:
-            raise ValueError(f'Agent "{agent_id}" does not exist')
+            raise ValueError(f"No agent exists with the provided agent ID: {agent_id}")
+
+        del self._agents[agent_id]
+        self._agents_service_logger.debug(
+            f"Removed agent: {agent!r}",
+        )
+        self._agents_service_logger.info(
+            f"Removed agent: {agent}",
+        )
 
     def get_agent_by_agent_id(self, agent_id: str) -> Agent:
-        return self._agents[agent_id]
+        try:
+            agent = self._agents[agent_id]
+        except KeyError:
+            raise ValueError(
+                f"No agent exists with the provided agent ID: {agent_id}",
+            )
+
+        self._agents_service_logger.debug(
+            f"Retrieved agent: {agent!r}",
+        )
+        self._agents_service_logger.info(
+            f"Retrieved agent: {agent}",
+        )
+        return agent
 
     def get_all_agents(self) -> list[Agent]:
         all_agents = list(self._agents.values())

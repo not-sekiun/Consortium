@@ -12,7 +12,7 @@ from consortium.server.server_config import (
 )
 
 
-def main(args: argparse.Namespace) -> None:
+def main(arguments: argparse.Namespace) -> None:
     # Load server configuration file
     with open(str(CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH), "r") as file:
         json_data = json.load(fp=file)
@@ -26,7 +26,7 @@ def main(args: argparse.Namespace) -> None:
         f"{CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH}/{datetime.now().isoformat().replace(":", "-")}.log",
         colorize=False,
         format="[{time:YYYY-MM-DDTHH:mm:ssZ}] {level:<8} {message}",
-        level="DEBUG" if args.debug else "INFO",
+        level="DEBUG" if arguments.debug else "INFO",
     )
     logger.level("DEBUG", color="<bold><green>")
     logger.level("INFO", color="<bold><blue>")
@@ -40,7 +40,7 @@ def main(args: argparse.Namespace) -> None:
             "<dim><white>[{time:YYYY-MM-DDTHH:mm:ssZ}]</></> <level>{level:<8}</> "
             "<dim><white>{extra[logger_name]}</></>: {message}"
         ),
-        level="DEBUG" if args.debug else "INFO",
+        level="DEBUG" if arguments.debug else "INFO",
     )
 
     # We are importing both Server and server_singletons within the function here

@@ -1,5 +1,4 @@
 import argparse
-import asyncio
 
 import consortium.client.start_client as start_client
 import consortium.server.start_server as start_server
@@ -63,11 +62,11 @@ def main():
         action="store_true",
     )
 
-    args = parser.parse_args()
-    if args.command == "server":
-        start_server.main(args)
-    elif args.command == "client":
-        asyncio.run(start_client.main(args))
+    arguments = parser.parse_args()
+    if arguments.command == "server":
+        start_server.main(arguments)
+    elif arguments.command == "client":
+        start_client.main(arguments)
 
 
 if __name__ == "__main__":

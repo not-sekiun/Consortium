@@ -178,3 +178,9 @@ class BaseAgentGenerator(ABC):
                 for option_name, option in self.options.items()
             },
         }
+
+    def __str__(self) -> str:
+        return f'"{self.name}" ({str(self.agent_generator_id)})'
+
+    def __repr__(self) -> str:
+        return f"AgentGenerator(agent_type={self.agent_type!r}, name={self.name!r}, options={self.options!r})"

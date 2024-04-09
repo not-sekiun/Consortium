@@ -97,6 +97,14 @@ class SingleValueOption(_BaseOption):
             ),
         }
 
+    def __str__(self) -> str:
+        return (
+            f"SingleValueOption - Name: {self.name}, Value: {self.get_option_value()}"
+        )
+
+    def __repr__(self) -> str:
+        return f"SingleValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, value_type={self.value_type}, validating_regex={self.validating_regex}, validating_function={self.validating_function})"
+
 
 class ListValueOption(_BaseOption):
     def __init__(
@@ -165,6 +173,12 @@ class ListValueOption(_BaseOption):
             ),
         }
 
+    def __str__(self) -> str:
+        return f"ListValueOption - Name: {self.name}, Value: {self.get_option_value()}"
+
+    def __repr__(self) -> str:
+        return f"ListValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, value_type={self.value_type}, validating_regex={self.validating_regex}, validating_function={self.validating_function})"
+
 
 class ChoiceValueOption(_BaseOption):
     def __init__(
@@ -192,6 +206,14 @@ class ChoiceValueOption(_BaseOption):
             "default_value": self.default_value,
             "available_values": self.available_values,
         }
+
+    def __str__(self) -> str:
+        return (
+            f"ChoiceValueOption - Name: {self.name}, Value: {self.get_option_value()}"
+        )
+
+    def __repr__(self) -> str:
+        return f"ChoiceValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, available_values={self.available_values})"
 
 
 class DictionaryValueOption(_BaseOption):
@@ -279,3 +301,9 @@ class DictionaryValueOption(_BaseOption):
                 else None
             ),
         }
+
+    def __str__(self) -> str:
+        return f"DictionaryValueOption - Name: {self.name}, Value: {self.get_option_value()}"
+
+    def __repr__(self) -> str:
+        return f"DictionaryValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, key_type={self.key_type}, key_validating_regex={self.key_validating_regex}, key_validating_function={self.key_validating_function}, value_type={self.value_type}, value_validating_regex={self.value_validating_regex}, value_validating_function={self.value_validating_function})"

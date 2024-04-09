@@ -70,6 +70,12 @@ class AgentType:
             "agent_type_id": str(self.agent_type_id),
         }
 
+    def __str__(self) -> str:
+        return f'"{self.name}" ({str(self.agent_type_id)})'
+
+    def __repr__(self) -> str:
+        return f"AgentType(name={self.name!r}, description={self.description!r}, compatible_listener_types={self.compatible_listener_types!r})"
+
 
 class ListenerType:
     def __init__(
@@ -137,3 +143,9 @@ class ListenerType:
             ),
             "listener_type_id": str(self.listener_type_id),
         }
+
+    def __str__(self) -> str:
+        return f'"{self.name}" ({str(self.agent_type_id)})'
+
+    def __repr__(self) -> str:
+        return f"ListenerType(name={self.name!r}, description={self.description!r}, compatible_agent_types={self.compatible_agent_types!r})"

@@ -13,7 +13,7 @@ class ClientSessionsService:
     def add_client_session(self, client_session: ClientSession) -> None:
         self._client_sessions[str(client_session.client_session_id)] = client_session
         self._client_sessions_service_logger.debug(
-            f"Client session was added: {repr(client_session)}",
+            f"Added client session: {client_session!r}",
         )
 
     def get_all_client_sessions(self) -> list[ClientSession]:
@@ -31,7 +31,7 @@ class ClientSessionsService:
             client_session = self._client_sessions[client_session_id]
         except KeyError:
             raise ValueError(
-                f"Client session with requested ID does not exist: {client_session_id}",
+                f"No client session exists with the provided client session ID: {client_session_id}",
             )
 
         self._client_sessions_service_logger.debug(
@@ -44,9 +44,9 @@ class ClientSessionsService:
             del self._client_sessions[str(client_session.client_session_id)]
         except KeyError:
             raise ValueError(
-                f"Requested client session to remove does not exist: {repr(client_session)}",
+                f"Client session does not exist: {client_session}",
             )
 
         self._client_sessions_service_logger.debug(
-            f"Client session was removed: {repr(client_session)}",
+            f"Removed client session: {client_session!r}",
         )

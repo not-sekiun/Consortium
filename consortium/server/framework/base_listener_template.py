@@ -106,3 +106,9 @@ class BaseListenerTemplate(ABC):
                 self.validating_function.__doc__ if self.validating_function else None
             ),
         }
+
+    def __str__(self) -> str:
+        return f'"{self.name}" ({str(self.listener_template_id)})'
+
+    def __repr__(self) -> str:
+        return f"ListenerTemplate(listener={self.listener!r}, listener_type={self.listener_type!r}, name={self.name!r}, description={self.description!r}, authors={self.authors!r}, options={self.options!r}, validating_function={self.validating_function!r})"

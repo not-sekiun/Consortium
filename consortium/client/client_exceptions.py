@@ -1,4 +1,4 @@
-# Client session exceptions.
+# Exceptions for the client connection.
 class AlreadyLoggedInError(Exception):
     pass
 
@@ -11,32 +11,11 @@ class FailedToLoginError(Exception):
     pass
 
 
-# Interpreter lexer exceptions.
-class IncompleteSingleQuoteError(Exception):
+class InvalidServerLoginResponseError(Exception):
     pass
 
 
-class IncompleteDoubleQuoteError(Exception):
-    pass
-
-
-class IncompleteEscapeError(Exception):
-    pass
-
-
-# Interpreter command execution exceptions.
-class InvalidCommandError(Exception):
-    pass
-
-
-class InvalidReturnStatus(Exception):
-    pass
-
-
-# Resource command exceptions.
-class ResourceFileAccessError(Exception):
-    pass
-
-
-class ResourceFileParseError(Exception):
+# TODO: Add more granular exception handling in the future for each particular error
+#  response that may returned for each API endpoint.
+class APIError(Exception):
     pass

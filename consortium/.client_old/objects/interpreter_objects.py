@@ -13,6 +13,7 @@ class InterpreterType(StrEnum):
     LISTENERS = "LISTENERS"
     AGENTS = "AGENTS"
     GENERATORS = "GENERATORS"
+    CREATE_LISTENER = "CREATE_LISTENER"
 
 
 class LexerState(StrEnum):

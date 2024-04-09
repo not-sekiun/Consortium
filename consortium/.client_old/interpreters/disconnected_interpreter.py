@@ -27,7 +27,7 @@ from consortium.client.utils.standard_io_utils import color_white
 
 
 class DisconnectedInterpreter(BaseInterpreter):
-    def __init__(self, client_session: ClientSession | None = None):
+    def __init__(self):
         super().__init__(
             prompt=color_white("Consortium > ", bold=True),
             commands=[
@@ -45,5 +45,4 @@ class DisconnectedInterpreter(BaseInterpreter):
                 InfoClientSessionCommand(),
                 RenameClientSessionCommand(),
             ],
-            client_session=client_session,
         )

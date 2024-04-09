@@ -25,10 +25,12 @@ class UserAccountsService:
                 if user_account.username in self._user_accounts:
                     # TODO: Figure out a cleaner way to deal with configuration
                     #  type errors at start up
-                    raise ValueError("User accounts must have unique usernames")
+                    raise ValueError(
+                        f"User accounts with duplicate username are not allowed: {user_account.username}",
+                    )
                 self._user_accounts[str(user_account.user_account_id)] = user_account
                 self._user_accounts_service_logger.debug(
-                    f'Loaded user account: "{user_account.username}" ({user_account.user_account_id})',
+                    f"Loaded user account: {user_account!r}",
                 )
 
     def _write_user_accounts_to_user_accounts_file(self):
@@ -45,7 +47,7 @@ class UserAccountsService:
             data = json.dumps(serializable_user_accounts, indent=4)
             file.write(data)
         self._user_accounts_service_logger.debug(
-            f"Wrote user accounts to user accounts file ({len(data)} bytes written)",
+            f"Wrote user accounts to user accounts file ({len(data)} bytes written).",
         )
 
     def create_user_account(
@@ -60,7 +62,7 @@ class UserAccountsService:
         for user_account in self._user_accounts.values():
             if user_account.username == username:
                 raise ValueError(
-                    f'User account with the username "{username}" already exists',
+                    f"User accounts with duplicate username are not allowed: {username}",
                 )
 
         user_account = UserAccountModel(
@@ -82,11 +84,11 @@ class UserAccountsService:
             user_account = self._user_accounts[user_account_id]
         except KeyError:
             raise ValueError(
-                f'User account with the user account ID "{user_account_id}" does not exist',
+                f"No user account has the provided user account ID: {user_account_id}",
             )
 
         self._user_accounts_service_logger.debug(
-            f'Retrieved user account "{user_account.username}" ({user_account_id})',
+            f"Retrieved user account: {user_account!r}",
         )
         return user_account
 
@@ -94,15 +96,15 @@ class UserAccountsService:
         for user_account in self._user_accounts.values():
             if user_account.username == username:
                 self._user_accounts_service_logger.debug(
-                    f'Retrieved user account "{user_account.username}" ({user_account.user_account_id})',
+                    f"Retrieved user account: {user_account!r}",
                 )
                 return user_account
-        raise ValueError(f'User account with the username "{username}" does not exist')
+        raise ValueError(f"No user account has the provided username: {username}")
 
     def get_all_user_accounts(self) -> list[UserAccountModel]:
         all_user_accounts = list(self._user_accounts.values())
         self._user_accounts_service_logger.debug(
-            f"Retrieved all user accounts ({len(all_user_accounts)} retrieved)",
+            f"Retrieved all user accounts ({len(all_user_accounts)} retrieved).",
         )
         return all_user_accounts
 
@@ -113,18 +115,22 @@ class UserAccountsService:
     ) -> None:
         # We perform a LBYL over EAFP check here because accessing the dictionary is
         # not necessary since the user_account object is a reference to the object in
-        # the dictionary. Otherwise given that we will access the dictionary, we would
+        # the dictionary. Otherwise, given that we will access the dictionary, we would
         # use a try-except block to EAFP.
         if user_account not in self._user_accounts.values():
             raise ValueError(
-                f'User account "{user_account.username}" ({user_account.user_account_id}) does not exist',
+                f"User account does not exist: {user_account}",
             )
 
         # We don't need to explicitly update the self._user_accounts dictionary because
         # the user_account object is a reference to the object in the dictionary.
+        old_password = user_account.password
         user_account.password = password
+        self._user_accounts_service_logger.debug(
+            f"Updated password for {user_account!r}: {old_password} -> {password}",
+        )
         self._user_accounts_service_logger.info(
-            f'Updated user account "{user_account.username}"\'s ({user_account.user_account_id}) password',
+            f"Updated password for {user_account}: {old_password} -> {password}",
         )
         self._write_user_accounts_to_user_accounts_file()
 
@@ -135,12 +141,16 @@ class UserAccountsService:
     ) -> None:
         if user_account not in self._user_accounts.values():
             raise ValueError(
-                f'User account "{user_account.username}" ({user_account.user_account_id}) does not exist',
+                f"User account does not exist: {user_account}",
             )
 
+        old_role = user_account.role
         user_account.role = role
+        self._user_accounts_service_logger.debug(
+            f"Updated role for {user_account!r}: {old_role} -> {role}",
+        )
         self._user_accounts_service_logger.info(
-            f'Updated user account "{user_account.username}"\'s ({user_account.user_account_id}) role',
+            f"Updated role for {user_account}: {old_role} -> {role}",
         )
         self._write_user_accounts_to_user_accounts_file()
 
@@ -149,10 +159,13 @@ class UserAccountsService:
             del self._user_accounts[str(user_account.user_account_id)]
         except KeyError:
             raise ValueError(
-                f'User account "{user_account.username}" ({user_account.user_account_id}) does not exist',
+                f"User account does not exist: {user_account}",
             )
 
+        self._user_accounts_service_logger.debug(
+            f"Deleted user account: {user_account!r}",
+        )
         self._user_accounts_service_logger.info(
-            f'Deleted user account "{user_account.username}" ({user_account.user_account_id})',
+            f"Deleted user account: {user_account}",
         )
         self._write_user_accounts_to_user_accounts_file()

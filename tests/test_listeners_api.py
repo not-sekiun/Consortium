@@ -102,7 +102,7 @@ def test_start_listener_by_listener_id(
     if session != spectator_session:
         # Test for admin sessions and operator sessions.
         for listener_id in get_all_listener_ids(admin_session):
-            validate_response(
+            resp = validate_response(
                 test_response=session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/start",
                 ),
@@ -111,7 +111,7 @@ def test_start_listener_by_listener_id(
             )
             # Listeners cannot be deleted if they are running, so we stop them first to
             # allow the fixture to properly delete the listener after the test finishes.
-            validate_response(
+            resp = validate_response(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/stop",
                 ),

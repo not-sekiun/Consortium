@@ -16,14 +16,17 @@ class AgentGeneratorsService:
     def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
         if str(agent_generator.agent_generator_id) in self._agent_generators:
             raise ValueError(
-                f'Listener "{agent_generator.name}" ({agent_generator.agent_generator_id}) already exists',
+                f"Cannot add agent generator to service because an agent generator with the same agent generator ID already exists: {agent_generator.agent_generator_id}",
             )
 
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
+        self._agent_generators_service_logger.debug(
+            f"Added agent generator: {agent_generator!r}",
+        )
         self._agent_generators_service_logger.info(
-            f'Listener "{agent_generator.name}" ({agent_generator.agent_generator_id}) was created',
+            f"Added agent generator: {agent_generator}",
         )
 
     def get_agent_generator_by_agent_generator_id(
@@ -34,11 +37,14 @@ class AgentGeneratorsService:
             agent_generator = self._agent_generators[agent_generator_id]
         except KeyError:
             raise ValueError(
-                f'Listener with the agent_generator ID "{agent_generator_id}" does not exist',
+                f"No agent generator exists with the provided agent generator ID: {agent_generator_id}",
             )
 
         self._agent_generators_service_logger.debug(
-            f'Retrieved agent_generator "{agent_generator.name}" ({agent_generator_id})',
+            f"Retrieved agent generator: {agent_generator!r}",
+        )
+        self._agent_generators_service_logger.info(
+            f"Retrieved agent generator: {agent_generator}",
         )
         return agent_generator
 
@@ -54,9 +60,12 @@ class AgentGeneratorsService:
             del self._agent_generators[str(agent_generator.agent_generator_id)]
         except KeyError:
             raise ValueError(
-                f'Listener "{agent_generator.name}" ({agent_generator.agent_generator_id}) does not exist',
+                f"Agent generator does not exist: {agent_generator}",
             )
 
+        self._agent_generators_service_logger.debug(
+            f"Removed agent generator: {agent_generator!r}",
+        )
         self._agent_generators_service_logger.info(
-            f'Listener "{agent_generator.name}" ({agent_generator.agent_generator_id}) was removed',
+            f"Removed agent generator: {agent_generator}",
         )

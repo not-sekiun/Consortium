@@ -33,6 +33,12 @@ class SwitchInterpreterReturnStatus(ReturnStatus):
         self.interpreter_type = interpreter_type
 
 
+class SwitchToCreateListenerInterpreterReturnStatus(ReturnStatus):
+    def __init__(self, listener_template_id: str):
+        super().__init__(CommandReturnState.SWITCH_INTERPRETER)
+        self.listener_template_id = listener_template_id
+
+
 class ExitClientSessionReturnStatus(ReturnStatus):
     def __init__(self):
         super().__init__(CommandReturnState.EXIT_CLIENT_SESSION)

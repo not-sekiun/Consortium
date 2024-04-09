@@ -58,3 +58,9 @@ class User:
             "datetime_connected": self.datetime_connected,
             "user_id": str(self.user_id),
         }
+
+    def __str__(self) -> str:
+        return f'"{self.username}" ({self.user_id})'
+
+    def __repr__(self) -> str:
+        return f"User(username={self.username!r}, password={self.password!r}, role={self.role!r}, remote_host={self.remote_host!r}, datetime_connected={self.datetime_connected!r}, user_id={self.user_id!r})"
