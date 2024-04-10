@@ -1,7 +1,9 @@
 import importlib
-import pathlib
+import json
+from pathlib import Path
 from typing import Type
 
+import jsonschema
 from loguru import logger
 
 from consortium.server.framework.base_agent_generator import BaseAgentGenerator
@@ -13,6 +15,12 @@ from consortium.server.server_config import (
     CONSORTIUM_AGENTS_DIRECTORY_PATH,
     CONSORTIUM_HOME_DIRECTORY_PATH,
 )
+from consortium.server.server_exceptions import (
+    InternalAgentProjectError,
+    InvalidAgentProjectFolderStructureError,
+    InvalidAgentProjectImplementationError,
+    InvalidAgentProjectManifestFileError,
+)
 
 
 class AgentGeneratorTemplatesService:
@@ -22,108 +30,202 @@ class AgentGeneratorTemplatesService:
             logger_name="Consortium Agent Generator Templates Service",
         )
 
-        # Attempt to recursively load each folder as an agent generator project folder.
-        visited_dir_paths = []
-        for agent_project_folder_path in CONSORTIUM_AGENTS_DIRECTORY_PATH.rglob("*"):
-            if agent_project_folder_path.parent in visited_dir_paths:
-                continue
-            visited_dir_paths.append(agent_project_folder_path.parent)
-            try:
-                self._load_agent_project_folder(agent_project_folder_path.parent)
-            # triggers for invalid project folder structure
-            except ValueError:
-                pass
-
-    # TODO: Write better error messages for the ValueError exceptions + figure out when
-    #  to log vs raise exceptions
-    def _load_agent_project_folder(self, agent_project_folder_path: pathlib.Path):
-        # An agent project folder is a folder that represents a valid agent that can be
-        # loaded into the server. It is defined as a folder that contains an
-        # agent_generator.py file, an agent_generator_template.py file, and an
-        # agent_type.py file. The agent_generator.py file must contain a class called
-        # AgentGenerator that inherits from BaseAgentGenerator. The
-        # agent_generator_template.py file must contain a class called
-        # AgentGeneratorTemplate that inherits from BaseAgentGeneratorTemplate. The
-        # agent_type.py file must contain the constant AGENT_TYPE which is an instance
-        # of AgentType. The folder must be located at consortium/server/framework/agents
-        # with any arbitrary nested folder structure. On top of that, the folder must be
-        # a valid python package reachable from the root of the server. This means that
-        # the folder must contain __init__.py files in all parent directories.
-        files_in_directory = [
-            file.name for file in agent_project_folder_path.iterdir() if file.is_file()
-        ]
-
-        # check for valid project folder structure
-        if (
-            "agent_generator.py" not in files_in_directory
-            or "agent_generator_template.py" not in files_in_directory
-            or "agent_type.py" not in files_in_directory
-            or "__init__.py" not in files_in_directory
+        # Recursively search through the agents directory to load all agent
+        # projects.
+        for agent_project_folder_path in CONSORTIUM_AGENTS_DIRECTORY_PATH.rglob(
+            "*",
         ):
-            raise ValueError(
-                f"The directory at {agent_project_folder_path} does not meet the requirements of a valid agent project folder. It must contain the following files: agent_generator.py, agent_generator_template.py, agent_type.py, and __init__.py",
+            if agent_project_folder_path.name != "agent_project_manifest.json":
+                continue
+
+            try:
+                # Instantiate and load the agent generator template into the agent
+                # generator templates service. This represents the loading of an agent.
+                agent_generator_template = self._load_agent_from_agent_project_folder(
+                    agent_project_folder_path.parent,
+                )
+                self._agent_generator_templates[
+                    str(agent_generator_template.agent_generator_template_id)
+                ] = agent_generator_template
+
+                # Although we are explicitly loading the agent generator template here,
+                # the loading of an agent generator template represents the framework
+                # loading an entire agent.
+                self._agent_generator_templates_service_logger.debug(
+                    f"Loaded agent: {agent_generator_template!r}",
+                )
+                self._agent_generator_templates_service_logger.info(
+                    f"Loaded agent: {agent_generator_template}",
+                )
+            except (
+                InvalidAgentProjectFolderStructureError,
+                InvalidAgentProjectManifestFileError,
+                InvalidAgentProjectImplementationError,
+                InternalAgentProjectError,
+            ) as exc:
+                self._agent_generator_templates_service_logger.error(
+                    f"Failed to load agent. {exc}",
+                )
+
+    # Loading an agent is represented by the loading of an agent generator template into
+    # the agent generator templates service hence the naming of this method.
+    @staticmethod
+    def _load_agent_from_agent_project_folder(
+        agent_project_folder: Path,
+    ) -> BaseAgentGeneratorTemplate:
+        # Check if project folder contains a valid manifest file.
+        agent_project_manifest_file = (
+            agent_project_folder / "agent_project_manifest.json"
+        )
+        agent_project_manifest_json_schema = {
+            "type": "object",
+            "properties": {
+                "agent_generator": {
+                    "type": "object",
+                    "properties": {
+                        "filepath": {"type": "string"},
+                        "symbol": {"type": "string"},
+                    },
+                },
+                "agent_generator_template": {
+                    "type": "object",
+                    "properties": {
+                        "filepath": {"type": "string"},
+                        "symbol": {"type": "string"},
+                    },
+                },
+                "agent_type": {
+                    "type": "object",
+                    "properties": {
+                        "filepath": {"type": "string"},
+                        "symbol": {"type": "string"},
+                    },
+                },
+            },
+        }
+        try:
+            with agent_project_manifest_file.open("r") as file:
+                agent_project_manifest_json = json.load(fp=file)
+                jsonschema.validate(
+                    instance=agent_project_manifest_json,
+                    schema=agent_project_manifest_json_schema,
+                )
+        except FileNotFoundError:
+            raise InvalidAgentProjectFolderStructureError(
+                f"No agent project manifest file found in agent project folder: {agent_project_folder}",
+            )
+        except jsonschema.ValidationError:
+            raise InvalidAgentProjectManifestFileError(
+                f"Invalid agent_project_manifest.json file in agent project folder: {agent_project_folder}",
             )
 
-        relative_path = agent_project_folder_path.relative_to(
-            CONSORTIUM_HOME_DIRECTORY_PATH,
+        # Check for valid project folder structure as specified by the manifest file.
+        agent_generator_file = agent_project_folder / Path(
+            agent_project_manifest_json["agent_generator"]["filepath"],
         )
-        module_name = ".".join(relative_path.parts)
+        agent_generator_template_file = agent_project_folder / Path(
+            agent_project_manifest_json["agent_generator_template"]["filepath"],
+        )
+        agent_type_file = agent_project_folder / Path(
+            agent_project_manifest_json["agent_type"]["filepath"],
+        )
 
-        # Check to see if any errors arise during import.
+        if not agent_generator_file.exists():
+            raise InvalidAgentProjectFolderStructureError(
+                f"The agent generator file is missing for agent project folder: {agent_project_folder}",
+            )
+        if not agent_generator_template_file.exists():
+            raise InvalidAgentProjectFolderStructureError(
+                f"The agent generator template file is missing for agent project folder: {agent_project_folder}",
+            )
+        if not agent_type_file.exists():
+            raise InvalidAgentProjectFolderStructureError(
+                f"The agent type file is missing for agent project folder: {agent_project_folder}",
+            )
+
+        # Check for valid symbol names in the required agent project files.
+        agent_generator_module_path = ".".join(
+            agent_generator_file.relative_to(
+                CONSORTIUM_HOME_DIRECTORY_PATH,
+            ).parts,
+        )[: -len(".py")]
+        agent_generator_template_module_path = ".".join(
+            agent_generator_template_file.relative_to(
+                CONSORTIUM_HOME_DIRECTORY_PATH,
+            ).parts,
+        )[: -len(".py")]
+        agent_type_module_path = ".".join(
+            agent_type_file.relative_to(
+                CONSORTIUM_HOME_DIRECTORY_PATH,
+            ).parts,
+        )[: -len(".py")]
+
         try:
             agent_generator_module = importlib.import_module(
-                f"{module_name}.agent_generator",
+                agent_generator_module_path,
             )
-            agent_generator_template_module = importlib.import_module(
-                f"{module_name}.agent_generator_template",
+            agent_generator_class = getattr(
+                agent_generator_module,
+                agent_project_manifest_json["agent_generator"]["symbol"],
             )
-            agent_type_module = importlib.import_module(
-                f"{module_name}.agent_type",
+        except (ImportError, AttributeError):
+            raise InvalidAgentProjectFolderStructureError(
+                f"Symbol name specified in agent_project_manifest.json was not found in the agent generator file for agent project folder: {agent_project_folder}",
             )
         except Exception as exc:
-            self._agent_generator_templates_service_logger.error(
-                f"Failed to load agent from {agent_project_folder_path} due to exception: {exc}",
+            raise InternalAgentProjectError(
+                f"Failed to load agent generator from {agent_project_folder} due to an exception during import: {exc}",
             )
-            return
 
-        # check for valid naming of classes
         try:
-            agent_generator = agent_generator_module.AgentGenerator
-            agent_generator_template = (
-                agent_generator_template_module.AgentGeneratorTemplate
+            agent_generator_template_module = importlib.import_module(
+                agent_generator_template_module_path,
             )
-            agent_type = agent_type_module.AGENT_TYPE
-        except AttributeError:
-            self._agent_generator_templates_service_logger.error(
-                f"Failed to load agent from {agent_project_folder_path} due to missing required classes or constants. Ensure that the files agent_generator.py, agent_generator_template.py, and agent_type.py contain the classes AgentGenerator, AgentGeneratorTemplate, and the constant AGENT_TYPE respectively.",
+            agent_generator_template_class = getattr(
+                agent_generator_template_module,
+                agent_project_manifest_json["agent_generator_template"]["symbol"],
             )
-            return
+        except (ImportError, AttributeError):
+            raise InvalidAgentProjectFolderStructureError(
+                f"Symbol name specified in agent_project_manifest.json was not found in the agent generator template file for agent project folder: {agent_project_folder}",
+            )
+        except Exception as exc:
+            raise InternalAgentProjectError(
+                f"Failed to load agent generator template from {agent_project_folder} due to an exception during import: {exc}",
+            )
 
-        # check if the agent generator and agent generator template classes are valid
-        if not issubclass(agent_generator, BaseAgentGenerator):
-            raise ValueError(
-                f"The directory at {agent_project_folder_path} is not a valid agent project folder. The AgentGenerator class in agent_generator.py must inherit from BaseAgentGenerator.",
+        try:
+            agent_type_module = importlib.import_module(agent_type_module_path)
+            agent_type = getattr(
+                agent_type_module,
+                agent_project_manifest_json["agent_type"]["symbol"],
             )
-        if not issubclass(agent_generator_template, BaseAgentGeneratorTemplate):
-            raise ValueError(
-                f"The directory at {agent_project_folder_path} is not a valid agent project folder. The AgentGeneratorTemplate class in agent_generator_template.py must inherit from BaseAgentGeneratorTemplate.",
+        except (ImportError, AttributeError):
+            raise InvalidAgentProjectFolderStructureError(
+                f"Symbol name specified in agent_project_manifest.json was not found in the agent type file for agent project folder: {agent_project_folder}",
+            )
+        except Exception as exc:
+            raise InternalAgentProjectError(
+                f"Failed to load agent type from {agent_project_folder} due to an exception during import: {exc}",
+            )
+
+        # Check for correct inheritance and instantiation of classes.
+        if not issubclass(agent_generator_class, BaseAgentGenerator):
+            raise InvalidAgentProjectImplementationError(
+                f"The agent generator class must inherit from the framework's base agent generator class for agent project folder: {agent_project_folder}",
+            )
+        if not issubclass(agent_generator_template_class, BaseAgentGeneratorTemplate):
+            raise InvalidAgentProjectImplementationError(
+                f"The agent generator template class must inherit from the framework's base agent generator template class for agent project folder: {agent_project_folder}",
             )
         if not isinstance(agent_type, AgentType):
-            raise ValueError(
-                f"The directory at {agent_project_folder_path} is not a valid agent project folder. The AGENT_TYPE constant in agent_type.py must be an instance of the AgentType class.",
+            raise InvalidAgentProjectImplementationError(
+                f"The agent type must be an instance of the framework's agent type class for agent project folder: {agent_project_folder}",
             )
 
-        instantiated_agent_generator_template = agent_generator_template()
-        self._agent_generator_templates[
-            str(instantiated_agent_generator_template.agent_generator_template_id)
-        ] = instantiated_agent_generator_template
-
-        # Although we are explicitly loading the agent generator template here, the
-        # loading of an agent generator template represents the framework loading an
-        # entire agent.
-        self._agent_generator_templates_service_logger.debug(
-            f"Loaded agent: {instantiated_agent_generator_template!r}",
-        )
+        # Return the instantiated agent generator template to be loaded into the
+        # service.
+        return agent_generator_template_class()
 
     def get_agent_generator_template_by_agent_generator_template_id(
         self,

@@ -1,0 +1,14 @@
+{
+    "agent_generator": {
+        "filepath": "agent_generator.py",
+        "symbol": "AgentGenerator"
+    },
+    "agent_generator_template": {
+        "filepath": "agent_generator_template.py",
+        "symbol": "AgentGeneratorTemplate"
+    },
+    "agent_type": {
+        "filepath": "agent_type.py",
+        "symbol": "AGENT_TYPE"
+    }
+}

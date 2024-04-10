@@ -10,3 +10,6 @@ class UserAccountModel(BaseModel):
     username: str
     password: str
     role: UserRole
+
+    def __str__(self) -> str:
+        return f'"{self.username}" ({self.user_account_id})'

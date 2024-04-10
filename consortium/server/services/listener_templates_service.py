@@ -13,6 +13,12 @@ from consortium.server.server_config import (
     CONSORTIUM_HOME_DIRECTORY_PATH,
     CONSORTIUM_LISTENERS_DIRECTORY_PATH,
 )
+from consortium.server.server_exceptions import (
+    InternalListenerProjectError,
+    InvalidListenerProjectFolderStructureError,
+    InvalidListenerProjectImplementationError,
+    InvalidListenerProjectManifestFileError,
+)
 
 
 class ListenerTemplatesService:
@@ -22,112 +28,199 @@ class ListenerTemplatesService:
             logger_name="Consortium Listener Templates Service",
         )
 
-        # attempt to recursively load each folder as a listener project folder
-        visited_dir_paths = []
+        # Recursively search through the listeners directory to load all listener
+        # projects.
         for listener_project_folder_path in CONSORTIUM_LISTENERS_DIRECTORY_PATH.rglob(
             "*",
         ):
-            if listener_project_folder_path.parent in visited_dir_paths:
+            if listener_project_folder_path.name != "listener_project_manifest.json":
                 continue
-            visited_dir_paths.append(listener_project_folder_path.parent)
+
             try:
-                self._load_listener_project_folder(listener_project_folder_path.parent)
-            # triggers for invalid project folder structure
-            except ValueError:
-                pass
+                # Instantiate and load the listener template into the listener templates
+                # service. This represents the loading of a listener.
+                listener_template = self._load_listener_from_listener_project_folder(
+                    listener_project_folder_path.parent,
+                )
+                self._listener_templates[
+                    str(listener_template.listener_template_id)
+                ] = listener_template
 
-    # TODO: Write better error messages for the ValueError exceptions + figure out when
-    #  to log vs raise exceptions
-    def _load_listener_project_folder(
-        self,
-        listener_project_folder_path: Path,
-    ) -> None:
-        # A listener project folder is a folder that represents a valid listener that
-        # can be loaded into the server. It is defined as a folder that contains a
-        # listener.py file, a listener_template.py file, and a listener_type.py file.
-        # The listener.py file must contain a class called Listener that inherits from
-        # BaseListener. The listener_template.py file must contain a class called
-        # ListenerTemplate that inherits from BaseListenerTemplate. The listener_type.py
-        # file must contain the constant LISTENER_TYPE which is an instance of
-        # ListenerType. The folder must be located at
-        # consortium/server/framework/listeners with any arbitrary nested folder
-        # structure. On top of that, the folder must be a valid python package reachable
-        # from the root of the server. This means that the folder must contain
-        # __init__.py files in all parent directories.
-        files_in_directory = [
-            file.name
-            for file in listener_project_folder_path.iterdir()
-            if file.is_file()
-        ]
+                # Although we are explicitly loading the listener template here, the
+                # loading of a listener template represents the framework loading an
+                # entire listener.
+                self._listener_templates_service_logger.debug(
+                    f"Loaded listener: {listener_template!r}",
+                )
+                self._listener_templates_service_logger.info(
+                    f"Loaded listener: {listener_template}",
+                )
+            except (
+                InvalidListenerProjectFolderStructureError,
+                InvalidListenerProjectManifestFileError,
+                InvalidListenerProjectImplementationError,
+                InternalListenerProjectError,
+            ) as exc:
+                self._listener_templates_service_logger.error(
+                    f"Failed to load listener. {exc}",
+                )
 
-        # check for valid project folder structure
-        if (
-            "listener.py" not in files_in_directory
-            or "listener_template.py" not in files_in_directory
-            or "listener_type.py" not in files_in_directory
-            or "__init__.py" not in files_in_directory
-        ):
-            raise ValueError(
-                f"The directory at {listener_project_folder_path} does not meet the requirements of a valid listener project folder. It must contain the following files: listener.py, listener_template.py, listener_type.py, and __init__.py",
-            )
-
-        relative_path = listener_project_folder_path.relative_to(
-            CONSORTIUM_HOME_DIRECTORY_PATH,
+    # Loading a listener is represented by the loading of a listener template into the
+    # listener templates service hence the naming of this method.
+    @staticmethod
+    def _load_listener_from_listener_project_folder(
+        listener_project_folder: Path,
+    ) -> BaseListenerTemplate:
+        # Check if project folder contains a valid manifest file.
+        listener_project_manifest_file = (
+            listener_project_folder / "listener_project_manifest.json"
         )
-        module_name = ".".join(relative_path.parts)
-
-        # Check to see if any errors arise during import.
+        listener_project_manifest_json_schema = {
+            "type": "object",
+            "properties": {
+                "listener": {
+                    "type": "object",
+                    "properties": {
+                        "filepath": {"type": "string"},
+                        "symbol": {"type": "string"},
+                    },
+                },
+                "listener_template": {
+                    "type": "object",
+                    "properties": {
+                        "filepath": {"type": "string"},
+                        "symbol": {"type": "string"},
+                    },
+                },
+                "listener_type": {
+                    "type": "object",
+                    "properties": {
+                        "filepath": {"type": "string"},
+                        "symbol": {"type": "string"},
+                    },
+                },
+            },
+        }
         try:
-            listener_template_module = importlib.import_module(
-                f"{module_name}.listener_template",
+            with listener_project_manifest_file.open("r") as file:
+                listener_project_manifest_json = json.load(fp=file)
+                jsonschema.validate(
+                    instance=listener_project_manifest_json,
+                    schema=listener_project_manifest_json_schema,
+                )
+        except FileNotFoundError:
+            raise InvalidListenerProjectFolderStructureError(
+                f"No listener project manifest file found in listener project folder: {listener_project_folder}",
             )
-            listener_module = importlib.import_module(
-                f"{module_name}.listener",
+        except jsonschema.ValidationError:
+            raise InvalidListenerProjectManifestFileError(
+                f"Invalid listener_project_manifest.json file in listener project folder: {listener_project_folder}",
             )
-            listener_type_module = importlib.import_module(
-                f"{module_name}.listener_type",
+
+        # Check for valid project folder structure as specified by the manifest file.
+        listener_file = listener_project_folder / Path(
+            listener_project_manifest_json["listener"]["filepath"],
+        )
+        listener_template_file = listener_project_folder / Path(
+            listener_project_manifest_json["listener_template"]["filepath"],
+        )
+        listener_type_file = listener_project_folder / Path(
+            listener_project_manifest_json["listener_type"]["filepath"],
+        )
+
+        if not listener_file.exists():
+            raise InvalidListenerProjectFolderStructureError(
+                f"The listener.py file is missing for listener project folder: {listener_project_folder}",
+            )
+        if not listener_template_file.exists():
+            raise InvalidListenerProjectFolderStructureError(
+                f"The listener_template.py file is missing for listener project folder: {listener_project_folder}",
+            )
+        if not listener_type_file.exists():
+            raise InvalidListenerProjectFolderStructureError(
+                f"The listener_type.py file is missing for listener project folder: {listener_project_folder}",
+            )
+
+        # Check for valid symbol names in the required listener project files.
+        listener_module_path = ".".join(
+            listener_file.relative_to(
+                CONSORTIUM_HOME_DIRECTORY_PATH,
+            ).parts,
+        )[: -len(".py")]
+        listener_template_module_path = ".".join(
+            listener_template_file.relative_to(
+                CONSORTIUM_HOME_DIRECTORY_PATH,
+            ).parts,
+        )[: -len(".py")]
+        listener_type_module_path = ".".join(
+            listener_type_file.relative_to(
+                CONSORTIUM_HOME_DIRECTORY_PATH,
+            ).parts,
+        )[: -len(".py")]
+
+        try:
+            listener_module = importlib.import_module(listener_module_path)
+            listener_class = getattr(
+                listener_module,
+                listener_project_manifest_json["listener"]["symbol"],
+            )
+        except (ImportError, AttributeError):
+            raise InvalidListenerProjectFolderStructureError(
+                f"Symbol name specified in listener_project_manifest.json was not found in the listener file for listener project folder: {listener_project_folder}",
             )
         except Exception as exc:
-            self._listener_templates_service_logger.error(
-                f"Failed to load listener from {listener_project_folder_path} due to exception: {exc}",
+            raise InternalListenerProjectError(
+                f"Failed to load listener from {listener_project_folder} due to an exception during import: {exc}",
             )
-            return
 
-        # check for valid naming of classes
         try:
-            listener_template = listener_template_module.ListenerTemplate
-            listener = listener_module.Listener
-            listener_type = listener_type_module.LISTENER_TYPE
-        except AttributeError:
-            self._listener_templates_service_logger.error(
-                f"Failed to load listener from {listener_project_folder_path} due to missing required classes or constants. Ensure that the files listener.py, listener_template.py, and listener_type.py contain the classes Listener, ListenerTemplate, and the constant LISTENER_TYPE respectively.",
+            listener_template_module = importlib.import_module(
+                listener_template_module_path,
             )
-            return
+            listener_template_class = getattr(
+                listener_template_module,
+                listener_project_manifest_json["listener_template"]["symbol"],
+            )
+        except (ImportError, AttributeError):
+            raise InvalidListenerProjectFolderStructureError(
+                f"Symbol name specified in listener_project_manifest.json was not found in the listener template file for listener project folder: {listener_project_folder}",
+            )
+        except Exception as exc:
+            raise InternalListenerProjectError(
+                f"Failed to load listener template from {listener_project_folder} due to an exception during import: {exc}",
+            )
 
-        # check that classes inherit from the correct base classes
-        if not issubclass(listener_template, BaseListenerTemplate):
-            raise ValueError(
-                f"The directory at {listener_project_folder_path} is not a valid listener project folder. The ListenerTemplate class in listener_template.py must inherit from BaseListenerTemplate.",
+        try:
+            listener_type_module = importlib.import_module(listener_type_module_path)
+            listener_type = getattr(
+                listener_type_module,
+                listener_project_manifest_json["listener_type"]["symbol"],
             )
-        if not issubclass(listener, BaseListener):
-            raise ValueError(
-                f"The directory at {listener_project_folder_path} is not a valid listener project folder. The Listener class in listener.py must inherit from BaseListener.",
+        except (ImportError, AttributeError):
+            raise InvalidListenerProjectFolderStructureError(
+                f"Symbol name specified in listener_project_manifest.json was not found in the listener type file for listener project folder: {listener_project_folder}",
+            )
+        except Exception as exc:
+            raise InternalListenerProjectError(
+                f"Failed to load listener type from {listener_project_folder} due to an exception during import: {exc}",
+            )
+
+        # Check for correct inheritance and instantiation of classes.
+        if not issubclass(listener_class, BaseListener):
+            raise InvalidListenerProjectImplementationError(
+                f"The listener class must inherit from the framework's base listener class for listener project folder: {listener_project_folder}",
+            )
+        if not issubclass(listener_template_class, BaseListenerTemplate):
+            raise InvalidListenerProjectImplementationError(
+                f"The listener template class must inherit from the framework's base listener template class for listener project folder: {listener_project_folder}",
             )
         if not isinstance(listener_type, ListenerType):
-            raise ValueError(
-                f"The directory at {listener_project_folder_path} is not a valid listener project folder. The LISTENER_TYPE constant in listener_type.py must be an instance of the ListenerType class.",
+            raise InvalidListenerProjectImplementationError(
+                f"The listener type must be an instance of the framework's listener type class for listener project folder: {listener_project_folder}",
             )
 
-        instantiated_listener_template = listener_template()
-        self._listener_templates[
-            str(instantiated_listener_template.listener_template_id)
-        ] = instantiated_listener_template
-
-        # Although we are explicitly loading the listener template here, the loading of
-        # a listener template represents the framework loading an entire listener.
-        self._listener_templates_service_logger.debug(
-            f"Loaded listener: {instantiated_listener_template!r}",
-        )
+        # Return the instantiated listener template to be loaded into the service.
+        return listener_template_class()
 
     def get_listener_template_by_listener_template_id(
         self,

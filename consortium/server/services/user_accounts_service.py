@@ -1,9 +1,18 @@
 import json
+from pathlib import Path
 
 from loguru import logger
+from pydantic import ValidationError
 
 from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
+from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
+from consortium.server.server_exceptions import (
+    DuplicateUsernamesError,
+    InvalidUserAccountError,
+    InvalidUserAccountsFileError,
+    UserAccountsFileNotFoundError,
+)
 
 
 class UserAccountsService:
@@ -17,21 +26,58 @@ class UserAccountsService:
             logger_name="Consortium User Accounts Service",
         )
 
-        with open("data/server/user_accounts.json", "r") as f:
-            data = f.read()
-            json_data = json.loads(data)
-            for user_account_json_data in json_data:
-                user_account = UserAccountModel(**user_account_json_data)
-                if user_account.username in self._user_accounts:
-                    # TODO: Figure out a cleaner way to deal with configuration
-                    #  type errors at start up
-                    raise ValueError(
-                        f"User accounts with duplicate username are not allowed: {user_account.username}",
-                    )
+        try:
+            user_accounts = self._load_user_accounts_from_user_accounts_file(
+                CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
+            )
+            for user_account in user_accounts:
                 self._user_accounts[str(user_account.user_account_id)] = user_account
                 self._user_accounts_service_logger.debug(
                     f"Loaded user account: {user_account!r}",
                 )
+                self._user_accounts_service_logger.info(
+                    f"Loaded user account: {user_account}",
+                )
+        except (
+            UserAccountsFileNotFoundError,
+            InvalidUserAccountsFileError,
+            DuplicateUsernamesError,
+            UserAccountsFileNotFoundError,
+        ) as exc:
+            self._user_accounts_service_logger.error(
+                f"Failed to load user accounts. {exc}",
+            )
+
+    def _load_user_accounts_from_user_accounts_file(
+        self,
+        user_accounts_file: Path,
+    ) -> list[UserAccountModel]:
+        if not user_accounts_file.exists():
+            raise UserAccountsFileNotFoundError(
+                f"User accounts file not found: {user_accounts_file}",
+            )
+
+        try:
+            user_accounts = []
+            with user_accounts_file.open("r") as file:
+                data = file.read()
+                json_data = json.loads(data)
+                for user_account_json_data in json_data:
+                    user_account = UserAccountModel(**user_account_json_data)
+                    if user_account.username in self._user_accounts:
+                        raise DuplicateUsernamesError(
+                            f"Duplicate username {user_account.username} detected in user accounts file: {user_accounts_file}",
+                        )
+                    user_accounts.append(user_account)
+            return user_accounts
+        except json.JSONDecodeError as exc:
+            raise InvalidUserAccountsFileError(
+                f"Invalid JSON data in user accounts file {user_accounts_file}: {exc}",
+            )
+        except ValidationError as exc:
+            raise InvalidUserAccountError(
+                f"Invalid user account data in user accounts file {user_accounts_file}: {exc}",
+            )
 
     def _write_user_accounts_to_user_accounts_file(self):
         serializable_user_accounts = [
