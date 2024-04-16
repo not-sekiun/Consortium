@@ -95,8 +95,8 @@ class AuthorizeUserRequest:
             UserPermissions.DELETE_LISTENER_BY_LISTENER_ID,
             UserPermissions.CANCEL_LISTENER_BY_LISTENER_ID,
             UserPermissions.CREATE_AGENT_GENERATOR,
-            UserPermissions.READ_ALL_AGENT_GENERATOR_TEMPLATES,
-            UserPermissions.READ_AGENT_GENERATOR_TEMPLATE_BY_AGENT_GENERATOR_TEMPLATE_ID,
+            UserPermissions.READ_ALL_AGENT_TEMPLATES,
+            UserPermissions.READ_AGENT_TEMPLATE_BY_AGENT_TEMPLATE_ID,
         },
         # Spectators can only read information and have even less read access than
         # operators
@@ -108,8 +108,8 @@ class AuthorizeUserRequest:
             UserPermissions.READ_LISTENER_TEMPLATE_BY_LISTENER_TEMPLATE_ID,
             UserPermissions.READ_ALL_LISTENERS,
             UserPermissions.READ_LISTENER_BY_LISTENER_ID,
-            UserPermissions.READ_ALL_AGENT_GENERATOR_TEMPLATES,
-            UserPermissions.READ_AGENT_GENERATOR_TEMPLATE_BY_AGENT_GENERATOR_TEMPLATE_ID,
+            UserPermissions.READ_ALL_AGENT_TEMPLATES,
+            UserPermissions.READ_AGENT_TEMPLATE_BY_AGENT_TEMPLATE_ID,
         },
     }
 

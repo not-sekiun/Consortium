@@ -51,12 +51,12 @@ def get_all_user_account_ids(admin_session: requests.Session) -> list[str]:
     ]
 
 
-def get_all_agent_generator_template_ids(
+def get_all_agent_template_ids(
     admin_session: requests.Session,
 ) -> list[str]:
     return [
-        agent_generator_template["agent_generator_template_id"]
-        for agent_generator_template in admin_session.get(
-            "http://localhost:9999/api/agent-generator-templates/all",
+        agent_template["agent_template_id"]
+        for agent_template in admin_session.get(
+            "http://localhost:9999/api/agent-templates/all",
         ).json()
     ]

@@ -6,11 +6,11 @@ from fastapi import FastAPI
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from consortium.server.api.agent_generator_templates_api import (
-    router as agent_generator_templates_api_router,
-)
 from consortium.server.api.agent_generators_api import (
     router as agent_generators_api_router,
+)
+from consortium.server.api.agent_templates_api import (
+    router as agent_templates_api_router,
 )
 from consortium.server.api.listener_templates_api import (
     router as listener_templates_api_router,
@@ -59,7 +59,7 @@ class Server:
         self._app.include_router(user_accounts_api_router)
         self._app.include_router(listener_templates_api_router)
         self._app.include_router(listeners_api_router)
-        self._app.include_router(agent_generator_templates_api_router)
+        self._app.include_router(agent_templates_api_router)
         self._app.include_router(agent_generators_api_router)
 
         # configure middleware, order matters, the last middleware added will be the

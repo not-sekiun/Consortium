@@ -457,53 +457,53 @@ class ListenerStillRunningError(ServerException):
         )
 
 
-# Errors for the endpoint /api/agent-generator-templates.
-class AgentGeneratorTemplateNotFoundError(ServerException):
+# Errors for the endpoint /api/agent-templates.
+class AgentTemplateNotFoundError(ServerException):
     def __init__(
         self,
         message: str = (
-            "The requested agent generator template was not found. (Check that the "
-            "agent_generator_template_id URL parameter is correct.)"
+            "The requested agent template was not found. (Check that the "
+            "agent_template_id URL parameter is correct.)"
         ),
         detail: Any = None,
     ) -> None:
         super().__init__(
             status_code=404,
-            code="AGENT_GENERATOR_TEMPLATE_NOT_FOUND_ERROR",
+            code="AGENT_TEMPLATE_NOT_FOUND_ERROR",
             message=message,
             detail=detail,
         )
 
 
-class InvalidAgentGeneratorTemplateOptionNameError(ServerException):
+class InvalidAgentTemplateOptionNameError(ServerException):
     def __init__(
         self,
         message: str = (
-            "The provided agent generator template option name is invalid. (Check that "
+            "The provided agent template option name is invalid. (Check that "
             "the option name exists.)"
         ),
         detail: Any = None,
     ) -> None:
         super().__init__(
             status_code=422,
-            code="INVALID_AGENT_GENERATOR_TEMPLATE_OPTION_NAME_ERROR",
+            code="INVALID_AGENT_TEMPLATE_OPTION_NAME_ERROR",
             message=message,
             detail=detail,
         )
 
 
-class InvalidAgentGeneratorTemplateOptionValueError(ServerException):
+class InvalidAgentTemplateOptionValueError(ServerException):
     def __init__(
         self,
         message: str = (
-            "The provided agent generator template option value is invalid. (Check "
+            "The provided agent template option value is invalid. (Check "
             "that the type and format of the option's value is valid.)"
         ),
         detail: Any = None,
     ) -> None:
         super().__init__(
             status_code=422,
-            code="INVALID_AGENT_GENERATOR_TEMPLATE_OPTION_VALUE_ERROR",
+            code="INVALID_AGENT_TEMPLATE_OPTION_VALUE_ERROR",
             message=message,
             detail=detail,
         )
@@ -537,7 +537,7 @@ class AgentGeneratorStillRunningError(ServerException):
         )
 
 
-# Internal exceptions for the agent generator templates service. These do not inherit
+# Internal exceptions for the agent templates service. These do not inherit
 # from ServerException because they should not be handled by the server exception
 # handlers
 class InvalidAgentProjectManifestFileError(Exception):

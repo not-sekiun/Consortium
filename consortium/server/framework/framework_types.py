@@ -5,13 +5,11 @@ class AgentType:
     def __init__(
         self,
         name: str = "",
-        description: str = "",
         # "ListenerType" is not defined yet at this point, so we use a string instead in
         # the type hint
         compatible_listener_types: list["ListenerType"] | None = None,
     ):
         self.name = name
-        self.description = description
         self.compatible_listener_types = set()
         if compatible_listener_types is None:
             compatible_listener_types = []
@@ -58,7 +56,6 @@ class AgentType:
     def to_json(self) -> dict[str, str]:
         return {
             "name": self.name,
-            "description": self.description,
             "compatible_listener_types": (
                 [
                     str(listener_type.listener_type_id)
@@ -74,18 +71,16 @@ class AgentType:
         return f'"{self.name}" ({str(self.agent_type_id)})'
 
     def __repr__(self) -> str:
-        return f"AgentType(name={self.name!r}, description={self.description!r}, compatible_listener_types={self.compatible_listener_types!r})"
+        return f"AgentType(name={self.name!r}, compatible_listener_types={self.compatible_listener_types!r})"
 
 
 class ListenerType:
     def __init__(
         self,
         name: str = "",
-        description: str = "",
         compatible_agent_types: list[AgentType] | None = None,
     ):
         self.name = name
-        self.description = description
         self.compatible_agent_types = set()
         if compatible_agent_types is None:
             compatible_agent_types = []
@@ -132,7 +127,6 @@ class ListenerType:
     def to_json(self) -> dict[str, str]:
         return {
             "name": self.name,
-            "description": self.description,
             "compatible_agent_types": (
                 [
                     str(agent_type.agent_type_id)
@@ -145,7 +139,7 @@ class ListenerType:
         }
 
     def __str__(self) -> str:
-        return f'"{self.name}" ({str(self.agent_type_id)})'
+        return f'"{self.name}" ({str(self.listener_type_id)})'
 
     def __repr__(self) -> str:
-        return f"ListenerType(name={self.name!r}, description={self.description!r}, compatible_agent_types={self.compatible_agent_types!r})"
+        return f"ListenerType(name={self.name!r}, compatible_agent_types={self.compatible_agent_types!r})"

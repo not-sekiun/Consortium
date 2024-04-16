@@ -11,7 +11,7 @@ class AgentGeneratorsService:
         )
 
     # Unlike user_accounts_service.py, we don't create the agent generator in this
-    # method because we already have dedicated agent generator template objects that do
+    # method because we already have dedicated agent template objects that do
     # that for us
     def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
         if str(agent_generator.agent_generator_id) in self._agent_generators:

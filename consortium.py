@@ -2,7 +2,7 @@ import argparse
 
 import consortium.client.start_client as start_client
 import consortium.server.start_server as start_server
-from consortium.client.utils.data_structure_utils import argparse_epilog_formatter
+from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 def main():

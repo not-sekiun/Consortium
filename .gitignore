@@ -1,6 +1,8 @@
 *.pyc
+data/server/artifacts/
+data/server/logs/
+data/client/logs/
 __pycache__/
-data/
 .idea/
 .pytest_cache/
 .ruff_cache/

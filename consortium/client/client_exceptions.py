@@ -15,7 +15,8 @@ class InvalidServerLoginResponseError(Exception):
     pass
 
 
+# Exceptions for the REST API.
 # TODO: Add more granular exception handling in the future for each particular error
 #  response that may returned for each API endpoint.
-class APIError(Exception):
+class RESTAPIError(Exception):
     pass

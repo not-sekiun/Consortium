@@ -1,0 +1,17 @@
+from consortium.client.framework.base_command import ReturnStatusType
+
+
+class InterpreterType:
+    HOME = "HOME"
+    LISTENERS = "LISTENERS"
+    AGENTS = "AGENTS"
+    GENERATORS = "GENERATORS"
+    CREATE_LISTENER = "CREATE_LISTENER"
+    CREATE_GENERATOR = "CREATE_GENERATOR"
+    INTERACT_AGENT = "INTERACT_AGENT"
+
+
+class ClientReturnStatusType(ReturnStatusType):
+    SWITCH_INTERPRETER = "SWITCH_INTERPRETER"
+    EXIT_CLIENT_CONNECTION = "EXIT_CLIENT_CONNECTION"
+    SWITCH_CLIENT_CONNECTION = "SWITCH_CLIENT_CONNECTION"

@@ -1,0 +1,76 @@
+import argparse
+
+from rich.table import Table
+
+from consortium.client.framework.base_command import (
+    BaseCommand,
+    CommandContext,
+    ReturnStatus,
+)
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.utils.printer_utils import CONSOLE, print_error
+from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
+
+
+class HelpCommand(BaseCommand):
+    name = "help"
+    description = "Get a summary for a command or display the help menu for all available commands."
+    epilog = argparse_epilog_formatter(
+        """
+        Examples:
+            help  # Display the help menu for all available commands.
+            help banner  # Display the help page for the banner command.
+        """,
+    )
+
+    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "command",
+            nargs="?",
+            help="The command to get the help page for.",
+        )
+
+    @staticmethod
+    def _print_summarized_help_menu(commands: dict[str, BaseCommand]) -> None:
+        table = Table(title="Commands")
+        table.add_column("Command")
+        table.add_column("Description")
+
+        help_menu_entries = []
+        for _, command in sorted(commands.items()):
+            help_menu_entries.append([command.name, command.description])
+
+        for command, description in help_menu_entries:
+            table.add_row(command, description)
+
+        CONSOLE.print(table)
+
+    async def run_command(
+        self,
+        command_context: CommandContext,
+    ) -> ReturnStatus:
+        try:
+            parsed_args = self.parser.parse_args(
+                command_context.arguments,
+            )
+            if parsed_args.command:
+                if parsed_args.command in command_context.environment["commands"]:
+                    print(
+                        command_context.environment["commands"][
+                            parsed_args.command
+                        ].summary,
+                    )
+                else:
+                    print_error(f"Invalid command: {parsed_args.command}")
+            else:
+                self._print_summarized_help_menu(
+                    command_context.environment["commands"],
+                )
+        except SystemExit:
+            pass
+
+        return ReturnStatus(
+            type=ClientReturnStatusType.CONTINUE,
+        )

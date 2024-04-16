@@ -16,6 +16,8 @@ from consortium.client.objects.client_objects import ClientConfig
 
 async def _start_client(arguments: argparse.Namespace) -> None:
     # Load client configuration file
+    # TODO: Support starting the client with a disconnected interpreter when the client
+    #  config file is not specified.
     with open(str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH), "r") as file:
         json_data = json.load(fp=file)
     client_config = ClientConfig(**json_data)
