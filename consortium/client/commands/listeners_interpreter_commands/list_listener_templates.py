@@ -12,8 +12,6 @@ from consortium.client.objects.client_return_status_objects import (
 from consortium.client.utils.printer_utils import CONSOLE
 from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
-client_connections_service = client_singletons.client_connections_service
-
 
 class ListListenerTemplatesCommand(BaseCommand):
     name = "list_listener_templates"

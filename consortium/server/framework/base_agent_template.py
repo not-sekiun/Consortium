@@ -1,3 +1,4 @@
+import copy
 import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
@@ -75,7 +76,7 @@ class BaseAgentTemplate(ABC):
         created_agent_generator = self.agent_generator(
             agent_type=self.agent_type,
             name=self.resolve_agent_generator_name(),
-            options=self.options,
+            options=copy.deepcopy(self.options),
         )
         return created_agent_generator
 

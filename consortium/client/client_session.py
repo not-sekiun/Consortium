@@ -4,6 +4,9 @@ from consortium.client.interpreters.agents_interpreter import AgentsInterpreter
 from consortium.client.interpreters.generators_interpreter import GeneratorsInterpreter
 from consortium.client.interpreters.home_interpreter import HomeInterpreter
 from consortium.client.interpreters.listeners_interpreter import ListenersInterpreter
+from consortium.client.interpreters.use_listener_interpreter import (
+    UseListenerInterpreter,
+)
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
     InterpreterType,
@@ -29,6 +32,7 @@ class ClientSession:
                 == ClientReturnStatusType.SWITCH_INTERPRETER
             ):
                 interpreter_type = interpreter_return_status.data["interpreter_type"]
+                # TODO: Clean this up to make it less if elsey
                 if interpreter_type == InterpreterType.HOME:
                     interpreter = HomeInterpreter(
                         client_connection=self.client_connection,
@@ -44,6 +48,16 @@ class ClientSession:
                 elif interpreter_type == InterpreterType.GENERATORS:
                     interpreter = GeneratorsInterpreter(
                         client_connection=self.client_connection,
+                    )
+                elif interpreter_type == InterpreterType.CREATE_LISTENER:
+                    interpreter = UseListenerInterpreter(
+                        client_connection=self.client_connection,
+                        listener_template_id=interpreter_return_status.data[
+                            "listener_template_id"
+                        ],
+                        listener_template_name=interpreter_return_status.data[
+                            "listener_template_name"
+                        ],
                     )
                 else:
                     raise NotImplementedError(

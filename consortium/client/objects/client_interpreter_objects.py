@@ -1,3 +1,4 @@
+import traceback
 from typing import Iterator
 
 from prompt_toolkit import ANSI, HTML, PromptSession
@@ -5,6 +6,7 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.client_connection import ClientConnection
+from consortium.client.client_exceptions import RESTAPIError
 from consortium.client.framework.base_command import BaseCommand, CommandContext
 from consortium.client.framework.base_interpreter import BaseInterpreter
 from consortium.client.framework.base_lexer import (
@@ -14,10 +16,11 @@ from consortium.client.framework.base_lexer import (
     TokenType,
 )
 from consortium.client.framework.base_parser import ParsedCommand
-from consortium.client.utils.printer_utils import print_error, print_info
+from consortium.client.utils.printer_utils import CONSOLE, print_error, print_info
 
 
-# TODO: Replace the calls to the environment variable with this
+# TODO: Replace the calls to the environment variable with this at some point in the
+#  future.
 class ClientCommandContext(CommandContext):
     client_connection: ClientConnection | None
 
@@ -44,87 +47,108 @@ class ClientInterpreterLexer(BaseLexer):
         self._previous_lexer_state = None
         self._lexer_state = self.PseudoShellStyleLexerState.DEFAULT
         self._token_buffer = ""
+        self._token_start_index = None
         super().__init__()
 
-    def _handle_default(self, character: str) -> None:
-        if character == "'":
+    def _handle_default(self, char_index: int, char: str) -> None:
+        if char == "'":
             self._lexer_state = self.PseudoShellStyleLexerState.SINGLE_QUOTE_ESCAPED
-        elif character == '"':
+        elif char == '"':
             self._lexer_state = self.PseudoShellStyleLexerState.DOUBLE_QUOTE_ESCAPED
-        elif character == "\\":
+        elif char == "\\":
             self._previous_lexer_state = self._lexer_state
             self._lexer_state = self.PseudoShellStyleLexerState.BACKSLASH_ESCAPED
-        elif character == " " and self._token_buffer:
+        elif char == " " and self._token_buffer:
             self._lexer_state = self.PseudoShellStyleLexerState.OUTPUT_TOKEN
         # Ignore additional whitespaces.
-        elif character == " " and not self._token_buffer:
+        elif char == " " and not self._token_buffer:
             pass
         else:
-            self._token_buffer += character
+            self._add_char_to_token_buffer(char_index=char_index, char=char)
 
-    def _handle_single_quote_escaped(self, character: str) -> None:
-        if character == "'":
-            self._lexer_state = self.PseudoShellStyleLexerState.OUTPUT_TOKEN
-        elif character == "\\":
+    def _handle_single_quote_escaped(self, char_index: int, char: str) -> None:
+        if char == "'":
+            self._lexer_state = self.PseudoShellStyleLexerState.DEFAULT
+        elif char == "\\":
             self._previous_lexer_state = self._lexer_state
             self._lexer_state = self.PseudoShellStyleLexerState.BACKSLASH_ESCAPED
         else:
-            self._token_buffer += character
+            self._add_char_to_token_buffer(char_index=char_index, char=char)
 
-    def _handle_double_quote_escape(self, character: str) -> None:
-        if character == '"':
-            self._lexer_state = self.PseudoShellStyleLexerState.OUTPUT_TOKEN
-        elif character == "'":
-            self._token_buffer += character
-        elif character == "\\":
+    def _handle_double_quote_escape(self, char_index: int, char: str) -> None:
+        if char == '"':
+            self._lexer_state = self.PseudoShellStyleLexerState.DEFAULT
+        elif char == "\\":
             self._previous_lexer_state = self._lexer_state
             self._lexer_state = self.PseudoShellStyleLexerState.BACKSLASH_ESCAPED
         else:
-            self._token_buffer += character
+            self._add_char_to_token_buffer(char_index=char_index, char=char)
 
-    def _handle_backslash_escaped(self, character: str) -> None:
+    def _handle_backslash_escaped(self, char_index: int, char: str) -> None:
         # Handle special escape sequences.
-        if character in ["n", "t", "r", "b", "f", "v", "a", "e"]:
-            self._token_buffer += "\\" + character
+        if char in ["n", "t", "r", "b", "f", "v", "a", "e"]:
+            # Backslash is included as part of the token.
+            self._add_char_to_token_buffer(char_index=char_index - 1, char="\\" + char)
         else:
-            self._token_buffer += character
+            self._add_char_to_token_buffer(char_index=char_index, char=char)
 
         self._lexer_state = self._previous_lexer_state
 
-    def _flush_token_buffer(self) -> Token:
+    def _add_char_to_token_buffer(self, char_index: int, char: str) -> None:
+        if self._token_start_index is None:
+            if self._lexer_state == self.PseudoShellStyleLexerState.DEFAULT:
+                self._token_start_index = char_index
+            elif self._lexer_state in (
+                self.PseudoShellStyleLexerState.SINGLE_QUOTE_ESCAPED,
+                self.PseudoShellStyleLexerState.DOUBLE_QUOTE_ESCAPED,
+                self.PseudoShellStyleLexerState.BACKSLASH_ESCAPED,
+            ):
+                self._token_start_index = char_index - 1
+        self._token_buffer += char
+
+    def _flush_token_buffer(self, current_char_index: int) -> Token:
         # All tokens are of type WORD because the client interpreter does not simulate
         # pipes, redirections, or other shell features.
         token = Token(
             token_type=self.PseudoShellStyleTokenType.WORD,
             token=self._token_buffer,
+            start_index=self._token_start_index,
+            end_index=current_char_index - 1,  # -1 to exclude the space
         )
         self._token_buffer = ""
+        self._token_start_index = None
         return token
 
     def _yield_token(self, input_string: str) -> Iterator[Token]:
-        for char in input_string:
+        for char_index, char in enumerate(input_string):
             if self._lexer_state == self.PseudoShellStyleLexerState.DEFAULT:
-                self._handle_default(char)
+                self._handle_default(char_index=char_index, char=char)
             elif (
                 self._lexer_state
                 == self.PseudoShellStyleLexerState.SINGLE_QUOTE_ESCAPED
             ):
-                self._handle_single_quote_escaped(char)
+                self._handle_single_quote_escaped(char_index=char_index, char=char)
             elif (
                 self._lexer_state
                 == self.PseudoShellStyleLexerState.DOUBLE_QUOTE_ESCAPED
             ):
-                self._handle_double_quote_escape(char)
+                self._handle_double_quote_escape(char_index=char_index, char=char)
             elif self._lexer_state == self.PseudoShellStyleLexerState.BACKSLASH_ESCAPED:
-                self._handle_backslash_escaped(char)
+                self._handle_backslash_escaped(char_index=char_index, char=char)
 
             if self._lexer_state == self.PseudoShellStyleLexerState.OUTPUT_TOKEN:
                 self._lexer_state = self.PseudoShellStyleLexerState.DEFAULT
-                yield self._flush_token_buffer()
+                yield self._flush_token_buffer(current_char_index=char_index)
 
         # Flush the buffer if there is anything left in it.
         if self._token_buffer:
-            yield self._flush_token_buffer()
+            # We add 1 to the current_char_index to account for the fact that at the
+            # very end no space is present to denote the end of the token. While the
+            # _flush_token_buffer assumes it is present. This is equivalent to adding a
+            # space at the end of the input string to signify a form of EOF.
+            yield self._flush_token_buffer(
+                current_char_index=(len(input_string) - 1) + 1,
+            )
 
     def tokenize(self, input_string: str) -> TokenizedString:
         tokens = []
@@ -143,7 +167,21 @@ class ClientInterpreter(BaseInterpreter):
         prompt: ANSI | HTML | str,
         commands: list[BaseCommand],
         client_connection: ClientConnection,
+        additional_environment_variables: dict[str, any] = None,
     ):
+        # TODO: Add resource commands and aliases to the environment variables at some
+        #  point
+        if additional_environment_variables is None:
+            additional_environment_variables = {}
+
+        for key in additional_environment_variables:
+            if key in ("client_connection", "commands"):
+                # This exception should not be raised under normal circumstances unless
+                # a programmer error is made.
+                raise ValueError(
+                    f"Environment variable name '{key}' is reserved and cannot be used.",
+                )
+
         super().__init__(
             prompt_session=PromptSession(
                 message=prompt,
@@ -157,6 +195,7 @@ class ClientInterpreter(BaseInterpreter):
             environment={
                 "client_connection": client_connection,
                 "commands": {command.name: command for command in commands},
+                **additional_environment_variables,
             },
             lexer=ClientInterpreterLexer(),
         )
@@ -174,6 +213,10 @@ class ClientInterpreter(BaseInterpreter):
 
     # TODO: Provide more comprehensive error handling in the commands.
     # In general, when an error is raised on the REST API side we simply print the error
-    # message to the console.
+    # message to the console and interrupt whichever operation we were attempting to do.
     async def on_interpreter_errored(self, exc: Exception) -> None:
-        print_error(f"Error: {exc}")
+        if isinstance(exc, RESTAPIError):
+            print_error(f"Error: {exc}")
+        else:
+            print_error(f"Fatal error occurred: {exc}")
+            CONSOLE.print(f"[bold red]{traceback.format_exc()}")

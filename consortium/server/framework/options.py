@@ -1,9 +1,23 @@
 import copy
 import re
 from abc import ABC, abstractmethod
+from enum import StrEnum
 from typing import Any, Callable, Type
 
 SimpleType = str | int | float | bool
+
+# TODO: Potentially support handling more complex nested data types like nesting dicts
+#  in dicts or lists in dicts with lists containing lists with dicts of lists (If there
+#  is a valid use case for why nesting complex data types would be needed). For now we
+#  severely restrict the data types that can be used to keep the complexity of the
+#  framework down. Also figure out a more aesthetic __str__
+
+
+class OptionType(StrEnum):
+    SINGLE_VALUE_OPTION = "SINGLE_VALUE_OPTION"
+    LIST_VALUE_OPTION = "LIST_VALUE_OPTION"
+    CHOICE_VALUE_OPTION = "CHOICE_VALUE_OPTION"
+    DICTIONARY_VALUE_OPTION = "DICTIONARY_VALUE_OPTION"
 
 
 class _BaseOption(ABC):
@@ -60,10 +74,18 @@ class SingleValueOption(_BaseOption):
         validating_regex: str | None = None,
         validating_function: Callable[[Any], None] | None = None,
     ):
+        self.option_type = OptionType.SINGLE_VALUE_OPTION
         self.value_type = value_type
         self.validating_regex = validating_regex
         self.validating_function = validating_function
         super().__init__(name, description, required, default_value)
+
+        try:
+            self.validate_value(default_value)
+        except ValueError as exc:
+            raise ValueError(
+                f"Default value {default_value} failed validation: {exc}",
+            )
 
     def validate_value(self, value: SimpleType) -> None:
         if self.value_type:
@@ -95,11 +117,12 @@ class SingleValueOption(_BaseOption):
             "validating_function": (
                 self.validating_function.__doc__ if self.validating_function else None
             ),
+            "option_type": str(self.option_type),
         }
 
     def __str__(self) -> str:
         return (
-            f"SingleValueOption - Name: {self.name}, Value: {self.get_option_value()}"
+            f"{self.option_type} - Name: {self.name}, Value: {self.get_option_value()}"
         )
 
     def __repr__(self) -> str:
@@ -118,11 +141,20 @@ class ListValueOption(_BaseOption):
         validating_regex: str | None = None,
         validating_function: Callable[[Any], None] | None = None,
     ):
+        self.option_type = OptionType.LIST_VALUE_OPTION
         self.allow_duplicates = allow_duplicates
         self.value_type = value_type
         self.validating_regex = validating_regex
         self.validating_function = validating_function
         super().__init__(name, description, required, default_value)
+
+        if default_value is not None:
+            try:
+                self.validate_value(default_value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Default value {default_value} failed validation: {exc}",
+                )
 
     def get_option_value(self) -> list[SimpleType]:
         return copy.deepcopy(super().get_option_value())
@@ -171,10 +203,13 @@ class ListValueOption(_BaseOption):
             "validating_function": (
                 self.validating_function.__doc__ if self.validating_function else None
             ),
+            "option_type": str(self.option_type),
         }
 
     def __str__(self) -> str:
-        return f"ListValueOption - Name: {self.name}, Value: {self.get_option_value()}"
+        return (
+            f"{self.option_type} - Name: {self.name}, Value: {self.get_option_value()}"
+        )
 
     def __repr__(self) -> str:
         return f"ListValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, value_type={self.value_type}, validating_regex={self.validating_regex}, validating_function={self.validating_function})"
@@ -189,13 +224,22 @@ class ChoiceValueOption(_BaseOption):
         default_value: SimpleType | None = None,
         available_values: list[SimpleType] = None,
     ):
+        self.option_type = OptionType.CHOICE_VALUE_OPTION
         self.available_values = available_values
         super().__init__(name, description, required, default_value)
+
+        if default_value is not None:
+            try:
+                self.validate_value(default_value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Default value {default_value} failed validation: {exc}",
+                )
 
     def validate_value(self, value: SimpleType) -> None:
         if value not in self.available_values:
             raise ValueError(
-                f'Value "{value}" is not one of the available choice values {self.available_values}',
+                f'Value "{value}" is not one of the available choice values {self.available_values}.',
             )
 
     def to_json(self) -> dict[str, SimpleType | None]:
@@ -205,11 +249,12 @@ class ChoiceValueOption(_BaseOption):
             "required": self.required,
             "default_value": self.default_value,
             "available_values": self.available_values,
+            "option_type": str(self.option_type),
         }
 
     def __str__(self) -> str:
         return (
-            f"ChoiceValueOption - Name: {self.name}, Value: {self.get_option_value()}"
+            f"{self.option_type} - Name: {self.name}, Value: {self.get_option_value()}"
         )
 
     def __repr__(self) -> str:
@@ -223,17 +268,32 @@ class DictionaryValueOption(_BaseOption):
         description: str = "",
         required: bool = True,
         default_value: dict[str, SimpleType] | None = None,
-        key_type: Type[SimpleType] | None = None,
         key_validating_regex: str | None = None,
         key_validating_function: Callable[[Any], None] | None = None,
         value_type: Type[SimpleType] | None = None,
         value_validating_regex: str | None = None,
         value_validating_function: Callable[[Any], None] | None = None,
     ):
+        if default_value is not None:
+            try:
+                self.validate_value(default_value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Default value {default_value} failed validation: {exc}",
+                )
+
+        if value_type is not None and not issubclass(
+            value_type,
+            (str, int, float, bool),
+        ):
+            raise ValueError(
+                f"Value type {value_type} is not a valid type (str, int, float, bool).",
+            )
+
+        self.option_type = OptionType.DICTIONARY_VALUE_OPTION
         self.value_type = value_type
         self.value_validating_regex = value_validating_regex
         self.value_validating_function = value_validating_function
-        self.key_type = key_type
         self.key_validating_regex = key_validating_regex
         self.key_validating_function = key_validating_function
         super().__init__(name, description, required, default_value)
@@ -243,11 +303,10 @@ class DictionaryValueOption(_BaseOption):
 
     def validate_value(self, value: dict[str, SimpleType]) -> None:
         for dict_key, dict_value in value.items():
-            if self.key_type:
-                if not isinstance(dict_key, self.key_type):
-                    raise ValueError(
-                        f'Key {dict_key} in value failed against the option "{self.name}" type validation: {self.key_type}',
-                    )
+            if not isinstance(dict_key, str):
+                raise ValueError(
+                    f'Key {dict_key} in value failed against the option "{self.name}" type validation: {str}',
+                )
             if self.key_validating_regex:
                 if re.match(self.key_validating_regex, str(dict_key)) is None:
                     raise ValueError(
@@ -286,7 +345,6 @@ class DictionaryValueOption(_BaseOption):
             "description": self.description,
             "required": self.required,
             "default_value": self.default_value,
-            "key_type": self.key_type.__name__,
             "key_validating_regex": self.key_validating_regex,
             "key_validating_function": (
                 self.key_validating_function.__doc__
@@ -300,10 +358,13 @@ class DictionaryValueOption(_BaseOption):
                 if self.value_validating_function
                 else None
             ),
+            "option_type": str(self.option_type),
         }
 
     def __str__(self) -> str:
-        return f"DictionaryValueOption - Name: {self.name}, Value: {self.get_option_value()}"
+        return (
+            f"{self.option_type} - Name: {self.name}, Value: {self.get_option_value()}"
+        )
 
     def __repr__(self) -> str:
-        return f"DictionaryValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, key_type={self.key_type}, key_validating_regex={self.key_validating_regex}, key_validating_function={self.key_validating_function}, value_type={self.value_type}, value_validating_regex={self.value_validating_regex}, value_validating_function={self.value_validating_function})"
+        return f"DictionaryValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, key_validating_regex={self.key_validating_regex}, key_validating_function={self.key_validating_function}, value_type={self.value_type}, value_validating_regex={self.value_validating_regex}, value_validating_function={self.value_validating_function})"

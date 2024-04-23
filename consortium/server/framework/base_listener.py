@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 from abc import ABC, abstractmethod
+from datetime import datetime
 from types import SimpleNamespace
 from typing import Any
 
@@ -29,6 +30,7 @@ class BaseListener(ABC):
         self,
         listener_type: ListenerType,
         name: str = "",
+        description: str = "",
         endpoint: str = "",
         options: (
             dict[
@@ -43,9 +45,11 @@ class BaseListener(ABC):
     ) -> None:
         self.listener_id = uuid.uuid4()
         self.name = name
+        self.description = description
         self.endpoint = endpoint
         self.listener_type = listener_type
         self.options = options
+        self.datetime_created = datetime.now()
         self.status = ListenerStatus()
 
         # self.state is used to store any state information that the listener may need
@@ -176,6 +180,7 @@ class BaseListener(ABC):
         return {
             "listener_id": str(self.listener_id),
             "name": self.name,
+            "description": self.description,
             "endpoint": self.endpoint,
             "listener_type": self.listener_type.to_json(),
             "options": {
@@ -184,6 +189,7 @@ class BaseListener(ABC):
             },
             "status": self.status.to_json(),
             "agent_ids": [str(agent.agent_id) for agent in self.agents.values()],
+            "datetime_created": self.datetime_created.isoformat(),
         }
 
     def __str__(self) -> str:

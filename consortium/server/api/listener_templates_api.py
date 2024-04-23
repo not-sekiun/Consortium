@@ -92,6 +92,7 @@ def get_all_listener_templates_info(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENER_TEMPLATES)),
     ],
 ):
+    print(listener_templates_service.get_all_listener_templates()[0].to_json())
     return [
         ListenerTemplateModel(**listener_template.to_json())
         for listener_template in listener_templates_service.get_all_listener_templates()

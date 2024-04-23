@@ -27,7 +27,7 @@ def _check_if_logged_in(async_func):
     return wrapper
 
 
-def _check_for_api_error_response(async_func):
+def _check_for_rest_api_error_response(async_func):
     async def wrapper(*args, **kwargs):
         response = await async_func(*args, **kwargs)
 
@@ -118,7 +118,7 @@ class ClientConnection:
 
     # Wrapper methods for the /api/server API endpoints.
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_server_release(self) -> dict[str, Any]:
         response = await self._aiohttp_client_session.get(
             f"{self._api_base_url}/server/release",
@@ -126,7 +126,7 @@ class ClientConnection:
         return await response.json()
 
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_server_config(self) -> dict[str, Any]:
         response = await self._aiohttp_client_session.get(
             f"{self._api_base_url}/server/config",
@@ -135,7 +135,7 @@ class ClientConnection:
 
     # Wrapper methods for the /api/listener-templates API endpoint.
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_all_listener_templates(self) -> list[dict[str, Any]]:
         response = await self._aiohttp_client_session.get(
             f"{self._api_base_url}/listener-templates/all",
@@ -143,7 +143,7 @@ class ClientConnection:
         return await response.json()
 
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_listener_template_by_listener_template_id(
         self,
         listener_template_id: str,
@@ -153,9 +153,22 @@ class ClientConnection:
         )
         return await response.json()
 
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def create_listener_through_listener_template_by_listener_template_id(
+        self,
+        listener_template_id: str,
+        listener_template_option_values: dict[str, Any],
+    ) -> dict[str, Any]:
+        response = await self._aiohttp_client_session.post(
+            f"{self._api_base_url}/listener-templates/{listener_template_id}",
+            json=listener_template_option_values,
+        )
+        return await response.json()
+
     # Wrapper methods for the /api/listeners API endpoint.
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_all_listeners(self) -> list[dict[str, Any]]:
         response = await self._aiohttp_client_session.get(
             f"{self._api_base_url}/listeners/all",
@@ -163,7 +176,7 @@ class ClientConnection:
         return await response.json()
 
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_listener_by_listener_id(
         self,
         listener_id: str,
@@ -173,9 +186,25 @@ class ClientConnection:
         )
         return await response.json()
 
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def start_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
+        response = await self._aiohttp_client_session.post(
+            f"{self._api_base_url}/listeners/{listener_id}/start",
+        )
+        return await response.json()
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def stop_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
+        response = await self._aiohttp_client_session.post(
+            f"{self._api_base_url}/listeners/{listener_id}/stop",
+        )
+        return await response.json()
+
     # Wrapper methods for the /api/users API endpoint.
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_user_info_by_user_id(
         self,
         user_id: str,
@@ -186,7 +215,7 @@ class ClientConnection:
         return await response.json()
 
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_own_user_info(self) -> dict[str, Any]:
         response = await self._aiohttp_client_session.get(
             f"{self._api_base_url}/users/me",
@@ -194,7 +223,7 @@ class ClientConnection:
         return await response.json()
 
     @_check_if_logged_in
-    @_check_for_api_error_response
+    @_check_for_rest_api_error_response
     async def get_all_users_info(self) -> list[dict[str, Any]]:
         response = await self._aiohttp_client_session.get(
             f"{self._api_base_url}/users/all",

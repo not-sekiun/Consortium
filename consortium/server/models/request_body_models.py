@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 from consortium.server.objects.user_account_objects import UserRole
@@ -15,3 +17,9 @@ class NewPasswordRequestBodyModel(BaseModel):
 
 class NewRoleRequestBodyModel(BaseModel):
     role: UserRole
+
+
+class NewListenerAttributesRequestBodyModel(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    options: dict[str, Any] | None = None

@@ -40,21 +40,21 @@ class ListenerTemplate(BaseListenerTemplate):
         options = [
             SingleValueOption(
                 name="name",
-                description="Name of the listener being created",
+                description="Name of the listener being created.",
                 required=True,
                 default_value="",
                 value_type=str,
             ),
             SingleValueOption(
                 name="local_host",
-                description="Local host interface to bind to to listen for agents",
+                description="Local host interface to bind to to listen for agents.",
                 required=True,
                 default_value="0.0.0.0",
                 value_type=str,
             ),
             SingleValueOption(
                 name="local_port",
-                description="Local port to bind to to listen for agents",
+                description="Local port to bind to to listen for agents.",
                 required=True,
                 default_value=1337,
                 value_type=int,
@@ -62,7 +62,7 @@ class ListenerTemplate(BaseListenerTemplate):
             ),
             ListValueOption(
                 name="tasks_url_paths",
-                description="URL paths for agents to make GET requests to to obtain the task to run. URL paths are randomly chosen",
+                description="URL paths for agents to make GET requests to to obtain the task to run.",
                 required=True,
                 default_value=["/tasks"],
                 allow_duplicates=False,
@@ -71,7 +71,7 @@ class ListenerTemplate(BaseListenerTemplate):
             ),
             ListValueOption(
                 name="results_url_paths",
-                description="URL paths for agents to make POST requests to to return the results of tasks that were finished running. URL paths are randomly chosen",
+                description="URL paths for agents to make POST requests to to return the results of tasks that were finished running.",
                 required=True,
                 default_value=["/results"],
                 allow_duplicates=False,
@@ -80,7 +80,7 @@ class ListenerTemplate(BaseListenerTemplate):
             ),
             ListValueOption(
                 name="registration_url_paths",
-                description="URL paths for agents to make POST requests to to register with the listener. the agent will query this path once at start up before receiving tasks and sending results. URL paths are randomly chosen",
+                description="URL paths for agents to make POST requests to to register with the listener.",
                 required=True,
                 default_value=["/register"],
                 value_type=str,
@@ -104,7 +104,8 @@ class ListenerTemplate(BaseListenerTemplate):
 
     def resolve_listener_endpoint(self) -> str:
         return (
-            self.options["local_host"].get_option_value()
+            "http://"
+            + self.options["local_host"].get_option_value()
             + ":"
             + str(self.options["local_port"].get_option_value())
         )

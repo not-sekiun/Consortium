@@ -1,7 +1,6 @@
-import uuid
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from consortium.server.models.common_models import ErrorModel
 from consortium.server.objects.listener_objects import ListenerState
@@ -9,8 +8,10 @@ from consortium.server.objects.listener_objects import ListenerState
 
 class ListenerTypeModel(BaseModel):
     name: str
-    description: str
-    listener_type_id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    listener_type_id: str
+    # If compatible_agent_type_ids is an empty list it is compatible with no agent
+    # types.
+    compatible_agent_type_ids: list[str]
 
 
 class _ListenerStatusModel(BaseModel):
@@ -20,8 +21,11 @@ class _ListenerStatusModel(BaseModel):
 
 class ListenerModel(BaseModel):
     name: str
+    description: str
     endpoint: str
     listener_type: ListenerTypeModel
     options: dict[str, Any]
     listener_id: str
     status: _ListenerStatusModel
+    agent_ids: list[str]
+    datetime_created: str

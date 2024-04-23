@@ -10,6 +10,8 @@ class TokenType(StrEnum): ...
 class Token:
     token_type: TokenType
     token: str
+    start_index: int
+    end_index: int
 
 
 @dataclass
@@ -36,7 +38,30 @@ class SimpleLexer(BaseLexer):
     def tokenize(self, input_string: str) -> TokenizedString:
         tokens = []
 
-        for word in input_string.split():
-            tokens.append(Token(self.SimpleLexerTokenType.WORD, word))
+        word = ""
+        for char_index, char in enumerate(input_string.strip()):
+            if char == " ":
+                if word:
+                    tokens.append(
+                        Token(
+                            token_type=self.SimpleLexerTokenType.WORD,
+                            token=word,
+                            start_index=char_index - len(word),
+                            end_index=char_index - 1,  # -1 to exclude the space
+                        ),
+                    )
+                    word = ""
+            else:
+                word += char
+
+        if word:
+            tokens.append(
+                Token(
+                    token_type=self.SimpleLexerTokenType.WORD,
+                    token=word,
+                    start_index=len(input_string) - len(word),
+                    end_index=len(input_string) - 1,
+                ),
+            )
 
         return TokenizedString(tokens=tokens, original_string=input_string)

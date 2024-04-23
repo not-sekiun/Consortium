@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-import consortium.client.client_singletons as client_singletons
 from consortium.client.framework.base_command import (
     BaseCommand,
     CommandContext,
@@ -14,12 +13,10 @@ from consortium.client.objects.client_return_status_objects import (
 from consortium.client.utils.printer_utils import CONSOLE
 from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
-client_connections_service = client_singletons.client_connections_service
-
 
 class InfoListenerTemplateCommand(BaseCommand):
     name = "info_listener_template"
-    description = "List all information for a specific listener template."
+    description = "Show all information for a specific listener template."
     epilog = argparse_epilog_formatter(
         """
         Example:
@@ -56,11 +53,28 @@ class InfoListenerTemplateCommand(BaseCommand):
                 "Listener Template ID",
                 listener_template["listener_template_id"],
             )
-            table.add_row("Listener Name", listener_template["name"])
-            table.add_row("Listener Description", listener_template["description"])
-            table.add_row(
+            table.add_row("Name", listener_template["name"])
+            table.add_row("Description", listener_template["description"])
+            listener_type_table = Table()
+            listener_type_table.add_column("Information")
+            listener_type_table.add_column("Data")
+            listener_type_table.add_row(
                 "Listener Type ID",
                 listener_template["listener_type"]["listener_type_id"],
+            )
+            listener_type_table.add_row(
+                "Name",
+                listener_template["listener_type"]["name"],
+            )
+            listener_type_table.add_row(
+                "Compatible Agent Type IDs",
+                "\n".join(
+                    listener_template["listener_type"]["compatible_agent_type_ids"],
+                ),
+            )
+            table.add_row(
+                "Listener Type",
+                listener_type_table,
             )
             table.add_row("Authors", str(listener_template["authors"]))
 

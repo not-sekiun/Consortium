@@ -12,6 +12,9 @@ from consortium.server.framework.framework_exceptions import (
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.listener_models import ListenerModel
+from consortium.server.models.request_body_models import (
+    NewListenerAttributesRequestBodyModel,
+)
 from consortium.server.objects.listener_objects import ListenerState
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
@@ -169,7 +172,11 @@ async def cancel_listener_by_listener_id(
 )
 def update_listener_by_listener_id(
     listener_id: str,
-    new_listener_options: dict[str, Any],
+    # The only updateable listener attributes are its name, description and any set
+    # options within the listener. The options can dictate the name to be set. Name
+    # setting priority is given to the name attribute over the options attribute to be
+    # as explicit as possible
+    updated_listener_attributes: NewListenerAttributesRequestBodyModel,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.UPDATE_LISTENER_BY_LISTENER_ID)),
@@ -179,66 +186,79 @@ def update_listener_by_listener_id(
         listener = listeners_service.get_listener_by_listener_id(listener_id)
     except ValueError:
         raise ListenerNotFoundError
+    new_name = updated_listener_attributes.name
+    new_description = updated_listener_attributes.description
+    new_options = updated_listener_attributes.options
 
-    previous_listener_options = {
-        option_name: option.get_option_value()
-        for option_name, option in listener.options.items()
-    }
+    if new_description is not None:
+        listener.description = new_description
+    if new_options is not None:
+        previous_options = {
+            option_name: option.get_option_value()
+            for option_name, option in listener.options.items()
+        }
 
-    def revert_to_previous_listener_options():
-        for (
-            previous_option_name,
-            previous_option_value,
-        ) in previous_listener_options.items():
-            listener.options[previous_option_name].set_option_value(
+        def revert_to_previous_listener_options():
+            for (
+                previous_option_name,
                 previous_option_value,
-            )
+            ) in previous_options.items():
+                listener.options[previous_option_name].set_option_value(
+                    previous_option_value,
+                )
 
-    try:
-        # It should be impossible for this for loop to break out without finding
-        # the listener template that matches the target listener or to trip up on a
-        # false positive based on listener type because all listener types are
-        # unique to their respective listener
-        for (
-            listener_template
-        ) in listener_templates_service.get_all_listener_templates():
-            if listener_template.listener_type == listener.listener_type:
-                new_option_values = {}
-                # Preserve values that are not to be modified in the new listener
-                for option_name, option in listener.options.items():
-                    if option_name not in new_listener_options:
-                        new_option_values[option_name] = option.get_option_value()
+        try:
+            # It should be impossible for this for loop to break out without finding
+            # the listener template that matches the target listener or to trip up on a
+            # false positive based on listener type because all listener types are
+            # unique to their respective listener
+            for (
+                listener_template
+            ) in listener_templates_service.get_all_listener_templates():
+                if listener_template.listener_type == listener.listener_type:
+                    new_option_values = {}
+                    # Preserve values that are not to be modified in the new listener
+                    for option_name, option in listener.options.items():
+                        if option_name not in updated_listener_attributes:
+                            new_option_values[option_name] = option.get_option_value()
 
-                # Add in the new values, checking for invalid values
-                for option_name, option_value in new_listener_options.items():
-                    if option_name not in listener_template.options:
-                        revert_to_previous_listener_options()
-                        raise InvalidListenerOptionNameError(
-                            detail=f'Listener option "{option_name}" does not exist',
-                        )
-                    new_option_values[option_name] = option_value
-
-                # Attempt to assign the updated values to the options within the
-                # listener template to ensure that the new values are valid
-                for option_name, option_value in new_option_values.items():
-                    listener_template.options[option_name].set_option_value(
+                    # Add in the new values, checking for invalid values
+                    for (
+                        option_name,
                         option_value,
-                    )
+                    ) in updated_listener_attributes.items():
+                        if option_name not in listener_template.options:
+                            revert_to_previous_listener_options()
+                            raise InvalidListenerOptionNameError(
+                                detail=f'Listener option "{option_name}" does not exist',
+                            )
+                        new_option_values[option_name] = option_value
 
-                # Create a temporary listener whose attributes we copy over to the
-                # existing listener. This allows us to perform the name and
-                # endpoint resolution required to update the attribute without
-                # inadvertently overwriting any existing state within the existing
-                # listener
-                temporary_listener = listener_template.create_listener()
-                listener.name = temporary_listener.name
-                listener.endpoint = temporary_listener.endpoint
-                listener.options = copy.deepcopy(temporary_listener.options)
+                    # Attempt to assign the updated values to the options within the
+                    # listener template to ensure that the new values are valid
+                    for option_name, option_value in new_option_values.items():
+                        listener_template.options[option_name].set_option_value(
+                            option_value,
+                        )
 
-                break
-    except ValueError as exc:
-        revert_to_previous_listener_options()
-        raise InvalidListenerOptionValueError(detail=str(exc))
+                    # Create a temporary listener whose attributes we copy over to the
+                    # existing listener. This allows us to perform the name and
+                    # endpoint resolution required to update the attribute without
+                    # inadvertently overwriting any existing state within the existing
+                    # listener
+                    temporary_listener = listener_template.create_listener()
+                    listener.name = temporary_listener.name
+                    listener.endpoint = temporary_listener.endpoint
+                    listener.options = copy.deepcopy(temporary_listener.options)
+
+                    break
+        except ValueError as exc:
+            revert_to_previous_listener_options()
+            raise InvalidListenerOptionValueError(detail=str(exc))
+    # Update name after options to overwrite the name if it is set in options.
+    if new_name is not None:
+        listener.name = new_name
+
     return SuccessResponseModel()
 
 

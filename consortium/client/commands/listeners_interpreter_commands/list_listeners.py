@@ -12,8 +12,6 @@ from consortium.client.objects.client_return_status_objects import (
 from consortium.client.utils.printer_utils import CONSOLE
 from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
-client_connections_service = client_singletons.client_connections_service
-
 
 class ListListenersCommand(BaseCommand):
     name = "list_listeners"
@@ -42,11 +40,15 @@ class ListListenersCommand(BaseCommand):
 
             table.add_column("Listener ID")
             table.add_column("Name")
+            table.add_column("Endpoint")
+            table.add_column("Status")
 
             for listener in all_listeners:
                 table.add_row(
                     listener["listener_id"],
                     listener["name"],
+                    listener["endpoint"],
+                    listener["status"]["state"],
                 )
 
             CONSOLE.print(table)

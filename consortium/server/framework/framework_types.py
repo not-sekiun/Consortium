@@ -56,14 +56,10 @@ class AgentType:
     def to_json(self) -> dict[str, str]:
         return {
             "name": self.name,
-            "compatible_listener_types": (
-                [
-                    str(listener_type.listener_type_id)
-                    for listener_type in self.compatible_listener_types
-                ]
-                if self.compatible_listener_types
-                else None
-            ),
+            "compatible_listener_types": [
+                str(listener_type.listener_type_id)
+                for listener_type in self.compatible_listener_types
+            ],
             "agent_type_id": str(self.agent_type_id),
         }
 
@@ -127,14 +123,10 @@ class ListenerType:
     def to_json(self) -> dict[str, str]:
         return {
             "name": self.name,
-            "compatible_agent_types": (
-                [
-                    str(agent_type.agent_type_id)
-                    for agent_type in self.compatible_agent_types
-                ]
-                if self.compatible_agent_types
-                else None
-            ),
+            "compatible_agent_type_ids": [
+                str(agent_type.agent_type_id)
+                for agent_type in self.compatible_agent_types
+            ],
             "listener_type_id": str(self.listener_type_id),
         }
 

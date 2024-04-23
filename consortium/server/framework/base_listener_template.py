@@ -1,3 +1,4 @@
+import copy
 import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
@@ -88,7 +89,7 @@ class BaseListenerTemplate(ABC):
             name=self.resolve_listener_name(),
             endpoint=self.resolve_listener_endpoint(),
             listener_type=self.listener_type,
-            options=self.options,
+            options=copy.deepcopy(self.options),
         )
 
     def to_json(self) -> dict[str, Any]:
