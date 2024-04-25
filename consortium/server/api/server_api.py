@@ -9,6 +9,7 @@ from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_config import SERVER_RELEASE
 from consortium.server.server_dependencies import AuthorizeUserRequest
 from consortium.server.server_exceptions import (
+    ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
@@ -18,6 +19,7 @@ router = APIRouter(
     prefix="/api/server",
     responses={
         401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },

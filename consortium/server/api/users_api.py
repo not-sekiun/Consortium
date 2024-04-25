@@ -20,6 +20,7 @@ router = APIRouter(
     prefix="/api/users",
     responses={
         401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
@@ -43,7 +44,6 @@ async def get_own_user_info(
     "/all",
     responses={
         200: {"model": list[UserModel]},
-        403: {"model": ForbiddenError().to_pydantic_model()},
     },
 )
 async def get_all_users_info(
@@ -59,8 +59,7 @@ async def get_all_users_info(
     "/{user_id}",
     responses={
         200: {"model": UserModel},
-        403: {"model": ForbiddenError().to_pydantic_model()},
-        404: {"model": UserNotFoundError().to_pydantic_model()},
+        404: {"model": UserNotFoundError(user_id="string").to_pydantic_model()},
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
@@ -77,6 +76,7 @@ async def get_user_info_by_user_id(
 ) -> UserModel:
     try:
         user = users_service.get_user_by_user_id(user_id)
-        return UserModel(**user.to_json())
     except ValueError:
-        raise UserNotFoundError
+        raise UserNotFoundError(user_id=user_id)
+
+    return UserModel(**user.to_json())

@@ -1,4 +1,5 @@
 import copy
+import textwrap
 import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
@@ -89,7 +90,10 @@ class BaseListenerTemplate(ABC):
             name=self.resolve_listener_name(),
             endpoint=self.resolve_listener_endpoint(),
             listener_type=self.listener_type,
-            options=copy.deepcopy(self.options),
+            parameters={
+                option_name: option.get_option_value()
+                for option_name, option in self.options.items()
+            },
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -104,7 +108,9 @@ class BaseListenerTemplate(ABC):
             },
             "listener_template_id": str(self.listener_template_id),
             "validating_function": (
-                self.validating_function.__doc__ if self.validating_function else None
+                "".join(textwrap.dedent(self.validating_function.__doc__).splitlines())
+                if self.validating_function
+                else None
             ),
         }
 

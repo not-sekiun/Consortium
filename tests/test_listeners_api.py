@@ -19,13 +19,16 @@ LISTENER_RESPONSE_JSON_SCHEMA = {
             "type": "object",
             "properties": {
                 "name": {"type": "string"},
-                "description": {"type": "string"},
+                "compatible_agent_type_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
                 "listener_type_id": {"type": "string"},
             },
         },
         "authors": {"type": "array", "items": {"type": "string"}},
         "listener_id": {"type": "string"},
-        "options": {"type": "object"},
+        "parameters": {"type": "object"},
         "status": {
             "type": "object",
             "properties": {
@@ -44,7 +47,7 @@ LISTENER_RESPONSE_JSON_SCHEMA = {
                     ],
                 },
             },
-            "required": ["state"],
+            "required": ["state", "error"],
         },
     },
     "required": [
@@ -52,7 +55,7 @@ LISTENER_RESPONSE_JSON_SCHEMA = {
         "endpoint",
         "listener_type",
         "listener_id",
-        "options",
+        "parameters",
         "status",
     ],
 }
@@ -64,7 +67,7 @@ ALL_LISTENERS_RESPONSE_JSON_SCHEMA = {
 
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_get_all_listeners_info(
+def test_get_all_listeners(
     session: requests.Session,
 ):
     validate_response(
@@ -78,7 +81,7 @@ def test_get_all_listeners_info(
 
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_get_listener_info_by_listener_id(
+def test_get_listener_by_listener_id(
     admin_session: requests.Session,
     session: requests.Session,
 ):
@@ -102,7 +105,7 @@ def test_start_listener_by_listener_id(
     if session != spectator_session:
         # Test for admin sessions and operator sessions.
         for listener_id in get_all_listener_ids(admin_session):
-            resp = validate_response(
+            validate_response(
                 test_response=session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/start",
                 ),
@@ -111,7 +114,7 @@ def test_start_listener_by_listener_id(
             )
             # Listeners cannot be deleted if they are running, so we stop them first to
             # allow the fixture to properly delete the listener after the test finishes.
-            resp = validate_response(
+            validate_response(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/stop",
                 ),
@@ -242,6 +245,7 @@ def test_update_listener_by_listener_id(
     session: requests.Session,
 ):
     new_name = uuid.uuid4().hex
+    new_description = uuid.uuid4().hex
 
     if session != spectator_session:
         # Test for admin sessions and operator sessions.
@@ -249,9 +253,9 @@ def test_update_listener_by_listener_id(
             validate_response(
                 test_response=session.put(
                     f"http://localhost:9999/api/listeners/{listener_id}",
-                    json={"name": new_name},
+                    json={"name": new_name, "description": new_description},
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=LISTENER_RESPONSE_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
@@ -260,7 +264,8 @@ def test_update_listener_by_listener_id(
                 ),
                 expected_json_schema=LISTENER_RESPONSE_JSON_SCHEMA,
                 expected_status_code=200,
-                validator_function=lambda response: response.json()["name"] == new_name,
+                validator_function=lambda response: response.json()["name"] == new_name
+                and response.json()["description"] == new_description,
             )
     else:
         # Test for spectator sessions.

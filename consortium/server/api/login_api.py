@@ -23,6 +23,7 @@ users_service = server_singletons.users_service
     "",
     responses={
         200: {"model": JSONWebTokenModel},
+        409: {"model": AlreadyLoggedInError().to_pydantic_model()},
     },
     # This allows us to use the type annotations in the function signature as Response
     # is not a valid Pydantic model.

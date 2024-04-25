@@ -44,7 +44,6 @@ class InfoListenerCommand(BaseCommand):
             listener = await client_connection.get_listener_by_listener_id(
                 parsed_args.listener_id[0],
             )
-            CONSOLE.print(listener)
 
             table = Table(title="Listener Information")
             table.add_column("Information")
@@ -72,12 +71,12 @@ class InfoListenerCommand(BaseCommand):
                 "\n".join(listener["listener_type"]["compatible_agent_type_ids"]),
             )
             table.add_row("Listener Type", listener_type_table)
-            options_table = Table()
-            options_table.add_column("Option")
-            options_table.add_column("Value")
-            for option_name, option in listener["options"].items():
-                options_table.add_row(option_name, str(option["value"]))
-            table.add_row("Options", options_table)
+            parameter_table = Table()
+            parameter_table.add_column("Parameter")
+            parameter_table.add_column("Value")
+            for parameter_name, parameter_value in listener["parameters"].items():
+                parameter_table.add_row(parameter_name, str(parameter_value))
+            table.add_row("Parameters", parameter_table)
             table.add_row("Status", str(listener["status"]["state"]))
             table.add_row("Datetime Created", listener["datetime_created"])
             table.add_row("Agent IDs", "\n".join(listener["agent_ids"]))

@@ -79,6 +79,7 @@ class AuthorizeUserRequest:
         ),  # All defined permissions now and in the future are granted to the admin
         UserRole.OPERATOR: {
             UserPermissions.READ_OWN_USER_ACCOUNT,
+            UserPermissions.UPDATE_OWN_USER_ACCOUNT_USERNAME,
             UserPermissions.UPDATE_OWN_USER_ACCOUNT_PASSWORD,
             UserPermissions.DELETE_OWN_USER_ACCOUNT,
             UserPermissions.READ_OWN_USER,

@@ -6,6 +6,7 @@ from consortium.server.framework.framework_exceptions import (
     ListenerStartError,
     ListenerStopError,
 )
+from consortium.server.server_exceptions import FatalListenerRuntimeError
 
 
 class ListenerState(StrEnum):
@@ -65,10 +66,16 @@ class ListenerStatus:
 
     def transition_to_fatal(self, exception: Exception) -> None:
         self.state = ListenerState.FATAL
-        self.exception = exception
+        self.exception = FatalListenerRuntimeError(
+            message="A fatal error occurred while the listener was running.",
+            detail={
+                "type": type(exception).__name__,
+                "message": str(exception),
+            },
+        )
 
     def to_json(self) -> dict[str, str | None]:
-        # internally the identifier "exception" is more representative of what is stored
+        # Internally the identifier "exception" is more representative of what is stored
         # here. In the API we want to expose this as "error" instead to align the naming
         # convention with other parts of the api that use "error" instead of "exception"
         if not self.exception:

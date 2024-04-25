@@ -56,7 +56,7 @@ class AgentType:
     def to_json(self) -> dict[str, str]:
         return {
             "name": self.name,
-            "compatible_listener_types": [
+            "compatible_listener_type_ids": [
                 str(listener_type.listener_type_id)
                 for listener_type in self.compatible_listener_types
             ],

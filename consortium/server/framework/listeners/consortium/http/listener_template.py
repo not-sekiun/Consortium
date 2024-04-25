@@ -9,7 +9,10 @@ from consortium.server.framework.options import ListValueOption, SingleValueOpti
 def _check_all_url_endpoints_unique(
     options_dict: dict[str, SingleValueOption | ListValueOption],
 ) -> None:
-    """Checks that all the URL endpoints are unique between the tasks, results and registration URL paths"""
+    """
+    Checks that the list of the tasks, results and registration URL paths are mutually
+    exclusive to one another.
+    """
     all_url_paths = (
         options_dict["tasks_url_paths"].get_option_value()
         + options_dict["results_url_paths"].get_option_value()
@@ -19,42 +22,52 @@ def _check_all_url_endpoints_unique(
     for element in all_url_paths:
         if element in unique_elements:
             raise ValueError(
-                'The tasks, results and registration URL paths must not share any common URL endpoints between all of them. The URL path "{element}" violates this requirement',
+                f'The provided URL path "{element}" is not unique among the the tasks, '
+                f"results and registration URL paths.",
             )
         unique_elements.add(element)
 
 
 def _check_integer_is_a_valid_port_number(port: int) -> None:
-    """Checks that the integer provided is a valid port number (0 to 65535)"""
+    """
+    Check that the integer provided is a valid port number between 0 and 65535.
+    """
     if port not in range(0, 65536):
         raise ValueError(
-            f"The port number {port} is not a valid port number. Port numbers must be in the range of 0 to 65535",
+            f"The port number provided {port} is not a valid port number between 0 and "
+            "65535",
         )
 
 
 class ListenerTemplate(BaseListenerTemplate):
     def __init__(self):
-        name = "HTTP Consortium Listener"
-        description = "An HTTP based listener that is compatible with all Consortium-based agents (default agents bundled with the framework)"
+        name = "HTTP Listener"
+        description = "A listener that communicates over the HTTP transport."
         authors = ["Sekiun (github.com/not-sekiun)"]
         options = [
             SingleValueOption(
                 name="name",
-                description="Name of the listener being created.",
+                description="The name of the listener being created.",
                 required=True,
                 default_value="",
                 value_type=str,
             ),
             SingleValueOption(
                 name="local_host",
-                description="Local host interface to bind to to listen for agents.",
+                description=(
+                    "The local host interface for the listener to bind to when "
+                    "listening for agents."
+                ),
                 required=True,
                 default_value="0.0.0.0",
                 value_type=str,
             ),
             SingleValueOption(
                 name="local_port",
-                description="Local port to bind to to listen for agents.",
+                description=(
+                    "The local port for the listener to bind to when listening for "
+                    "agents."
+                ),
                 required=True,
                 default_value=1337,
                 value_type=int,
@@ -62,7 +75,10 @@ class ListenerTemplate(BaseListenerTemplate):
             ),
             ListValueOption(
                 name="tasks_url_paths",
-                description="URL paths for agents to make GET requests to to obtain the task to run.",
+                description=(
+                    "A list of available URL paths for agents to randomly query when "
+                    "obtaining tasks to run."
+                ),
                 required=True,
                 default_value=["/tasks"],
                 allow_duplicates=False,
@@ -71,7 +87,10 @@ class ListenerTemplate(BaseListenerTemplate):
             ),
             ListValueOption(
                 name="results_url_paths",
-                description="URL paths for agents to make POST requests to to return the results of tasks that were finished running.",
+                description=(
+                    "A list of available URL paths for agents to randomly submit to "
+                    "when returning the results of finished tasks."
+                ),
                 required=True,
                 default_value=["/results"],
                 allow_duplicates=False,
@@ -80,7 +99,10 @@ class ListenerTemplate(BaseListenerTemplate):
             ),
             ListValueOption(
                 name="registration_url_paths",
-                description="URL paths for agents to make POST requests to to register with the listener.",
+                description=(
+                    "A list of available URL paths for the agent to randomly query "
+                    "when registering with the listener."
+                ),
                 required=True,
                 default_value=["/register"],
                 value_type=str,

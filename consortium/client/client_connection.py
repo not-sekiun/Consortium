@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any
 
 import aiohttp
+from loguru import logger
 
 from consortium.client.client_exceptions import (
     AlreadyLoggedInError,
@@ -19,7 +20,7 @@ def _check_if_logged_in(async_func):
         # args[0] is the self parameter of the method.
         if not args[0]._logged_in:
             raise NotLoggedInError(
-                "Client is not logged in to server (Log in to server before attempting to make an API request).",
+                "Client is not logged in to server.",
             )
 
         return await async_func(*args, **kwargs)
@@ -33,7 +34,8 @@ def _check_for_rest_api_error_response(async_func):
 
         if "error" in response and response["error"]["detail"]:
             raise RESTAPIError(
-                f"{response["error"]["code"]}: {response["error"]["message"]} (Detail: {response["error"]["detail"]})",
+                f"{response["error"]["code"]}: {response["error"]["message"]} "
+                f"(Detail: {response["error"]["detail"]})",
             )
         elif "error" in response and not response["error"]["detail"]:
             raise RESTAPIError(
@@ -45,7 +47,6 @@ def _check_for_rest_api_error_response(async_func):
     return wrapper
 
 
-# TODO: Add debug messages for API requests.
 class ClientConnection:
     def __init__(self, client_config: ClientConfig):
         self.client_config = client_config
@@ -58,14 +59,67 @@ class ClientConnection:
         self.datetime_connected = None
         self.client_connection_id = uuid.uuid4()
 
+        self._client_connection_logger = logger.bind(
+            logger_name=f'Consortium Client Connection "{self.name}" ({self.client_connection_id})',
+        )
         self._api_base_url = f"http://{self.remote_host}:{self.remote_port}/api"
         self._logged_in = False
+
+    async def _request(self, method: str, url: str, **kwargs) -> Any:
+        response = await self._aiohttp_client_session.request(method, url, **kwargs)
+        response_json = await response.json()
+
+        color_map = {
+            "1": ("<bold><blue>", "</></>"),
+            "2": ("<bold><green>", "</></>"),
+            "3": ("<bold><blue>", "</></>"),
+            "4": ("<bold><yellow>", "</></>"),
+            "5": ("<bold><red>", "</></>"),
+        }
+        if kwargs:
+            format_string = (
+                "<bold><blue>{}</></> {} {}"
+                + color_map[str(response.status)[0]][0]
+                + " {} {}"
+                + color_map[str(response.status)[0]][1]
+                + " {} {}"
+            )
+            self._client_connection_logger.opt(ansi=True).debug(
+                format_string,
+                method.upper(),
+                url,
+                kwargs,
+                response.status,
+                response.reason,
+                response.content_length,
+                response_json,
+            )
+        else:
+            format_string = (
+                "<bold><blue>{}</></> {}"
+                + color_map[str(response.status)[0]][0]
+                + " {} {}"
+                + color_map[str(response.status)[0]][1]
+                + " {} {}"
+            )
+            self._client_connection_logger.opt(ansi=True).debug(
+                format_string,
+                method.upper(),
+                url,
+                response.status,
+                response.reason,
+                response.content_length,
+                response_json,
+            )
+
+        return response_json
 
     # Wrapper methods for the /api/login API endpoints.
     async def login(self):
         if self._logged_in:
             raise AlreadyLoggedInError(
-                "Client is already logged in to server (Log out from server before attempting to log in).",
+                "Client is already logged in to server (Log out from server before "
+                "attempting to log in).",
             )
 
         try:
@@ -86,14 +140,17 @@ class ClientConnection:
 
         if response.status != 200:
             raise FailedToLoginError(
-                "Failed to login to server (Either invalid credentials were provided or the server is not a valid Consortium server instance).",
+                "Failed to login to server. Either invalid credentials were provided "
+                "or the server is not a valid Consortium server instance.",
             )
         if (
             response_json["token_type"] != "bearer"
             or "access_token" not in response_json
         ):
             raise InvalidServerLoginResponseError(
-                "Failed to login to server because it did not return a valid OAuth2 JSON web token (The server is likely not a valid Consortium server instance).",
+                "Failed to login to server because it did not return a valid OAuth2 "
+                "JSON web token. The server is likely not a valid Consortium server "
+                "instance.",
             )
 
         self.datetime_connected = datetime.now()
@@ -105,12 +162,11 @@ class ClientConnection:
     # Wrapper methods for the /api/logout API endpoint.
     async def logout(self):
         if not self._logged_in:
-            raise NotLoggedInError(
-                "Client is not logged in to server (Log in to server before attempting to log out).",
-            )
+            raise NotLoggedInError("Client is not logged in to server.")
 
-        await self._aiohttp_client_session.post(
-            f"{self._api_base_url}/logout",
+        await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/logout",
         )
         self._aiohttp_client_session.headers.pop("Authorization")
         await self._aiohttp_client_session.close()
@@ -120,27 +176,27 @@ class ClientConnection:
     @_check_if_logged_in
     @_check_for_rest_api_error_response
     async def get_server_release(self) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/server/release",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/server/release",
         )
-        return await response.json()
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
     async def get_server_config(self) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/server/config",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/server/config",
         )
-        return await response.json()
 
     # Wrapper methods for the /api/listener-templates API endpoint.
     @_check_if_logged_in
     @_check_for_rest_api_error_response
     async def get_all_listener_templates(self) -> list[dict[str, Any]]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/listener-templates/all",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/listener-templates/all",
         )
-        return await response.json()
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
@@ -148,10 +204,10 @@ class ClientConnection:
         self,
         listener_template_id: str,
     ) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/listener-templates/{listener_template_id}",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/listener-templates/{listener_template_id}",
         )
-        return await response.json()
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
@@ -160,20 +216,20 @@ class ClientConnection:
         listener_template_id: str,
         listener_template_option_values: dict[str, Any],
     ) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.post(
-            f"{self._api_base_url}/listener-templates/{listener_template_id}",
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/listener-templates/{listener_template_id}",
             json=listener_template_option_values,
         )
-        return await response.json()
 
     # Wrapper methods for the /api/listeners API endpoint.
     @_check_if_logged_in
     @_check_for_rest_api_error_response
     async def get_all_listeners(self) -> list[dict[str, Any]]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/listeners/all",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/listeners/all",
         )
-        return await response.json()
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
@@ -181,26 +237,26 @@ class ClientConnection:
         self,
         listener_id: str,
     ) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/listeners/{listener_id}",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/listeners/{listener_id}",
         )
-        return await response.json()
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
     async def start_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.post(
-            f"{self._api_base_url}/listeners/{listener_id}/start",
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/listeners/{listener_id}/start",
         )
-        return await response.json()
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
     async def stop_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.post(
-            f"{self._api_base_url}/listeners/{listener_id}/stop",
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/listeners/{listener_id}/stop",
         )
-        return await response.json()
 
     # Wrapper methods for the /api/users API endpoint.
     @_check_if_logged_in
@@ -209,26 +265,26 @@ class ClientConnection:
         self,
         user_id: str,
     ) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/users/{user_id}",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/users/{user_id}",
         )
-        return await response.json()
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
     async def get_own_user_info(self) -> dict[str, Any]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/users/me",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/users/me",
         )
-        return await response.json()
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
     async def get_all_users_info(self) -> list[dict[str, Any]]:
-        response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/users/all",
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/users/all",
         )
-        return await response.json()
 
     def __repr__(self) -> str:
         return f"ClientConnection(client_config={self.client_config})"

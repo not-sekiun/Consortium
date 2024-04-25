@@ -14,9 +14,13 @@ LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA = {
             "type": "object",
             "properties": {
                 "name": {"type": "string"},
-                "description": {"type": "string"},
                 "listener_type_id": {"type": "string"},
+                "compatible_agent_type_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
             },
+            "required": ["name", "listener_type_id", "compatible_agent_type_ids"],
         },
         "authors": {"type": "array", "items": {"type": "string"}},
         "options": {"type": "object"},
@@ -58,7 +62,7 @@ LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
 }
 
 
-def test_get_all_listener_templates_info(
+def test_get_all_listener_templates(
     session: requests.Session,
 ):
     validate_response(
@@ -70,7 +74,7 @@ def test_get_all_listener_templates_info(
     )
 
 
-def test_get_listener_template_info_by_listener_template_id(
+def test_get_listener_template_by_listener_template_id(
     admin_session: requests.Session,
     session: requests.Session,
 ):

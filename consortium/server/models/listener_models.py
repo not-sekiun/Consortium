@@ -24,7 +24,7 @@ class ListenerModel(BaseModel):
     description: str
     endpoint: str
     listener_type: ListenerTypeModel
-    options: dict[str, Any]
+    parameters: dict[str, Any]
     listener_id: str
     status: _ListenerStatusModel
     agent_ids: list[str]

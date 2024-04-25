@@ -124,7 +124,7 @@ def test_create_user_account(
         )
 
 
-def test_get_own_user_account_info(session: requests.Session):
+def test_get_own_user_account(session: requests.Session):
     validate_response(
         test_response=session.get("http://localhost:9999/api/user-accounts/me"),
         expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
@@ -132,7 +132,7 @@ def test_get_own_user_account_info(session: requests.Session):
     )
 
 
-def test_get_all_user_accounts_info(
+def test_get_all_user_accounts(
     admin_session: requests.Session,
     session: requests.Session,
 ):
@@ -152,7 +152,7 @@ def test_get_all_user_accounts_info(
         )
 
 
-def test_get_user_account_info_by_user_account_id(
+def test_get_user_account_by_user_account_id(
     admin_session: requests.Session,
     session: requests.Session,
 ):
@@ -177,35 +177,73 @@ def test_get_user_account_info_by_user_account_id(
 
 
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_update_own_user_account_password(
+def test_update_own_user_account(
+    admin_session: requests.Session,
+    operator_session: requests.Session,
     spectator_session: requests.Session,
     session: requests.Session,
 ):
+    new_username = uuid.uuid4().hex
     new_password = uuid.uuid4().hex
 
-    if session != spectator_session:
-        # Test for admin sessions and operator sessions.
+    if session == admin_session:
+        new_role = "OPERATOR"
         validate_response(
             session.patch(
-                "http://localhost:9999/api/user-accounts/me/password",
-                json={"password": new_password},
+                "http://localhost:9999/api/user-accounts/me",
+                json={
+                    "username": new_username,
+                    "password": new_password,
+                    "role": new_role,
+                },
             ),
-            expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
-            expected_status_code=200,
-        )
-        validate_response(
-            test_response=session.get("http://localhost:9999/api/user-accounts/me"),
             expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
             expected_status_code=200,
-            validator_function=lambda response: response.json()["password"]
-            == new_password,
+            validator_function=lambda response: response.json()["username"]
+            == new_username
+            and response.json()["password"] == new_password
+            and response.json()["role"] == new_role,
+        )
+    elif session == operator_session:
+        new_role = "ADMIN"
+        validate_response(
+            session.patch(
+                "http://localhost:9999/api/user-accounts/me",
+                json={
+                    "username": new_username,
+                    "password": new_password,
+                    "role": new_role,
+                },
+            ),
+            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_status_code=403,
+        )
+        validate_response(
+            session.patch(
+                "http://localhost:9999/api/user-accounts/me",
+                json={
+                    "username": new_username,
+                    "password": new_password,
+                },
+            ),
+            expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+            expected_status_code=200,
+            validator_function=lambda response: response.json()["username"]
+            == new_username
+            and response.json()["password"] == new_password
+            and response.json()["role"] == "OPERATOR",
         )
     else:
         # Test for spectator sessions.
+        new_role = "ADMIN"
         validate_response(
             spectator_session.patch(
-                "http://localhost:9999/api/user-accounts/me/password",
-                json={"password": new_password},
+                "http://localhost:9999/api/user-accounts/me",
+                json={
+                    "username": new_username,
+                    "password": new_password,
+                    "role": new_role,
+                },
             ),
             expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
             expected_status_code=403,
@@ -213,92 +251,52 @@ def test_update_own_user_account_password(
 
 
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_update_user_account_password_by_user_account_id(
+def test_update_user_account_by_user_account_id(
     admin_session: requests.Session,
     session: requests.Session,
 ):
-    new_password = uuid.uuid4().hex
-
     if session == admin_session:
-        # Test for admin sessions.
-        # Changing the password of a user account will not log the user out from the
-        # associated account.
+        old_role_to_new_role_map = {
+            "ADMIN": "OPERATOR",
+            "OPERATOR": "SPECTATOR",
+            "SPECTATOR": "ADMIN",
+        }
         for user_account_id in get_all_user_account_ids(admin_session):
+            user = admin_session.get(
+                f"http://localhost:9999/api/user-accounts/{user_account_id}",
+            ).json()
+            new_username = uuid.uuid4().hex
+            new_password = uuid.uuid4().hex
+            new_role = old_role_to_new_role_map[user["role"]]
             validate_response(
                 test_response=admin_session.patch(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}/password",
-                    json={"password": new_password},
-                ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
-                expected_status_code=200,
-            )
-            validate_response(
-                test_response=admin_session.get(
                     f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                    json={
+                        "username": new_username,
+                        "password": new_password,
+                        "role": new_role,
+                    },
                 ),
                 expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
                 expected_status_code=200,
-                validator_function=lambda response: response.json()["password"]
-                == new_password,
+                validator_function=lambda response: response.json()["username"]
+                == new_username
+                and response.json()["password"] == new_password
+                and response.json()["role"] == new_role,
             )
     else:
-        # Test for operator and spectator sessions.
         for user_account_id in get_all_user_account_ids(admin_session):
+            new_username = uuid.uuid4().hex
+            new_password = uuid.uuid4().hex
+            new_role = "OPERATOR"
             validate_response(
                 test_response=session.patch(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}/password",
-                    json={"password": new_password},
-                ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-                expected_status_code=403,
-            )
-
-
-@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_update_user_account_role_by_user_account_id(
-    admin_session: requests.Session,
-    session: requests.Session,
-):
-    old_role_to_new_role_map = {
-        "ADMIN": "OPERATOR",
-        "OPERATOR": "SPECTATOR",
-        "SPECTATOR": "ADMIN",
-    }
-
-    if session == admin_session:
-        # Test for admin sessions.
-        for user_account_id in get_all_user_account_ids(admin_session):
-            old_role = admin_session.get(
-                f"http://localhost:9999/api/user-accounts/{user_account_id}",
-            ).json()["role"]
-            new_role = old_role_to_new_role_map[old_role]
-            validate_response(
-                test_response=admin_session.patch(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}/role",
-                    json={"role": new_role},
-                ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
-                expected_status_code=200,
-            )
-            validate_response(
-                test_response=admin_session.get(
                     f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                ),
-                expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
-                expected_status_code=200,
-                validator_function=lambda response: response.json()["role"] == new_role,
-            )
-    else:
-        # Test for operator and spectator sessions.
-        for user_account_id in get_all_user_account_ids(admin_session):
-            old_role = admin_session.get(
-                f"http://localhost:9999/api/user-accounts/{user_account_id}",
-            ).json()["role"]
-            new_role = old_role_to_new_role_map[old_role]
-            validate_response(
-                test_response=session.patch(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}/role",
-                    json={"role": new_role},
+                    json={
+                        "username": new_username,
+                        "password": new_password,
+                        "role": new_role,
+                    },
                 ),
                 expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
                 expected_status_code=403,

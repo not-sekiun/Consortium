@@ -15,14 +15,12 @@ from consortium.server.framework.framework_exceptions import (
     ListenerStopError,
 )
 from consortium.server.framework.framework_types import ListenerType
-from consortium.server.framework.options import (
-    ChoiceValueOption,
-    DictionaryValueOption,
-    ListValueOption,
-    SingleValueOption,
-)
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.listener_objects import ListenerState, ListenerStatus
+from consortium.server.server_exceptions import (
+    ListenerAlreadyRunningError,
+    ListenerNotRunningError,
+)
 
 
 class BaseListener(ABC):
@@ -32,23 +30,14 @@ class BaseListener(ABC):
         name: str = "",
         description: str = "",
         endpoint: str = "",
-        options: (
-            dict[
-                str,
-                SingleValueOption
-                | ListValueOption
-                | ChoiceValueOption
-                | DictionaryValueOption,
-            ]
-            | None
-        ) = None,
+        parameters: dict[str, Any] | None = None,
     ) -> None:
         self.listener_id = uuid.uuid4()
         self.name = name
         self.description = description
         self.endpoint = endpoint
         self.listener_type = listener_type
-        self.options = options
+        self.parameters = parameters
         self.datetime_created = datetime.now()
         self.status = ListenerStatus()
 
@@ -155,24 +144,39 @@ class BaseListener(ABC):
 
     async def start_listener(self) -> None:
         if self.status.state == ListenerState.STARTED:
-            raise ListenerStartError(detail="Listener is already running")
+            raise ListenerAlreadyRunningError(
+                message="The listener cannot be started because it is already running",
+            )
 
-        # ListenerStartError can be raised here to indicate some sort of validation
-        # failure
+        # ListenerStartError is raised within on_listener_started() to abort the
+        # listener start process if preconditions are not met.
         self.status.transition_to_started()
-        await self.on_listener_started()
+        try:
+            await self.on_listener_started()
+        except ListenerStartError as exc:
+            self.status.transition_to_errored(exception=exc)
+            raise exc
 
         self._listener_task = asyncio.create_task(self._run_listener())
 
     async def stop_listener(self) -> None:
         if self.status.state != ListenerState.RUNNING:
-            raise ListenerStopError(detail="Listener is not running")
+            raise ListenerNotRunningError(
+                message="The listener cannot be stopped because it is not running.",
+            )
 
-        self.stop_listener_event.set()
+        try:
+            self.stop_listener_event.set()
+        except ListenerStopError as exc:
+            self.status.transition_to_running()
+            self.stop_listener_event.clear()
+            raise exc
 
     async def cancel_listener(self) -> None:
         if self.status.state != ListenerState.RUNNING:
-            raise ListenerCancellationError(detail="Listener is not running")
+            raise ListenerNotRunningError(
+                message="The listener cannot be cancelled because it is not running.",
+            )
         self._listener_task.cancel()
         self._listener_task = None
 
@@ -183,10 +187,7 @@ class BaseListener(ABC):
             "description": self.description,
             "endpoint": self.endpoint,
             "listener_type": self.listener_type.to_json(),
-            "options": {
-                option_name: {**option.to_json(), "value": option.get_option_value()}
-                for option_name, option in self.options.items()
-            },
+            "parameters": self.parameters,
             "status": self.status.to_json(),
             "agent_ids": [str(agent.agent_id) for agent in self.agents.values()],
             "datetime_created": self.datetime_created.isoformat(),
@@ -196,4 +197,7 @@ class BaseListener(ABC):
         return f'"{self.name}" ({str(self.listener_id)})'
 
     def __repr__(self) -> str:
-        return f"Listener(listener_type={self.listener_type!r}, name={self.name!r}, endpoint={self.endpoint!r}, options={self.options!r})"
+        return (
+            f"Listener(listener_type={self.listener_type!r}, name={self.name!r}, "
+            f"endpoint={self.endpoint!r}, parameters={self.parameters!r})"
+        )

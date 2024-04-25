@@ -1,4 +1,5 @@
 import copy
+import textwrap
 import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
@@ -76,7 +77,10 @@ class BaseAgentTemplate(ABC):
         created_agent_generator = self.agent_generator(
             agent_type=self.agent_type,
             name=self.resolve_agent_generator_name(),
-            options=copy.deepcopy(self.options),
+            parameters={
+                option_name: option.get_option_value()
+                for option_name, option in self.options.items()
+            },
         )
         return created_agent_generator
 
@@ -91,7 +95,9 @@ class BaseAgentTemplate(ABC):
                 for option_name, option in self.options.items()
             },
             "agent_template_id": str(self.agent_template_id),
-            "validating_function": self.validating_function.__doc__
+            "validating_function": "".join(
+                textwrap.dedent(self.validating_function.__doc__).splitlines(),
+            )
             if self.validating_function
             else None,
         }

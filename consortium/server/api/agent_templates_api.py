@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -10,13 +10,23 @@ from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 from consortium.server.server_exceptions import (
     AgentTemplateNotFoundError,
+    ForbiddenError,
+    InternalServerError,
     InvalidAgentTemplateOptionNameError,
     InvalidAgentTemplateOptionValueError,
+    MethodNotAllowedError,
+    UnauthorizedError,
     UnprocessableEntityError,
 )
 
 router = APIRouter(
     prefix="/api/agent-templates",
+    responses={
+        401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
+        405: {"model": MethodNotAllowedError().to_pydantic_model()},
+        500: {"model": InternalServerError().to_pydantic_model()},
+    },
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 agent_templates_service = server_singletons.agent_templates_service
@@ -26,22 +36,31 @@ agent_generators_service = server_singletons.agent_generators_service
 @router.post(
     "/{agent_template_id}",
     responses={
-        201: {"model": AgentGeneratorModel},
+        201: {"model": AgentTemplateModel},
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model()
             | InvalidAgentTemplateOptionValueError(
-                detail="string",
+                option_name="string",
+                option_value="string",
+                exception=Exception("string"),
             ).to_pydantic_model()
-            | InvalidAgentTemplateOptionNameError().to_pydantic_model(),
+            | InvalidAgentTemplateOptionNameError(
+                option_name="string",
+            ).to_pydantic_model(),
         },
-        404: {"model": AgentTemplateNotFoundError().to_pydantic_model()},
+        404: {
+            "model": AgentTemplateNotFoundError(
+                agent_template_id="string",
+            ).to_pydantic_model(),
+        },
     },
     status_code=201,
 )
 def create_agent_generator_through_agent_template_by_agent_template_id(
     agent_template_id: str,
+    agent_template_options: dict[str, Any],
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.CREATE_AGENT_GENERATOR)),
@@ -50,21 +69,25 @@ def create_agent_generator_through_agent_template_by_agent_template_id(
     try:
         agent_template = (
             agent_templates_service.get_agent_template_by_agent_template_id(
-                agent_template_id,
+                agent_template_id=agent_template_id,
             )
         )
     except ValueError:
-        raise AgentTemplateNotFoundError
+        raise AgentTemplateNotFoundError(agent_template_id=agent_template_id)
 
-    for option_name, option_value in agent_template.options.items():
+    for option_name, option_value in agent_template_options.items():
         try:
             agent_template.set_option_value(option_name, option_value)
         # KeyError is raised when option_name is invalid.
         except KeyError:
-            raise InvalidAgentTemplateOptionNameError
+            raise InvalidAgentTemplateOptionNameError(option_name=option_name)
         # ValueError is raised when option_value is invalid.
         except ValueError as exc:
-            raise InvalidAgentTemplateOptionValueError(detail=str(exc))
+            raise InvalidAgentTemplateOptionValueError(
+                option_name=option_name,
+                option_value=option_value,
+                exception=exc,
+            )
 
     # Agent generator is created and added to the agent generator service but not
     # explicitly started. Starting the agent generator must be manually done from the
@@ -100,7 +123,16 @@ def get_all_agent_templates(
     "/{agent_template_id}",
     responses={
         200: {"model": AgentTemplateModel},
-        404: {"model": AgentTemplateNotFoundError().to_pydantic_model()},
+        404: {
+            "model": AgentTemplateNotFoundError(
+                agent_template_id="string",
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
+            ).to_pydantic_model(),
+        },
     },
 )
 def get_agent_template_by_agent_template_id(
@@ -121,6 +153,6 @@ def get_agent_template_by_agent_template_id(
             )
         )
     except ValueError:
-        raise AgentTemplateNotFoundError
+        raise AgentTemplateNotFoundError(agent_template_id=agent_template_id)
 
     return AgentTemplateModel(**agent_template.to_json())

@@ -11,15 +11,13 @@ class NewUserAccountRequestBodyModel(BaseModel):
     role: UserRole
 
 
-class NewPasswordRequestBodyModel(BaseModel):
-    password: str
-
-
-class NewRoleRequestBodyModel(BaseModel):
-    role: UserRole
+class NewUserAccountAttributesRequestBodyModel(BaseModel):
+    username: str | None = None
+    password: str | None = None
+    role: UserRole | None = None
 
 
 class NewListenerAttributesRequestBodyModel(BaseModel):
     name: str | None = None
     description: str | None = None
-    options: dict[str, Any] | None = None
+    parameters: dict[str, Any] | None = None

@@ -8,7 +8,7 @@ from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
 from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
 from consortium.server.server_exceptions import (
-    DuplicateUsernamesError,
+    DuplicateUserAccountUsernamesError,
     InvalidUserAccountError,
     InvalidUserAccountsFileError,
     UserAccountsFileNotFoundError,
@@ -41,7 +41,7 @@ class UserAccountsService:
         except (
             UserAccountsFileNotFoundError,
             InvalidUserAccountsFileError,
-            DuplicateUsernamesError,
+            DuplicateUserAccountUsernamesError,
             UserAccountsFileNotFoundError,
         ) as exc:
             self._user_accounts_service_logger.error(
@@ -65,7 +65,7 @@ class UserAccountsService:
                 for user_account_json_data in json_data:
                     user_account = UserAccountModel(**user_account_json_data)
                     if user_account.username in self._user_accounts:
-                        raise DuplicateUsernamesError(
+                        raise DuplicateUserAccountUsernamesError(
                             f"Duplicate username {user_account.username} detected in user accounts file: {user_accounts_file}",
                         )
                     user_accounts.append(user_account)
@@ -153,6 +153,32 @@ class UserAccountsService:
             f"Retrieved all user accounts ({len(all_user_accounts)} retrieved).",
         )
         return all_user_accounts
+
+    def update_user_account_username(
+        self,
+        user_account: UserAccountModel,
+        username: str,
+    ) -> None:
+        if user_account not in self._user_accounts.values():
+            raise ValueError(
+                f"User account does not exist: {user_account}",
+            )
+
+        for existing_user_account in self._user_accounts.values():
+            if existing_user_account.username == username:
+                raise ValueError(
+                    f"User accounts with duplicate username are not allowed: {username}",
+                )
+
+        old_username = user_account.username
+        user_account.username = username
+        self._user_accounts_service_logger.debug(
+            f"Updated username for {user_account!r}: {old_username} -> {username}",
+        )
+        self._user_accounts_service_logger.info(
+            f"Updated username for {user_account}: {old_username} -> {username}",
+        )
+        self._write_user_accounts_to_user_accounts_file()
 
     def update_user_account_password(
         self,

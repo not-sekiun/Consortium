@@ -1,6 +1,5 @@
 from rich.table import Table
 
-import consortium.client.client_singletons as client_singletons
 from consortium.client.framework.base_command import (
     BaseCommand,
     CommandContext,
@@ -44,11 +43,17 @@ class ListListenersCommand(BaseCommand):
             table.add_column("Status")
 
             for listener in all_listeners:
+                listener_status_string = listener["status"]["state"]
+                if listener_status_string == "RUNNING":
+                    listener_status_string = f"[bold green]{listener_status_string}"
+                elif listener_status_string == "ERRORED":
+                    listener_status_string = f"[bold red]{listener_status_string}"
+
                 table.add_row(
                     listener["listener_id"],
                     listener["name"],
                     listener["endpoint"],
-                    listener["status"]["state"],
+                    listener_status_string,
                 )
 
             CONSOLE.print(table)

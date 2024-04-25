@@ -1,6 +1,10 @@
+# TODO: Add better default error messages to the errors.
 from typing import Any, Generic, Type, TypeVar
 
 from pydantic import BaseModel, create_model
+
+from consortium.server.framework.framework_types import ListenerType
+from consortium.server.objects.user_account_objects import UserRole
 
 T = TypeVar("T")
 
@@ -46,11 +50,9 @@ class ServerException(Exception):
 
     def to_json(self) -> dict[str, Any]:
         return {
-            "error": {
-                "code": self.code,
-                "message": self.message,
-                "detail": self.detail,
-            },
+            "code": self.code,
+            "message": self.message,
+            "detail": self.detail,
         }
 
     def to_pydantic_model(self) -> Type[BaseModel]:
@@ -97,15 +99,60 @@ class ServerException(Exception):
         return pydantic_model
 
 
-# A special error that has no response body to prevent C2 server fingerprinting from
-# unauthorized hosts. This error does not inherit from ServerException because it exists
-# solely as an exception model to be documented in the OpenAPI schema.
-class UnauthorizedError:
-    def __init__(self) -> None:
-        pass
+# HTTP related errors that are not specific to any api endpoint. These errors are raised
+# internally by the FastAPI framework and are not raised by the application code. They
+# are included here to provide additional data for preprocessing in the custom defined
+# server exception handlers at server_exception_handlers.py.
+# - HTTPError
+#   - ForbiddenError
+#   - NotFoundError
+#     - UserAccountNotFoundError
+#     - ListenerTemplateNotFoundError
+#     - ListenerNotFoundError
+#     - AgentTemplateNotFoundError
+#     - AgentGeneratorNotFoundError
+#     - UserNotFoundError
+#     - AgentNotFoundError
+#   - MethodNotAllowedError
+#   - UnprocessableEntityError
+#   - InternalServerError
+#   - ServiceUnavailableError
+class HTTPError(ServerException):
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str = "",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        )
 
-    @staticmethod
-    def to_json() -> None:
+
+# UnauthorizedError is a special error that has no response body to prevent C2 server
+# fingerprinting from unauthorized hosts. This error does not inherit from
+# ServerException because it exists solely as an exception model to be documented in
+# the OpenAPI schema.
+class UnauthorizedError(ServerException):
+    def __init__(
+        self,
+        status_code: int = 401,
+        code: str = "UNAUTHORIZED_ERROR",
+        message: str = "Unauthorized",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        )
+
+    def to_json(self) -> None:
         return None
 
     def to_pydantic_model(self) -> Type[BaseModel]:
@@ -116,22 +163,17 @@ class UnauthorizedError:
         return model
 
 
-# HTTP related errors that are not specific to any api endpoint. These errors are raised
-# internally by the FastAPI framework and are not raised by the application code. They
-# are included here to provide additional data for preprocessing in the custom defined
-# server exception handlers at server_exception_handlers.py.
-class ForbiddenError(ServerException):
+class ForbiddenError(HTTPError):
     def __init__(
         self,
-        message: str = (
-            "Access to the requested resource is forbidden. (Check if the role of your "
-            "account has sufficient permissions to access the requested resource.)"
-        ),
+        status_code: int = 403,
+        code: str = "FORBIDDEN_ERROR",
+        message: str = "You do not have permission to access this resource.",
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=403,
-            code="FORBIDDEN_ERROR",
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
@@ -140,15 +182,14 @@ class ForbiddenError(ServerException):
 class NotFoundError(ServerException):
     def __init__(
         self,
-        message: str = (
-            "The requested resource could not be found. (Check that the requested "
-            "resource URL exists.)"
-        ),
+        status_code: int = 404,
+        code: str = "NOT_FOUND_ERROR",
+        message: str = "The requested resource could not be found.",
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=404,
-            code="NOT_FOUND_ERROR",
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
@@ -157,15 +198,14 @@ class NotFoundError(ServerException):
 class MethodNotAllowedError(ServerException):
     def __init__(
         self,
-        message: str = (
-            "The requested HTTP method is not allowed for this resource. (Use a "
-            "different supported HTTP method for the requested resource.)"
-        ),
+        status_code: int = 405,
+        code: str = "METHOD_NOT_ALLOWED_ERROR",
+        message: str = "The requested method is not allowed for this resource.",
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=405,
-            code="METHOD_NOT_ALLOWED_ERROR",
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
@@ -174,16 +214,17 @@ class MethodNotAllowedError(ServerException):
 class UnprocessableEntityError(ServerException):
     def __init__(
         self,
+        status_code: int = 422,
+        code: str = "UNPROCESSABLE_ENTITY_ERROR",
         message: str = (
-            "The server cannot process the request due to the client request "
-            "containing invalid data. (Check that all provided request data follows "
-            "the specified format for the requested resource.)"
+            "The request could not be processed due to it containing invalidly "
+            "formatted data."
         ),
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=422,
-            code="UNPROCESSABLE_ENTITY_ERROR",
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
@@ -192,12 +233,14 @@ class UnprocessableEntityError(ServerException):
 class InternalServerError(ServerException):
     def __init__(
         self,
-        message: str = "An internal server error occurred. (Try again later.)",
+        status_code: int = 500,
+        code: str = "INTERNAL_SERVER_ERROR",
+        message: str = "An internal server error occurred. Please try again later.",
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=500,
-            code="INTERNAL_SERVER_ERROR",
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
@@ -206,115 +249,149 @@ class InternalServerError(ServerException):
 class ServiceUnavailableError(ServerException):
     def __init__(
         self,
-        message: str = (
-            "The server is currently in the process of shutting down and is no longer "
-            "accepting any more requests.(Try again later.)"
-        ),
+        status_code: int = 503,
+        code: str = "SERVICE_UNAVAILABLE_ERROR",
+        message: str = "The service is currently unavailable. Please try again later.",
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=503,
-            code="SERVICE_UNAVAILABLE_ERROR",
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
 
 
 # Errors for the api endpoint /api/user-accounts.
-class UserAccountNotFoundError(ServerException):
+# - HTTPError
+#   - NotFoundError
+#     - UserAccountNotFoundError
+#   - UnprocessableEntityError
+#     - UserAccountModificationError
+#       - IdenticalUserAccountUsernameError
+#       - UserAccountUsernameAlreadyExistsError
+#       - IdenticalUserAccountPasswordError
+#       - EmptyUserAccountPasswordError
+#       - IdenticalUserAccountRoleError
+class UserAccountNotFoundError(NotFoundError):
     def __init__(
         self,
-        message: str = (
-            "The requested user account was not found. (Check that the user_id URL "
-            "parameter is correct.)"
-        ),
-        detail: Any = None,
+        user_account_id: str | None,
     ) -> None:
+        # user_account_id is None in the specific case when a logged-in user makes a
+        # GET request to /api/user-accounts/me and the user account is not found
+        # because it was deleted.
+        if user_account_id is None:
+            message = "The requested user account was not found."
+        else:
+            message = (
+                "The requested user account with the provided user account ID "
+                f'"{user_account_id}" was not found.'
+            )
+
         super().__init__(
             status_code=404,
             code="USER_ACCOUNT_NOT_FOUND_ERROR",
             message=message,
-            detail=detail,
+            detail={"user_account_id": user_account_id},
         )
 
 
-class DuplicateUserAccountCreationError(ServerException):
+class UserAccountModificationError(UnprocessableEntityError):
     def __init__(
         self,
-        message: str = (
-            "The new user account contains a username that already exists. (Use a "
-            "different username for the new account or delete the old account.)"
-        ),
+        status_code: int = 422,
+        code: str = "USER_ACCOUNT_MODIFICATION_ERROR",
+        message: str = "An error occurred while attempting to modify the user account.",
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=409,
-            code="DUPLICATE_USER_ACCOUNT_CREATION_ERROR",
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
 
 
-class IdenticalUserAccountPasswordError(ServerException):
+class IdenticalUserAccountUsernameError(UserAccountModificationError):
     def __init__(
         self,
-        message: str = (
-            "The provided password is identical to the existing password being used "
-            "for the target user account. (Use a different password.)"
-        ),
-        detail: Any = None,
+        username: str,
     ) -> None:
         super().__init__(
-            status_code=400,
+            status_code=422,
+            code="IDENTICAL_USER_ACCOUNT_USERNAME_ERROR",
+            message=f'The provided username "{username}" is identical to the currently '
+            "used username for the user account.",
+            detail={"username": username},
+        )
+
+
+class UserAccountUsernameAlreadyExistsError(UserAccountModificationError):
+    def __init__(
+        self,
+        username: str,
+    ) -> None:
+        super().__init__(
+            status_code=422,
+            code="USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR",
+            message=(
+                f'The provided username "{username}" is already in use by another user '
+                "account."
+            ),
+            detail={"username": username},
+        )
+
+
+class IdenticalUserAccountPasswordError(UserAccountModificationError):
+    def __init__(
+        self,
+    ) -> None:
+        super().__init__(
+            status_code=422,
             code="IDENTICAL_USER_ACCOUNT_PASSWORD_ERROR",
-            message=message,
-            detail=detail,
+            message=(
+                "The provided password is identical to the currently used password for "
+                "the user account."
+            ),
+            detail=None,
         )
 
 
-class EmptyUserAccountPasswordError(ServerException):
+class EmptyUserAccountPasswordError(UserAccountModificationError):
     def __init__(
         self,
-        message: str = (
-            "The provided password value is an empty string. (Use a password with at "
-            "least one character. To specify that an account have no password at all, "
-            "the provided password value should be null.)"
-        ),
-        detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=400,
-            code="IDENTICAL_USER_ACCOUNT_PASSWORD_ERROR",
-            message=message,
-            detail=detail,
+            status_code=422,
+            code="EMPTY_USER_ACCOUNT_PASSWORD_ERROR",
+            message="The provided password cannot be empty.",
+            detail=None,
         )
 
 
-class IdenticalUserAccountRoleError(ServerException):
+class IdenticalUserAccountRoleError(UserAccountModificationError):
     def __init__(
         self,
-        message: str = (
-            "The provided role is identical to the existing role being used for the "
-            "target user account. (Use a different role.)"
-        ),
-        detail: Any = None,
+        role: UserRole,
     ) -> None:
         super().__init__(
-            status_code=400,
+            status_code=422,
             code="IDENTICAL_USER_ACCOUNT_ROLE_ERROR",
-            message=message,
-            detail=detail,
+            message=(
+                f'The provided role "{role}" is identical to the current role of the '
+                "user account."
+            ),
+            detail={"role": role},
         )
 
 
 # Errors for the api endpoint /api/login.
+# - AlreadyLoggedInError
 class AlreadyLoggedInError(ServerException):
     def __init__(
         self,
-        message: str = (
-            "The user is already logged in. (Log out before attempting to log in "
-            "again.)"
-        ),
+        message: str = "The user is already logged in.",
         detail: Any = None,
     ) -> None:
         super().__init__(
@@ -326,212 +403,600 @@ class AlreadyLoggedInError(ServerException):
 
 
 # Errors for the api endpoint /api/users.
-class UserNotFoundError(ServerException):
+# - HTTPError
+#   - NotFoundError
+#     - UserNotFoundError
+class UserNotFoundError(NotFoundError):
     def __init__(
         self,
-        message: str = (
-            "The requested user was not found. (Check that the user_id URL parameter "
-            "is correct.)"
-        ),
-        detail: Any = None,
+        user_id: str,
     ) -> None:
         super().__init__(
             status_code=404,
             code="USER_NOT_FOUND_ERROR",
-            message=message,
-            detail=detail,
+            message=f'The requested user with the provided user ID "{user_id}" was not '
+            "found.",
+            detail={"user_id": user_id},
         )
 
 
 # Errors for the api endpoint /api/listener-templates.
-class ListenerTemplateNotFoundError(ServerException):
+# - HTTPError
+#   - NotFoundError
+#     - ListenerTemplateNotFoundError
+#   - UnprocessableEntityError
+#     - ListenerCreationError
+#       - InvalidListenerTemplateOptionNameError
+#       - InvalidListenerTemplateOptionValueError
+class ListenerTemplateNotFoundError(NotFoundError):
     def __init__(
         self,
-        message: str = (
-            "The requested listener template was not found. (Check that the "
-            "listener_template_id URL parameter is correct.)"
-        ),
-        detail: Any = None,
+        listener_template_id: str,
     ) -> None:
         super().__init__(
             status_code=404,
             code="LISTENER_TEMPLATE_NOT_FOUND_ERROR",
+            message=(
+                "The requested listener template with the provided listener template "
+                f'ID "{listener_template_id}" was not found.'
+            ),
+            detail={"listener_template_id": listener_template_id},
+        )
+
+
+class ListenerCreationError(UnprocessableEntityError):
+    def __init__(
+        self,
+        status_code: int = 422,
+        code: str = "LISTENER_CREATION_ERROR",
+        message: str = "An error occurred while attempting to create the listener.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
 
 
-class InvalidListenerTemplateOptionNameError(ServerException):
+class InvalidListenerTemplateOptionNameError(ListenerCreationError):
     def __init__(
         self,
-        message: str = (
-            "The provided listener template option name is invalid. (Check that the "
-            "option name exists.)"
-        ),
-        detail: Any = None,
+        option_name: str,
     ) -> None:
         super().__init__(
             status_code=422,
             code="INVALID_LISTENER_TEMPLATE_OPTION_NAME_ERROR",
-            message=message,
-            detail=detail,
+            message=(
+                f'The provided listener template option name "{option_name}" is '
+                f"invalid"
+            ),
+            detail={"option_name": option_name},
         )
 
 
-class InvalidListenerTemplateOptionValueError(ServerException):
+class InvalidListenerTemplateOptionValueError(ListenerCreationError):
     def __init__(
         self,
-        message: str = (
-            "The provided listener template option value is invalid. (Check that the "
-            "type and format of the option's value is valid.)"
-        ),
-        detail: Any = None,
+        option_name: str,
+        option_value: Any,
+        exception: Exception,
     ) -> None:
         super().__init__(
             status_code=422,
             code="INVALID_LISTENER_TEMPLATE_OPTION_VALUE_ERROR",
-            message=message,
-            detail=detail,
+            message=(
+                f'The provided listener template option value "{option_value}" for '
+                f'option "{option_name}" is invalid'
+            ),
+            detail={
+                "option_name": option_name,
+                "option_value": option_value,
+                "exception": str(exception),
+            },
         )
 
 
 # Errors for the api endpoint /api/listeners.
+# - HTTPError
+#   - NotFoundError
+#     - ListenerNotFoundError
+#   - InternalServerError
+#     - ListenerTemplateResolutionError
+#     - FatalListenerRuntimeError
+#   - UnprocessableEntityError
+#     - ListenerParameterUpdateError
+#       - InvalidListenerParameterNameError
+#       - InvalidListenerParameterValueError
+# - ListenerError
+#   - ListenerStateError
+#     - ListenerAlreadyRunningError
+#     - ListenerNotRunningError
+#   - ListenerOperationError
+#     - ListenerStartError
+#     - ListenerStopError
+#     - ListenerCancellationError
 class ListenerNotFoundError(ServerException):
     def __init__(
         self,
-        message: str = (
-            "The requested listener was not found. Please check that the listener_id "
-            "URL parameter is correct and try again."
-        ),
-        detail: Any = None,
+        listener_id: str,
     ) -> None:
         super().__init__(
             status_code=404,
             code="LISTENER_NOT_FOUND_ERROR",
+            message=(
+                f'The requested listener with the provided listener ID "{listener_id}" '
+                "was not found."
+            ),
+            detail={"listener_id": listener_id},
+        )
+
+
+class ListenerTemplateResolutionError(InternalServerError):
+    def __init__(
+        self,
+        listener_type: ListenerType,
+    ) -> None:
+        super().__init__(
+            status_code=500,
+            code="LISTENER_TEMPLATE_RESOLUTION_ERROR",
+            message=(
+                "Failed to resolve the listener's listener template for the given "
+                "listener type with listener type ID "
+                f'"{listener_type.listener_type_id}".'
+            ),
+            detail={"listener_type": listener_type.to_json()},
+        )
+
+
+class FatalListenerRuntimeError(InternalServerError):
+    def __init__(
+        self,
+        message: str = "A fatal error occurred while the listener was running.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=500,
+            code="FATAL_LISTENER_RUNTIME_ERROR",
             message=message,
             detail=detail,
         )
 
 
-class InvalidListenerOptionNameError(ServerException):
+class ListenerError(ServerException):
     def __init__(
         self,
+        status_code: int = 400,
+        code: str = "LISTENER_ERROR",
+        message: str = "A listener error occurred.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        )
+
+
+class ListenerStateError(ListenerError):
+    def __init__(
+        self,
+        status_code: int = 409,
+        code: str = "LISTENER_STATE_ERROR",
         message: str = (
-            "The provided listener option name is invalid. (Check that the option name "
-            "exists.)"
+            "A listener error occurred due to a conflict in the listener's state."
         ),
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=422,
-            code="INVALID_LISTENER_OPTION_NAME_ERROR",
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
 
 
-class InvalidListenerOptionValueError(ServerException):
+class ListenerAlreadyRunningError(ListenerStateError):
     def __init__(
         self,
         message: str = (
-            "The provided listener option value is invalid. (Check that the type and "
-            "format of the option's value is valid.)"
+            "The listener is already running. Stop it before performing this operation."
         ),
         detail: Any = None,
     ) -> None:
-        super().__init__(
-            status_code=422,
-            code="INVALID_LISTENER_OPTION_VALUE_ERROR",
-            message=message,
-            detail=detail,
-        )
-
-
-class ListenerStillRunningError(ServerException):
-    def __init__(self, message: str = "", detail: Any = None) -> None:
         super().__init__(
             status_code=409,
-            code="LISTENER_STILL_RUNNING_ERROR",
+            code="LISTENER_ALREADY_RUNNING_ERROR",
             message=message,
             detail=detail,
+        )
+
+
+class ListenerNotRunningError(ServerException):
+    def __init__(
+        self,
+        message: str = (
+            "The listener is not running. Start it before performing this operation."
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=409,
+            code="LISTENER_NOT_RUNNING_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class ListenerOperationError(ListenerError):
+    def __init__(
+        self,
+        status_code: int = 400,
+        code: str = "LISTENER_OPERATION_ERROR",
+        message: str = "A listener error occurred while it was in operation.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        )
+
+
+class ListenerStartError(ListenerOperationError):
+    def __init__(
+        self,
+        message: str = "An error occurred while attempting to start the listener.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=400,
+            code="LISTENER_START_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class ListenerStopError(ListenerOperationError):
+    def __init__(
+        self,
+        message: str = "An error occurred while attempting to stop the listener.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=400,
+            code="LISTENER_STOP_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class ListenerCancellationError(ListenerOperationError):
+    def __init__(
+        self,
+        message: str = "An error occurred while attempting to cancel the listener.",
+        detail: Any = None,
+    ):
+        super().__init__(
+            status_code=400,
+            code="LISTENER_CANCELLATION_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class ListenerParameterUpdateError(UnprocessableEntityError):
+    def __init__(
+        self,
+        status_code: int = 422,
+        code: str = "LISTENER_PARAMETER_UPDATE_ERROR",
+        message: str = (
+            "An error occurred while attempting to update the listener's parameters."
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        )
+
+
+class InvalidListenerParameterNameError(ListenerParameterUpdateError):
+    def __init__(
+        self,
+        parameter_name: str,
+    ) -> None:
+        super().__init__(
+            status_code=422,
+            code="INVALID_LISTENER_PARAMETER_NAME_ERROR",
+            message=(
+                f'The provided listener parameter name "{parameter_name}" is '
+                "invalid."
+            ),
+            detail={"parameter_name": parameter_name},
+        )
+
+
+class InvalidListenerParameterValueError(ListenerParameterUpdateError):
+    def __init__(
+        self,
+        parameter_name: str,
+        parameter_value: Any,
+        exception: Exception,
+    ) -> None:
+        super().__init__(
+            status_code=422,
+            code="INVALID_LISTENER_PARAMETER_VALUE_ERROR",
+            message=(
+                f'The provided listener parameter value "{parameter_value}" for '
+                f'parameter "{parameter_name}" is invalid.'
+            ),
+            detail={
+                "parameter_name": parameter_name,
+                "parameter_value": parameter_value,
+                "exception": str(exception),
+            },
         )
 
 
 # Errors for the endpoint /api/agent-templates.
-class AgentTemplateNotFoundError(ServerException):
+# - HTTPError
+#   - NotFoundError
+#     - AgentTemplateNotFoundError
+#   - UnprocessableEntityError
+#     - AgentGeneratorCreationError
+#       - InvalidAgentTemplateOptionNameError
+#       - InvalidAgentTemplateOptionValueError
+class AgentTemplateNotFoundError(NotFoundError):
     def __init__(
         self,
-        message: str = (
-            "The requested agent template was not found. (Check that the "
-            "agent_template_id URL parameter is correct.)"
-        ),
-        detail: Any = None,
+        agent_template_id: str,
     ) -> None:
         super().__init__(
             status_code=404,
             code="AGENT_TEMPLATE_NOT_FOUND_ERROR",
+            message=(
+                "The requested agent template with the provided agent template ID "
+                f'"{agent_template_id}" was not found.'
+            ),
+            detail={"agent_template_id": agent_template_id},
+        )
+
+
+class AgentGeneratorCreationError(UnprocessableEntityError):
+    def __init__(
+        self,
+        status_code: int = 422,
+        code: str = "AGENT_GENERATOR_CREATION_ERROR",
+        message: str = (
+            "An error occurred while attempting to create the agent generator."
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
 
 
-class InvalidAgentTemplateOptionNameError(ServerException):
+class InvalidAgentTemplateOptionNameError(AgentGeneratorCreationError):
     def __init__(
         self,
-        message: str = (
-            "The provided agent template option name is invalid. (Check that "
-            "the option name exists.)"
-        ),
-        detail: Any = None,
+        option_name: str,
     ) -> None:
         super().__init__(
             status_code=422,
             code="INVALID_AGENT_TEMPLATE_OPTION_NAME_ERROR",
-            message=message,
-            detail=detail,
+            message=(
+                f'The provided agent template option name "{option_name}" is '
+                f"invalid"
+            ),
+            detail={"option_name": option_name},
         )
 
 
-class InvalidAgentTemplateOptionValueError(ServerException):
+class InvalidAgentTemplateOptionValueError(AgentGeneratorCreationError):
     def __init__(
         self,
-        message: str = (
-            "The provided agent template option value is invalid. (Check "
-            "that the type and format of the option's value is valid.)"
-        ),
-        detail: Any = None,
+        option_name: str,
+        option_value: Any,
+        exception: Exception,
     ) -> None:
         super().__init__(
             status_code=422,
             code="INVALID_AGENT_TEMPLATE_OPTION_VALUE_ERROR",
-            message=message,
-            detail=detail,
+            message=(
+                f'The provided agent template option value "{option_value}" for '
+                f'option "{option_name}" is invalid'
+            ),
+            detail={
+                "option_name": option_name,
+                "option_value": option_value,
+                "exception": str(exception),
+            },
         )
 
 
 # Errors for the endpoint /api/agent-generators.
-class AgentGeneratorNotFoundError(ServerException):
+# - HTTPError
+#   - NotFoundError
+#     - AgentGeneratorNotFoundError
+# - AgentGeneratorError
+#  - AgentGeneratorStateError
+#    - AgentGeneratorAlreadyBuildingError
+#    - AgentGeneratorNotBuildingError
+#  - AgentGeneratorOperationError
+#    - AgentGeneratorQueueError
+#    - AgentGeneratorBuildError
+#    - AgentGeneratorStopError
+#    - AgentGeneratorCancellationError
+class AgentGeneratorNotFoundError(NotFoundError):
     def __init__(
         self,
-        message: str = (
-            "The requested agent generator was not found. (Check that the "
-            "agent_generator_id URL parameter is correct.)"
-        ),
-        detail: Any = None,
+        agent_generator_id: str,
     ) -> None:
         super().__init__(
             status_code=404,
             code="AGENT_GENERATOR_NOT_FOUND_ERROR",
+            message=(
+                "The requested agent generator with the provided agent generator ID "
+                f'"{agent_generator_id}" was not found.'
+            ),
+            detail={"agent_generator_id": agent_generator_id},
+        )
+
+
+class AgentGeneratorError(ServerException):
+    def __init__(
+        self,
+        status_code: int = 400,
+        code: str = "AGENT_GENERATOR_ERROR",
+        message: str = "An agent generator error occurred.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
             message=message,
             detail=detail,
         )
 
 
-class AgentGeneratorStillRunningError(ServerException):
-    def __init__(self, message: str = "", detail: Any = None) -> None:
+class AgentGeneratorStateError(AgentGeneratorError):
+    def __init__(
+        self,
+        status_code: int = 409,
+        code: str = "AGENT_GENERATOR_STATE_ERROR",
+        message: str = (
+            "An agent generator error occurred due to a conflict in the agent "
+            "generator's state."
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorAlreadyBuildingError(AgentGeneratorStateError):
+    def __init__(
+        self,
+        message: str = (
+            "The agent generator is already building. Stop or wait for it to "
+            "complete before performing this operation."
+        ),
+        detail: Any = None,
+    ) -> None:
         super().__init__(
             status_code=409,
-            code="AGENT_GENERATOR_STILL_RUNNING_ERROR",
+            code="AGENT_GENERATOR_ALREADY_BUILDING_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorNotBuildingError(AgentGeneratorStateError):
+    def __init__(
+        self,
+        message: str = (
+            "The agent generator is not building. Start it before performing this "
+            "operation."
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=409,
+            code="AGENT_GENERATOR_NOT_BUILDING_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorOperationError(AgentGeneratorError):
+    def __init__(
+        self,
+        status_code: int = 400,
+        code: str = "AGENT_GENERATOR_OPERATION_ERROR",
+        message: str = "An agent generator error occurred while it was in operation.",
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorQueueError(AgentGeneratorOperationError):
+    def __init__(
+        self,
+        message: str = (
+            "An error occurred while attempting to queue the agent generator."
+        ),
+        detail: Any = None,
+    ):
+        super().__init__(
+            status_code=400,
+            code="AGENT_GENERATOR_QUEUE_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorBuildError(AgentGeneratorOperationError):
+    def __init__(
+        self,
+        message: str = (
+            "An error occurred while the agent generator was building the agent."
+        ),
+        detail: Any = None,
+    ):
+        super().__init__(
+            status_code=400,
+            code="AGENT_GENERATOR_BUILD_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorStopError(AgentGeneratorOperationError):
+    def __init__(
+        self,
+        message: str = (
+            "An error occurred while attempting to stop the agent generator."
+        ),
+        detail: Any = None,
+    ):
+        super().__init__(
+            status_code=400,
+            code="AGENT_GENERATOR_STOP_ERROR",
+            message=message,
+            detail=detail,
+        )
+
+
+class AgentGeneratorCancellationError(AgentGeneratorOperationError):
+    def __init__(
+        self,
+        message: str = (
+            "An error occurred while attempting to cancel the agent generator."
+        ),
+        detail: Any = None,
+    ):
+        super().__init__(
+            status_code=400,
+            code="AGENT_GENERATOR_CANCELLATION_ERROR",
             message=message,
             detail=detail,
         )
@@ -589,7 +1054,7 @@ class InvalidUserAccountError(Exception):
     pass
 
 
-class DuplicateUsernamesError(Exception):
+class DuplicateUserAccountUsernamesError(Exception):
     pass
 
 

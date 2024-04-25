@@ -1,48 +1,32 @@
 from typing import Any
 
-from consortium.server.server_exceptions import ServerException
 
-
-# Framework exceptions encapsulate the same data as server exceptions, but will not
-# automatically run in the server exception handler when raised. Server exceptions
-# should only be used when an immediate response is to be expected since raising a
-# server exception will also return a response to the client. Framework exceptions are
-# raised when the error is not expected to be immediately handled by the server most
-# notably during asynchronous runtime.
 class FrameworkException(Exception):
     def __init__(
         self,
-        status_code: int,
         code: str,
         message: str = "",
         detail: Any = None,
-        headers: dict[str, Any] | None = None,
     ) -> None:
         self.code = code
         self.message = message
         self.detail = detail
 
-        self.status_code = status_code
-        self.headers = headers
-
     def to_json(self) -> dict[str, Any]:
         return {
-            "error": {
-                "code": self.code,
-                "message": self.message,
-                "detail": self.detail,
-            },
+            "code": self.code,
+            "message": self.message,
+            "detail": self.detail,
         }
 
 
-class ListenerStartError(ServerException):
+class ListenerStartError(FrameworkException):
     def __init__(
         self,
-        message: str = "The listener could not be started due to an error.",
+        message: str = "An error occurred while attempting to start the listener.",
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=400,
             code="LISTENER_START_ERROR",
             message=message,
             detail=detail,
@@ -52,53 +36,51 @@ class ListenerStartError(ServerException):
 class ListenerRuntimeError(FrameworkException):
     def __init__(
         self,
-        message: str = "The listener encountered a runtime error.",
+        message: str = "An error occurred while the listener was running.",
         detail: Any = None,
-    ) -> None:
+    ):
         super().__init__(
-            status_code=400,
             code="LISTENER_RUNTIME_ERROR",
             message=message,
             detail=detail,
         )
 
 
-class ListenerStopError(ServerException):
+class ListenerStopError(FrameworkException):
     def __init__(
         self,
-        message: str = "The listener could not be stopped due to an error.",
+        message: str = "An error occurred while attempting to stop the listener.",
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=400,
             code="LISTENER_STOP_ERROR",
             message=message,
             detail=detail,
         )
 
 
-class ListenerCancellationError(ServerException):
+class ListenerCancellationError(FrameworkException):
     def __init__(
         self,
-        message: str = "The listener could not be cancelled due to an error.",
+        message: str = "An error occurred while attempting to cancel the listener.",
         detail: Any = None,
-    ) -> None:
+    ):
         super().__init__(
-            status_code=400,
             code="LISTENER_CANCELLATION_ERROR",
             message=message,
             detail=detail,
         )
 
 
-class AgentGeneratorQueueError(ServerException):
+class AgentGeneratorQueueError(FrameworkException):
     def __init__(
         self,
-        message: str = "The agent generator could not be queued due to an error.",
+        message: str = (
+            "An error occurred while attempting to queue the agent generator."
+        ),
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=400,
             code="AGENT_GENERATOR_QUEUE_ERROR",
             message=message,
             detail=detail,
@@ -106,37 +88,44 @@ class AgentGeneratorQueueError(ServerException):
 
 
 class AgentGeneratorBuildError(FrameworkException):
-    def __init__(self, message: str = "", detail: Any = None):
+    def __init__(
+        self,
+        message: str = (
+            "An error occurred while the agent generator was building the agent."
+        ),
+        detail: Any = None,
+    ):
         super().__init__(
-            status_code=400,
             code="AGENT_GENERATOR_BUILD_ERROR",
             message=message,
             detail=detail,
         )
 
 
-class AgentGeneratorCompletionError(ServerException):
+class AgentGeneratorStopError(FrameworkException):
     def __init__(
         self,
-        message: str = "The agent generator could not be completed due to an error.",
+        message: str = (
+            "An error occurred while attempting to stop the agent generator."
+        ),
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=400,
-            code="AGENT_GENERATOR_COMPLETION_ERROR",
+            code="AGENT_GENERATOR_STOP_ERROR",
             message=message,
             detail=detail,
         )
 
 
-class AgentGeneratorCancellationError(ServerException):
+class AgentGeneratorCancellationError(FrameworkException):
     def __init__(
         self,
-        message: str = "The agent generator could not be cancelled due to an error.",
+        message: str = (
+            "An error occurred while attempting to cancel the agent generator."
+        ),
         detail: Any = None,
     ) -> None:
         super().__init__(
-            status_code=400,
             code="AGENT_GENERATOR_CANCELLATION_ERROR",
             message=message,
             detail=detail,

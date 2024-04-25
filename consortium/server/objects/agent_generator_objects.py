@@ -42,9 +42,12 @@ class AgentGeneratorStatus:
         self.state = AgentGeneratorState.COMPLETED
         self.exception = None
 
-    def transition_to_errored(self, exc: Exception) -> None:
+    def transition_to_errored(
+        self,
+        exception: Exception,
+    ) -> None:
         self.state = AgentGeneratorState.ERRORED
-        self.exception = exc
+        self.exception = exception
 
     def transition_to_cancelled(self) -> None:
         self.state = AgentGeneratorState.CANCELLED
@@ -55,14 +58,23 @@ class AgentGeneratorStatus:
         self.exception = exc
 
     def to_json(self) -> dict[str, str | None]:
+        # Internally the identifier "exception" is more representative of what is stored
+        # here. In the API we want to expose this as "error" instead to align the naming
+        # convention with other parts of the api that use "error" instead of "exception"
+        if not self.exception:
+            return {"state": str(self.state), "error": None}
         return {
             "state": str(self.state),
-            "exception": (
-                {
-                    "type": type(self.exception).__name__,
-                    "message": str(self.exception),
-                }
-                if self.exception
-                else None
-            ),
+            "error": self.exception.to_json(),
         }
+
+
+class AgentGeneratorBuildStepState(StrEnum):
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    ERRORED = "ERRORED"
+    FATAL = "FATAL"
+
+
+class AgentGeneratorBuildStepStatus: ...

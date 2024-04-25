@@ -182,6 +182,25 @@ def delete_listeners_after_test(
         admin_session.delete(f"http://localhost:9999/api/listeners/{listener_id}")
 
 
+# Delete all agent generators after the test finishes.
+@pytest.fixture
+def delete_agent_generators_after_test(
+    admin_session: requests.Session,
+):
+    yield None
+
+    all_agent_generator_ids = [
+        agent_generator["agent_generator_id"]
+        for agent_generator in admin_session.get(
+            "http://localhost:9999/api/agent-generators/all",
+        ).json()
+    ]
+    for agent_generator_id in all_agent_generator_ids:
+        admin_session.delete(
+            f"http://localhost:9999/api/listeners/{agent_generator_id}",
+        )
+
+
 # We do not write directly to the user_accounts.json file because that will not
 # automatically update the user accounts information that is stored in memory on the
 # still running server.

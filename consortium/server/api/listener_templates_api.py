@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Dict
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -9,6 +9,7 @@ from consortium.server.models.listener_template_models import ListenerTemplateMo
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 from consortium.server.server_exceptions import (
+    ForbiddenError,
     InternalServerError,
     InvalidListenerTemplateOptionNameError,
     InvalidListenerTemplateOptionValueError,
@@ -22,6 +23,7 @@ router = APIRouter(
     prefix="/api/listener-templates",
     responses={
         401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
@@ -35,22 +37,30 @@ listeners_service = server_singletons.listeners_service
     "/{listener_template_id}",
     responses={
         201: {"model": ListenerModel},
+        404: {
+            "model": ListenerTemplateNotFoundError(
+                listener_template_id="string",
+            ).to_pydantic_model(),
+        },
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model()
             | InvalidListenerTemplateOptionValueError(
-                detail="string",
+                option_name="string",
+                option_value="string",
+                exception=Exception("string"),
             ).to_pydantic_model()
-            | InvalidListenerTemplateOptionNameError().to_pydantic_model(),
+            | InvalidListenerTemplateOptionNameError(
+                option_name="string",
+            ).to_pydantic_model(),
         },
-        404: {"model": ListenerTemplateNotFoundError().to_pydantic_model()},
     },
     status_code=201,
 )
 def create_listener_through_listener_template_by_listener_template_id(
     listener_template_id: str,
-    listener_template_options: Dict[str, Any],
+    listener_template_options: dict[str, Any],
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.CREATE_LISTENER))],
 ) -> ListenerModel:
     try:
@@ -60,21 +70,26 @@ def create_listener_through_listener_template_by_listener_template_id(
             )
         )
     except ValueError:
-        raise ListenerTemplateNotFoundError
+        raise ListenerTemplateNotFoundError(listener_template_id=listener_template_id)
 
     for option_name, option_value in listener_template_options.items():
         try:
             listener_template.set_option_value(option_name, option_value)
-        # KeyError is raised when the option_name is invalid
+        # KeyError is raised when option_name is invalid
         except KeyError:
-            raise InvalidListenerTemplateOptionNameError
-        # ValueError is raised when the option_value is invalid
+            raise InvalidListenerTemplateOptionNameError(option_name=option_name)
+        # ValueError is raised when option_value fails any validation checks within the
+        # options objects.
         except ValueError as exc:
-            raise InvalidListenerTemplateOptionValueError(detail=str(exc))
+            raise InvalidListenerTemplateOptionValueError(
+                option_name=option_name,
+                option_value=option_value,
+                exception=exc,
+            )
 
     # Listener is created and added to the listeners service but not explicitly
-    # started. Starting the listener must be manually done from the /api/listeners
-    # endpoint.
+    # started. Starting the listener must be manually done by POSTing to the endpoint
+    # /api/listeners/{listener_id}/start.
     listener = listener_template.create_listener()
     listener_template.clear_all_options_values()
     listeners_service.add_listener(listener)
@@ -92,7 +107,6 @@ def get_all_listener_templates_info(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENER_TEMPLATES)),
     ],
 ):
-    print(listener_templates_service.get_all_listener_templates()[0].to_json())
     return [
         ListenerTemplateModel(**listener_template.to_json())
         for listener_template in listener_templates_service.get_all_listener_templates()
@@ -108,7 +122,11 @@ def get_all_listener_templates_info(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
-        404: {"model": ListenerTemplateNotFoundError().to_pydantic_model()},
+        404: {
+            "model": ListenerTemplateNotFoundError(
+                listener_template_id="string",
+            ).to_pydantic_model(),
+        },
     },
 )
 def get_listener_template_info_by_listener_templates_id(
@@ -129,6 +147,6 @@ def get_listener_template_info_by_listener_templates_id(
             )
         )
     except ValueError:
-        raise ListenerTemplateNotFoundError
+        raise ListenerTemplateNotFoundError(listener_template_id=listener_template_id)
 
     return ListenerTemplateModel(**listener_template.to_json())

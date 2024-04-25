@@ -1,4 +1,3 @@
-import asyncio
 import socket
 
 from aiohttp import web
@@ -9,8 +8,8 @@ from consortium.server.framework.framework_exceptions import ListenerStartError
 
 class Listener(BaseListener):
     async def on_listener_started(self) -> None:
-        local_host = self.options["local_host"].get_option_value()
-        local_port = self.options["local_port"].get_option_value()
+        local_host = self.parameters["local_host"]
+        local_port = self.parameters["local_port"]
 
         try:
             test_socket = socket.socket()
@@ -18,17 +17,17 @@ class Listener(BaseListener):
             test_socket.close()
         except socket.error as exc:
             raise ListenerStartError(
-                f"Unable to bind to the provided host and port: {exc}",
+                f"An error occurred while attempting to start the listener. Listener "
+                f"was unable to bind to the provided host and port due to the "
+                f"following socket error: {exc}",
             )
 
     async def on_listener_running(self) -> None:
-        local_host = self.options["local_host"].get_option_value()
-        local_port = self.options["local_port"].get_option_value()
-        tasks_url_paths = self.options["tasks_url_paths"].get_option_value()
-        results_url_paths = self.options["results_url_paths"].get_option_value()
-        registration_url_paths = self.options[
-            "registration_url_paths"
-        ].get_option_value()
+        local_host = self.parameters["local_host"]
+        local_port = self.parameters["local_port"]
+        tasks_url_paths = self.parameters["tasks_url_paths"]
+        results_url_paths = self.parameters["results_url_paths"]
+        registration_url_paths = self.parameters["registration_url_paths"]
 
         app = web.Application()
 

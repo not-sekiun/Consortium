@@ -1,5 +1,6 @@
 import queue
 import uuid
+from enum import StrEnum
 from typing import Any
 
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel

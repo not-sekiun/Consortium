@@ -52,7 +52,7 @@ USER_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
 }
 
 
-def test_get_own_user_info(session: requests.Session):
+def test_get_own_user(session: requests.Session):
     validate_response(
         test_response=session.get("http://localhost:9999/api/users/me"),
         expected_json_schema=USER_RESPONSE_JSON_SCHEMA,
@@ -60,7 +60,7 @@ def test_get_own_user_info(session: requests.Session):
     )
 
 
-def test_get_all_users_info(admin_session: requests.Session, session: requests.Session):
+def test_get_all_users(admin_session: requests.Session, session: requests.Session):
     if session == admin_session:
         # Test for admin sessions.
         validate_response(
@@ -77,7 +77,7 @@ def test_get_all_users_info(admin_session: requests.Session, session: requests.S
         )
 
 
-def test_get_user_info_by_user_id(
+def test_get_user_by_user_id(
     admin_session: requests.Session,
     session: requests.Session,
 ):

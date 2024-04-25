@@ -16,19 +16,19 @@ def cleanup_tmp_dir(tmp_dir: pathlib.Path) -> None:
         shutil.rmtree(str(tmp_dir))
 
 
+# TODO: Shift all this to a docker container
 class AgentGenerator(BaseAgentGenerator):
     async def on_agent_generator_queued(self) -> bool:
         # Check the existence of required tools.
         if shutil.which("python") is None:
             raise AgentGeneratorQueueError(
-                "Python is required to build the agent. Please install it and try again.",
+                "Python is required to build the agent but was not found.",
             )
         if shutil.which("pyinstaller") is None:
             raise AgentGeneratorQueueError(
-                "The pyinstaller package is required to build the agent. Please install the package and try again.",
+                "The pyinstaller package is required to build the agent but was not "
+                "found.",
             )
-
-        # Create a temporary directory to store the agent source code.
 
     async def on_agent_generator_building(self) -> None:
         with open(
@@ -89,14 +89,14 @@ class AgentGenerator(BaseAgentGenerator):
         ) as file:
             file_output += file.read()
 
-        if self.options["format"] == "py_script":
+        if self.parameters["format"] == "py_script":
             with open(
-                str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / self.options["file_path"])
+                str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / self.parameters["file_path"])
                 + ".py",
                 "w",
             ) as file:
                 file.write(file_output)
-        elif self.options["format"] == "py_freeze":
+        elif self.parameters["format"] == "py_freeze":
             tmp_dir = CONSORTIUM_AGENTS_DIRECTORY_PATH / "consortium" / "http" / ".tmp"
             if not tmp_dir.is_dir():
                 os.mkdir(str(tmp_dir))
@@ -110,19 +110,21 @@ class AgentGenerator(BaseAgentGenerator):
             )
             shutil.move(
                 str(tmp_dir / "dist" / "tmp.exe"),
-                str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / self.options["file_path"])
+                str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / self.parameters["file_path"])
                 + ".exe",
             )
-        elif self.options["format"] == "py_oneline":
+        elif self.parameters["format"] == "py_oneline":
             with open(
-                str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / self.options["file_path"])
+                str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / self.parameters["file_path"])
                 + ".txt",
                 "w",
             ) as file:
                 file.write('python -c "' + repr(file_output) + '"')
 
     async def on_agent_generator_completed(self) -> None:
-        cleanup_tmp_dir(tmp_dir)
+        cleanup_tmp_dir(
+            CONSORTIUM_AGENTS_DIRECTORY_PATH / "consortium" / "http" / ".tmp",
+        )
 
     async def on_agent_generator_cancelled(self) -> None:
         pass
