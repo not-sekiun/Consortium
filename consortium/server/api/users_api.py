@@ -4,17 +4,17 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.models.user_models import UserModel
-from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
-from consortium.server.server_exceptions import (
+from consortium.server.exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
-    UserNotFoundError,
 )
+from consortium.server.exceptions.users_api_exceptions import UserNotFoundError
+from consortium.server.models.user_models import UserModel
+from consortium.server.objects.user_account_objects import UserPermissions
+from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
 
 router = APIRouter(
     prefix="/api/users",

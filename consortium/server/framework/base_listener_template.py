@@ -1,11 +1,10 @@
-import copy
 import textwrap
 import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
 
 from consortium.server.framework.base_listener import BaseListener
-from consortium.server.framework.framework_types import ListenerType
+from consortium.server.framework.c2_types import ListenerType
 from consortium.server.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,

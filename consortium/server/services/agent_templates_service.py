@@ -6,18 +6,18 @@ from typing import Type
 import jsonschema
 from loguru import logger
 
-from consortium.server.framework.base_agent_generator import BaseAgentGenerator
-from consortium.server.framework.base_agent_template import BaseAgentTemplate
-from consortium.server.framework.framework_types import AgentType
-from consortium.server.server_config import (
-    CONSORTIUM_AGENTS_DIRECTORY_PATH,
-    CONSORTIUM_HOME_DIRECTORY_PATH,
-)
-from consortium.server.server_exceptions import (
+from consortium.server.exceptions.internal_server_exceptions import (
     InternalAgentProjectError,
     InvalidAgentProjectFolderStructureError,
     InvalidAgentProjectImplementationError,
     InvalidAgentProjectManifestFileError,
+)
+from consortium.server.framework.base_agent_generator import BaseAgentGenerator
+from consortium.server.framework.base_agent_template import BaseAgentTemplate
+from consortium.server.framework.c2_types import AgentType
+from consortium.server.server_config import (
+    CONSORTIUM_AGENTS_DIRECTORY_PATH,
+    CONSORTIUM_HOME_DIRECTORY_PATH,
 )
 
 

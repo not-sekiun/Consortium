@@ -5,16 +5,34 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
+from consortium.server.exceptions.http_exceptions import (
+    ForbiddenError,
+    InternalServerError,
+    MethodNotAllowedError,
+    UnauthorizedError,
+    UnprocessableEntityError,
+)
+from consortium.server.exceptions.listeners_api_exceptions import (
+    InvalidListenerParameterNameError,
+    InvalidListenerParameterValueError,
+    ListenerAlreadyRunningError,
+    ListenerCancellationError,
+    ListenerNotFoundError,
+    ListenerNotRunningError,
+    ListenerStartError,
+    ListenerStopError,
+    ListenerTemplateResolutionError,
+)
 
 # Framework exceptions are raised by the user of the framework themselves to
 # distinguish them from the internally raised and handled server exceptions.
-from consortium.server.framework.framework_exceptions import (
+from consortium.server.framework.exceptions import (
     ListenerCancellationError as FrameworkListenerCancellationError,
 )
-from consortium.server.framework.framework_exceptions import (
+from consortium.server.framework.exceptions import (
     ListenerStartError as FrameworkListenerStartError,
 )
-from consortium.server.framework.framework_exceptions import (
+from consortium.server.framework.exceptions import (
     ListenerStopError as FrameworkListenerStopError,
 )
 from consortium.server.models.common_models import SuccessResponseModel
@@ -26,22 +44,6 @@ from consortium.server.objects.example_objects import example_listener_type
 from consortium.server.objects.listener_objects import ListenerState
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
-from consortium.server.server_exceptions import (
-    ForbiddenError,
-    InternalServerError,
-    InvalidListenerParameterNameError,
-    InvalidListenerParameterValueError,
-    ListenerAlreadyRunningError,
-    ListenerCancellationError,
-    ListenerNotFoundError,
-    ListenerNotRunningError,
-    ListenerStartError,
-    ListenerStopError,
-    ListenerTemplateResolutionError,
-    MethodNotAllowedError,
-    UnauthorizedError,
-    UnprocessableEntityError,
-)
 
 router = APIRouter(
     prefix="/api/listeners",

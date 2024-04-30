@@ -25,8 +25,8 @@ class ReturnStatus:
 
 class BaseCommand(ABC):
     name: str
-    description: str
-    epilog: str
+    description: str = ""
+    epilog: str = ""
 
     def __init__(self, environment: dict | None = None) -> None:
         if environment is None:

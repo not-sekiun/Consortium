@@ -16,32 +16,41 @@ class AgentType:
         for listener_type in compatible_listener_types:
             if not isinstance(listener_type, ListenerType):
                 raise ValueError(
-                    f"Invalid listener type {listener_type} provided, expected an instance of ListenerType",
+                    f"Invalid listener type {listener_type} provided, expected an "
+                    f"instance of ListenerType",
                 )
             self.compatible_listener_types.add(listener_type)
+            if self not in listener_type.compatible_agent_types:
+                listener_type.add_compatible_agent_type(self)
 
         self.agent_type_id = uuid.uuid4()
 
     def add_compatible_listener_type(self, listener_type: "ListenerType") -> None:
         if not isinstance(listener_type, ListenerType):
             raise ValueError(
-                f"Invalid listener type {listener_type} provided, expected an instance of ListenerType",
+                f"Invalid listener type {listener_type} provided, expected an instance "
+                f"of ListenerType",
             )
         if listener_type in self.compatible_listener_types:
             raise ValueError(
-                f"Listener type {listener_type} is already in the list of compatible listener types",
+                f"Listener type {listener_type} is already in the set of compatible "
+                f"listener types",
             )
         self.compatible_listener_types.add(listener_type)
-        listener_type.add_compatible_agent_type(self)
+        # Prevent infinite recursion
+        if self not in listener_type.compatible_agent_types:
+            listener_type.add_compatible_agent_type(self)
 
     def remove_compatible_listener_type(self, listener_type: "ListenerType") -> None:
         if not isinstance(listener_type, ListenerType):
             raise ValueError(
-                f"Invalid listener type {listener_type} provided, expected an instance of ListenerType",
+                f"Invalid listener type {listener_type} provided, expected an instance "
+                f"of ListenerType",
             )
         if listener_type not in self.compatible_listener_types:
             raise ValueError(
-                f"Listener type {listener_type} is not in the list of compatible listener types",
+                f"Listener type {listener_type} is not in the set of compatible "
+                f"listener types",
             )
         self.compatible_listener_types.remove(listener_type)
         listener_type.remove_compatible_agent_type(self)
@@ -67,7 +76,10 @@ class AgentType:
         return f'"{self.name}" ({str(self.agent_type_id)})'
 
     def __repr__(self) -> str:
-        return f"AgentType(name={self.name!r}, compatible_listener_types={self.compatible_listener_types!r})"
+        return (
+            f"AgentType(name={self.name!r}, "
+            f"compatible_listener_types={self.compatible_listener_types!r})"
+        )
 
 
 class ListenerType:
@@ -83,32 +95,40 @@ class ListenerType:
         for agent_type in compatible_agent_types:
             if not isinstance(agent_type, AgentType):
                 raise ValueError(
-                    f"Invalid agent type {agent_type} provided, expected an instance of AgentType",
+                    f"Invalid agent type {agent_type} provided, expected an instance "
+                    f"of AgentType",
                 )
             self.compatible_agent_types.add(agent_type)
+            if self not in agent_type.compatible_listener_types:
+                agent_type.add_compatible_listener_type(self)
 
         self.listener_type_id = uuid.uuid4()
 
     def add_compatible_agent_type(self, agent_type: AgentType) -> None:
         if not isinstance(agent_type, AgentType):
             raise ValueError(
-                f"Invalid agent type {agent_type} provided, expected an instance of AgentType",
+                f"Invalid agent type {agent_type} provided, expected an instance of "
+                f"AgentType",
             )
         if agent_type in self.compatible_agent_types:
             raise ValueError(
-                f"Agent type {agent_type} is already in the list of compatible agent types",
+                f"Agent type {agent_type} is already in the set of compatible agent "
+                f"types",
             )
         self.compatible_agent_types.add(agent_type)
-        agent_type.add_compatible_listener_type(self)
+        # Prevent infinite recursion
+        if self not in agent_type.compatible_listener_types:
+            agent_type.add_compatible_listener_type(self)
 
     def remove_compatible_agent_type(self, agent_type: AgentType) -> None:
         if not isinstance(agent_type, AgentType):
             raise ValueError(
-                f"Invalid agent type {agent_type} provided, expected an instance of AgentType",
+                f"Invalid agent type {agent_type} provided, expected an instance of "
+                f"AgentType",
             )
         if agent_type not in self.compatible_agent_types:
             raise ValueError(
-                f"Agent type {agent_type} is not in the list of compatible agent types",
+                f"Agent type {agent_type} is not in the set of compatible agent types",
             )
         self.compatible_agent_types.remove(agent_type)
         agent_type.remove_compatible_listener_type(self)
@@ -134,4 +154,7 @@ class ListenerType:
         return f'"{self.name}" ({str(self.listener_type_id)})'
 
     def __repr__(self) -> str:
-        return f"ListenerType(name={self.name!r}, compatible_agent_types={self.compatible_agent_types!r})"
+        return (
+            f"ListenerType(name={self.name!r}, "
+            f"compatible_agent_types={self.compatible_agent_types!r})"
+        )

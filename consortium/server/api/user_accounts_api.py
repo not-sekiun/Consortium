@@ -4,6 +4,20 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
+from consortium.server.exceptions.http_exceptions import (
+    ForbiddenError,
+    InternalServerError,
+    MethodNotAllowedError,
+    UnauthorizedError,
+)
+from consortium.server.exceptions.user_accounts_api_exceptions import (
+    EmptyUserAccountPasswordError,
+    IdenticalUserAccountPasswordError,
+    IdenticalUserAccountRoleError,
+    IdenticalUserAccountUsernameError,
+    UserAccountNotFoundError,
+    UserAccountUsernameAlreadyExistsError,
+)
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.request_body_models import (
     NewUserAccountAttributesRequestBodyModel,
@@ -13,18 +27,6 @@ from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserPermissions, UserRole
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
-from consortium.server.server_exceptions import (
-    EmptyUserAccountPasswordError,
-    ForbiddenError,
-    IdenticalUserAccountPasswordError,
-    IdenticalUserAccountRoleError,
-    IdenticalUserAccountUsernameError,
-    InternalServerError,
-    MethodNotAllowedError,
-    UnauthorizedError,
-    UserAccountNotFoundError,
-    UserAccountUsernameAlreadyExistsError,
-)
 
 router = APIRouter(
     prefix="/api/user-accounts",

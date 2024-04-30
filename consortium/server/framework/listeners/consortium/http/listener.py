@@ -3,7 +3,7 @@ import socket
 from aiohttp import web
 
 from consortium.server.framework.base_listener import BaseListener
-from consortium.server.framework.framework_exceptions import ListenerStartError
+from consortium.server.framework.exceptions import ListenerStartError
 
 
 class Listener(BaseListener):

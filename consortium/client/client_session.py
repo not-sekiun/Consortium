@@ -4,6 +4,9 @@ from consortium.client.interpreters.agents_interpreter import AgentsInterpreter
 from consortium.client.interpreters.generators_interpreter import GeneratorsInterpreter
 from consortium.client.interpreters.home_interpreter import HomeInterpreter
 from consortium.client.interpreters.listeners_interpreter import ListenersInterpreter
+from consortium.client.interpreters.use_generator_interpreter import (
+    UseGeneratorInterpreter,
+)
 from consortium.client.interpreters.use_listener_interpreter import (
     UseListenerInterpreter,
 )
@@ -49,7 +52,17 @@ class ClientSession:
                     interpreter = GeneratorsInterpreter(
                         client_connection=self.client_connection,
                     )
-                elif interpreter_type == InterpreterType.CREATE_LISTENER:
+                elif interpreter_type == InterpreterType.USE_GENERATOR:
+                    interpreter = UseGeneratorInterpreter(
+                        client_connection=self.client_connection,
+                        agent_template_id=interpreter_return_status.data[
+                            "agent_template_id"
+                        ],
+                        agent_template_name=interpreter_return_status.data[
+                            "agent_template_name"
+                        ],
+                    )
+                elif interpreter_type == InterpreterType.USE_LISTENER:
                     interpreter = UseListenerInterpreter(
                         client_connection=self.client_connection,
                         listener_template_id=interpreter_return_status.data[

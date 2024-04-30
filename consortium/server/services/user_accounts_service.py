@@ -4,15 +4,15 @@ from pathlib import Path
 from loguru import logger
 from pydantic import ValidationError
 
-from consortium.server.models.user_account_models import UserAccountModel
-from consortium.server.objects.user_account_objects import UserRole
-from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
-from consortium.server.server_exceptions import (
+from consortium.server.exceptions.internal_server_exceptions import (
     DuplicateUserAccountUsernamesError,
     InvalidUserAccountError,
     InvalidUserAccountsFileError,
     UserAccountsFileNotFoundError,
 )
+from consortium.server.models.user_account_models import UserAccountModel
+from consortium.server.objects.user_account_objects import UserRole
+from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
 
 
 class UserAccountsService:

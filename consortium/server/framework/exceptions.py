@@ -1,7 +1,7 @@
 from typing import Any
 
 
-class FrameworkException(Exception):
+class BaseFrameworkException(Exception):
     def __init__(
         self,
         code: str,
@@ -20,7 +20,7 @@ class FrameworkException(Exception):
         }
 
 
-class ListenerStartError(FrameworkException):
+class ListenerStartError(BaseFrameworkException):
     def __init__(
         self,
         message: str = "An error occurred while attempting to start the listener.",
@@ -33,7 +33,7 @@ class ListenerStartError(FrameworkException):
         )
 
 
-class ListenerRuntimeError(FrameworkException):
+class ListenerRuntimeError(BaseFrameworkException):
     def __init__(
         self,
         message: str = "An error occurred while the listener was running.",
@@ -46,7 +46,7 @@ class ListenerRuntimeError(FrameworkException):
         )
 
 
-class ListenerStopError(FrameworkException):
+class ListenerStopError(BaseFrameworkException):
     def __init__(
         self,
         message: str = "An error occurred while attempting to stop the listener.",
@@ -59,7 +59,7 @@ class ListenerStopError(FrameworkException):
         )
 
 
-class ListenerCancellationError(FrameworkException):
+class ListenerCancellationError(BaseFrameworkException):
     def __init__(
         self,
         message: str = "An error occurred while attempting to cancel the listener.",
@@ -72,7 +72,7 @@ class ListenerCancellationError(FrameworkException):
         )
 
 
-class AgentGeneratorQueueError(FrameworkException):
+class AgentGeneratorStartError(BaseFrameworkException):
     def __init__(
         self,
         message: str = (
@@ -87,7 +87,7 @@ class AgentGeneratorQueueError(FrameworkException):
         )
 
 
-class AgentGeneratorBuildError(FrameworkException):
+class AgentGeneratorBuildError(BaseFrameworkException):
     def __init__(
         self,
         message: str = (
@@ -102,7 +102,7 @@ class AgentGeneratorBuildError(FrameworkException):
         )
 
 
-class AgentGeneratorStopError(FrameworkException):
+class AgentGeneratorStopError(BaseFrameworkException):
     def __init__(
         self,
         message: str = (
@@ -117,7 +117,7 @@ class AgentGeneratorStopError(FrameworkException):
         )
 
 
-class AgentGeneratorCancellationError(FrameworkException):
+class AgentGeneratorCancellationError(BaseFrameworkException):
     def __init__(
         self,
         message: str = (

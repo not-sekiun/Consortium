@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from consortium.server.framework.agents.consortium.http.agent_generator import (
     AgentGenerator,
 )
@@ -8,6 +10,23 @@ from consortium.server.framework.options import (
     ListValueOption,
     SingleValueOption,
 )
+
+
+def _check_jitter_percent_is_positive(jitter_percent: float):
+    if jitter_percent < 0:
+        raise ValueError(
+            "Jitter percent cannot be less than zero.",
+        )
+
+
+def _check_filename_does_not_traverse_directories(filename: str):
+    """
+    Checks that the filename does not attempt to traverse directories.
+    """
+    if filename != Path(filename).name:
+        raise ValueError(
+            "Filename cannot traverse directories.",
+        )
 
 
 def _check_all_url_endpoints_unique(
@@ -62,7 +81,6 @@ class AgentTemplate(BaseAgentTemplate):
                     "The remote host address of the listener for the agent to connect "
                     "back to."
                 ),
-                required=True,
                 default_value="0.0.0.0",
                 value_type=str,
             ),
@@ -71,7 +89,6 @@ class AgentTemplate(BaseAgentTemplate):
                 description=(
                     "The remote port of the listener for the agent to connect back to."
                 ),
-                required=True,
                 default_value=1337,
                 value_type=int,
                 validating_function=_check_integer_is_a_valid_port_number,
@@ -82,7 +99,6 @@ class AgentTemplate(BaseAgentTemplate):
                     "A list of available URL paths for the agent to randomly query "
                     "when obtaining tasks to run."
                 ),
-                required=True,
                 default_value=["/tasks"],
                 allow_duplicates=False,
                 value_type=str,
@@ -94,7 +110,6 @@ class AgentTemplate(BaseAgentTemplate):
                     "A list of available URL paths for the agent to randomly submit "
                     "to when returning the results of finished tasks."
                 ),
-                required=True,
                 default_value=["/results"],
                 allow_duplicates=False,
                 value_type=str,
@@ -106,7 +121,6 @@ class AgentTemplate(BaseAgentTemplate):
                     "A list of available URL paths for the agent to randomly query "
                     "when registering with the listener."
                 ),
-                required=True,
                 default_value=["/register"],
                 value_type=str,
                 validating_regex=r"^\/[\w-]+(\.[\w-]+)*$",
@@ -117,22 +131,20 @@ class AgentTemplate(BaseAgentTemplate):
                     "The amount of time in seconds to sleep for between each request "
                     "made to the listener."
                 ),
-                required=True,
                 default_value=1.0,
                 value_type=float,
             ),
             SingleValueOption(
-                name="jitter_percentage",
+                name="jitter_percent",
                 description=(
                     "The percentage of sleep_time to randomly vary sleeping by. A "
-                    "random percentage between 0 and the value of the option "
-                    '"jitter_percentage" is chosen to randomly increase or decrease the'
+                    "random value between 0 and the value of the option "
+                    '"jitter_percent" is chosen to randomly increase or decrease the'
                     "sleep time by."
                 ),
-                required=True,
                 default_value=0.5,
                 value_type=float,
-                validating_function=lambda x: x >= 0,
+                validating_function=_check_jitter_percent_is_positive,
             ),
             ChoiceValueOption(
                 name="format",
@@ -141,9 +153,18 @@ class AgentTemplate(BaseAgentTemplate):
                     "python script (script), a frozen pyinstaller executable "
                     "(executable) or a oneliner python command (oneliner)."
                 ),
-                required=True,
                 default_value="script",
                 available_values=["script", "executable", "oneliner"],
+            ),
+            SingleValueOption(
+                name="filename",
+                description=(
+                    "The filename of the agent to be generated. The appropriate file "
+                    'extension is appended depending on the value of the "format" '
+                    "option of the generated agent"
+                ),
+                default_value="agent",
+                validating_function=_check_filename_does_not_traverse_directories,
             ),
         ]
         validating_function = _check_all_url_endpoints_unique

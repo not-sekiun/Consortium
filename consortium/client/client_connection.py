@@ -222,6 +222,48 @@ class ClientConnection:
             json=listener_template_option_values,
         )
 
+    # Wrapper methods for the /api/agent-generators API endpoint.
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_agent_generators(self) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agent-generators/all",
+        )
+
+    # Wrapper methods for the /api/agent-templates API endpoint.
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_agent_templates(self) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agent-templates/all",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_agent_template_by_agent_template_id(
+        self,
+        agent_template_id: str,
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def create_agent_generator_through_agent_template_by_agent_template_id(
+        self,
+        agent_template_id: str,
+        agent_template_option_values: dict[str, Any],
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
+            json=agent_template_option_values,
+        )
+
     # Wrapper methods for the /api/listeners API endpoint.
     @_check_if_logged_in
     @_check_for_rest_api_error_response

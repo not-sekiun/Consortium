@@ -3,15 +3,15 @@ from fastapi.exceptions import RequestValidationError as FastAPIRequestValidatio
 from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from consortium.server.server_dependencies import is_user_logged_in
-from consortium.server.server_exceptions import (
+from consortium.server.exceptions.base_server_exception import BaseServerException
+from consortium.server.exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
     NotFoundError,
-    ServerException,
     UnprocessableEntityError,
 )
+from consortium.server.server_dependencies import is_user_logged_in
 
 
 # there isn't a good way to add exception handlers from a separate file, so this is a
@@ -70,10 +70,10 @@ def register_server_exception_handlers(app: FastAPI) -> None:
 
     # All the custom server exceptions inherit from ServerException, so we can use this
     # exception handler to handle all of them at once
-    @app.exception_handler(ServerException)
+    @app.exception_handler(BaseServerException)
     async def generic_error_exception_handler(
         request: Request,
-        exc: ServerException,
+        exc: BaseServerException,
     ) -> JSONResponse | Response:
         # Handle the special case of errors that arise on the /api/login endpoint. Any
         # error that arises on the /api/login endpoint is disguised as a 401

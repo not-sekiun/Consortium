@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
 
 from consortium.server.framework.base_agent_generator import BaseAgentGenerator
-from consortium.server.framework.framework_types import AgentType
+from consortium.server.framework.c2_types import AgentType
 from consortium.server.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,

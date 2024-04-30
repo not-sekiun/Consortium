@@ -4,10 +4,11 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 import consortium.server.server_singletons as server_singletons
+from consortium.server.exceptions.http_exceptions import UnauthorizedError
+from consortium.server.exceptions.login_api_exceptions import AlreadyLoggedInError
 from consortium.server.models.user_models import JSONWebTokenModel
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import is_user_logged_in
-from consortium.server.server_exceptions import AlreadyLoggedInError, UnauthorizedError
 
 router = APIRouter(
     prefix="/api/login",

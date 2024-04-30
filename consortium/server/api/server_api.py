@@ -4,16 +4,16 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.models.server_models import ServerConfigModel, ServerReleaseModel
-from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_config import SERVER_RELEASE
-from consortium.server.server_dependencies import AuthorizeUserRequest
-from consortium.server.server_exceptions import (
+from consortium.server.exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
 )
+from consortium.server.models.server_models import ServerConfigModel, ServerReleaseModel
+from consortium.server.objects.user_account_objects import UserPermissions
+from consortium.server.server_config import SERVER_RELEASE
+from consortium.server.server_dependencies import AuthorizeUserRequest
 
 router = APIRouter(
     prefix="/api/server",

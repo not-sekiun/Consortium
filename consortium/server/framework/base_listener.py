@@ -8,19 +8,19 @@ from typing import Any
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.framework.framework_exceptions import (
+from consortium.server.exceptions.listeners_api_exceptions import (
+    ListenerAlreadyRunningError,
+    ListenerNotRunningError,
+)
+from consortium.server.framework.c2_types import ListenerType
+from consortium.server.framework.exceptions import (
     ListenerCancellationError,
     ListenerRuntimeError,
     ListenerStartError,
     ListenerStopError,
 )
-from consortium.server.framework.framework_types import ListenerType
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.listener_objects import ListenerState, ListenerStatus
-from consortium.server.server_exceptions import (
-    ListenerAlreadyRunningError,
-    ListenerNotRunningError,
-)
 
 
 class BaseListener(ABC):
@@ -39,6 +39,7 @@ class BaseListener(ABC):
         self.listener_type = listener_type
         self.parameters = parameters
         self.datetime_created = datetime.now()
+        # Original status.state is set to STOPPED.
         self.status = ListenerStatus()
 
         # self.state is used to store any state information that the listener may need
@@ -57,90 +58,108 @@ class BaseListener(ABC):
             logger_name=f'Consortium Listener "{self.name}" ({self.listener_id})',
         )
 
-        # asyncio type tasks are held by a weak reference by default, so they can be
+        # Asyncio type tasks are held by a weak reference by default, so they can be
         # garbage collected at any time mid-execution, to prevent this we have to store
         # a reference of the task in a variable. We declare the variable here and assign
-        # it in start_listener() later on
+        # it in start_listener() later on.
         self._listener_task = None
 
     @abstractmethod
     async def on_listener_started(self) -> None:
         """
-        This method is called when the listener is started. This method should be used
-        to perform any setup or checks that are required before the listener is
-        started. This method should raise a ListenerStartError if the listener cannot be
-        started.
+        This method is called when the listener is started. To prevent the listener
+        from starting raise the framework error ListenerStartError. Returning from this
+        method will allow the listener to continue starting.
+
+        This method should be used to perform any setup or validation required before
+        the listener is started.
         """
 
     @abstractmethod
     async def on_listener_running(self) -> None:
         """
-        This method is called to run the listener. This method should be used to perform
-        any actions that are required while the listener is running and should be a
-        blocking coroutine that has some mechanism in place to check if the
-        self.stop_listener_event asynchronous event flag is set to know when to stop
-        running. This method should raise a ListenerRuntimeError if the  listener
-        encounters an error while running.
+        This method is called as the listener's main runtime loop. To indicate that an
+        error has occurred within this method raise the framework exception
+        ListenerRuntimeError. Returning from this method will allow the listener to
+        stop running. To detect when the listener should stop running check the
+        self.stop_listener_event asynchronous event flag.
+
+        This method should be used to perform the main runtime logic of the listener.
+        This includes listening for incoming connections, registering agents, sending
+        tasks to and receiving results from agents.
         """
 
     @abstractmethod
     async def on_listener_stopped(self) -> None:
         """
-        This method is called when the listener is stopped. This method should be used
-        to perform any cleanup or actions that are required before the listener is
-        stopped such as gracefully disconnecting any agents or releasing any held
-        resources. This method should raise a ListenerStopError if the listener cannot
-        be stopped.
+        This method is called when the listener is stopped. To prevent the listener
+        from stopping raise the framework exception ListenerStopError. Returning from
+        this method will allow the listener to set the self.stop_listener_event
+        asynchronous event flag which will signal to the listener's main runtime loop
+        to stop.
+
+        This method should be used to perform any cleanup required before the listener
+        is stopped.
         """
 
     @abstractmethod
     async def on_listener_cancelled(self) -> None:
         """
-        This method is called when the listener is cancelled forcefully without setting
-        the self.stop_listener_event asynchronous event flag. This method should be used
-        to perform any cleanup or actions that are required before the listener is
-        cancelled such as gracefully disconnecting any agents or releasing any held
-        resources. This method should raise a ListenerCancellationError if the listener
-        cannot be cancelled.
+        This method is called when the listener is cancelled. Cancellation occurs
+        forcefully without setting the self.stop_listener_event asynchronous event
+        flag. To prevent the listener from being cancelled raise the framework
+        exception ListenerCancellationError. Returning from this method will allow the
+        listener to be cancelled.
+
+        This method should be used to perform any cleanup required before the listener
+        is forcefully cancelled.
         """
 
     @abstractmethod
     async def on_listener_errored(self, exc: Exception) -> None:
         """
-        This method is called when the listener encounters an unexpected error while
-        running. If any error apart from ListenerStartError, ListenerStopError,
-        ListenerCancellationError or ListenerRuntimeError is raised, this method is
-        called.
+        This method is called when any unhandled exception or the framework exception
+        ListenerRuntimeError is raised within the listener's main runtime loop. This
+        excludes the exception asyncio.CancelledError which is raised when cancelling
+        the listener.
         """
 
     # To avoid exposing the internal workings of the AgentsService service to the
     # implementer we instead provide a create_agent() method that can be used to create
     # a new agent in the publicly exposed framework.
-    @staticmethod
-    def create_agent() -> Agent:
-        return server_singletons.agents_service.create_agent()
+    def create_agent(self) -> Agent:
+        agent = server_singletons.agents_service.create_agent()
+        self.agents[agent.agent_id] = agent
+        return agent
 
     async def _run_listener(self):
         try:
             try:
+                # The listener is now running.
                 self.status.transition_to_running()
                 await self.on_listener_running()
 
+                # The listener is now stopped.
                 self.status.transition_to_stopped()
-                await self.on_listener_stopped()
-
                 self._listener_task = None
             except asyncio.CancelledError:
-                try:
-                    self.status.transition_to_cancelled()
-                    await self.on_listener_cancelled()
-                except ListenerCancellationError as exc:
-                    self.status.transition_to_errored(exc)
-            except (ListenerStartError, ListenerRuntimeError, ListenerStopError) as exc:
+                # The listener is now cancelled
+                self.status.transition_to_cancelled()
+            except ListenerRuntimeError as exc:
+                # The listener is now errored
                 self.status.transition_to_errored(exc)
-                await self.on_listener_errored(exc)
+                try:
+                    await self.on_listener_errored(exc)
+                except Exception as exc:
+                    # The listener is now fatally errored.
+                    self.status.transition_to_fatal(exc)
         except Exception as exc:
             self.status.transition_to_fatal(exc)
+            # The listener is now fatally errored.
+            try:
+                await self.on_listener_errored(exc)
+            except Exception as exc:
+                self.status.transition_to_fatal(exc)
 
     async def start_listener(self) -> None:
         if self.status.state == ListenerState.STARTED:
@@ -148,13 +167,15 @@ class BaseListener(ABC):
                 message="The listener cannot be started because it is already running",
             )
 
-        # ListenerStartError is raised within on_listener_started() to abort the
-        # listener start process if preconditions are not met.
+        # The listener is now started.
         self.status.transition_to_started()
         try:
             await self.on_listener_started()
+        # ListenerStartError is raised within on_listener_started() to abort the
+        # listener start process if preconditions are not met.
         except ListenerStartError as exc:
-            self.status.transition_to_errored(exception=exc)
+            # The listener is now initialized.
+            self.status.transition_to_initialized()
             raise exc
 
         self._listener_task = asyncio.create_task(self._run_listener())
@@ -166,17 +187,32 @@ class BaseListener(ABC):
             )
 
         try:
-            self.stop_listener_event.set()
+            await self.on_listener_stopped()
+        # ListenerStopError is raised within on_listener_stopped() to abort the
+        # listener stop process if preconditions are not met.
         except ListenerStopError as exc:
+            # The listener has not changed from its running state.
             self.status.transition_to_running()
-            self.stop_listener_event.clear()
             raise exc
+
+        # Signal to the listener to stop running.
+        self.stop_listener_event.set()
 
     async def cancel_listener(self) -> None:
         if self.status.state != ListenerState.RUNNING:
             raise ListenerNotRunningError(
                 message="The listener cannot be cancelled because it is not running.",
             )
+
+        try:
+            await self.on_listener_cancelled()
+        # ListenerCancellationError is raised within on_listener_cancelled() to abort
+        # the listener cancellation process if preconditions are not met.
+        except ListenerCancellationError as exc:
+            self.status.transition_to_running()
+            raise exc
+
+        # Cancel the listener.
         self._listener_task.cancel()
         self._listener_task = None
 

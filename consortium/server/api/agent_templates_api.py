@@ -4,20 +4,22 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.models.agent_generator_models import AgentGeneratorModel
-from consortium.server.models.agent_template_models import AgentTemplateModel
-from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_dependencies import AuthorizeUserRequest
-from consortium.server.server_exceptions import (
+from consortium.server.exceptions.agent_templates_api_exceptions import (
     AgentTemplateNotFoundError,
-    ForbiddenError,
-    InternalServerError,
     InvalidAgentTemplateOptionNameError,
     InvalidAgentTemplateOptionValueError,
+)
+from consortium.server.exceptions.http_exceptions import (
+    ForbiddenError,
+    InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
 )
+from consortium.server.models.agent_generator_models import AgentGeneratorModel
+from consortium.server.models.agent_template_models import AgentTemplateModel
+from consortium.server.objects.user_account_objects import UserPermissions
+from consortium.server.server_dependencies import AuthorizeUserRequest
 
 router = APIRouter(
     prefix="/api/agent-templates",
@@ -36,7 +38,7 @@ agent_generators_service = server_singletons.agent_generators_service
 @router.post(
     "/{agent_template_id}",
     responses={
-        201: {"model": AgentTemplateModel},
+        201: {"model": AgentGeneratorModel},
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],

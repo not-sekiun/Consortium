@@ -1,39 +1,25 @@
 from enum import StrEnum
 
-from consortium.server.framework.framework_exceptions import (
-    ListenerCancellationError,
-    ListenerRuntimeError,
-    ListenerStartError,
-    ListenerStopError,
-)
-from consortium.server.server_exceptions import FatalListenerRuntimeError
+from consortium.server.framework.exceptions import ListenerRuntimeError
 
 
 class ListenerState(StrEnum):
-    # Listener has been started but is not yet running, preliminary checks are being
-    # performed
+    INITIALIZED = "INITIALIZED"
     STARTED = "STARTED"
-    # Listener is currently running in the main loop
     RUNNING = "RUNNING"
-    # Listener has been stopped and is no longer running
     STOPPED = "STOPPED"
-    # Listener has been cancelled, this is a form of force stopping the listener
     CANCELLED = "CANCELLED"
-    # Listener has failed, the failure can be due to a number of reasons, such as a
-    # failed startup validation. Exceptions at runtime can trigger this state as
-    # well
     ERRORED = "ERRORED"
-    # Listener has experienced a fatal error and is no longer running. Any unhandled
-    # exceptions will trigger this state
     FATAL = "FATAL"
 
 
 class ListenerStatus:
     def __init__(self):
-        # ListenerStatus is instantiated at the point of instantiation of the listener.
-        # When the listener is instantiated it is not automatically running, hence the
-        # initial state of STOPPED
-        self.state = ListenerState.STOPPED
+        self.state = ListenerState.INITIALIZED
+        self.exception = None
+
+    def transition_to_initialized(self) -> None:
+        self.state = ListenerState.INITIALIZED
         self.exception = None
 
     def transition_to_started(self) -> None:
@@ -52,21 +38,13 @@ class ListenerStatus:
         self.state = ListenerState.CANCELLED
         self.exception = None
 
-    def transition_to_errored(
-        self,
-        exception: (
-            ListenerStartError
-            | ListenerRuntimeError
-            | ListenerStopError
-            | ListenerCancellationError
-        ),
-    ) -> None:
+    def transition_to_errored(self, exception: ListenerRuntimeError) -> None:
         self.state = ListenerState.ERRORED
         self.exception = exception
 
     def transition_to_fatal(self, exception: Exception) -> None:
         self.state = ListenerState.FATAL
-        self.exception = FatalListenerRuntimeError(
+        self.exception = ListenerRuntimeError(
             message="A fatal error occurred while the listener was running.",
             detail={
                 "type": type(exception).__name__,
@@ -78,9 +56,7 @@ class ListenerStatus:
         # Internally the identifier "exception" is more representative of what is stored
         # here. In the API we want to expose this as "error" instead to align the naming
         # convention with other parts of the api that use "error" instead of "exception"
-        if not self.exception:
-            return {"state": str(self.state), "error": None}
         return {
             "state": str(self.state),
-            "error": self.exception.to_json(),
+            "error": self.exception.to_json() if self.exception else None,
         }

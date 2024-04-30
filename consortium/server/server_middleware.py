@@ -8,14 +8,14 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
+from consortium.server.exceptions.http_exceptions import (
+    InternalServerError,
+    ServiceUnavailableError,
+)
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
-)
-from consortium.server.server_exceptions import (
-    InternalServerError,
-    ServiceUnavailableError,
 )
 
 rest_api_logger = logger.bind(logger_name="Consortium REST API")

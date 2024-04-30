@@ -5,13 +5,13 @@ from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
+from consortium.server.exceptions.http_exceptions import ForbiddenError
 from consortium.server.objects.user_account_objects import UserPermissions, UserRole
 from consortium.server.objects.user_objects import User
 from consortium.server.server_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
 )
-from consortium.server.server_exceptions import ForbiddenError
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 users_service = server_singletons.users_service
@@ -96,6 +96,7 @@ class AuthorizeUserRequest:
             UserPermissions.DELETE_LISTENER_BY_LISTENER_ID,
             UserPermissions.CANCEL_LISTENER_BY_LISTENER_ID,
             UserPermissions.CREATE_AGENT_GENERATOR,
+            UserPermissions.START_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
             UserPermissions.READ_ALL_AGENT_TEMPLATES,
             UserPermissions.READ_AGENT_TEMPLATE_BY_AGENT_TEMPLATE_ID,
         },

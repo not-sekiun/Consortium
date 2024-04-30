@@ -1,4 +1,3 @@
-import json
 from argparse import ArgumentParser
 
 from consortium.client.framework.base_command import (

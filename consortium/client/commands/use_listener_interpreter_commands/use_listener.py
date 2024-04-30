@@ -59,7 +59,7 @@ class UseListenerCommand(BaseCommand):
             return ReturnStatus(
                 type=ClientReturnStatusType.SWITCH_INTERPRETER,
                 data={
-                    "interpreter_type": InterpreterType.CREATE_LISTENER,
+                    "interpreter_type": InterpreterType.USE_LISTENER,
                     "listener_template_id": listener_template["listener_template_id"],
                     "listener_template_name": listener_template["name"],
                 },

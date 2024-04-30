@@ -4,20 +4,26 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.models.agent_generator_models import AgentGeneratorModel
-from consortium.server.models.common_models import SuccessResponseModel
-from consortium.server.objects.agent_generator_objects import AgentGeneratorState
-from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_dependencies import AuthorizeUserRequest
-from consortium.server.server_exceptions import (
-    AgentGeneratorAlreadyBuildingError,
+from consortium.server.exceptions.agent_generators_api_exceptions import (
+    AgentGeneratorAlreadyRunningError,
     AgentGeneratorNotFoundError,
+    AgentGeneratorStartError,
+)
+from consortium.server.exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
 )
+from consortium.server.framework.exceptions import (
+    AgentGeneratorStartError as FrameworkAgentGeneratorStartError,
+)
+from consortium.server.models.agent_generator_models import AgentGeneratorModel
+from consortium.server.models.common_models import SuccessResponseModel
+from consortium.server.objects.agent_generator_objects import AgentGeneratorState
+from consortium.server.objects.user_account_objects import UserPermissions
+from consortium.server.server_dependencies import AuthorizeUserRequest
 
 router = APIRouter(
     prefix="/api/agent-generators",
@@ -32,10 +38,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 agent_generators_service = server_singletons.agent_generators_service
 
 
-@router.post(
+@router.get(
     "/all",
     responses={
-        201: {"model": AgentGeneratorModel},
+        200: {"model": AgentGeneratorModel},
     },
     status_code=201,
 )
@@ -51,10 +57,10 @@ def get_all_agent_generators(
     ]
 
 
-@router.post(
+@router.get(
     "/{agent_generator_id}",
     responses={
-        201: {"model": AgentGeneratorModel},
+        200: {"model": AgentGeneratorModel},
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
@@ -89,6 +95,58 @@ def get_agent_generator_by_agent_generator_id(
         raise AgentGeneratorNotFoundError(agent_generator_id=agent_generator_id)
 
 
+@router.post(
+    "/{agent_generator_id}/start",
+    responses={
+        200: {"model": SuccessResponseModel},
+        400: {"model": AgentGeneratorStartError().to_pydantic_model()},
+        404: {
+            "model": AgentGeneratorNotFoundError(
+                agent_generator_id="string",
+            ).to_pydantic_model(),
+        },
+        409: {"model": AgentGeneratorAlreadyRunningError().to_pydantic_model()},
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
+            ).to_pydantic_model(),
+        },
+    },
+)
+async def start_agent_generator_by_agent_generator_id(
+    agent_generator_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(
+                UserPermissions.START_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
+            ),
+        ),
+    ],
+) -> SuccessResponseModel:
+    try:
+        agent_generator = (
+            agent_generators_service.get_agent_generator_by_agent_generator_id(
+                agent_generator_id=agent_generator_id,
+            )
+        )
+    except ValueError:
+        raise AgentGeneratorNotFoundError(agent_generator_id=agent_generator_id)
+
+    if agent_generator.status.state == AgentGeneratorState.RUNNING:
+        raise AgentGeneratorAlreadyRunningError(
+            message="The agent generator cannot be started because it is already "
+            "running",
+        )
+
+    try:
+        await agent_generator.start_agent_generator()
+    except FrameworkAgentGeneratorStartError as exc:
+        raise AgentGeneratorStartError(message=exc.message, detail=exc.detail)
+
+    return SuccessResponseModel()
+
+
 @router.delete(
     "/{agent_generator_id}",
     responses={
@@ -98,7 +156,7 @@ def get_agent_generator_by_agent_generator_id(
                 agent_generator_id="string",
             ).to_pydantic_model(),
         },
-        409: {"model": AgentGeneratorAlreadyBuildingError().to_pydantic_model()},
+        409: {"model": AgentGeneratorAlreadyRunningError().to_pydantic_model()},
     },
 )
 def delete_agent_generator_by_agent_generator_id(
@@ -117,7 +175,7 @@ def delete_agent_generator_by_agent_generator_id(
     except ValueError:
         raise AgentGeneratorNotFoundError
 
-    if agent_generator.status.state == AgentGeneratorState.BUILDING:
-        raise AgentGeneratorAlreadyBuildingError
+    if agent_generator.status.state == AgentGeneratorState.RUNNING:
+        raise AgentGeneratorAlreadyRunningError
     agent_generators_service.remove_agent_generator(agent_generator)
     return SuccessResponseModel()
