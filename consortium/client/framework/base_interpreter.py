@@ -73,6 +73,7 @@ class BaseInterpreter:
 
         while True:
             try:
+                await self.on_interpreter_loop()
                 input_string = await self.read_input()
 
                 if not input_string:
@@ -89,8 +90,6 @@ class BaseInterpreter:
                         return command_return_status
                 else:
                     await self.on_command_not_found(parsed_command)
-
-                await self.on_interpreter_loop()
             except KeyboardInterrupt:
                 await self.on_interrupt()
                 if not self.ignore_keyboard_interrupt:

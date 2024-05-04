@@ -8,14 +8,17 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class CreateGeneratorCommand(BaseCommand):
     name = "create_generator"
-    description = "Create an agent generator with the currently set agent generator template options."
-    epilog = argparse_epilog_formatter(
+    description = (
+        "Create an agent generator with the currently set agent generator template "
+        "options."
+    )
+    epilog = format_argparse_epilog(
         """
         Example:
             create_generator  # Create a listener with the currently set listener template options

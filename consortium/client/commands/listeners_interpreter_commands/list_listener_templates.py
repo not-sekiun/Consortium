@@ -9,14 +9,14 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class ListListenerTemplatesCommand(BaseCommand):
     name = "list_listener_templates"
     description = "List all listener templates."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Example:
             list_listener_templates  # List all listener templates

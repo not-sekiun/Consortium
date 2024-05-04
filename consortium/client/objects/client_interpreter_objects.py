@@ -6,8 +6,16 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.client_connection import ClientConnection
-from consortium.client.client_exceptions import RESTAPIError
-from consortium.client.framework.base_command import BaseCommand, CommandContext
+from consortium.client.client_exceptions import (
+    RESTAPIError,
+    UnclosedDoubleQuotesError,
+    UnclosedSingleQuotesError,
+)
+from consortium.client.framework.base_command import (
+    BaseCommand,
+    CommandContext,
+    ReturnStatusType,
+)
 from consortium.client.framework.base_interpreter import BaseInterpreter
 from consortium.client.framework.base_lexer import (
     BaseLexer,
@@ -85,12 +93,7 @@ class ClientInterpreterLexer(BaseLexer):
             self._add_char_to_token_buffer(char_index=char_index, char=char)
 
     def _handle_backslash_escaped(self, char_index: int, char: str) -> None:
-        # Handle special escape sequences.
-        if char in ["n", "t", "r", "b", "f", "v", "a", "e"]:
-            # Backslash is included as part of the token.
-            self._add_char_to_token_buffer(char_index=char_index - 1, char="\\" + char)
-        else:
-            self._add_char_to_token_buffer(char_index=char_index, char=char)
+        self._add_char_to_token_buffer(char_index=char_index, char=char)
 
         self._lexer_state = self._previous_lexer_state
 
@@ -135,10 +138,14 @@ class ClientInterpreterLexer(BaseLexer):
                 self._handle_double_quote_escape(char_index=char_index, char=char)
             elif self._lexer_state == self.PseudoShellStyleLexerState.BACKSLASH_ESCAPED:
                 self._handle_backslash_escaped(char_index=char_index, char=char)
-
             if self._lexer_state == self.PseudoShellStyleLexerState.OUTPUT_TOKEN:
                 self._lexer_state = self.PseudoShellStyleLexerState.DEFAULT
                 yield self._flush_token_buffer(current_char_index=char_index)
+
+        if self._lexer_state == self.PseudoShellStyleLexerState.DOUBLE_QUOTE_ESCAPED:
+            raise UnclosedDoubleQuotesError
+        elif self._lexer_state == self.PseudoShellStyleLexerState.SINGLE_QUOTE_ESCAPED:
+            raise UnclosedSingleQuotesError
 
         # Flush the buffer if there is anything left in it.
         if self._token_buffer:
@@ -151,6 +158,15 @@ class ClientInterpreterLexer(BaseLexer):
             )
 
     def tokenize(self, input_string: str) -> TokenizedString:
+        # TODO: Prevent states from interfering.
+        # Reset lexer state to its default state since incomplete quotes (while raising
+        # the appropriate errors) can cause the state to not be initialized to its
+        # default state when _yield_token() is called again.
+        self._lexer_state = self.PseudoShellStyleLexerState.DEFAULT
+        self._previous_lexer_state = None
+        self._token_buffer = ""
+        self._token_start_index = None
+
         tokens = []
         for token in self._yield_token(input_string.strip()):
             tokens.append(token)
@@ -179,7 +195,8 @@ class ClientInterpreter(BaseInterpreter):
                 # This exception should not be raised under normal circumstances unless
                 # a programmer error is made.
                 raise ValueError(
-                    f"Environment variable name '{key}' is reserved and cannot be used.",
+                    f"Environment variable name '{key}' is reserved and cannot be "
+                    f"used.",
                 )
 
         super().__init__(
@@ -220,3 +237,54 @@ class ClientInterpreter(BaseInterpreter):
         else:
             print_error(f"Fatal error occurred: {exc}")
             CONSOLE.print(f"[bold red]{traceback.format_exc()}")
+
+    async def run_interpreter(self):
+        await self.on_enter_interpreter()
+
+        while True:
+            try:
+                await self.on_interpreter_loop()
+
+                input_string = await self.read_input()
+
+                if not input_string:
+                    continue
+
+                # Provide multi-line input functionality for unclosed quotes.
+                try:
+                    tokens = self.lexer.tokenize(input_string)
+                except (UnclosedDoubleQuotesError, UnclosedSingleQuotesError):
+                    previous_prompt = self.prompt_session.message
+                    while True:
+                        input_string += "\n" + await self.prompt_session.prompt_async(
+                            message="... ",
+                        )
+                        try:
+                            tokens = self.lexer.tokenize(input_string)
+                            # Calling prompt_async() with the message argument
+                            # overwrites the previously set prompt message, so we
+                            # reassign here to be able to call prompt_async() next time
+                            # round with passing in a message argument.
+                            self.prompt_session.message = previous_prompt
+                            break
+                        except (UnclosedDoubleQuotesError, UnclosedSingleQuotesError):
+                            continue
+
+                parsed_command = self.parser.parse(tokens)
+
+                if parsed_command.command in self.commands:
+                    command_return_status = await self.on_command(parsed_command)
+                    if command_return_status.type == ReturnStatusType.CONTINUE:
+                        continue
+                    else:
+                        return command_return_status
+                else:
+                    await self.on_command_not_found(parsed_command)
+            except KeyboardInterrupt:
+                await self.on_interrupt()
+                if not self.ignore_keyboard_interrupt:
+                    break
+            except Exception as exc:
+                await self.on_interpreter_errored(exc)
+
+        await self.on_exit_interpreter()

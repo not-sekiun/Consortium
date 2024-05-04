@@ -63,4 +63,8 @@ class User:
         return f'"{self.username}" ({self.user_id})'
 
     def __repr__(self) -> str:
-        return f"User(username={self.username!r}, password={self.password!r}, role={self.role!r}, remote_host={self.remote_host!r}, datetime_connected={self.datetime_connected!r}, user_id={self.user_id!r})"
+        return (
+            f"User(username={self.username!r}, password={self.password!r}, "
+            f"role={self.role!r}, remote_host={self.remote_host!r}, "
+            f"datetime_connected={self.datetime_connected!r}, user_id={self.user_id!r})"
+        )

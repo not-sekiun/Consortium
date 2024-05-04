@@ -1,6 +1,12 @@
+from copy import deepcopy
+
 from prompt_toolkit import ANSI
+from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
+from consortium.client.commands.listeners_interpreter_commands.cancel_listener import (
+    CancelListenerCommand,
+)
 from consortium.client.commands.listeners_interpreter_commands.info_listener import (
     InfoListenerCommand,
 )
@@ -13,17 +19,26 @@ from consortium.client.commands.listeners_interpreter_commands.list_listener_tem
 from consortium.client.commands.listeners_interpreter_commands.list_listeners import (
     ListListenersCommand,
 )
+from consortium.client.commands.listeners_interpreter_commands.redescribe_listener import (
+    RedescribeListenerCommand,
+)
+from consortium.client.commands.listeners_interpreter_commands.rename_listener import (
+    RenameListenerCommand,
+)
+from consortium.client.commands.listeners_interpreter_commands.set_listener_parameter import (
+    SetListenerParameterCommand,
+)
 from consortium.client.commands.listeners_interpreter_commands.start_listener import (
     StartListenerCommand,
 )
 from consortium.client.commands.listeners_interpreter_commands.stop_listener import (
     StopListenerCommand,
 )
-from consortium.client.commands.listeners_interpreter_commands.use_listener import (
-    UseListenerCommand,
+from consortium.client.commands.listeners_interpreter_commands.use_listener_template import (
+    UseListenerTemplateCommand,
 )
 from consortium.client.objects.client_interpreter_objects import ClientInterpreter
-from consortium.client.utils.formatter_utils import export_rich_text_as_ansi
+from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 
 LISTENERS_INTERPRETER_COMMANDS = [
     *[command for command in CORE_COMMANDS if command.name != "listeners"],
@@ -31,9 +46,13 @@ LISTENERS_INTERPRETER_COMMANDS = [
     InfoListenerTemplateCommand(),
     ListListenersCommand(),
     InfoListenerCommand(),
-    UseListenerCommand(),
+    UseListenerTemplateCommand(),
     StartListenerCommand(),
     StopListenerCommand(),
+    CancelListenerCommand(),
+    RenameListenerCommand(),
+    RedescribeListenerCommand(),
+    SetListenerParameterCommand(),
 ]
 
 
@@ -41,10 +60,60 @@ class ListenersInterpreter(ClientInterpreter):
     def __init__(self, client_connection):
         super().__init__(
             prompt=ANSI(
-                export_rich_text_as_ansi(
+                format_rich_text_as_ansi(
                     "[bold white]Consortium ([bold blue]Listeners[bold white]) > ",
                 ),
             ),
             commands=LISTENERS_INTERPRETER_COMMANDS,
             client_connection=client_connection,
+        )
+
+    async def on_interpreter_loop(self) -> None:
+        # TODO: Listen for events on a websocket to intelligently know when to update
+        #  the completer rather than updating it on each interpreter loop which adds
+        #  a lot of unnecessary traffic.
+        all_listeners = await self.environment["client_connection"].get_all_listeners()
+        all_listener_templates = await self.environment[
+            "client_connection"
+        ].get_all_listener_templates()
+
+        listeners_interpreter_completer_dict = deepcopy(
+            self.prompt_session.completer.options,
+        )
+
+        listeners_interpreter_completer_dict["start_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        listeners_interpreter_completer_dict["stop_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        listeners_interpreter_completer_dict["cancel_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        listeners_interpreter_completer_dict["info_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        listeners_interpreter_completer_dict["rename_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        listeners_interpreter_completer_dict["redescribe_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        listeners_interpreter_completer_dict["set_listener_parameter"] = {
+            listener["listener_id"]: {
+                parameter_name: None for parameter_name in listener["parameters"]
+            }
+            for listener in all_listeners
+        }
+        listeners_interpreter_completer_dict["info_listener_template"] = {
+            listener_template["listener_template_id"]: None
+            for listener_template in all_listener_templates
+        }
+        listeners_interpreter_completer_dict["use_listener_template"] = {
+            listener_template["listener_template_id"]: None
+            for listener_template in all_listener_templates
+        }
+
+        self.prompt_session.completer = NestedCompleter.from_nested_dict(
+            listeners_interpreter_completer_dict,
         )

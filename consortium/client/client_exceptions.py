@@ -20,3 +20,12 @@ class InvalidServerLoginResponseError(Exception):
 #  response that may returned for each API endpoint.
 class RESTAPIError(Exception):
     pass
+
+
+# Exceptions for the lexer
+class UnclosedSingleQuotesError(Exception):
+    pass
+
+
+class UnclosedDoubleQuotesError(Exception):
+    pass

@@ -1,3 +1,5 @@
+from rich import box
+from rich.panel import Panel
 from rich.table import Table
 
 from consortium.client.framework.base_command import (
@@ -8,14 +10,17 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import (
+    format_agent_generator_state_string_with_color,
+    format_argparse_epilog,
+)
 from consortium.client.utils.printer_utils import CONSOLE
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class ListGeneratorsCommand(BaseCommand):
     name = "list_generators"
     description = "List all generators."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Example:
             list_generators  # List all agent generators
@@ -35,7 +40,7 @@ class ListGeneratorsCommand(BaseCommand):
                 "client_connection"
             ].get_all_agent_generators()
 
-            table = Table(title="Agent Generators", show_lines=True)
+            table = Table(title="Agent Generators")
 
             table.add_column("Agent Generator ID")
             table.add_column("Name")
@@ -43,50 +48,39 @@ class ListGeneratorsCommand(BaseCommand):
             table.add_column("Status")
 
             for agent_generator in all_agent_generators:
-                agent_generator_status_string = agent_generator["status"]["state"]
-                if agent_generator_status_string == "RUNNING":
-                    agent_generator_status_string = (
-                        f"[bold green]{agent_generator_status_string}"
-                    )
-                elif agent_generator_status_string == "ERRORED":
-                    agent_generator_status_string = (
-                        f"[bold red]{agent_generator_status_string}"
-                    )
+                agent_generator_build_steps_summary = []
+                completed_agent_generator_build_steps = 0
+                for agent_generator_build_step in agent_generator[
+                    "agent_generator_build_steps"
+                ]:
+                    if agent_generator_build_step["status"]["state"] == "COMPLETED":
+                        completed_agent_generator_build_steps += 1
 
+                    agent_generator_build_steps_summary.append(
+                        {
+                            "QUEUED": f"[bold white]QUEUED    [/]{agent_generator_build_step["name"]}",
+                            "RUNNING": f"[bold yellow]RUNNING   [/]{agent_generator_build_step["name"]}",
+                            "COMPLETED": f"[bold green]COMPLETED [/]{agent_generator_build_step["name"]}",
+                            "ERRORED": f"[bold red]ERRORED   [/]{agent_generator_build_step["name"]}",
+                            "FATAL": f"[bold red]FATAL     [/]{agent_generator_build_step["name"]}",
+                        }[agent_generator_build_step["status"]["state"]],
+                    )
+                agent_generator_build_steps_summary_string = "\n".join(
+                    agent_generator_build_steps_summary,
+                )
                 table.add_row(
                     agent_generator["agent_generator_id"],
                     agent_generator["name"],
-                    "\n".join(
-                        [
-                            {
-                                "QUEUED": f"[bold white]QUEUED    {agent_generator_build_step["name"]}",
-                                "RUNNING": f"[bold yellow]RUNNING   {agent_generator_build_step["name"]}",
-                                "COMPLETED": f"[bold green]COMPLETED {agent_generator_build_step["name"]}",
-                                "ERRORED": f"[bold red]ERRORED   {agent_generator_build_step["name"]}",
-                                "FATAL": f"[bold red]FATAL     {agent_generator_build_step["name"]}",
-                            }[agent_generator_build_step["status"]["state"]]
-                            for agent_generator_build_step in agent_generator[
-                                "agent_generator_build_steps"
-                            ]
-                        ],
-                    )
-                    + "\n"
-                    + str(
-                        len(
-                            [
-                                agent_generator_build_step
-                                for agent_generator_build_step in agent_generator[
-                                    "agent_generator_build_steps"
-                                ]
-                                if agent_generator_build_step["status"]["state"]
-                                == "COMPLETED"
-                            ],
-                        ),
-                    )
-                    + "/"
-                    + str(len(agent_generator["agent_generator_build_steps"]))
-                    + " steps completed",
-                    agent_generator_status_string,
+                    Panel(
+                        agent_generator_build_steps_summary_string
+                        + "\n"
+                        + f"{completed_agent_generator_build_steps}/{len(agent_generator['agent_generator_build_steps'])} steps completed",
+                        box=box.HEAVY_HEAD,
+                        title="Agent Generator Build Progress",
+                    ),
+                    format_agent_generator_state_string_with_color(
+                        agent_generator["status"]["state"],
+                    ),
                 )
 
             CONSOLE.print(table)

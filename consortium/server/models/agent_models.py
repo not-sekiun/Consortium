@@ -7,14 +7,6 @@ from pydantic import BaseModel, Field
 SimpleType = str | int | float | bool
 
 
-class AgentTypeModel(BaseModel):
-    name: str
-    agent_type_id: str
-    # If compatible_listener_type_ids is an empty list it is compatible with no listener
-    # types.
-    compatible_listener_type_ids: list[str]
-
-
 class AgentTaskModel(BaseModel):
     command: str = ""
     arguments: list[SimpleType] | dict | None = None

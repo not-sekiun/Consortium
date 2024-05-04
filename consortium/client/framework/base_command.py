@@ -11,6 +11,7 @@ class CommandContext:
     environment: dict
 
 
+# TODO: Add differentiation between success and failure with SUCCESS and FAIL types.
 @dataclass
 class ReturnStatusType:
     CONTINUE = "CONTINUE"

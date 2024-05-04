@@ -15,7 +15,8 @@ class ListenersService:
     def add_listener(self, listener: BaseListener) -> None:
         if str(listener.listener_id) in self._listeners:
             raise ValueError(
-                f"Cannot add listener to service because a listener with the same listener ID already exists: {listener.listener_id}",
+                f"Cannot add listener to service because a listener with the same "
+                f"listener ID already exists: {listener.listener_id}",
             )
 
         self._listeners[str(listener.listener_id)] = listener

@@ -10,14 +10,17 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE, print_error
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class HelpCommand(BaseCommand):
     name = "help"
-    description = "Get a summary for a command or display the help menu for all available commands."
-    epilog = argparse_epilog_formatter(
+    description = (
+        "Get a summary for a command or display the help menu for all available "
+        "commands."
+    )
+    epilog = format_argparse_epilog(
         """
         Examples:
             help  # Display the help menu for all available commands.

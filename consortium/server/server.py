@@ -136,7 +136,8 @@ class Server:
             test_sock.close()
         except socket.error as exc:
             self._server_logger.error(
-                f"Network error occurred while attempting to bind server to target socket address: {exc}",
+                f"Network error occurred while attempting to bind server to target "
+                f"socket address: {exc}",
             )
 
         try:

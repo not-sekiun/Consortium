@@ -2,7 +2,7 @@ import argparse
 
 import consortium.client.start_client as start_client
 import consortium.server.start_server as start_server
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
 def main():
@@ -10,7 +10,7 @@ def main():
         prog="consortium",
         description="Start the consortium server or client",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=argparse_epilog_formatter(
+        epilog=format_argparse_epilog(
             """
             Examples:
                 consortium server -h
@@ -28,7 +28,7 @@ def main():
         name="server",
         help="Start the consortium server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=argparse_epilog_formatter(
+        epilog=format_argparse_epilog(
             """
             Examples:
                 consortium server
@@ -47,7 +47,7 @@ def main():
         name="client",
         help="Start the consortium client",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=argparse_epilog_formatter(
+        epilog=format_argparse_epilog(
             """
             Examples:
                 consortium client

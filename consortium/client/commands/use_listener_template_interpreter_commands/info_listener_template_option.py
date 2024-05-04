@@ -10,24 +10,27 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE, print_error
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
-class InfoAgentTemplateOptionsCommand(BaseCommand):
-    name = "info_agent_template_options"
-    description = "Show all information for a specific agent template option."
-    epilog = argparse_epilog_formatter(
+class InfoListenerTemplateOptionsCommand(BaseCommand):
+    name = "info_listener_template_option"
+    description = "Show all information for a specific listener template option."
+    epilog = format_argparse_epilog(
         """
         Example:
-            info_options_agent_template remote_host # Display information for the agent template option with name remote_host
+            info_listener_template_option remote_host # Display information for the listener template option with name remote_host
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "agent_template_option_name",
-            help="Agent template option name of the agent template option to display information for.",
+            "listener_template_option_name",
+            help=(
+                "Listener template option name of the listener template option to "
+                "display information for."
+            ),
             nargs=1,
         )
 
@@ -38,17 +41,17 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
 
-            table = Table(title="Agent Template Option Information")
+            table = Table(title="Listener Template Option Information")
             table.add_column("Information")
             table.add_column("Data")
 
             try:
-                option = command_context.environment["agent_template"]["options"][
-                    parsed_args.agent_template_option_name[0]
+                option = command_context.environment["listener_template"]["options"][
+                    parsed_args.listener_template_option_name[0]
                 ]
             except KeyError:
                 print_error(
-                    f"Agent template option with name {parsed_args.agent_template_option_name[0]} not found.",
+                    f"Listener template option with name {parsed_args.listener_template_option_name[0]} not found.",
                 )
                 return ReturnStatus(
                     type=ClientReturnStatusType.CONTINUE,

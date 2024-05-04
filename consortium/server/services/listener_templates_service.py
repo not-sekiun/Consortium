@@ -110,11 +110,13 @@ class ListenerTemplatesService:
                 )
         except FileNotFoundError:
             raise InvalidListenerProjectFolderStructureError(
-                f"No listener project manifest file found in listener project folder: {listener_project_folder}",
+                f"No listener project manifest file found in listener project folder: "
+                f"{listener_project_folder}",
             )
         except jsonschema.ValidationError:
             raise InvalidListenerProjectManifestFileError(
-                f"Invalid listener_project_manifest.json file in listener project folder: {listener_project_folder}",
+                f"Invalid listener_project_manifest.json file in listener project "
+                f"folder: {listener_project_folder}",
             )
 
         # Check for valid project folder structure as specified by the manifest file.

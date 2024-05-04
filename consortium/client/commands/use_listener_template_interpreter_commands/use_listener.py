@@ -9,14 +9,14 @@ from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
     InterpreterType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class UseListenerCommand(BaseCommand):
     name = "use_listener"
     description = "Use a listener."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Example:
             use_listener 123e4567-e89b-12d3-a456-42661417400  # Use a listener with the listener template with listener template ID 123e4567-e89b-12d3-a456-42661417400
@@ -53,7 +53,8 @@ class UseListenerCommand(BaseCommand):
             )
 
             print_info(
-                f'Using listener with listener template: "{listener_template["name"]}" ({listener_template["listener_template_id"]})',
+                f'Using listener with listener template: "{listener_template["name"]}" '
+                f'({listener_template["listener_template_id"]})',
             )
 
             return ReturnStatus(

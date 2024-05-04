@@ -1,13 +1,19 @@
 import asyncio
-import os
 import shutil
 from types import SimpleNamespace
 
+from consortium.server.framework.agent_generator_utils.filesystem_utils import (
+    TemporarilyChangeWorkingDirectory,
+)
+from consortium.server.framework.agent_generator_utils.shell_utils import run_command
 from consortium.server.framework.base_agent_generator import (
     BaseAgentGenerator,
     BaseAgentGeneratorBuildStep,
 )
-from consortium.server.framework.exceptions import AgentGeneratorStartError
+from consortium.server.framework.exceptions import (
+    AgentGeneratorBuildError,
+    AgentGeneratorStartError,
+)
 from consortium.server.server_config import (
     CONSORTIUM_AGENTS_DIRECTORY_PATH,
     CONSORTIUM_ARTIFACTS_DIRECTORY_PATH,
@@ -42,12 +48,11 @@ class CreateTemporaryDirectory(BaseAgentGeneratorBuildStep):
         parameters: dict,
         build_context: SimpleNamespace,
     ):
-        temporary_directory = (
-            CONSORTIUM_AGENTS_DIRECTORY_PATH / "consortium" / "http" / ".tmp"
-        )
+        temporary_directory = self.working_directory / ".tmp"
         if parameters["format"] == "executable":
-            if not temporary_directory.is_dir():
-                os.mkdir(str(temporary_directory))
+            # Create the temporary directory, if it already exists, no error is raised.
+            temporary_directory.mkdir(exist_ok=True)
+            print("Made directory", temporary_directory)
         build_context.temporary_directory = temporary_directory
 
 
@@ -69,11 +74,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         build_context: SimpleNamespace,
     ):
         with open(
-            CONSORTIUM_AGENTS_DIRECTORY_PATH
-            / "consortium"
-            / "http"
-            / "source"
-            / "agent.py",
+            self.working_directory / "source" / "agent.py",
             "r",
         ) as file:
             template_source_code = file.read()
@@ -94,8 +95,8 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                     1,
                 )
                 .replace(
-                    '"JITTER_PERCENTAGE"',
-                    repr(parameters["jitter_percentage"]),
+                    '"JITTER_PERCENT"',
+                    repr(parameters["jitter_percent"]),
                     1,
                 )
                 .replace(
@@ -123,7 +124,7 @@ class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
         description = (
             "Export the agent to the server's artifacts folder. Freeze the "
             "agent into an executable with pyinstaller if specified by the "
-            '"format" option'
+            '"format" option.'
         )
         ignore_failure = False
         super().__init__(
@@ -140,37 +141,46 @@ class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
     ):
         if parameters["format"] == "script":
             with open(
-                CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / parameters["filename"] + ".py",
+                CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / (parameters["filename"] + ".py"),
                 "w",
             ) as file:
                 file.write(build_context.source_code)
         elif parameters["format"] == "executable":
-            temporary_agent_file_path = (
-                CONSORTIUM_AGENTS_DIRECTORY_PATH
-                / "consortium"
-                / "http"
-                / ".tmp"
-                / "tmp.py"
-            )
+            temporary_agent_file_path = build_context.temporary_directory / "tmp.py"
 
             with open(temporary_agent_file_path, "w") as file:
                 file.write(build_context.source_code)
 
-            await asyncio.create_subprocess_exec(
-                "pyinstaller",
-                "--onefile",
-                "--windowed",
-                str(temporary_agent_file_path),
-            )
+            # Changing back to the previous working directory is crucial to avoid any
+            # issues with deleting the temporary directory after building the agent due
+            # to the server process still "using" the directory while it is in that
+            # directory
+            with TemporarilyChangeWorkingDirectory(
+                new_working_directory=build_context.temporary_directory,
+            ):
+                command_result = await run_command(
+                    "pyinstaller",
+                    "--onefile",
+                    "--windowed",
+                    str(temporary_agent_file_path),
+                )
 
-            shutil.move(
-                str(build_context.temporary_directory / "dist" / "tmp.exe"),
-                str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / parameters["filename"])
-                + ".exe",
-            )
+                if command_result.return_code != 0:
+                    raise AgentGeneratorBuildError(
+                        message=(
+                            f"Failed to build agent executable: "
+                            f"{command_result.stderr}"
+                        ),
+                    )
+
+                shutil.move(
+                    str(build_context.temporary_directory / "dist" / "tmp.exe"),
+                    str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / parameters["filename"])
+                    + ".exe",
+                )
         elif parameters["format"] == "oneliner":
             with open(
-                CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / parameters["filename"] + ".txt",
+                CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / (parameters["filename"] + ".txt"),
                 "w",
             ) as file:
                 file.write('python -c "' + repr(build_context.source_code) + '"')
@@ -213,28 +223,28 @@ class AgentGenerator(BaseAgentGenerator):
             **kwargs,
         )
 
-    def on_agent_generator_started(self) -> None:
+    async def on_agent_generator_started(self) -> None:
         if self.parameters["format"] == "executable" and (
             shutil.which("pyinstaller") is None or shutil.which("python") is None
         ):
             raise AgentGeneratorStartError(
                 message=(
                     "The PyInstaller python package is required to build a frozen "
-                    'executable of the agent for the "format" option set to "frozen" '
-                    "but was not found on the system's path."
+                    'executable of the agent for the "format" option set to '
+                    '"executable" but was not found on the system\'s path.'
                 ),
             )
 
-    def on_agent_generator_completed(self) -> None:
+    async def on_agent_generator_completed(self) -> None:
         # Cleanup temporary directory agent generator build step is guaranteed to have
-        # ran already.
+        # run already.
         pass
 
-    def on_agent_generator_stopped(self) -> None:
+    async def on_agent_generator_stopped(self) -> None:
         _cleanup_temporary_directory()
 
-    def on_agent_generator_cancelled(self) -> None:
+    async def on_agent_generator_cancelled(self) -> None:
         _cleanup_temporary_directory()
 
-    def on_agent_generator_errored(self, exc: Exception) -> None:
+    async def on_agent_generator_errored(self, exc: Exception) -> None:
         _cleanup_temporary_directory()

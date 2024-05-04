@@ -10,17 +10,17 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
-class ListOptionsAgentTemplateCommand(BaseCommand):
-    name = "list_options_agent_template"
-    description = "List options for the currently selected agent template."
-    epilog = argparse_epilog_formatter(
+class ListOptionsListenerTemplateCommand(BaseCommand):
+    name = "list_options_listener_template"
+    description = "List options for the currently selected listener template."
+    epilog = format_argparse_epilog(
         """
         Example:
-            view_options_agent_template
+            view_options_listener_template
         """,
     )
 
@@ -34,14 +34,14 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
         try:
             _ = self.parser.parse_args(command_context.arguments)
 
-            table = Table(title="Agent Template Options")
+            table = Table(title="Listener Template Options")
             table.add_column("Option Type")
             table.add_column("Name")
             table.add_column("Description")
             table.add_column("Required")
             table.add_column("Current Value")
 
-            for option_name, option in command_context.environment["agent_template"][
+            for option_name, option in command_context.environment["listener_template"][
                 "options"
             ].items():
                 table.add_row(
@@ -49,7 +49,7 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
                     option_name,
                     option["description"],
                     str(option["required"]),
-                    str(option["value"]),
+                    str(option["value"]) if option["value"] is not None else "",
                 )
 
             CONSOLE.print(

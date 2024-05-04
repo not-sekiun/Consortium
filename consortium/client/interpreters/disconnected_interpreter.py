@@ -22,7 +22,7 @@ from consortium.client.commands.home_interpreter_commands.list_client_connection
 from consortium.client.framework.base_interpreter import BaseInterpreter
 from consortium.client.framework.base_parser import ParsedCommand
 from consortium.client.objects.client_interpreter_objects import ClientInterpreterLexer
-from consortium.client.utils.formatter_utils import export_rich_text_as_ansi
+from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 from consortium.client.utils.printer_utils import print_error, print_info
 
 
@@ -43,7 +43,7 @@ class DisconnectedInterpreter(BaseInterpreter):
         ]
         super().__init__(
             prompt_session=PromptSession(
-                message=ANSI(export_rich_text_as_ansi("[bold white]Consortium > ")),
+                message=ANSI(format_rich_text_as_ansi("[bold white]Consortium > ")),
                 completer=NestedCompleter.from_nested_dict(
                     {
                         command.name: None

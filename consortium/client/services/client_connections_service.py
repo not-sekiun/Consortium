@@ -33,7 +33,8 @@ class ClientConnectionsService:
             client_connection = self._client_connections[client_connection_id]
         except KeyError:
             raise ValueError(
-                f"No client connection exists with the provided client connection ID: {client_connection_id}",
+                f"No client connection exists with the provided client connection ID: "
+                f"{client_connection_id}",
             )
 
         self._client_connections_service_logger.debug(

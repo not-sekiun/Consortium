@@ -71,8 +71,8 @@ class AgentTemplate(BaseAgentTemplate):
             SingleValueOption(
                 name="name",
                 description="The name of the agent generator being created.",
-                required=True,
-                default_value="0.0.0.0",
+                required=False,
+                default_value="",
                 value_type=str,
             ),
             SingleValueOption(
@@ -137,10 +137,10 @@ class AgentTemplate(BaseAgentTemplate):
             SingleValueOption(
                 name="jitter_percent",
                 description=(
-                    "The percentage of sleep_time to randomly vary sleeping by. A "
-                    "random value between 0 and the value of the option "
+                    "The percentage of the duration of the sleep time to randomly vary "
+                    "sleeping by. A random value between 0 and the value of the option "
                     '"jitter_percent" is chosen to randomly increase or decrease the'
-                    "sleep time by."
+                    "duration of the sleep time by."
                 ),
                 default_value=0.5,
                 value_type=float,
@@ -161,7 +161,7 @@ class AgentTemplate(BaseAgentTemplate):
                 description=(
                     "The filename of the agent to be generated. The appropriate file "
                     'extension is appended depending on the value of the "format" '
-                    "option of the generated agent"
+                    "option of the generated agent."
                 ),
                 default_value="agent",
                 validating_function=_check_filename_does_not_traverse_directories,

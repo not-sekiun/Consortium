@@ -11,16 +11,19 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE, print_error
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 client_connections_service = client_singletons.client_connections_service
 
 
 class InfoClientConnectionCommand(BaseCommand):
     name = "info_client_connection"
-    description = "List all information for a specific client connection by its client connection ID."
-    epilog = argparse_epilog_formatter(
+    description = (
+        "List all information for a specific client connection by its client "
+        "connection ID."
+    )
+    epilog = format_argparse_epilog(
         """
         Example:
             info_client_session 123e4567-e89b-12d3-a456-42661417400  # Display information for the client session with client session ID 123e4567-e89b-12d3-a456-42661417400
@@ -30,7 +33,11 @@ class InfoClientConnectionCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "client_connection_id",
-            help="Client connection ID of the client connection to display information for. If not provided, information for the current client connection is displayed",
+            help=(
+                "Client connection ID of the client connection to display information "
+                "for. If not provided, information for the current client connection "
+                "is displayed"
+            ),
             nargs=1,
             default=None,
         )

@@ -7,14 +7,14 @@ from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
     InterpreterType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_info
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class HomeCommand(BaseCommand):
     name = "home"
     description = "Switch to the home interpreter."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Examples:
             home  # Switch to the home interpreter.

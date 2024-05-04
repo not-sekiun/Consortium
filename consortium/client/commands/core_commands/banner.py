@@ -10,14 +10,14 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class BannerCommand(BaseCommand):
     name = "banner"
     description = "Display a banner."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Examples:
             banner  # Display a banner.
@@ -43,11 +43,13 @@ class BannerCommand(BaseCommand):
             "[bold white] <o>      .--+x   .          [bold red]--------[bold white]+ .        `     --.    x  [bold cyan]   [Ad astra!]\n"
         )
         banner_art = [star_banner]
-        banner_text = [""]
+        banner_text = [
+            "Cogito ergo sum.",
+        ]
 
         if client_connection is None:
-            number_of_listeners = "N/A"
-            number_of_agents = "N/A"
+            number_of_running_listeners = "N/A"
+            number_of_running_agents = "N/A"
             server_release_formatted_string = "N/A"
             role = "N/A"
             connection_status_banner = (
@@ -57,13 +59,17 @@ class BannerCommand(BaseCommand):
             )
         else:
             server_release = await client_connection.get_server_release()
-            listeners = await client_connection.get_all_listeners()
+            listeners = [
+                listener
+                for listener in await client_connection.get_all_listeners()
+                if listener["status"]["state"] == "RUNNING"
+            ]
             own_user = await client_connection.get_own_user_info()
             # TODO: Add agent API endpoint
             agents = []
 
-            number_of_listeners = str(len(listeners))
-            number_of_agents = str(len(agents))
+            number_of_running_listeners = str(len(listeners))
+            number_of_running_agents = str(len(agents))
             server_release_formatted_string = (
                 f'v{server_release["version"]} "{server_release["codename"]}"'
             )
@@ -84,7 +90,7 @@ class BannerCommand(BaseCommand):
                     + "[bold white])"
                 )
 
-        banner_art = random.choice(banner_art)
+        random_banner_art = random.choice(banner_art)
         author_banner = (
             "[bold white]    Author         - Sekiun (https://github.com/not-sekiun)"
         )
@@ -94,19 +100,19 @@ class BannerCommand(BaseCommand):
         )
         info_banner = (
             "[bold white]    Information    - "
-            + f"[bold white]{number_of_listeners} Active listener(s) | "
-            + f"[bold white]{number_of_agents} Active agent(s)"
+            + f"[bold white]{number_of_running_listeners} Running listener(s) | "
+            + f"[bold white]{number_of_running_agents} Running agent(s)"
         )
-        quote_banner = f"    {random.choice(banner_text)}"
+        random_banner_text = f"    {random.choice(banner_text)}"
 
-        CONSOLE.print(banner_art)
+        CONSOLE.print(random_banner_art)
         CONSOLE.print(author_banner)
         CONSOLE.print(client_version_banner)
         CONSOLE.print(server_version_banner)
         CONSOLE.print(connection_status_banner)
         CONSOLE.print(info_banner)
         CONSOLE.print()
-        CONSOLE.print(quote_banner)
+        CONSOLE.print(random_banner_text)
         CONSOLE.print()
 
     def configure_parser(self, parser) -> None:

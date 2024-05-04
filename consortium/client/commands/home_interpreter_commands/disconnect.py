@@ -9,8 +9,8 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 client_connections_service = client_singletons.client_connections_service
 
@@ -20,7 +20,7 @@ class DisconnectCommand(BaseCommand):
     description = (
         "Disconnect from the current client connection or a specific client connection."
     )
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Example:
             disconnect  # Disconnect the current client connection
@@ -31,7 +31,11 @@ class DisconnectCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "client_connection_id",
-            help="Client connection ID of the client connection to disconnect. If no client connection ID is provided, the current client connection is disconnected.",
+            help=(
+                "Client connection ID of the client connection to disconnect. If no "
+                "client connection ID is provided, the current client connection is "
+                "disconnected."
+            ),
             nargs="?",
             default=None,
         )

@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from consortium.server.models.agent_models import AgentTypeModel
+from consortium.server.models.c2_types_models import AgentTypeModel
 
 
 class AgentTemplateModel(BaseModel):

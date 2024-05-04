@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -27,6 +28,7 @@ class BaseListener(ABC):
     def __init__(
         self,
         listener_type: ListenerType,
+        listener_template: "BaseListenerTemplate",  # Prevent circular dependency.
         name: str = "",
         description: str = "",
         endpoint: str = "",
@@ -39,9 +41,10 @@ class BaseListener(ABC):
         self.listener_type = listener_type
         self.parameters = parameters
         self.datetime_created = datetime.now()
+        self.listener_template = listener_template
+
         # Original status.state is set to STOPPED.
         self.status = ListenerStatus()
-
         # self.state is used to store any state information that the listener may need
         # to store and share amongst its user defined methods.
         self.state = SimpleNamespace()
@@ -55,7 +58,7 @@ class BaseListener(ABC):
         # self.listener_logger is an internal logger to use for logging within the
         # listener to standard output and log files.
         self.listener_logger = logger.bind(
-            logger_name=f'Consortium Listener "{self.name}" ({self.listener_id})',
+            logger_name=f"Consortium Listener {self}",
         )
 
         # Asyncio type tasks are held by a weak reference by default, so they can be
@@ -151,14 +154,26 @@ class BaseListener(ABC):
                 try:
                     await self.on_listener_errored(exc)
                 except Exception as exc:
+                    self.listener_logger.opt(ansi=True).error(
+                        "<bold><red>{}</></>",
+                        traceback.format_exc(),
+                    )
                     # The listener is now fatally errored.
                     self.status.transition_to_fatal(exc)
         except Exception as exc:
+            self.listener_logger.opt(ansi=True).error(
+                "<bold><red>{}</></>",
+                traceback.format_exc(),
+            )
             self.status.transition_to_fatal(exc)
             # The listener is now fatally errored.
             try:
                 await self.on_listener_errored(exc)
             except Exception as exc:
+                self.listener_logger.opt(ansi=True).error(
+                    "<bold><red>{}</></>",
+                    traceback.format_exc(),
+                )
                 self.status.transition_to_fatal(exc)
 
     async def start_listener(self) -> None:
@@ -166,6 +181,10 @@ class BaseListener(ABC):
             raise ListenerAlreadyRunningError(
                 message="The listener cannot be started because it is already running",
             )
+
+        # Clear the signal to the listener to stop running if it is set, so it won't
+        # instantly stop.
+        self.stop_listener_event.clear()
 
         # The listener is now started.
         self.status.transition_to_started()
@@ -176,6 +195,14 @@ class BaseListener(ABC):
         except ListenerStartError as exc:
             # The listener is now initialized.
             self.status.transition_to_initialized()
+            raise exc
+        except Exception as exc:
+            self.listener_logger.opt(ansi=True).error(
+                "<bold><red>{}</></>",
+                traceback.format_exc(),
+            )
+            # The listener is now fatally errored
+            self.status.transition_to_fatal(exc)
             raise exc
 
         self._listener_task = asyncio.create_task(self._run_listener())
@@ -194,6 +221,14 @@ class BaseListener(ABC):
             # The listener has not changed from its running state.
             self.status.transition_to_running()
             raise exc
+        except Exception as exc:
+            self.listener_logger.opt(ansi=True).error(
+                "<bold><red>{}</></>",
+                traceback.format_exc(),
+            )
+            # The listener is now fatally errored
+            self.status.transition_to_fatal(exc)
+            raise exc
 
         # Signal to the listener to stop running.
         self.stop_listener_event.set()
@@ -211,6 +246,14 @@ class BaseListener(ABC):
         except ListenerCancellationError as exc:
             self.status.transition_to_running()
             raise exc
+        except Exception as exc:
+            self.listener_logger.opt(ansi=True).error(
+                "<bold><red>{}</></>",
+                traceback.format_exc(),
+            )
+            # The listener is now fatally errored
+            self.status.transition_to_fatal(exc)
+            raise exc
 
         # Cancel the listener.
         self._listener_task.cancel()
@@ -222,6 +265,7 @@ class BaseListener(ABC):
             "name": self.name,
             "description": self.description,
             "endpoint": self.endpoint,
+            "listener_template": self.listener_template.to_json(),
             "listener_type": self.listener_type.to_json(),
             "parameters": self.parameters,
             "status": self.status.to_json(),

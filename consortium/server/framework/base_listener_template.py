@@ -1,4 +1,3 @@
-import textwrap
 import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Type
@@ -10,6 +9,9 @@ from consortium.server.framework.options import (
     DictionaryValueOption,
     ListValueOption,
     SingleValueOption,
+)
+from consortium.server.utils.string_processing_utils import (
+    docstring_to_single_line_formatter,
 )
 
 
@@ -43,7 +45,9 @@ class BaseListenerTemplate(ABC):
         for option in options:
             if option.name in names:
                 raise ValueError(
-                    f"The option being registered with name {option.name} could not be registered because an option of the same name has already been registered. Duplicate named options are not allowed",
+                    f"The option being registered with name {option.name} could not be "
+                    f"registered because an option of the same name has already been "
+                    f"registered. Duplicate named options are not allowed",
                 )
             names.append(option.name)
         if options is None:
@@ -86,6 +90,7 @@ class BaseListenerTemplate(ABC):
             self.validating_function(self.options)
 
         return self.listener(
+            listener_template=self,
             name=self.resolve_listener_name(),
             endpoint=self.resolve_listener_endpoint(),
             listener_type=self.listener_type,
@@ -106,15 +111,21 @@ class BaseListenerTemplate(ABC):
                 for option_name, option in self.options.items()
             },
             "listener_template_id": str(self.listener_template_id),
-            "validating_function": (
-                "".join(textwrap.dedent(self.validating_function.__doc__).splitlines())
-                if self.validating_function
-                else None
-            ),
+            "validating_function": docstring_to_single_line_formatter(
+                self.validating_function.__doc__,
+            )
+            if self.validating_function and self.validating_function.__doc__
+            else None,
         }
 
     def __str__(self) -> str:
         return f'"{self.name}" ({str(self.listener_template_id)})'
 
     def __repr__(self) -> str:
-        return f"ListenerTemplate(listener={self.listener!r}, listener_type={self.listener_type!r}, name={self.name!r}, description={self.description!r}, authors={self.authors!r}, options={self.options!r}, validating_function={self.validating_function!r})"
+        return (
+            f"ListenerTemplate(listener={self.listener!r}, "
+            f"listener_type={self.listener_type!r}, name={self.name!r}, "
+            f"description={self.description!r}, authors={self.authors!r}, "
+            f"options={self.options!r}, "
+            f"validating_function={self.validating_function!r})"
+        )

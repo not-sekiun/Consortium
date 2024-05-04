@@ -3,7 +3,7 @@ from prompt_toolkit import ANSI
 from consortium.client.client_connection import ClientConnection
 from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
 from consortium.client.objects.client_interpreter_objects import ClientInterpreter
-from consortium.client.utils.formatter_utils import export_rich_text_as_ansi
+from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 
 
 class AgentsInterpreter(ClientInterpreter):
@@ -13,7 +13,7 @@ class AgentsInterpreter(ClientInterpreter):
         ]
         super().__init__(
             prompt=ANSI(
-                export_rich_text_as_ansi(
+                format_rich_text_as_ansi(
                     "[bold white]Consortium ([bold red]Agents[bold white]) > ",
                 ),
             ),

@@ -9,16 +9,19 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 client_connections_service = client_singletons.client_connections_service
 
 
 class RenameClientConnectionCommand(BaseCommand):
     name = "rename_client_connection"
-    description = "Rename the current client connection or a specific client connection by its client connection ID."
-    epilog = argparse_epilog_formatter(
+    description = (
+        "Rename the current client connection or a specific client connection by its "
+        "client connection ID."
+    )
+    epilog = format_argparse_epilog(
         """
         Example:
             rename_client_connection "Client Connection Name" # Rename the current client connection to "Client Connection Name"

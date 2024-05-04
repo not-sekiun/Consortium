@@ -45,7 +45,10 @@ class Agent:
         }
 
     def __repr__(self) -> str:
-        return f"Agent(name={self.name!r}, agent_id={self.agent_id!r}), agent_data={self.agent_data!r})"
+        return (
+            f"Agent(name={self.name!r}, agent_id={self.agent_id!r}), "
+            f"agent_data={self.agent_data!r})"
+        )
 
     def __str__(self) -> str:
         return f'"{self.name}" ({self.agent_id})'

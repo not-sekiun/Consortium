@@ -9,14 +9,14 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class ClearCommand(BaseCommand):
     name = "clear"
     description = "Clear the terminal screen."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Examples:
             clear  # Clear the terminal screen.

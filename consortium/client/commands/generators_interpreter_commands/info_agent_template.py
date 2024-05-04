@@ -10,14 +10,14 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class InfoAgentTemplateCommand(BaseCommand):
     name = "info_agent_template"
     description = "Show all information for a specific agent template."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Example:
             info_agent_template 123e4567-e89b-12d3-a456-42661417400  # Display information for the agent template with agent template ID 123e4567-e89b-12d3-a456-42661417400
@@ -67,16 +67,24 @@ class InfoAgentTemplateCommand(BaseCommand):
                 agent_template["agent_type"]["name"],
             )
             agent_type_table.add_row(
-                "Compatible Listener Type IDs",
+                "Compatible Listener Types",
                 "\n".join(
-                    agent_template["agent_type"]["compatible_listener_type_ids"],
+                    [
+                        listener_type["name"]
+                        + " ("
+                        + listener_type["listener_type_id"]
+                        + ")"
+                        for listener_type in agent_template["agent_type"][
+                            "compatible_listener_types"
+                        ]
+                    ],
                 ),
             )
             table.add_row(
                 "Agent Type",
                 agent_type_table,
             )
-            table.add_row("Authors", str(agent_template["authors"]))
+            table.add_row("Authors", "\n".join(agent_template["authors"]))
 
             CONSOLE.print(table)
         except SystemExit:

@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from consortium.server.models.listener_models import ListenerTypeModel
+from consortium.server.models.c2_types_models import ListenerTypeModel
 
 
 class ListenerTemplateModel(BaseModel):

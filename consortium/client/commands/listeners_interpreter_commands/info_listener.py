@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-import consortium.client.client_singletons as client_singletons
 from consortium.client.framework.base_command import (
     BaseCommand,
     CommandContext,
@@ -11,14 +10,17 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_listener_state_string_with_color,
+)
 from consortium.client.utils.printer_utils import CONSOLE
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 
 class InfoListenerCommand(BaseCommand):
     name = "info_listener"
     description = "Show all information for a specific listener."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Example:
             info_listener 123e4567-e89b-12d3-a456-42661417400  # Display information for the listener with listener ID 123e4567-e89b-12d3-a456-42661417400
@@ -62,13 +64,27 @@ class InfoListenerCommand(BaseCommand):
                 "Listener Type ID",
                 listener["listener_type"]["listener_type_id"],
             )
+            table.add_row(
+                "Listener Template",
+                listener["listener_template"]["name"]
+                + " ("
+                + listener["listener_template"]["listener_template_id"]
+                + ")",
+            )
             listener_type_table.add_row(
                 "Name",
                 listener["listener_type"]["name"],
             )
             listener_type_table.add_row(
                 "Compatible Agent Types",
-                "\n".join(listener["listener_type"]["compatible_agent_type_ids"]),
+                "\n".join(
+                    [
+                        agent_type["name"] + " (" + agent_type["agent_type_id"] + ")"
+                        for agent_type in listener["listener_type"][
+                            "compatible_agent_types"
+                        ]
+                    ],
+                ),
             )
             table.add_row("Listener Type", listener_type_table)
             parameter_table = Table()
@@ -77,7 +93,10 @@ class InfoListenerCommand(BaseCommand):
             for parameter_name, parameter_value in listener["parameters"].items():
                 parameter_table.add_row(parameter_name, str(parameter_value))
             table.add_row("Parameters", parameter_table)
-            table.add_row("Status", str(listener["status"]["state"]))
+            table.add_row(
+                "Status",
+                format_listener_state_string_with_color(listener["status"]["state"]),
+            )
             table.add_row("Datetime Created", listener["datetime_created"])
             table.add_row("Agent IDs", "\n".join(listener["agent_ids"]))
 

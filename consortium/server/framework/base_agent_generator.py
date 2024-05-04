@@ -1,9 +1,14 @@
 import asyncio
+import inspect
+import traceback
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+
+from loguru import logger
 
 from consortium.server.exceptions.agent_generators_api_exceptions import (
     AgentGeneratorAlreadyRunningError,
@@ -37,6 +42,8 @@ class BaseAgentGeneratorBuildStep(ABC):
         self.datetime_started = None
         self.datetime_stopped = None
         self.status = AgentGeneratorBuildStepStatus()
+
+        self.working_directory = Path(inspect.getsourcefile(self.__class__)).parent
 
     @abstractmethod
     async def on_agent_generator_build_step_running(
@@ -95,6 +102,7 @@ class BaseAgentGenerator(ABC):
     def __init__(
         self,
         agent_type: AgentType,
+        agent_template: "BaseAgentTemplate",  # Prevent circular dependency.
         agent_generator_build_steps: list[BaseAgentGeneratorBuildStep] = None,
         name: str = "",
         description: str = "",
@@ -106,6 +114,7 @@ class BaseAgentGenerator(ABC):
         )
         self.name = name
         self.description = description
+        self.agent_template = agent_template
         self.agent_type = agent_type
         self.parameters = parameters
         self.datetime_created = datetime.now()
@@ -121,6 +130,9 @@ class BaseAgentGenerator(ABC):
         # self.stop_agent_generator_event is used to signal to the agent generator
         # runtime to exit.
         self.stop_agent_generator_event = asyncio.Event()
+        self.agent_generator_logger = logger.bind(
+            logger_name=f"Consortium Agent Generator {self}",
+        )
 
         # asyncio type tasks are held by a weak reference by default, so they can be
         # garbage collected at any time mid-execution, to prevent this we have to store
@@ -218,14 +230,26 @@ class BaseAgentGenerator(ABC):
                 try:
                     await self.on_agent_generator_errored(exc)
                 except Exception as exc:
+                    self.agent_generator_logger.opt(ansi=True).error(
+                        "<bold><red>{}</></>",
+                        traceback.format_exc(),
+                    )
                     # The agent generator is now fatally errored.
                     self.status.transition_to_fatal(exc)
         except Exception as exc:
+            self.agent_generator_logger.opt(ansi=True).error(
+                "<bold><red>{}</></>",
+                traceback.format_exc(),
+            )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(exc)
             try:
                 await self.on_agent_generator_errored(exc)
             except Exception as exc:
+                self.agent_generator_logger.opt(ansi=True).error(
+                    "<bold><red>{}</></>",
+                    traceback.format_exc(),
+                )
                 self.status.transition_to_fatal(exc)
 
     async def start_agent_generator(self) -> None:
@@ -237,6 +261,10 @@ class BaseAgentGenerator(ABC):
                 ),
             )
 
+        # Clear the signal to the agent generator to stop running if it is set, so it
+        # won't instantly stop.
+        self.stop_agent_generator_event.clear()
+
         # The agent generator is now started.
         self.status.transition_to_started()
         try:
@@ -244,6 +272,14 @@ class BaseAgentGenerator(ABC):
         except AgentGeneratorStartError as exc:
             # The agent generator is now initialized.
             self.status.transition_to_initialized()
+            raise exc
+        except Exception as exc:
+            self.agent_generator_logger.opt(ansi=True).error(
+                "<bold><red>{}</></>",
+                traceback.format_exc(),
+            )
+            # The agent generator is now fatally errored.
+            self.status.transition_to_fatal(exc)
             raise exc
 
         self._agent_generator_task = asyncio.create_task(self._run_agent_generator())
@@ -263,6 +299,14 @@ class BaseAgentGenerator(ABC):
             # The agent generator has not changed from its building state.
             self.status.transition_to_building()
             raise exc
+        except Exception as exc:
+            self.agent_generator_logger.opt(ansi=True).error(
+                "<bold><red>{}</></>",
+                traceback.format_exc(),
+            )
+            # The agent generator is now fatally errored.
+            self.status.transition_to_fatal(exc)
+            raise exc
 
         # Signal to the agent generator runtime to stop.
         self.stop_agent_generator_event.set()
@@ -281,6 +325,14 @@ class BaseAgentGenerator(ABC):
         except AgentGeneratorCancellationError as exc:
             self.status.transition_to_building()
             raise exc
+        except Exception as exc:
+            self.agent_generator_logger.opt(ansi=True).error(
+                "<bold><red>{}</></>",
+                traceback.format_exc(),
+            )
+            # The agent generator is now fatally errored.
+            self.status.transition_to_fatal(exc)
+            raise exc
 
         # Cancel the agent generator.
         self._agent_generator_task.cancel()
@@ -297,6 +349,7 @@ class BaseAgentGenerator(ABC):
             "description": self.description,
             "status": self.status.to_json(),
             "agent_type": self.agent_type.to_json(),
+            "agent_template": self.agent_template.to_json(),
             "parameters": self.parameters,
             "datetime_created": self.datetime_created.isoformat(),
         }

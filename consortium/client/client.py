@@ -32,7 +32,8 @@ class Client:
         try:
             await client_connection.login()
             print_success(
-                f"Logged into server: {self.client_config.remote_host}:{self.client_config.remote_port}",
+                f"Logged into server: "
+                f"{self.client_config.remote_host}:{self.client_config.remote_port}",
             )
         # AlreadyLoggedInError should not be raised unless a programmer error is made.
         except (

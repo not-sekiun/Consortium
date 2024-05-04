@@ -4,6 +4,10 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 from typing import Any, Callable, Type
 
+from consortium.server.utils.string_processing_utils import (
+    docstring_to_single_line_formatter,
+)
+
 SimpleType = str | int | float | bool
 
 # TODO: Potentially support handling more complex nested data types like nesting dicts
@@ -41,7 +45,8 @@ class _BaseOption(ABC):
         if self._value is None:
             if self.default_value is None:
                 raise ValueError(
-                    f'No value was not set for the option "{self.name}" while the default value was also not set',
+                    f'No value was not set for the option "{self.name}" while the '
+                    f"default value was also not set",
                 )
             return self.default_value
         return self._value
@@ -80,30 +85,34 @@ class SingleValueOption(_BaseOption):
         self.validating_function = validating_function
         super().__init__(name, description, required, default_value)
 
-        try:
-            self.validate_value(default_value)
-        except ValueError as exc:
-            raise ValueError(
-                f"Default value {default_value} failed validation: {exc}",
-            )
+        if default_value is not None:
+            try:
+                self.validate_value(default_value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Default value {default_value} failed validation: {exc}",
+                )
 
     def validate_value(self, value: SimpleType) -> None:
         if self.value_type:
             if not isinstance(value, self.value_type):
                 raise ValueError(
-                    f'Value "{value}" failed against the option "{self.name}" type validation: {self.value_type}',
+                    f'Value "{value}" failed against the option "{self.name}" '
+                    f"type validation: {self.value_type}",
                 )
         if self.validating_regex:
             if re.match(self.validating_regex, str(value)) is None:
                 raise ValueError(
-                    f'Value "{value}" failed to match the option "{self.name}" validating regex: {self.validating_regex}',
+                    f'Value "{value}" failed to match the option "{self.name}" '
+                    f"validating regex: {self.validating_regex}",
                 )
         if self.validating_function:
             try:
                 self.validating_function(value)
             except ValueError as exc:
                 raise ValueError(
-                    f'Value "{value}" failed against the option "{self.name}" validating function: {exc}',
+                    f'Value "{value}" failed against the option "{self.name}" '
+                    f"validating function: {exc}",
                 )
 
     def to_json(self) -> dict[str, SimpleType | None]:
@@ -114,9 +123,11 @@ class SingleValueOption(_BaseOption):
             "default_value": self.default_value,
             "value_type": self.value_type.__name__ if self.value_type else None,
             "validating_regex": self.validating_regex,
-            "validating_function": (
-                self.validating_function.__doc__ if self.validating_function else None
-            ),
+            "validating_function": docstring_to_single_line_formatter(
+                self.validating_function.__doc__,
+            )
+            if self.validating_function and self.validating_function.__doc__
+            else None,
             "option_type": str(self.option_type),
         }
 
@@ -126,7 +137,12 @@ class SingleValueOption(_BaseOption):
         )
 
     def __repr__(self) -> str:
-        return f"SingleValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, value_type={self.value_type}, validating_regex={self.validating_regex}, validating_function={self.validating_function})"
+        return (
+            f"SingleValueOption(name={self.name}, description={self.description}, "
+            f"required={self.required}, default_value={self.default_value}, "
+            f"value_type={self.value_type}, validating_regex={self.validating_regex}, "
+            f"validating_function={self.validating_function})"
+        )
 
 
 class ListValueOption(_BaseOption):
@@ -164,13 +180,15 @@ class ListValueOption(_BaseOption):
             for element in value:
                 if not isinstance(element, self.value_type):
                     raise ValueError(
-                        f'Element {element} in value failed against the option "{self.name}" type validation: {self.value_type}',
+                        f"Element {element} in value failed against the option "
+                        f'"{self.name}" type validation: {self.value_type}',
                     )
         if self.validating_regex:
             for element in value:
                 if re.match(self.validating_regex, str(element)) is None:
                     raise ValueError(
-                        f'Element {element} in value failed to match the option "{self.name}" validating regex: {self.validating_regex}',
+                        f"Element {element} in value failed to match the option "
+                        f'"{self.name}" validating regex: {self.validating_regex}',
                     )
         if self.validating_function:
             for element in value:
@@ -178,14 +196,17 @@ class ListValueOption(_BaseOption):
                     self.validating_function(element)
                 except ValueError as exc:
                     raise ValueError(
-                        f'Element {element} in value failed against the option "{self.name}" validating function: {exc}',
+                        f"Element {element} in value failed against the option "
+                        f'"{self.name}" validating function: {exc}',
                     )
         if not self.allow_duplicates:
             unique_elements = set()
             for element in value:
                 if element in unique_elements:
                     raise ValueError(
-                        f'Element {element} in value is contains duplicate copies for option "{self.name}" while the option disallows duplicate elements',
+                        f"Element {element} in value is contains duplicate copies for "
+                        f'option "{self.name}" while the option disallows duplicate '
+                        f"elements",
                     )
                 unique_elements.add(element)
 
@@ -200,9 +221,11 @@ class ListValueOption(_BaseOption):
             "allow_duplicates": self.allow_duplicates,
             "value_type": self.value_type.__name__ if self.value_type else None,
             "validating_regex": self.validating_regex,
-            "validating_function": (
-                self.validating_function.__doc__ if self.validating_function else None
-            ),
+            "validating_function": docstring_to_single_line_formatter(
+                self.validating_function.__doc__,
+            )
+            if self.validating_function and self.validating_function.__doc__
+            else None,
             "option_type": str(self.option_type),
         }
 
@@ -212,7 +235,12 @@ class ListValueOption(_BaseOption):
         )
 
     def __repr__(self) -> str:
-        return f"ListValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, value_type={self.value_type}, validating_regex={self.validating_regex}, validating_function={self.validating_function})"
+        return (
+            f"ListValueOption(name={self.name}, description={self.description}, "
+            f"required={self.required}, default_value={self.default_value}, "
+            f"value_type={self.value_type}, validating_regex={self.validating_regex}, "
+            f"validating_function={self.validating_function})"
+        )
 
 
 class ChoiceValueOption(_BaseOption):
@@ -239,7 +267,8 @@ class ChoiceValueOption(_BaseOption):
     def validate_value(self, value: SimpleType) -> None:
         if value not in self.available_values:
             raise ValueError(
-                f'Value "{value}" is not one of the available choice values {self.available_values}.',
+                f'Value "{value}" is not one of the available choice values '
+                f"{self.available_values}.",
             )
 
     def to_json(self) -> dict[str, SimpleType | None]:
@@ -258,7 +287,11 @@ class ChoiceValueOption(_BaseOption):
         )
 
     def __repr__(self) -> str:
-        return f"ChoiceValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, available_values={self.available_values})"
+        return (
+            f"ChoiceValueOption(name={self.name}, description={self.description}, "
+            f"required={self.required}, default_value={self.default_value}, "
+            f"available_values={self.available_values})"
+        )
 
 
 class DictionaryValueOption(_BaseOption):
@@ -305,36 +338,43 @@ class DictionaryValueOption(_BaseOption):
         for dict_key, dict_value in value.items():
             if not isinstance(dict_key, str):
                 raise ValueError(
-                    f'Key {dict_key} in value failed against the option "{self.name}" type validation: {str}',
+                    f'Key {dict_key} in value failed against the option "{self.name}" '
+                    f"type validation: {str}",
                 )
             if self.key_validating_regex:
                 if re.match(self.key_validating_regex, str(dict_key)) is None:
                     raise ValueError(
-                        f'Key {dict_key} in value failed to match the option "{self.name}" validating regex: {self.key_validating_regex}',
+                        f"Key {dict_key} in value failed to match the option "
+                        f'"{self.name}" validating regex: {self.key_validating_regex}',
                     )
             if self.key_validating_function:
                 try:
                     self.key_validating_function(dict_key)
                 except ValueError as exc:
                     raise ValueError(
-                        f'Key {dict_key} in value failed against the option "{self.name}" validating function: {exc}',
+                        f"Key {dict_key} in value failed against the option "
+                        f'"{self.name}" validating function: {exc}',
                     )
             if self.value_type:
                 if not isinstance(dict_value, self.value_type):
                     raise ValueError(
-                        f'Value {dict_value} in value failed against the option "{self.name}" type validation: {self.value_type}',
+                        f"Value {dict_value} in value failed against the option "
+                        f'"{self.name}" type validation: {self.value_type}',
                     )
             if self.value_validating_regex:
                 if re.match(self.value_validating_regex, str(dict_value)) is None:
                     raise ValueError(
-                        f'Value {dict_value} in value failed to match the option "{self.name}" validating regex: {self.value_validating_regex}',
+                        f"Value {dict_value} in value failed to match the option "
+                        f'"{self.name}" validating regex: '
+                        f"{self.value_validating_regex}",
                     )
             if self.value_validating_function:
                 try:
                     self.value_validating_function(dict_value)
                 except ValueError as exc:
                     raise ValueError(
-                        f'Value {dict_value} in value failed against the option "{self.name}" validating function: {exc}',
+                        f"Value {dict_value} in value failed against the option "
+                        f'"{self.name}" validating function: {exc}',
                     )
 
     def to_json(
@@ -346,18 +386,18 @@ class DictionaryValueOption(_BaseOption):
             "required": self.required,
             "default_value": self.default_value,
             "key_validating_regex": self.key_validating_regex,
-            "key_validating_function": (
-                self.key_validating_function.__doc__
-                if self.key_validating_function
-                else None
-            ),
+            "key_validating_function": docstring_to_single_line_formatter(
+                self.key_validating_function.__doc__,
+            )
+            if self.key_validating_function and self.key_validating_function.__doc__
+            else None,
             "value_type": self.value_type.__name__ if self.value_type else None,
             "value_validating_regex": self.value_validating_regex,
-            "value_validating_function": (
-                self.value_validating_function.__doc__
-                if self.value_validating_function
-                else None
-            ),
+            "value_validating_function": docstring_to_single_line_formatter(
+                self.value_validating_function.__doc__,
+            )
+            if self.value_validating_function and self.value_validating_function.__doc__
+            else None,
             "option_type": str(self.option_type),
         }
 
@@ -367,4 +407,13 @@ class DictionaryValueOption(_BaseOption):
         )
 
     def __repr__(self) -> str:
-        return f"DictionaryValueOption(name={self.name}, description={self.description}, required={self.required}, default_value={self.default_value}, key_validating_regex={self.key_validating_regex}, key_validating_function={self.key_validating_function}, value_type={self.value_type}, value_validating_regex={self.value_validating_regex}, value_validating_function={self.value_validating_function})"
+        return (
+            f"DictionaryValueOption("
+            f"name={self.name}, description={self.description}, "
+            f"required={self.required}, default_value={self.default_value}, "
+            f"key_validating_regex={self.key_validating_regex}, "
+            f"key_validating_function={self.key_validating_function}, "
+            f"value_type={self.value_type}, "
+            f"value_validating_regex={self.value_validating_regex}, "
+            f"value_validating_function={self.value_validating_function})"
+        )

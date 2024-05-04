@@ -21,8 +21,8 @@ from consortium.client.objects.client_objects import ClientConfig
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
-from consortium.client.utils.string_processing_utils import argparse_epilog_formatter
 
 client_connections_service = client_singletons.client_connections_service
 
@@ -30,7 +30,7 @@ client_connections_service = client_singletons.client_connections_service
 class ConnectCommand(BaseCommand):
     name = "connect"
     description = "Connect to a server."
-    epilog = argparse_epilog_formatter(
+    epilog = format_argparse_epilog(
         """
         Example:
             connect -c my/path/to/client_config.json  # Connect using config file
@@ -42,7 +42,11 @@ class ConnectCommand(BaseCommand):
         parser.add_argument(
             "-c",
             "--config",
-            help="Filepath of client config JSON file to load client config data from. By default, the client config JSON file is loaded from the client data folder.",
+            help=(
+                "Filepath of client config JSON file to load client config data from. "
+                "By default, the client config JSON file is loaded from the client "
+                "data folder."
+            ),
             nargs="?",
             const=str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH),
         )

@@ -141,6 +141,13 @@ async def start_listener_by_listener_id(
         await listener.start_listener()
     except FrameworkListenerStartError as exc:
         raise ListenerStartError(message=exc.message, detail=exc.detail)
+    except Exception as exc:
+        raise InternalServerError(
+            detail={
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        )
 
     return SuccessResponseModel()
 
@@ -170,6 +177,13 @@ async def stop_listener_by_listener_id(
         listener = listeners_service.get_listener_by_listener_id(listener_id)
     except ValueError:
         raise ListenerNotFoundError(listener_id=listener_id)
+    except Exception as exc:
+        raise InternalServerError(
+            detail={
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        )
 
     if listener.status.state != ListenerState.RUNNING:
         raise ListenerNotRunningError(
@@ -219,11 +233,18 @@ async def cancel_listener_by_listener_id(
         await listener.cancel_listener()
     except FrameworkListenerCancellationError as exc:
         raise ListenerCancellationError(message=exc.message, detail=exc.detail)
+    except Exception as exc:
+        raise InternalServerError(
+            detail={
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        )
 
     return SuccessResponseModel()
 
 
-@router.put(
+@router.patch(
     "/{listener_id}",
     responses={
         200: {"model": ListenerModel},
@@ -302,9 +323,8 @@ def update_listener_by_listener_id(
                 listener_type=listener.listener_type,
             )
 
-        new_parameters = {}
         for parameter_name, parameter_value in listener.parameters.items():
-            if parameter_name not in updated_listener_attributes:
+            if parameter_name not in new_parameters:
                 # parameter_value could be a list or a dict, so we need to perform
                 # a deep copy to prevent reference sharing.
                 new_parameters[parameter_name] = copy.deepcopy(parameter_value)

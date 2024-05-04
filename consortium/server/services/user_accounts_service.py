@@ -66,7 +66,8 @@ class UserAccountsService:
                     user_account = UserAccountModel(**user_account_json_data)
                     if user_account.username in self._user_accounts:
                         raise DuplicateUserAccountUsernamesError(
-                            f"Duplicate username {user_account.username} detected in user accounts file: {user_accounts_file}",
+                            f"Duplicate username {user_account.username} detected in "
+                            f"user accounts file: {user_accounts_file}",
                         )
                     user_accounts.append(user_account)
             return user_accounts
@@ -76,7 +77,8 @@ class UserAccountsService:
             )
         except ValidationError as exc:
             raise InvalidUserAccountError(
-                f"Invalid user account data in user accounts file {user_accounts_file}: {exc}",
+                f"Invalid user account data in user accounts file "
+                f"{user_accounts_file}: {exc}",
             )
 
     def _write_user_accounts_to_user_accounts_file(self):
@@ -108,7 +110,8 @@ class UserAccountsService:
         for user_account in self._user_accounts.values():
             if user_account.username == username:
                 raise ValueError(
-                    f"User accounts with duplicate username are not allowed: {username}",
+                    f"User accounts with duplicate username are not allowed: "
+                    f"{username}",
                 )
 
         user_account = UserAccountModel(
@@ -167,7 +170,8 @@ class UserAccountsService:
         for existing_user_account in self._user_accounts.values():
             if existing_user_account.username == username:
                 raise ValueError(
-                    f"User accounts with duplicate username are not allowed: {username}",
+                    f"User accounts with duplicate username are not allowed: "
+                    f"{username}",
                 )
 
         old_username = user_account.username

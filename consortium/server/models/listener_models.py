@@ -2,16 +2,10 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from consortium.server.models.c2_types_models import ListenerTypeModel
 from consortium.server.models.common_models import ErrorModel
+from consortium.server.models.listener_template_models import ListenerTemplateModel
 from consortium.server.objects.listener_objects import ListenerState
-
-
-class ListenerTypeModel(BaseModel):
-    name: str
-    listener_type_id: str
-    # If compatible_agent_type_ids is an empty list it is compatible with no agent
-    # types.
-    compatible_agent_type_ids: list[str]
 
 
 class _ListenerStatusModel(BaseModel):
@@ -24,6 +18,7 @@ class ListenerModel(BaseModel):
     description: str
     endpoint: str
     listener_type: ListenerTypeModel
+    listener_template: ListenerTemplateModel
     parameters: dict[str, Any]
     listener_id: str
     status: _ListenerStatusModel

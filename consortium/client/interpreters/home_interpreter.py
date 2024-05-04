@@ -19,7 +19,7 @@ from consortium.client.commands.home_interpreter_commands.rename_client_connecti
     RenameClientConnectionCommand,
 )
 from consortium.client.objects.client_interpreter_objects import ClientInterpreter
-from consortium.client.utils.formatter_utils import export_rich_text_as_ansi
+from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 
 
 class HomeInterpreter(ClientInterpreter):
@@ -28,7 +28,7 @@ class HomeInterpreter(ClientInterpreter):
             command for command in CORE_COMMANDS if command.name != "home"
         ]
         super().__init__(
-            prompt=ANSI(export_rich_text_as_ansi("[bold white]Consortium (Home) > ")),
+            prompt=ANSI(format_rich_text_as_ansi("[bold white]Consortium (Home) > ")),
             commands=[
                 *home_interpreter_core_commands,
                 InfoClientConnectionCommand(),

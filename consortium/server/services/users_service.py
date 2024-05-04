@@ -11,7 +11,8 @@ class UsersService:
     def add_user(self, user: User) -> None:
         if str(user.user_id) in self._users:
             raise ValueError(
-                f"Cannot add user to service because a user with the same user ID already exists: {user.user_id}",
+                f"Cannot add user to service because a user with the same user ID "
+                f"already exists: {user.user_id}",
             )
 
         self._users[str(user.user_id)] = user
