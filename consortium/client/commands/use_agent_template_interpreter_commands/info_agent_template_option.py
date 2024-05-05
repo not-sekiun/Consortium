@@ -19,7 +19,7 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
     description = "Show all information for a specific agent template option."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             info_agent_template_option remote_host # Display information for the agent template option with name remote_host
         """,
     )

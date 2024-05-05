@@ -17,7 +17,7 @@ class ListAgentTemplatesCommand(BaseCommand):
     description = "List all agent templates."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             list_agent_templates  # List all agent templates
         """,
     )

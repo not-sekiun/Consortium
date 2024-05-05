@@ -14,11 +14,11 @@ from consortium.client.utils.printer_utils import print_success
 
 class CancelListenerCommand(BaseCommand):
     name = "cancel_listener"
-    description = "Cancel a running listener."
+    description = "Forcefully stop a running listener instance."
     epilog = format_argparse_epilog(
         """
-        Example:
-            cancel_listener 123e4567-e89b-12d3-a456-42661417400 # Cancel a listener with listener ID 123e4567-e89b-12d3-a456-42661417400
+        Examples:
+            cancel_listener 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

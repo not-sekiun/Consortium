@@ -18,13 +18,14 @@ client_connections_service = client_singletons.client_connections_service
 class DisconnectCommand(BaseCommand):
     name = "disconnect"
     description = (
-        "Disconnect from the current client connection or a specific client connection."
+        "Disconnect the current client connection or a specific client connection from "
+        "a Consortium server"
     )
     epilog = format_argparse_epilog(
         """
-        Example:
-            disconnect  # Disconnect the current client connection
-            disconnect 123e4567-e89b-12d3-a456-42661417400  # Disconnect the client connection with client connection ID 123e4567-e89b-12d3-a456-42661417400
+        Examples:
+            disconnect  # Disconnects the current client connection if the client connection ID is not specified.
+            disconnect 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -32,9 +33,8 @@ class DisconnectCommand(BaseCommand):
         parser.add_argument(
             "client_connection_id",
             help=(
-                "Client connection ID of the client connection to disconnect. If no "
-                "client connection ID is provided, the current client connection is "
-                "disconnected."
+                "The client connection ID of the client to disconnect. If not "
+                "provided, the current client connection is disconnected."
             ),
             nargs="?",
             default=None,
@@ -46,32 +46,28 @@ class DisconnectCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
             if parsed_args.client_connection_id is None:
-                target_client_connection = command_context.environment[
-                    "client_connection"
-                ]
+                client_connection = command_context.environment["client_connection"]
             else:
                 try:
-                    target_client_connection = client_connections_service.get_client_connection_by_client_connection_id(
+                    client_connection = client_connections_service.get_client_connection_by_client_connection_id(
                         parsed_args.client_connection_id,
                     )
                 except ValueError as exc:
                     print_error(str(exc))
                     return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-            await target_client_connection.logout()
+            await client_connection.logout()
+
             client_connections_service.remove_client_connection(
-                target_client_connection,
+                client_connection,
             )
             print_success(
-                f"Disconnected client connection: {target_client_connection}",
+                f"Disconnected from server "
+                f"{client_connection.remote_host}:{client_connection.remote_port} "
+                f"with client connection: {client_connection}",
             )
-
-            if (
-                target_client_connection
-                == command_context.environment["client_connection"]
-            ):
+            if client_connection == command_context.environment["client_connection"]:
                 return ReturnStatus(type=ClientReturnStatusType.EXIT_CLIENT_CONNECTION)
         except SystemExit:
             pass

@@ -19,16 +19,16 @@ client_connections_service = client_singletons.client_connections_service
 
 class ListClientConnectionsCommand(BaseCommand):
     name = "list_client_connections"
-    description = "List all current client connections."
+    description = (
+        "List basic information for all current client connections to a Consortium "
+        "server."
+    )
     epilog = format_argparse_epilog(
         """
-        Example:
-            list_client_connections  # List all current client connections
+        Examples:
+            list_client_connections
         """,
     )
-
-    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        pass
 
     async def run_command(
         self,
@@ -36,20 +36,22 @@ class ListClientConnectionsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-            all_client_sessions = (
+            all_client_connections = (
                 client_connections_service.get_all_client_connections()
             )
-            table = Table(title="Client Connections")
 
+            table = Table(title="Client Connections")
             table.add_column("Client Connection ID")
             table.add_column("Name")
-
-            for client_session in all_client_sessions:
+            table.add_column("Remote Host")
+            table.add_column("Remote Port")
+            for client_connection in all_client_connections:
                 table.add_row(
-                    str(client_session.client_connection_id),
-                    client_session.name,
+                    str(client_connection.client_connection_id),
+                    client_connection.name,
+                    client_connection.remote_host,
+                    client_connection.remote_port,
                 )
-
             CONSOLE.print(table)
         except SystemExit:
             pass

@@ -18,7 +18,7 @@ class UseAgentTemplateCommand(BaseCommand):
     description = "Use an agent template to create an agent generator."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             use_agent_template 123e4567-e89b-12d3-a456-42661417400  # Use an agent template with agent template ID 123e4567-e89b-12d3-a456-42661417400
         """,
     )

@@ -17,11 +17,14 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListListenersCommand(BaseCommand):
     name = "list_listeners"
-    description = "List all listeners."
+    description = (
+        "Display a list of all listener instances currently created within the "
+        "Consortium C2 framework."
+    )
     epilog = format_argparse_epilog(
         """
-        Example:
-            list_listeners  # List all listeners
+        Examples:
+            list_listeners
         """,
     )
 

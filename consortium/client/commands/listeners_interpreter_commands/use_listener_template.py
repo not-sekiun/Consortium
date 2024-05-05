@@ -15,11 +15,11 @@ from consortium.client.utils.printer_utils import print_info
 
 class UseListenerTemplateCommand(BaseCommand):
     name = "use_listener_template"
-    description = "Use a listener template to create a listener."
+    description = "Select a listener template to create a new listener instance."
     epilog = format_argparse_epilog(
         """
-        Example:
-            use_listener_template 123e4567-e89b-12d3-a456-42661417400  # Use a listener template with listener template ID 123e4567-e89b-12d3-a456-42661417400
+        Examples:
+            use_listener_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

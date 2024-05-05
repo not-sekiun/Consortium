@@ -15,12 +15,13 @@ from consortium.client.utils.printer_utils import print_success
 class StartListenerCommand(BaseCommand):
     name = "start_listener"
     description = (
-        "Start a created listener with the currently set listener template options."
+        "Start a created listener instance using the configured parameters and "
+        "options."
     )
     epilog = format_argparse_epilog(
         """
-        Example:
-            start_listener 123e4567-e89b-12d3-a456-42661417400 # Start a listener with listener ID 123e4567-e89b-12d3-a456-42661417400
+        Examples:
+            start_listener 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

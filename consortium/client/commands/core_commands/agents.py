@@ -13,11 +13,14 @@ from consortium.client.utils.printer_utils import print_info
 
 class AgentsCommand(BaseCommand):
     name = "agents"
-    description = "Switch to the agents interpreter."
+    description = (
+        "Switch to the agents interpreter, allowing management and control of agents "
+        "within the Consortium C2 framework."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-            agents  # Switch to the agents interpreter.
+            agents
         """,
     )
 

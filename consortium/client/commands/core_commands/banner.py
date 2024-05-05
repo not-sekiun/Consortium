@@ -16,11 +16,14 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class BannerCommand(BaseCommand):
     name = "banner"
-    description = "Display a banner."
+    description = (
+        "Display a banner providing information or branding for the Consortium C2 "
+        "framework."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-            banner  # Display a banner.
+            banner
         """,
     )
 

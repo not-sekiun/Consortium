@@ -17,7 +17,7 @@ class CancelGeneratorCommand(BaseCommand):
     description = "Cancel a running agent generator."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             cancel_generator 123e4567-e89b-12d3-a456-42661417400 # Cancel an agent generator with agent generator ID 123e4567-e89b-12d3-a456-42661417400
         """,
     )

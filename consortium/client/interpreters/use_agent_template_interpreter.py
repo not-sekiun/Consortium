@@ -23,6 +23,9 @@ from consortium.client.interpreters.generators_interpreter import (
     GENERATORS_INTERPRETER_COMMANDS,
 )
 from consortium.client.objects.client_interpreter_objects import ClientInterpreter
+from consortium.client.utils.data_structure_utils import (
+    extract_nested_completer_dict_from_nested_completer,
+)
 from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 
 
@@ -93,41 +96,41 @@ class UseAgentTemplateInterpreter(ClientInterpreter):
         # This environment variable is initialized in on_enter_interpreter().
         agent_template = self.environment["agent_template"]
 
-        generators_interpreter_completer_dict = deepcopy(
-            self.prompt_session.completer.options,
+        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
+            self.prompt_session.completer,
         )
 
-        generators_interpreter_completer_dict["info_agent_template_option"] = {
+        nested_completer_dict["info_agent_template_option"] = {
             agent_template["agent_template_id"]: None
             for agent_template in all_agent_templates
         }
-        generators_interpreter_completer_dict["info_generator"] = {
+        nested_completer_dict["info_generator"] = {
             agent_generator["agent_generator_id"]: None
             for agent_generator in all_agent_generators
         }
-        generators_interpreter_completer_dict["use_agent_template"] = {
+        nested_completer_dict["use_agent_template"] = {
             agent_template["agent_template_id"]: None
             for agent_template in all_agent_templates
         }
-        generators_interpreter_completer_dict["start_generator"] = {
+        nested_completer_dict["start_generator"] = {
             agent_generator["agent_generator_id"]: None
             for agent_generator in all_agent_generators
         }
-        generators_interpreter_completer_dict["stop_generator"] = {
+        nested_completer_dict["stop_generator"] = {
             agent_generator["agent_generator_id"]: None
             for agent_generator in all_agent_generators
         }
-        generators_interpreter_completer_dict["cancel_generator"] = {
+        nested_completer_dict["cancel_generator"] = {
             agent_generator["agent_generator_id"]: None
             for agent_generator in all_agent_generators
         }
-        generators_interpreter_completer_dict["set_agent_template_option"] = {
+        nested_completer_dict["set_agent_template_option"] = {
             option_name: None for option_name in agent_template["options"]
         }
-        generators_interpreter_completer_dict["info_agent_template_option"] = {
+        nested_completer_dict["info_agent_template_option"] = {
             option_name: None for option_name in agent_template["options"]
         }
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            generators_interpreter_completer_dict,
+            nested_completer_dict,
         )

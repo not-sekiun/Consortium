@@ -19,7 +19,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
     description = "Show all information for a specific listener template option."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             info_listener_template_option remote_host # Display information for the listener template option with name remote_host
         """,
     )

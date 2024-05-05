@@ -14,11 +14,18 @@ from consortium.client.utils.printer_utils import print_success
 
 class SetListenerParameterCommand(BaseCommand):
     name = "set_listener_parameter"
-    description = "Change the parameter of an already created listener."
+    description = (
+        "Modify the parameters of an existing listener to adjust its behavior or "
+        "configuration."
+    )
     epilog = format_argparse_epilog(
         """
-        Example:
-            set_listener_parameter 123e4567-e89b-12d3-a456-42661417400 parameter value  # Set the parameter named "parameter" to the value "value" for the listener with listener ID 123e4567-e89b-12d3-a456-42661417400
+        Examples:
+            set_listener_parameter 123e4567-e89b-12d3-a456-42661417400 parameter value
+            set_listener_parameter 123e4567-e89b-12d3-a456-42661417400 parameter 1 -t int  # Explicitly specify the parameter type.
+            set_listener_parameter 123e4567-e89b-12d3-a456-42661417400 float_parameter 3.14  # If the type of the parameter is specified by the listener's corresponding listener template, the type will be inferred.
+            set_listener_parameter 123e4567-e89b-12d3-a456-42661417400 parameter "['value1', 'value2']"  # A list parameter is set as a JSON string so it must be escaped.
+            set_listener_parameter 123e4567-e89b-12d3-a456-42661417400 parameter "{'key1': 'value1', 'key2': 'value2'}"  # A dictionary parameter is set as a JSON string so it must be escaped.
         """,
     )
 

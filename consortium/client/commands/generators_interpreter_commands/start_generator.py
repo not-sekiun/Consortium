@@ -19,7 +19,7 @@ class StartGeneratorCommand(BaseCommand):
     )
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             start_agent 123e4567-e89b-12d3-a456-42661417400 # Start an agent generator with agent generator ID 123e4567-e89b-12d3-a456-42661417400
         """,
     )

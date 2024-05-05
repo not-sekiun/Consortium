@@ -66,7 +66,7 @@ class BaseInterpreter:
         pass
 
     async def on_interpreter_errored(self, exc: Exception) -> None:
-        pass
+        raise exc
 
     async def run_interpreter(self):
         await self.on_enter_interpreter()

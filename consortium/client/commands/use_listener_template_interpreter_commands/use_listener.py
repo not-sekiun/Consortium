@@ -18,7 +18,7 @@ class UseListenerCommand(BaseCommand):
     description = "Use a listener."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             use_listener 123e4567-e89b-12d3-a456-42661417400  # Use a listener with the listener template with listener template ID 123e4567-e89b-12d3-a456-42661417400
         """,
     )

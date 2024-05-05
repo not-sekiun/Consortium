@@ -17,7 +17,7 @@ class CreateListenerCommand(BaseCommand):
     description = "Create a listener with the currently set listener template options."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             create_listener  # Create a listener with the currently set listener template options
         """,
     )

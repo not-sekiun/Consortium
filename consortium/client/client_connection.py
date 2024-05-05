@@ -56,6 +56,7 @@ class ClientConnection:
         self.remote_port = client_config.remote_port
 
         self.name = ""
+        self.description = ""
         self.datetime_connected = None
         self.client_connection_id = uuid.uuid4()
 

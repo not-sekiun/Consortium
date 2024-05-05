@@ -16,11 +16,11 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class InfoListenerTemplateCommand(BaseCommand):
     name = "info_listener_template"
-    description = "Show all information for a specific listener template."
+    description = "Display detailed information about a specific listener template."
     epilog = format_argparse_epilog(
         """
-        Example:
-            info_listener_template 123e4567-e89b-12d3-a456-42661417400  # Display information for the listener template with listener template ID 123e4567-e89b-12d3-a456-42661417400
+        Examples:
+            info_listener_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

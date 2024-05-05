@@ -24,7 +24,7 @@ class InfoGeneratorCommand(BaseCommand):
     description = "Show all information for a specific agent generator."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             info_generator 123e4567-e89b-12d3-a456-42661417400  # Display information for the agent generator with agent generator ID 123e4567-e89b-12d3-a456-42661417400
         """,
     )

@@ -45,8 +45,8 @@ class BaseCommand(ABC):
         )
         self.configure_parser(self.parser)
 
-    @abstractmethod
-    def configure_parser(self, parser: ArgumentParser) -> None: ...
+    def configure_parser(self, parser: ArgumentParser) -> None:
+        pass
 
     @abstractmethod
     async def run_command(self, command_context: CommandContext) -> ReturnStatus: ...

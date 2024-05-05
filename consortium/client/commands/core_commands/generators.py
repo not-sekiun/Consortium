@@ -13,11 +13,14 @@ from consortium.client.utils.printer_utils import print_info
 
 class GeneratorsCommand(BaseCommand):
     name = "generators"
-    description = "Switch to the generators interpreter."
+    description = (
+        "Switch to the generators interpreter, facilitating the creation and "
+        "management of agent payloads."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-            generators  # Switch to the generators interpreter.
+            generators
         """,
     )
 

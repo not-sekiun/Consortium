@@ -22,7 +22,7 @@ class ListGeneratorsCommand(BaseCommand):
     description = "List all generators."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             list_generators  # List all agent generators
         """,
     )

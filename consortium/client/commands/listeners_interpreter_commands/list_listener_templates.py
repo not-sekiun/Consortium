@@ -1,6 +1,5 @@
 from rich.table import Table
 
-import consortium.client.client_singletons as client_singletons
 from consortium.client.framework.base_command import (
     BaseCommand,
     CommandContext,
@@ -15,11 +14,11 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListListenerTemplatesCommand(BaseCommand):
     name = "list_listener_templates"
-    description = "List all listener templates."
+    description = "List all available listener templates for reference and selection."
     epilog = format_argparse_epilog(
         """
-        Example:
-            list_listener_templates  # List all listener templates
+        Examples:
+            list_listener_templates
         """,
     )
 

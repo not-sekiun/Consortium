@@ -25,10 +25,13 @@ class BaseParser(ABC):
 class SimpleParser(BaseParser):
     def parse(self, tokenized_string: TokenizedString) -> ParsedCommand:
         if tokenized_string.original_string.strip() != "":
-            return ParsedCommand(
-                command=tokenized_string.tokens[0].token,
-                arguments=[token.token for token in tokenized_string.tokens[1:]],
-                original_string=tokenized_string.original_string,
-            )
+            if tokenized_string.tokens:
+                return ParsedCommand(
+                    command=tokenized_string.tokens[0].token,
+                    arguments=[token.token for token in tokenized_string.tokens[1:]],
+                    original_string=tokenized_string.original_string,
+                )
+            else:
+                return ParsedCommand(command="", arguments=[], original_string="")
         else:
             return ParsedCommand(command="", arguments=[], original_string="")

@@ -19,7 +19,7 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
     description = "List options for the currently selected agent template."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             view_options_agent_template
         """,
     )

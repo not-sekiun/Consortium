@@ -19,11 +19,11 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class InfoListenerCommand(BaseCommand):
     name = "info_listener"
-    description = "Show all information for a specific listener."
+    description = "Display detailed information about a specific listener instance."
     epilog = format_argparse_epilog(
         """
-        Example:
-            info_listener 123e4567-e89b-12d3-a456-42661417400  # Display information for the listener with listener ID 123e4567-e89b-12d3-a456-42661417400
+        Examples:
+            info_listener 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

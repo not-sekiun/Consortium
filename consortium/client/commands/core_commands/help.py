@@ -17,14 +17,14 @@ from consortium.client.utils.printer_utils import CONSOLE, print_error
 class HelpCommand(BaseCommand):
     name = "help"
     description = (
-        "Get a summary for a command or display the help menu for all available "
-        "commands."
+        "Retrieve a summary of a specific command or display the help menu listing all "
+        "available commands."
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-            help  # Display the help menu for all available commands.
-            help banner  # Display the help page for the banner command.
+            help
+            help banner
         """,
     )
 

@@ -29,12 +29,16 @@ client_connections_service = client_singletons.client_connections_service
 
 class ConnectCommand(BaseCommand):
     name = "connect"
-    description = "Connect to a server."
+    description = (
+        "Create a new client connection to a Consortium server using a configuration "
+        "file or by manually specifying connection details."
+    )
     epilog = format_argparse_epilog(
         """
-        Example:
-            connect -c my/path/to/client_config.json  # Connect using config file
-            connect -u username -p password -rh server.com -rp 1234  # Connect manually
+        Examples:
+            connect -c  # Connect using the default filepath to the client configuration file.
+            connect -c path/to/client_config.json  # Connect using a custom configuration file.
+            connect -u username -p password -rh server.com -rp 1234  # Connect through manually provided connection details.
         """,
     )
 
@@ -43,32 +47,48 @@ class ConnectCommand(BaseCommand):
             "-c",
             "--config",
             help=(
-                "Filepath of client config JSON file to load client config data from. "
-                "By default, the client config JSON file is loaded from the client "
-                "data folder."
+                "The filepath to a configuration JSON file containing the client "
+                "settings specifying the remote host, remote port, username, and "
+                "password to use when connecting to the Consortium server. If not "
+                "provided, the default filepath to the configuration file is used."
             ),
             nargs="?",
             const=str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH),
+            metavar="CONFIG_FILEPATH",
         )
         parser.add_argument(
             "-rh",
             "--remote-host",
-            help="The remote host to connect to.",
+            help=(
+                "The remote hostname or IP address of the Consortium server to connect "
+                "to."
+            ),
+            metavar="HOSTNAME/IP",
         )
         parser.add_argument(
             "-rp",
             "--remote-port",
-            help="The remote port to connect to.",
+            help="The port of the Consortium server to connect to.",
+            metavar="PORT",
+            type=int,
         )
         parser.add_argument(
             "-u",
             "--username",
-            help="The username to authenticate with.",
+            help=(
+                "The username of the account to login to when connecting to the "
+                "Consortium server."
+            ),
+            metavar="USERNAME",
         )
         parser.add_argument(
             "-p",
             "--password",
-            help="The password to authenticate with.",
+            help=(
+                "The password of the account to login to when connecting to the "
+                "Consortium server."
+            ),
+            metavar="PASSWORD",
         )
 
     async def run_command(
@@ -77,8 +97,8 @@ class ConnectCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
-            # Perform custom checking of arguments
+            # Perform custom checking of arguments to ensure that either a config file
+            # or all of the connection details are provided but not both.
             if (
                 not parsed_args.config
                 and not all(
@@ -100,9 +120,10 @@ class ConnectCommand(BaseCommand):
                 )
             ):
                 self.parser.error(
-                    "Either -c/--config or all of -rh/--remote-host, -rp/--remote-port, -u/--username, and -p/--password must be provided but not both at the same time.",
+                    "Either -c/--config or all of -rh/--remote-host, "
+                    "-rp/--remote-port, -u/--username, and -p/--password must be "
+                    "provided but not both simultaneously.",
                 )
-
             if parsed_args.config:
                 client_config_file_json_schema = {
                     "type": "object",
@@ -132,7 +153,8 @@ class ConnectCommand(BaseCommand):
                     return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
                 except jsonschema.ValidationError as exc:
                     print_error(
-                        f"The config file's JSON data is not of a valid server config format: {exc}",
+                        f"The config file's JSON data is not of a valid server config "
+                        f"format: {exc}",
                     )
                     return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
@@ -161,14 +183,16 @@ class ConnectCommand(BaseCommand):
                 AlreadyLoggedInError,
                 ClientConnectionError,
             ) as exc:
-                print_error(f"Failed to login to server: {exc}")
+                print_error(f"Failed to connect to server: {exc}")
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
-
             client_connections_service.add_client_connection(
                 client_connection=client_connection,
             )
+
             print_success(
-                f"Successfully logged in to server: {client_config.remote_host}:{client_config.remote_port}",
+                f"Successfully connected to server "
+                f"{client_config.remote_host}:{client_config.remote_port} with client "
+                f"connection: {client_connection}",
             )
         except SystemExit:
             pass

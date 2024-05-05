@@ -19,7 +19,7 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
     description = "List options for the currently selected listener template."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             view_options_listener_template
         """,
     )

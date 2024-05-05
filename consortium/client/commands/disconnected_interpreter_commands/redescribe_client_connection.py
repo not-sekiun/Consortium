@@ -15,26 +15,28 @@ from consortium.client.utils.printer_utils import print_error, print_success
 client_connections_service = client_singletons.client_connections_service
 
 
-class RenameClientConnectionCommand(BaseCommand):
-    name = "rename_client_connection"
-    description = "Rename a specific client connection."
+class RedescribeClientConnectionCommand(BaseCommand):
+    name = "redescribe_client_connection"
+    description = "Change the description of a specific client connection."
     epilog = format_argparse_epilog(
         """
         Examples:
-            rename_client_connection 123e4567-e89b-12d3-a456-42661417400 "New name"
+            redescribe_client_connection 123e4567-e89b-12d3-a456-42661417400 "New description"
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "client_connection_id",
-            help="Client connection ID of the client connection to rename.",
+            help=(
+                "Client connection ID of the client connection to change the "
+                "description of."
+            ),
             nargs=1,
-            default=None,
         )
         parser.add_argument(
-            "new_name",
-            help="New name to assign to the specified client connection.",
+            "new_description",
+            help="New description to assign to the specified client connection.",
             nargs=1,
         )
 
@@ -50,15 +52,14 @@ class RenameClientConnectionCommand(BaseCommand):
                 )
             except ValueError:
                 print_error(
-                    f"Invalid client connection ID: {parsed_args.client_connection_id[0]}",
+                    f"Invalid client connection ID: {parsed_args.client_connection_id}",
                 )
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-            previous_client_connection_repr = repr(client_connection)
-            client_connection.name = parsed_args.new_name[0]
+            client_connection.description = parsed_args.new_description[0]
             print_success(
-                f"Renamed client connection {previous_client_connection_repr} to: "
-                f'"{client_connection.name}"',
+                f"Client connection {client_connection} description updated to: "
+                f'"{client_connection.description}"',
             )
         except SystemExit:
             pass

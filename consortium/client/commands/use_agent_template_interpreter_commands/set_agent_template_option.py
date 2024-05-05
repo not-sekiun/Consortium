@@ -18,7 +18,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
     description = "Set a listener template option to a specific value."
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             set_agent_template_option local_host 0.0.0.0  # All values are treated as strings by default.
             set_agent_template_option local_port 1337 -t int  # Explicitly set the type of the set value to an integer.
             set_agent_template_option list_option '["str_value_1",1,3.14,True]' -t list  # For values that expect lists set the type to "list" and escape the value with quotes.

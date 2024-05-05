@@ -20,7 +20,7 @@ class CreateGeneratorCommand(BaseCommand):
     )
     epilog = format_argparse_epilog(
         """
-        Example:
+        Examples:
             create_generator  # Create a listener with the currently set listener template options
         """,
     )

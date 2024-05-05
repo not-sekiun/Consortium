@@ -17,11 +17,11 @@ client_connections_service = client_singletons.client_connections_service
 
 class ExitCommand(BaseCommand):
     name = "exit"
-    description = "Exit the Consortium client."
+    description = "Close the Consortium client and exit the program."
     epilog = format_argparse_epilog(
         """
         Examples:
-            exit  # Exit the Consortium client.
+            exit
         """,
     )
 

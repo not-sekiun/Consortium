@@ -17,22 +17,18 @@ client_connections_service = client_singletons.client_connections_service
 
 class DisconnectCommand(BaseCommand):
     name = "disconnect"
-    description = "Disconnect a specific client connection."
+    description = "Disconnect a specific client connection from a Consortium server."
     epilog = format_argparse_epilog(
         """
-        Example:
-            disconnect 123e4567-e89b-12d3-a456-42661417400  # Disconnect the client connection with client connection ID 123e4567-e89b-12d3-a456-42661417400
+        Examples:
+            disconnect 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "client_connection_id",
-            help=(
-                "Client connection ID of the client connection to disconnect. If no "
-                "client connection ID is provided, the current client connection is "
-                "disconnected."
-            ),
+            help="The client connection ID of the client connection to disconnect.",
             nargs=1,
             default=None,
         )
@@ -43,21 +39,22 @@ class DisconnectCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
             try:
-                target_client_connection = client_connections_service.get_client_connection_by_client_connection_id(
+                client_connection = client_connections_service.get_client_connection_by_client_connection_id(
                     parsed_args.client_connection_id[0],
                 )
             except ValueError as exc:
                 print_error(str(exc))
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-            await target_client_connection.logout()
+            await client_connection.logout()
             client_connections_service.remove_client_connection(
-                target_client_connection,
+                client_connection,
             )
             print_success(
-                f"Disconnected client connection: {target_client_connection}",
+                f"Disconnected from server "
+                f"{client_connection.remote_host}:{client_connection.remote_port} "
+                f"with client connection: {client_connection}",
             )
         except SystemExit:
             pass

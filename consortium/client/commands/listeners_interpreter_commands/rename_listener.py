@@ -15,13 +15,13 @@ from consortium.client.utils.printer_utils import print_success
 class RenameListenerCommand(BaseCommand):
     name = "rename_listener"
     description = (
-        "Change the name of a listener. This will not override any of the listener's "
-        "parameters that are related to its name."
+        "Change the name of a listener instance without altering its configured "
+        "parameters."
     )
     epilog = format_argparse_epilog(
         """
-        Example:
-            rename_listener listener_id new_listener_name
+        Examples:
+            rename_listener 123e4567-e89b-12d3-a456-42661417400 "New name"
         """,
     )
 
@@ -32,7 +32,7 @@ class RenameListenerCommand(BaseCommand):
             nargs=1,
         )
         parser.add_argument(
-            "new_listener_name",
+            "new_name",
             help="New name to assign to the listener.",
             nargs=1,
         )
@@ -44,11 +44,11 @@ class RenameListenerCommand(BaseCommand):
 
             await client_connection.update_listener_by_listener_id(
                 listener_id=parsed_commands.listener_id[0],
-                new_listener_attributes={"name": parsed_commands.new_listener_name[0]},
+                new_listener_attributes={"name": parsed_commands.new_name[0]},
             )
 
             print_success(
-                f'Listener renamed to "{parsed_commands.new_listener_name[0]}"',
+                f'Listener renamed to "{parsed_commands.new_name[0]}"',
             )
         except SystemExit:
             pass
