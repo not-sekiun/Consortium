@@ -13,11 +13,14 @@ from consortium.client.utils.printer_utils import print_info
 
 class ListenersCommand(BaseCommand):
     name = "listeners"
-    description = "Switch to the listeners interpreter."
+    description = (
+        "Switch to the listeners interpreter, the interface for creating and managing "
+        "listeners."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-            listeners  # Switch to the listeners interpreter.
+            listeners
         """,
     )
 

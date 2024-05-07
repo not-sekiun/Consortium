@@ -59,7 +59,16 @@ class HomeInterpreter(ClientInterpreter):
             nested_completer=self.prompt_session.completer,
         )
 
+        nested_completer_dict["disconnect"] = {
+            str(client_connection.client_connection_id): None
+            for client_connection in all_client_connections
+        }
+        nested_completer_dict["help"] = {command: None for command in self.commands}
         nested_completer_dict["info_client_connection"] = {
+            str(client_connection.client_connection_id): None
+            for client_connection in all_client_connections
+        }
+        nested_completer_dict["interact_client_connection"] = {
             str(client_connection.client_connection_id): None
             for client_connection in all_client_connections
         }
@@ -68,14 +77,6 @@ class HomeInterpreter(ClientInterpreter):
             for client_connection in all_client_connections
         }
         nested_completer_dict["redescribe_client_connection"] = {
-            str(client_connection.client_connection_id): None
-            for client_connection in all_client_connections
-        }
-        nested_completer_dict["disconnect"] = {
-            str(client_connection.client_connection_id): None
-            for client_connection in all_client_connections
-        }
-        nested_completer_dict["interact_client_connection"] = {
             str(client_connection.client_connection_id): None
             for client_connection in all_client_connections
         }

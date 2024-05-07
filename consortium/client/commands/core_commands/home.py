@@ -15,7 +15,7 @@ class HomeCommand(BaseCommand):
     name = "home"
     description = (
         "Return to the home interpreter, the main control interface of the Consortium "
-        "C2 framework."
+        "framework."
     )
     epilog = format_argparse_epilog(
         """

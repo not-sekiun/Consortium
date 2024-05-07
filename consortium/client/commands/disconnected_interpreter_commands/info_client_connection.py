@@ -19,7 +19,7 @@ client_connections_service = client_singletons.client_connections_service
 
 class InfoClientConnectionCommand(BaseCommand):
     name = "info_client_connection"
-    description = "Display all information for a specific client connection."
+    description = "Display detailed information for a specific client connection."
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -31,7 +31,7 @@ class InfoClientConnectionCommand(BaseCommand):
         parser.add_argument(
             "client_connection_id",
             help=(
-                "The client connection ID of the client connection to display all "
+                "The client connection ID of the client connection to display detailed "
                 "information for."
             ),
             nargs=1,
@@ -52,6 +52,7 @@ class InfoClientConnectionCommand(BaseCommand):
                 print_error(str(exc))
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
             own_user = await client_connection.get_own_user_info()
+            server_release = await client_connection.get_server_release()
 
             table = Table(title="Client Connection Info")
             table.add_column("Information")
@@ -71,6 +72,16 @@ class InfoClientConnectionCommand(BaseCommand):
                 "Datetime Connected",
                 str(client_connection.datetime_connected.isoformat()),
             )
+            server_release_table = Table()
+            server_release_table.add_column("Information")
+            server_release_table.add_column("Data")
+            server_release_table.add_row("Version", server_release["version"])
+            server_release_table.add_row("Codename", server_release["codename"])
+            server_release_table.add_row(
+                "Datetime Released",
+                server_release["datetime_released"],
+            )
+            table.add_row("Server Release", server_release_table)
             CONSOLE.print(table)
         except SystemExit:
             pass

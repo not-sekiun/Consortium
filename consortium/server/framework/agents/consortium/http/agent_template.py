@@ -154,7 +154,7 @@ class AgentTemplate(BaseAgentTemplate):
                     "(executable) or a oneliner python command (oneliner)."
                 ),
                 default_value="script",
-                available_values=["script", "executable", "oneliner"],
+                available_values={"script", "executable", "oneliner"},
             ),
             SingleValueOption(
                 name="filename",

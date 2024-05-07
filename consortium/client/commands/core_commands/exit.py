@@ -36,7 +36,6 @@ class ExitCommand(BaseCommand):
             _ = self.parser.parse_args(command_context.arguments)
 
             print_info("Disconnecting all client connections...")
-
             for (
                 client_connection
             ) in client_connections_service.get_all_client_connections():
@@ -46,7 +45,9 @@ class ExitCommand(BaseCommand):
                         f"Disconnected client connection: {client_connection}",
                     )
                 except Exception as exc:
-                    print_error(f"Error disconnecting client connection: {exc}")
+                    print_error(
+                        f"Error disconnecting client connection {client_connection}: {exc}",
+                    )
 
             print_info("Exiting...")
             return ReturnStatus(

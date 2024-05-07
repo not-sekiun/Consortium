@@ -50,7 +50,7 @@ class ListClientConnectionsCommand(BaseCommand):
                     str(client_connection.client_connection_id),
                     client_connection.name,
                     client_connection.remote_host,
-                    client_connection.remote_port,
+                    str(client_connection.remote_port),
                 )
             CONSOLE.print(table)
         except SystemExit:

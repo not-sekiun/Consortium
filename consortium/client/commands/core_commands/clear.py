@@ -15,7 +15,7 @@ from consortium.client.utils.printer_utils import print_error
 
 class ClearCommand(BaseCommand):
     name = "clear"
-    description = "Clear the terminal screen for better visibility and organization."
+    description = "Clear the terminal screen."
     epilog = format_argparse_epilog(
         """
         Examples:

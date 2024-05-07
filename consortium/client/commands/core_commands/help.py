@@ -17,22 +17,22 @@ from consortium.client.utils.printer_utils import CONSOLE, print_error
 class HelpCommand(BaseCommand):
     name = "help"
     description = (
-        "Retrieve a summary of a specific command or display the help menu listing all "
-        "available commands."
+        "Display the help summary of a specific command or display the help menu "
+        "listing all available commands for the current interpreter."
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-            help
+            help  # Displays the help menu listing all available commands if no command name is specified.
             help banner
         """,
     )
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
-            "command",
+            "command_name",
             nargs="?",
-            help="The command to get the help page for.",
+            help="The name of the command to display the help summary for.",
         )
 
     @staticmethod
@@ -58,15 +58,16 @@ class HelpCommand(BaseCommand):
             parsed_args = self.parser.parse_args(
                 command_context.arguments,
             )
-            if parsed_args.command:
-                if parsed_args.command in command_context.environment["commands"]:
+
+            if parsed_args.command_name:
+                if parsed_args.command_name in command_context.environment["commands"]:
                     print(
                         command_context.environment["commands"][
-                            parsed_args.command
+                            parsed_args.command_name
                         ].summary,
                     )
                 else:
-                    print_error(f"Invalid command: {parsed_args.command}")
+                    print_error(f"Invalid command: {parsed_args.command_name}")
             else:
                 self._print_summarized_help_menu(
                     command_context.environment["commands"],

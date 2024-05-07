@@ -14,8 +14,8 @@ from consortium.client.utils.printer_utils import print_info
 class GeneratorsCommand(BaseCommand):
     name = "generators"
     description = (
-        "Switch to the generators interpreter, facilitating the creation and "
-        "management of agent payloads."
+        "Switch to the generators interpreter, the interface for creating and managing "
+        "the generation of agent payloads."
     )
     epilog = format_argparse_epilog(
         """
