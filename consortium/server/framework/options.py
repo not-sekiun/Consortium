@@ -4,9 +4,7 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 from typing import Any, Callable, Type
 
-from consortium.server.utils.string_processing_utils import (
-    docstring_to_single_line_formatter,
-)
+from consortium.server.utils.formatter_utils import format_docstring_to_single_line
 
 SimpleType = str | int | float | bool
 
@@ -120,7 +118,7 @@ class SingleValueOption(_BaseOption):
             "default_value": self.default_value,
             "value_type": self.value_type.__name__ if self.value_type else None,
             "validating_regex": self.validating_regex,
-            "validating_function": docstring_to_single_line_formatter(
+            "validating_function": format_docstring_to_single_line(
                 self.validating_function.__doc__,
             )
             if self.validating_function and self.validating_function.__doc__
@@ -216,7 +214,7 @@ class ListValueOption(_BaseOption):
             "allow_duplicates": self.allow_duplicates,
             "value_type": self.value_type.__name__ if self.value_type else None,
             "validating_regex": self.validating_regex,
-            "validating_function": docstring_to_single_line_formatter(
+            "validating_function": format_docstring_to_single_line(
                 self.validating_function.__doc__,
             )
             if self.validating_function and self.validating_function.__doc__
@@ -441,19 +439,19 @@ class DictionaryValueOption(_BaseOption):
             "required": self.required,
             "default_value": self.default_value,
             "key_validating_regex": self.key_validating_regex,
-            "key_validating_function": docstring_to_single_line_formatter(
+            "key_validating_function": format_docstring_to_single_line(
                 self.key_validating_function.__doc__,
             )
             if self.key_validating_function and self.key_validating_function.__doc__
             else None,
             "value_type": self.value_type.__name__ if self.value_type else None,
             "value_validating_regex": self.value_validating_regex,
-            "value_validating_function": docstring_to_single_line_formatter(
+            "value_validating_function": format_docstring_to_single_line(
                 self.value_validating_function.__doc__,
             )
             if self.value_validating_function and self.value_validating_function.__doc__
             else None,
-            "validating_function": docstring_to_single_line_formatter(
+            "validating_function": format_docstring_to_single_line(
                 self.validating_function.__doc__,
             )
             if self.validating_function and self.validating_function.__doc__

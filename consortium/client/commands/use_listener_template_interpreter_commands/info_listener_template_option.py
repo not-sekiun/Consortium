@@ -10,17 +10,22 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_snake_case_to_title,
+)
 from consortium.client.utils.printer_utils import CONSOLE, print_error
 
 
 class InfoListenerTemplateOptionsCommand(BaseCommand):
     name = "info_listener_template_option"
-    description = "Show all information for a specific listener template option."
+    description = (
+        "Display detailed information about a specific listener template option."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_listener_template_option remote_host # Display information for the listener template option with name remote_host
+            info_listener_template_option local_host
         """,
     )
 
@@ -28,8 +33,8 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
         parser.add_argument(
             "listener_template_option_name",
             help=(
-                "Listener template option name of the listener template option to "
-                "display information for."
+                "The name of the listener template option to display detailed "
+                "information for."
             ),
             nargs=1,
         )
@@ -40,28 +45,25 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
-            table = Table(title="Listener Template Option Information")
-            table.add_column("Information")
-            table.add_column("Data")
-
+            listener_template = command_context.environment["listener_template"]
             try:
-                option = command_context.environment["listener_template"]["options"][
+                option = listener_template["options"][
                     parsed_args.listener_template_option_name[0]
                 ]
             except KeyError:
                 print_error(
-                    f"Listener template option with name {parsed_args.listener_template_option_name[0]} not found.",
+                    f"Listener template option with name "
+                    f"{parsed_args.listener_template_option_name[0]} not found.",
                 )
                 return ReturnStatus(
                     type=ClientReturnStatusType.CONTINUE,
                 )
 
+            table = Table(title="Listener Template Option Information")
+            table.add_column("Information")
+            table.add_column("Data")
             for key, value in option.items():
-                table.add_row(
-                    key,
-                    str(value),
-                )
+                table.add_row(format_snake_case_to_title(key), str(value))
 
             CONSOLE.print(
                 table,

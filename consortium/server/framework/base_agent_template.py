@@ -10,9 +10,7 @@ from consortium.server.framework.options import (
     ListValueOption,
     SingleValueOption,
 )
-from consortium.server.utils.string_processing_utils import (
-    docstring_to_single_line_formatter,
-)
+from consortium.server.utils.formatter_utils import format_docstring_to_single_line
 
 
 class BaseAgentTemplate(ABC):
@@ -99,7 +97,7 @@ class BaseAgentTemplate(ABC):
                 for option_name, option in self.options.items()
             },
             "agent_template_id": str(self.agent_template_id),
-            "validating_function": docstring_to_single_line_formatter(
+            "validating_function": format_docstring_to_single_line(
                 self.validating_function.__doc__,
             )
             if self.validating_function and self.validating_function.__doc__

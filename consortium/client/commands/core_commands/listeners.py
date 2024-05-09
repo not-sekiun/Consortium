@@ -24,9 +24,6 @@ class ListenersCommand(BaseCommand):
         """,
     )
 
-    def configure_parser(self, parser) -> None:
-        pass
-
     async def run_command(
         self,
         command_context: CommandContext,
@@ -36,7 +33,7 @@ class ListenersCommand(BaseCommand):
             print_info("Switching to the listeners interpreter...")
             return ReturnStatus(
                 type=ClientReturnStatusType.SWITCH_INTERPRETER,
-                data={"interpreter_type": InterpreterType.LISTENERS},
+                data={"interpreter_type": InterpreterType.LISTENERS_INTERPRETER},
             )
         except SystemExit:
             pass

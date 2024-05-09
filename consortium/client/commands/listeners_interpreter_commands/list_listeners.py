@@ -17,10 +17,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListListenersCommand(BaseCommand):
     name = "list_listeners"
-    description = (
-        "Display a list of all listener instances currently created within the "
-        "Consortium C2 framework."
-    )
+    description = "List all created listeners along with their essential information."
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -28,33 +25,21 @@ class ListListenersCommand(BaseCommand):
         """,
     )
 
-    def configure_parser(self, parser) -> None:
-        pass
-
     async def run_command(
         self,
         command_context: CommandContext,
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-            all_listeners = await command_context.environment[
-                "client_connection"
-            ].get_all_listeners()
+            client_connection = command_context.environment["client_connection"]
+            all_listeners = await client_connection.get_all_listeners()
 
             table = Table(title="Listeners")
-
             table.add_column("Listener ID")
             table.add_column("Name")
             table.add_column("Endpoint")
             table.add_column("Status")
-
             for listener in all_listeners:
-                # listener_status_string = listener["status"]["state"]
-                # if listener_status_string == "RUNNING":
-                #     listener_status_string = f"[bold green]{listener_status_string}"
-                # elif listener_status_string == "ERRORED":
-                #     listener_status_string = f"[bold red]{listener_status_string}"
-
                 table.add_row(
                     listener["listener_id"],
                     listener["name"],

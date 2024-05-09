@@ -14,10 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class StartListenerCommand(BaseCommand):
     name = "start_listener"
-    description = (
-        "Start a created listener instance using the configured parameters and "
-        "options."
-    )
+    description = "Start a created listener using its configured parameters."
     epilog = format_argparse_epilog(
         """
         Examples:

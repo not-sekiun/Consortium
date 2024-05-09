@@ -19,16 +19,15 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListGeneratorsCommand(BaseCommand):
     name = "list_generators"
-    description = "List all generators."
+    description = (
+        "List all created agent generators along with their essential information."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_generators  # List all agent generators
+            list_generators
         """,
     )
-
-    def configure_parser(self, parser) -> None:
-        pass
 
     async def run_command(
         self,
@@ -36,17 +35,14 @@ class ListGeneratorsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-            all_agent_generators = await command_context.environment[
-                "client_connection"
-            ].get_all_agent_generators()
+            client_connection = command_context.environment["client_connection"]
+            all_agent_generators = await client_connection.get_all_agent_generators()
 
             table = Table(title="Agent Generators")
-
             table.add_column("Agent Generator ID")
             table.add_column("Name")
             table.add_column("Agent Generator Build Progress")
             table.add_column("Status")
-
             for agent_generator in all_agent_generators:
                 agent_generator_build_steps_summary = []
                 completed_agent_generator_build_steps = 0
@@ -82,7 +78,6 @@ class ListGeneratorsCommand(BaseCommand):
                         agent_generator["status"]["state"],
                     ),
                 )
-
             CONSOLE.print(table)
         except SystemExit:
             pass

@@ -12,13 +12,13 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
 
 
-class ListListenerTemplatesCommand(BaseCommand):
-    name = "list_listener_templates"
-    description = "List all available listener templates for reference and selection."
+class ListAgentsCommand(BaseCommand):
+    name = "list_agents"
+    description = "List all connected agents along with their essential information."
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_listener_templates
+            list_agents
         """,
     )
 
@@ -28,19 +28,16 @@ class ListListenerTemplatesCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-            all_listener_templates = await command_context.environment[
-                "client_connection"
-            ].get_all_listener_templates()
+            client_connection = command_context.environment["client_connection"]
+            all_agents = await client_connection.get_all_agents()
 
-            table = Table(title="Listener Templates")
-
-            table.add_column("Listener Template ID")
+            table = Table(title="Agents")
+            table.add_column("Agent ID")
             table.add_column("Name")
-
-            for listener_template in all_listener_templates:
+            for agent in all_agents:
                 table.add_row(
-                    listener_template["listener_template_id"],
-                    listener_template["name"],
+                    agent["agent_id"],
+                    agent["name"],
                 )
 
             CONSOLE.print(table)

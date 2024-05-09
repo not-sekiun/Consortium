@@ -71,3 +71,7 @@ def format_agent_generator_build_step_state_string_with_color(
             agent_generator_build_step_state_string
         ]
     return agent_generator_build_step_state_string
+
+
+def format_snake_case_to_title(snake_case_string: str) -> str:
+    return " ".join([word.capitalize() for word in snake_case_string.split("_")])

@@ -95,8 +95,8 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                     1,
                 )
                 .replace(
-                    '"JITTER_PERCENT"',
-                    repr(parameters["jitter_percent"]),
+                    '"SLEEP_TIME_JITTER"',
+                    repr(parameters["sleep_time_jitter"]),
                     1,
                 )
                 .replace(

@@ -17,14 +17,14 @@ from consortium.client.utils.printer_utils import CONSOLE
 class InfoListenerTemplateCommand(BaseCommand):
     name = "info_listener_template"
     description = (
-        "Show all information for a specific listener template or for the currently "
-        "used listener template."
+        "Display detailed information about a specific listener template or for the "
+        "currently selected listener template being used."
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_listener_template 123e4567-e89b-12d3-a456-42661417400  # Display information for the listener template with listener template ID 123e4567-e89b-12d3-a456-42661417400
-            info_listener_template  # Running the command without a specified listener template ID will show information for the currently used listener template
+            info_listener_template  # Displays detailed information for the currently selected listener template being used if the listener template ID is not specified.
+            info_listener_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -32,8 +32,9 @@ class InfoListenerTemplateCommand(BaseCommand):
         parser.add_argument(
             "listener_template_id",
             help=(
-                "Listener template ID of the listener template to display information "
-                "for."
+                "The listener template ID of the listener template to display detailed "
+                "information for. If not provided, detailed information for the "
+                "currently selected listener template is displayed."
             ),
             nargs="?",
             default=None,
@@ -45,21 +46,18 @@ class InfoListenerTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
+            client_connection = command_context.environment["client_connection"]
 
             if parsed_args.listener_template_id is None:
                 listener_template = command_context.environment["listener_template"]
             else:
-                listener_template = await command_context.environment[
-                    "client_connection"
-                ].get_listener_template_by_listener_template_id(
+                listener_template = await client_connection.get_listener_template_by_listener_template_id(
                     parsed_args.listener_template_id,
                 )
 
-            table = Table(title="Listener Template Info")
-
+            table = Table(title="Listener Template Information")
             table.add_column("Information")
             table.add_column("Data")
-
             table.add_row(
                 "Listener Template ID",
                 listener_template["listener_template_id"],
@@ -93,7 +91,6 @@ class InfoListenerTemplateCommand(BaseCommand):
                 listener_type_table,
             )
             table.add_row("Authors", ", ".join(listener_template["authors"]))
-
             CONSOLE.print(table)
         except SystemExit:
             pass

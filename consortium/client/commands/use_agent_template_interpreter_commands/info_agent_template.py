@@ -17,21 +17,25 @@ from consortium.client.utils.printer_utils import CONSOLE
 class InfoAgentTemplateCommand(BaseCommand):
     name = "info_agent_template"
     description = (
-        "Show all information for a specific agent template or for the currently used "
-        "agent template."
+        "Display detailed information for a specific agent template or for the "
+        "currently selected agent template being used."
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_agent_template 123e4567-e89b-12d3-a456-42661417400  # Display information for the agent template with agent template ID 123e4567-e89b-12d3-a456-42661417400
-            info_agent_template  # Running the command without a specified agent template ID will show information for the currently used agent template
+            info_agent_template  # Displays detailed information for the currently selected agent template being used if the agent template ID is not specified.
+            info_agent_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_template_id",
-            help="Agent template ID of the agent template to display information for.",
+            help=(
+                "The agent template ID of the agent template to display detailed "
+                "information for. If not provided, detailed information for the "
+                "currently selected agent template is displayed."
+            ),
             nargs="?",
             default=None,
         )
@@ -42,21 +46,19 @@ class InfoAgentTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
+            client_connection = command_context.environment["client_connection"]
             if parsed_args.agent_template_id is None:
                 agent_template = command_context.environment["agent_template"]
             else:
-                agent_template = await command_context.environment[
-                    "client_connection"
-                ].get_agent_template_by_agent_template_id(
-                    parsed_args.agent_template_id,
+                agent_template = (
+                    await client_connection.get_agent_template_by_agent_template_id(
+                        parsed_args.agent_template_id,
+                    )
                 )
 
-            table = Table(title="Agent Template Info")
-
+            table = Table(title="Agent Template Information")
             table.add_column("Information")
             table.add_column("Data")
-
             table.add_row(
                 "Agent Template ID",
                 agent_template["agent_template_id"],
@@ -93,7 +95,6 @@ class InfoAgentTemplateCommand(BaseCommand):
                 agent_type_table,
             )
             table.add_row("Authors", "\n".join(agent_template["authors"]))
-
             CONSOLE.print(table)
         except SystemExit:
             pass

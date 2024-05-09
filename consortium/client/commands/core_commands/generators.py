@@ -24,9 +24,6 @@ class GeneratorsCommand(BaseCommand):
         """,
     )
 
-    def configure_parser(self, parser) -> None:
-        pass
-
     async def run_command(
         self,
         command_context: CommandContext,
@@ -36,7 +33,7 @@ class GeneratorsCommand(BaseCommand):
             print_info("Switching to the generators interpreter...")
             return ReturnStatus(
                 type=ClientReturnStatusType.SWITCH_INTERPRETER,
-                data={"interpreter_type": InterpreterType.GENERATORS},
+                data={"interpreter_type": InterpreterType.GENERATORS_INTERPRETER},
             )
         except SystemExit:
             pass

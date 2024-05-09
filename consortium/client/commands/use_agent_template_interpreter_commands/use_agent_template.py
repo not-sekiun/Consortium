@@ -37,12 +37,28 @@ class UseAgentTemplateCommand(BaseCommand):
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
             client_connection = command_context.environment["client_connection"]
+            currently_used_agent_template = command_context.environment[
+                "agent_template"
+            ]
+
+            if (
+                currently_used_agent_template["agent_template_id"]
+                == parsed_args.agent_template_id[0]
+            ):
+                print_error(
+                    f"Already using agent template: "
+                    f'"{currently_used_agent_template["name"]}" '
+                    f'({currently_used_agent_template["agent_template_id"]})',
+                )
+                return ReturnStatus(
+                    type=ClientReturnStatusType.CONTINUE,
+                )
+
             agent_template = (
                 await client_connection.get_agent_template_by_agent_template_id(
                     parsed_args.agent_template_id[0],
                 )
             )
-
             print_info(
                 f'Using agent template: '
                 f'"{agent_template["name"]}" '

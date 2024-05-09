@@ -15,7 +15,10 @@ from consortium.client.utils.printer_utils import print_error, print_success
 
 class SetListenerTemplateOptionCommand(BaseCommand):
     name = "set_listener_template_option"
-    description = "Set a listener template option to a specific value."
+    description = (
+        "Set a listener template option to a specific value for the currently "
+        "selected listener template being used."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -29,7 +32,7 @@ class SetListenerTemplateOptionCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "option_name",
-            help="Listener template option name of the listener template option to set.",
+            help="Name of the listener template option to set the value of.",
             nargs=1,
         )
         parser.add_argument(
@@ -41,9 +44,10 @@ class SetListenerTemplateOptionCommand(BaseCommand):
             "--value-type",
             "-t",
             help="Type of the listener template option to set.",
-            choices=["str", "int", "float", "bool", "list", "dict"],
+            choices={"str", "int", "float", "bool", "list", "dict"},
             nargs=1,
             default=["str"],  # nargs=1 sets the value to be a list with one element.
+            metavar="VALUE_TYPE",
         )
 
     @staticmethod
@@ -51,7 +55,7 @@ class SetListenerTemplateOptionCommand(BaseCommand):
         value: str,
         value_type: str,
     ) -> str | int | float | bool | list | dict:
-        if value_type not in ("str", "int", "float", "bool", "list", "dict"):
+        if value_type not in {"str", "int", "float", "bool", "list", "dict"}:
             raise ValueError(
                 f'Value type "{value_type}" is not a valid value type.',
             )

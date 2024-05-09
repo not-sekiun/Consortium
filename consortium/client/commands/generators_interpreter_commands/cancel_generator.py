@@ -14,11 +14,11 @@ from consortium.client.utils.printer_utils import print_success
 
 class CancelGeneratorCommand(BaseCommand):
     name = "cancel_generator"
-    description = "Cancel a running agent generator."
+    description = "Forcefully stop a running agent generator."
     epilog = format_argparse_epilog(
         """
         Examples:
-            cancel_generator 123e4567-e89b-12d3-a456-42661417400 # Cancel an agent generator with agent generator ID 123e4567-e89b-12d3-a456-42661417400
+            cancel_generator 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -32,7 +32,6 @@ class CancelGeneratorCommand(BaseCommand):
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
             client_connection = command_context.environment["client_connection"]
 
             # If agent generator does not exist, a RESTAPIError is raised and caught by

@@ -10,17 +10,20 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_snake_case_to_title,
+)
 from consortium.client.utils.printer_utils import CONSOLE, print_error
 
 
 class InfoAgentTemplateOptionsCommand(BaseCommand):
     name = "info_agent_template_option"
-    description = "Show all information for a specific agent template option."
+    description = "Display detailed information about a specific agent template option."
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_agent_template_option remote_host # Display information for the agent template option with name remote_host
+            info_agent_template_option remote_host
         """,
     )
 
@@ -28,8 +31,8 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
         parser.add_argument(
             "agent_template_option_name",
             help=(
-                "Agent template option name of the agent template option to display "
-                "information for."
+                "The name of the agent template option to display detailed information "
+                "for."
             ),
             nargs=1,
         )
@@ -40,13 +43,9 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
-            table = Table(title="Agent Template Option Information")
-            table.add_column("Information")
-            table.add_column("Data")
-
+            agent_template = command_context.environment["agent_template"]
             try:
-                option = command_context.environment["agent_template"]["options"][
+                option = agent_template["options"][
                     parsed_args.agent_template_option_name[0]
                 ]
             except KeyError:
@@ -58,15 +57,13 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
                     type=ClientReturnStatusType.CONTINUE,
                 )
 
+            table = Table(title="Agent Template Option Information")
+            table.add_column("Information")
+            table.add_column("Data")
             for key, value in option.items():
-                table.add_row(
-                    key,
-                    str(value),
-                )
+                table.add_row(format_snake_case_to_title(key), str(value))
 
-            CONSOLE.print(
-                table,
-            )
+            CONSOLE.print(table)
         except SystemExit:
             pass
 

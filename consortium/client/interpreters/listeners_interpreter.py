@@ -5,6 +5,9 @@ from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.listeners_interpreter_commands.cancel_listener import (
     CancelListenerCommand,
 )
+from consortium.client.commands.listeners_interpreter_commands.delete_listener import (
+    DeleteListenerCommand,
+)
 from consortium.client.commands.listeners_interpreter_commands.info_listener import (
     InfoListenerCommand,
 )
@@ -54,6 +57,7 @@ LISTENERS_INTERPRETER_COMMANDS = [
     RenameListenerCommand(),
     RedescribeListenerCommand(),
     SetListenerParameterCommand(),
+    DeleteListenerCommand(),
 ]
 
 
@@ -82,22 +86,23 @@ class ListenersInterpreter(ClientInterpreter):
             self.prompt_session.completer,
         )
 
-        nested_completer_dict["start_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        nested_completer_dict["stop_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
         nested_completer_dict["cancel_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        nested_completer_dict["delete_listener"] = {
             listener["listener_id"]: None for listener in all_listeners
         }
         nested_completer_dict["info_listener"] = {
             listener["listener_id"]: None for listener in all_listeners
         }
-        nested_completer_dict["rename_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
+        nested_completer_dict["info_listener_template"] = {
+            listener_template["listener_template_id"]: None
+            for listener_template in all_listener_templates
         }
         nested_completer_dict["redescribe_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        nested_completer_dict["rename_listener"] = {
             listener["listener_id"]: None for listener in all_listeners
         }
         nested_completer_dict["set_listener_parameter"] = {
@@ -106,9 +111,11 @@ class ListenersInterpreter(ClientInterpreter):
             }
             for listener in all_listeners
         }
-        nested_completer_dict["info_listener_template"] = {
-            listener_template["listener_template_id"]: None
-            for listener_template in all_listener_templates
+        nested_completer_dict["start_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        nested_completer_dict["stop_listener"] = {
+            listener["listener_id"]: None for listener in all_listeners
         }
         nested_completer_dict["use_listener_template"] = {
             listener_template["listener_template_id"]: None

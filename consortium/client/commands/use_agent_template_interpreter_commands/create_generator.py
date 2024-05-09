@@ -15,33 +15,29 @@ from consortium.client.utils.printer_utils import print_success
 class CreateGeneratorCommand(BaseCommand):
     name = "create_generator"
     description = (
-        "Create an agent generator with the currently set agent generator template "
-        "options."
+        "Create an agent generator with the currently set agent template options."
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-            create_generator  # Create a listener with the currently set listener template options
+            create_generator
         """,
     )
-
-    def configure_parser(self, parser: ArgumentParser) -> None:
-        pass
 
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-
-            agent_template_id = command_context.environment["agent_template_id"]
+            client_connection = command_context.environment["client_connection"]
+            agent_template_id = command_context.environment["agent_template"][
+                "agent_template_id"
+            ]
             agent_template_options = command_context.environment["agent_template"][
                 "options"
             ]
-            client_connection = command_context.environment["client_connection"]
 
             agent_template_option_values = {}
             for option_name, option in agent_template_options.items():
                 agent_template_option_values[option_name] = option["value"]
-
             agent_generator = await client_connection.create_agent_generator_through_agent_template_by_agent_template_id(
                 agent_template_id=agent_template_id,
                 agent_template_option_values=agent_template_option_values,

@@ -14,7 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class StopListenerCommand(BaseCommand):
     name = "stop_listener"
-    description = "Stop a currently running listener, suspending its operation."
+    description = "Stop a running listener, suspending its operation."
     epilog = format_argparse_epilog(
         """
         Examples:

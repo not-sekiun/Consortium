@@ -24,9 +24,6 @@ class HomeCommand(BaseCommand):
         """,
     )
 
-    def configure_parser(self, parser) -> None:
-        pass
-
     async def run_command(
         self,
         command_context: CommandContext,
@@ -36,7 +33,7 @@ class HomeCommand(BaseCommand):
             print_info("Switching to the home interpreter...")
             return ReturnStatus(
                 type=ClientReturnStatusType.SWITCH_INTERPRETER,
-                data={"interpreter_type": InterpreterType.HOME},
+                data={"interpreter_type": InterpreterType.HOME_INTERPRETER},
             )
         except SystemExit:
             pass

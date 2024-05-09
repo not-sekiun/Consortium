@@ -2,6 +2,12 @@
 # - HTTPError
 #   - NotFoundError
 #     - AgentGeneratorNotFoundError
+#   - UnprocessableEntityError
+#     - AgentGeneratorParameterUpdateError
+#       - InvalidAgentGeneratorParameterNameError
+#       - InvalidAgentGeneratorParameterValueError
+#   - InternalServerError
+#     - AgentTemplateResolutionError
 # - AgentGeneratorError
 #  - AgentGeneratorStateError
 #    - AgentGeneratorAlreadyRunningError
@@ -17,7 +23,9 @@ from consortium.server.exceptions.base_server_exception import BaseServerExcepti
 from consortium.server.exceptions.http_exceptions import (
     InternalServerError,
     NotFoundError,
+    UnprocessableEntityError,
 )
+from consortium.server.framework.c2_types import AgentType
 
 
 class AgentGeneratorNotFoundError(NotFoundError):
@@ -33,6 +41,78 @@ class AgentGeneratorNotFoundError(NotFoundError):
                 f'"{agent_generator_id}" was not found.'
             ),
             detail={"agent_generator_id": agent_generator_id},
+        )
+
+
+class AgentTemplateResolutionError(InternalServerError):
+    def __init__(
+        self,
+        agent_type: AgentType,
+    ) -> None:
+        super().__init__(
+            status_code=500,
+            code="AGENT_TEMPLATE_RESOLUTION_ERROR",
+            message=(
+                "Failed to resolve the agent's agent template for the given agent type "
+                f'with agent type ID "{agent_type.agent_type_id}".'
+            ),
+            detail={"agent_type": agent_type.to_json()},
+        )
+
+
+class AgentGeneratorParameterUpdateError(UnprocessableEntityError):
+    def __init__(
+        self,
+        status_code: int = 422,
+        code: str = "AGENT_GENERATOR_PARAMETER_UPDATE_ERROR",
+        message: str = (
+            "An error occurred while updating the agent generator's parameters."
+        ),
+        detail: Any = None,
+    ) -> None:
+        super().__init__(
+            status_code=status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        )
+
+
+class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError):
+    def __init__(
+        self,
+        parameter_name: str,
+    ) -> None:
+        super().__init__(
+            status_code=422,
+            code="INVALID_LISTENER_PARAMETER_NAME_ERROR",
+            message=(
+                f'The provided listener parameter name "{parameter_name}" is '
+                "invalid."
+            ),
+            detail={"parameter_name": parameter_name},
+        )
+
+
+class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateError):
+    def __init__(
+        self,
+        parameter_name: str,
+        parameter_value: Any,
+        exception: Exception,
+    ) -> None:
+        super().__init__(
+            status_code=422,
+            code="INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR",
+            message=(
+                f'The provided agent generator parameter value "{parameter_value}" for '
+                f'parameter "{parameter_name}" is invalid.'
+            ),
+            detail={
+                "parameter_name": parameter_name,
+                "parameter_value": parameter_value,
+                "exception": str(exception),
+            },
         )
 
 

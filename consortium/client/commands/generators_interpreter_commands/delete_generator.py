@@ -12,20 +12,20 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class StartGeneratorCommand(BaseCommand):
-    name = "start_generator"
-    description = "Start a created agent generator using its configured parameters."
+class DeleteGeneratorCommand(BaseCommand):
+    name = "delete_generator"
+    description = "Delete a non-running agent generator."
     epilog = format_argparse_epilog(
         """
         Examples:
-            start_generator 123e4567-e89b-12d3-a456-42661417400
+            cancel_generator 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_generator_id",
-            help="Agent generator ID of the agent generator to start.",
+            help="Agent generator ID of the non-running agent generator to delete.",
             nargs=1,
         )
 
@@ -41,13 +41,13 @@ class StartGeneratorCommand(BaseCommand):
                 )
             )
 
-            _ = await client_connection.start_agent_generator_by_agent_generator_id(
+            _ = await client_connection.delete_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_args.agent_generator_id[0],
             )
 
             print_success(
-                f'Started agent generator: "{agent_generator["name"]}" '
-                f"({agent_generator["agent_generator_id"]})",
+                f'Deleted agent generator: "{agent_generator["name"]}" '
+                f'({agent_generator["agent_generator_id"]})',
             )
         except SystemExit:
             pass

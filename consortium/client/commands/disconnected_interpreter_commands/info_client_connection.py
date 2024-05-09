@@ -54,7 +54,7 @@ class InfoClientConnectionCommand(BaseCommand):
             own_user = await client_connection.get_own_user_info()
             server_release = await client_connection.get_server_release()
 
-            table = Table(title="Client Connection Info")
+            table = Table(title="Client Connection Information")
             table.add_column("Information")
             table.add_column("Data")
             table.add_row(

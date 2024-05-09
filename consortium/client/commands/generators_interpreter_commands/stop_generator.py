@@ -14,11 +14,11 @@ from consortium.client.utils.printer_utils import print_success
 
 class StopGeneratorCommand(BaseCommand):
     name = "stop_generator"
-    description = "Stop a running agent generator."
+    description = "Stop a running agent generator, suspending its operation."
     epilog = format_argparse_epilog(
         """
         Examples:
-            stop_generator 123e4567-e89b-12d3-a456-42661417400 # Stop an agent generator with agent generator ID 123e4567-e89b-12d3-a456-42661417400
+            stop_generator 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -32,9 +32,7 @@ class StopGeneratorCommand(BaseCommand):
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
             client_connection = command_context.environment["client_connection"]
-
             # If agent generator does not exist, a RESTAPIError is raised and caught by
             # the outer try-except block
             agent_generator = (
@@ -42,6 +40,7 @@ class StopGeneratorCommand(BaseCommand):
                     parsed_args.agent_generator_id[0],
                 )
             )
+
             _ = await client_connection.stop_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_args.agent_generator_id[0],
             )

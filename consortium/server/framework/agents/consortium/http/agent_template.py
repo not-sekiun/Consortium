@@ -81,7 +81,7 @@ class AgentTemplate(BaseAgentTemplate):
                     "The remote host address of the listener for the agent to connect "
                     "back to."
                 ),
-                default_value="0.0.0.0",
+                default_value="127.0.0.1",
                 value_type=str,
             ),
             SingleValueOption(
@@ -135,12 +135,12 @@ class AgentTemplate(BaseAgentTemplate):
                 value_type=float,
             ),
             SingleValueOption(
-                name="jitter_percent",
+                name="sleep_time_jitter",
                 description=(
                     "The percentage of the duration of the sleep time to randomly vary "
-                    "sleeping by. A random value between 0 and the value of the option "
-                    '"jitter_percent" is chosen to randomly increase or decrease the'
-                    "duration of the sleep time by."
+                    "sleeping by expressed as a decimal. A random value between 0 and "
+                    'the value of the option "jitter_percent" is chosen to randomly '
+                    "increase or decrease the duration of the sleep time by."
                 ),
                 default_value=0.5,
                 value_type=float,

@@ -109,9 +109,6 @@ class BannerCommand(BaseCommand):
         CONSOLE.print(info_banner)
         CONSOLE.print()
 
-    def configure_parser(self, parser) -> None:
-        pass
-
     async def run_command(
         self,
         command_context: CommandContext,

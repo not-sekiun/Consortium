@@ -12,28 +12,28 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class RedescribeListenerCommand(BaseCommand):
-    name = "redescribe_listener"
+class RedescribeGeneratorCommand(BaseCommand):
+    name = "redescribe_generator"
     description = (
-        "Update the description of a listener instance for better organization and "
-        "identification."
+        "Update the description of an agent generator instance for better organization "
+        "and identification."
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-            redescribe_listener 123e4567-e89b-12d3-a456-42661417400 "New description"
+            redescribe_generator 123e4567-e89b-12d3-a456-42661417400 "New description"
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "listener_id",
-            help="Listener ID of the listener to redescribe.",
+            "agent_generator_id",
+            help="Agent generator ID of the agent generator to redescribe.",
             nargs=1,
         )
         parser.add_argument(
             "new_description",
-            help="New description to assign to the listener.",
+            help="New description to assign to the agent generator.",
             nargs=1,
         )
 
@@ -41,19 +41,22 @@ class RedescribeListenerCommand(BaseCommand):
         try:
             parsed_commands = self.parser.parse_args(command_context.arguments)
             client_connection = command_context.environment["client_connection"]
-            listener = await client_connection.get_listener_by_listener_id(
-                listener_id=parsed_commands.listener_id[0],
+            agent_generator = (
+                await client_connection.get_agent_generator_by_agent_generator_id(
+                    agent_generator_id=parsed_commands.agent_generator_id[0],
+                )
             )
 
-            await client_connection.update_listener_by_listener_id(
-                listener_id=parsed_commands.listener_id[0],
-                new_listener_attributes={
+            await client_connection.update_agent_generator_by_agent_generator_id(
+                agent_generator_id=parsed_commands.agent_generator_id[0],
+                new_agent_generator_attributes={
                     "description": parsed_commands.new_description[0],
                 },
             )
 
             print_success(
-                f"Listener {listener["name"]} ({listener["listener_id"]}) description "
+                f'Agent generator "{agent_generator["name"]}" '
+                f"({agent_generator["agent_generator_id"]}) description "
                 f'updated to: "{parsed_commands.new_description[0]}"',
             )
         except SystemExit:

@@ -73,7 +73,7 @@ class SetListenerParameterCommand(BaseCommand):
             )
             print_success(
                 f'Set parameter "{parsed_args.parameter_name[0]}" to '
-                f'"{parameter_value[0]}" for listener: {listener["name"]} '
+                f'"{parameter_value[0]}" for listener: "{listener["name"]}" '
                 f'({listener["listener_id"]})',
             )
         except SystemExit:

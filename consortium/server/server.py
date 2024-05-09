@@ -12,6 +12,7 @@ from consortium.server.api.agent_generators_api import (
 from consortium.server.api.agent_templates_api import (
     router as agent_templates_api_router,
 )
+from consortium.server.api.agents_api import router as agents_api_router
 from consortium.server.api.listener_templates_api import (
     router as listener_templates_api_router,
 )
@@ -61,10 +62,11 @@ class Server:
         self._app.include_router(listeners_api_router)
         self._app.include_router(agent_templates_api_router)
         self._app.include_router(agent_generators_api_router)
+        self._app.include_router(agents_api_router)
 
-        # configure middleware, order matters, the last middleware added will be the
+        # Configure middleware. Order matters, the last middleware added will be the
         # first to be executed on the request and the last to be executed on the
-        # response
+        # response.
         self._app.add_middleware(
             BaseHTTPMiddleware,
             dispatch=check_if_server_is_shutting_down,
@@ -86,16 +88,16 @@ class Server:
             dispatch=log_rest_api_requests_and_responses,
         )
 
-        # register custom exception handlers, these are used to standardize the error
+        # Register custom exception handlers, these are used to standardize the error
         # responses returned by the server and to account for custom exceptions that
-        # may be raised by the server
+        # may be raised by the server.
         register_server_exception_handlers(self._app)
 
-        # manually modify the openapi schema to remove the default 422 response from the
+        # Manually modify the openapi schema to remove the default 422 response from the
         # /api/login endpoint (https://github.com/tiangolo/fastapi/issues/660)
         del self._app.openapi()["paths"]["/api/login"]["post"]["responses"]["422"]
-        # workaround to modify the openapi schema to add in null detail responses that
-        # were removed. go bug tiangolo about this issue because it still has yet to be
+        # Workaround to modify the openapi schema to add in null detail responses that
+        # were removed. Go bug tiangolo about this issue because it still has yet to be
         # fixed https://github.com/tiangolo/fastapi/issues/1082
         for schema_name, schema in self._app.openapi()["components"]["schemas"].items():
             if schema_name.endswith("ErrorModel") and "examples" in schema:

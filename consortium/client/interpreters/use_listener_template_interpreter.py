@@ -1,9 +1,11 @@
 from copy import deepcopy
+from typing import Any
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.client_connection import ClientConnection
+from consortium.client.commands.core_commands.listeners import ListenersCommand
 from consortium.client.commands.use_listener_template_interpreter_commands.create_listener import (
     CreateListenerCommand,
 )
@@ -19,8 +21,8 @@ from consortium.client.commands.use_listener_template_interpreter_commands.list_
 from consortium.client.commands.use_listener_template_interpreter_commands.set_listener_template_option import (
     SetListenerTemplateOptionCommand,
 )
-from consortium.client.commands.use_listener_template_interpreter_commands.use_listener import (
-    UseListenerCommand,
+from consortium.client.commands.use_listener_template_interpreter_commands.use_listener_template import (
+    UseListenerTemplateCommand,
 )
 from consortium.client.interpreters.listeners_interpreter import (
     LISTENERS_INTERPRETER_COMMANDS,
@@ -36,47 +38,25 @@ class UseListenerTemplateInterpreter(ClientInterpreter):
     def __init__(
         self,
         client_connection: ClientConnection,
-        listener_template_id: str,
-        listener_template_name: str,
+        listener_template: dict[str, Any],
     ):
         use_listener_interpreter_commands = [
             *[
                 command
                 for command in LISTENERS_INTERPRETER_COMMANDS
-                if command.name not in ("info_listener_template",)
+                if command.name
+                not in ("info_listener_template", "use_listener_template")
             ],
+            # Add back in the listeners command since it's removed in the
+            # LISTENERS_INTERPRETER_COMMANDS command list.
+            ListenersCommand(),
             ListOptionsListenerTemplateCommand(),
-            UseListenerCommand(),
+            UseListenerTemplateCommand(),
             InfoListenerTemplateOptionsCommand(),
             SetListenerTemplateOptionCommand(),
             CreateListenerCommand(),
             InfoListenerTemplateCommand(),
         ]
-        super().__init__(
-            prompt=ANSI(
-                format_rich_text_as_ansi(
-                    f"[bold white]Consortium ([bold blue]Listeners[bold white]: "
-                    f'[bold blue]"{listener_template_name}" '
-                    f"({listener_template_id})[bold white]) > ",
-                ),
-            ),
-            commands=use_listener_interpreter_commands,
-            client_connection=client_connection,
-            additional_environment_variables={
-                "listener_template_id": listener_template_id,
-            },
-        )
-
-    # We can't do this __init__ because __init__ does not support async.
-    async def on_enter_interpreter(self) -> None:
-        # Make the request once to retrieve data from the server to avoid making the
-        # request multiple times.
-        listener_template = await self.environment[
-            "client_connection"
-        ].get_listener_template_by_listener_template_id(
-            self.environment["listener_template_id"],
-        )
-
         # Add a "value" key to the options to store the current value of the
         # option.
         for option in listener_template["options"].values():
@@ -84,8 +64,20 @@ class UseListenerTemplateInterpreter(ClientInterpreter):
             # value in that key, it's good practice to make a deep copy of the
             # default_value key.
             option["value"] = deepcopy(option["default_value"])
-
-        self.environment["listener_template"] = listener_template
+        super().__init__(
+            prompt=ANSI(
+                format_rich_text_as_ansi(
+                    f"[bold white]Consortium ([bold blue]Listeners[bold white]: "
+                    f'[bold blue]"{listener_template["name"]}" '
+                    f"({listener_template["listener_template_id"]})[bold white]) > ",
+                ),
+            ),
+            commands=use_listener_interpreter_commands,
+            client_connection=client_connection,
+            additional_environment_variables={
+                "listener_template": listener_template,
+            },
+        )
 
     async def on_interpreter_loop(self) -> None:
         # TODO: Listen for events on a websocket to intelligently know when to update

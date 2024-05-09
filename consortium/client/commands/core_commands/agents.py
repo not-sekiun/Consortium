@@ -24,9 +24,6 @@ class AgentsCommand(BaseCommand):
         """,
     )
 
-    def configure_parser(self, parser) -> None:
-        pass
-
     async def run_command(
         self,
         command_context: CommandContext,
@@ -36,7 +33,7 @@ class AgentsCommand(BaseCommand):
             print_info("Switching to the agents interpreter...")
             return ReturnStatus(
                 type=ClientReturnStatusType.SWITCH_INTERPRETER,
-                data={"interpreter_type": InterpreterType.AGENTS},
+                data={"interpreter_type": InterpreterType.AGENTS_INTERPRETER},
             )
         except SystemExit:
             pass

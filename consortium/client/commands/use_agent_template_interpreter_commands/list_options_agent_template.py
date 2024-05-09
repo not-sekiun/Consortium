@@ -16,16 +16,15 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListOptionsAgentTemplateCommand(BaseCommand):
     name = "list_options_agent_template"
-    description = "List options for the currently selected agent template."
+    description = (
+        "List all options for the currently selected agent template being used."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-            view_options_agent_template
+            list_options_agent_template
         """,
     )
-
-    def configure_parser(self, parser: ArgumentParser) -> None:
-        pass
 
     async def run_command(
         self,
@@ -40,7 +39,6 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
             table.add_column("Description")
             table.add_column("Required")
             table.add_column("Current Value")
-
             for option_name, option in command_context.environment["agent_template"][
                 "options"
             ].items():
@@ -52,9 +50,7 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
                     str(option["value"]) if option["value"] is not None else "",
                 )
 
-            CONSOLE.print(
-                table,
-            )
+            CONSOLE.print(table)
         except SystemExit:
             pass
 

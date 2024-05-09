@@ -14,16 +14,13 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListAgentTemplatesCommand(BaseCommand):
     name = "list_agent_templates"
-    description = "List all agent templates."
+    description = "List all available agent templates for reference and selection."
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_agent_templates  # List all agent templates
+            list_agent_templates
         """,
     )
-
-    def configure_parser(self, parser) -> None:
-        pass
 
     async def run_command(
         self,
@@ -31,15 +28,12 @@ class ListAgentTemplatesCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-            all_agent_templates = await command_context.environment[
-                "client_connection"
-            ].get_all_agent_templates()
+            client_connection = command_context.environment["client_connection"]
+            all_agent_templates = await client_connection.get_all_agent_templates()
 
             table = Table(title="Agent Templates")
-
             table.add_column("Agent Template ID")
             table.add_column("Name")
-
             for agent_template in all_agent_templates:
                 table.add_row(
                     agent_template["agent_template_id"],

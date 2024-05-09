@@ -40,18 +40,17 @@ class InfoListenerTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
+            client_connection = command_context.environment["client_connection"]
 
-            listener_template = await command_context.environment[
-                "client_connection"
-            ].get_listener_template_by_listener_template_id(
-                parsed_args.listener_template_id[0],
+            listener_template = (
+                await client_connection.get_listener_template_by_listener_template_id(
+                    parsed_args.listener_template_id[0],
+                )
             )
 
-            table = Table(title="Listener Template Info")
-
+            table = Table(title="Listener Template Information")
             table.add_column("Information")
             table.add_column("Data")
-
             table.add_row(
                 "Listener Template ID",
                 listener_template["listener_template_id"],
@@ -85,7 +84,6 @@ class InfoListenerTemplateCommand(BaseCommand):
                 listener_type_table,
             )
             table.add_row("Authors", ", ".join(listener_template["authors"]))
-
             CONSOLE.print(table)
         except SystemExit:
             pass

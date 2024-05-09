@@ -226,6 +226,107 @@ class ClientConnection:
             json=listener_template_option_values,
         )
 
+    # Wrapper methods for the /api/listeners API endpoint.
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_listeners(self) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/listeners/all",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_listener_by_listener_id(
+        self,
+        listener_id: str,
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/listeners/{listener_id}",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def update_listener_by_listener_id(
+        self,
+        listener_id: str,
+        new_listener_attributes: dict[str, Any],
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="PATCH",
+            url=f"{self._api_base_url}/listeners/{listener_id}",
+            json=new_listener_attributes,
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def delete_listener_by_listener_id(
+        self,
+        listener_id: str,
+    ):
+        return await self._request(
+            method="DELETE",
+            url=f"{self._api_base_url}/listeners/{listener_id}",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def start_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/listeners/{listener_id}/start",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def stop_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/listeners/{listener_id}/stop",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def cancel_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/listeners/{listener_id}/cancel",
+        )
+
+    # Wrapper methods for the /api/agent-templates API endpoint.
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_agent_templates(self) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agent-templates/all",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_agent_template_by_agent_template_id(
+        self,
+        agent_template_id: str,
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def create_agent_generator_through_agent_template_by_agent_template_id(
+        self,
+        agent_template_id: str,
+        agent_template_option_values: dict[str, Any],
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
+            json=agent_template_option_values,
+        )
+
     # Wrapper methods for the /api/agent-generators API endpoint.
     @_check_if_logged_in
     @_check_for_rest_api_error_response
@@ -243,6 +344,30 @@ class ClientConnection:
     ) -> dict[str, Any]:
         return await self._request(
             method="GET",
+            url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def update_agent_generator_by_agent_generator_id(
+        self,
+        agent_generator_id: str,
+        new_agent_generator_attributes: dict[str, Any],
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="PATCH",
+            url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
+            json=new_agent_generator_attributes,
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def delete_agent_generator_by_agent_generator_id(
+        self,
+        agent_generator_id: str,
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="DELETE",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
         )
 
@@ -279,94 +404,21 @@ class ClientConnection:
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}/cancel",
         )
 
-    # Wrapper methods for the /api/agent-templates API endpoint.
+    # Wrapper methods for the /api/agents API endpoint.
     @_check_if_logged_in
     @_check_for_rest_api_error_response
-    async def get_all_agent_templates(self) -> list[dict[str, Any]]:
+    async def get_all_agents(self) -> list[dict[str, Any]]:
         return await self._request(
             method="GET",
-            url=f"{self._api_base_url}/agent-templates/all",
+            url=f"{self._api_base_url}/agents/all",
         )
 
     @_check_if_logged_in
     @_check_for_rest_api_error_response
-    async def get_agent_template_by_agent_template_id(
-        self,
-        agent_template_id: str,
-    ) -> dict[str, Any]:
+    async def get_agent_by_agent_id(self, agent_id: str) -> list[dict[str, Any]]:
         return await self._request(
             method="GET",
-            url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
-        )
-
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def create_agent_generator_through_agent_template_by_agent_template_id(
-        self,
-        agent_template_id: str,
-        agent_template_option_values: dict[str, Any],
-    ) -> dict[str, Any]:
-        return await self._request(
-            method="POST",
-            url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
-            json=agent_template_option_values,
-        )
-
-    # Wrapper methods for the /api/listeners API endpoint.
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def get_all_listeners(self) -> list[dict[str, Any]]:
-        return await self._request(
-            method="GET",
-            url=f"{self._api_base_url}/listeners/all",
-        )
-
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def get_listener_by_listener_id(
-        self,
-        listener_id: str,
-    ) -> dict[str, Any]:
-        return await self._request(
-            method="GET",
-            url=f"{self._api_base_url}/listeners/{listener_id}",
-        )
-
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def update_listener_by_listener_id(
-        self,
-        listener_id: str,
-        new_listener_attributes: dict[str, Any],
-    ) -> dict[str, Any]:
-        return await self._request(
-            method="PATCH",
-            url=f"{self._api_base_url}/listeners/{listener_id}",
-            json=new_listener_attributes,
-        )
-
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def start_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
-        return await self._request(
-            method="POST",
-            url=f"{self._api_base_url}/listeners/{listener_id}/start",
-        )
-
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def stop_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
-        return await self._request(
-            method="POST",
-            url=f"{self._api_base_url}/listeners/{listener_id}/stop",
-        )
-
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def cancel_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
-        return await self._request(
-            method="POST",
-            url=f"{self._api_base_url}/listeners/{listener_id}/cancel",
+            url=f"{self._api_base_url}/agents/{agent_id}",
         )
 
     # Wrapper methods for the /api/users API endpoint.

@@ -8,6 +8,7 @@ from consortium.client.framework.base_command import (
 )
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
+    InterpreterType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
@@ -15,25 +16,20 @@ from consortium.client.utils.printer_utils import print_error, print_success
 client_connections_service = client_singletons.client_connections_service
 
 
-class InteractClientConnectionCommand(BaseCommand):
-    name = "interact_client_connection"
-    description = (
-        "Choose a specific client connection to interact with that is associated with "
-        "a specific user account instance of a Consortium server."
-    )
+class InteractAgentCommand(BaseCommand):
+    name = "interact_agent"
+    description = "Choose a specific agent to interact with."
     epilog = format_argparse_epilog(
         """
         Examples:
-            interact_client_connection 123e4567-e89b-12d3-a456-42661417400
+            interact_agent 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "client_connection_id",
-            help=(
-                "The client connection ID of the client connection to interact with."
-            ),
+            "agent_id",
+            help=("The agent ID of the agent to interact with."),
             nargs=1,
             default=None,
         )
@@ -44,28 +40,24 @@ class InteractClientConnectionCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
+            client_connection = command_context.environment["client_connection"]
             try:
-                client_connection = client_connections_service.get_client_connection_by_client_connection_id(
-                    parsed_args.client_connection_id[0],
+                agent = client_connection.get_agent_by_agent_id(
+                    parsed_args.agent_id[0],
                 )
             except ValueError as exc:
                 print_error(str(exc))
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-            if client_connection == command_context.environment["client_connection"]:
-                print_error(
-                    f"Already interacting with client connection: "
-                    f"{client_connection}.",
-                )
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
             print_success(
-                f"Interacting with client connection: {client_connection}",
+                f"Interacting with agent: {agent["name"]} ({agent["agent_id"]}).",
             )
 
             return ReturnStatus(
-                type=ClientReturnStatusType.SWITCH_CLIENT_CONNECTION,
+                type=ClientReturnStatusType.SWITCH_INTERPRETER,
                 data={
-                    "client_connection": client_connection,
+                    "interpreter_type": InterpreterType.INTERACT_AGENT_INTERPRETER,
+                    "agent": agent,
                 },
             )
         except SystemExit:

@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
@@ -7,6 +5,9 @@ from consortium.client.client_connection import ClientConnection
 from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.generators_interpreter_commands.cancel_generator import (
     CancelGeneratorCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.delete_generator import (
+    DeleteGeneratorCommand,
 )
 from consortium.client.commands.generators_interpreter_commands.info_agent_template import (
     InfoAgentTemplateCommand,
@@ -19,6 +20,15 @@ from consortium.client.commands.generators_interpreter_commands.list_agent_templ
 )
 from consortium.client.commands.generators_interpreter_commands.list_generators import (
     ListGeneratorsCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.redescribe_generator import (
+    RedescribeGeneratorCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.rename_generator import (
+    RenameGeneratorCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.set_generator_parameter import (
+    SetGeneratorParameterCommand,
 )
 from consortium.client.commands.generators_interpreter_commands.start_generator import (
     StartGeneratorCommand,
@@ -45,6 +55,10 @@ GENERATORS_INTERPRETER_COMMANDS = [
     StopGeneratorCommand(),
     CancelGeneratorCommand(),
     InfoGeneratorCommand(),
+    DeleteGeneratorCommand(),
+    RenameGeneratorCommand(),
+    RedescribeGeneratorCommand(),
+    SetGeneratorParameterCommand(),
 ]
 
 
@@ -78,6 +92,14 @@ class GeneratorsInterpreter(ClientInterpreter):
             self.prompt_session.completer,
         )
 
+        nested_completer_dict["cancel_generator"] = {
+            agent_generator["agent_generator_id"]: None
+            for agent_generator in all_agent_generators
+        }
+        nested_completer_dict["delete_generator"] = {
+            agent_generator["agent_generator_id"]: None
+            for agent_generator in all_agent_generators
+        }
         nested_completer_dict["info_agent_template"] = {
             agent_template["agent_template_id"]: None
             for agent_template in all_agent_templates
@@ -86,9 +108,13 @@ class GeneratorsInterpreter(ClientInterpreter):
             agent_generator["agent_generator_id"]: None
             for agent_generator in all_agent_generators
         }
-        nested_completer_dict["use_agent_template"] = {
-            agent_template["agent_template_id"]: None
-            for agent_template in all_agent_templates
+        nested_completer_dict["redescribe_generator"] = {
+            agent_generator["agent_generator_id"]: None
+            for agent_generator in all_agent_generators
+        }
+        nested_completer_dict["rename_generator"] = {
+            agent_generator["agent_generator_id"]: None
+            for agent_generator in all_agent_generators
         }
         nested_completer_dict["start_generator"] = {
             agent_generator["agent_generator_id"]: None
@@ -98,9 +124,15 @@ class GeneratorsInterpreter(ClientInterpreter):
             agent_generator["agent_generator_id"]: None
             for agent_generator in all_agent_generators
         }
-        nested_completer_dict["cancel_generator"] = {
-            agent_generator["agent_generator_id"]: None
+        nested_completer_dict["set_generator_parameter"] = {
+            agent_generator["agent_generator_id"]: {
+                parameter_name: None for parameter_name in agent_generator["parameters"]
+            }
             for agent_generator in all_agent_generators
+        }
+        nested_completer_dict["use_agent_template"] = {
+            agent_template["agent_template_id"]: None
+            for agent_template in all_agent_templates
         }
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(

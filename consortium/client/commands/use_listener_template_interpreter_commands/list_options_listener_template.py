@@ -16,11 +16,13 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListOptionsListenerTemplateCommand(BaseCommand):
     name = "list_options_listener_template"
-    description = "List options for the currently selected listener template."
+    description = (
+        "List all options for the currently selected listener template being used."
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-            view_options_listener_template
+            list_options_listener_template
         """,
     )
 
@@ -33,6 +35,9 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
+            listener_template_options = command_context.environment[
+                "listener_template"
+            ]["options"]
 
             table = Table(title="Listener Template Options")
             table.add_column("Option Type")
@@ -40,10 +45,7 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
             table.add_column("Description")
             table.add_column("Required")
             table.add_column("Current Value")
-
-            for option_name, option in command_context.environment["listener_template"][
-                "options"
-            ].items():
+            for option_name, option in listener_template_options.items():
                 table.add_row(
                     option["option_type"],
                     option_name,

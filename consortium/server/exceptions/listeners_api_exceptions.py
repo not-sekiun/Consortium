@@ -21,12 +21,13 @@ from typing import Any
 from consortium.server.exceptions.base_server_exception import BaseServerException
 from consortium.server.exceptions.http_exceptions import (
     InternalServerError,
+    NotFoundError,
     UnprocessableEntityError,
 )
 from consortium.server.framework.c2_types import ListenerType
 
 
-class ListenerNotFoundError(BaseServerException):
+class ListenerNotFoundError(NotFoundError):
     def __init__(
         self,
         listener_id: str,

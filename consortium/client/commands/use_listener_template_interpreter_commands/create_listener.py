@@ -18,7 +18,7 @@ class CreateListenerCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            create_listener  # Create a listener with the currently set listener template options
+            create_listener
         """,
     )
 
@@ -28,17 +28,17 @@ class CreateListenerCommand(BaseCommand):
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-
-            listener_template_id = command_context.environment["listener_template_id"]
+            client_connection = command_context.environment["client_connection"]
+            listener_template_id = command_context.environment["listener_template"][
+                "listener_template_id"
+            ]
             listener_template_options = command_context.environment[
                 "listener_template"
             ]["options"]
-            client_connection = command_context.environment["client_connection"]
 
             listener_template_option_values = {}
             for option_name, option in listener_template_options.items():
                 listener_template_option_values[option_name] = option["value"]
-
             listener = await client_connection.create_listener_through_listener_template_by_listener_template_id(
                 listener_template_id=listener_template_id,
                 listener_template_option_values=listener_template_option_values,

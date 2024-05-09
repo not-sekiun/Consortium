@@ -16,18 +16,21 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class InfoAgentTemplateCommand(BaseCommand):
     name = "info_agent_template"
-    description = "Show all information for a specific agent template."
+    description = "Display detailed information for a specific agent template."
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_agent_template 123e4567-e89b-12d3-a456-42661417400  # Display information for the agent template with agent template ID 123e4567-e89b-12d3-a456-42661417400
+            info_agent_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_template_id",
-            help="Agent template ID of the agent template to display information for.",
+            help=(
+                "Agent template ID of the agent template to display detailed "
+                "information for."
+            ),
             nargs=1,
         )
 
@@ -37,18 +40,16 @@ class InfoAgentTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
-            agent_template = await command_context.environment[
-                "client_connection"
-            ].get_agent_template_by_agent_template_id(
-                parsed_args.agent_template_id[0],
+            client_connection = command_context.environment["client_connection"]
+            agent_template = (
+                await client_connection.get_agent_template_by_agent_template_id(
+                    parsed_args.agent_template_id[0],
+                )
             )
 
-            table = Table(title="Agent Template Info")
-
+            table = Table(title="Agent Template Information")
             table.add_column("Information")
             table.add_column("Data")
-
             table.add_row(
                 "Agent Template ID",
                 agent_template["agent_template_id"],
@@ -85,7 +86,6 @@ class InfoAgentTemplateCommand(BaseCommand):
                 agent_type_table,
             )
             table.add_row("Authors", "\n".join(agent_template["authors"]))
-
             CONSOLE.print(table)
         except SystemExit:
             pass

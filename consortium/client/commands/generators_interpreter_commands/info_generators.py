@@ -21,11 +21,11 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class InfoGeneratorCommand(BaseCommand):
     name = "info_generator"
-    description = "Show all information for a specific agent generator."
+    description = "Display detailed information for a specific agent generator."
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_generator 123e4567-e89b-12d3-a456-42661417400  # Display information for the agent generator with agent generator ID 123e4567-e89b-12d3-a456-42661417400
+            info_generator 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -33,7 +33,8 @@ class InfoGeneratorCommand(BaseCommand):
         parser.add_argument(
             "agent_generator_id",
             help=(
-                "Agent generator ID of the agent generator to display information for."
+                "Agent generator ID of the agent generator to display detailed "
+                "information for."
             ),
             nargs=1,
         )
@@ -44,9 +45,7 @@ class InfoGeneratorCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
             client_connection = command_context.environment["client_connection"]
-
             agent_generator = (
                 await client_connection.get_agent_generator_by_agent_generator_id(
                     agent_generator_id=parsed_args.agent_generator_id[0],
@@ -183,7 +182,6 @@ class InfoGeneratorCommand(BaseCommand):
                     else ""
                 ),
             )
-
             CONSOLE.print(table)
         except SystemExit:
             pass

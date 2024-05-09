@@ -19,7 +19,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class InfoListenerCommand(BaseCommand):
     name = "info_listener"
-    description = "Display detailed information about a specific listener instance."
+    description = "Display detailed information about a specific listener."
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -30,7 +30,7 @@ class InfoListenerCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "listener_id",
-            help="Listener ID of the listener to display information for.",
+            help="The listener ID of the listener to display detailed information for.",
             nargs=1,
         )
 
@@ -40,9 +40,7 @@ class InfoListenerCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-
             client_connection = command_context.environment["client_connection"]
-
             listener = await client_connection.get_listener_by_listener_id(
                 parsed_args.listener_id[0],
             )
