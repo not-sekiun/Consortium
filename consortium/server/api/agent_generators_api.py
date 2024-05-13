@@ -50,6 +50,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
+    tags=["Agent Generators API"],
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 agent_generators_service = server_singletons.agent_generators_service

@@ -107,34 +107,29 @@ class DisconnectedInterpreter(BaseInterpreter):
             print_error(f"Fatal error occurred: {exc}")
             CONSOLE.print(f"[bold red]{traceback.format_exc()}")
 
+    # TODO: Find a way for interpreters to "inherit" command completions or share
+    #  common command completions. Probably could just make it a parameter
     async def on_interpreter_loop(self) -> None:
         all_client_connections = client_connections_service.get_all_client_connections()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             nested_completer=self.prompt_session.completer,
         )
-
-        nested_completer_dict["disconnect"] = {
-            str(client_connection.client_connection_id): None
-            for client_connection in all_client_connections
-        }
+        for key, value in {
+            command: {
+                str(client_connection.client_connection_id): None
+                for client_connection in all_client_connections
+            }
+            for command in [
+                "disconnect",
+                "info_client_connection",
+                "interact_client_connection",
+                "rename_client_connection",
+                "redescribe_client_connection",
+            ]
+        }.items():
+            nested_completer_dict[key] = value
         nested_completer_dict["help"] = {command: None for command in self.commands}
-        nested_completer_dict["info_client_connection"] = {
-            str(client_connection.client_connection_id): None
-            for client_connection in all_client_connections
-        }
-        nested_completer_dict["interact_client_connection"] = {
-            str(client_connection.client_connection_id): None
-            for client_connection in all_client_connections
-        }
-        nested_completer_dict["rename_client_connection"] = {
-            str(client_connection.client_connection_id): None
-            for client_connection in all_client_connections
-        }
-        nested_completer_dict["redescribe_client_connection"] = {
-            str(client_connection.client_connection_id): None
-            for client_connection in all_client_connections
-        }
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,

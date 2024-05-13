@@ -10,8 +10,8 @@ class AgentsService:
             logger_name="Consortium Agents Service",
         )
 
-    def create_agent(self) -> Agent:
-        agent = Agent()
+    def create_agent(self, *args, **kwargs) -> Agent:
+        agent = Agent(*args, **kwargs)
         self._agents[str(agent.agent_id)] = agent
         self._agents_service_logger.debug(
             f"Created agent: {agent!r}",

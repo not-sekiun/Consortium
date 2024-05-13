@@ -421,6 +421,111 @@ class ClientConnection:
             url=f"{self._api_base_url}/agents/{agent_id}",
         )
 
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_agent_tasks_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_queued_agent_tasks_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks/queued",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_running_agent_tasks_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks/running",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_completed_agent_tasks_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks/completed",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def task_agent_by_agent_id(
+        self,
+        agent_id: str,
+        command: str,
+        arguments: dict[str, Any] | list[Any],
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            json={
+                "command": command,
+                "arguments": arguments,
+            },
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_agent_results_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/results",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_successful_agent_results_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/results/success",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_failed_agent_results_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/results/fail",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def get_all_errored_agent_results_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/results/error",
+        )
+
     # Wrapper methods for the /api/users API endpoint.
     @_check_if_logged_in
     @_check_for_rest_api_error_response

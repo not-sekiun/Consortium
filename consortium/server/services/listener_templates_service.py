@@ -132,7 +132,7 @@ class ListenerTemplatesService:
 
         if not listener_file.exists():
             raise InvalidListenerProjectFolderStructureError(
-                f"The listener.py file is missing for listener project folder: {listener_project_folder}",
+                f"The _listener.py file is missing for listener project folder: {listener_project_folder}",
             )
         if not listener_template_file.exists():
             raise InvalidListenerProjectFolderStructureError(

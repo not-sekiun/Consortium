@@ -1,0 +1,2 @@
+class InternalPeerErrorError(Exception):
+    pass

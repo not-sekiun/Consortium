@@ -53,6 +53,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
+    tags=["Listeners API"],
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 listeners_service = server_singletons.listeners_service

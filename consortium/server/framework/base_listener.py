@@ -130,9 +130,9 @@ class BaseListener(ABC):
     # To avoid exposing the internal workings of the AgentsService service to the
     # implementer we instead provide a create_agent() method that can be used to create
     # a new agent in the publicly exposed framework.
-    def create_agent(self) -> Agent:
-        agent = server_singletons.agents_service.create_agent()
-        self.agents[agent.agent_id] = agent
+    def create_agent(self, *args, **kwargs) -> Agent:
+        agent = server_singletons.agents_service.create_agent(*args, **kwargs)
+        self.agents[str(agent.agent_id)] = agent
         return agent
 
     async def _run_listener(self):
@@ -265,7 +265,7 @@ class BaseListener(ABC):
             "name": self.name,
             "description": self.description,
             "endpoint": self.endpoint,
-            "listener_template": self.listener_template.to_json(),
+            "listener_template_id": str(self.listener_template.listener_template_id),
             "listener_type": self.listener_type.to_json(),
             "parameters": self.parameters,
             "status": self.status.to_json(),

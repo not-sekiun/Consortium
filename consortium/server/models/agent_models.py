@@ -15,19 +15,30 @@ class AgentTaskState(StrEnum):
 class AgentTaskModel(BaseModel):
     task_id: UUID = Field(default_factory=uuid4)
     command: str
-    arguments: dict[str, Any] = Field(default_factory=dict)
+    arguments: dict[str, Any] | list[Any]
     started_at: datetime = Field(default_factory=datetime.now)
     state: AgentTaskState = AgentTaskState.QUEUED
 
 
+class AgentResultState(StrEnum):
+    SUCCESS = "SUCCESS"
+    FAIL = "FAIL"
+    ERROR = "ERROR"
+
+
 class AgentResultModel(BaseModel):
     result_id: UUID = Field(default_factory=uuid4)
-    result: dict[str, Any] = Field(default_factory=dict)
-    finished_at: datetime = Field(default_factory=datetime.now)
+    state: AgentResultState
+    result: dict[str, Any] | list[Any]
     task_id: str
+    finished_at: datetime = Field(default_factory=datetime.now)
 
 
 class AgentModel(BaseModel):
     agent_id: str
     name: str
     description: str
+    endpoint: str
+    agent_data: dict[str, Any]
+    datetime_first_checked_in: str
+    datetime_last_checked_in: str

@@ -7,6 +7,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.agents_api_exceptions import (
     AgentNotFoundError,
     AgentResultNotFoundError,
+    AgentTaskNotFoundError,
 )
 from consortium.server.exceptions.http_exceptions import (
     ForbiddenError,
@@ -32,6 +33,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
+    tags=["Agents API"],
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 agents_service = server_singletons.agents_service
@@ -81,6 +83,137 @@ def get_agent_by_agent_id(
         raise AgentNotFoundError(agent_id=agent_id)
 
 
+@router.get(
+    "/{agent_id}/tasks",
+    responses={
+        200: {"model": list[AgentTaskModel]},
+        404: {"model": AgentNotFoundError(agent_id="string").to_pydantic_model()},
+    },
+)
+def get_all_agent_tasks_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID),
+        ),
+    ],
+) -> list[AgentTaskModel]:
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    return agent.get_all_tasks()
+
+
+@router.get(
+    "/{agent_id}/tasks/queued",
+    responses={
+        200: {"model": list[AgentTaskModel]},
+        404: {"model": AgentNotFoundError(agent_id="string").to_pydantic_model()},
+    },
+)
+def get_all_queued_agent_tasks_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID),
+        ),
+    ],
+) -> list[AgentTaskModel]:
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    return agent.peek_all_queued_tasks()
+
+
+@router.get(
+    "/{agent_id}/tasks/running",
+    responses={
+        200: {"model": list[AgentTaskModel]},
+        404: {"model": AgentNotFoundError(agent_id="string").to_pydantic_model()},
+    },
+)
+def get_all_running_agent_tasks_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID),
+        ),
+    ],
+) -> list[AgentTaskModel]:
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    return agent.get_all_running_tasks()
+
+
+@router.get(
+    "/{agent_id}/tasks/completed",
+    responses={
+        200: {"model": list[AgentTaskModel]},
+        404: {"model": AgentNotFoundError(agent_id="string").to_pydantic_model()},
+    },
+)
+def get_all_completed_agent_tasks_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID),
+        ),
+    ],
+) -> list[AgentTaskModel]:
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    return agent.get_all_completed_tasks()
+
+
+@router.get(
+    "/{agent_id}/tasks/{task_id}",
+    responses={
+        200: {"model": AgentTaskModel},
+        404: {
+            "model": AgentNotFoundError(agent_id="string").to_pydantic_model()
+            | AgentTaskNotFoundError(
+                task_id="string",
+            ).to_pydantic_model(),
+        },
+    },
+)
+def get_agent_tasks_by_agent_id_and_task_id(
+    agent_id: str,
+    task_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID),
+        ),
+    ],
+) -> AgentTaskModel:
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    try:
+        task = agent.get_task_by_task_id(task_id)
+    except ValueError:
+        raise AgentTaskNotFoundError(task_id=task_id)
+
+    return task
+
+
 @router.post(
     "/{agent_id}/tasks",
     responses={
@@ -88,13 +221,13 @@ def get_agent_by_agent_id(
         404: {"model": AgentNotFoundError(agent_id="string").to_pydantic_model()},
     },
 )
-def task_agent(
+def task_agent_by_agent_id(
     agent_id: str,
     agent_task_request_body: AgentTaskRequestBodyModel,
     _: Annotated[
         None,
         Depends(
-            AuthorizeUserRequest(UserPermissions.TASK_AGENT),
+            AuthorizeUserRequest(UserPermissions.TASK_AGENT_BY_AGENT_ID),
         ),
     ],
 ) -> AgentTaskModel:
@@ -116,19 +249,21 @@ def task_agent(
         404: {"model": AgentNotFoundError(agent_id="string").to_pydantic_model()},
     },
 )
-def get_all_agent_results(
+def get_all_agent_results_by_agent_id(
     agent_id: str,
     _: Annotated[
         None,
         Depends(
-            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS),
+            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID),
         ),
     ],
 ) -> list[AgentResultModel]:
-    return [
-        AgentResultModel(**result)
-        for result in agents_service.get_agent_by_agent_id(agent_id).get_all_results()
-    ]
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    return agent.get_all_results()
 
 
 @router.get(
@@ -143,14 +278,14 @@ def get_all_agent_results(
         },
     },
 )
-def get_agent_result_by_task_id_or_result_id(
+def get_agent_result_by_agent_id_and_task_id_or_result_id(
     agent_id: str,
     task_id_or_result_id: str,
     _: Annotated[
         None,
         Depends(
             AuthorizeUserRequest(
-                UserPermissions.READ_AGENT_RESULT_BY_TASK_ID_OR_RESULT_ID,
+                UserPermissions.READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID,
             ),
         ),
     ],
@@ -161,11 +296,103 @@ def get_agent_result_by_task_id_or_result_id(
         raise AgentNotFoundError(agent_id=agent_id)
 
     try:
-        result = agent.get_result_by_task_id(task_id_or_result_id)
+        result = agent.get_result_by_task_id(
+            agent_id=agent_id,
+            task_id_or_result_id=task_id_or_result_id,
+        )
     except ValueError:
         try:
-            result = agent.get_result_by_result_id(task_id_or_result_id)
+            result = agent.get_result_by_result_id(
+                agent_id=agent_id,
+                task_id_or_result_id=task_id_or_result_id,
+            )
         except ValueError:
-            raise AgentResultNotFoundError(task_id_or_result_id)
+            raise AgentResultNotFoundError(
+                task_id_or_result_id=task_id_or_result_id,
+            )
 
     return result
+
+
+@router.get(
+    "/{agent_id}/results/success",
+    responses={
+        200: {"model": AgentResultModel},
+        404: {
+            "model": AgentNotFoundError(agent_id="string").to_pydantic_model(),
+        },
+    },
+)
+def get_all_successful_agent_results_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(
+                UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
+            ),
+        ),
+    ],
+) -> list[AgentResultModel]:
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    return agent.get_all_successful_results()
+
+
+@router.get(
+    "/{agent_id}/results/fail",
+    responses={
+        200: {"model": AgentResultModel},
+        404: {
+            "model": AgentNotFoundError(agent_id="string").to_pydantic_model(),
+        },
+    },
+)
+def get_all_failed_agent_results_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(
+                UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
+            ),
+        ),
+    ],
+) -> list[AgentResultModel]:
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    return agent.get_all_failed_results()
+
+
+@router.get(
+    "/{agent_id}/results/error",
+    responses={
+        200: {"model": AgentResultModel},
+        404: {
+            "model": AgentNotFoundError(agent_id="string").to_pydantic_model(),
+        },
+    },
+)
+def get_all_errored_agent_results_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(
+                UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
+            ),
+        ),
+    ],
+) -> list[AgentResultModel]:
+    try:
+        agent = agents_service.get_agent_by_agent_id(agent_id)
+    except ValueError:
+        raise AgentNotFoundError(agent_id=agent_id)
+
+    return agent.get_all_errored_results()

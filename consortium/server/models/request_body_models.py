@@ -31,4 +31,4 @@ class NewAgentGeneratorAttributesRequestBodyModel(BaseModel):
 
 class AgentTaskRequestBodyModel(BaseModel):
     command: str
-    arguments: dict[str, Any] = Field(default_factory=dict)
+    arguments: dict[str, Any] | list[Any]

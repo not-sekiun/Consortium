@@ -34,10 +34,12 @@ class ListAgentsCommand(BaseCommand):
             table = Table(title="Agents")
             table.add_column("Agent ID")
             table.add_column("Name")
+            table.add_column("Endpoint")
             for agent in all_agents:
                 table.add_row(
                     agent["agent_id"],
                     agent["name"],
+                    agent["endpoint"],
                 )
 
             CONSOLE.print(table)

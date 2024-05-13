@@ -10,10 +10,7 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
-from consortium.client.utils.formatter_utils import (
-    format_argparse_epilog,
-    format_listener_state_string_with_color,
-)
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
 
 
@@ -54,6 +51,20 @@ class InfoAgentCommand(BaseCommand):
             )
             table.add_row("Name", agent["name"])
             table.add_row("Description", agent["description"])
+            table.add_row("Endpoint", agent["endpoint"])
+            agent_data_table = Table(title="Agent Data")
+            agent_data_table.add_column("Information")
+            agent_data_table.add_column("Data")
+            for key, value in agent["agent_data"].items():
+                agent_data_table.add_row(key, value)
+            table.add_row("Agent Data", agent_data_table)
+            # # TODO: Figure out a standardized way to represent and print results
+            # table.add_row("Results", repr(agent["results"]))
+            table.add_row(
+                "Datetime First Checked In",
+                agent["datetime_first_checked_in"],
+            )
+            table.add_row("Datetime Last Checked In", agent["datetime_last_checked_in"])
 
             CONSOLE.print(table)
         except SystemExit:

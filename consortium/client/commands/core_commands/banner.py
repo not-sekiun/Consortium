@@ -64,8 +64,7 @@ class BannerCommand(BaseCommand):
                 if listener["status"]["state"] == "RUNNING"
             ]
             own_user = await client_connection.get_own_user_info()
-            # TODO: Add agent API endpoint
-            agents = []
+            agents = await client_connection.get_all_agents()
 
             number_of_running_listeners = str(len(listeners))
             number_of_running_agents = str(len(agents))

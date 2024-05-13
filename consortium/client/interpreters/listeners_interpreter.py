@@ -35,6 +35,9 @@ from consortium.client.commands.listeners_interpreter_commands.start_listener im
 from consortium.client.commands.listeners_interpreter_commands.stop_listener import (
     StopListenerCommand,
 )
+from consortium.client.commands.listeners_interpreter_commands.unset_listener_parameter import (
+    UnsetListenerParameterCommand,
+)
 from consortium.client.commands.listeners_interpreter_commands.use_listener_template import (
     UseListenerTemplateCommand,
 )
@@ -54,10 +57,11 @@ LISTENERS_INTERPRETER_COMMANDS = [
     StartListenerCommand(),
     StopListenerCommand(),
     CancelListenerCommand(),
+    DeleteListenerCommand(),
     RenameListenerCommand(),
     RedescribeListenerCommand(),
     SetListenerParameterCommand(),
-    DeleteListenerCommand(),
+    UnsetListenerParameterCommand(),
 ]
 
 
@@ -73,6 +77,8 @@ class ListenersInterpreter(ClientInterpreter):
             client_connection=client_connection,
         )
 
+    # TODO: Find a way for interpreters to "inherit" command completions or share
+    #  common command completions. Probably could just make it a parameter
     async def on_interpreter_loop(self) -> None:
         # TODO: Listen for events on a websocket to intelligently know when to update
         #  the completer rather than updating it on each interpreter loop which adds
@@ -85,42 +91,44 @@ class ListenersInterpreter(ClientInterpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-
-        nested_completer_dict["cancel_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        nested_completer_dict["delete_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        nested_completer_dict["info_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        nested_completer_dict["info_listener_template"] = {
-            listener_template["listener_template_id"]: None
-            for listener_template in all_listener_templates
-        }
-        nested_completer_dict["redescribe_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        nested_completer_dict["rename_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        nested_completer_dict["set_listener_parameter"] = {
-            listener["listener_id"]: {
-                parameter_name: None for parameter_name in listener["parameters"]
+        for key, value in {
+            command: {listener["listener_id"]: None for listener in all_listeners}
+            for command in [
+                "start_listener",
+                "stop_listener",
+                "cancel_listener",
+                "delete_listener",
+                "info_listener",
+                "rename_listener",
+                "redescribe_listener",
+            ]
+        }.items():
+            nested_completer_dict[key] = value
+        for key, value in {
+            command: {
+                listener_template["listener_template_id"]: None
+                for listener_template in all_listener_templates
             }
-            for listener in all_listeners
-        }
-        nested_completer_dict["start_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        nested_completer_dict["stop_listener"] = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        nested_completer_dict["use_listener_template"] = {
-            listener_template["listener_template_id"]: None
-            for listener_template in all_listener_templates
-        }
+            for command in [
+                "info_listener_template",
+                "use_listener_template",
+            ]
+        }.items():
+            nested_completer_dict[key] = value
+        for key, value in {
+            command: {
+                listener["listener_id"]: {
+                    parameter_name: None for parameter_name in listener["parameters"]
+                }
+                for listener in all_listeners
+            }
+            for command in [
+                "set_listener_parameter",
+                "unset_listener_parameter",
+            ]
+        }.items():
+            nested_completer_dict[key] = value
+        nested_completer_dict["help"] = {command: None for command in self.commands}
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,

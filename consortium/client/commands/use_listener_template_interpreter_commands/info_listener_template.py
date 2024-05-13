@@ -37,7 +37,6 @@ class InfoListenerTemplateCommand(BaseCommand):
                 "currently selected listener template is displayed."
             ),
             nargs="?",
-            default=None,
         )
 
     async def run_command(

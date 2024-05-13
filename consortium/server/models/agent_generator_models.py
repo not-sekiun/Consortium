@@ -2,7 +2,6 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from consortium.server.models.agent_template_models import AgentTemplateModel
 from consortium.server.models.c2_types_models import AgentTypeModel
 from consortium.server.models.common_models import ErrorModel
 from consortium.server.objects.agent_generator_objects import (
@@ -38,6 +37,6 @@ class AgentGeneratorModel(BaseModel):
     description: str
     status: _AgentGeneratorStatusModel
     agent_type: AgentTypeModel
-    agent_template: AgentTemplateModel
+    agent_template_id: str
     agent_generator_build_steps: list[AgentGeneratorBuildStepModel]
     parameters: dict[str, Any]

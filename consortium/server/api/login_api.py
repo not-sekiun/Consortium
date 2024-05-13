@@ -15,6 +15,7 @@ router = APIRouter(
     responses={
         401: {"model": UnauthorizedError().to_pydantic_model()},
     },
+    tags=["Login API"],
 )
 user_accounts_service = server_singletons.user_accounts_service
 users_service = server_singletons.users_service

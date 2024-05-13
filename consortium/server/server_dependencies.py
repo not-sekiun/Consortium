@@ -107,11 +107,11 @@ class AuthorizeUserRequest:
             UserPermissions.DELETE_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
             UserPermissions.READ_ALL_AGENTS,
             UserPermissions.READ_AGENT_BY_AGENT_ID,
-            UserPermissions.READ_ALL_AGENT_TASKS,
-            UserPermissions.READ_AGENT_TASK_BY_TASK_ID,
-            UserPermissions.READ_ALL_AGENT_RESULTS,
-            UserPermissions.READ_AGENT_RESULT_BY_TASK_ID_OR_RESULT_ID,
-            UserPermissions.TASK_AGENT,
+            UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID,
+            UserPermissions.READ_AGENT_TASK_BY_AGENT_ID_AND_TASK_ID,
+            UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
+            UserPermissions.READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID,
+            UserPermissions.TASK_AGENT_BY_AGENT_ID,
         },
         # Spectators can only read information and have even less read access than
         # operators
@@ -131,10 +131,10 @@ class AuthorizeUserRequest:
             UserPermissions.READ_AGENT_BY_AGENT_ID,
             UserPermissions.READ_ALL_AGENTS,
             UserPermissions.READ_AGENT_BY_AGENT_ID,
-            UserPermissions.READ_ALL_AGENT_TASKS,
-            UserPermissions.READ_AGENT_TASK_BY_TASK_ID,
-            UserPermissions.READ_ALL_AGENT_RESULTS,
-            UserPermissions.READ_AGENT_RESULT_BY_TASK_ID_OR_RESULT_ID,
+            UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID,
+            UserPermissions.READ_AGENT_TASK_BY_AGENT_ID_AND_TASK_ID,
+            UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
+            UserPermissions.READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID,
         },
     }
 

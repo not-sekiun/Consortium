@@ -30,7 +30,7 @@ def _cleanup_temporary_directory() -> None:
 
 class CreateTemporaryDirectory(BaseAgentGeneratorBuildStep):
     def __init__(self) -> None:
-        name = "Create temporary directory"
+        name = "Create Temporary Directory"
         description = (
             "Create a temporary directory to store the intermediate agent source code"
             "for freezing the agent into an executable if necessary."
@@ -58,7 +58,7 @@ class CreateTemporaryDirectory(BaseAgentGeneratorBuildStep):
 
 class BuildAgent(BaseAgentGeneratorBuildStep):
     def __init__(self) -> None:
-        name = "Build agent"
+        name = "Build Agent"
         description = "Build the agent source code into the desired format."
         ignore_failure = False
         super().__init__(
@@ -120,7 +120,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
 
 class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
     def __init__(self) -> None:
-        name = "Export agent artifact"
+        name = "Export Agent Artifact"
         description = (
             "Export the agent to the server's artifacts folder. Freeze the "
             "agent into an executable with pyinstaller if specified by the "
@@ -188,7 +188,7 @@ class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
 
 class CleanupTemporaryDirectory(BaseAgentGeneratorBuildStep):
     def __init__(self) -> None:
-        name = "Cleanup temporary directory"
+        name = "Cleanup Temporary Directory"
         description = (
             "Cleanup the temporary directory created to store the intermediate agent "
             "source code for freezing the agent into an executable if necessary."

@@ -62,13 +62,7 @@ class InfoListenerCommand(BaseCommand):
                 "Listener Type ID",
                 listener["listener_type"]["listener_type_id"],
             )
-            table.add_row(
-                "Listener Template",
-                listener["listener_template"]["name"]
-                + " ("
-                + listener["listener_template"]["listener_template_id"]
-                + ")",
-            )
+            table.add_row("Listener Template ID", listener["listener_template_id"])
             listener_type_table.add_row(
                 "Name",
                 listener["listener_type"]["name"],
@@ -96,7 +90,7 @@ class InfoListenerCommand(BaseCommand):
                 format_listener_state_string_with_color(listener["status"]["state"]),
             )
             table.add_row("Datetime Created", listener["datetime_created"])
-            table.add_row("Agent IDs", "\n".join(listener["agent_ids"]))
+            table.add_row("Connected Agents IDs", "\n".join(listener["agent_ids"]))
 
             CONSOLE.print(table)
         except SystemExit:

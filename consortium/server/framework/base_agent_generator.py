@@ -349,7 +349,7 @@ class BaseAgentGenerator(ABC):
             "description": self.description,
             "status": self.status.to_json(),
             "agent_type": self.agent_type.to_json(),
-            "agent_template": self.agent_template.to_json(),
+            "agent_template_id": str(self.agent_template.agent_template_id),
             "parameters": self.parameters,
             "datetime_created": self.datetime_created.isoformat(),
         }

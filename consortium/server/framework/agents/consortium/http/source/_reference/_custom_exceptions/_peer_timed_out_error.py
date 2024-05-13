@@ -1,0 +1,2 @@
+class PeerTimedOutError(Exception):
+    pass

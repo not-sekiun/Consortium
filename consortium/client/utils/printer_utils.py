@@ -17,3 +17,8 @@ def print_error(*args, highlight: bool | None = False, **kwargs):
 def print_info(*args, highlight: bool | None = False, **kwargs):
     CONSOLE.print(f"[bold blue][*][/bold blue]", end=" ")
     CONSOLE.print(*args, highlight=highlight, **kwargs)
+
+
+def print_warning(*args, highlight: bool | None = False, **kwargs):
+    CONSOLE.print(f"[bold yellow][!][/bold yellow]", end=" ")
+    CONSOLE.print(*args, highlight=highlight, **kwargs)

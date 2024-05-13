@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 from consortium.server.models.c2_types_models import ListenerTypeModel
 from consortium.server.models.common_models import ErrorModel
-from consortium.server.models.listener_template_models import ListenerTemplateModel
 from consortium.server.objects.listener_objects import ListenerState
 
 
@@ -18,7 +17,7 @@ class ListenerModel(BaseModel):
     description: str
     endpoint: str
     listener_type: ListenerTypeModel
-    listener_template: ListenerTemplateModel
+    listener_template_id: str
     parameters: dict[str, Any]
     listener_id: str
     status: _ListenerStatusModel

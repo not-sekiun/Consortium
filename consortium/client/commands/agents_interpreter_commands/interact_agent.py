@@ -42,7 +42,7 @@ class InteractAgentCommand(BaseCommand):
             parsed_args = self.parser.parse_args(command_context.arguments)
             client_connection = command_context.environment["client_connection"]
             try:
-                agent = client_connection.get_agent_by_agent_id(
+                agent = await client_connection.get_agent_by_agent_id(
                     parsed_args.agent_id[0],
                 )
             except ValueError as exc:

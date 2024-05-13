@@ -23,6 +23,22 @@ class AgentNotFoundError(NotFoundError):
         )
 
 
+class AgentTaskNotFoundError(NotFoundError):
+    def __init__(
+        self,
+        task_id: str,
+    ) -> None:
+        super().__init__(
+            status_code=404,
+            code="AGENT_TASK_NOT_FOUND_ERROR",
+            message=(
+                f'The requested agent task with the provided task ID "{task_id}" was '
+                f"not found."
+            ),
+            detail={"task_id": task_id},
+        )
+
+
 class AgentResultNotFoundError(NotFoundError):
     def __init__(
         self,

@@ -1,9 +1,11 @@
+import json
 import socket
 
 from aiohttp import web
 
 from consortium.server.framework.base_listener import BaseListener
 from consortium.server.framework.exceptions import ListenerStartError
+from consortium.server.models.agent_models import AgentResultModel
 
 
 class Listener(BaseListener):
@@ -31,22 +33,71 @@ class Listener(BaseListener):
 
         app = web.Application()
 
-        async def handle_registration(_):
-            agent = self.create_agent()
+        async def handle_agent_registration(request):
+            agent = self.create_agent(endpoint=request.remote)
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
-        async def handle_tasks(_):
-            return web.json_response({"tasks": []}, status=200)
+        async def handle_agent_get_tasks(request):
+            try:
+                agent_id = request.headers["Cookie"]
+                agent = self.agents[agent_id]
+            except KeyError:
+                return web.Response(status=401)
 
-        async def handle_results(_):
+            agent.register_checked_in()
+
+            queued_tasks = []
+            while True:
+                task = agent.get_next_queued_task()
+                if task is None:
+                    break
+                queued_tasks.append(task)
+            tasks = [
+                {
+                    "task_id": str(task.task_id),
+                    "command": task.command,
+                    "arguments": task.arguments,
+                }
+                for task in queued_tasks
+            ]
+            return web.json_response({"tasks": tasks}, status=200)
+
+        async def handle_agent_post_results(request):
+            # JSON request body from the agent takes the form
+            # {"agent_id": AGENT_ID, "task_id": TASK_ID "result": RESULT}.
+            try:
+                json_request_body = await request.json()
+            except json.JSONDecodeError:
+                return web.Response(status=401)
+
+            try:
+                agent_id = json_request_body["agent_id"]
+                task_id = json_request_body["task_id"]
+                result = json_request_body["result"]
+                agent = self.agents[agent_id]
+            except KeyError:
+                return web.Response(status=401)
+
+            # See if the task ID is valid.
+            try:
+                _ = agent.get_running_task_by_task_id(task_id)
+            except ValueError:
+                return web.Response(status=401)
+
+            # Only if the task ID is valid do we deem it a valid agent that has checked
+            # in.
+            agent.register_checked_in()
+
+            result = AgentResultModel(task_id=task_id, data=result)
+            agent.add_result(result)
             return web.Response(status=200)
 
         for url_path in registration_url_paths:
-            app.add_routes([web.get(url_path, handle_registration)])
+            app.add_routes([web.get(url_path, handle_agent_registration)])
         for url_path in tasks_url_paths:
-            app.add_routes([web.get(url_path, handle_tasks)])
+            app.add_routes([web.get(url_path, handle_agent_get_tasks)])
         for url_path in results_url_paths:
-            app.add_routes([web.post(url_path, handle_results)])
+            app.add_routes([web.post(url_path, handle_agent_post_results)])
 
         self.state.runner = web.AppRunner(app)
         await self.state.runner.setup()
