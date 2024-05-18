@@ -6,8 +6,11 @@ from consortium.server.framework.base_listener import BaseListener
 class ListenersService:
     def __init__(self):
         self._listeners = {}
-        self._listeners_service_logger = logger.bind(
-            logger_name="Consortium Listeners Service",
+        self.listeners_service_logger = logger.bind(
+            logger_name=str(self),
+        )
+        self.listeners_service_logger.debug(
+            f"Started {self}",
         )
 
     # Unlike user_accounts_service.py, we don't create the listener in this method
@@ -20,8 +23,8 @@ class ListenersService:
             )
 
         self._listeners[str(listener.listener_id)] = listener
-        self._listeners_service_logger.debug(f"Added listener: {listener!r}")
-        self._listeners_service_logger.info(f"Added listener: {listener}")
+        self.listeners_service_logger.debug(f"Added listener: {listener!r}")
+        self.listeners_service_logger.info(f"Added listener: {listener}")
 
     def get_listener_by_listener_id(self, listener_id: str) -> BaseListener:
         try:
@@ -31,12 +34,12 @@ class ListenersService:
                 f"No listener exists with the provided listener ID: {listener_id}",
             )
 
-        self._listeners_service_logger.debug(f"Retrieved listener: {listener!r}")
+        self.listeners_service_logger.debug(f"Retrieved listener: {listener!r}")
         return listener
 
     def get_all_listeners(self) -> list[BaseListener]:
         all_listeners = list(self._listeners.values())
-        self._listeners_service_logger.debug(
+        self.listeners_service_logger.debug(
             f"Retrieved all listeners ({len(all_listeners)} retrieved)",
         )
         return all_listeners
@@ -47,5 +50,11 @@ class ListenersService:
         except KeyError:
             raise ValueError(f"Listener does not exist: {listener}")
 
-        self._listeners_service_logger.debug(f"Removed listener: {listener!r}")
-        self._listeners_service_logger.info(f"Removed listener: {listener}")
+        self.listeners_service_logger.info(f"Removed listener: {listener}")
+        self.listeners_service_logger.debug(f"Removed listener: {listener!r}")
+
+    def __str__(self) -> str:
+        return "Consortium Listeners Service"
+
+    def __repr__(self) -> str:
+        return "ListenersService()"

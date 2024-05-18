@@ -32,6 +32,16 @@ CONSORTIUM_LISTENERS_DIRECTORY_PATH = (
 CONSORTIUM_AGENTS_DIRECTORY_PATH = (
     CONSORTIUM_HOME_DIRECTORY_PATH / "consortium" / "server" / "framework" / "agents"
 )
+CONSORTIUM_PLUGINS_DIRECTORY_PATH = (
+    CONSORTIUM_HOME_DIRECTORY_PATH / "consortium" / "server" / "framework" / "plugins"
+)
+CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH = (
+    CONSORTIUM_HOME_DIRECTORY_PATH
+    / "consortium"
+    / "server"
+    / "framework"
+    / "event_hooks"
+)
 CONSORTIUM_ARTIFACTS_DIRECTORY_PATH = (
     CONSORTIUM_HOME_DIRECTORY_PATH / "data" / "server" / "artifacts"
 )

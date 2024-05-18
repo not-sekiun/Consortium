@@ -6,8 +6,11 @@ from consortium.server.framework.base_agent_generator import BaseAgentGenerator
 class AgentGeneratorsService:
     def __init__(self):
         self._agent_generators = {}
-        self._agent_generators_service_logger = logger.bind(
-            logger_name="Consortium Listeners Service",
+        self.agent_generators_service_logger = logger.bind(
+            logger_name=str(self),
+        )
+        self.agent_generators_service_logger.debug(
+            f"Started {self}",
         )
 
     # Unlike user_accounts_service.py, we don't create the agent generator in this
@@ -22,10 +25,10 @@ class AgentGeneratorsService:
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
-        self._agent_generators_service_logger.debug(
+        self.agent_generators_service_logger.debug(
             f"Added agent generator: {agent_generator!r}",
         )
-        self._agent_generators_service_logger.info(
+        self.agent_generators_service_logger.info(
             f"Added agent generator: {agent_generator}",
         )
 
@@ -40,17 +43,17 @@ class AgentGeneratorsService:
                 f"No agent generator exists with the provided agent generator ID: {agent_generator_id}",
             )
 
-        self._agent_generators_service_logger.debug(
+        self.agent_generators_service_logger.debug(
             f"Retrieved agent generator: {agent_generator!r}",
         )
-        self._agent_generators_service_logger.info(
+        self.agent_generators_service_logger.info(
             f"Retrieved agent generator: {agent_generator}",
         )
         return agent_generator
 
     def get_all_agent_generators(self) -> list[BaseAgentGenerator]:
         all_agent_generators = list(self._agent_generators.values())
-        self._agent_generators_service_logger.debug(
+        self.agent_generators_service_logger.debug(
             f"Retrieved all agent_generators ({len(all_agent_generators)} retrieved)",
         )
         return all_agent_generators
@@ -63,9 +66,15 @@ class AgentGeneratorsService:
                 f"Agent generator does not exist: {agent_generator}",
             )
 
-        self._agent_generators_service_logger.debug(
+        self.agent_generators_service_logger.debug(
             f"Removed agent generator: {agent_generator!r}",
         )
-        self._agent_generators_service_logger.info(
+        self.agent_generators_service_logger.info(
             f"Removed agent generator: {agent_generator}",
         )
+
+    def __str__(self) -> str:
+        return "Agent Generators Service"
+
+    def __repr__(self) -> str:
+        return "AgentGeneratorsService()"

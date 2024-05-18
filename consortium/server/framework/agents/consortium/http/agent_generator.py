@@ -10,7 +10,7 @@ from consortium.server.framework.base_agent_generator import (
     BaseAgentGenerator,
     BaseAgentGeneratorBuildStep,
 )
-from consortium.server.framework.exceptions import (
+from consortium.server.framework.exceptions.agent_framework_exceptions import (
     AgentGeneratorBuildError,
     AgentGeneratorStartError,
 )

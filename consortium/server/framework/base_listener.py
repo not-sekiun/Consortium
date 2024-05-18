@@ -4,7 +4,7 @@ import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Optional
 
 from loguru import logger
 
@@ -14,7 +14,7 @@ from consortium.server.exceptions.listeners_api_exceptions import (
     ListenerNotRunningError,
 )
 from consortium.server.framework.c2_types import ListenerType
-from consortium.server.framework.exceptions import (
+from consortium.server.framework.exceptions.listener_framework_exceptions import (
     ListenerCancellationError,
     ListenerRuntimeError,
     ListenerStartError,
@@ -28,7 +28,8 @@ class BaseListener(ABC):
     def __init__(
         self,
         listener_type: ListenerType,
-        listener_template: "BaseListenerTemplate",  # Prevent circular dependency.
+        # Using a forward reference as a type hint to prevent circular dependency.
+        listener_template: Optional["BaseListenerTemplate"] = None,
         name: str = "",
         description: str = "",
         endpoint: str = "",
@@ -43,11 +44,11 @@ class BaseListener(ABC):
         self.datetime_created = datetime.now()
         self.listener_template = listener_template
 
-        # Original status.state is set to STOPPED.
+        # Original status.state is set to INITIALIZED.
         self.status = ListenerStatus()
-        # self.state is used to store any state information that the listener may need
+        # self.environment is used to store any information that the listener may need
         # to store and share amongst its user defined methods.
-        self.state = SimpleNamespace()
+        self.environment = SimpleNamespace()
         # self.stop_listener_event used to signal to the listener runtime loop to exit.
         # The implementation of the listener runtime loop should check this event
         # periodically and exit if it is set.
@@ -128,12 +129,19 @@ class BaseListener(ABC):
         """
 
     # To avoid exposing the internal workings of the AgentsService service to the
-    # implementer we instead provide a create_agent() method that can be used to create
-    # a new agent in the publicly exposed framework.
-    def create_agent(self, *args, **kwargs) -> Agent:
+    # implementer we instead provide a register_agent() and deregister_agent() method
+    # that can be used to handle registering and deregistering agents in the publicly
+    # exposed framework.
+    def register_agent(self, *args, **kwargs) -> Agent:
         agent = server_singletons.agents_service.create_agent(*args, **kwargs)
         self.agents[str(agent.agent_id)] = agent
         return agent
+
+    def deregister_agent(self, agent: Agent):
+        server_singletons.agents_service.remove_agent_by_agent_id(
+            agent_id=str(agent.agent_id),
+        )
+        del self.agents[str(agent.agent_id)]
 
     async def _run_listener(self):
         try:

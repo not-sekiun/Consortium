@@ -23,13 +23,13 @@ from consortium.server.exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
-from consortium.server.framework.exceptions import (
+from consortium.server.framework.exceptions.agent_framework_exceptions import (
     AgentGeneratorCancellationError as FrameworkAgentGeneratorCancellationError,
 )
-from consortium.server.framework.exceptions import (
+from consortium.server.framework.exceptions.agent_framework_exceptions import (
     AgentGeneratorStartError as FrameworkAgentGeneratorStartError,
 )
-from consortium.server.framework.exceptions import (
+from consortium.server.framework.exceptions.agent_framework_exceptions import (
     AgentGeneratorStopError as FrameworkAgentGeneratorStopError,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel

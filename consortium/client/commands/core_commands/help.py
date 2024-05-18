@@ -37,7 +37,7 @@ class HelpCommand(BaseCommand):
 
     @staticmethod
     def _print_summarized_help_menu(commands: dict[str, BaseCommand]) -> None:
-        table = Table(title="Commands")
+        table = Table(title="Help Menu")
         table.add_column("Command")
         table.add_column("Description")
 

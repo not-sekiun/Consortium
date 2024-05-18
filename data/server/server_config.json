@@ -3,5 +3,6 @@
     "local_port": 9999,
     "remote_host_whitelist": [],
     "remote_host_blacklist": [],
-    "server_banner": "Apache"
+    "server_banner": "Apache",
+    "log_level": "INFO"
 }

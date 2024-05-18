@@ -29,7 +29,8 @@ class AgentResultState(StrEnum):
 class AgentResultModel(BaseModel):
     result_id: UUID = Field(default_factory=uuid4)
     state: AgentResultState
-    result: dict[str, Any] | list[Any]
+    message: str
+    data: dict[str, Any] | list[Any] | None = None
     task_id: str
     finished_at: datetime = Field(default_factory=datetime.now)
 

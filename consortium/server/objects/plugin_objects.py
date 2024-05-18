@@ -1,11 +1,11 @@
 from enum import StrEnum
 
-from consortium.server.framework.exceptions.listener_framework_exceptions import (
-    ListenerRuntimeError,
+from consortium.server.framework.exceptions.plugins_framework_exceptions import (
+    PluginRuntimeError,
 )
 
 
-class ListenerState(StrEnum):
+class PluginState(StrEnum):
     INITIALIZED = "INITIALIZED"
     STARTED = "STARTED"
     RUNNING = "RUNNING"
@@ -15,39 +15,39 @@ class ListenerState(StrEnum):
     FATAL = "FATAL"
 
 
-class ListenerStatus:
+class PluginStatus:
     def __init__(self):
-        self.state = ListenerState.INITIALIZED
+        self.state = PluginState.INITIALIZED
         self.exception = None
 
     def transition_to_initialized(self) -> None:
-        self.state = ListenerState.INITIALIZED
+        self.state = PluginState.INITIALIZED
         self.exception = None
 
     def transition_to_started(self) -> None:
-        self.state = ListenerState.STARTED
+        self.state = PluginState.STARTED
         self.exception = None
 
     def transition_to_running(self) -> None:
-        self.state = ListenerState.RUNNING
+        self.state = PluginState.RUNNING
         self.exception = None
 
     def transition_to_stopped(self) -> None:
-        self.state = ListenerState.STOPPED
+        self.state = PluginState.STOPPED
         self.exception = None
 
     def transition_to_cancelled(self) -> None:
-        self.state = ListenerState.CANCELLED
+        self.state = PluginState.CANCELLED
         self.exception = None
 
-    def transition_to_errored(self, exception: ListenerRuntimeError) -> None:
-        self.state = ListenerState.ERRORED
+    def transition_to_errored(self, exception: PluginRuntimeError) -> None:
+        self.state = PluginState.ERRORED
         self.exception = exception
 
     def transition_to_fatal(self, exception: Exception) -> None:
-        self.state = ListenerState.FATAL
-        self.exception = ListenerRuntimeError(
-            message="A fatal error occurred while the listener was running.",
+        self.state = PluginState.FATAL
+        self.exception = PluginRuntimeError(
+            message="A fatal error occurred while the plugin was running.",
             detail={
                 "type": type(exception).__name__,
                 "message": str(exception),

@@ -20,6 +20,7 @@ from consortium.server.server_config import (
 
 rest_api_logger = logger.bind(logger_name="Consortium REST API")
 users_service = server_singletons.users_service
+application_service = server_singletons.application_service
 
 
 # this middleware checks if the server is in the process of shutting down and if so
@@ -44,10 +45,12 @@ async def check_if_server_is_shutting_down(
 # /docs endpoint for the remote host 127.0.0.1 which is used for the server's Swagger UI
 # and does not require authentication
 async def check_if_request_is_authenticated(request: Request, call_next) -> Response:
-    # provide access to the endpoint /api/login for hosts that have yet to authenticate
+    # TODO: Move this to a service that can be accessed by plugins to hook into the
+    #  RBAC system
+    # Provide access to the endpoint /api/login for hosts that have yet to authenticate.
     if request.url.path == "/api/login" and request.method == "POST":
         return await call_next(request)
-    # provide access to the automatic documentation endpoints for localhost only
+    # Provide access to the automatic documentation endpoints for localhost only.
     elif (
         request.url.path in ("/openapi.json", "/docs", "/redoc")
         and request.client.host == "127.0.0.1"

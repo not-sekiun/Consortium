@@ -2,10 +2,10 @@ import socket
 import traceback
 
 import uvicorn
-from fastapi import FastAPI
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
+import consortium.server.server_singletons as server_singletons
 from consortium.server.api.agent_generators_api import (
     router as agent_generators_api_router,
 )
@@ -25,6 +25,7 @@ from consortium.server.api.users_api import router as users_api_router
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import SERVER_RELEASE
+from consortium.server.server_event_handlers import register_server_event_handlers
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
@@ -35,6 +36,8 @@ from consortium.server.server_middleware import (
     log_rest_api_requests_and_responses,
     spoof_response_server_header,
 )
+
+application_service = server_singletons.application_service
 
 
 class Server:
@@ -50,7 +53,8 @@ class Server:
 
         # configure fastapi application, disabling the display of models in the Swagger
         # UI
-        self._app = FastAPI(swagger_ui_parameters={"defaultModelsExpandDepth": -1})
+        # self._app = FastAPI(swagger_ui_parameters={"defaultModelsExpandDepth": -1})
+        self._app = application_service.get_application()
 
         # configure custom api endpoints
         self._app.include_router(login_api_router)
@@ -93,6 +97,12 @@ class Server:
         # may be raised by the server.
         register_server_exception_handlers(self._app)
 
+        # Register events. Startup events include those that load listener profiles,
+        # agent profiles, plugins, and event hooks. The START_SERVER event is also
+        # triggered by the event hooks service. The STOP_SERVER event is triggered by
+        # the event hooks service when the server is shutting down.
+        register_server_event_handlers(self._app)
+
         # Manually modify the openapi schema to remove the default 422 response from the
         # /api/login endpoint (https://github.com/tiangolo/fastapi/issues/660)
         del self._app.openapi()["paths"]["/api/login"]["post"]["responses"]["422"]
@@ -120,16 +130,17 @@ class Server:
         self.status = ServerStatus.SHUTTING_DOWN
 
     def start_server(self) -> None:
-        # manually start the server with the uvicorn backend and disable the uvicorn
+        # Manually start the server with the uvicorn backend and disable the uvicorn
         # logger
         self._server_logger.info(
-            f'Starting server (v{SERVER_RELEASE.version} "{SERVER_RELEASE.codename}") at {self.server_config.local_host}:{self.server_config.local_port}...',
+            f'Starting server (v{SERVER_RELEASE.version} "{SERVER_RELEASE.codename}") '
+            f"at {self.server_config.local_host}:{self.server_config.local_port}...",
         )
         self.status = ServerStatus.RUNNING
 
-        # uvicorn will ordinarily warn of an already bound socket through its logger,
+        # Uvicorn will ordinarily warn of an already bound socket through its logger,
         # but we disabled it, so we need to do our own socket check to see if the
-        # address is bindable
+        # address is bindable.
         try:
             test_sock = socket.socket()
             test_sock.bind(
@@ -152,21 +163,22 @@ class Server:
                     "version": 1,
                     "disable_existing_loggers": True,
                 },
-                # disables uvicorn's server header to prevent C2 server fingerprinting
+                # Disables Uvicorn's server header to prevent C2 server fingerprinting
                 server_header=False,
             )
-        # this except block triggered before the server runs. Any other exceptions that
+        # This except block triggered before the server runs. Any other exceptions that
         # skip past the middleware are handled internally by uvicorn and will NOT
         # trigger this except block. The traceback can be disabled by setting the
         # log_level parameter to "critical" in the uvicorn.run() call above
         except Exception:
             logger.opt(ansi=True).critical(
-                "<red><bold>Unrecoverable unhandled exception occurred while server was starting:\n{}</></>",
+                "<red><bold>Unrecoverable unhandled exception occurred while server "
+                "was starting:\n{}</></>",
                 traceback.format_exc(),
             )
             return
 
-        # uvicorn blocks the main thread until a keyboard interrupt is sent to it
+        # Uvicorn blocks the main thread until a keyboard interrupt is sent to it
         # signifying a shutdown. Execution is continued here where we can perform any
         # graceful shutdowns such as notifying clients and agents of the shutdown as
         # well as killing any running listeners

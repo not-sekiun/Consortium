@@ -4,7 +4,9 @@ import socket
 from aiohttp import web
 
 from consortium.server.framework.base_listener import BaseListener
-from consortium.server.framework.exceptions import ListenerStartError
+from consortium.server.framework.exceptions.listener_framework_exceptions import (
+    ListenerStartError,
+)
 from consortium.server.models.agent_models import AgentResultModel
 
 
@@ -34,7 +36,7 @@ class Listener(BaseListener):
         app = web.Application()
 
         async def handle_agent_registration(request):
-            agent = self.create_agent(endpoint=request.remote)
+            agent = self.register_agent(endpoint=request.remote)
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
         async def handle_agent_get_tasks(request):
@@ -64,7 +66,7 @@ class Listener(BaseListener):
 
         async def handle_agent_post_results(request):
             # JSON request body from the agent takes the form
-            # {"agent_id": AGENT_ID, "task_id": TASK_ID "result": RESULT}.
+            # {"agent_id": agent_id, "task_id": task_id "result": result}.
             try:
                 json_request_body = await request.json()
             except json.JSONDecodeError:
@@ -99,12 +101,12 @@ class Listener(BaseListener):
         for url_path in results_url_paths:
             app.add_routes([web.post(url_path, handle_agent_post_results)])
 
-        self.state.runner = web.AppRunner(app)
-        await self.state.runner.setup()
-        site = web.TCPSite(self.state.runner, local_host, local_port)
+        self.environment.runner = web.AppRunner(app)
+        await self.environment.runner.setup()
+        site = web.TCPSite(self.environment.runner, local_host, local_port)
         await site.start()
         await self.stop_listener_event.wait()
-        await self.state.runner.cleanup()
+        await self.environment.runner.cleanup()
 
     async def on_listener_stopped(self) -> None:
         pass
@@ -113,7 +115,7 @@ class Listener(BaseListener):
         # On cancellation, we need to stop the web server, but we may cancel the
         # listener task before the web server is fully set up.
         try:
-            await self.state.runner.cleanup()
+            await self.environment.runner.cleanup()
         except AttributeError:
             pass
 

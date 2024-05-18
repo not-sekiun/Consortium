@@ -6,17 +6,17 @@ from consortium.server.objects.agent_objects import Agent
 class AgentsService:
     def __init__(self):
         self._agents = {}
-        self._agents_service_logger = logger.bind(
-            logger_name="Consortium Agents Service",
+        self.agents_service_logger = logger.bind(
+            logger_name=str(self),
         )
 
     def create_agent(self, *args, **kwargs) -> Agent:
         agent = Agent(*args, **kwargs)
         self._agents[str(agent.agent_id)] = agent
-        self._agents_service_logger.debug(
+        self.agents_service_logger.debug(
             f"Created agent: {agent!r}",
         )
-        self._agents_service_logger.info(
+        self.agents_service_logger.info(
             f"Created agent: {agent}",
         )
         return agent
@@ -28,10 +28,10 @@ class AgentsService:
             raise ValueError(f"No agent exists with the provided agent ID: {agent_id}")
 
         del self._agents[agent_id]
-        self._agents_service_logger.debug(
+        self.agents_service_logger.debug(
             f"Removed agent: {agent!r}",
         )
-        self._agents_service_logger.info(
+        self.agents_service_logger.info(
             f"Removed agent: {agent}",
         )
 
@@ -43,17 +43,23 @@ class AgentsService:
                 f"No agent exists with the provided agent ID: {agent_id}",
             )
 
-        self._agents_service_logger.debug(
+        self.agents_service_logger.debug(
             f"Retrieved agent: {agent!r}",
         )
-        self._agents_service_logger.info(
+        self.agents_service_logger.info(
             f"Retrieved agent: {agent}",
         )
         return agent
 
     def get_all_agents(self) -> list[Agent]:
         all_agents = list(self._agents.values())
-        self._agents_service_logger.debug(
+        self.agents_service_logger.debug(
             f"Retrieved all agents ({len(all_agents)} retrieved)",
         )
         return all_agents
+
+    def __str__(self) -> str:
+        return "Consortium Agents Service"
+
+    def __repr__(self) -> str:
+        return "AgentsService()"

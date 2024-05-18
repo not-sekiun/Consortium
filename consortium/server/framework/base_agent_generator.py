@@ -15,7 +15,7 @@ from consortium.server.exceptions.agent_generators_api_exceptions import (
     AgentGeneratorNotRunningError,
 )
 from consortium.server.framework.c2_types import AgentType
-from consortium.server.framework.exceptions import (
+from consortium.server.framework.exceptions.agent_framework_exceptions import (
     AgentGeneratorBuildError,
     AgentGeneratorCancellationError,
     AgentGeneratorStartError,
