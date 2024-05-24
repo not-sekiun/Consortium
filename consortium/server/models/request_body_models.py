@@ -1,20 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, Field
-
-from consortium.server.objects.user_account_objects import UserRole
-
-
-class NewUserAccountRequestBodyModel(BaseModel):
-    username: str
-    password: str
-    role: UserRole
-
-
-class NewUserAccountAttributesRequestBodyModel(BaseModel):
-    username: str | None = None
-    password: str | None = None
-    role: UserRole | None = None
+from pydantic import BaseModel
 
 
 class NewListenerAttributesRequestBodyModel(BaseModel):

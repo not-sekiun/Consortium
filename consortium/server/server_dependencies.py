@@ -81,7 +81,6 @@ class AuthorizeUserRequest:
             UserPermissions.READ_OWN_USER_ACCOUNT,
             UserPermissions.UPDATE_OWN_USER_ACCOUNT_USERNAME,
             UserPermissions.UPDATE_OWN_USER_ACCOUNT_PASSWORD,
-            UserPermissions.DELETE_OWN_USER_ACCOUNT,
             UserPermissions.READ_OWN_USER,
             UserPermissions.READ_SERVER_RELEASE,
             UserPermissions.READ_SERVER_CONFIG,

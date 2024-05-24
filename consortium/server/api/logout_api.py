@@ -30,5 +30,5 @@ users_service = server_singletons.users_service
 async def logout_from_server(
     user: Annotated[User, Depends(get_current_user)],
 ) -> SuccessResponseModel:
-    users_service.remove_user(user)
+    users_service.logout_user_by_user_id(user_id=user.user_id)
     return SuccessResponseModel()

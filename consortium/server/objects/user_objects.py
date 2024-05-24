@@ -3,6 +3,7 @@ from datetime import datetime
 
 import jwt
 
+from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.server_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_EXPIRATION_DURATION,
@@ -10,7 +11,7 @@ from consortium.server.server_config import (
 )
 
 
-class _JSONWebToken:
+class JSONWebToken:
     def __init__(self):
         self.subject = uuid.uuid4()
         self.issued_at = datetime.now()
@@ -33,38 +34,32 @@ class _JSONWebToken:
 
 
 class User:
-    def __init__(
-        self,
-        username: str,
-        password: str,
-        role: str,
-        remote_host: str,
-    ):
-        self.username = username
-        self.password = password
-        self.role = role
-        self.json_web_token = _JSONWebToken()
-        self.remote_host = remote_host
-        self.datetime_connected = datetime.now()
+    def __init__(self, user_account: UserAccountModel):
+        self._user_account = user_account
+
         self.user_id = uuid.uuid4()
+        self.user_account_id = user_account.user_account_id
+        self.username = user_account.username
+        self.role = user_account.role
+        self.display_name = user_account.username
+        self.datetime_connected = datetime.now()
+        self.datetime_last_active = self.datetime_connected
+
+        self.json_web_token = JSONWebToken()
 
     def to_json(self):
         return {
-            "username": self.username,
-            "password": self.password,
-            "role": self.role,
-            "json_web_token": self.json_web_token.to_json(),
-            "remote_host": self.remote_host,
-            "datetime_connected": self.datetime_connected,
+            "user_account_id": str(self.user_account_id),
             "user_id": str(self.user_id),
+            "username": self.username,
+            "role": self.role,
+            "display_name": self.display_name,
+            "datetime_connected": self.datetime_connected,
+            "datetime_last_active": self.datetime_last_active,
         }
 
     def __str__(self) -> str:
-        return f'"{self.username}" ({self.user_id})'
+        return f"'{self.username}' ({self.user_id})"
 
     def __repr__(self) -> str:
-        return (
-            f"User(username={self.username!r}, password={self.password!r}, "
-            f"role={self.role!r}, remote_host={self.remote_host!r}, "
-            f"datetime_connected={self.datetime_connected!r}, user_id={self.user_id!r})"
-        )
+        return f"User(username={self._user_account!r})"

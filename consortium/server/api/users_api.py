@@ -4,14 +4,19 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.http_exceptions import (
-    ForbiddenError,
-    InternalServerError,
-    MethodNotAllowedError,
-    UnauthorizedError,
-    UnprocessableEntityError,
+from consortium.server.exceptions.api_exceptions.http_exceptions import (
+    ForbiddenHTTPError,
+    InternalServerErrorHTTPError,
+    MethodNotAllowedHTTPError,
+    UnauthorizedHTTPError,
+    UnprocessableEntityHTTPError,
 )
-from consortium.server.exceptions.users_api_exceptions import UserNotFoundError
+from consortium.server.exceptions.api_exceptions.users_api_exceptions import (
+    UserNotFoundAPIError,
+)
+from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
+    UserNotFoundServiceError,
+)
 from consortium.server.models.user_models import UserModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
@@ -19,10 +24,10 @@ from consortium.server.server_dependencies import AuthorizeUserRequest, get_curr
 router = APIRouter(
     prefix="/api/users",
     responses={
-        401: {"model": UnauthorizedError().to_pydantic_model()},
-        403: {"model": ForbiddenError().to_pydantic_model()},
-        405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerError().to_pydantic_model()},
+        401: {"model": UnauthorizedHTTPError().to_pydantic_model()},
+        403: {"model": ForbiddenHTTPError().to_pydantic_model()},
+        405: {"model": MethodNotAllowedHTTPError().to_pydantic_model()},
+        500: {"model": InternalServerErrorHTTPError().to_pydantic_model()},
     },
     tags=["Users API"],
 )
@@ -31,7 +36,7 @@ users_service = server_singletons.users_service
 
 
 @router.get("/me", responses={200: {"model": UserModel}})
-async def get_own_user_info(
+async def get_own_user(
     user: Annotated[UserModel, Depends(get_current_user)],
     _: Annotated[
         None,
@@ -47,7 +52,7 @@ async def get_own_user_info(
         200: {"model": list[UserModel]},
     },
 )
-async def get_all_users_info(
+async def get_all_users(
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_USERS)),
@@ -60,15 +65,15 @@ async def get_all_users_info(
     "/{user_id}",
     responses={
         200: {"model": UserModel},
-        404: {"model": UserNotFoundError(user_id="string").to_pydantic_model()},
+        404: {"model": UserNotFoundAPIError(user_id="string").to_pydantic_model()},
         422: {
-            "model": UnprocessableEntityError(
+            "model": UnprocessableEntityHTTPError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
     },
 )
-async def get_user_info_by_user_id(
+async def get_user_by_user_id(
     user_id: str,
     _: Annotated[
         None,
@@ -77,7 +82,7 @@ async def get_user_info_by_user_id(
 ) -> UserModel:
     try:
         user = users_service.get_user_by_user_id(user_id)
-    except ValueError:
-        raise UserNotFoundError(user_id=user_id)
+    except UserNotFoundServiceError:
+        raise UserNotFoundAPIError(user_id=user_id)
 
     return UserModel(**user.to_json())

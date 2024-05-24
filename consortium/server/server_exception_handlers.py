@@ -43,7 +43,7 @@ def register_server_exception_handlers(app: FastAPI) -> None:
         if exc.status_code in error_code_map:
             return JSONResponse(
                 status_code=exc.status_code,
-                content={"error": error_code_map[exc.status_code].to_json()},
+                content=error_code_map[exc.status_code].to_json(),
             )
         else:
             raise ValueError(f"Unhandled FastAPI HTTPException: {exc}")
@@ -83,6 +83,6 @@ def register_server_exception_handlers(app: FastAPI) -> None:
             return Response(status_code=401)
         return JSONResponse(
             status_code=exc.status_code,
-            content={"error": exc.to_json()},
+            content=exc.to_json(),
             headers=exc.headers,
         )

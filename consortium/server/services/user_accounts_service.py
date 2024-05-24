@@ -1,27 +1,36 @@
 import json
 from pathlib import Path
 
+import jsonschema
 from loguru import logger
-from pydantic import ValidationError
 
-from consortium.server.exceptions.internal_server_exceptions import (
-    DuplicateUserAccountUsernamesError,
-    InvalidUserAccountError,
-    InvalidUserAccountsFileError,
-    UserAccountsFileNotFoundError,
+from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
+    EmptyUserAccountPasswordServiceError,
+    EmptyUserAccountUsernameServiceError,
+    IdenticalUserAccountPasswordServiceError,
+    IdenticalUserAccountRoleServiceError,
+    IdenticalUserAccountUsernameServiceError,
+    InvalidUserAccountIDServiceError,
+    InvalidUserAccountRoleServiceError,
+    InvalidUserAccountUsernameServiceError,
+    UserAccountAuthenticationServiceError,
+    UserAccountsFileContainsDuplicateUsernamesServiceError,
+    UserAccountsFileIsNotJSONServiceError,
+    UserAccountsFileNotFoundServiceError,
+    UserAccountsFilepathIsDirectoryServiceError,
+    UserAccountsFileReadAccessServiceError,
+    UserAccountsFileSchemaServiceError,
+    UserAccountsFileWriteAccessServiceError,
+    UserAccountsServiceError,
+    UserAccountUsernameAlreadyExistsServiceError,
 )
 from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
 from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
 
 
-# TODO: Redo, add more methods, consider transitioning to using ID
 class UserAccountsService:
     def __init__(self):
-        # For brevity's sake, the representation of user accounts in the JSON file is as
-        # a list of elements where each element is a unique user account (with a unique
-        # username). To make accessing user accounts easier however, we use a dictionary
-        # representation in the service internally
         self._user_accounts = {}
         self.user_accounts_service_logger = logger.bind(
             logger_name=str(self),
@@ -43,12 +52,16 @@ class UserAccountsService:
         try:
             user_account = self._user_accounts[user_account_id]
         except KeyError:
-            raise ValueError(
-                f"No user account has the provided user account ID: {user_account_id}",
+            raise InvalidUserAccountIDServiceError(
+                user_account_id=user_account_id,
             )
         self.user_accounts_service_logger.debug(
             f"Retrieved user account: {user_account!r}",
         )
+
+        # Always return a deep copy of the user account to prevent the caller from
+        # modifying the original user account by interacting with the instantiated user
+        # account model directly.
         return user_account
 
     def get_user_account_by_username(self, username: str) -> UserAccountModel:
@@ -58,7 +71,8 @@ class UserAccountsService:
                     f"Retrieved user account: {user_account!r}",
                 )
                 return user_account
-        raise ValueError(f"No user account has the provided username: {username}")
+
+        raise InvalidUserAccountUsernameServiceError(username=username)
 
     def get_all_user_accounts(self) -> list[UserAccountModel]:
         all_user_accounts = list(self._user_accounts.values())
@@ -66,6 +80,7 @@ class UserAccountsService:
             f"Retrieved all user accounts ({len(all_user_accounts)} user account(s) "
             "retrieved).",
         )
+
         return all_user_accounts
 
     def create_user_account(
@@ -74,11 +89,16 @@ class UserAccountsService:
         password: str,
         role: UserRole,
     ) -> UserAccountModel:
-        for user_account in self._user_accounts.values():
+        if not username:
+            raise EmptyUserAccountUsernameServiceError
+        if not password:
+            raise EmptyUserAccountPasswordServiceError
+        if role not in UserRole:
+            raise InvalidUserAccountRoleServiceError(role=role)
+        for user_account in self.get_all_user_accounts():
             if user_account.username == username:
-                raise ValueError(
-                    f"User accounts with duplicate usernames are not allowed: "
-                    f"{username}",
+                raise UserAccountUsernameAlreadyExistsServiceError(
+                    existing_username=username,
                 )
 
         user_account = UserAccountModel(
@@ -87,7 +107,9 @@ class UserAccountsService:
             role=role,
         )
         self._user_accounts[str(user_account.user_account_id)] = user_account
-        self.user_accounts_service_logger.info(f"Created user account: {user_account}")
+        self.user_accounts_service_logger.info(
+            f"Created new user account: {user_account}",
+        )
 
         return user_account
 
@@ -96,22 +118,28 @@ class UserAccountsService:
         user_account_id: str,
         new_username: str,
     ) -> UserAccountModel:
-        user_account = self.get_user_account_by_user_account_id(user_account_id)
-
-        for existing_user_account in self._user_accounts.values():
+        if not new_username:
+            raise EmptyUserAccountUsernameServiceError
+        # Calling the `get_user_account_by_user_account_id()` method will implicitly
+        # check to see if the user account ID is valid. If not, an
+        # InvalidUserAccountIDServiceError will be thrown and propagated upwards to the
+        # caller.
+        user_account = self.get_user_account_by_user_account_id(
+            user_account_id=user_account_id,
+        )
+        if user_account.username == new_username:
+            raise IdenticalUserAccountUsernameServiceError(username=new_username)
+        for existing_user_account in self.get_all_user_accounts():
             if existing_user_account.username == new_username:
-                raise ValueError(
-                    f"User accounts with duplicate usernames are not allowed: "
-                    f"{new_username}",
+                raise UserAccountUsernameAlreadyExistsServiceError(
+                    existing_username=new_username,
                 )
 
-        # Modifying the user account here will modify its entry within the user accounts
-        # dictionary.
         old_username = user_account.username
         user_account.username = new_username
-        self.user_accounts_service_logger.debug(
-            f"Updated username for user account {user_account!r}: {old_username} -> "
-            f"{new_username}",
+        self.user_accounts_service_logger.info(
+            f"Updated username for user account {user_account}: '{old_username}' -> "
+            f"'{new_username}'",
         )
 
         return user_account
@@ -121,17 +149,20 @@ class UserAccountsService:
         user_account_id: str,
         new_password: str,
     ) -> UserAccountModel:
-        user_account = self.get_user_account_by_user_account_id(user_account_id)
+        if not new_password:
+            raise EmptyUserAccountPasswordServiceError
+        user_account = self.get_user_account_by_user_account_id(
+            user_account_id=user_account_id,
+        )
+        if user_account.password == new_password:
+            raise IdenticalUserAccountPasswordServiceError
 
-        # Modifying the user account here will modify its entry within the user accounts
-        # dictionary.
         old_password = user_account.password
         user_account.password = new_password
-        self.user_accounts_service_logger.debug(
-            f"Updated password for user account {user_account!r}: {old_password} -> "
-            f"{new_password}",
+        self.user_accounts_service_logger.info(
+            f"Updated password for user account {user_account}: '{old_password}' -> "
+            f"'{new_password}'",
         )
-
         return user_account
 
     def update_user_account_role_by_user_account_id(
@@ -139,14 +170,18 @@ class UserAccountsService:
         user_account_id: str,
         new_role: UserRole,
     ) -> UserAccountModel:
+        if new_role not in UserRole:
+            raise InvalidUserAccountRoleServiceError(role=new_role)
         user_account = self.get_user_account_by_user_account_id(user_account_id)
+        if user_account.role == new_role:
+            raise IdenticalUserAccountRoleServiceError(
+                role=new_role,
+            )
 
-        # Modifying the user account here will modify its entry within the user accounts
-        # dictionary.
         old_role = user_account.role
         user_account.role = new_role
         self.user_accounts_service_logger.info(
-            f"Updated role for {user_account}: {old_role} -> {new_role}",
+            f"Updated role for {user_account}: '{old_role}' -> '{new_role}'",
         )
 
         return user_account
@@ -155,94 +190,230 @@ class UserAccountsService:
         self,
         user_account_id: str,
     ) -> None:
-        # Check to see if the user account exists. If it does not exist, a ValueError
-        # is automatically raised from the get_user_account_by_user_account_id method.
-        _ = self.get_user_account_by_user_account_id(user_account_id)
-
-        deleted_user_account = self._user_accounts.pop(str(user_account_id))
+        try:
+            deleted_user_account = self._user_accounts.pop(str(user_account_id))
+        except KeyError:
+            raise InvalidUserAccountIDServiceError(user_account_id=user_account_id)
         self.user_accounts_service_logger.info(
             f"Deleted user account: {deleted_user_account}",
         )
 
-    def load_framework_user_accounts(self) -> None:
+    def authenticate_user_account_credentials(
+        self,
+        username: str,
+        password: str,
+    ) -> UserAccountModel:
+        existing_usernames = [
+            user_account.username for user_account in self.get_all_user_accounts()
+        ]
         try:
-            user_accounts = self.get_user_accounts_from_user_accounts_file(
-                CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
-            )
-            for user_account in user_accounts:
-                self._user_accounts[str(user_account.user_account_id)] = user_account
-                self.user_accounts_service_logger.debug(
-                    f"Loaded user account: {user_account!r}",
-                )
-        except (
-            UserAccountsFileNotFoundError,
-            InvalidUserAccountsFileError,
-            DuplicateUserAccountUsernamesError,
-            UserAccountsFileNotFoundError,
-        ) as exc:
-            self.user_accounts_service_logger.error(
-                f"Failed to load user accounts. {exc}",
-            )
+            user_account = self.get_user_account_by_username(username=username)
+        except InvalidUserAccountUsernameServiceError:
+            raise UserAccountAuthenticationServiceError
+        if username not in existing_usernames:
+            raise UserAccountAuthenticationServiceError
+        if user_account.password != password:
+            raise UserAccountAuthenticationServiceError
 
-    def reload_framework_user_accounts(self) -> None:
-        self.user_accounts_service_logger.info("Reloading framework user accounts...")
-        self._user_accounts.clear()
-        self.load_framework_user_accounts()
-        self.user_accounts_service_logger.info("Reloaded framework user accounts.")
-
-    def write_framework_user_accounts(self):
-        self.user_accounts_service_logger.info("Writing framework user accounts...")
-        self.write_user_accounts_to_user_accounts_file(
-            CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
+        self.user_accounts_service_logger.debug(
+            f"Authenticated user account: {user_account!r}",
         )
-        self.user_accounts_service_logger.info(f"Wrote framework user accounts.")
 
-    def get_user_accounts_from_user_accounts_file(
+        return user_account
+
+    def load_user_accounts_from_user_accounts_file(
         self,
         user_accounts_filepath: Path,
     ) -> list[UserAccountModel]:
+        new_user_accounts = self.read_user_accounts_from_user_accounts_file(
+            user_accounts_filepath=user_accounts_filepath,
+        )
+        for user_account in new_user_accounts:
+            self._user_accounts[str(user_account.user_account_id)] = user_account
+            self.user_accounts_service_logger.debug(
+                f"Loaded user account: {user_account!r}",
+            )
+        return new_user_accounts
+
+    def read_user_accounts_from_user_accounts_file(
+        self,
+        user_accounts_filepath: Path,
+    ) -> list[UserAccountModel]:
+        user_accounts_file_json_schema = {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "username": {"type": "string", "minLength": 1},
+                    "password": {"type": "string", "minLength": 1},
+                    "role": {
+                        "type": "string",
+                        "enum": ["SPECTATOR", "ADMIN", "OPERATOR"],
+                    },
+                },
+            },
+        }
+
         if not user_accounts_filepath.exists():
-            raise UserAccountsFileNotFoundError(
-                f"User accounts file not found: {user_accounts_filepath}",
+            raise UserAccountsFileNotFoundServiceError(
+                user_accounts_filepath=user_accounts_filepath,
+            )
+        if user_accounts_filepath.is_dir():
+            raise UserAccountsFilepathIsDirectoryServiceError(
+                user_accounts_filepath=user_accounts_filepath,
+            )
+        try:
+            with user_accounts_filepath.open("r") as file:
+                data = file.read()
+            json_data = json.loads(data)
+            jsonschema.validate(
+                instance=json_data,
+                schema=user_accounts_file_json_schema,
+            )
+        except jsonschema.ValidationError:
+            raise UserAccountsFileSchemaServiceError(
+                user_accounts_filepath=user_accounts_filepath,
+            )
+        except json.JSONDecodeError:
+            raise UserAccountsFileIsNotJSONServiceError(
+                user_accounts_filepath=user_accounts_filepath,
+            )
+        except PermissionError:
+            raise UserAccountsFileReadAccessServiceError(
+                user_accounts_filepath=user_accounts_filepath,
+            )
+
+        existing_usernames = [
+            user_account.username for user_account in self.get_all_user_accounts()
+        ]
+        new_usernames = []
+        new_user_accounts = []
+        for user_account_json_data in json_data:
+            # The JSON schema guarantees that the usernames and passwords are not empty
+            # strings, so we do not need to check for that condition here.
+            new_user_account = UserAccountModel(**user_account_json_data)
+            if new_user_account.username in existing_usernames:
+                raise UserAccountUsernameAlreadyExistsServiceError(
+                    existing_username=new_user_account.username,
+                )
+            if new_user_account.username in new_usernames:
+                raise UserAccountsFileContainsDuplicateUsernamesServiceError(
+                    user_accounts_filepath=user_accounts_filepath,
+                    duplicate_username=new_user_account.username,
+                )
+            self.user_accounts_service_logger.debug(
+                f"Read user account: {new_user_account}",
+            )
+            new_user_accounts.append(new_user_account)
+
+        self.user_accounts_service_logger.debug(
+            f"Read user accounts from user accounts file ({len(new_user_accounts)} "
+            "user account(s) read).",
+        )
+        return new_user_accounts
+
+    def write_user_accounts_to_user_accounts_file(
+        self,
+        user_accounts_filepath: Path,
+    ) -> int:
+        if user_accounts_filepath.is_dir():
+            raise UserAccountsFilepathIsDirectoryServiceError(
+                user_accounts_filepath=user_accounts_filepath,
+            )
+
+        serializable_user_accounts = []
+
+        for user_account in self.get_all_user_accounts():
+            self.user_accounts_service_logger.debug(
+                f"Writing user account: {user_account}",
+            )
+            serializable_user_accounts.append(
+                {
+                    "username": user_account.username,
+                    "password": user_account.password,
+                    "role": user_account.role.value,
+                },
             )
 
         try:
-            user_accounts = []
-            with user_accounts_filepath.open("r") as file:
-                data = file.read()
-                json_data = json.loads(data)
-                for user_account_json_data in json_data:
-                    user_account = UserAccountModel(**user_account_json_data)
-                    if user_account.username in self._user_accounts:
-                        raise DuplicateUserAccountUsernamesError(
-                            f"Duplicate username {user_account.username} detected in "
-                            f"user accounts file: {user_accounts_filepath}",
-                        )
-                    user_accounts.append(user_account)
-            return user_accounts
-        except json.JSONDecodeError as exc:
-            raise InvalidUserAccountsFileError(
-                f"Invalid JSON data in user accounts file {user_accounts_filepath}: {exc}",
-            )
-        except ValidationError as exc:
-            raise InvalidUserAccountError(
-                f"Invalid user account data in user accounts file "
-                f"{user_accounts_filepath}: {exc}",
+            with user_accounts_filepath.open("w") as file:
+                # Data is guaranteed to be JSON serializable at this point.
+                data = json.dumps(serializable_user_accounts, indent=4)
+                number_of_bytes_written = file.write(data)
+        except PermissionError:
+            raise UserAccountsFileWriteAccessServiceError(
+                user_accounts_filepath=user_accounts_filepath,
             )
 
-    def write_user_accounts_to_user_accounts_file(self, user_accounts_filepath: Path):
-        serializable_user_accounts = [
-            {
-                "username": user_account.username,
-                "password": user_account.password,
-                "role": user_account.role.value,
-            }
-            for user_account in self._user_accounts.values()
-        ]
-
-        with user_accounts_filepath.open("w") as file:
-            data = json.dumps(serializable_user_accounts, indent=4)
-            file.write(data)
         self.user_accounts_service_logger.debug(
-            f"Wrote user accounts to user accounts file ({len(data)} bytes written).",
+            f"Wrote user accounts to user accounts file ({number_of_bytes_written} "
+            f"byte(s) written).",
         )
+        return number_of_bytes_written
+
+    def load_framework_user_accounts(self) -> bool:
+        self.user_accounts_service_logger.debug("Loading framework user accounts...")
+
+        try:
+            loaded_user_accounts = self.load_user_accounts_from_user_accounts_file(
+                user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
+            )
+        except UserAccountsServiceError as exc:
+            self.user_accounts_service_logger.error(exc)
+            return False
+
+        for user_account in loaded_user_accounts:
+            self.user_accounts_service_logger.debug(
+                f"Loaded user account: {user_account}",
+            )
+        self.user_accounts_service_logger.debug(
+            f"Loaded framework user accounts ({len(loaded_user_accounts)} user "
+            f"account(s) loaded).",
+        )
+        return True
+
+    def reload_framework_user_accounts(self) -> bool:
+        self.user_accounts_service_logger.debug("Reloading framework user accounts...")
+
+        try:
+            for user_account_id in list(self._user_accounts.keys()):
+                self.delete_user_account_by_user_account_id(
+                    user_account_id=user_account_id,
+                )
+            loaded_user_accounts = self.load_user_accounts_from_user_accounts_file(
+                user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
+            )
+        except UserAccountsServiceError as exc:
+            self.user_accounts_service_logger.error(f"{exc.__class__.__name__}: {exc}")
+            return False
+
+        for user_account in loaded_user_accounts:
+            self.user_accounts_service_logger.debug(
+                f"Reloaded user account: {user_account}",
+            )
+        self.user_accounts_service_logger.debug(
+            f"Reloaded framework user accounts ({len(loaded_user_accounts)} user "
+            f"account(s) reloaded).",
+        )
+        return True
+
+    def write_framework_user_accounts(self) -> bool:
+        self.user_accounts_service_logger.debug("Writing framework user accounts...")
+
+        try:
+            number_of_bytes_written = self.write_user_accounts_to_user_accounts_file(
+                user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
+            )
+        except UserAccountsServiceError as exc:
+            self.user_accounts_service_logger.error(exc)
+            return False
+
+        for user_account in self.get_all_user_accounts():
+            self.user_accounts_service_logger.debug(
+                f"Wrote user account: {user_account}",
+            )
+        self.user_accounts_service_logger.debug(
+            f"Wrote framework user accounts ({number_of_bytes_written} byte(s) "
+            f"written).",
+        )
+        return True

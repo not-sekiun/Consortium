@@ -51,9 +51,6 @@ class Server:
 
         self._server_logger = logger.bind(logger_name="Consortium Server")
 
-        # configure fastapi application, disabling the display of models in the Swagger
-        # UI
-        # self._app = FastAPI(swagger_ui_parameters={"defaultModelsExpandDepth": -1})
         self._app = application_service.get_application()
 
         # configure custom api endpoints
@@ -62,11 +59,11 @@ class Server:
         self._app.include_router(server_api_router)
         self._app.include_router(users_api_router)
         self._app.include_router(user_accounts_api_router)
-        self._app.include_router(listener_templates_api_router)
-        self._app.include_router(listeners_api_router)
-        self._app.include_router(agent_templates_api_router)
-        self._app.include_router(agent_generators_api_router)
-        self._app.include_router(agents_api_router)
+        # self._app.include_router(listener_templates_api_router)
+        # self._app.include_router(listeners_api_router)
+        # self._app.include_router(agent_templates_api_router)
+        # self._app.include_router(agent_generators_api_router)
+        # self._app.include_router(agents_api_router)
 
         # Configure middleware. Order matters, the last middleware added will be the
         # first to be executed on the request and the last to be executed on the
@@ -104,19 +101,19 @@ class Server:
         register_server_event_handlers(self._app)
 
         # Manually modify the openapi schema to remove the default 422 response from the
-        # /api/login endpoint (https://github.com/tiangolo/fastapi/issues/660)
+        # /api/login endpoint (https://github.com/tiangolo/fastapi/issues/660).
         del self._app.openapi()["paths"]["/api/login"]["post"]["responses"]["422"]
         # Workaround to modify the openapi schema to add in null detail responses that
         # were removed. Go bug tiangolo about this issue because it still has yet to be
-        # fixed https://github.com/tiangolo/fastapi/issues/1082
+        # fixed (https://github.com/tiangolo/fastapi/issues/1082).
         for schema_name, schema in self._app.openapi()["components"]["schemas"].items():
             if schema_name.endswith("ErrorModel") and "examples" in schema:
                 if "detail" not in schema["examples"][0]["error"]:
                     schema["examples"][0]["error"]["detail"] = None
                 else:
-                    # dictionaries are in insertion order in python 3.7+ so this
+                    # Dictionaries are in insertion order in python 3.7+ so this
                     # moves the detail key to the end of the dictionary to make the
-                    # example look cleaner
+                    # example look cleaner.
                     reordered_dict = {
                         key: schema["examples"][0]["error"][key]
                         for key in ["code", "message", "detail"]
