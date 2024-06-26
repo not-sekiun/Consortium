@@ -15,7 +15,7 @@ repos:
         description: Automatically sort all import statements
         types_or: [cython, pyi, python]
         entry: poetry run isort
-        args: ["-l", "88", "-m", "3", "--profile", "black"]
+        args: ["-l", "88", "-m", "3", "--profile", "black", "--combine-as"]
         language: system
         types: [file, python]
     -   id: autoflake

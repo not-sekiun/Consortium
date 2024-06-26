@@ -1,6 +1,6 @@
-from typing import Any, Generic, Optional, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, create_model
 
 T = TypeVar("T")
 
@@ -13,26 +13,21 @@ class BaseAPIException(Exception):
     # all instances of this class and its subclasses.
     _pydantic_models = list()
 
-    class ErrorModel(BaseModel):
+    # We do not combine the non-null and null detail error models into a single model
+    # because an error response will only ever return ONE of the two, not possibly
+    # either.
+    class NonNullDetailErrorModel(BaseModel, Generic[T]):
         code: str
         message: str
-        detail: Optional[Any] = Field(default=None, examples=[None])
+        detail: T
 
-    # # We do not combine the non-null and null detail error models into a single model
-    # # because an error response will only ever return ONE of the two, not possibly
-    # # either.
-    # class NonNullDetailErrorModel(BaseModel, Generic[T]):
-    #     code: str
-    #     message: str
-    #     detail: T
-    #
-    # # Using detail: Any | None = None or Any = None as the pydantic field does not work,
-    # # the swagger UI refuses to properly render the response model hence the model
-    # # splitting
-    # class NullDetailErrorModel(BaseModel):
-    #     code: str
-    #     message: str
-    #     detail: type(None)
+    # Using detail: Any | None = None or Any = None as the pydantic field does not work,
+    # the swagger UI refuses to properly render the response model hence the model
+    # splitting
+    class NullDetailErrorModel(BaseModel):
+        code: str
+        message: str
+        detail: type(None)
 
     def __init__(
         self,
@@ -72,12 +67,11 @@ class BaseAPIException(Exception):
         pydantic_model = create_model(
             f"{self.__class__.__name__}Model",
             error=(
-                self.__class__.ErrorModel,
-                # (
-                #     self.__class__.NonNullDetailErrorModel[type(self.detail)]
-                #     if self.detail is not None
-                #     else self.__class__.NullDetailErrorModel
-                # ),
+                (
+                    self.__class__.NonNullDetailErrorModel[type(self.detail)]
+                    if self.detail is not None
+                    else self.__class__.NullDetailErrorModel
+                ),
                 ...,
             ),
         )

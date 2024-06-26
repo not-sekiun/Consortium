@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from consortium.server.framework.exceptions.agent_framework_exceptions import (
+from consortium.server.framework._exceptions.agent_framework_exceptions import (
     AgentGeneratorBuildError,
 )
 

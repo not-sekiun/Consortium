@@ -4,7 +4,7 @@
 #     - AgentNotFoundError
 #     - AgentTaskNotFoundError
 #     - AgentResultNotFoundError
-from consortium.server.exceptions.http_exceptions import NotFoundError
+from consortium.server.exceptions.api_exceptions.http_exceptions import NotFoundError
 
 
 class AgentNotFoundError(NotFoundError):

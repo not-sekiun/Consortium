@@ -13,4 +13,4 @@ def format_docstring_to_single_line(docstring: str) -> str:
         else:
             single_line_string += line + " "
 
-    return single_line_string
+    return single_line_string.strip()

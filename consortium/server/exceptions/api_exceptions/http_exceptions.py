@@ -1,16 +1,23 @@
-# HTTP related errors that are not specific to any api endpoint. These errors are
-# raised internally by the FastAPI framework and are not raised by the application
-# code. They are included here to provide additional data for preprocessing in the
-# custom defined server exception handlers at server_exception_handlers.py.
-# - BaseAPIException: Raised when an error occurs in the server's REST API
-#   - HTTPError: Raised when a generic HTTP related error occurs that is not specific to any API endpoint
-#     - UnauthorizedHTTPError: Raised when a user is not authorized to access a resource (401 Unauthorized)
-#     - ForbiddenHTTPError: Raised when a user does not have permission to access a resource (403 Forbidden)
-#     - NotFoundHTTPError: Raised when a requested resource could not be found (404 Not Found)
-#     - MethodNotAllowedHTTPError: Raised when a requested method is not allowed for a resource (405 Method Not Allowed)
-#     - UnprocessableEntityHTTPError: Raised when a request could not be processed due to invalidly formatted data (422 Unprocessable Entity)
-#     - InternalServerErrorHTTPError: Raised when an internal server error occurs (500 Internal Server Error)
-#     - ServiceUnavailableHTTPError: Raised when a service is unavailable (503 Service Unavailable)
+"""
+HTTP related errors that are not specific to any api endpoint. These errors are raised
+internally by the FastAPI framework and are not raised by the application code. They
+are included here to provide additional data for preprocessing in the custom defined
+server exception handlers at server_exception_handlers.py.
+- BaseAPIException: Base class for all API exceptions.
+ - HTTPError: Generic HTTP error.
+   - UnauthorizedError: User not authorized to access resource (401 Unauthorized).
+   - ForbiddenError: User does not have permission to access resource (403 Forbidden).
+   - NotFoundError: Requested resource not found (404 Not Found).
+   - MethodNotAllowedError: Requested method not allowed for resource (405 Method Not
+   Allowed).
+   - UnprocessableEntityError: Request could not be processed due to invalid data (422
+   Unprocessable Entity).
+   - InternalServerErrorError: Internal server error occurred (500 Internal Server
+   Error).
+   - ServiceUnavailableError: Service is currently unavailable (503 Service
+   Unavailable).
+"""
+
 from typing import Any, Type
 
 from pydantic import BaseModel, create_model
@@ -36,10 +43,10 @@ class HTTPError(BaseAPIException):
         )
 
 
-# UnauthorizedHTTPError is a special error whose to_json() method returns None. This is
+# UnauthorizedError is a special error whose to_json() method returns None. This is
 # so that the JSON data returned as part of the response body is empty to prevent C2
 # server fingerprinting from unauthorized clients.
-class UnauthorizedHTTPError(HTTPError):
+class UnauthorizedError(HTTPError):
     def __init__(
         self,
         status_code: int = 401,
@@ -67,7 +74,7 @@ class UnauthorizedHTTPError(HTTPError):
         return model
 
 
-class ForbiddenHTTPError(HTTPError):
+class ForbiddenError(HTTPError):
     def __init__(
         self,
         status_code: int = 403,
@@ -83,7 +90,7 @@ class ForbiddenHTTPError(HTTPError):
         )
 
 
-class NotFoundHTTPError(HTTPError):
+class NotFoundError(HTTPError):
     def __init__(
         self,
         status_code: int = 404,
@@ -99,7 +106,7 @@ class NotFoundHTTPError(HTTPError):
         )
 
 
-class MethodNotAllowedHTTPError(HTTPError):
+class MethodNotAllowedError(HTTPError):
     def __init__(
         self,
         status_code: int = 405,
@@ -115,7 +122,7 @@ class MethodNotAllowedHTTPError(HTTPError):
         )
 
 
-class UnprocessableEntityHTTPError(HTTPError):
+class UnprocessableEntityError(HTTPError):
     def __init__(
         self,
         status_code: int = 422,
@@ -134,7 +141,7 @@ class UnprocessableEntityHTTPError(HTTPError):
         )
 
 
-class InternalServerErrorHTTPError(HTTPError):
+class InternalServerErrorError(HTTPError):
     def __init__(
         self,
         status_code: int = 500,
@@ -150,7 +157,7 @@ class InternalServerErrorHTTPError(HTTPError):
         )
 
 
-class ServiceUnavailableHTTPError(HTTPError):
+class ServiceUnavailableError(HTTPError):
     def __init__(
         self,
         status_code: int = 503,

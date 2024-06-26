@@ -9,9 +9,9 @@ from consortium.server.exceptions.agent_templates_api_exceptions import (
     InvalidAgentTemplateOptionNameError,
     InvalidAgentTemplateOptionValueError,
 )
-from consortium.server.exceptions.http_exceptions import (
+from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
-    InternalServerError,
+    InternalServerErrorError,
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
@@ -27,7 +27,7 @@ router = APIRouter(
         401: {"model": UnauthorizedError().to_pydantic_model()},
         403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerError().to_pydantic_model()},
+        500: {"model": InternalServerErrorError().to_pydantic_model()},
     },
     tags=["Agent Templates API"],
 )
@@ -80,7 +80,7 @@ def create_agent_generator_through_agent_template_by_agent_template_id(
 
     for option_name, option_value in agent_template_options.items():
         try:
-            agent_template.set_option_value(option_name, option_value)
+            agent_template.set_option_value_by_option_name(option_name, option_value)
         # KeyError is raised when option_name is invalid.
         except KeyError:
             raise InvalidAgentTemplateOptionNameError(option_name=option_name)

@@ -17,7 +17,6 @@ class ListenerModel(BaseModel):
     description: str
     endpoint: str
     listener_type: ListenerTypeModel
-    listener_template_id: str
     parameters: dict[str, Any]
     listener_id: str
     status: _ListenerStatusModel

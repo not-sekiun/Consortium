@@ -5,10 +5,10 @@ from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
-    ForbiddenHTTPError,
-    InternalServerErrorHTTPError,
-    MethodNotAllowedHTTPError,
-    UnauthorizedHTTPError,
+    ForbiddenError,
+    InternalServerErrorError,
+    MethodNotAllowedError,
+    UnauthorizedError,
 )
 from consortium.server.models.server_models import ServerConfigModel, ServerReleaseModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -18,10 +18,10 @@ from consortium.server.server_dependencies import AuthorizeUserRequest
 router = APIRouter(
     prefix="/api/server",
     responses={
-        401: {"model": UnauthorizedHTTPError().to_pydantic_model()},
-        403: {"model": ForbiddenHTTPError().to_pydantic_model()},
-        405: {"model": MethodNotAllowedHTTPError().to_pydantic_model()},
-        500: {"model": InternalServerErrorHTTPError().to_pydantic_model()},
+        401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
+        405: {"model": MethodNotAllowedError().to_pydantic_model()},
+        500: {"model": InternalServerErrorError().to_pydantic_model()},
     },
     tags=["Server API"],
 )

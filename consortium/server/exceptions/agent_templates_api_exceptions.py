@@ -8,7 +8,7 @@
 #       - InvalidAgentTemplateOptionValueError
 from typing import Any
 
-from consortium.server.exceptions.http_exceptions import (
+from consortium.server.exceptions.api_exceptions.http_exceptions import (
     NotFoundError,
     UnprocessableEntityError,
 )

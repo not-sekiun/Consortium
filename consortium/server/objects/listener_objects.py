@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from consortium.server.framework.exceptions.listener_framework_exceptions import (
+from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (
     ListenerRuntimeError,
 )
 

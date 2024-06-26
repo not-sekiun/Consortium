@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.http_exceptions import (
-    InternalServerError,
+from consortium.server.exceptions.api_exceptions.http_exceptions import (
+    InternalServerErrorError,
     MethodNotAllowedError,
     UnauthorizedError,
 )
@@ -18,7 +18,7 @@ router = APIRouter(
     responses={
         401: {"model": UnauthorizedError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerError().to_pydantic_model()},
+        500: {"model": InternalServerErrorError().to_pydantic_model()},
     },
     tags=["Logout API"],
 )

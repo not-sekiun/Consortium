@@ -5,7 +5,7 @@ from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.http_exceptions import ForbiddenError
+from consortium.server.exceptions.api_exceptions.http_exceptions import ForbiddenError
 from consortium.server.objects.user_account_objects import UserPermissions, UserRole
 from consortium.server.objects.user_objects import User
 from consortium.server.server_config import (
@@ -78,7 +78,6 @@ class AuthorizeUserRequest:
             UserPermissions,
         ),  # All defined permissions now and in the future are granted to the admin
         UserRole.OPERATOR: {
-            UserPermissions.READ_OWN_USER_ACCOUNT,
             UserPermissions.UPDATE_OWN_USER_ACCOUNT_USERNAME,
             UserPermissions.UPDATE_OWN_USER_ACCOUNT_PASSWORD,
             UserPermissions.READ_OWN_USER,
@@ -115,7 +114,6 @@ class AuthorizeUserRequest:
         # Spectators can only read information and have even less read access than
         # operators
         UserRole.SPECTATOR: {
-            UserPermissions.READ_OWN_USER_ACCOUNT,
             UserPermissions.READ_OWN_USER,
             UserPermissions.READ_SERVER_RELEASE,
             UserPermissions.READ_ALL_LISTENER_TEMPLATES,

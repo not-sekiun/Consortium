@@ -1,29 +1,41 @@
-# Errors for the api endpoint /api/user-accounts.
-# - HTTPError
-#   - NotFoundError
-#     - UserAccountNotFoundAPIError
-#   - UnprocessableEntityError
-#     - UserAccountManagementAPIError
-#       - IdenticalUserAccountUsernameAPIError
-#       - IdenticalUserAccountPasswordAPIError
-#       - IdenticalUserAccountRoleAPIError
-#       - EmptyUserAccountUsernameAPIError
-#       - EmptyUserAccountPasswordAPIError
-#       - InvalidUserAccountRoleAPIError
-#       - UserAccountUsernameAlreadyExistsAPIError
-#   - ForbiddenHTTPError
-#       - InvalidUserAccountCredentials
-from typing import Any
+"""
+Errors for the api endpoint /api/user-accounts:
+
+- HTTPError
+ - NotFoundError
+   - UserAccountNotFoundError: User account with provided ID not found.
+ - UnprocessableEntityError
+   - IdenticalUserAccountUsernameError: New username identical to current username.
+   - IdenticalUserAccountPasswordError: New password identical to current password.
+   - IdenticalUserAccountRoleError: New role identical to current role.
+   - EmptyUserAccountUsernameError: Provided username cannot be empty.
+   - EmptyUserAccountPasswordError: Provided password cannot be empty.
+   - InvalidUserAccountRoleError: Provided role is invalid.
+   - UserAccountUsernameAlreadyExistsError: Provided username already in use.
+ - ForbiddenError
+   - UserAccountAuthenticationError: Provided user account credentials invalid.
+"""
 
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
-    ForbiddenHTTPError,
-    NotFoundHTTPError,
-    UnprocessableEntityHTTPError,
+    ForbiddenError,
+    NotFoundError,
+    UnprocessableEntityError,
+)
+from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
+    EmptyUserAccountPasswordError as EmptyUserAccountPasswordServiceError,
+    EmptyUserAccountUsernameError as EmptyUserAccountUsernameServiceError,
+    IdenticalUserAccountPasswordError as IdenticalUserAccountPasswordServiceError,
+    IdenticalUserAccountRoleError as IdenticalUserAccountRoleServiceError,
+    IdenticalUserAccountUsernameError as IdenticalUserAccountUsernameServiceError,
+    InvalidUserAccountRoleError as InvalidUserAccountRoleServiceError,
+    UserAccountAuthenticationError as UserAccountAuthenticationServiceError,
+    UserAccountIDNotFoundError,
+    UserAccountUsernameAlreadyExistsError as UserAccountUsernameAlreadyExistsServiceError,
 )
 from consortium.server.objects.user_account_objects import UserRole
 
 
-class UserAccountNotFoundAPIError(NotFoundHTTPError):
+class UserAccountNotFoundError(NotFoundError):
     def __init__(
         self,
         user_account_id: str | None,
@@ -33,14 +45,14 @@ class UserAccountNotFoundAPIError(NotFoundHTTPError):
         # (referencing the user account mapped to the currently logged-in user).
         if user_account_id is None:
             message = (
-                "The requested user account associated with the current user was not "
-                "found."
+                "Failed to find the requested user account associated with the current "
+                "user."
             )
         else:
-            message = (
-                "The requested user account with the provided user account ID "
-                f"'{user_account_id}' was not found."
+            service_exception = UserAccountIDNotFoundError(
+                user_account_id=user_account_id,
             )
+            message = service_exception.message
 
         super().__init__(
             status_code=404,
@@ -50,124 +62,99 @@ class UserAccountNotFoundAPIError(NotFoundHTTPError):
         )
 
 
-class UserAccountManagementAPIError(UnprocessableEntityHTTPError):
-    def __init__(
-        self,
-        status_code: int = 422,
-        code: str = "USER_ACCOUNT_MODIFICATION_ERROR",
-        message: str = "An error occurred while managing the user account.",
-        detail: Any | None = None,
-    ) -> None:
-        super().__init__(
-            status_code=status_code,
-            code=code,
-            message=message,
-            detail=detail,
-        )
-
-
-class IdenticalUserAccountUsernameAPIError(UserAccountManagementAPIError):
+class IdenticalUserAccountUsernameError(UnprocessableEntityError):
     def __init__(
         self,
         username: str,
     ) -> None:
+        service_exception = IdenticalUserAccountUsernameServiceError(username=username)
         super().__init__(
             status_code=422,
             code="IDENTICAL_USER_ACCOUNT_USERNAME_ERROR",
-            message=(
-                f"The provided username '{username}' is identical to the currently "
-                f"used username for the user account."
-            ),
-            detail=None,
+            message=service_exception.message,
         )
 
 
-class IdenticalUserAccountPasswordAPIError(UserAccountManagementAPIError):
+class IdenticalUserAccountPasswordError(UnprocessableEntityError):
     def __init__(
         self,
     ) -> None:
+        service_exception = IdenticalUserAccountPasswordServiceError()
         super().__init__(
             status_code=422,
             code="IDENTICAL_USER_ACCOUNT_PASSWORD_ERROR",
-            message=(
-                "The provided user account password is identical to the currently used "
-                "password for the user account."
-            ),
-            detail=None,
+            message=service_exception.message,
         )
 
 
-class IdenticalUserAccountRoleAPIError(UserAccountManagementAPIError):
+class IdenticalUserAccountRoleError(UnprocessableEntityError):
     def __init__(
         self,
         role: UserRole,
     ) -> None:
+        service_exception = IdenticalUserAccountRoleServiceError(role=role)
         super().__init__(
             status_code=422,
             code="IDENTICAL_USER_ACCOUNT_ROLE_ERROR",
-            message=(
-                f"The provided user account role '{role}' is identical to the current "
-                "role of the user account."
-            ),
+            message=service_exception.message,
             detail=None,
         )
 
 
-class EmptyUserAccountUsernameAPIError(UserAccountManagementAPIError):
+class EmptyUserAccountUsernameError(UnprocessableEntityError):
     def __init__(
         self,
     ) -> None:
+        service_exception = EmptyUserAccountUsernameServiceError()
         super().__init__(
             status_code=422,
             code="EMPTY_USER_ACCOUNT_USERNAME_ERROR",
-            message="The provided user account username cannot be empty.",
-            detail=None,
+            message=service_exception.message,
         )
 
 
-class EmptyUserAccountPasswordAPIError(UserAccountManagementAPIError):
+class EmptyUserAccountPasswordError(UnprocessableEntityError):
     def __init__(
         self,
     ) -> None:
+        service_exception = EmptyUserAccountPasswordServiceError()
         super().__init__(
             status_code=422,
             code="EMPTY_USER_ACCOUNT_PASSWORD_ERROR",
-            message="The provided user account password cannot be empty.",
-            detail=None,
+            message=service_exception.message,
         )
 
 
-class InvalidUserAccountRoleAPIError(UserAccountManagementAPIError):
+class InvalidUserAccountRoleError(UnprocessableEntityError):
     def __init__(self, role: str) -> None:
+        service_exception = InvalidUserAccountRoleServiceError(role=role)
         super().__init__(
             status_code=422,
             code="INVALID_USER_ACCOUNT_ROLE_ERROR",
-            message=f"The provided user account role '{role}' is invalid.",
-            detail=None,
+            message=service_exception.message,
         )
 
 
-class UserAccountUsernameAlreadyExistsAPIError(UserAccountManagementAPIError):
+class UserAccountUsernameAlreadyExistsError(UnprocessableEntityError):
     def __init__(
         self,
         username: str,
     ) -> None:
+        service_exception = UserAccountUsernameAlreadyExistsServiceError(
+            username=username,
+        )
         super().__init__(
             status_code=422,
             code="USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR",
-            message=(
-                f"The provided user account username '{username}' is already in use by "
-                "another user account."
-            ),
-            detail=None,
+            message=service_exception.message,
         )
 
 
-class InvalidUserAccountCredentials(ForbiddenHTTPError):
+class UserAccountAuthenticationError(ForbiddenError):
     def __init__(self):
+        service_exception = UserAccountAuthenticationServiceError()
         super().__init__(
             status_code=403,
-            code="INVALID_USER_ACCOUNT_CREDENTIALS",
-            message="The provided user account credentials were invalid.",
-            detail=None,
+            code="USER_ACCOUNT_AUTHENTICATION_ERROR",
+            message=service_exception.message,
         )

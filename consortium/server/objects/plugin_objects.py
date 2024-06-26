@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from consortium.server.framework.exceptions.plugins_framework_exceptions import (
+from consortium.server.framework._exceptions.plugins_framework_exceptions import (
     PluginRuntimeError,
 )
 

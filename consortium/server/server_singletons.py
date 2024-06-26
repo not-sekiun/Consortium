@@ -28,8 +28,12 @@ agents_service = AgentsService()
 # service because the listener templates service relies on the listener profiles
 # service to retrieve listener profiles.
 listener_profiles_service = ListenerProfilesService()
-listener_templates_service = ListenerTemplatesService()
-listeners_service = ListenersService()
+listener_templates_service = ListenerTemplatesService(
+    listener_profiles_service=listener_profiles_service,
+)
+listeners_service = ListenersService(
+    listener_templates_service=listener_templates_service
+)
 user_accounts_service = UserAccountsService()
 users_service = UsersService()
 # Plugins service needs to be instantiated last so that the loaded plugins have access

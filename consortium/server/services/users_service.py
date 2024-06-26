@@ -2,8 +2,8 @@ from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
-    InvalidAccessTokenServiceError,
-    InvalidUserIDServiceError,
+    UserAccessTokenNotFoundError,
+    UserIDNotFoundError,
 )
 from consortium.server.objects.user_objects import User
 
@@ -24,7 +24,7 @@ class UsersService:
         try:
             user = self._users[user_id]
         except KeyError:
-            raise InvalidUserIDServiceError(user_id=user_id)
+            raise UserIDNotFoundError(user_id=user_id)
 
         self.users_service_logger.debug(f"Retrieved user: {user!r}")
         return user
@@ -34,7 +34,7 @@ class UsersService:
             if str(user.json_web_token.subject) == access_token:
                 self.users_service_logger.debug(f"Retrieved user: {user!r}")
                 return user
-        raise InvalidAccessTokenServiceError(access_token=access_token)
+        raise UserAccessTokenNotFoundError(access_token=access_token)
 
     def get_all_users(self) -> list[User]:
         all_users = list(self._users.values())
@@ -74,7 +74,7 @@ class UsersService:
         try:
             deleted_user = self._users.pop(str(user_id))
         except KeyError:
-            raise InvalidUserIDServiceError(user_id=user_id)
+            raise UserIDNotFoundError(user_id=user_id)
 
         self.users_service_logger.info(f"User logged out: {deleted_user}")
         self.users_service_logger.debug(f"Removed user: {deleted_user!r}")

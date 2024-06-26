@@ -16,6 +16,7 @@ from consortium.server.api.agents_api import router as agents_api_router
 from consortium.server.api.listener_templates_api import (
     router as listener_templates_api_router,
 )
+
 from consortium.server.api.listeners_api import router as listeners_api_router
 from consortium.server.api.login_api import router as login_api_router
 from consortium.server.api.logout_api import router as logout_api_router
@@ -50,20 +51,18 @@ class Server:
         self.status = ServerStatus.STOPPED
 
         self._server_logger = logger.bind(logger_name="Consortium Server")
-
         self._app = application_service.get_application()
-
         # configure custom api endpoints
         self._app.include_router(login_api_router)
         self._app.include_router(logout_api_router)
         self._app.include_router(server_api_router)
         self._app.include_router(users_api_router)
         self._app.include_router(user_accounts_api_router)
-        # self._app.include_router(listener_templates_api_router)
-        # self._app.include_router(listeners_api_router)
-        # self._app.include_router(agent_templates_api_router)
-        # self._app.include_router(agent_generators_api_router)
-        # self._app.include_router(agents_api_router)
+        self._app.include_router(listener_templates_api_router)
+        self._app.include_router(listeners_api_router)
+        self._app.include_router(agent_templates_api_router)
+        self._app.include_router(agent_generators_api_router)
+        self._app.include_router(agents_api_router)
 
         # Configure middleware. Order matters, the last middleware added will be the
         # first to be executed on the request and the last to be executed on the
@@ -107,7 +106,7 @@ class Server:
         # were removed. Go bug tiangolo about this issue because it still has yet to be
         # fixed (https://github.com/tiangolo/fastapi/issues/1082).
         for schema_name, schema in self._app.openapi()["components"]["schemas"].items():
-            if schema_name.endswith("ErrorModel") and "examples" in schema:
+            if "ErrorModel" in schema_name and "examples" in schema:
                 if "detail" not in schema["examples"][0]["error"]:
                     schema["examples"][0]["error"]["detail"] = None
                 else:

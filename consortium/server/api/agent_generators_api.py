@@ -16,20 +16,16 @@ from consortium.server.exceptions.agent_generators_api_exceptions import (
     InvalidAgentGeneratorParameterNameError,
     InvalidAgentGeneratorParameterValueError,
 )
-from consortium.server.exceptions.http_exceptions import (
+from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
-    InternalServerError,
+    InternalServerErrorError,
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
 )
-from consortium.server.framework.exceptions.agent_framework_exceptions import (
+from consortium.server.framework._exceptions.agent_framework_exceptions import (
     AgentGeneratorCancellationError as FrameworkAgentGeneratorCancellationError,
-)
-from consortium.server.framework.exceptions.agent_framework_exceptions import (
     AgentGeneratorStartError as FrameworkAgentGeneratorStartError,
-)
-from consortium.server.framework.exceptions.agent_framework_exceptions import (
     AgentGeneratorStopError as FrameworkAgentGeneratorStopError,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
@@ -48,7 +44,7 @@ router = APIRouter(
         401: {"model": UnauthorizedError().to_pydantic_model()},
         403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerError().to_pydantic_model()},
+        500: {"model": InternalServerErrorError().to_pydantic_model()},
     },
     tags=["Agent Generators API"],
 )
@@ -163,7 +159,7 @@ async def start_agent_generator_by_agent_generator_id(
     except FrameworkAgentGeneratorStartError as exc:
         raise AgentGeneratorStartError(message=exc.message, detail=exc.detail)
     except Exception as exc:
-        raise InternalServerError(
+        raise InternalServerErrorError(
             detail={
                 "type": type(exc).__name__,
                 "message": str(exc),
@@ -221,7 +217,7 @@ async def stop_agent_generator_by_agent_generator_id(
     except FrameworkAgentGeneratorStopError as exc:
         raise AgentGeneratorStopError(message=exc.message, detail=exc.detail)
     except Exception as exc:
-        raise InternalServerError(
+        raise InternalServerErrorError(
             detail={
                 "type": type(exc).__name__,
                 "message": str(exc),
@@ -285,7 +281,7 @@ async def cancel_agent_generator_by_agent_generator_id(
     except FrameworkAgentGeneratorCancellationError as exc:
         raise AgentGeneratorCancellationError(message=exc.message, detail=exc.detail)
     except Exception as exc:
-        raise InternalServerError(
+        raise InternalServerErrorError(
             detail={
                 "type": type(exc).__name__,
                 "message": str(exc),
@@ -402,7 +398,7 @@ def update_agent_generator_by_agent_generator_id(
         # agent generator.
         for parameter_name, parameter_value in new_parameters.items():
             try:
-                agent_template.options[parameter_name].set_option_value(
+                agent_template.options[parameter_name].set_option_value_by_option_name(
                     parameter_value,
                 )
             except ValueError as exc:

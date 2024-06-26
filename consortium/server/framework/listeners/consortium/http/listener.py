@@ -3,14 +3,19 @@ import socket
 
 from aiohttp import web
 
-from consortium.server.framework.base_listener import BaseListener
-from consortium.server.framework.exceptions.listener_framework_exceptions import (
+from consortium.server.framework._exceptions.listener_framework_exceptions import (
     ListenerStartError,
+)
+from consortium.server.framework.base_listener import BaseListener
+from consortium.server.framework.listeners.consortium.http.listener_type import (
+    LISTENER_TYPE,
 )
 from consortium.server.models.agent_models import AgentResultModel
 
 
 class Listener(BaseListener):
+    listener_type = LISTENER_TYPE
+
     async def on_listener_started(self) -> None:
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]

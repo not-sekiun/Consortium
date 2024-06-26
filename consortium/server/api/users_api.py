@@ -5,17 +5,17 @@ from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
-    ForbiddenHTTPError,
-    InternalServerErrorHTTPError,
-    MethodNotAllowedHTTPError,
-    UnauthorizedHTTPError,
-    UnprocessableEntityHTTPError,
+    ForbiddenError,
+    InternalServerErrorError,
+    MethodNotAllowedError,
+    UnauthorizedError,
+    UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.users_api_exceptions import (
-    UserNotFoundAPIError,
+    UserNotFoundError as UserNotFoundAPIError,
 )
 from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
-    UserNotFoundServiceError,
+    UserNotFoundError as UserNotFoundServiceError,
 )
 from consortium.server.models.user_models import UserModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -24,10 +24,10 @@ from consortium.server.server_dependencies import AuthorizeUserRequest, get_curr
 router = APIRouter(
     prefix="/api/users",
     responses={
-        401: {"model": UnauthorizedHTTPError().to_pydantic_model()},
-        403: {"model": ForbiddenHTTPError().to_pydantic_model()},
-        405: {"model": MethodNotAllowedHTTPError().to_pydantic_model()},
-        500: {"model": InternalServerErrorHTTPError().to_pydantic_model()},
+        401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
+        405: {"model": MethodNotAllowedError().to_pydantic_model()},
+        500: {"model": InternalServerErrorError().to_pydantic_model()},
     },
     tags=["Users API"],
 )
@@ -67,7 +67,7 @@ async def get_all_users(
         200: {"model": UserModel},
         404: {"model": UserNotFoundAPIError(user_id="string").to_pydantic_model()},
         422: {
-            "model": UnprocessableEntityHTTPError(
+            "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },

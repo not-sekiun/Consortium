@@ -12,7 +12,7 @@ from consortium.server.exceptions.plugins_api_exceptions import (
     PluginAlreadyRunningError,
     PluginNotRunningError,
 )
-from consortium.server.framework.exceptions.plugins_framework_exceptions import (
+from consortium.server.framework._exceptions.plugins_framework_exceptions import (
     PluginCancellationError,
     PluginRuntimeError,
     PluginStartError,

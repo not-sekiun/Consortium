@@ -1,6 +1,6 @@
 from typing import Any
 
-from consortium.server.framework.exceptions.base_framework_exception import (
+from consortium.server.framework._exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
 

@@ -1,3 +1,4 @@
+import pytest
 import requests
 
 from tests.common_json_response_schemas import FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA
@@ -6,29 +7,20 @@ from tests.utils import validate_response
 USER_RESPONSE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "username": {"type": "string"},
-        "password": {"type": "string"},
-        "role": {"type": "string"},
-        "json_web_token": {
-            "type": "object",
-            "properties": {
-                "access_token": {"type": "string"},
-                "token_type": {"type": "string"},
-            },
-            "required": ["access_token", "token_type"],
-        },
         "user_id": {"type": "string"},
-        "remote_host": {"type": "string"},
+        "user_account_id": {"type": "string"},
+        "username": {"type": "string"},
+        "role": {"type": "string"},
         "datetime_connected": {"type": "string"},
+        "datetime_last_active": {"type": "string"},
     },
     "required": [
-        "username",
-        "password",
-        "role",
-        "json_web_token",
         "user_id",
-        "remote_host",
+        "user_account_id",
+        "username",
+        "role",
         "datetime_connected",
+        "datetime_last_active",
     ],
 }
 ALL_USERS_RESPONSE_JSON_SCHEMA = {

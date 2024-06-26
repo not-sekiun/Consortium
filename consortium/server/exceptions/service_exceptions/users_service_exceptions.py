@@ -1,11 +1,11 @@
 """
-Exception hierarchy for the users service.
+Exception hierarchy for the users service:
 
-- BaseServiceException: Base class for all service-related exceptions
-  - UsersServiceError: Base class for all exceptions related to the users service.
-    - UserNotFoundServiceError: Raised when a requested user is not found.
-      - InvalidUserIDServiceError: Raised when the provided user ID is not found.
-      - InvalidAccessTokenServiceError: Raised when a user could not be found with the provided access token.
+- BaseServiceException: Base class for all service-related exceptions.
+ - UsersServiceError: Base class for all users service exceptions.
+   - UserNotFoundError: User not found.
+     - UserIDNotFoundError: User with provided ID not found.
+     - UserAccessTokenNotFoundError: User with provided access token not found.
 """
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
@@ -16,36 +16,42 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 class UsersServiceError(BaseServiceException):
     def __init__(
         self,
-        message: str = "An unexpected error occurred within the users service.",
+        message: str = "An error occurred in the users service.",
     ):
         super().__init__(message=message)
 
 
-class UserNotFoundServiceError(UsersServiceError):
+class UserNotFoundError(UsersServiceError):
     def __init__(
         self,
-        message: str = "The requested user was not found within the users service",
+        message: str = "Failed to find the requested user.",
     ):
         super().__init__(message=message)
 
 
-class InvalidUserIDServiceError(UserNotFoundServiceError):
+class UserIDNotFoundError(UserNotFoundError):
     def __init__(
         self,
         user_id: str,
         message: str | None = None,
     ):
         if message is None:
-            message = f"No user found with the provided user ID: {user_id}"
+            message = (
+                "Failed to find the requested user. No user could be found with the "
+                f"provided user ID '{user_id}'."
+            )
         super().__init__(message=message)
 
 
-class InvalidAccessTokenServiceError(UserNotFoundServiceError):
+class UserAccessTokenNotFoundError(UserNotFoundError):
     def __init__(
         self,
         access_token: str,
         message: str | None = None,
     ):
         if message is None:
-            message = f"No user found with the provided access token: {access_token}"
+            message = (
+                "Failed to find the requested user. No user found with the provided "
+                f"access token '{access_token}'."
+            )
         super().__init__(message=message)

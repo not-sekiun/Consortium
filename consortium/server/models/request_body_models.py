@@ -3,12 +3,6 @@ from typing import Any
 from pydantic import BaseModel
 
 
-class NewListenerAttributesRequestBodyModel(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    parameters: dict[str, Any] | None = None
-
-
 class NewAgentGeneratorAttributesRequestBodyModel(BaseModel):
     name: str | None = None
     description: str | None = None

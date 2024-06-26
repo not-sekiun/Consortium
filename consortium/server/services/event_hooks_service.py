@@ -5,11 +5,16 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
-from consortium.server.exceptions.internal_server_exceptions import (
+from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
+    EventHookLoadingError,
+    EventHookNotFoundError,
+    EventHookProjectEventHookFileNotFoundError,
+    EventHookProjectInterfaceError,
+    EventHookProjectManifestFileNotFoundError,
+    EventHookProjectSymbolNotFoundError,
     InternalEventHookProjectError,
-    InvalidEventHookProjectFolderStructureError,
-    InvalidEventHookProjectImplementationError,
-    InvalidEventHookProjectManifestFileError,
+    InvalidEventHookProjectManifestFileJSONError,
+    InvalidEventHookProjectManifestFileSchemaError,
 )
 from consortium.server.framework.base_event_hook import BaseEventHook
 from consortium.server.objects.event_objects import Event, EventType
@@ -26,6 +31,12 @@ class EventHooksService:
             logger_name=str(self),
         )
         self.event_hooks_service_logger.debug(f"Started {self}")
+
+    def __str__(self) -> str:
+        return "Consortium Event Hooks Service"
+
+    def __repr__(self) -> str:
+        return "EventHooksService()"
 
     def get_event_hook_from_event_hook_project_folder(
         self,
@@ -64,23 +75,17 @@ class EventHooksService:
                     event_hook_project_manifest_json_schema,
                 )
         except FileNotFoundError:
-            raise InvalidEventHookProjectFolderStructureError(
-                "The event hook project manifest file "
-                "(event_hook_project_manifest.json) was not found in the event hook "
-                f"project folder: {event_hook_project_folder}",
+            raise EventHookProjectManifestFileNotFoundError(
+                event_hook_project_folder=str(event_hook_project_folder),
             )
         except json.JSONDecodeError:
-            raise InvalidEventHookProjectManifestFileError(
-                "The event hook project manifest file "
-                f"(event_hook_project_manifest.json) in the event hook project folder "
-                f'"{event_hook_project_folder}" is not a valid JSON file.',
+            raise InvalidEventHookProjectManifestFileJSONError(
+                event_hook_project_folder=str(event_hook_project_folder),
             )
         except jsonschema.ValidationError as exc:
-            raise InvalidEventHookProjectManifestFileError(
-                "The event hook project manifest file "
-                f"(event_hook_project_manifest.json) in the event hook project folder "
-                f'"{event_hook_project_folder}" does not follow the correct JSON '
-                f"schema: {exc}",
+            raise InvalidEventHookProjectManifestFileSchemaError(
+                event_hook_project_folder=str(event_hook_project_folder),
+                json_schema_error_message=exc.message,
             )
 
         # Check for valid project folder structure as specified by the manifest file.
@@ -90,10 +95,9 @@ class EventHooksService:
         event_hook_symbol = event_hook_project_manifest_json["event_hook"]["symbol"]
 
         if not event_hook_file.exists():
-            raise InvalidEventHookProjectFolderStructureError(
-                f'The event hook file "{event_hook_file}" specified in the event hook '
-                "project manifest file (event_hook_project_manifest.json) was not "
-                f"found for the event hook project folder: {event_hook_project_folder}",
+            raise EventHookProjectEventHookFileNotFoundError(
+                event_hook_file=str(event_hook_file),
+                event_hook_project_folder=str(event_hook_project_folder),
             )
 
         # Check for valid symbol names in the required event hook project file.
@@ -110,33 +114,30 @@ class EventHooksService:
                 event_hook_symbol,
             )
         except AttributeError:
-            raise InvalidEventHookProjectFolderStructureError(
-                f'The symbol name "{event_hook_symbol}" specified in the event hook '
-                "project manifest file (event_hook_project_manifest.json) was not "
-                f'found in the event hook file "{event_hook_file}" for the event hook '
-                f"project folder: {event_hook_project_folder}",
+            raise EventHookProjectSymbolNotFoundError(
+                symbol_name=event_hook_symbol,
+                event_hook_file=str(event_hook_file),
+                event_hook_project_folder=str(event_hook_project_folder),
             )
         except Exception as exc:
             raise InternalEventHookProjectError(
-                f"Failed to load event hook from {event_hook_project_folder} due to an "
-                f"exception that occurred while importing the event hook: {exc}",
+                event_hook_project_folder=str(event_hook_project_folder),
+                internal_error_message=str(exc),
             )
 
         # Check for correct inheritance and instantiation of classes.
         if not issubclass(event_hook_class, BaseEventHook):
-            raise InvalidEventHookProjectImplementationError(
-                "The symbol name of the event hook class specified in the event hook "
-                "project manifest file (event_hook_project_manifest.json) does not "
-                "inherit from the framework's base event hook class for the event hook "
-                f"project folder: {event_hook_project_folder}",
+            raise EventHookProjectInterfaceError(
+                event_hook_symbol=event_hook_symbol,
+                event_hook_project_folder=str(event_hook_project_folder),
             )
 
         try:
             event_hook_object = event_hook_class()
         except Exception as exc:
             raise InternalEventHookProjectError(
-                f"Failed to load event hook from {event_hook_project_folder} due to an "
-                f"exception that occurred while instantiating the event hook: {exc}",
+                event_hook_project_folder=str(event_hook_project_folder),
+                internal_error_message=str(exc),
             )
 
         self.event_hooks_service_logger.debug(
@@ -159,16 +160,8 @@ class EventHooksService:
                 self.load_event_hook_from_event_hook_project_folder(
                     event_hook_project_folder=path.parent,
                 )
-            except (
-                InvalidEventHookProjectFolderStructureError,
-                InvalidEventHookProjectManifestFileError,
-                InvalidEventHookProjectImplementationError,
-                InternalEventHookProjectError,
-            ) as exc:
-                self.event_hooks_service_logger.error(
-                    "Failed to load event hook from event hook project folder "
-                    f'"{path.parent}" due to an error: {exc}',
-                )
+            except EventHookLoadingError as exc:
+                self.event_hooks_service_logger.error(exc)
                 continue
             number_of_loaded_event_hooks += 1
 
@@ -248,9 +241,8 @@ class EventHooksService:
         try:
             event_hook = self._event_hooks[event_hook_id]
         except KeyError:
-            raise ValueError(
-                "No event hook exists with the provided event hook ID: "
-                f"{event_hook_id}",
+            raise EventHookNotFoundError(
+                event_hook_id=event_hook_id,
             )
 
         self.event_hooks_service_logger.debug(f"Retrieved event hook: {event_hook!r}")
@@ -271,9 +263,3 @@ class EventHooksService:
         for event_hook in self._event_hooks.values():
             if event.event_type in event_hook.event_types:
                 event_hook.run_event_hook(event)
-
-    def __str__(self) -> str:
-        return "Consortium Event Hooks Service"
-
-    def __repr__(self) -> str:
-        return "EventHooksService()"

@@ -1,16 +1,26 @@
-# Errors for the api endpoint /api/listener-templates.
-# - HTTPError
-#   - NotFoundError
-#     - ListenerTemplateNotFoundError
-#   - UnprocessableEntityError
-#     - ListenerCreationError
-#       - InvalidListenerTemplateOptionNameError
-#       - InvalidListenerTemplateOptionValueError
+"""
+Errors for the api endpoint /api/listener-templates.
+- HTTPError
+  - NotFoundError
+    - ListenerTemplateNotFoundError: The requested listener template with the
+    provided listener template ID was not found.
+  - UnprocessableEntityError
+    - ListenerCreationError: An error occurred while attempting to create the
+    listener.
+      - InvalidListenerTemplateOptionNameError: The provided listener template
+      option name is invalid.
+      - InvalidListenerTemplateOptionValueError: The provided listener template
+      option value is invalid.
+"""
+
 from typing import Any
 
-from consortium.server.exceptions.http_exceptions import (
+from consortium.server.exceptions.api_exceptions.http_exceptions import (
     NotFoundError,
     UnprocessableEntityError,
+)
+from consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions import (
+    ListenerTemplateNotFoundError as ListenerTemplateIDNotFoundServiceError,
 )
 
 
@@ -19,14 +29,13 @@ class ListenerTemplateNotFoundError(NotFoundError):
         self,
         listener_template_id: str,
     ) -> None:
+        service_exception = ListenerTemplateIDNotFoundServiceError(
+            listener_template_id=listener_template_id,
+        )
         super().__init__(
             status_code=404,
             code="LISTENER_TEMPLATE_NOT_FOUND_ERROR",
-            message=(
-                "The requested listener template with the provided listener template "
-                f'ID "{listener_template_id}" was not found.'
-            ),
-            detail={"listener_template_id": listener_template_id},
+            message=service_exception.message,
         )
 
 
@@ -67,7 +76,7 @@ class InvalidListenerTemplateOptionValueError(ListenerCreationError):
         self,
         option_name: str,
         option_value: Any,
-        exception: Exception,
+        message: str,
     ) -> None:
         super().__init__(
             status_code=422,
@@ -79,6 +88,6 @@ class InvalidListenerTemplateOptionValueError(ListenerCreationError):
             detail={
                 "option_name": option_name,
                 "option_value": option_value,
-                "exception": str(exception),
+                "message": message,
             },
         )

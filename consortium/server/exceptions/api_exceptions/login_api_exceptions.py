@@ -1,6 +1,8 @@
-# Errors for the api endpoint /api/login.
-# - AlreadyLoggedInError
-from typing import Any
+"""
+Errors for the api endpoint /api/login:
+
+- AlreadyLoggedInError: User is already logged in.
+"""
 
 from consortium.server.exceptions.base_server_exception import BaseServerException
 
@@ -8,12 +10,12 @@ from consortium.server.exceptions.base_server_exception import BaseServerExcepti
 class AlreadyLoggedInError(BaseServerException):
     def __init__(
         self,
-        message: str = "The user is already logged in.",
-        detail: Any = None,
+        message: str = (
+            "Failed to authenticate user. The current user is already logged in."
+        ),
     ) -> None:
         super().__init__(
             status_code=409,
             code="ALREADY_LOGGED_IN_ERROR",
             message=message,
-            detail=detail,
         )

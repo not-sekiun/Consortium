@@ -8,8 +8,8 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.http_exceptions import (
-    InternalServerError,
+from consortium.server.exceptions.api_exceptions.http_exceptions import (
+    InternalServerErrorError,
     ServiceUnavailableError,
 )
 from consortium.server.objects.server_objects import ServerStatus
@@ -181,13 +181,13 @@ async def log_rest_api_requests_and_responses(
             request.method,
             request.url.path,
             # length of the response as a JSON string
-            len(json.dumps(InternalServerError().to_json())),
+            len(json.dumps(InternalServerErrorError().to_json())),
         )
         rest_api_logger.opt(ansi=True).error(
             "<bold><red>{}</></>",
             traceback.format_exc(),
         )
         return JSONResponse(
-            status_code=InternalServerError().status_code,
-            content=InternalServerError().to_json(),
+            status_code=InternalServerErrorError().status_code,
+            content=InternalServerErrorError().to_json(),
         )

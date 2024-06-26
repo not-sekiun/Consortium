@@ -5,11 +5,20 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
-from consortium.server.exceptions.internal_server_exceptions import (
+from consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions import (
     InternalListenerProjectError,
     InvalidListenerProjectFolderStructureError,
     InvalidListenerProjectImplementationError,
     InvalidListenerProjectManifestFileError,
+    InvalidListenerProjectManifestFileJSONError,
+    InvalidListenerProjectManifestFileSchemaError,
+    ListenerProfileNotFoundError,
+    ListenerProjectInterfaceError,
+    ListenerProjectListenerFileNotFoundError,
+    ListenerProjectListenerTemplateFileNotFoundError,
+    ListenerProjectListenerTypeFileNotFoundError,
+    ListenerProjectManifestFileNotFoundError,
+    ListenerProjectSymbolNotFoundError,
 )
 from consortium.server.framework.base_listener import BaseListener
 from consortium.server.framework.base_listener_template import BaseListenerTemplate
@@ -33,6 +42,12 @@ class ListenerProfilesService:
         self.listener_profiles_service_logger.debug(
             f"Started {self}.",
         )
+
+    def __str__(self) -> str:
+        return "Consortium Listener Profiles Service"
+
+    def __repr__(self) -> str:
+        return "ListenerProfilesService()"
 
     @staticmethod
     def get_listener_profile_from_listener_project_folder(
@@ -78,22 +93,17 @@ class ListenerProfilesService:
                     schema=listener_project_manifest_json_schema,
                 )
         except FileNotFoundError:
-            raise InvalidListenerProjectFolderStructureError(
-                "The listener project manifest file (listener_project_manifest.json) "
-                "was not found in the listener project folder: "
-                f"{listener_project_folder}",
+            raise ListenerProjectManifestFileNotFoundError(
+                listener_project_folder=str(listener_project_folder),
             )
         except json.JSONDecodeError:
-            raise InvalidListenerProjectManifestFileError(
-                "The listener project manifest file (listener_project_manifest.json) "
-                f'in the listener project folder "{listener_project_folder}" is not a '
-                f"valid JSON file.",
+            raise InvalidListenerProjectManifestFileJSONError(
+                listener_project_folder=str(listener_project_folder),
             )
         except jsonschema.ValidationError as exc:
-            raise InvalidListenerProjectManifestFileError(
-                "The listener project manifest file (listener_project_manifest.json) "
-                f'in the listener project folder "{listener_project_folder}" does not '
-                f"follow the correct JSON schema: {exc}",
+            raise InvalidListenerProjectManifestFileSchemaError(
+                listener_project_folder=str(listener_project_folder),
+                json_schema_error_message=exc.message,
             )
 
         # Check for valid project folder structure as specified by the manifest file.
@@ -108,22 +118,19 @@ class ListenerProfilesService:
         )
 
         if not listener_file.exists():
-            raise InvalidListenerProjectFolderStructureError(
-                f'The listener file "{listener_file}" specified in the listener '
-                "project manifest file (listener_project_manifest.json) is missing for "
-                f"listener project folder: {listener_project_folder}",
+            raise ListenerProjectListenerFileNotFoundError(
+                listener_file=str(listener_file),
+                listener_project_folder=str(listener_project_folder),
             )
         if not listener_template_file.exists():
-            raise InvalidListenerProjectFolderStructureError(
-                f'The listener template file "{listener_template_file}" specified in '
-                "the listener project manifest file (listener_project_manifest.json) "
-                f"is missing for listener project folder: {listener_project_folder}",
+            raise ListenerProjectListenerTemplateFileNotFoundError(
+                listener_template_file=str(listener_template_file),
+                listener_project_folder=str(listener_project_folder),
             )
         if not listener_type_file.exists():
-            raise InvalidListenerProjectFolderStructureError(
-                f'The listener type file "{listener_type_file}" specified in the '
-                "listener project manifest file (listener_project_manifest.json) is "
-                f"missing for listener project folder: {listener_project_folder}",
+            raise ListenerProjectListenerTypeFileNotFoundError(
+                listener_type_file=str(listener_type_file),
+                listener_project_folder=str(listener_project_folder),
             )
 
         # Check for valid symbol names in the required listener project files.
@@ -155,16 +162,17 @@ class ListenerProfilesService:
                 listener_symbol,
             )
         except (ImportError, AttributeError):
-            raise InvalidListenerProjectFolderStructureError(
-                f'The symbol name "{listener_symbol}" specified in the listener '
-                "project manifest file (listener_project_manifest.json) was not found "
-                f'in the listener file "{listener_file}" for listener project folder: '
-                f"{listener_project_folder}",
+            raise ListenerProjectSymbolNotFoundError(
+                symbol_name=listener_symbol,
+                listener_project_file=str(listener_file),
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener",
             )
         except Exception as exc:
             raise InternalListenerProjectError(
-                f"Failed to load listener from {listener_project_folder} due to an "
-                f"exception that occurred while importing the listener: {exc}",
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener",
+                internal_error_message=str(exc),
             )
 
         try:
@@ -176,17 +184,17 @@ class ListenerProfilesService:
                 listener_template_symbol,
             )
         except (ImportError, AttributeError):
-            raise InvalidListenerProjectFolderStructureError(
-                f'The symbol name "{listener_template_symbol}" specified in the '
-                "listener project manifest file (listener_project_manifest.json) was "
-                f'not found in the listener template file "{listener_template_file}" '
-                f"for listener project folder: {listener_project_folder}",
+            raise ListenerProjectSymbolNotFoundError(
+                symbol_name=listener_template_symbol,
+                listener_project_file=str(listener_template_file),
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener template",
             )
         except Exception as exc:
             raise InternalListenerProjectError(
-                f"Failed to load listener template from {listener_project_folder} due "
-                f"to an exception that occurred while importing the listener template: "
-                f"{exc}",
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener template",
+                internal_error_message=str(exc),
             )
 
         try:
@@ -196,48 +204,46 @@ class ListenerProfilesService:
                 listener_type_symbol,
             )
         except (ImportError, AttributeError):
-            raise InvalidListenerProjectFolderStructureError(
-                f'The symbol name "{listener_type_symbol}" specified in the listener '
-                "project manifest file (listener_project_manifest.json) was not found "
-                f'in the listener type file "{listener_type_file}" for listener '
-                f"project folder: {listener_project_folder}",
+            raise ListenerProjectSymbolNotFoundError(
+                symbol_name=listener_type_symbol,
+                listener_project_file=str(listener_type_file),
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener type",
             )
         except Exception as exc:
             raise InternalListenerProjectError(
-                f"Failed to load listener type from {listener_project_folder} due to "
-                f"an exception that occurred while importing the listener type: {exc}",
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener type",
+                internal_error_message=str(exc),
             )
 
         # Check for correct inheritance and instantiation of classes.
         if not issubclass(listener_class, BaseListener):
-            raise InvalidListenerProjectImplementationError(
-                "The symbol name of the listener class specified in the listener "
-                "project manifest file (listener_project_manifest.json) does not inherit "
-                "from the framework's base listener class for the listener project "
-                f"folder: {listener_project_folder}",
+            raise ListenerProjectInterfaceError(
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener",
+                listener_project_symbol=listener_symbol,
             )
         if not issubclass(listener_template_class, BaseListenerTemplate):
-            raise InvalidListenerProjectImplementationError(
-                "The symbol name of the listener template class specified in the "
-                "listener project manifest file (listener_project_manifest.json) does "
-                "not inherit from the framework's base listener template class for the "
-                f"listener project folder: {listener_project_folder}",
+            raise ListenerProjectInterfaceError(
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener template",
+                listener_project_symbol=listener_template_symbol,
             )
         if not isinstance(listener_type, ListenerType):
-            raise InvalidListenerProjectImplementationError(
-                "The symbol name of the listener type specified in the listener "
-                "project manifest file (listener_project_manifest.json) does not "
-                "inherit from the framework's base listener type for the listener "
-                f"project folder: {listener_project_folder}",
+            raise ListenerProjectInterfaceError(
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener type",
+                listener_project_symbol=listener_type_symbol,
             )
 
         try:
             listener_template_object = listener_template_class()
         except Exception as exc:
             raise InternalListenerProjectError(
-                "Failed to load listener template for listener project folder "
-                f"{listener_project_folder} due to an exception that occurred while "
-                f"instantiating the listener template: {exc}",
+                listener_project_folder=str(listener_project_folder),
+                listener_project_file_type="listener template",
+                internal_error_message=str(exc),
             )
 
         # Return the instantiated listener template to be loaded into the service.
@@ -280,10 +286,7 @@ class ListenerProfilesService:
                 InvalidListenerProjectManifestFileError,
                 InternalListenerProjectError,
             ) as exc:
-                self.listener_profiles_service_logger.error(
-                    f"Failed to load listener profile from listener project folder "
-                    f"{path.parent}. {exc}",
-                )
+                self.listener_profiles_service_logger.error(exc)
 
         self.listener_profiles_service_logger.info(
             f"Loaded framework listener profiles ({len(self._listener_profiles)} "
@@ -335,9 +338,8 @@ class ListenerProfilesService:
         try:
             listener_profile = self._listener_profiles.pop(listener_profile_id)
         except KeyError:
-            raise ValueError(
-                f"No listener profile exists with the provided listener profile ID: "
-                f"{listener_profile_id}",
+            raise ListenerProfileNotFoundError(
+                listener_profile_id=listener_profile_id,
             )
 
         self.listener_profiles_service_logger.debug(
@@ -352,9 +354,8 @@ class ListenerProfilesService:
         try:
             listener_profile = self._listener_profiles.pop(listener_profile_id)
         except KeyError:
-            raise ValueError(
-                f"No listener profile exists with the provided listener profile ID: "
-                f"{listener_profile_id}",
+            raise ListenerProfileNotFoundError(
+                listener_profile_id=listener_profile_id,
             )
 
         listener_profile = self.load_listener_profile_from_listener_project_folder(
@@ -368,7 +369,8 @@ class ListenerProfilesService:
     def get_all_listener_profiles(self):
         all_listener_profiles = list(self._listener_profiles.values())
         self.listener_profiles_service_logger.debug(
-            f"Retrieved all listener profiles ({len(all_listener_profiles)} retrieved).",
+            f"Retrieved all listener profiles ({len(all_listener_profiles)} "
+            "retrieved).",
         )
         return all_listener_profiles
 
@@ -376,18 +378,11 @@ class ListenerProfilesService:
         try:
             listener_profile = self._listener_profiles[listener_profile_id]
         except KeyError:
-            raise ValueError(
-                f"No listener profile exists with the provided listener profile ID: "
-                f"{listener_profile_id}",
+            raise ListenerProfileNotFoundError(
+                listener_profile_id=listener_profile_id,
             )
 
         self.listener_profiles_service_logger.debug(
             f"Retrieved listener profile: {listener_profile!r}",
         )
         return listener_profile
-
-    def __str__(self) -> str:
-        return "Consortium Listener Profiles Service"
-
-    def __repr__(self) -> str:
-        return "ListenerProfilesService()"

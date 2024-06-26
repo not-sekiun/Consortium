@@ -5,33 +5,33 @@ from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
-    ForbiddenHTTPError,
-    InternalServerErrorHTTPError,
-    MethodNotAllowedHTTPError,
-    UnauthorizedHTTPError,
-    UnprocessableEntityHTTPError,
+    ForbiddenError,
+    InternalServerErrorError,
+    MethodNotAllowedError,
+    UnauthorizedError,
+    UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.user_accounts_api_exceptions import (
-    EmptyUserAccountPasswordAPIError,
-    EmptyUserAccountUsernameAPIError,
-    IdenticalUserAccountPasswordAPIError,
-    IdenticalUserAccountRoleAPIError,
-    IdenticalUserAccountUsernameAPIError,
-    InvalidUserAccountCredentials,
-    InvalidUserAccountRoleAPIError,
-    UserAccountNotFoundAPIError,
-    UserAccountUsernameAlreadyExistsAPIError,
+    EmptyUserAccountPasswordError as EmptyUserAccountPasswordAPIError,
+    EmptyUserAccountUsernameError as EmptyUserAccountUsernameAPIError,
+    IdenticalUserAccountPasswordError as IdenticalUserAccountPasswordAPIError,
+    IdenticalUserAccountRoleError as IdenticalUserAccountRoleAPIError,
+    IdenticalUserAccountUsernameError as IdenticalUserAccountUsernameAPIError,
+    InvalidUserAccountRoleError as InvalidUserAccountRoleAPIError,
+    UserAccountAuthenticationError as InvalidUserAccountCredentialsAPIError,
+    UserAccountNotFoundError as UserAccountNotFoundAPIError,
+    UserAccountUsernameAlreadyExistsError as UserAccountUsernameAlreadyExistsAPIError,
 )
 from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
-    EmptyUserAccountPasswordServiceError,
-    EmptyUserAccountUsernameServiceError,
-    IdenticalUserAccountPasswordServiceError,
-    IdenticalUserAccountRoleServiceError,
-    IdenticalUserAccountUsernameServiceError,
-    InvalidUserAccountIDServiceError,
-    InvalidUserAccountRoleServiceError,
-    UserAccountsFileServiceError,
-    UserAccountUsernameAlreadyExistsServiceError,
+    EmptyUserAccountPasswordError as EmptyUserAccountPasswordServiceError,
+    EmptyUserAccountUsernameError as EmptyUserAccountUsernameServiceError,
+    IdenticalUserAccountPasswordError as IdenticalUserAccountPasswordServiceError,
+    IdenticalUserAccountRoleError as IdenticalUserAccountRoleServiceError,
+    IdenticalUserAccountUsernameError as IdenticalUserAccountUsernameServiceError,
+    InvalidUserAccountRoleError as InvalidUserAccountRoleServiceError,
+    UserAccountIDNotFoundError as UserAccountIDNotFoundServiceError,
+    UserAccountsFileError as UserAccountsFileServiceError,
+    UserAccountUsernameAlreadyExistsError as UserAccountUsernameAlreadyExistsServiceError,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.user_account_models import UserAccountModel
@@ -42,10 +42,10 @@ from consortium.server.server_dependencies import AuthorizeUserRequest, get_curr
 router = APIRouter(
     prefix="/api/user-accounts",
     responses={
-        401: {"model": UnauthorizedHTTPError().to_pydantic_model()},
-        403: {"model": ForbiddenHTTPError().to_pydantic_model()},
-        405: {"model": MethodNotAllowedHTTPError().to_pydantic_model()},
-        500: {"model": InternalServerErrorHTTPError().to_pydantic_model()},
+        401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
+        405: {"model": MethodNotAllowedError().to_pydantic_model()},
+        500: {"model": InternalServerErrorError().to_pydantic_model()},
     },
     tags=["User Accounts API"],
 )
@@ -93,7 +93,7 @@ async def get_user_account_by_user_account_id(
         return user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-    except InvalidUserAccountIDServiceError:
+    except UserAccountIDNotFoundServiceError:
         raise UserAccountNotFoundAPIError(user_account_id=user_account_id)
 
 
@@ -138,7 +138,7 @@ async def create_user_account(
     try:
         user_accounts_service.write_framework_user_accounts()
     except UserAccountsFileServiceError:
-        raise InternalServerErrorHTTPError()
+        raise InternalServerErrorError()
 
     return new_user_account
 
@@ -178,14 +178,14 @@ def update_own_user_account_username(
         user_account = user_accounts_service.get_user_account_by_username(
             username=user.username,
         )
-    except InvalidUserAccountIDServiceError:
+    except UserAccountIDNotFoundServiceError:
         raise UserAccountNotFoundAPIError(user_account_id=None)
 
     old_user_account_username = user_account.username
     try:
         user_account = (
             user_accounts_service.update_user_account_username_by_user_account_id(
-                user_account_id=user_account.user_account_id,
+                user_account_id=str(user_account.user_account_id),
                 username=username,
             )
         )
@@ -196,7 +196,7 @@ def update_own_user_account_username(
     try:
         user_accounts_service.write_framework_user_accounts()
     except UserAccountsFileServiceError:
-        raise InternalServerErrorHTTPError()
+        raise InternalServerErrorError()
     for user in users_service.get_all_users():
         if user.username == old_user_account_username:
             user.username = user_account.username
@@ -207,7 +207,7 @@ def update_own_user_account_username(
 @router.patch(
     "/{user_account_id}/username",
     responses={
-        200: {"model": None},
+        200: {"model": UserAccountModel},
         404: {
             "model": UserAccountNotFoundAPIError(
                 user_account_id="string",
@@ -234,19 +234,19 @@ def update_user_account_username_by_user_account_id(
             ),
         ),
     ],
-) -> None:
+) -> UserAccountModel:
     try:
         user_account = user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-    except InvalidUserAccountIDServiceError:
+    except UserAccountIDNotFoundServiceError:
         raise UserAccountNotFoundAPIError(user_account_id=user_account_id)
 
     old_user_account_username = user_account.username
     try:
         user_account = (
             user_accounts_service.update_user_account_username_by_user_account_id(
-                user_account_id=user_account.user_account_id,
+                user_account_id=user_account_id,
                 username=username,
             )
         )
@@ -257,7 +257,7 @@ def update_user_account_username_by_user_account_id(
     try:
         user_accounts_service.write_framework_user_accounts()
     except UserAccountsFileServiceError:
-        raise InternalServerErrorHTTPError()
+        raise InternalServerErrorError()
     for user in users_service.get_all_users():
         if user.username == old_user_account_username:
             user.username = username
@@ -297,16 +297,16 @@ def update_own_user_account_password(
         user_account = user_accounts_service.get_user_account_by_username(
             username=user.username,
         )
-    except InvalidUserAccountIDServiceError:
+    except UserAccountIDNotFoundServiceError:
         raise UserAccountNotFoundAPIError(user_account_id=None)
     if old_password != user_account.password:
-        raise InvalidUserAccountCredentials
+        raise InvalidUserAccountCredentialsAPIError
 
     try:
         user_account = (
             user_accounts_service.update_user_account_password_by_user_account_id(
-                user_account_id=user_account.user_account_id,
-                new_password=new_password,
+                user_account_id=str(user_account.user_account_id),
+                password=new_password,
             )
         )
     except EmptyUserAccountPasswordServiceError:
@@ -316,7 +316,7 @@ def update_own_user_account_password(
     try:
         user_accounts_service.write_framework_user_accounts()
     except UserAccountsFileServiceError:
-        raise InternalServerErrorHTTPError()
+        raise InternalServerErrorError()
 
     return user_account
 
@@ -338,8 +338,7 @@ def update_own_user_account_password(
 )
 def update_user_account_password_by_user_account_id(
     user_account_id: str,
-    old_password: Annotated[str, Body()],
-    new_password: Annotated[str, Body()],
+    password: Annotated[str, Body()],
     _: Annotated[
         None,
         Depends(
@@ -350,29 +349,22 @@ def update_user_account_password_by_user_account_id(
     ],
 ) -> UserAccountModel:
     try:
-        user_account = user_accounts_service.get_user_account_by_user_account_id(
-            user_account_id=user_account_id,
-        )
-    except InvalidUserAccountIDServiceError:
-        raise UserAccountNotFoundAPIError(user_account_id=None)
-    if old_password != user_account.password:
-        raise InvalidUserAccountCredentials
-
-    try:
         user_account = (
             user_accounts_service.update_user_account_password_by_user_account_id(
-                user_account_id=user_account.user_account_id,
-                new_password=new_password,
+                user_account_id=user_account_id,
+                password=password,
             )
         )
     except EmptyUserAccountPasswordServiceError:
         raise EmptyUserAccountPasswordAPIError
     except IdenticalUserAccountPasswordServiceError:
         raise IdenticalUserAccountPasswordAPIError
+    except UserAccountIDNotFoundServiceError:
+        raise UserAccountNotFoundAPIError(user_account_id=None)
     try:
         user_accounts_service.write_framework_user_accounts()
     except UserAccountsFileServiceError:
-        raise InternalServerErrorHTTPError()
+        raise InternalServerErrorError()
 
     return user_account
 
@@ -409,7 +401,7 @@ def update_user_account_role_by_user_account_id(
         user_account = user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-    except InvalidUserAccountIDServiceError:
+    except UserAccountIDNotFoundServiceError:
         raise UserAccountNotFoundAPIError(user_account_id=None)
 
     old_user_account_role = user_account.role
@@ -425,7 +417,7 @@ def update_user_account_role_by_user_account_id(
     try:
         user_accounts_service.write_framework_user_accounts()
     except UserAccountsFileServiceError:
-        raise InternalServerErrorHTTPError()
+        raise InternalServerErrorError()
     for user in users_service.get_all_users():
         if user.role == old_user_account_role:
             user.role = user_account.role
@@ -443,7 +435,7 @@ def update_user_account_role_by_user_account_id(
             ).to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityHTTPError(
+            "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
@@ -464,11 +456,11 @@ async def delete_user_account_by_user_account_id(
         user_accounts_service.delete_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-    except InvalidUserAccountIDServiceError:
+    except UserAccountIDNotFoundServiceError:
         raise UserAccountNotFoundAPIError(user_account_id=user_account_id)
     try:
         user_accounts_service.write_framework_user_accounts()
     except UserAccountsFileServiceError:
-        raise InternalServerErrorHTTPError()
+        raise InternalServerErrorError()
 
     return SuccessResponseModel()

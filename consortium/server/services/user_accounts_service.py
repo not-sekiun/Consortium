@@ -5,24 +5,24 @@ import jsonschema
 from loguru import logger
 
 from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
-    EmptyUserAccountPasswordServiceError,
-    EmptyUserAccountUsernameServiceError,
-    IdenticalUserAccountPasswordServiceError,
-    IdenticalUserAccountRoleServiceError,
-    IdenticalUserAccountUsernameServiceError,
-    InvalidUserAccountIDServiceError,
-    InvalidUserAccountRoleServiceError,
-    InvalidUserAccountUsernameServiceError,
-    UserAccountAuthenticationServiceError,
-    UserAccountsFileContainsDuplicateUsernamesServiceError,
-    UserAccountsFileIsNotJSONServiceError,
-    UserAccountsFileNotFoundServiceError,
-    UserAccountsFilepathIsDirectoryServiceError,
-    UserAccountsFileReadAccessServiceError,
-    UserAccountsFileSchemaServiceError,
-    UserAccountsFileWriteAccessServiceError,
+    EmptyUserAccountPasswordError,
+    EmptyUserAccountUsernameError,
+    IdenticalUserAccountPasswordError,
+    IdenticalUserAccountRoleError,
+    IdenticalUserAccountUsernameError,
+    InvalidUserAccountRoleError,
+    UserAccountAuthenticationError,
+    UserAccountIDNotFoundError,
+    UserAccountsFileContainsDuplicateUsernamesError,
+    UserAccountsFileIsNotJSONError,
+    UserAccountsFileNotFoundError,
+    UserAccountsFilepathIsDirectoryError,
+    UserAccountsFileReadAccessError,
+    UserAccountsFileSchemaError,
+    UserAccountsFileWriteAccessError,
     UserAccountsServiceError,
-    UserAccountUsernameAlreadyExistsServiceError,
+    UserAccountUsernameAlreadyExistsError,
+    UserAccountUsernameNotFoundError,
 )
 from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
@@ -52,7 +52,7 @@ class UserAccountsService:
         try:
             user_account = self._user_accounts[user_account_id]
         except KeyError:
-            raise InvalidUserAccountIDServiceError(
+            raise UserAccountIDNotFoundError(
                 user_account_id=user_account_id,
             )
         self.user_accounts_service_logger.debug(
@@ -72,7 +72,7 @@ class UserAccountsService:
                 )
                 return user_account
 
-        raise InvalidUserAccountUsernameServiceError(username=username)
+        raise UserAccountUsernameNotFoundError(username=username)
 
     def get_all_user_accounts(self) -> list[UserAccountModel]:
         all_user_accounts = list(self._user_accounts.values())
@@ -90,15 +90,15 @@ class UserAccountsService:
         role: UserRole,
     ) -> UserAccountModel:
         if not username:
-            raise EmptyUserAccountUsernameServiceError
+            raise EmptyUserAccountUsernameError
         if not password:
-            raise EmptyUserAccountPasswordServiceError
+            raise EmptyUserAccountPasswordError
         if role not in UserRole:
-            raise InvalidUserAccountRoleServiceError(role=role)
+            raise InvalidUserAccountRoleError(role=role)
         for user_account in self.get_all_user_accounts():
             if user_account.username == username:
-                raise UserAccountUsernameAlreadyExistsServiceError(
-                    existing_username=username,
+                raise UserAccountUsernameAlreadyExistsError(
+                    username=username,
                 )
 
         user_account = UserAccountModel(
@@ -116,30 +116,31 @@ class UserAccountsService:
     def update_user_account_username_by_user_account_id(
         self,
         user_account_id: str,
-        new_username: str,
+        username: str,
     ) -> UserAccountModel:
-        if not new_username:
-            raise EmptyUserAccountUsernameServiceError
+        if not username:
+            raise EmptyUserAccountUsernameError
         # Calling the `get_user_account_by_user_account_id()` method will implicitly
         # check to see if the user account ID is valid. If not, an
-        # InvalidUserAccountIDServiceError will be thrown and propagated upwards to the
+        # InvalidUserAccountIDError will be thrown and propagated upwards to the
         # caller.
+        print(self._user_accounts)
         user_account = self.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-        if user_account.username == new_username:
-            raise IdenticalUserAccountUsernameServiceError(username=new_username)
+        if user_account.username == username:
+            raise IdenticalUserAccountUsernameError(username=username)
         for existing_user_account in self.get_all_user_accounts():
-            if existing_user_account.username == new_username:
-                raise UserAccountUsernameAlreadyExistsServiceError(
-                    existing_username=new_username,
+            if existing_user_account.username == username:
+                raise UserAccountUsernameAlreadyExistsError(
+                    username=username,
                 )
 
         old_username = user_account.username
-        user_account.username = new_username
+        user_account.username = username
         self.user_accounts_service_logger.info(
             f"Updated username for user account {user_account}: '{old_username}' -> "
-            f"'{new_username}'",
+            f"'{username}'",
         )
 
         return user_account
@@ -147,41 +148,41 @@ class UserAccountsService:
     def update_user_account_password_by_user_account_id(
         self,
         user_account_id: str,
-        new_password: str,
+        password: str,
     ) -> UserAccountModel:
-        if not new_password:
-            raise EmptyUserAccountPasswordServiceError
+        if not password:
+            raise EmptyUserAccountPasswordError
         user_account = self.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-        if user_account.password == new_password:
-            raise IdenticalUserAccountPasswordServiceError
+        if user_account.password == password:
+            raise IdenticalUserAccountPasswordError
 
         old_password = user_account.password
-        user_account.password = new_password
+        user_account.password = password
         self.user_accounts_service_logger.info(
             f"Updated password for user account {user_account}: '{old_password}' -> "
-            f"'{new_password}'",
+            f"'{password}'",
         )
         return user_account
 
     def update_user_account_role_by_user_account_id(
         self,
         user_account_id: str,
-        new_role: UserRole,
+        role: UserRole,
     ) -> UserAccountModel:
-        if new_role not in UserRole:
-            raise InvalidUserAccountRoleServiceError(role=new_role)
+        if role not in UserRole:
+            raise InvalidUserAccountRoleError(role=role)
         user_account = self.get_user_account_by_user_account_id(user_account_id)
-        if user_account.role == new_role:
-            raise IdenticalUserAccountRoleServiceError(
-                role=new_role,
+        if user_account.role == role:
+            raise IdenticalUserAccountRoleError(
+                role=role,
             )
 
         old_role = user_account.role
-        user_account.role = new_role
+        user_account.role = role
         self.user_accounts_service_logger.info(
-            f"Updated role for {user_account}: '{old_role}' -> '{new_role}'",
+            f"Updated role for {user_account}: '{old_role}' -> '{role}'",
         )
 
         return user_account
@@ -193,7 +194,7 @@ class UserAccountsService:
         try:
             deleted_user_account = self._user_accounts.pop(str(user_account_id))
         except KeyError:
-            raise InvalidUserAccountIDServiceError(user_account_id=user_account_id)
+            raise UserAccountIDNotFoundError(user_account_id=user_account_id)
         self.user_accounts_service_logger.info(
             f"Deleted user account: {deleted_user_account}",
         )
@@ -208,12 +209,12 @@ class UserAccountsService:
         ]
         try:
             user_account = self.get_user_account_by_username(username=username)
-        except InvalidUserAccountUsernameServiceError:
-            raise UserAccountAuthenticationServiceError
+        except UserAccountUsernameNotFoundError:
+            raise UserAccountAuthenticationError
         if username not in existing_usernames:
-            raise UserAccountAuthenticationServiceError
+            raise UserAccountAuthenticationError
         if user_account.password != password:
-            raise UserAccountAuthenticationServiceError
+            raise UserAccountAuthenticationError
 
         self.user_accounts_service_logger.debug(
             f"Authenticated user account: {user_account!r}",
@@ -255,11 +256,11 @@ class UserAccountsService:
         }
 
         if not user_accounts_filepath.exists():
-            raise UserAccountsFileNotFoundServiceError(
+            raise UserAccountsFileNotFoundError(
                 user_accounts_filepath=user_accounts_filepath,
             )
         if user_accounts_filepath.is_dir():
-            raise UserAccountsFilepathIsDirectoryServiceError(
+            raise UserAccountsFilepathIsDirectoryError(
                 user_accounts_filepath=user_accounts_filepath,
             )
         try:
@@ -271,15 +272,15 @@ class UserAccountsService:
                 schema=user_accounts_file_json_schema,
             )
         except jsonschema.ValidationError:
-            raise UserAccountsFileSchemaServiceError(
+            raise UserAccountsFileSchemaError(
                 user_accounts_filepath=user_accounts_filepath,
             )
         except json.JSONDecodeError:
-            raise UserAccountsFileIsNotJSONServiceError(
+            raise UserAccountsFileIsNotJSONError(
                 user_accounts_filepath=user_accounts_filepath,
             )
         except PermissionError:
-            raise UserAccountsFileReadAccessServiceError(
+            raise UserAccountsFileReadAccessError(
                 user_accounts_filepath=user_accounts_filepath,
             )
 
@@ -293,11 +294,11 @@ class UserAccountsService:
             # strings, so we do not need to check for that condition here.
             new_user_account = UserAccountModel(**user_account_json_data)
             if new_user_account.username in existing_usernames:
-                raise UserAccountUsernameAlreadyExistsServiceError(
-                    existing_username=new_user_account.username,
+                raise UserAccountUsernameAlreadyExistsError(
+                    username=new_user_account.username,
                 )
             if new_user_account.username in new_usernames:
-                raise UserAccountsFileContainsDuplicateUsernamesServiceError(
+                raise UserAccountsFileContainsDuplicateUsernamesError(
                     user_accounts_filepath=user_accounts_filepath,
                     duplicate_username=new_user_account.username,
                 )
@@ -317,7 +318,7 @@ class UserAccountsService:
         user_accounts_filepath: Path,
     ) -> int:
         if user_accounts_filepath.is_dir():
-            raise UserAccountsFilepathIsDirectoryServiceError(
+            raise UserAccountsFilepathIsDirectoryError(
                 user_accounts_filepath=user_accounts_filepath,
             )
 
@@ -341,7 +342,7 @@ class UserAccountsService:
                 data = json.dumps(serializable_user_accounts, indent=4)
                 number_of_bytes_written = file.write(data)
         except PermissionError:
-            raise UserAccountsFileWriteAccessServiceError(
+            raise UserAccountsFileWriteAccessError(
                 user_accounts_filepath=user_accounts_filepath,
             )
 

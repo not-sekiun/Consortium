@@ -5,11 +5,18 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
-from consortium.server.exceptions.internal_server_exceptions import (
+from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
+    AgentProfileLoadError,
+    AgentProfileNotFoundError,
+    AgentProjectAgentGeneratorFileNotFoundError,
+    AgentProjectAgentTemplateFileNotFoundError,
+    AgentProjectAgentTypeFileNotFoundError,
+    AgentProjectInterfaceError,
+    AgentProjectManifestFileInvalidJSONError,
+    AgentProjectManifestFileNotFoundError,
+    AgentProjectManifestFileSchemaError,
+    AgentProjectSymbolNotFoundError,
     InternalAgentProjectError,
-    InvalidAgentProjectFolderStructureError,
-    InvalidAgentProjectImplementationError,
-    InvalidAgentProjectManifestFileError,
 )
 from consortium.server.framework.base_agent_generator import BaseAgentGenerator
 from consortium.server.framework.base_agent_template import BaseAgentTemplate
@@ -33,6 +40,12 @@ class AgentProfilesService:
         self.agent_profiles_service_logger.debug(
             f"Started {self}",
         )
+
+    def __str__(self) -> str:
+        return "Consortium Agent Profiles Service"
+
+    def __repr__(self) -> str:
+        return "AgentProfilesService()"
 
     @staticmethod
     def get_agent_profile_from_agent_project_folder(
@@ -76,22 +89,17 @@ class AgentProfilesService:
                     schema=agent_project_manifest_json_schema,
                 )
         except FileNotFoundError:
-            raise InvalidAgentProjectFolderStructureError(
-                "The agent project manifest file (agent_project_manifest.json) "
-                "was not found in the agent project folder: "
-                f"{agent_project_folder}",
+            raise AgentProjectManifestFileNotFoundError(
+                agent_project_folder=str(agent_project_folder),
             )
         except json.JSONDecodeError:
-            raise InvalidAgentProjectManifestFileError(
-                "The agent project manifest file (agent_project_manifest.json) "
-                f'in the agent project folder "{agent_project_folder}" is not a '
-                f"valid JSON file.",
+            raise AgentProjectManifestFileInvalidJSONError(
+                agent_project_folder=str(agent_project_folder),
             )
         except jsonschema.ValidationError as exc:
-            raise InvalidAgentProjectManifestFileError(
-                "The agent project manifest file (agent_project_manifest.json) "
-                f'in the agent project folder "{agent_project_folder}" does not '
-                f"follow the correct JSON schema: {exc}",
+            raise AgentProjectManifestFileSchemaError(
+                agent_project_folder=str(agent_project_folder),
+                json_schema_error_message=exc.message,
             )
 
         # Check for valid project folder structure as specified by the manifest file.
@@ -106,22 +114,19 @@ class AgentProfilesService:
         )
 
         if not agent_generator_file.exists():
-            raise InvalidAgentProjectFolderStructureError(
-                f'The agent generator file "{agent_generator_file}" specified in the '
-                "agent project manifest file (agent_project_manifest.json) is missing "
-                f"for agent project folder: {agent_project_folder}",
+            raise AgentProjectAgentGeneratorFileNotFoundError(
+                agent_project_folder=str(agent_project_folder),
+                agent_generator_file=str(agent_generator_file),
             )
         if not agent_template_file.exists():
-            raise InvalidAgentProjectFolderStructureError(
-                f'The agent template file "{agent_template_file}" specified in '
-                "the agent project manifest file (agent_project_manifest.json) "
-                f"is missing for agent project folder: {agent_project_folder}",
+            raise AgentProjectAgentTemplateFileNotFoundError(
+                agent_project_folder=str(agent_project_folder),
+                agent_template_file=str(agent_template_file),
             )
         if not agent_type_file.exists():
-            raise InvalidAgentProjectFolderStructureError(
-                f'The agent type file "{agent_type_file}" specified in the '
-                "agent project manifest file (agent_project_manifest.json) is "
-                f"missing for agent project folder: {agent_project_folder}",
+            raise AgentProjectAgentTypeFileNotFoundError(
+                agent_project_folder=str(agent_project_folder),
+                agent_type_file=str(agent_type_file),
             )
 
         # Check for valid symbol names in the required agent project files.
@@ -155,16 +160,17 @@ class AgentProfilesService:
                 agent_generator_symbol,
             )
         except (ImportError, AttributeError):
-            raise InvalidAgentProjectFolderStructureError(
-                f'The symbol name "{agent_generator_symbol}" specified in the agent '
-                "project manifest file (agent_project_manifest.json) was not found "
-                f'in the agent generator file "{agent_generator_file}" for agent '
-                f"project folder: {agent_project_folder}",
+            raise AgentProjectSymbolNotFoundError(
+                symbol_name=str(agent_generator_symbol),
+                agent_project_file=str(agent_generator_file),
+                agent_project_file_type="agent generator",
+                agent_project_folder=str(agent_project_folder),
             )
         except Exception as exc:
             raise InternalAgentProjectError(
-                f"Failed to load agent generator from {agent_project_folder} due to an "
-                f"exception that occurred while importing the agent generator: {exc}",
+                agent_project_file_type="agent generator",
+                agent_project_folder=str(agent_project_folder),
+                internal_error_message=str(exc),
             )
 
         try:
@@ -176,17 +182,17 @@ class AgentProfilesService:
                 agent_template_symbol,
             )
         except (ImportError, AttributeError):
-            raise InvalidAgentProjectFolderStructureError(
-                f'The symbol name "{agent_template_symbol}" specified in the '
-                "agent project manifest file (agent_project_manifest.json) was "
-                f'not found in the agent template file "{agent_template_file}" for '
-                f"agent project folder: {agent_project_folder}",
+            raise AgentProjectSymbolNotFoundError(
+                symbol_name=str(agent_generator_symbol),
+                agent_project_file=str(agent_generator_file),
+                agent_project_file_type="agent template",
+                agent_project_folder=str(agent_project_folder),
             )
         except Exception as exc:
             raise InternalAgentProjectError(
-                f"Failed to load agent template from {agent_project_folder} due "
-                f"to an exception that occurred while importing the agent template: "
-                f"{exc}",
+                agent_project_file_type="agent template",
+                agent_project_folder=str(agent_project_folder),
+                internal_error_message=str(exc),
             )
 
         try:
@@ -196,48 +202,46 @@ class AgentProfilesService:
                 agent_type_symbol,
             )
         except (ImportError, AttributeError):
-            raise InvalidAgentProjectFolderStructureError(
-                f'The symbol name "{agent_type_symbol}" specified in the agent '
-                "project manifest file (agent_project_manifest.json) was not found "
-                f'in the agent type file "{agent_type_file}" for agent project folder: '
-                f"{agent_project_folder}",
+            raise AgentProjectSymbolNotFoundError(
+                symbol_name=str(agent_generator_symbol),
+                agent_project_file=str(agent_generator_file),
+                agent_project_file_type="agent type",
+                agent_project_folder=str(agent_project_folder),
             )
         except Exception as exc:
             raise InternalAgentProjectError(
-                f"Failed to load agent type from {agent_project_folder} due to "
-                f"an exception that occurred while importing the agent type: {exc}",
+                agent_project_file_type="agent type",
+                agent_project_folder=str(agent_project_folder),
+                internal_error_message=str(exc),
             )
 
         # Check for correct inheritance and instantiation of classes.
         if not issubclass(agent_generator_class, BaseAgentGenerator):
-            raise InvalidAgentProjectImplementationError(
-                "The symbol name of the agent generator class specified in the agent "
-                "project manifest file (agent_project_manifest.json) does not inherit "
-                "from the framework's base agent generator class for the agent project "
-                f"folder: {agent_project_folder}",
+            raise AgentProjectInterfaceError(
+                agent_project_file_type="agent generator",
+                agent_project_folder=str(agent_project_folder),
+                agent_project_symbol=str(agent_generator_symbol),
             )
         if not issubclass(agent_template_class, BaseAgentTemplate):
-            raise InvalidAgentProjectImplementationError(
-                "The symbol name of the agent template class specified in the "
-                "agent project manifest file (agent_project_manifest.json) does "
-                "not inherit from the framework's base agent template class for the "
-                f"agent project folder: {agent_project_folder}",
+            raise AgentProjectInterfaceError(
+                agent_project_file_type="agent template",
+                agent_project_folder=str(agent_project_folder),
+                agent_project_symbol=str(agent_generator_symbol),
             )
         if not isinstance(agent_type, AgentType):
-            raise InvalidAgentProjectImplementationError(
-                "The symbol name of the agent type specified in the agent "
-                "project manifest file (agent_project_manifest.json) does not inherit "
-                "from the framework's base agent type for the agent project "
-                f"folder: {agent_project_folder}",
+            raise AgentProjectInterfaceError(
+                agent_project_file_type="agent type",
+                agent_project_folder=str(agent_project_folder),
+                agent_project_symbol=str(agent_generator_symbol),
             )
 
         try:
             agent_template_object = agent_template_class()
         except Exception as exc:
             raise InternalAgentProjectError(
-                "Failed to load agent template for agent project folder "
-                f"{agent_project_folder} due to an exception that occurred while "
-                f"instantiating the agent template: {exc}",
+                agent_project_file_type="agent template",
+                agent_project_folder=str(agent_project_folder),
+                internal_error_message=str(exc),
             )
 
         return AgentProfile(
@@ -271,12 +275,7 @@ class AgentProfilesService:
                 self.agent_profiles_service_logger.debug(
                     f"Loaded agent profile: {agent_profile!r}",
                 )
-            except (
-                InvalidAgentProjectFolderStructureError,
-                InvalidAgentProjectImplementationError,
-                InvalidAgentProjectManifestFileError,
-                InternalAgentProjectError,
-            ) as exc:
+            except AgentProfileLoadError as exc:
                 self.agent_profiles_service_logger.error(
                     f"Failed to load agent profile from agent project folder "
                     f"{path.parent}. {exc}",
@@ -325,10 +324,7 @@ class AgentProfilesService:
         try:
             agent_profile = self._agent_profiles.pop(agent_profile_id)
         except KeyError:
-            raise ValueError(
-                f"No agent profile exists with the provided agent profile ID: "
-                f"{agent_profile_id}",
-            )
+            raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
 
         self.agent_profiles_service_logger.debug(
             f"Unloaded agent profile: {agent_profile!r}",
@@ -342,10 +338,7 @@ class AgentProfilesService:
         try:
             agent_profile = self._agent_profiles.pop(agent_profile_id)
         except KeyError:
-            raise ValueError(
-                f"No agent profile exists with the provided agent profile ID: "
-                f"{agent_profile_id}",
-            )
+            raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
 
         agent_profile = self.load_agent_profile_from_agent_project_folder(
             agent_profile.agent_project_folder_path,
@@ -366,18 +359,9 @@ class AgentProfilesService:
         try:
             agent_profile = self._agent_profiles[agent_profile_id]
         except KeyError:
-            raise ValueError(
-                f"No agent profile exists with the provided agent profile ID: "
-                f"{agent_profile_id}",
-            )
+            raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
 
         self.agent_profiles_service_logger.debug(
             f"Retrieved agent profile: {agent_profile!r}",
         )
         return agent_profile
-
-    def __str__(self) -> str:
-        return "Consortium Agent Profiles Service"
-
-    def __repr__(self) -> str:
-        return "AgentProfilesService()"
