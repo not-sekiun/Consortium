@@ -14,8 +14,7 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class ListenersServiceError(BaseServiceException):
-    def __init__(self, message: str = "An error occurred in the listeners service."):
-        super().__init__(message)
+    pass
 
 
 class ListenerNotFoundError(ListenersServiceError):
@@ -34,35 +33,20 @@ class ListenerAlreadyExistsError(ListenersServiceError):
         )
 
 
-class ListenerTemplateResolutionError(ListenersServiceError):
-    def __init__(self, message: str = "", *args):
-        super().__init__(message, *args)
-
-
 class ListenerOperationError(ListenersServiceError):
-    def __init__(self, message: str = "", *args):
-        super().__init__(message, *args)
+    pass
 
 
 class ListenerStartError(ListenerOperationError):
-    def __init__(self, message: str = "", *args):
-        super().__init__(message, *args)
+    pass
 
 
 class ListenerStopError(ListenerOperationError):
-    def __init__(self, message: str = "", *args):
-        super().__init__(message, *args)
+    pass
 
 
 class ListenerStateError(ListenersServiceError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to perform the requested operation on the listener due to a "
-            "conflict with the requested operation and the listener's current state."
-        )
-    ):
-        super().__init__(message)
+    pass
 
 
 class ListenerAlreadyRunningError(ListenerStateError):
@@ -71,7 +55,7 @@ class ListenerAlreadyRunningError(ListenerStateError):
         message: str = (
             "Failed to perform the requested operation on the listener. The listener "
             "is already running which conflicts with the operation that was requested."
-        )
+        ),
     ):
         super().__init__(message)
 
@@ -82,25 +66,21 @@ class ListenerNotRunningError(ListenerStateError):
         message: str = (
             "Failed to perform the requested operation on the listener. The listener "
             "is not running which conflicts with the operation that was requested."
-        )
+        ),
     ):
         super().__init__(message)
 
 
 class ListenerParameterUpdateError(ListenersServiceError):
-    def __init__(
-        self,
-        message: str = "Failed to update listener parameter.",
-    ):
-        super().__init__(message)
+    pass
 
 
 class InvalidListenerParameterNameError(ListenerParameterUpdateError):
-    def __init__(self, parameter_name: str, listener_string: str):
+    def __init__(self, parameter_name: str, listener: str):
         super().__init__(
-            "Failed to update listener parameter. The provided parameter name "
-            f"'{parameter_name}' is not a valid parameter name for the listener "
-            f"'{listener_string}'.",
+            f"Failed to update listener parameters for listener '{listener}'. The "
+            f"provided parameter name '{parameter_name}' was not found for the "
+            f"listener.",
         )
 
 
@@ -108,12 +88,12 @@ class InvalidListenerParameterValueError(ListenerParameterUpdateError):
     def __init__(
         self,
         parameter_name: str,
-        parameter_value_string: str,
-        listener_string: str,
-        error_message: str,
+        parameter_value: str,
+        listener: str,
+        validation_error_message: str,
     ):
         super().__init__(
-            "Failed to update listener parameter. The provided parameter value "
-            f"'{parameter_value_string}' failed validation for the parameter "
-            f"'{parameter_name}' for listener '{listener_string}': {error_message}",
+            f"Failed to update listener parameters for listener '{listener}'. The "
+            f"provided parameter value '{parameter_value}' failed validation for the "
+            f"parameter '{parameter_name}': {validation_error_message}",
         )

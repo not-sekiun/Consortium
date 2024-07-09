@@ -40,39 +40,25 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class AgentProfilesServiceError(BaseServiceException):
-    def __init__(
-        self,
-        message: str = "An error occurred in the agent profiles service.",
-    ):
-        super().__init__(message)
+    pass
 
 
 class AgentProfileNotFoundError(AgentProfilesServiceError):
     def __init__(self, agent_profile_id: str):
         super().__init__(
-            "Failed to find the requested agent profile. No agent profile was "
-            f"found with the provided agent profile ID '{agent_profile_id}'.",
+            message=(
+                f"Failed to find the requested agent profile. No agent profile was "
+                f"found with the provided agent profile ID '{agent_profile_id}'."
+            ),
         )
 
 
 class AgentProfileLoadError(AgentProfilesServiceError):
-    def __init__(
-        self,
-        message: str = "Failed to load agent profile. An error occurred while "
-        "loading the agent profile.",
-    ):
-        super().__init__(message)
+    pass
 
 
 class InvalidAgentProjectManifestFileError(AgentProfileLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load agent project. The agent project manifest file is "
-            "invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class AgentProjectManifestFileInvalidJSONError(
@@ -80,9 +66,11 @@ class AgentProjectManifestFileInvalidJSONError(
 ):
     def __init__(self, agent_project_folder: str):
         super().__init__(
-            "Failed to load agent project. The agent project manifest file "
-            f"in agent project folder '{agent_project_folder}' is not a valid "
-            f"JSON file.",
+            message=(
+                f"Failed to load agent project at '{agent_project_folder}'. The agent "
+                f"project manifest file in the agent project folder is not a valid "
+                f"JSON file."
+            ),
         )
 
 
@@ -91,21 +79,16 @@ class AgentProjectManifestFileSchemaError(
 ):
     def __init__(self, agent_project_folder: str, json_schema_error_message: str):
         super().__init__(
-            "Failed to load agent project. The agent project manifest file in "
-            f"agent project folder '{agent_project_folder}' failed when "
-            f"validating against the JSON schema: {json_schema_error_message}",
+            message=(
+                f"Failed to load the agent project at '{agent_project_folder}'. The "
+                f"agent project manifest file in the agent project folder failed JSON "
+                f"schema validation: {json_schema_error_message}"
+            ),
         )
 
 
 class InvalidAgentProjectFolderStructureError(AgentProfileLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load agent project folder. The agent project "
-            "folder structure is invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class AgentProjectManifestFileNotFoundError(
@@ -113,8 +96,11 @@ class AgentProjectManifestFileNotFoundError(
 ):
     def __init__(self, agent_project_folder: str):
         super().__init__(
-            "Failed to load agent project. The agent project manifest file was "
-            f"not found in the agent project folder '{agent_project_folder}'.",
+            message=(
+                f"Failed to load the agent project at '{agent_project_folder}'. The "
+                f"agent project manifest file was not found in the agent project "
+                f"folder."
+            ),
         )
 
 
@@ -123,9 +109,11 @@ class AgentProjectAgentGeneratorFileNotFoundError(
 ):
     def __init__(self, agent_generator_file: str, agent_project_folder: str):
         super().__init__(
-            f"Failed to load agent project folder. Agent generator file '{agent_generator_file}' "
-            "specified in the agent project manifest file is missing for agent "
-            f"project folder '{agent_project_folder}'.",
+            message=(
+                f"Failed to load agent project folder at '{agent_project_folder}'. "
+                f"Agent generator file '{agent_generator_file}' specified in the agent "
+                f"project manifest file was not found."
+            ),
         )
 
 
@@ -134,9 +122,11 @@ class AgentProjectAgentTemplateFileNotFoundError(
 ):
     def __init__(self, agent_template_file: str, agent_project_folder: str):
         super().__init__(
-            "Failed to load agent project folder. The agent template file "
-            f"'{agent_template_file}' specified in the agent project manifest "
-            f"file is missing for agent project folder '{agent_project_folder}'.",
+            message=(
+                f"Failed to load agent project folder at '{agent_project_folder}'. "
+                f"Agent template file '{agent_template_file}' specified in the agent "
+                f"project manifest file was not found."
+            ),
         )
 
 
@@ -145,21 +135,16 @@ class AgentProjectAgentTypeFileNotFoundError(
 ):
     def __init__(self, agent_type_file: str, agent_project_folder: str):
         super().__init__(
-            "Failed to load agent project folder. The agent type file "
-            f"'{agent_type_file}' specified in the agent project manifest file "
-            f"is missing for agent project folder '{agent_project_folder}'",
+            message=(
+                f"Failed to load agent project folder at '{agent_project_folder}'. "
+                f"Agent type file '{agent_type_file}' specified in the agent project "
+                f"manifest file was not found."
+            ),
         )
 
 
 class InvalidAgentProjectImplementationError(AgentProfileLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load agent profile. The agent project implementation is "
-            "invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class AgentProjectInterfaceError(InvalidAgentProjectImplementationError):
@@ -174,9 +159,12 @@ class AgentProjectInterfaceError(InvalidAgentProjectImplementationError):
         agent_project_symbol: str,
     ):
         super().__init__(
-            f"Failed to load agent profile. The {agent_project_file_type} in "
-            f"agent project folder '{agent_project_folder}' does not implement "
-            f"the required interface for its symbol '{agent_project_symbol}'.",
+            message=(
+                f"Failed to load the agent project at '{agent_project_folder}'. The "
+                f"{agent_project_file_type} in the agent project folder does not "
+                f"implement the required interface for its defined symbol "
+                f"'{agent_project_symbol}'."
+            ),
         )
 
 
@@ -193,10 +181,12 @@ class AgentProjectSymbolNotFoundError(InvalidAgentProjectImplementationError):
         ],
     ):
         super().__init__(
-            f"Failed to load agent project. The symbol name '{symbol_name}' "
-            "specified in the agent project manifest file was not found in the "
-            f"{agent_project_file_type} file '{agent_project_file}' for agent "
-            f"project folder '{agent_project_folder}'",
+            message=(
+                f"Failed to load agent project at '{agent_project_folder}'. The symbol "
+                f"name '{symbol_name}' specified in the agent project's manifest file "
+                f"was not found in the {agent_project_file_type} file "
+                f"'{agent_project_file}'."
+            ),
         )
 
 
@@ -209,10 +199,12 @@ class InternalAgentProjectError(InvalidAgentProjectImplementationError):
             "agent type",
         ],
         agent_project_folder: str,
-        internal_error_message: str,
+        error_message: str,
     ):
         super().__init__(
-            "Failed to load agent profile. An exception occurred while loading the "
-            f"{agent_project_file_type} from agent project folder "
-            f"'{agent_project_folder}': {internal_error_message}",
+            message=(
+                f"Failed to load agent project at '{agent_project_folder}'. An "
+                f"exception occurred while loading the {agent_project_file_type}: "
+                f"{error_message}"
+            ),
         )

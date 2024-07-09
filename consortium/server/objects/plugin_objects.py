@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from consortium.server.framework._exceptions.plugins_framework_exceptions import (
+from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
     PluginRuntimeError,
 )
 
@@ -44,10 +44,11 @@ class PluginStatus:
         self.state = PluginState.ERRORED
         self.exception = exception
 
-    def transition_to_fatal(self, exception: Exception) -> None:
+    def transition_to_fatal(self, plugin_str: str, exception: Exception) -> None:
         self.state = PluginState.FATAL
         self.exception = PluginRuntimeError(
-            message="A fatal error occurred while the plugin was running.",
+            plugin_str=plugin_str,
+            error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,
                 "message": str(exception),

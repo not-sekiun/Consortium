@@ -1,7 +1,7 @@
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.framework.base_agent_template import BaseAgentTemplate
+from consortium.framework.base_agent_template import BaseAgentTemplate
 
 
 class AgentTemplatesService:
@@ -9,6 +9,12 @@ class AgentTemplatesService:
         self.agent_templates_service_logger = logger.bind(
             logger_name=str(self),
         )
+
+    def __str__(self) -> str:
+        return "Consortium Agent Templates Service"
+
+    def __repr__(self) -> str:
+        return "AgentTemplatesService()"
 
     def get_all_agent_templates(
         self,
@@ -36,9 +42,3 @@ class AgentTemplatesService:
             f"No agent template exists with the provided agent template ID: "
             f"{agent_template_id}",
         )
-
-    def __str__(self) -> str:
-        return "Consortium Agent Templates Service"
-
-    def __repr__(self) -> str:
-        return "AgentTemplatesService()"

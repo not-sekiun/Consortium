@@ -3,17 +3,22 @@ from typing import Any
 
 from loguru import logger
 
+from consortium.framework.base_listener import BaseListener
+from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (
+    ListenerStartError as ListenerStartFrameworkError,
+    ListenerStopError as ListenerStopFrameworkError,
+)
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
     InvalidListenerParameterNameError,
     InvalidListenerParameterValueError,
     ListenerAlreadyExistsError,
     ListenerAlreadyRunningError,
     ListenerNotFoundError,
-    ListenerTemplateResolutionError,
-)
-from consortium.server.framework.base_listener import BaseListener
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
-    OptionValueValidationError,
+    ListenerStartError as ListenerStartServiceError,
+    ListenerStopError as ListenerStopServiceError,
 )
 from consortium.server.objects.listener_objects import ListenerState
 from consortium.server.services.listener_templates_service import (
@@ -82,21 +87,6 @@ class ListenersService:
         self.listeners_service_logger.info(f"Removed listener: {removed_listener}")
         self.listeners_service_logger.debug(f"Removed listener: {removed_listener!r}")
 
-    async def start_listener_by_listener_id(self, listener_id: str) -> None:
-        listener = self.get_listener_by_listener_id(listener_id=listener_id)
-        await listener.start_listener()
-        self.listeners_service_logger.info(f"Started listener: {listener}")
-
-    async def stop_listener_by_listener_id(self, listener_id: str) -> None:
-        listener = self.get_listener_by_listener_id(listener_id=listener_id)
-        await listener.stop_listener()
-        self.listeners_service_logger.info(f"Stopped listener: {listener}")
-
-    async def cancel_listener_by_listener_id(self, listener_id: str) -> None:
-        listener = self.get_listener_by_listener_id(listener_id=listener_id)
-        await listener.cancel_listener()
-        self.listeners_service_logger.info(f"Cancelled listener: {listener}")
-
     def update_listener_name_by_listener_id(
         self,
         listener_id: str,
@@ -137,7 +127,7 @@ class ListenersService:
         # It should be impossible for this for loop to break out without finding
         # the listener template that matches the target listener or to trip up on a
         # false positive based on listener type because all listener types are
-        # unique to their respective listener
+        # unique to their respective listener.
         found_listener_template = False
         for (
             test_listener_template
@@ -147,8 +137,9 @@ class ListenersService:
                 listener_template = test_listener_template
                 break
         # This should never be raised unless a programmer error is made.
-        if not found_listener_template:
-            raise ListenerTemplateResolutionError
+        assert (
+            found_listener_template
+        ), "Listener template resolution failed unexpectedly"
 
         for parameter_name, parameter_value in listener.parameters.items():
             if parameter_name not in new_parameters:
@@ -160,7 +151,7 @@ class ListenersService:
             if parameter_name not in listener_template.options:
                 raise InvalidListenerParameterNameError(
                     parameter_name=parameter_name,
-                    listener_string=str(listener),
+                    listener=str(listener),
                 )
             new_parameters[parameter_name] = parameter_value
 
@@ -178,9 +169,9 @@ class ListenersService:
             except OptionValueValidationError as exc:
                 raise InvalidListenerParameterValueError(
                     parameter_name=parameter_name,
-                    parameter_value_string=str(parameter_value),
-                    listener_string=str(listener),
-                    error_message=str(exc),
+                    parameter_value=str(parameter_value),
+                    listener=str(listener),
+                    validation_error_message=str(exc),
                 )
 
         # Create a temporary listener whose attributes we copy over to the
@@ -199,3 +190,15 @@ class ListenersService:
         if str(listener.listener_id) in self._listeners:
             raise ListenerAlreadyExistsError
         self._listeners[str(listener.listener_id)] = listener
+
+    async def start_listener_by_listener_id(self, listener_id: str) -> None:
+        listener = self.get_listener_by_listener_id(listener_id=listener_id)
+        await listener.start_listener()
+
+    async def stop_listener_by_listener_id(self, listener_id: str) -> None:
+        listener = self.get_listener_by_listener_id(listener_id=listener_id)
+        await listener.stop_listener()
+
+    async def cancel_listener_by_listener_id(self, listener_id: str) -> None:
+        listener = self.get_listener_by_listener_id(listener_id=listener_id)
+        await listener.cancel_listener()

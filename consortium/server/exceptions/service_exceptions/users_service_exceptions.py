@@ -14,44 +14,34 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class UsersServiceError(BaseServiceException):
-    def __init__(
-        self,
-        message: str = "An error occurred in the users service.",
-    ):
-        super().__init__(message=message)
+    pass
 
 
 class UserNotFoundError(UsersServiceError):
-    def __init__(
-        self,
-        message: str = "Failed to find the requested user.",
-    ):
-        super().__init__(message=message)
+    pass
 
 
 class UserIDNotFoundError(UserNotFoundError):
     def __init__(
         self,
         user_id: str,
-        message: str | None = None,
     ):
-        if message is None:
-            message = (
+        super().__init__(
+            message=(
                 "Failed to find the requested user. No user could be found with the "
                 f"provided user ID '{user_id}'."
-            )
-        super().__init__(message=message)
+            ),
+        )
 
 
 class UserAccessTokenNotFoundError(UserNotFoundError):
     def __init__(
         self,
         access_token: str,
-        message: str | None = None,
     ):
-        if message is None:
-            message = (
+        super().__init__(
+            message=(
                 "Failed to find the requested user. No user found with the provided "
                 f"access token '{access_token}'."
-            )
-        super().__init__(message=message)
+            ),
+        )

@@ -5,6 +5,9 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
+from consortium.framework.base_listener import BaseListener
+from consortium.framework.base_listener_template import BaseListenerTemplate
+from consortium.framework.c2_types import ListenerType
 from consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions import (
     InternalListenerProjectError,
     InvalidListenerProjectFolderStructureError,
@@ -20,9 +23,6 @@ from consortium.server.exceptions.service_exceptions.listener_profiles_service_e
     ListenerProjectManifestFileNotFoundError,
     ListenerProjectSymbolNotFoundError,
 )
-from consortium.server.framework.base_listener import BaseListener
-from consortium.server.framework.base_listener_template import BaseListenerTemplate
-from consortium.server.framework.c2_types import ListenerType
 from consortium.server.objects.c2_profile_objects import ListenerProfile
 from consortium.server.server_config import (
     CONSORTIUM_HOME_DIRECTORY_PATH,
@@ -172,7 +172,7 @@ class ListenerProfilesService:
             raise InternalListenerProjectError(
                 listener_project_folder=str(listener_project_folder),
                 listener_project_file_type="listener",
-                internal_error_message=str(exc),
+                error_message=str(exc),
             )
 
         try:
@@ -194,7 +194,7 @@ class ListenerProfilesService:
             raise InternalListenerProjectError(
                 listener_project_folder=str(listener_project_folder),
                 listener_project_file_type="listener template",
-                internal_error_message=str(exc),
+                error_message=str(exc),
             )
 
         try:
@@ -214,7 +214,7 @@ class ListenerProfilesService:
             raise InternalListenerProjectError(
                 listener_project_folder=str(listener_project_folder),
                 listener_project_file_type="listener type",
-                internal_error_message=str(exc),
+                error_message=str(exc),
             )
 
         # Check for correct inheritance and instantiation of classes.
@@ -243,7 +243,7 @@ class ListenerProfilesService:
             raise InternalListenerProjectError(
                 listener_project_folder=str(listener_project_folder),
                 listener_project_file_type="listener template",
-                internal_error_message=str(exc),
+                error_message=str(exc),
             )
 
         # Return the instantiated listener template to be loaded into the service.

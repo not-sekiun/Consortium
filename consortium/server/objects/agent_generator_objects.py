@@ -1,7 +1,8 @@
 from enum import StrEnum
 
-from consortium.server.framework._exceptions.agent_framework_exceptions import (
+from consortium.server.exceptions.framework_exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorBuildError,
+    AgentGeneratorBuildStepError,
 )
 
 
@@ -52,10 +53,15 @@ class AgentGeneratorStatus:
         self.state = AgentGeneratorState.ERRORED
         self.exception = exception
 
-    def transition_to_fatal(self, exception: Exception) -> None:
+    def transition_to_fatal(
+        self,
+        agent_generator_str: str,
+        exception: Exception,
+    ) -> None:
         self.state = AgentGeneratorState.FATAL
         self.exception = AgentGeneratorBuildError(
-            message="A fatal error occurred while the agent generator was building.",
+            agent_generator_str=agent_generator_str,
+            error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,
                 "message": str(exception),
@@ -103,10 +109,15 @@ class AgentGeneratorBuildStepStatus:
         self.state = AgentGeneratorBuildStepState.ERRORED
         self.exception = exception
 
-    def transition_to_fatal(self, exception: Exception) -> None:
+    def transition_to_fatal(
+        self,
+        agent_generator_build_step_identifier: str,
+        exception: Exception,
+    ) -> None:
         self.state = AgentGeneratorBuildStepState.FATAL
-        self.exception = AgentGeneratorBuildError(
-            message="A fatal error occurred while the agent generator was building.",
+        self.exception = AgentGeneratorBuildStepError(
+            agent_generator_build_step_identifier=agent_generator_build_step_identifier,
+            error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,
                 "message": str(exception),

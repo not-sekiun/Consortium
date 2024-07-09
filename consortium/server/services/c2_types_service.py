@@ -1,7 +1,7 @@
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.framework.c2_types import AgentType, ListenerType
+from consortium.framework.c2_types import AgentType, ListenerType
 
 
 class C2TypesService:

@@ -1,5 +1,4 @@
 class BaseServiceException(Exception):
-    def __init__(self, message: str = "", *args):
+    def __init__(self, message: str = ""):
         self.message = message
-        # The Exception class takes no keyword arguments.
-        super().__init__(self.message, *args)
+        super().__init__(self.message)

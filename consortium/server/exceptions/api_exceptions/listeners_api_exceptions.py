@@ -31,6 +31,7 @@ Exception hierarchy for the REST API endpoint at /api/listeners.
 
 from typing import Any
 
+from consortium.framework.c2_types import ListenerType
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
     BaseAPIException,
 )
@@ -39,7 +40,6 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     NotFoundError,
     UnprocessableEntityError,
 )
-from consortium.server.framework.c2_types import ListenerType
 
 
 class ListenerNotFoundError(NotFoundError):

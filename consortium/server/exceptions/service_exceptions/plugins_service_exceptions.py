@@ -36,40 +36,26 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 )
 
 
-class PluginsServiceException(BaseServiceException):
-    def __init__(
-        self,
-        message: str = "An error occurred in the plugins service.",
-    ):
-        super().__init__(message)
+class PluginsServiceError(BaseServiceException):
+    pass
 
 
-class PluginNotFoundError(PluginsServiceException):
+class PluginNotFoundError(PluginsServiceError):
     def __init__(self, plugin_id: str):
         super().__init__(
-            f"Failed to find the requested plugin. No plugin was found with the "
-            f"provided plugin ID '{plugin_id}'.",
+            message=(
+                f"Failed to find the requested plugin. No plugin was found with the "
+                f"provided plugin ID '{plugin_id}'."
+            ),
         )
 
 
-class PluginLoadError(PluginsServiceException):
-    def __init__(
-        self,
-        message: str = "Failed to load plugin. An error occurred while loading the "
-        "plugin.",
-    ):
-        super().__init__(message)
+class PluginLoadingError(PluginsServiceError):
+    pass
 
 
-class InvalidPluginProjectManifestFileError(PluginLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load plugin project. The plugin project manifest file is "
-            "invalid."
-        ),
-    ):
-        super().__init__(message)
+class InvalidPluginProjectManifestFileError(PluginLoadingError):
+    pass
 
 
 class InvalidPluginProjectManifestFileJSONError(
@@ -77,9 +63,11 @@ class InvalidPluginProjectManifestFileJSONError(
 ):
     def __init__(self, plugin_project_folder: str):
         super().__init__(
-            "Failed to load plugin project. The plugin project manifest file in "
-            f"plugin project folder '{plugin_project_folder}' is not a valid JSON "
-            f"file.",
+            message=(
+                f"Failed to load the plugin project at '{plugin_project_folder}'. "
+                f"The plugin project manifest file in the plugin project folder is "
+                f"not a valid JSON file."
+            ),
         )
 
 
@@ -88,21 +76,16 @@ class InvalidPluginProjectManifestFileSchemaError(
 ):
     def __init__(self, plugin_project_folder: str, json_schema_error_message: str):
         super().__init__(
-            "Failed to load plugin project. The plugin project manifest file in "
-            f"plugin project folder '{plugin_project_folder}' failed when "
-            f"validating against the JSON schema: {json_schema_error_message}",
+            message=(
+                f"Failed to load the plugin project at '{plugin_project_folder}'. "
+                f"The plugin project manifest file in the plugin project folder "
+                f"failed JSON schema validation: {json_schema_error_message}"
+            ),
         )
 
 
-class InvalidPluginProjectFolderStructureError(PluginLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load plugin project folder. The plugin project folder "
-            "structure is invalid."
-        ),
-    ):
-        super().__init__(message)
+class InvalidPluginProjectFolderStructureError(PluginLoadingError):
+    pass
 
 
 class PluginProjectManifestFileNotFoundError(
@@ -110,78 +93,95 @@ class PluginProjectManifestFileNotFoundError(
 ):
     def __init__(self, plugin_project_folder: str):
         super().__init__(
-            "Failed to load plugin project. The plugin project manifest file was "
-            f"not found in the plugin project folder '{plugin_project_folder}'.",
+            message=(
+                f"Failed to load the plugin project at '{plugin_project_folder}'. "
+                f"The plugin project manifest file was not found in the plugin "
+                f"project folder."
+            ),
         )
 
 
-class PluginProjectPluginFileNotFoundError(InvalidPluginProjectFolderStructureError):
+class PluginProjectPluginFileNotFoundError(
+    InvalidPluginProjectFolderStructureError,
+):
     def __init__(self, plugin_file: str, plugin_project_folder: str):
         super().__init__(
-            f"Failed to load plugin project folder. Plugin file '{plugin_file}' "
-            "specified in the plugin project manifest file is missing for plugin "
-            f"project folder '{plugin_project_folder}'.",
+            message=(
+                f"Failed to load the plugin project at '{plugin_project_folder}'. "
+                f"The plugin file '{plugin_file}' specified in the plugin project's "
+                f"manifest file was not found."
+            ),
         )
 
 
-class InvalidPluginProjectImplementationError(PluginLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load plugin. The plugin project implementation is " "invalid."
-        ),
-    ):
-        super().__init__(message)
+class InvalidPluginProjectImplementationError(PluginLoadingError):
+    pass
 
 
 class PluginProjectSymbolNotFoundError(InvalidPluginProjectImplementationError):
-    def __init__(self, symbol_name: str, plugin_file: str, plugin_project_folder: str):
+    def __init__(
+        self,
+        symbol_name: str,
+        plugin_file: str,
+        plugin_project_folder: str,
+    ):
         super().__init__(
-            f"Failed to load plugin project. The symbol name '{symbol_name}' "
-            "specified in the plugin project manifest file was not found in the "
-            f"plugin file '{plugin_file}' for plugin project folder "
-            f"'{plugin_project_folder}'",
+            message=(
+                f"Failed to load plugin project at '{plugin_project_folder}'. The "
+                f"symbol name '{symbol_name}' specified in the plugin project's "
+                f"manifest file was not found in the plugin file '{plugin_file}'."
+            ),
         )
 
 
 class PluginProjectInterfaceError(InvalidPluginProjectImplementationError):
-    def __init__(self, plugin_symbol: str, plugin_project_folder: str):
+    def __init__(
+        self,
+        plugin_project_folder: str,
+        plugin_symbol: str,
+    ):
         super().__init__(
-            f"Failed to load plugin. The plugin in plugin project folder "
-            f"'{plugin_project_folder}' does not implement the required interface for "
-            f"its symbol '{plugin_symbol}'.",
+            message=(
+                f"Failed to load the plugin project at '{plugin_project_folder}'. "
+                f"The plugin in the plugin project does not implement the required "
+                f"interface for its defined symbol '{plugin_symbol}'."
+            ),
         )
 
 
 class InternalPluginProjectError(InvalidPluginProjectImplementationError):
-    def __init__(self, plugin_project_folder: str, internal_error_message: str):
+    def __init__(
+        self,
+        plugin_project_folder: str,
+        error_message: str,
+    ):
         super().__init__(
-            "Failed to load plugin. An exception was raised when loading the plugin "
-            f"from plugin project folder '{plugin_project_folder}': "
-            f"{internal_error_message}",
+            message=(
+                f"Failed to load plugin project at '{plugin_project_folder}'. An "
+                f"exception occurred while loading the plugin: {error_message}"
+            ),
         )
 
 
-class PluginUnloadError(PluginsServiceException):
-    def __init__(
-        self,
-        message: str = "Failed to unload plugin. An error occurred while unloading "
-        "the plugin.",
-    ):
-        super().__init__(message)
+class PluginUnloadError(PluginsServiceError):
+    pass
 
 
 class InternalPluginStopError(PluginUnloadError):
-    def __init__(self, plugin_name: str, internal_error_message: str):
+    def __init__(self, plugin: str, error_message: str):
         super().__init__(
-            "Failed to unload plugin. An exception was raised when unloading the "
-            f"plugin '{plugin_name}': {internal_error_message}",
+            message=(
+                f"Failed to unload plugin '{plugin}'. An exception occurred while "
+                f"stopping the plugin: {error_message}"
+            ),
         )
 
 
 class PluginStopTimeoutError(PluginUnloadError):
-    def __init__(self, plugin_name):
+    def __init__(self, plugin: str):
         super().__init__(
-            f"Failed to unload plugin. The plugin '{plugin_name}' timed out while "
-            f"attempting to stop it before unloading it.",
+            message=(
+                f"Failed to unload plugin '{plugin}'. The plugin timed out while "
+                f"attempting to stop it before unloading."
+            ),
         )

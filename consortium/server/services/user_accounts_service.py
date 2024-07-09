@@ -90,14 +90,14 @@ class UserAccountsService:
         role: UserRole,
     ) -> UserAccountModel:
         if not username:
-            raise EmptyUserAccountUsernameError
+            raise EmptyUserAccountUsernameError.during_user_account_creation()
         if not password:
-            raise EmptyUserAccountPasswordError
+            raise EmptyUserAccountPasswordError.during_user_account_creation()
         if role not in UserRole:
-            raise InvalidUserAccountRoleError(role=role)
+            raise InvalidUserAccountRoleError.during_user_account_creation(role=role)
         for user_account in self.get_all_user_accounts():
             if user_account.username == username:
-                raise UserAccountUsernameAlreadyExistsError(
+                raise UserAccountUsernameAlreadyExistsError.during_user_account_creation(
                     username=username,
                 )
 
@@ -118,22 +118,28 @@ class UserAccountsService:
         user_account_id: str,
         username: str,
     ) -> UserAccountModel:
-        if not username:
-            raise EmptyUserAccountUsernameError
         # Calling the `get_user_account_by_user_account_id()` method will implicitly
         # check to see if the user account ID is valid. If not, an
         # InvalidUserAccountIDError will be thrown and propagated upwards to the
         # caller.
-        print(self._user_accounts)
         user_account = self.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
+
+        if not username:
+            raise EmptyUserAccountUsernameError.during_user_account_modification(
+                user_account=str(user_account),
+            )
         if user_account.username == username:
-            raise IdenticalUserAccountUsernameError(username=username)
+            raise IdenticalUserAccountUsernameError(
+                username=username,
+                user_account_str=str(user_account),
+            )
         for existing_user_account in self.get_all_user_accounts():
             if existing_user_account.username == username:
-                raise UserAccountUsernameAlreadyExistsError(
+                raise UserAccountUsernameAlreadyExistsError.during_user_account_modification(
                     username=username,
+                    user_account=str(user_account),
                 )
 
         old_username = user_account.username
@@ -150,11 +156,14 @@ class UserAccountsService:
         user_account_id: str,
         password: str,
     ) -> UserAccountModel:
-        if not password:
-            raise EmptyUserAccountPasswordError
         user_account = self.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
+
+        if not password:
+            raise EmptyUserAccountPasswordError.during_user_account_modification(
+                user_account=str(user_account),
+            )
         if user_account.password == password:
             raise IdenticalUserAccountPasswordError
 
@@ -171,11 +180,16 @@ class UserAccountsService:
         user_account_id: str,
         role: UserRole,
     ) -> UserAccountModel:
-        if role not in UserRole:
-            raise InvalidUserAccountRoleError(role=role)
         user_account = self.get_user_account_by_user_account_id(user_account_id)
+
+        if role not in UserRole:
+            raise InvalidUserAccountRoleError.during_user_account_modification(
+                role=role,
+                user_account=str(user_account),
+            )
         if user_account.role == role:
             raise IdenticalUserAccountRoleError(
+                user_account_str=str(user_account),
                 role=role,
             )
 
@@ -257,11 +271,11 @@ class UserAccountsService:
 
         if not user_accounts_filepath.exists():
             raise UserAccountsFileNotFoundError(
-                user_accounts_filepath=user_accounts_filepath,
+                user_accounts_filepath=str(user_accounts_filepath),
             )
         if user_accounts_filepath.is_dir():
             raise UserAccountsFilepathIsDirectoryError(
-                user_accounts_filepath=user_accounts_filepath,
+                user_accounts_filepath=str(user_accounts_filepath),
             )
         try:
             with user_accounts_filepath.open("r") as file:
@@ -271,17 +285,18 @@ class UserAccountsService:
                 instance=json_data,
                 schema=user_accounts_file_json_schema,
             )
-        except jsonschema.ValidationError:
+        except jsonschema.ValidationError as exc:
             raise UserAccountsFileSchemaError(
-                user_accounts_filepath=user_accounts_filepath,
+                user_accounts_filepath=str(user_accounts_filepath),
+                json_schema_error_message=exc.message,
             )
         except json.JSONDecodeError:
             raise UserAccountsFileIsNotJSONError(
-                user_accounts_filepath=user_accounts_filepath,
+                user_accounts_filepath=str(user_accounts_filepath),
             )
         except PermissionError:
             raise UserAccountsFileReadAccessError(
-                user_accounts_filepath=user_accounts_filepath,
+                user_accounts_filepath=str(user_accounts_filepath),
             )
 
         existing_usernames = [
@@ -294,8 +309,9 @@ class UserAccountsService:
             # strings, so we do not need to check for that condition here.
             new_user_account = UserAccountModel(**user_account_json_data)
             if new_user_account.username in existing_usernames:
-                raise UserAccountUsernameAlreadyExistsError(
+                raise UserAccountUsernameAlreadyExistsError.during_user_accounts_file_loading(
                     username=new_user_account.username,
+                    user_accounts_filepath=str(user_accounts_filepath),
                 )
             if new_user_account.username in new_usernames:
                 raise UserAccountsFileContainsDuplicateUsernamesError(
@@ -319,7 +335,7 @@ class UserAccountsService:
     ) -> int:
         if user_accounts_filepath.is_dir():
             raise UserAccountsFilepathIsDirectoryError(
-                user_accounts_filepath=user_accounts_filepath,
+                user_accounts_filepath=str(user_accounts_filepath),
             )
 
         serializable_user_accounts = []
@@ -343,7 +359,7 @@ class UserAccountsService:
                 number_of_bytes_written = file.write(data)
         except PermissionError:
             raise UserAccountsFileWriteAccessError(
-                user_accounts_filepath=user_accounts_filepath,
+                user_accounts_filepath=str(user_accounts_filepath),
             )
 
         self.user_accounts_service_logger.debug(

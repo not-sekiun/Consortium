@@ -1,22 +1,20 @@
 """
-- BaseFrameworkException: Base class for all framework related exceptions.
-  - ListenerTypeConfigurationError: Raised when an error occurs while configuring a
-  listener type.
-  - ListenerTypeAlreadyExistsError: Raised when a listener type already exists when a
-  new listener type is attempted to be added to the set of compatible listener types
-  for an agent type.
-  - ListenerTypeNotFoundError: Raised when a listener type is not found when attempting
-  to remove a listener type from the set of compatible listener types of an agent type.
-  - AgentTypeConfigurationError: Raised when an error occurs while configuring an agent
-  type.
-  - AgentTypeAlreadyExistsError: Raised when an agent type already exists when a new
-  agent type is attempted to be added to the set of compatible agent types for a
-  listener type.
-  - AgentTypeNotFoundError: Raised when an agent type is not found when attempting to
-  remove an agent type from the set of compatible agent types of a listener type.
+Exception hierarchy for C2 types framework:
+
+- BaseFrameworkException: Base class for all framework exceptions.
+  - ListenerTypeConfigurationError: Error in the configuration of the listener type.
+  - ListenerTypeAlreadyExistsError: Listener type already exists in the set of
+  compatible listener types for the specified agent type.
+  - ListenerTypeNotFoundError: Listener type not found in the set of compatible
+  listener types for the specified agent type.
+  - AgentTypeConfigurationError: Error in the configuration of the agent type.
+  - AgentTypeAlreadyExistsError: Agent type already exists in the set of compatible
+  agent types for the specified listener type.
+  - AgentTypeNotFoundError: Agent type not found in the set of compatible agent types
+  for the specified listener type.
 """
 
-from consortium.server.framework.exceptions.base_framework_exception import (
+from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
 

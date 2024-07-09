@@ -5,6 +5,7 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
+from consortium.framework.base_event_hook import BaseEventHook
 from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
     EventHookLoadingError,
     EventHookNotFoundError,
@@ -16,7 +17,6 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
     InvalidEventHookProjectManifestFileJSONError,
     InvalidEventHookProjectManifestFileSchemaError,
 )
-from consortium.server.framework.base_event_hook import BaseEventHook
 from consortium.server.objects.event_objects import Event, EventType
 from consortium.server.server_config import (
     CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
@@ -262,4 +262,4 @@ class EventHooksService:
     def trigger_event(self, event: Event):
         for event_hook in self._event_hooks.values():
             if event.event_type in event_hook.event_types:
-                event_hook.run_event_hook(event)
+                event_hook.on_event_hook_triggered(event)

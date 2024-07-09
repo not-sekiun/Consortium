@@ -6,12 +6,13 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
+from consortium.framework.base_plugin import BasePlugin
 from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
     InternalPluginProjectError,
     InternalPluginStopError,
     InvalidPluginProjectManifestFileJSONError,
     InvalidPluginProjectManifestFileSchemaError,
-    PluginLoadError,
+    PluginLoadingError,
     PluginNotFoundError,
     PluginProjectInterfaceError,
     PluginProjectManifestFileNotFoundError,
@@ -20,7 +21,6 @@ from consortium.server.exceptions.service_exceptions.plugins_service_exceptions 
     PluginStopTimeoutError,
     PluginUnloadError,
 )
-from consortium.server.framework.base_plugin import BasePlugin
 from consortium.server.objects.plugin_objects import PluginState
 from consortium.server.server_config import (
     CONSORTIUM_HOME_DIRECTORY_PATH,
@@ -173,7 +173,7 @@ class PluginsService:
             return_exceptions=True,
         )
         for result in load_plugins_tasks_results:
-            if isinstance(result, PluginLoadError):
+            if isinstance(result, PluginLoadingError):
                 self.plugins_service_logger.error(result)
             else:
                 number_of_loaded_plugins += 1
@@ -240,7 +240,7 @@ class PluginsService:
         for result in load_plugin_tasks_results:
             # A successful plugin load will log the plugin load message. We only want to
             # log errors here.
-            if isinstance(result, PluginLoadError):
+            if isinstance(result, PluginLoadingError):
                 self.plugins_service_logger.error(result)
 
         self.plugins_service_logger.info(
@@ -298,7 +298,7 @@ class PluginsService:
             try:
                 await plugin.start_plugin()
             except Exception as exc:
-                raise PluginLoadError(
+                raise PluginLoadingError(
                     f"Failed to load plugin {plugin} because it failed to autostart "
                     f"due to an error: {exc}",
                 )
@@ -323,7 +323,7 @@ class PluginsService:
         except Exception as exc:
             if not force_unload:
                 raise InternalPluginStopError(
-                    plugin_name=str(plugin),
+                    plugin=str(plugin),
                     internal_error_message=str(exc),
                 )
 
@@ -339,7 +339,7 @@ class PluginsService:
 
         if plugin.status.state != PluginState.STOPPED:
             if not force_unload:
-                raise PluginStopTimeoutError(plugin_name=str(plugin))
+                raise PluginStopTimeoutError(plugin=str(plugin))
             else:
                 self.plugins_service_logger.warning(
                     f"Forcing plugin cancellation for plugin {plugin} because its "

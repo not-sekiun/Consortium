@@ -13,23 +13,18 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class ListenerTemplatesServiceError(BaseServiceException):
-    def __init__(
-        self,
-        message: str = "An error occurred in the listener templates service.",
-    ):
-        super().__init__(message=message)
+    pass
 
 
 class ListenerTemplateNotFoundError(ListenerTemplatesServiceError):
     def __init__(
         self,
         listener_template_id: str,
-        message: str | None = None,
     ):
-        if message is None:
-            message = (
+        super().__init__(
+            message=(
                 "Failed to find the requested listener template. No listener template "
                 "could be found with the provided listener template ID "
                 f"'{listener_template_id}'."
-            )
-        super().__init__(message=message)
+            ),
+        )

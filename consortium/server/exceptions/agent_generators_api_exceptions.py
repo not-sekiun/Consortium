@@ -19,13 +19,13 @@
 #    - AgentGeneratorCancellationError
 from typing import Any
 
+from consortium.framework.c2_types import AgentType
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerErrorError,
     NotFoundError,
     UnprocessableEntityError,
 )
 from consortium.server.exceptions.base_server_exception import BaseServerException
-from consortium.server.framework.c2_types import AgentType
 
 
 class AgentGeneratorNotFoundError(NotFoundError):

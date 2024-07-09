@@ -20,6 +20,18 @@ class ListenerStatus:
         self.state = ListenerState.INITIALIZED
         self.exception = None
 
+    def __str__(self) -> str:
+        if self.exception is None:
+            return f"{self.state}"
+        else:
+            return f"{self.state}: {self.exception}"
+
+    def __repr__(self) -> str:
+        if self.exception is None:
+            return f"!r{self.state}"
+        else:
+            return f"!r{self.state}: {self.exception}"
+
     def transition_to_initialized(self) -> None:
         self.state = ListenerState.INITIALIZED
         self.exception = None
@@ -44,10 +56,11 @@ class ListenerStatus:
         self.state = ListenerState.ERRORED
         self.exception = exception
 
-    def transition_to_fatal(self, exception: Exception) -> None:
+    def transition_to_fatal(self, listener_str: str, exception: Exception) -> None:
         self.state = ListenerState.FATAL
         self.exception = ListenerRuntimeError(
-            message="A fatal error occurred while the listener was running.",
+            listener_str=listener_str,
+            error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,
                 "message": str(exception),

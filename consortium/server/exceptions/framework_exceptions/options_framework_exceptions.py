@@ -1,18 +1,22 @@
 """
-Exception hierarchy for option configuration:
+Exception hierarchy for options framework:
 
 - BaseFrameworkException: Base class for all framework exceptions.
-  - OptionValueValidationError: Error validating an option value.
-  - RequiredOptionValueNotSetError: Required option value not set.
-  - OptionConfigurationError: Error configuring an option.
-    - InvalidValidatingRegexError:
-    - EmptyOptionNameError:
-    - InvalidDefaultValueError:
+  - OptionValueValidationError: Error occurred while validating an option's value.
+  - RequiredOptionValueNotSetError: A required option value was not set and has no
+  default value.
+  - OptionConfigurationError: Error occurred during option configuration.
+    - OptionConfigurationParameterTypeError: Invalid type for an option configuration
+    parameter.
+    - InvalidValidatingRegexError: The regex provided for option validation is invalid.
+    - EmptyOptionNameError: The name provided for an option is an empty string.
+    - InvalidDefaultValueError: The default value provided for an option is invalid.
+    - EmptyAvailableValuesError: The set of available values for an option is empty.
 """
 
 from typing import Any
 
-from consortium.server.framework.exceptions.base_framework_exception import (
+from consortium.framework.exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
 
@@ -37,11 +41,7 @@ class RequiredOptionValueNotSetError(BaseFrameworkException):
 
 
 class OptionConfigurationError(BaseFrameworkException):
-    def __init__(
-        self,
-        message: str = "An error occurred while configuring the option.",
-    ):
-        super().__init__(message)
+    pass
 
 
 class OptionConfigurationParameterTypeError(OptionConfigurationError):
@@ -53,11 +53,17 @@ class OptionConfigurationParameterTypeError(OptionConfigurationError):
         error_message: str = "",
     ):
         if not error_message:
-            error_message = (
-                f"Failed to configure option. The parameter '{parameter_name}' must be "
-                f"of type '{parameter_type}' for option '{option_name}'."
+            super().__init__(
+                message=(
+                    f"Failed to configure option '{option_name}'. The parameter "
+                    f"'{parameter_name}' must be of type '{parameter_type}' in the "
+                    f"option's. definition"
+                ),
             )
-        super().__init__(error_message)
+        else:
+            super().__init__(
+                f"Failed to configure option '{option_name}'. {error_message}",
+            )
 
 
 class InvalidValidatingRegexError(OptionConfigurationError):
@@ -68,17 +74,17 @@ class InvalidValidatingRegexError(OptionConfigurationError):
         regex_error_message: str,
     ):
         super().__init__(
-            "Failed to configure option. The provided validating regex "
-            f"'{validating_regex}' for option '{option_name}' is not valid. "
-            f"{regex_error_message}",
+            f"Failed to configure option '{option_name}'. The provided validating "
+            f"regex '{validating_regex}' in the option's definition during "
+            f"configuration is not valid: {regex_error_message}",
         )
 
 
 class EmptyOptionNameError(OptionConfigurationError):
-    def __init__(self, option_name: str):
+    def __init__(self, option_filepath: str):
         super().__init__(
-            f"Failed to configure option. The name for option '{option_name}' cannot "
-            "be an empty string.",
+            f"Failed to configure the option defined at '{option_filepath}'. The name "
+            f"provided in the option's parameters during creation cannot empty.",
         )
 
 
@@ -87,17 +93,18 @@ class InvalidDefaultValueError(OptionConfigurationError):
         self,
         option_name: str,
         default_value: Any,
-        error_message: str,
+        option_value_validation_error_message: str,
     ):
         super().__init__(
-            f"The provided default value '{default_value}' for option '{option_name}' "
-            f"is invalid. {error_message}",
+            f"Failed to configure the option '{option_name}'. The provided default "
+            f"value '{default_value}' for the option is invalid: "
+            f"{option_value_validation_error_message}",
         )
 
 
 class EmptyAvailableValuesError(OptionConfigurationError):
     def __init__(self, option_name: str):
         super().__init__(
-            f"Failed to configure option. The 'available_values' parameter for option "
-            f"'{option_name}' cannot be an empty set.",
+            f"Failed to configure option '{option_name}'. The 'available_values' "
+            f"parameter for the option cannot be an empty set.",
         )

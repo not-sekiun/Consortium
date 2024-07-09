@@ -16,8 +16,8 @@ Exception hierarchy for the user accounts service.
      - UserAccountsFileIsNotJSONError: User accounts file not valid JSON.
      - UserAccountsFileSchemaError: User accounts file does not conform to expected
      schema.
-       - UserAccountsFileContainsDuplicateUsernamesError: File contains duplicate
-       usernames.
+     - UserAccountsFileContainsDuplicateUsernamesError: File contains duplicate
+     usernames.
    - UserAccountAuthenticationError: Invalid credentials provided for authentication.
    - UserAccountManagementError: Error creating or modifying user account.
      - UserAccountUsernameAlreadyExistsError: Provided username already exists.
@@ -30,6 +30,7 @@ Exception hierarchy for the user accounts service.
 """
 
 from pathlib import Path
+from typing import Literal
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -38,275 +39,303 @@ from consortium.server.objects.user_account_objects import UserRole
 
 
 class UserAccountsServiceError(BaseServiceException):
-    def __init__(
-        self,
-        message: str = ("An error occurred in the user accounts service."),
-    ):
-        super().__init__(message=message)
+    pass
 
 
 class UserAccountNotFoundError(UserAccountsServiceError):
-    def __init__(
-        self,
-        message: str = ("Failed to find the requested user account."),
-    ):
-        super().__init__(message=message)
+    pass
 
 
 class UserAccountIDNotFoundError(UserAccountNotFoundError):
     def __init__(
         self,
         user_account_id: str,
-        message: str | None = None,
     ):
-        if message is None:
-            message = (
+        super().__init__(
+            message=(
                 "Failed to find the requested user account. No user account could "
                 f"be found with the provided user account ID '{user_account_id}'."
-            )
-        super().__init__(message=message)
+            ),
+        )
 
 
 class UserAccountUsernameNotFoundError(UserAccountNotFoundError):
     def __init__(
         self,
         username: str,
-        message: str | None = None,
     ):
-        if message is None:
-            message = (
+        super().__init__(
+            message=(
                 "Failed to find the requested user account. No user account could "
                 f"be found with the provided username '{username}'."
-            )
-        super().__init__(message=message)
+            ),
+        )
 
 
 class UserAccountsFileError(UserAccountsServiceError):
-    def __init__(
-        self,
-        user_accounts_filepath: str | Path,
-        message: str | None = None,
-    ):
-        if message is None:
-            message = (
-                "An error occurred while attempting to process the provided user "
-                f"accounts file '{user_accounts_filepath}'."
-            )
-        super().__init__(message=message)
+    pass
 
 
 class UserAccountsFileNotFoundError(UserAccountsFileError):
     def __init__(
         self,
-        user_accounts_filepath: str | Path,
-        message: str | None = None,
+        user_accounts_filepath: str,
     ):
-        if message is None:
-            message = (
-                "Failed to access the provided user accounts file "
+        super().__init__(
+            message=(
+                "Failed to access the user accounts file "
                 f"'{user_accounts_filepath}'. The filepath does not appear to exist."
-            )
-        super().__init__(user_accounts_filepath=user_accounts_filepath, message=message)
+            ),
+        )
 
 
 class UserAccountsFileAccessError(UserAccountsFileError):
-    def __init__(
-        self,
-        user_accounts_filepath: str | Path,
-        message: str | None = None,
-    ):
-        if message is None:
-            message = (
-                "Failed to access the provided user accounts file "
-                f"'{user_accounts_filepath}'. The process has insufficient access "
-                "permissions."
-            )
-        super().__init__(user_accounts_filepath=user_accounts_filepath, message=message)
+    pass
 
 
 class UserAccountsFileReadAccessError(UserAccountsFileAccessError):
     def __init__(
         self,
-        user_accounts_filepath: str | Path,
-        message: str | None = None,
+        user_accounts_filepath: str,
     ):
-        if message is None:
-            message = (
+        super().__init__(
+            message=(
                 "Failed to read the provided user accounts file "
-                f"'{user_accounts_filepath}'. The process has insufficient read "
-                "permissions."
-            )
-        super().__init__(user_accounts_filepath=user_accounts_filepath, message=message)
+                f"'{user_accounts_filepath}'. The process does not have the required "
+                "permissions to read the file."
+            ),
+        )
 
 
 class UserAccountsFileWriteAccessError(UserAccountsFileAccessError):
     def __init__(
         self,
-        user_accounts_filepath: str | Path,
-        message: str | None = None,
+        user_accounts_filepath: str,
     ):
-        if message is None:
-            message = (
-                "Failed to write to the provided user accounts file "
-                f"'{user_accounts_filepath}'. The process has insufficient write "
-                "permissions."
-            )
-        super().__init__(user_accounts_filepath=user_accounts_filepath, message=message)
+        super().__init__(
+            message=(
+                "Failed to write to the user accounts file "
+                f"'{user_accounts_filepath}'. The process does not have the required "
+                "permissions to write to the file."
+            ),
+        )
 
 
 class UserAccountsFilepathIsDirectoryError(UserAccountsFileError):
     def __init__(
         self,
-        user_accounts_filepath: str | Path,
-        message: str | None = None,
+        user_accounts_filepath: str,
     ):
-        if message is None:
-            message = (
-                "Failed to access the provided user accounts file "
+        super().__init__(
+            message=(
+                "Failed to access the user accounts file "
                 f"'{user_accounts_filepath}'. The provided filepath points to an "
-                "existing directory when a file was expected."
-            )
-        super().__init__(user_accounts_filepath=user_accounts_filepath, message=message)
+                "existing directory where a file was expected."
+            ),
+        )
 
 
 class UserAccountsFileIsNotJSONError(UserAccountsFileError):
     def __init__(
         self,
-        user_accounts_filepath: str | Path,
-        message: str | None = None,
+        user_accounts_filepath: str,
     ):
-        if message is None:
-            message = (
-                "Failed to decode the provided user accounts file "
+        super().__init__(
+            message=(
+                "Failed to process the user accounts file "
                 f"'{user_accounts_filepath}'. The provided file does not contain "
                 "valid JSON data."
-            )
-        super().__init__(user_accounts_filepath=user_accounts_filepath, message=message)
+            ),
+        )
 
 
 class UserAccountsFileSchemaError(UserAccountsFileError):
     def __init__(
         self,
-        user_accounts_filepath: str | Path,
-        message: str | None = None,
+        user_accounts_filepath: str,
+        json_schema_error_message,
     ):
-        if message is None:
-            message = (
-                "Failed to decode the provided user accounts file "
-                f"'{user_accounts_filepath}'. The provided file does not contain "
-                "JSON data that conforms to the expected JSON schema."
-            )
-        super().__init__(user_accounts_filepath=user_accounts_filepath, message=message)
+        super().__init__(
+            message=(
+                f"Failed to process the user accounts file "
+                f"'{user_accounts_filepath}'. The provided file failed JSON schema "
+                f"validation: {json_schema_error_message}."
+            ),
+        )
 
 
 class UserAccountsFileContainsDuplicateUsernamesError(
-    UserAccountsFileSchemaError,
+    UserAccountsFileError,
 ):
     def __init__(
         self,
         user_accounts_filepath: str | Path,
         duplicate_username: str,
-        message: str | None = None,
     ):
-        if message is None:
-            message = (
-                "Failed to decode the provided user accounts file "
-                f"'{user_accounts_filepath}'. The user accounts file contains entries "
-                f"with a duplicate username '{duplicate_username}'."
-            )
-        super().__init__(user_accounts_filepath=user_accounts_filepath, message=message)
+        super().__init__(
+            message=(
+                "Failed to process the user accounts file "
+                f"'{user_accounts_filepath}'. The user accounts file contains user "
+                f"account entries with the duplicate username '{duplicate_username}'."
+            ),
+        )
 
 
 class UserAccountAuthenticationError(UserAccountsServiceError):
     def __init__(
         self,
-        message: str = (
-            "Unable to authenticate user account. Invalid credentials were provided."
-        ),
     ):
-        super().__init__(message=message)
+        super().__init__(
+            message=(
+                "Failed to authenticate user account. Invalid credentials were "
+                "provided."
+            ),
+        )
 
 
 class UserAccountManagementError(UserAccountsServiceError):
-    def __init__(
-        self,
-        message: str = "An error occurred while creating or modifying a user account.",
-    ):
-        super().__init__(message=message)
+    pass
 
 
 class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
-    def __init__(
-        self,
+    @classmethod
+    def during_user_account_creation(
+        cls,
         username: str,
-        message: str | None = None,
-    ):
-        if message is None:
-            message = (
-                f"Unable to create or modify a user account. The username '{username}' "
-                "is already in use and user accounts cannot have duplicate usernames."
-            )
-        super().__init__(message=message)
+    ) -> "UserAccountUsernameAlreadyExistsError":
+        return cls(
+            message=(
+                f"Failed to create the user account. The username '{username}' is "
+                f"already in use by another user account."
+            ),
+        )
+
+    @classmethod
+    def during_user_account_modification(
+        cls,
+        username: str,
+        user_account: str,
+    ) -> "UserAccountUsernameAlreadyExistsError":
+        return cls(
+            message=(
+                f"Failed to modify the user account '{user_account}'. The new "
+                f"username '{username}' is already in use by another user account."
+            ),
+        )
+
+    @classmethod
+    def during_user_accounts_file_loading(
+        cls,
+        username: str,
+        user_accounts_filepath: str,
+    ) -> "UserAccountUsernameAlreadyExistsError":
+        return cls(
+            message=(
+                f"Failed to load the user account from the user accounts file "
+                f"'{user_accounts_filepath}'. The username '{username}' is already in "
+                f"use by another user account."
+            ),
+        )
 
 
 class EmptyUserAccountUsernameError(UserAccountManagementError):
-    def __init__(self, message: str | None = None):
-        if message is None:
-            message = (
-                "Unable to create or modify a user account. The provided username "
+    @classmethod
+    def during_user_account_creation(cls) -> "EmptyUserAccountUsernameError":
+        return cls(
+            message=(
+                "Failed to create the user account. The provided username "
                 "cannot be empty."
-            )
-        super().__init__(message=message)
+            ),
+        )
+
+    @classmethod
+    def during_user_account_modification(
+        cls,
+        user_account: str,
+    ) -> "EmptyUserAccountUsernameError":
+        return cls(
+            message=(
+                f"Failed to modify the user account {user_account}. The provided "
+                f"username cannot be empty."
+            ),
+        )
 
 
 class EmptyUserAccountPasswordError(UserAccountManagementError):
-    def __init__(self, message: str | None = None):
-        if message is None:
-            message = (
-                "Unable to create or modify a user account. The provided password "
+    @classmethod
+    def during_user_account_creation(cls) -> "EmptyUserAccountPasswordError":
+        return cls(
+            message=(
+                "Failed to create the user account. The provided password "
                 "cannot be empty."
-            )
-        super().__init__(message=message)
+            ),
+        )
+
+    @classmethod
+    def during_user_account_modification(
+        cls,
+        user_account: str,
+    ) -> "EmptyUserAccountPasswordError":
+        return cls(
+            message=(
+                f"Failed to modify the user account {user_account}. The provided "
+                "password cannot be empty."
+            ),
+        )
 
 
 class InvalidUserAccountRoleError(UserAccountManagementError):
-    def __init__(self, role: str, message: str | None = None):
-        if message is None:
-            message = (
-                "Unable to create or modify a user account. The provided role "
-                f"'{role}' is not a valid role. Valid roles are 'ADMIN', 'OPERATOR', "
-                f"and 'SPECTATOR'."
-            )
-        self.role = role
-        super().__init__(message=message)
+    @classmethod
+    def during_user_account_creation(cls, role: str) -> "InvalidUserAccountRoleError":
+        return cls(
+            message=(
+                f"Failed to create the user account. The provided role '{role}' "
+                "is not a valid role which must be one of 'ADMIN', 'OPERATOR', or "
+                "'SPECTATOR'."
+            ),
+        )
+
+    @classmethod
+    def during_user_account_modification(
+        cls,
+        role: str,
+        user_account: str,
+    ) -> "InvalidUserAccountRoleError":
+        return cls(
+            message=(
+                f"Failed to modify the user account '{user_account}'. The provided "
+                f"role '{role}' is not a valid role which must be one of 'ADMIN', "
+                f"'OPERATOR', or 'SPECTATOR'."
+            ),
+        )
 
 
 class IdenticalUserAccountUsernameError(UserAccountManagementError):
-    def __init__(self, username: str, message: str | None = None):
-        if message is None:
-            message = (
-                "Unable to modify the user account's usernames. The new username "
-                f"'{username}' is identical to the previous username. "
-                "Provide a different username."
-            )
-        super().__init__(message=message)
+    def __init__(self, user_account_str: str, username: str):
+        super().__init__(
+            message=(
+                f"Failed to modify user account '{user_account_str}'. The newly "
+                f"provided username '{username}' is identical to the previously used "
+                f"username."
+            ),
+        )
 
 
 class IdenticalUserAccountPasswordError(UserAccountManagementError):
-    def __init__(self, message: str | None = None):
-        if message is None:
-            message = (
-                "Unable to modify the user account's password. The new password "
-                "is identical to the previous password. Provide a different password."
-            )
-        super().__init__(message=message)
+    def __init__(self, user_account_str: str):
+        super().__init__(
+            message=(
+                f"Failed to modify user account '{user_account_str}'. The newly "
+                f"provided password is identical to the previously used password."
+            ),
+        )
 
 
 class IdenticalUserAccountRoleError(UserAccountManagementError):
-    def __init__(self, role: str | UserRole, message: str | None = None):
-        if message is None:
-            message = (
-                f"Unable to modify the user account's role. The new role '{role}' is "
-                "identical to the previous role. Provide a different role."
-            )
-        super().__init__(message=message)
+    def __init__(self, user_account_str: str, role: str | UserRole):
+        super().__init__(
+            message=(
+                f"Failed to modify user account '{user_account_str}'. The newly "
+                f"provided role '{role}' is identical to the previously assigned role."
+            ),
+        )

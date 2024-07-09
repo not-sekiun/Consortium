@@ -1,53 +1,41 @@
 """
-Exception hierarchy for listener template framework exceptions:
+Exception hierarchy for listener template framework:
 
 - BaseFrameworkException: Base class for all framework exceptions.
-  - ListenerTemplateException: Base class for all listener template-related exceptions.
-    - ListenerTemplateConfigurationError: Error configuring a listener template.
+  - ListenerTemplatesFrameworkException: General error occurred in the listener
+  templates framework.
+    - ListenerTemplateConfigurationError: Error during listener template configuration.
       - ListenerTemplateConfigurationParameterError: Error with a listener template
       parameter.
-        - ListenerTemplateConfigurationParameterTypeError: Invalid type for listener
+        - ListenerTemplateConfigurationParameterTypeError: Invalid type for a listener
         template parameter.
         - RequiredListenerTemplateConfigurationParameterNotDeclaredError: Required
-        parameter not declared for listener template.
-      - InvalidListenerTemplateNameError: Error with the listener template name.
-        - EmptyListenerTemplateNameError: Listener template name is empty.
+        parameter not declared in listener template.
+      - EmptyListenerTemplateNameError: Listener template name is an empty string.
       - DuplicateListenerTemplateOptionNameError: Duplicate option name in listener
-      template.
+      template configuration.
     - ListenerTemplateOptionError: Error related to a listener template option.
-      - ListenerTemplateOptionNotFoundError: Option with provided name not found in
-      listener template.
-      - ListenerTemplateOptionValueError: Provided value for listener template option
-      is invalid.
+      - ListenerTemplateOptionNotFoundError: Specified option not found in listener
+      template.
+      - ListenerTemplateOptionValueError: Invalid value provided for a listener
+      template option.
 """
 
-from consortium.server.framework.exceptions.base_framework_exception import (
+from consortium.framework.exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
 
 
-class ListenerTemplateException(BaseFrameworkException):
-    def __init__(self, message: str = "An error occurred with the listener template."):
-        super().__init__(message)
+class ListenerTemplatesFrameworkError(BaseFrameworkException):
+    pass
 
 
-class ListenerTemplateConfigurationError(ListenerTemplateException):
-    def __init__(
-        self,
-        message: str = "An error occurred while configuring the listener template.",
-    ):
-        super().__init__(message)
+class ListenerTemplateConfigurationError(ListenerTemplatesFrameworkError):
+    pass
 
 
 class ListenerTemplateConfigurationParameterError(ListenerTemplateConfigurationError):
-    def __init__(
-        self,
-        message: str = (
-            "An error occurred with a parameter while configuring the listener "
-            "template."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class ListenerTemplateConfigurationParameterTypeError(
@@ -55,82 +43,92 @@ class ListenerTemplateConfigurationParameterTypeError(
 ):
     def __init__(
         self,
-        listener_template_name: str | None = None,
+        listener_template_str: str | None = None,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
         error_message: str = "",
     ):
         if not error_message:
-            error_message = (
-                f"The parameter '{parameter_name}' must be of type '{parameter_type}' "
-                f"for listener template '{listener_template_name}'."
+            super().__init__(
+                message=(
+                    f"Failed to configure the listener template "
+                    f"'{listener_template_str}'. The parameter '{parameter_name}' "
+                    f"must be of type '{parameter_type}' in the listener template's "
+                    f"definition."
+                )
             )
-        super().__init__(
-            f"Failed to configure the listener template. {error_message}",
-        )
+        else:
+            super().__init__(
+                message=(
+                    f"Failed to configure the listener template "
+                    f"'{listener_template_str}'. {error_message}"
+                )
+            )
 
 
 class RequiredListenerTemplateConfigurationParameterNotDeclaredError(
     ListenerTemplateConfigurationParameterError,
 ):
-    def __init__(self, parameter_name: str, listener_template_name: str):
+    def __init__(self, parameter_name: str, listener_template_str: str):
         super().__init__(
-            "Failed to configure the listener template. The required parameter "
-            f"'{parameter_name}' was not declared in listener template "
-            f"'{listener_template_name}'.",
+            message=(
+                f"Failed to configure the listener template "
+                f"'{listener_template_str}'. The required parameter "
+                f"'{parameter_name}' was not declared in the listener template's "
+                f"definition."
+            )
         )
 
 
-class InvalidListenerTemplateNameError(ListenerTemplateConfigurationError):
-    def __init__(
-        self,
-        message: str = "An error occurred with the listener template name.",
-    ):
-        super().__init__(message)
-
-
-class EmptyListenerTemplateNameError(InvalidListenerTemplateNameError):
-    def __init__(self):
+class EmptyListenerTemplateNameError(ListenerTemplateConfigurationError):
+    def __init__(self, listener_template_filepath: str):
         super().__init__(
-            "Failed to configure the listener template. The listener template's name "
-            "cannot be empty.",
+            message=(
+                f"Failed to configure the listener template defined at "
+                f"'{listener_template_filepath}'. The name provided in the listener "
+                f"template's definition during configuration cannot be empty."
+            )
         )
 
 
 class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationError):
-    def __init__(self, option_name: str, listener_template_name: str):
+    def __init__(self, option_name: str, listener_template_str: str):
         super().__init__(
-            f"The options provided to the listener template '{listener_template_name}' "
-            f"must not have duplicated names. The name '{option_name}' was duplicated",
+            message=(
+                f"Failed to configure the listener template {listener_template_str}'. "
+                f"The options provided to the listener template must not have "
+                f"duplicate names but the name '{option_name}' was duplicated."
+            )
         )
 
 
-class ListenerTemplateOptionError(ListenerTemplateException):
-    def __init__(
-        self,
-        message: str = "An error occurred with an option for the listener template.",
-    ):
-        super().__init__(message)
+class ListenerTemplateOptionError(ListenerTemplatesFrameworkError):
+    pass
 
 
 class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
-    def __init__(self, option_name: str, listener_template_name: str):
+    def __init__(self, option_name: str, listener_template_str: str):
         super().__init__(
-            "Failed to find the requested option. No option with the name "
-            f"'{option_name}' was found in the listener template "
-            f"'{listener_template_name}'.",
+            message=(
+                f"Failed to access the option '{option_name}' for the listener "
+                f"template {listener_template_str}. Could not find the requested "
+                f"option '{option_name}' in the agent template."
+            )
         )
 
 
 class ListenerTemplateOptionValueError(ListenerTemplateOptionError):
     def __init__(
         self,
-        listener_template_name: str,
+        listener_template_str: str,
         option_name: str,
         option_value: str,
         error_message: str,
     ):
         super().__init__(
-            f"Failed to set the option '{option_name}' to the value '{option_value}' "
-            f"for listener template '{listener_template_name}'. {error_message}",
+            message=(
+                f"Failed to set the option '{option_name}' to the value "
+                f"'{option_value}' for the listener template "
+                f"'{listener_template_str}'. {error_message}"
+            )
         )

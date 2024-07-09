@@ -1,6 +1,6 @@
 from loguru import logger
 
-from consortium.server.framework.base_agent_generator import BaseAgentGenerator
+from consortium.framework.base_agent_generator import BaseAgentGenerator
 
 
 class AgentGeneratorsService:

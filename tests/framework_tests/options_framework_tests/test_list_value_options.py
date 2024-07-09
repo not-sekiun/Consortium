@@ -1,12 +1,12 @@
 import pytest
 
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
-    OptionConfigurationError,
-)
-from consortium.server.framework.options import (
+from consortium.framework.options import (
     ListValueOption,
     OptionValueValidationError,
     RequiredOptionValueNotSetError,
+)
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+    OptionConfigurationError,
 )
 
 

@@ -5,6 +5,9 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
+from consortium.framework.base_agent_generator import BaseAgentGenerator
+from consortium.framework.base_agent_template import BaseAgentTemplate
+from consortium.framework.c2_types import AgentType
 from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
     AgentProfileLoadError,
     AgentProfileNotFoundError,
@@ -18,9 +21,6 @@ from consortium.server.exceptions.service_exceptions.agent_profiles_service_exce
     AgentProjectSymbolNotFoundError,
     InternalAgentProjectError,
 )
-from consortium.server.framework.base_agent_generator import BaseAgentGenerator
-from consortium.server.framework.base_agent_template import BaseAgentTemplate
-from consortium.server.framework.c2_types import AgentType
 from consortium.server.objects.c2_profile_objects import AgentProfile
 from consortium.server.server_config import (
     CONSORTIUM_AGENTS_DIRECTORY_PATH,
@@ -170,7 +170,7 @@ class AgentProfilesService:
             raise InternalAgentProjectError(
                 agent_project_file_type="agent generator",
                 agent_project_folder=str(agent_project_folder),
-                internal_error_message=str(exc),
+                error_message=str(exc),
             )
 
         try:
@@ -192,7 +192,7 @@ class AgentProfilesService:
             raise InternalAgentProjectError(
                 agent_project_file_type="agent template",
                 agent_project_folder=str(agent_project_folder),
-                internal_error_message=str(exc),
+                error_message=str(exc),
             )
 
         try:
@@ -212,7 +212,7 @@ class AgentProfilesService:
             raise InternalAgentProjectError(
                 agent_project_file_type="agent type",
                 agent_project_folder=str(agent_project_folder),
-                internal_error_message=str(exc),
+                error_message=str(exc),
             )
 
         # Check for correct inheritance and instantiation of classes.
@@ -241,7 +241,7 @@ class AgentProfilesService:
             raise InternalAgentProjectError(
                 agent_project_file_type="agent template",
                 agent_project_folder=str(agent_project_folder),
-                internal_error_message=str(exc),
+                error_message=str(exc),
             )
 
         return AgentProfile(
@@ -276,10 +276,7 @@ class AgentProfilesService:
                     f"Loaded agent profile: {agent_profile!r}",
                 )
             except AgentProfileLoadError as exc:
-                self.agent_profiles_service_logger.error(
-                    f"Failed to load agent profile from agent project folder "
-                    f"{path.parent}. {exc}",
-                )
+                self.agent_profiles_service_logger.error(exc)
 
         self.agent_profiles_service_logger.info(
             f"Loaded framework agent profiles ({len(self._agent_profiles)} "

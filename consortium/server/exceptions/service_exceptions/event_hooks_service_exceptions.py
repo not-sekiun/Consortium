@@ -34,40 +34,26 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 )
 
 
-class EventHooksServiceException(BaseServiceException):
-    def __init__(
-        self,
-        message: str = "An error occurred in the event hooks service.",
-    ):
-        super().__init__(message)
+class EventHooksServiceError(BaseServiceException):
+    pass
 
 
-class EventHookNotFoundError(EventHooksServiceException):
+class EventHookNotFoundError(EventHooksServiceError):
     def __init__(self, event_hook_id: str):
         super().__init__(
-            f"Failed to find the requested event hook. No event hook was found "
-            f"with the provided event hook ID '{event_hook_id}'.",
+            message=(
+                f"Failed to find the requested event hook. No event hook was found "
+                f"with the provided event hook ID '{event_hook_id}'."
+            ),
         )
 
 
-class EventHookLoadingError(EventHooksServiceException):
-    def __init__(
-        self,
-        message: str = "Failed to load event hook. An error occurred while loading "
-        "the event hook.",
-    ):
-        super().__init__(message)
+class EventHookLoadingError(EventHooksServiceError):
+    pass
 
 
 class InvalidEventHookProjectManifestFileError(EventHookLoadingError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load event hook project. The event hook project manifest "
-            "file is invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class InvalidEventHookProjectManifestFileJSONError(
@@ -75,9 +61,11 @@ class InvalidEventHookProjectManifestFileJSONError(
 ):
     def __init__(self, event_hook_project_folder: str):
         super().__init__(
-            "Failed to load event hook project. The event hook project manifest "
-            f"file in event hook project folder '{event_hook_project_folder}' is "
-            f"not a valid JSON file.",
+            message=(
+                f"Failed to load the event hook at '{event_hook_project_folder}'. "
+                f"The event hook project manifest file in the event hook project "
+                f"folder is not a valid JSON file."
+            ),
         )
 
 
@@ -86,22 +74,16 @@ class InvalidEventHookProjectManifestFileSchemaError(
 ):
     def __init__(self, event_hook_project_folder: str, json_schema_error_message: str):
         super().__init__(
-            "Failed to load event hook project. The event hook project manifest "
-            f"file in event hook project folder '{event_hook_project_folder}' "
-            f"failed when validating against the JSON schema: "
-            f"{json_schema_error_message}",
+            message=(
+                f"Failed to load the event hook at '{event_hook_project_folder}'. "
+                f"The event hook project manifest file in the event hook project "
+                f"folder failed JSON schema validation: {json_schema_error_message}"
+            ),
         )
 
 
 class InvalidEventHookProjectFolderStructureError(EventHookLoadingError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load event hook project folder. The event hook project "
-            "folder structure is invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class EventHookProjectManifestFileNotFoundError(
@@ -109,9 +91,11 @@ class EventHookProjectManifestFileNotFoundError(
 ):
     def __init__(self, event_hook_project_folder: str):
         super().__init__(
-            "Failed to load event hook project. The event hook project manifest "
-            f"file was not found in the event hook project folder "
-            f"'{event_hook_project_folder}'.",
+            message=(
+                f"Failed to load the event hook at '{event_hook_project_folder}'. "
+                f"The event hook project manifest file was not found in the event hook "
+                f"project folder."
+            ),
         )
 
 
@@ -120,22 +104,16 @@ class EventHookProjectEventHookFileNotFoundError(
 ):
     def __init__(self, event_hook_file: str, event_hook_project_folder: str):
         super().__init__(
-            f"Failed to load event hook project folder. Event hook file "
-            f"'{event_hook_file}' specified in the event hook project manifest "
-            f"file is missing for event hook project folder "
-            f"'{event_hook_project_folder}'.",
+            message=(
+                f"Failed to load the event hook at '{event_hook_project_folder}'. "
+                f"The event hook file '{event_hook_file}' specified in the event hook "
+                f"project's manifest file was not found."
+            ),
         )
 
 
 class InvalidEventHookProjectImplementationError(EventHookLoadingError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load event hook. The event hook project implementation is "
-            "invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class EventHookProjectSymbolNotFoundError(InvalidEventHookProjectImplementationError):
@@ -146,35 +124,49 @@ class EventHookProjectSymbolNotFoundError(InvalidEventHookProjectImplementationE
         event_hook_project_folder: str,
     ):
         super().__init__(
-            f"Failed to load event hook project. The symbol name '{symbol_name}' "
-            "specified in the event hook project manifest file was not found in "
-            f"the event hook file '{event_hook_file}' for event hook project "
-            f"folder '{event_hook_project_folder}'",
+            message=(
+                f"Failed to load the event hook at '{event_hook_project_folder}'. The "
+                f"symbol name '{symbol_name}' specified in the event hook project's "
+                f"manifest file was not found in the event hook file "
+                f"'{event_hook_file}'."
+            ),
         )
 
 
 class EventHookProjectInterfaceError(InvalidEventHookProjectImplementationError):
-    def __init__(self, event_hook_symbol: str, event_hook_project_folder: str):
+    def __init__(
+        self,
+        event_hook_project_folder: str,
+        event_hook_symbol: str,
+    ):
         super().__init__(
-            f"Failed to load event hook. The event hook in event hook project folder "
-            f"'{event_hook_project_folder}' does not implement the required interface "
-            f"for its symbol '{event_hook_symbol}'.",
+            message=(
+                f"Failed to load the event hook at '{event_hook_project_folder}'. "
+                f"The event hook in the event hook project does not implement the "
+                f"required interface for its defined symbol '{event_hook_symbol}'."
+            ),
         )
 
 
 class InternalEventHookProjectError(InvalidEventHookProjectImplementationError):
-    def __init__(self, event_hook_project_folder: str, internal_error_message: str):
+    def __init__(
+        self,
+        event_hook_project_folder: str,
+        error_message: str,
+    ):
         super().__init__(
-            f"Failed to load event hook. An exception was raised when loading the "
-            f"event hook from event hook project folder '{event_hook_project_folder}': "
-            f"{internal_error_message}",
+            message=(
+                f"Failed to load the event hook at '{event_hook_project_folder}'. An "
+                f"exception occurred while loading the event hook: {error_message}"
+            ),
         )
 
 
-class EventHookUnloadingError(EventHooksServiceException):
-    def __init__(
-        self,
-        message: str = "Failed to unload event hook. An error occurred while unloading "
-        "the event hook.",
-    ):
-        super().__init__(message)
+class EventHookUnloadError(EventHooksServiceError):
+    def __init__(self, event_hook: str):
+        super().__init__(
+            message=(
+                f"Failed to unload event hook '{event_hook}'. An error occurred "
+                f"while unloading the event hook."
+            ),
+        )

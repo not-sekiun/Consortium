@@ -40,39 +40,26 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class ListenerProfilesServiceError(BaseServiceException):
-    def __init__(
-        self,
-        message: str = "An error occurred in the listener profiles service.",
-    ):
-        super().__init__(message)
+    pass
 
 
 class ListenerProfileNotFoundError(ListenerProfilesServiceError):
     def __init__(self, listener_profile_id: str):
         super().__init__(
-            "Failed to find the requested listener profile. No listener profile was "
-            f"found with the provided listener profile ID '{listener_profile_id}'.",
+            message=(
+                f"Failed to find the requested listener profile. No listener profile "
+                f"was found with the provided listener profile ID "
+                f"'{listener_profile_id}'."
+            ),
         )
 
 
 class ListenerProfileLoadError(ListenerProfilesServiceError):
-    def __init__(
-        self,
-        message: str = "Failed to load listener profile. An error occurred while "
-        "loading the listener profile.",
-    ):
-        super().__init__(message)
+    pass
 
 
 class InvalidListenerProjectManifestFileError(ListenerProfileLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load listener project. The listener project manifest file is "
-            "invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class InvalidListenerProjectManifestFileJSONError(
@@ -80,9 +67,11 @@ class InvalidListenerProjectManifestFileJSONError(
 ):
     def __init__(self, listener_project_folder: str):
         super().__init__(
-            "Failed to load listener project. The listener project manifest file "
-            f"in listener project folder '{listener_project_folder}' is not a valid "
-            f"JSON file.",
+            message=(
+                f"Failed to load the listener project at '{listener_project_folder}'. "
+                f"The listener project manifest file in the listener project folder is "
+                f"not a valid JSON file."
+            ),
         )
 
 
@@ -91,21 +80,16 @@ class InvalidListenerProjectManifestFileSchemaError(
 ):
     def __init__(self, listener_project_folder: str, json_schema_error_message: str):
         super().__init__(
-            "Failed to load listener project. The listener project manifest file in "
-            f"listener project folder '{listener_project_folder}' failed when "
-            f"validating against the JSON schema: {json_schema_error_message}",
+            message=(
+                f"Failed to load the listener project at '{listener_project_folder}'. "
+                f"The listener project manifest file in the listener project folder "
+                f"failed JSON schema validation: {json_schema_error_message}"
+            ),
         )
 
 
 class InvalidListenerProjectFolderStructureError(ListenerProfileLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load listener project folder. The listener project "
-            "folder structure is invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class ListenerProjectManifestFileNotFoundError(
@@ -113,8 +97,11 @@ class ListenerProjectManifestFileNotFoundError(
 ):
     def __init__(self, listener_project_folder: str):
         super().__init__(
-            "Failed to load listener project. The listener project manifest file was "
-            f"not found in the listener project folder '{listener_project_folder}'.",
+            message=(
+                f"Failed to load the listener project at '{listener_project_folder}'. "
+                f"The listener project manifest file was not found in the listener "
+                f"project folder."
+            ),
         )
 
 
@@ -123,9 +110,11 @@ class ListenerProjectListenerFileNotFoundError(
 ):
     def __init__(self, listener_file: str, listener_project_folder: str):
         super().__init__(
-            f"Failed to load listener project folder. Listener file '{listener_file}' "
-            "specified in the listener project manifest file is missing for listener "
-            f"project folder '{listener_project_folder}'.",
+            message=(
+                f"Failed to load the listener project at "
+                f"'{listener_project_folder}'. The listener file '{listener_file}' "
+                "specified in the listener project's manifest file was not found."
+            ),
         )
 
 
@@ -134,9 +123,12 @@ class ListenerProjectListenerTemplateFileNotFoundError(
 ):
     def __init__(self, listener_template_file: str, listener_project_folder: str):
         super().__init__(
-            "Failed to load listener project folder. The listener template file "
-            f"'{listener_template_file}' specified in the listener project manifest "
-            f"file is missing for listener project folder '{listener_project_folder}'.",
+            message=(
+                f"Failed to load the listener project at "
+                f"'{listener_project_folder}'. The listener template file "
+                f"'{listener_template_file}' specified in the listener project's "
+                f"manifest file was not found."
+            ),
         )
 
 
@@ -145,21 +137,14 @@ class ListenerProjectListenerTypeFileNotFoundError(
 ):
     def __init__(self, listener_type_file: str, listener_project_folder: str):
         super().__init__(
-            "Failed to load listener project folder. The listener type file "
-            f"'{listener_type_file}' specified in the listener project manifest file "
-            f"is missing for listener project folder '{listener_project_folder}'",
+            f"Failed to load the listener project at '{listener_project_folder}'. The "
+            f"listener type file '{listener_type_file}' specified in the listener "
+            f"project's manifest file was not found.",
         )
 
 
 class InvalidListenerProjectImplementationError(ListenerProfileLoadError):
-    def __init__(
-        self,
-        message: str = (
-            "Failed to load listener profile. The listener project implementation is "
-            "invalid."
-        ),
-    ):
-        super().__init__(message)
+    pass
 
 
 class ListenerProjectInterfaceError(InvalidListenerProjectImplementationError):
@@ -174,9 +159,10 @@ class ListenerProjectInterfaceError(InvalidListenerProjectImplementationError):
         listener_project_symbol: str,
     ):
         super().__init__(
-            f"Failed to load listener profile. The {listener_project_file_type} in "
-            f"listener project folder '{listener_project_folder}' does not implement "
-            f"the required interface for its symbol '{listener_project_symbol}'.",
+            f"Failed to load the listener project at '{listener_project_folder}'. "
+            f"The {listener_project_file_type} in the listener project does not "
+            f"implement the required interface for its defined symbol "
+            f"'{listener_project_symbol}'.",
         )
 
 
@@ -193,10 +179,10 @@ class ListenerProjectSymbolNotFoundError(InvalidListenerProjectImplementationErr
         ],
     ):
         super().__init__(
-            f"Failed to load listener project. The symbol name '{symbol_name}' "
-            "specified in the listener project manifest file was not found in the "
-            f"{listener_project_file_type} file '{listener_project_file}' for listener "
-            f"project folder '{listener_project_folder}'",
+            f"Failed to load listener project at '{listener_project_folder}'. The "
+            f"symbol name '{symbol_name}' specified in the listener project's manifest "
+            f"file was not found in the {listener_project_file_type} file "
+            f"'{listener_project_file}'.",
         )
 
 
@@ -209,10 +195,10 @@ class InternalListenerProjectError(InvalidListenerProjectImplementationError):
             "listener type",
         ],
         listener_project_folder: str,
-        internal_error_message: str,
+        error_message: str,
     ):
         super().__init__(
-            "Failed to load listener profile. An exception occurred while loading the "
-            f"{listener_project_file_type} from listener project folder "
-            f"'{listener_project_folder}': {internal_error_message}",
+            f"Failed to load listener project at '{listener_project_folder}'. An "
+            f"exception occurred while loading the "
+            f"{listener_project_file_type}: {error_message}",
         )

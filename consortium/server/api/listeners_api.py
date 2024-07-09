@@ -18,16 +18,15 @@ from consortium.server.exceptions.api_exceptions.listeners_api_exceptions import
     ListenerCancellationError,
     ListenerNotFoundError as ListenerNotFoundAPIError,
     ListenerNotRunningError,
-    ListenerStartError,
-    ListenerStopError,
+    ListenerStartError as ListenerStartAPIError,
+    ListenerStopError as ListenerStopAPIError,
     ListenerTemplateResolutionError,
 )
 from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
-    ListenerAlreadyRunningError as ListenerAlreadyRunningServiceError,
-    ListenerNotFoundError as ListenerNotFoundServiceError,
     InvalidListenerParameterNameError as InvalidListenerParameterNameServiceError,
     InvalidListenerParameterValueError as InvalidListenerParameterValueServiceError,
-    ListenerStartError as ListenerStartServiceError,
+    ListenerAlreadyRunningError as ListenerAlreadyRunningServiceError,
+    ListenerNotFoundError as ListenerNotFoundServiceError,
     ListenerStartError as ListenerStartServiceError,
 )
 from consortium.server.models.common_models import SuccessResponseModel
@@ -105,7 +104,7 @@ def get_listener_by_listener_id(
     "/{listener_id}/start",
     responses={
         200: {"model": SuccessResponseModel},
-        400: {"model": ListenerStartError().to_pydantic_model()},
+        400: {"model": ListenerStartAPIError().to_pydantic_model()},
         404: {
             "model": ListenerNotFoundAPIError(listener_id="string").to_pydantic_model(),
         },
@@ -153,7 +152,7 @@ async def start_listener_by_listener_id(
     "/{listener_id}/stop",
     responses={
         200: {"model": SuccessResponseModel},
-        400: {"model": ListenerStopError(message="string").to_pydantic_model()},
+        400: {"model": ListenerStopAPIError(message="string").to_pydantic_model()},
         404: {
             "model": ListenerNotFoundAPIError(listener_id="string").to_pydantic_model(),
         },

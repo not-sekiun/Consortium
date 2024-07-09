@@ -4,6 +4,7 @@ import sys
 from datetime import datetime
 
 from loguru import logger
+from rich.logging import RichHandler
 
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server_config import (
@@ -42,6 +43,13 @@ def main(arguments: argparse.Namespace) -> None:
         ),
         level="DEBUG" if arguments.debug else "INFO",
     )
+    # logger.add(
+    #     RichHandler(),
+    #     format=(
+    #         "[{time:YYYY-MM-DDTHH:mm:ssZ}] {level:<8} {extra[logger_name]}: {message}"
+    #     ),
+    #     level="DEBUG" if arguments.debug else "INFO",
+    # )
 
     # We are importing both Server and server_singletons within the function here
     # because we need to configure the logger first. server_singletons contains services

@@ -1,0 +1,8 @@
+from typing import Any
+
+
+class BaseFrameworkException(Exception):
+    def __init__(self, message: str, detail: Any = None):
+        self.message = message
+        self.detail = detail
+        super().__init__(message)
