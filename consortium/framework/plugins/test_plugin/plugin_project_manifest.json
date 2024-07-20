@@ -1,6 +1,0 @@
-{
-  "plugin": {
-    "filepath": "test_plugin.py",
-    "symbol": "TestPlugin"
-  }
-}

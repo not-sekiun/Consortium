@@ -14,16 +14,17 @@ from consortium.server.services.plugins_service import PluginsService
 from consortium.server.services.user_accounts_service import UserAccountsService
 from consortium.server.services.users_service import UsersService
 
-application_service = ApplicationService()
-event_hooks_service = EventHooksService()
-c2_types_service = C2TypesService()
 # Agent profiles service needs to be instantiated before the agent templates service
 # because the agent templates service relies on the agent profiles service to retrieve
 # agent profiles.
 agent_profiles_service = AgentProfilesService()
-agent_templates_service = AgentTemplatesService()
-agent_generators_service = AgentGeneratorsService()
-agents_service = AgentsService()
+agent_templates_service = AgentTemplatesService(
+    agent_profiles_service=agent_profiles_service,
+)
+agent_generators_service = AgentGeneratorsService(
+    agent_templates_service=agent_templates_service,
+)
+
 # Listener profiles service needs to be instantiated before the listener templates
 # service because the listener templates service relies on the listener profiles
 # service to retrieve listener profiles.
@@ -32,12 +33,22 @@ listener_templates_service = ListenerTemplatesService(
     listener_profiles_service=listener_profiles_service,
 )
 listeners_service = ListenersService(
-    listener_templates_service=listener_templates_service
+    listener_templates_service=listener_templates_service,
 )
+
+c2_types_service = C2TypesService(
+    listener_profiles_service=listener_profiles_service,
+    agent_profiles_service=agent_profiles_service,
+)
+
+# These services are instantiated independent of other services.
+agents_service = AgentsService()
+application_service = ApplicationService()
+event_hooks_service = EventHooksService()
 user_accounts_service = UserAccountsService()
 users_service = UsersService()
-# Plugins service needs to be instantiated last so that the loaded plugins have access
-# to all the other services.
+# The plugins service needs to be instantiated last so that the loaded plugins have
+# access to all the other services.
 plugins_service = PluginsService()
 # The server instance is instantiated dynamically at start_server.py. The configuration
 # values need to be passed into it over there before the instance can be assigned here.

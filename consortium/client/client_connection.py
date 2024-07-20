@@ -69,6 +69,12 @@ class ClientConnection:
         self._api_base_url = f"http://{self.remote_host}:{self.remote_port}/api"
         self._logged_in = False
 
+    def __repr__(self) -> str:
+        return f"ClientConnection(client_config={self.client_config})"
+
+    def __str__(self):
+        return f'"{self.name}" ({self.client_connection_id})'
+
     async def _request(self, method: str, url: str, **kwargs) -> Any:
         response = await self._aiohttp_client_session.request(method, url, **kwargs)
         response_json = await response.json()
@@ -553,9 +559,3 @@ class ClientConnection:
             method="GET",
             url=f"{self._api_base_url}/users/all",
         )
-
-    def __repr__(self) -> str:
-        return f"ClientConnection(client_config={self.client_config})"
-
-    def __str__(self):
-        return f'"{self.name}" ({self.client_connection_id})'

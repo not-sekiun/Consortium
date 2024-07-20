@@ -2,10 +2,20 @@ from typing import Any, Generic, Type, TypeVar
 
 from pydantic import BaseModel, create_model
 
+from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
+    BaseFrameworkException,
+)
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceException,
+)
+
 T = TypeVar("T")
 
 
 class BaseAPIException(Exception):
+    status_code: int
+    code: str
+
     # This ensures that there is ever only a single instance of the pydantic model
     # within the entire framework. This is important because duplicate pydantic models
     # with the same name will cause the OpenAPI schema to attempt name mangling leading
@@ -31,18 +41,13 @@ class BaseAPIException(Exception):
 
     def __init__(
         self,
-        status_code: int,
-        code: str,
         message: str = "",
         detail: Any = None,
-        headers: dict[str, Any] | None = None,
     ) -> None:
-        self.code = code
         self.message = message
         self.detail = detail
 
-        self.status_code = status_code
-        self.headers = headers
+        super().__init__(message)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -95,3 +100,24 @@ class BaseAPIException(Exception):
         }
         self._pydantic_models.append(pydantic_model)
         return pydantic_model
+
+    @classmethod
+    def from_service_exception(
+        cls,
+        service_exception: BaseServiceException,
+        detail: dict[str, Any] | None = None,
+    ) -> "BaseAPIException":
+        return cls(
+            message=service_exception.message,
+            detail=detail,
+        )
+
+    @classmethod
+    def from_framework_exception(
+        cls,
+        framework_exception: BaseFrameworkException,
+    ) -> "BaseAPIException":
+        return cls(
+            message=framework_exception.message,
+            detail=framework_exception.detail,
+        )

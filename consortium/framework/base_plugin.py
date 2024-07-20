@@ -46,11 +46,31 @@ class BasePlugin(ABC):
         self.stop_plugin_event = asyncio.Event()
         # Server services are all accessed through the self.server_services attribute.
         self.server_services = SimpleNamespace()
-        for attr_name, attr_value in server_singletons.__dict__.items():
-            # server_singletons also contains a reference to the server which we don't
-            # want to set on the plugin.
-            if attr_name != "server" and attr_name.endswith("_service"):
-                setattr(self.server_services, attr_name, attr_value)
+        self.server_services.agent_profiles_service = (
+            server_singletons.agent_profiles_service
+        )
+        self.server_services.agent_templates_service = (
+            server_singletons.agent_templates_service
+        )
+        self.server_services.agent_generators_service = (
+            server_singletons.agent_generators_service
+        )
+        self.server_services.agents_service = server_singletons.agents_service
+        self.server_services.application_service = server_singletons.application_service
+        self.server_services.c2_types_service = server_singletons.c2_types_service
+        self.server_services.event_hooks_service = server_singletons.event_hooks_service
+        self.server_services.listener_profiles_service = (
+            server_singletons.listener_profiles_service
+        )
+        self.server_services.listener_templates_service = (
+            server_singletons.listener_templates_service
+        )
+        self.server_services.listeners_service = server_singletons.listeners_service
+        self.server_services.plugins_service = server_singletons.plugins_service
+        self.server_services.user_accounts_service = (
+            server_singletons.user_accounts_service
+        )
+        self.server_services.users_service = server_singletons.users_service
         self.plugin_logger = logger.bind(
             logger_name=f"Consortium Plugin {self}",
         )
@@ -140,7 +160,7 @@ class BasePlugin(ABC):
     async def start_plugin(self, autostart: bool = False) -> None:
         if self.status.state == PluginState.STARTED:
             raise PluginAlreadyRunningError(
-                plugin_str=str(self),
+                plugin=str(self),
                 error_message=(
                     "The plugin cannot be started because it is already running"
                 ),
@@ -164,8 +184,8 @@ class BasePlugin(ABC):
                 # the REST API. An automatically started plugin has no client to return
                 # any error response to.
                 raise PluginStartFrameworkError(
-                    plugin_str=str(self),
-                    error_message=exc.message,
+                    plugin=str(self),
+                    start_error_message=exc.message,
                     detail=exc.detail,
                 )
         except Exception as exc:
@@ -175,7 +195,7 @@ class BasePlugin(ABC):
             )
             # The plugin is now fatally errored.
             self.status.transition_to_fatal(
-                plugin_str=str(self),
+                plugin=str(self),
                 exception=exc,
             )
             raise exc
@@ -185,7 +205,7 @@ class BasePlugin(ABC):
     async def stop_plugin(self) -> None:
         if self.status.state != PluginState.RUNNING:
             raise PluginNotRunningError(
-                plugin_str=str(self),
+                plugin=str(self),
                 error_message="The plugin cannot be stopped because it is not running.",
             )
 
@@ -197,8 +217,8 @@ class BasePlugin(ABC):
             # The plugin has not changed from its running state.
             self.status.transition_to_running()
             raise PluginStopFrameworkError(
-                plugin_str=str(self),
-                error_message=exc.message,
+                plugin=str(self),
+                stop_error_message=exc.message,
                 detail=exc.detail,
             )
         except Exception as exc:
@@ -208,7 +228,7 @@ class BasePlugin(ABC):
             )
             # The plugin is now fatally errored.
             self.status.transition_to_fatal(
-                plugin_str=str(self),
+                plugin=str(self),
                 exception=exc,
             )
             raise exc
@@ -219,7 +239,7 @@ class BasePlugin(ABC):
     async def cancel_plugin(self) -> None:
         if self.status.state != PluginState.RUNNING:
             raise PluginNotRunningError(
-                plugin_str=str(self),
+                plugin=str(self),
                 error_message=(
                     "The plugin cannot be cancelled because it is not running."
                 ),
@@ -242,7 +262,7 @@ class BasePlugin(ABC):
             )
             # The plugin is now fatally errored.
             self.status.transition_to_fatal(
-                plugin_str=str(self),
+                plugin=str(self),
                 exception=exc,
             )
             raise exc
@@ -272,8 +292,8 @@ class BasePlugin(ABC):
                 self.status.transition_to_cancelled()
             except PluginRuntimeError as exc:
                 exc = PluginRuntimeFrameworkError(
-                    plugin_str=str(self),
-                    error_message=exc.message,
+                    plugin=str(self),
+                    runtime_error_message=exc.message,
                     detail=exc.detail,
                 )
                 # The plugin is now errored.
@@ -287,7 +307,7 @@ class BasePlugin(ABC):
                     )
                     # The plugin is now fatally errored.
                     self.status.transition_to_fatal(
-                        plugin_str=str(self),
+                        plugin=str(self),
                         exception=exc,
                     )
         except Exception as exc:
@@ -296,7 +316,7 @@ class BasePlugin(ABC):
                 traceback.format_exc(),
             )
             self.status.transition_to_fatal(
-                plugin_str=str(self),
+                plugin=str(self),
                 exception=exc,
             )
             # The plugin is now fatally errored.
@@ -308,6 +328,6 @@ class BasePlugin(ABC):
                     traceback.format_exc(),
                 )
                 self.status.transition_to_fatal(
-                    plugin_str=str(self),
+                    plugin=str(self),
                     exception=exc,
                 )

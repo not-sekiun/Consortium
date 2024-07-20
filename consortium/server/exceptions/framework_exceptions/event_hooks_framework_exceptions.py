@@ -23,7 +23,7 @@ class EventHooksFrameworkError(BaseFrameworkException):
 class EventHookConfigurationParameterTypeError(EventHooksFrameworkError):
     def __init__(
         self,
-        event_hook_str: str,
+        event_hook: str,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
         error_message: str = "",
@@ -31,7 +31,7 @@ class EventHookConfigurationParameterTypeError(EventHooksFrameworkError):
         if not error_message:
             super().__init__(
                 message=(
-                    f"Failed to configure the event hook '{event_hook_str}'. "
+                    f"Failed to configure the event hook '{event_hook}'. "
                     f"The parameter '{parameter_name}' must be of type "
                     f"'{parameter_type}' in the event hook's definition."
                 ),
@@ -39,17 +39,17 @@ class EventHookConfigurationParameterTypeError(EventHooksFrameworkError):
         else:
             super().__init__(
                 message=(
-                    f"Failed to configure the event hook '{event_hook_str}'. "
+                    f"Failed to configure the event hook '{event_hook}'. "
                     f"{error_message}"
                 ),
             )
 
 
 class RequiredEventHookConfigurationParameterNotDeclaredError(EventHooksFrameworkError):
-    def __init__(self, parameter_name: str, event_hook_str: str):
+    def __init__(self, parameter_name: str, event_hook: str):
         super().__init__(
             message=(
-                f"Failed to configure the event hook '{event_hook_str}'. The required "
+                f"Failed to configure the event hook '{event_hook}'. The required "
                 f"parameter '{parameter_name}' was not declared in the event hook's "
                 f"definition ."
             ),

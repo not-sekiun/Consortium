@@ -6,6 +6,9 @@ import jsonschema
 from loguru import logger
 
 from consortium.framework.base_event_hook import BaseEventHook
+from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exceptions import (
+    EventHooksFrameworkError,
+)
 from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
     EventHookLoadingError,
     EventHookNotFoundError,
@@ -119,6 +122,8 @@ class EventHooksService:
                 event_hook_file=str(event_hook_file),
                 event_hook_project_folder=str(event_hook_project_folder),
             )
+        except EventHooksFrameworkError as exc:
+            raise exc from None
         except Exception as exc:
             raise InternalEventHookProjectError(
                 event_hook_project_folder=str(event_hook_project_folder),
@@ -134,6 +139,8 @@ class EventHooksService:
 
         try:
             event_hook_object = event_hook_class()
+        except EventHooksFrameworkError as exc:
+            raise exc from None
         except Exception as exc:
             raise InternalEventHookProjectError(
                 event_hook_project_folder=str(event_hook_project_folder),

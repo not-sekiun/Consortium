@@ -168,7 +168,7 @@ class BaseAgentGenerator(ABC):
             # still validating the name parameter, so we refer to it by its filepath
             # for now.
             raise AgentGeneratorCreationParameterTypeError(
-                agent_generator_str=sys.modules[self.__module__].__file__,
+                agent_generator=sys.modules[self.__module__].__file__,
                 parameter_name="name",
                 parameter_type="str",
             )
@@ -179,7 +179,7 @@ class BaseAgentGenerator(ABC):
         # From here onwards we can refer to the agent generator by its assigned name.
         if not isinstance(description, str):
             raise AgentGeneratorCreationParameterTypeError(
-                agent_generator_str=sys.modules[self.__module__].__file__,
+                agent_generator=sys.modules[self.__module__].__file__,
                 parameter_name="description",
                 parameter_type="str",
             )
@@ -187,7 +187,7 @@ class BaseAgentGenerator(ABC):
             json.dumps(parameters)
         except json.JSONDecodeError:
             raise AgentGeneratorCreationParameterTypeError(
-                agent_generator_str=name,
+                agent_generator=name,
                 error_message=(
                     "The parameter 'parameters' must be a dictionary with string keys "
                     "and values that are either: str, int, float, bool, None, lists of "
@@ -288,7 +288,7 @@ class BaseAgentGenerator(ABC):
     async def start_agent_generator(self) -> None:
         if self.status.state == AgentGeneratorState.RUNNING:
             raise AgentGeneratorAlreadyRunningError(
-                agent_generator_str=str(self),
+                agent_generator=str(self),
                 error_message=(
                     "The agent generator cannot be started because it is already "
                     "building an agent."
@@ -307,8 +307,8 @@ class BaseAgentGenerator(ABC):
             # The agent generator is now initialized.
             self.status.transition_to_initialized()
             raise AgentGeneratorStartFrameworkError(
-                agent_generator_str=str(self),
-                error_message=exc.message,
+                agent_generator=str(self),
+                start_error_message=exc.message,
                 detail=exc.detail,
             )
         except Exception as exc:
@@ -318,7 +318,7 @@ class BaseAgentGenerator(ABC):
             )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(
-                agent_generator_str=str(self),
+                agent_generator=str(self),
                 exception=exc,
             )
             raise exc
@@ -328,7 +328,7 @@ class BaseAgentGenerator(ABC):
     async def stop_agent_generator(self) -> None:
         if self.status.state != AgentGeneratorState.RUNNING:
             raise AgentGeneratorNotRunningError(
-                agent_generator_str=str(self),
+                agent_generator=str(self),
                 error_message=(
                     "The agent generator cannot be stopped because it is not building "
                     "an agent."
@@ -341,8 +341,8 @@ class BaseAgentGenerator(ABC):
             # The agent generator has not changed from its building state.
             self.status.transition_to_building()
             raise AgentGeneratorStopFrameworkError(
-                agent_generator_str=str(self),
-                error_message=exc.message,
+                agent_generator=str(self),
+                stop_error_message=exc.message,
                 detail=exc.detail,
             )
         except Exception as exc:
@@ -352,7 +352,7 @@ class BaseAgentGenerator(ABC):
             )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(
-                agent_generator_str=str(self),
+                agent_generator=str(self),
                 exception=exc,
             )
             raise exc
@@ -363,7 +363,7 @@ class BaseAgentGenerator(ABC):
     async def cancel_agent_generator(self) -> None:
         if self.status.state != AgentGeneratorState.RUNNING:
             raise AgentGeneratorNotRunningError(
-                agent_generator_str=str(self),
+                agent_generator=str(self),
                 error_message=(
                     "The agent generator cannot be cancelled because it is not "
                     "building an agent."
@@ -387,7 +387,7 @@ class BaseAgentGenerator(ABC):
             )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(
-                agent_generator_str=str(self),
+                agent_generator=str(self),
                 exception=exc,
             )
             raise exc
@@ -436,8 +436,8 @@ class BaseAgentGenerator(ABC):
                 self.status.transition_to_cancelled()
             except AgentGeneratorBuildError as exc:
                 framework_exc = AgentGeneratorBuildFrameworkError(
-                    agent_generator_str=str(self),
-                    error_message=exc.message,
+                    agent_generator=str(self),
+                    build_error_message=exc.message,
                     detail=exc.detail,
                 )
                 # The agent generator is now errored.
@@ -453,7 +453,7 @@ class BaseAgentGenerator(ABC):
                     )
                     # The agent generator is now fatally errored.
                     self.status.transition_to_fatal(
-                        agent_generator_str=str(self),
+                        agent_generator=str(self),
                         exception=exc,
                     )
         except Exception as exc:
@@ -463,7 +463,7 @@ class BaseAgentGenerator(ABC):
             )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(
-                agent_generator_str=str(self),
+                agent_generator=str(self),
                 exception=exc,
             )
             try:
@@ -474,6 +474,6 @@ class BaseAgentGenerator(ABC):
                     traceback.format_exc(),
                 )
                 self.status.transition_to_fatal(
-                    agent_generator_str=str(self),
+                    agent_generator=str(self),
                     exception=exc,
                 )

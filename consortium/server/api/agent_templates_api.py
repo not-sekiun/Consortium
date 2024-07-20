@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.agent_templates_api_exceptions import (
-    AgentTemplateNotFoundError,
-    InvalidAgentTemplateOptionNameError,
-    InvalidAgentTemplateOptionValueError,
+from consortium.server.exceptions.api_exceptions.agent_templates_api_exceptions import (
+    AgentTemplateNotFoundError as AgentTemplateNotFoundAPIError,
+    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundAPIError,
+    AgentTemplateOptionValueError as AgentTemplateOptionValueAPIError,
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
@@ -15,6 +15,13 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
+)
+from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
+    AgentTemplateOptionNotFoundError,
+    AgentTemplateOptionValueError,
+)
+from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
+    AgentTemplateNotFoundError as AgentTemplateNotFoundServiceError,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.models.agent_template_models import AgentTemplateModel
@@ -44,18 +51,26 @@ agent_generators_service = server_singletons.agent_generators_service
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model()
-            | InvalidAgentTemplateOptionValueError(
-                option_name="string",
-                option_value="string",
-                exception=Exception("string"),
+            | AgentTemplateOptionValueAPIError.from_framework_exception(
+                framework_exception=AgentTemplateOptionValueError(
+                    agent_template="string",
+                    option_name="string",
+                    option_value="string",
+                    error_message="string",
+                ),
             ).to_pydantic_model()
-            | InvalidAgentTemplateOptionNameError(
-                option_name="string",
+            | AgentTemplateOptionNotFoundAPIError.from_framework_exception(
+                framework_exception=AgentTemplateOptionNotFoundError(
+                    agent_template="string",
+                    option_name="string",
+                ),
             ).to_pydantic_model(),
         },
         404: {
-            "model": AgentTemplateNotFoundError(
-                agent_template_id="string",
+            "model": AgentTemplateNotFoundAPIError.from_service_exception(
+                service_exception=AgentTemplateNotFoundServiceError(
+                    agent_template_id="string",
+                ),
             ).to_pydantic_model(),
         },
     },
@@ -75,21 +90,21 @@ def create_agent_generator_through_agent_template_by_agent_template_id(
                 agent_template_id=agent_template_id,
             )
         )
-    except ValueError:
-        raise AgentTemplateNotFoundError(agent_template_id=agent_template_id)
+    except AgentTemplateNotFoundServiceError as exc:
+        raise AgentTemplateNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
 
     for option_name, option_value in agent_template_options.items():
         try:
             agent_template.set_option_value_by_option_name(option_name, option_value)
-        # KeyError is raised when option_name is invalid.
-        except KeyError:
-            raise InvalidAgentTemplateOptionNameError(option_name=option_name)
-        # ValueError is raised when option_value is invalid.
-        except ValueError as exc:
-            raise InvalidAgentTemplateOptionValueError(
-                option_name=option_name,
-                option_value=option_value,
-                exception=exc,
+        except AgentTemplateOptionNotFoundError as exc:
+            raise AgentTemplateOptionNotFoundAPIError.from_framework_exception(
+                framework_exception=exc,
+            )
+        except AgentTemplateOptionValueError as exc:
+            raise AgentTemplateOptionValueAPIError.from_framework_exception(
+                framework_exception=exc,
             )
 
     # Agent generator is created and added to the agent generator service but not
@@ -127,8 +142,10 @@ def get_all_agent_templates(
     responses={
         200: {"model": AgentTemplateModel},
         404: {
-            "model": AgentTemplateNotFoundError(
-                agent_template_id="string",
+            "model": AgentTemplateNotFoundAPIError.from_service_exception(
+                service_exception=AgentTemplateNotFoundServiceError(
+                    agent_template_id="string",
+                ),
             ).to_pydantic_model(),
         },
         422: {
@@ -155,7 +172,9 @@ def get_agent_template_by_agent_template_id(
                 agent_template_id,
             )
         )
-    except ValueError:
-        raise AgentTemplateNotFoundError(agent_template_id=agent_template_id)
+    except AgentTemplateNotFoundServiceError as exc:
+        raise AgentTemplateNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
 
     return AgentTemplateModel(**agent_template.to_json())

@@ -84,12 +84,12 @@ class EmptyPluginNameError(PluginConfigurationParameterError):
 class PluginNotRunningError(PluginsFrameworkError):
     def __init__(
         self,
-        plugin_str: str,
+        plugin: str,
         error_message: str,
     ):
         super().__init__(
             message=(
-                f"An error occurred with the plugin '{plugin_str}' because it is not "
+                f"An error occurred with the plugin '{plugin}' because it is not "
                 f"running. {error_message}"
             ),
         )
@@ -98,12 +98,12 @@ class PluginNotRunningError(PluginsFrameworkError):
 class PluginAlreadyRunningError(PluginsFrameworkError):
     def __init__(
         self,
-        plugin_str: str,
+        plugin: str,
         error_message: str,
     ):
         super().__init__(
             message=(
-                f"An error occurred with the plugin '{plugin_str}' because it is "
+                f"An error occurred with the plugin '{plugin}' because it is "
                 f"already running. {error_message}"
             ),
         )
@@ -112,12 +112,12 @@ class PluginAlreadyRunningError(PluginsFrameworkError):
 class PluginStartError(PluginsFrameworkError):
     def __init__(
         self,
-        plugin_str: str,
-        error_message: str,
+        plugin: str,
+        start_error_message: str,
         detail: Any,
     ):
         super().__init__(
-            message=f"Failed to start the plugin '{plugin_str}'. {error_message}",
+            message=f"Failed to start the plugin '{plugin}'. {start_error_message}",
             detail=detail,
         )
 
@@ -125,14 +125,14 @@ class PluginStartError(PluginsFrameworkError):
 class PluginRuntimeError(PluginsFrameworkError):
     def __init__(
         self,
-        plugin_str: str,
-        error_message: str,
+        plugin: str,
+        runtime_error_message: str,
         detail: Any,
     ):
         super().__init__(
             message=(
-                f"The plugin '{plugin_str}' encountered an error while running. "
-                f"{error_message}"
+                f"The plugin '{plugin}' encountered an error while running. "
+                f"{runtime_error_message}"
             ),
             detail=detail,
         )
@@ -141,11 +141,11 @@ class PluginRuntimeError(PluginsFrameworkError):
 class PluginStopError(PluginsFrameworkError):
     def __init__(
         self,
-        plugin_str: str,
-        error_message: str,
+        plugin: str,
+        stop_error_message: str,
         detail: Any,
     ):
         super().__init__(
-            message=(f"Failed to stop the plugin '{plugin_str}'. {error_message}"),
+            message=(f"Failed to stop the plugin '{plugin}'. {stop_error_message}"),
             detail=detail,
         )

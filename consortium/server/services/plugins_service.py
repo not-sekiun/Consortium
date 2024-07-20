@@ -1,12 +1,16 @@
 import asyncio
 import importlib
 import json
+import traceback
 from pathlib import Path
 
 import jsonschema
 from loguru import logger
 
 from consortium.framework.base_plugin import BasePlugin
+from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
+    PluginsFrameworkError,
+)
 from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
     InternalPluginProjectError,
     InternalPluginStopError,
@@ -119,6 +123,9 @@ class PluginsService:
                 plugin_project_folder=str(plugin_project_folder),
                 plugin_file=str(plugin_file),
             )
+        except PluginsFrameworkError as exc:
+            raise exc from None
+        # This should only catch errors that are not related to the plugin project.
         except Exception as exc:
             raise InternalPluginProjectError(
                 plugin_project_folder=str(plugin_project_folder),
@@ -134,6 +141,8 @@ class PluginsService:
 
         try:
             plugin_object = plugin_class()
+        except PluginsFrameworkError as exc:
+            raise exc from None
         except Exception as exc:
             raise InternalPluginProjectError(
                 plugin_project_folder=str(plugin_project_folder),
@@ -173,8 +182,16 @@ class PluginsService:
             return_exceptions=True,
         )
         for result in load_plugins_tasks_results:
-            if isinstance(result, PluginLoadingError):
+            if isinstance(result, (PluginLoadingError, PluginsFrameworkError)):
                 self.plugins_service_logger.error(result)
+            elif isinstance(result, Exception):
+                self.plugins_service_logger.error(
+                    "Fatal error occurred while loading plugin.",
+                )
+                self.plugins_service_logger.opt(colors=True, raw=True).error(
+                    "<bold><red>{}</></>",
+                    "".join(traceback.format_exception(result)),
+                )
             else:
                 number_of_loaded_plugins += 1
 
@@ -289,10 +306,6 @@ class PluginsService:
         plugin_project_folder: Path,
     ) -> BasePlugin:
         plugin = self.get_plugin_from_plugin_project_folder(plugin_project_folder)
-
-        # To prevent circular imports we assign the PluginService to the plugin's
-        # server_services attribute after it has been fully loaded.
-        plugin.server_services.plugins_service = self
 
         if plugin.autostart:
             try:

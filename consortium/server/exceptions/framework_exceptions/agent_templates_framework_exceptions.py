@@ -42,7 +42,7 @@ class AgentTemplateConfigurationParameterTypeError(
 ):
     def __init__(
         self,
-        agent_template_str: str | None = None,
+        agent_template: str | None = None,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
         error_message: str = "",
@@ -50,7 +50,7 @@ class AgentTemplateConfigurationParameterTypeError(
         if not error_message:
             super().__init__(
                 message=(
-                    f"Failed to configure the agent template '{agent_template_str}'. "
+                    f"Failed to configure the agent template '{agent_template}'. "
                     f"The parameter '{parameter_name}' must be of type "
                     f"'{parameter_type}' in the agent template's definition."
                 ),
@@ -58,7 +58,7 @@ class AgentTemplateConfigurationParameterTypeError(
         else:
             super().__init__(
                 message=(
-                    f"Failed to configure the agent template '{agent_template_str}'. "
+                    f"Failed to configure the agent template '{agent_template}'. "
                     f"{error_message}"
                 ),
             )
@@ -67,10 +67,10 @@ class AgentTemplateConfigurationParameterTypeError(
 class RequiredAgentTemplateConfigurationParameterNotDeclaredError(
     AgentTemplateConfigurationParameterError,
 ):
-    def __init__(self, parameter_name: str, agent_template_str: str):
+    def __init__(self, parameter_name: str, agent_template: str):
         super().__init__(
             message=(
-                f"Failed to configure the agent template '{agent_template_str}'. "
+                f"Failed to configure the agent template '{agent_template}'. "
                 f"The required parameter '{parameter_name}' was not declared in the "
                 f"agent template's definition."
             ),
@@ -89,10 +89,10 @@ class EmptyAgentTemplateNameError(AgentTemplateConfigurationError):
 
 
 class DuplicateAgentTemplateOptionNameError(AgentTemplateConfigurationError):
-    def __init__(self, option_name: str, agent_template_str: str):
+    def __init__(self, option_name: str, agent_template: str):
         super().__init__(
             message=(
-                f"Failed to configure the agent template {agent_template_str}'. The "
+                f"Failed to configure the agent template {agent_template}'. The "
                 f"options provided to the agent template must not have duplicate "
                 f"names but the name '{option_name}' was duplicated."
             ),
@@ -104,11 +104,11 @@ class AgentTemplateOptionError(AgentTemplatesFrameworkError):
 
 
 class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
-    def __init__(self, option_name: str, agent_template_str: str):
+    def __init__(self, option_name: str, agent_template: str):
         super().__init__(
             message=(
                 f"Failed to access the option '{option_name}' for the agent template "
-                f"{agent_template_str}. Could not find the requested option "
+                f"{agent_template}. Could not find the requested option "
                 f"'{option_name}' in the agent template."
             ),
         )
@@ -117,7 +117,7 @@ class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
 class AgentTemplateOptionValueError(AgentTemplateOptionError):
     def __init__(
         self,
-        agent_template_str: str,
+        agent_template: str,
         option_name: str,
         option_value: str,
         error_message: str,
@@ -125,7 +125,7 @@ class AgentTemplateOptionValueError(AgentTemplateOptionError):
         super().__init__(
             message=(
                 f"Failed to set the option '{option_name}' to the value "
-                f"'{option_value}' for the agent template '{agent_template_str}'. "
+                f"'{option_value}' for the agent template '{agent_template}'. "
                 f"{error_message}"
             ),
         )

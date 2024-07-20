@@ -46,12 +46,12 @@ class BaseEventHook(ABC):
             # still validating the name parameter, so we refer to it by its filepath
             # for now.
             raise RequiredEventHookConfigurationParameterNotDeclaredError(
-                event_hook_str=sys.modules[cls.__module__].__file__,
+                event_hook=sys.modules[cls.__module__].__file__,
                 parameter_name="name",
             )
         if not isinstance(cls.name, str):
             raise EventHookConfigurationParameterTypeError(
-                event_hook_str=sys.modules[cls.__module__].__file__,
+                event_hook=sys.modules[cls.__module__].__file__,
                 parameter_name="name",
                 parameter_type="str",
             )
@@ -62,20 +62,20 @@ class BaseEventHook(ABC):
         # From here onwards we can refer to event hook by its name.
         if not isinstance(cls.description, str):
             raise EventHookConfigurationParameterTypeError(
-                event_hook_str=cls.name,
+                event_hook=cls.name,
                 parameter_name="description",
                 parameter_type="str",
             )
         if not isinstance(cls.authors, set):
             raise EventHookConfigurationParameterTypeError(
-                event_hook_str=cls.name,
+                event_hook=cls.name,
                 parameter_name="authors",
                 parameter_type="set",
             )
         for author in cls.authors:
             if not isinstance(author, str):
                 raise EventHookConfigurationParameterTypeError(
-                    event_hook_str=cls.name,
+                    event_hook=cls.name,
                     error_message=(
                         "The elements in the authors set must be strings for event "
                         f"hook '{cls.name}'."
@@ -83,14 +83,14 @@ class BaseEventHook(ABC):
                 )
         if not isinstance(cls.event_types, set):
             raise EventHookConfigurationParameterTypeError(
-                event_hook_str=cls.name,
+                event_hook=cls.name,
                 parameter_name="event_types",
                 parameter_type="set",
             )
         for event_type in cls.event_types:
             if not isinstance(event_type, (EventType, str)):
                 raise EventHookConfigurationParameterTypeError(
-                    event_hook_str=cls.name,
+                    event_hook=cls.name,
                     error_message=(
                         "The elements in the event types set must be event type "
                         f"objects for event hook '{cls.name}'."

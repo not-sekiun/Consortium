@@ -6,24 +6,22 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 import consortium.server.server_singletons as server_singletons
-
-# from consortium.server.api.agent_generators_api import (
-#     router as agent_generators_api_router,
-# )
-# from consortium.server.api.agent_templates_api import (
-#     router as agent_templates_api_router,
-# )
-# from consortium.server.api.agents_api import router as agents_api_router
-# from consortium.server.api.listener_templates_api import (
-#     router as listener_templates_api_router,
-# )
-#
-# from consortium.server.api.listeners_api import router as listeners_api_router
-# from consortium.server.api.login_api import router as login_api_router
-# from consortium.server.api.logout_api import router as logout_api_router
-# from consortium.server.api.server_api import router as server_api_router
-# from consortium.server.api.user_accounts_api import router as user_accounts_api_router
-# from consortium.server.api.users_api import router as users_api_router
+from consortium.server.api.agent_generators_api import (
+    router as agent_generators_api_router,
+)
+from consortium.server.api.agent_templates_api import (
+    router as agent_templates_api_router,
+)
+from consortium.server.api.agents_api import router as agents_api_router
+from consortium.server.api.listener_templates_api import (
+    router as listener_templates_api_router,
+)
+from consortium.server.api.listeners_api import router as listeners_api_router
+from consortium.server.api.login_api import router as login_api_router
+from consortium.server.api.logout_api import router as logout_api_router
+from consortium.server.api.server_api import router as server_api_router
+from consortium.server.api.user_accounts_api import router as user_accounts_api_router
+from consortium.server.api.users_api import router as users_api_router
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import SERVER_RELEASE
@@ -53,17 +51,17 @@ class Server:
 
         self._server_logger = logger.bind(logger_name="Consortium Server")
         self._app = application_service.get_application()
-        # # configure custom api endpoints
-        # self._app.include_router(login_api_router)
-        # self._app.include_router(logout_api_router)
-        # self._app.include_router(server_api_router)
-        # self._app.include_router(users_api_router)
-        # self._app.include_router(user_accounts_api_router)
-        # self._app.include_router(listener_templates_api_router)
-        # self._app.include_router(listeners_api_router)
-        # self._app.include_router(agent_templates_api_router)
-        # self._app.include_router(agent_generators_api_router)
-        # self._app.include_router(agents_api_router)
+        # Configure custom api endpoints.
+        self._app.include_router(login_api_router)
+        self._app.include_router(logout_api_router)
+        self._app.include_router(server_api_router)
+        self._app.include_router(users_api_router)
+        self._app.include_router(user_accounts_api_router)
+        self._app.include_router(listener_templates_api_router)
+        self._app.include_router(listeners_api_router)
+        self._app.include_router(agent_templates_api_router)
+        self._app.include_router(agent_generators_api_router)
+        self._app.include_router(agents_api_router)
 
         # Configure middleware. Order matters, the last middleware added will be the
         # first to be executed on the request and the last to be executed on the
@@ -100,25 +98,26 @@ class Server:
         # the event hooks service when the server is shutting down.
         register_server_event_handlers(self._app)
 
-        # # Manually modify the openapi schema to remove the default 422 response from the
-        # # /api/login endpoint (https://github.com/tiangolo/fastapi/issues/660).
-        # del self._app.openapi()["paths"]["/api/login"]["post"]["responses"]["422"]
-        # # Workaround to modify the openapi schema to add in null detail responses that
-        # # were removed. Go bug tiangolo about this issue because it still has yet to be
-        # # fixed (https://github.com/tiangolo/fastapi/issues/1082).
-        # for schema_name, schema in self._app.openapi()["components"]["schemas"].items():
-        #     if "ErrorModel" in schema_name and "examples" in schema:
-        #         if "detail" not in schema["examples"][0]["error"]:
-        #             schema["examples"][0]["error"]["detail"] = None
-        #         else:
-        #             # Dictionaries are in insertion order in python 3.7+ so this
-        #             # moves the detail key to the end of the dictionary to make the
-        #             # example look cleaner.
-        #             reordered_dict = {
-        #                 key: schema["examples"][0]["error"][key]
-        #                 for key in ["code", "message", "detail"]
-        #             }
-        #             schema["examples"][0]["error"] = reordered_dict
+        # TODO: Make this hack more elegant.
+        # Manually modify the openapi schema to remove the default 422 response from the
+        # /api/login endpoint (https://github.com/tiangolo/fastapi/issues/660).
+        del self._app.openapi()["paths"]["/api/login"]["post"]["responses"]["422"]
+        # Workaround to modify the openapi schema to add in null detail responses that
+        # were removed. Go bug tiangolo about this issue because it still has yet to be
+        # fixed (https://github.com/tiangolo/fastapi/issues/1082).
+        for schema_name, schema in self._app.openapi()["components"]["schemas"].items():
+            if "ErrorModel" in schema_name and "examples" in schema:
+                if "detail" not in schema["examples"][0]["error"]:
+                    schema["examples"][0]["error"]["detail"] = None
+                else:
+                    # Dictionaries are in insertion order in python 3.7+ so this
+                    # moves the detail key to the end of the dictionary to make the
+                    # example look cleaner.
+                    reordered_dict = {
+                        key: schema["examples"][0]["error"][key]
+                        for key in ["code", "message", "detail"]
+                    }
+                    schema["examples"][0]["error"] = reordered_dict
 
     def _shutdown_server(self) -> None:
         # TODO: run all the necessary shutdown procedures, this is where we gracefully
@@ -155,18 +154,18 @@ class Server:
                 self._app,
                 host=self.server_config.local_host,
                 port=self.server_config.local_port,
-                # disables standard uvicorn logging through logging's dictionary config
+                # Disables standard uvicorn logging through logging's dictionary config.
                 log_config={
                     "version": 1,
                     "disable_existing_loggers": True,
                 },
-                # Disables Uvicorn's server header to prevent C2 server fingerprinting
+                # Disables Uvicorn's server header to prevent C2 server fingerprinting.
                 server_header=False,
             )
         # This except block triggered before the server runs. Any other exceptions that
         # skip past the middleware are handled internally by uvicorn and will NOT
         # trigger this except block. The traceback can be disabled by setting the
-        # log_level parameter to "critical" in the uvicorn.run() call above
+        # log_level parameter to "critical" in the uvicorn.run() call above.
         except Exception:
             logger.opt(ansi=True).critical(
                 "<red><bold>Unrecoverable unhandled exception occurred while server "
@@ -178,7 +177,7 @@ class Server:
         # Uvicorn blocks the main thread until a keyboard interrupt is sent to it
         # signifying a shutdown. Execution is continued here where we can perform any
         # graceful shutdowns such as notifying clients and agents of the shutdown as
-        # well as killing any running listeners
+        # well as killing any running listeners.
         self._shutdown_server()
         self._server_logger.info("Server shutdown complete. See you again ^_^")
         self.status = ServerStatus.STOPPED

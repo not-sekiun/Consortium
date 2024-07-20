@@ -12,7 +12,7 @@ from consortium.framework.options import (
     SingleValueOption,
     ToggleableChoicesValueOption,
 )
-from consortium.server.exceptions.framework_exceptions.agent_templates_framework import (
+from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
     AgentTemplateConfigurationParameterTypeError,
     AgentTemplateOptionNotFoundError,
     AgentTemplateOptionValueError,
@@ -53,11 +53,11 @@ class BaseAgentTemplate(ABC):
                 parameter_name="name",
                 # Since the agent template cannot be identified by name we identify
                 # it by the filepath it was declared in.
-                agent_template_str=sys.modules[cls.__module__].__file__,
+                agent_template=sys.modules[cls.__module__].__file__,
             )
         if not isinstance(cls.name, str):
             raise AgentTemplateConfigurationParameterTypeError(
-                agent_template_str=sys.modules[cls.__module__].__file__,
+                agent_template=sys.modules[cls.__module__].__file__,
                 parameter_name="name",
                 parameter_type="str",
             )
@@ -69,7 +69,7 @@ class BaseAgentTemplate(ABC):
         if not hasattr(cls, "agent_generator"):
             raise RequiredAgentTemplateConfigurationParameterNotDeclaredError(
                 parameter_name="agent_generator",
-                agent_template_str=cls.name,
+                agent_template=cls.name,
             )
 
         if cls.authors is None:
@@ -97,19 +97,19 @@ class BaseAgentTemplate(ABC):
             if option.name in option_names:
                 raise DuplicateAgentTemplateOptionNameError(
                     option_name=option.name,
-                    agent_template_str=cls.name,
+                    agent_template=cls.name,
                 )
             option_names.append(option.name)
 
         if not isinstance(cls.description, str):
             raise AgentTemplateConfigurationParameterTypeError(
-                agent_template_str=cls.name,
+                agent_template=cls.name,
                 parameter_name="description",
                 parameter_type="str",
             )
         if not isinstance(cls.authors, set):
             raise AgentTemplateConfigurationParameterTypeError(
-                agent_template_str=cls.name,
+                agent_template=cls.name,
                 parameter_name="authors",
                 parameter_type="set",
             )
@@ -165,7 +165,7 @@ class BaseAgentTemplate(ABC):
                 return option
         raise AgentTemplateOptionNotFoundError(
             option_name=option_name,
-            agent_template_str=self.name,
+            agent_template=self.name,
         )
 
     def set_option_value_by_option_name(
@@ -181,7 +181,7 @@ class BaseAgentTemplate(ABC):
             raise AgentTemplateOptionValueError(
                 option_name=option_name,
                 option_value=option_value,
-                agent_template_str=self.name,
+                agent_template=self.name,
                 error_message=str(exc),
             )
 

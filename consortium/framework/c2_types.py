@@ -1,11 +1,14 @@
+import sys
 import uuid
 
 from consortium.server.exceptions.framework_exceptions.c2_types_framework_exceptions import (
     AgentTypeAlreadyExistsError,
     AgentTypeConfigurationError,
+    AgentTypeConfigurationParameterTypeError,
     AgentTypeNotFoundError,
+    EmptyListenerTypeNameError,
     ListenerTypeAlreadyExistsError,
-    ListenerTypeConfigurationError,
+    ListenerTypeConfigurationParameterTypeError,
     ListenerTypeNotFoundError,
 )
 
@@ -14,18 +17,33 @@ class AgentType:
     def __init__(
         self,
         name: str,
-        # "ListenerType" is not defined yet at this point, so we use a string instead in
-        # the type hint
+        # `ListenerType` is not defined yet at this point, so we use a forward
+        # reference.
         compatible_listener_types: set["ListenerType"] | None = None,
     ):
         if compatible_listener_types is None:
             compatible_listener_types = set()
 
+        if not isinstance(name, str):
+            raise AgentTypeConfigurationError("The agent type's name must be a string.")
+        if not name:
+            raise AgentTypeConfigurationError(
+                "The agent type's name must not be an empty string.",
+            )
+        if not isinstance(compatible_listener_types, set):
+            raise AgentTypeConfigurationError(
+                "The agent type's provided compatible listener types must be a set.",
+            )
+        for listener_type in compatible_listener_types:
+            if not isinstance(listener_type, ListenerType):
+                raise AgentTypeConfigurationError(
+                    "The elements in the set of compatible listener types must be "
+                    "listener type objects.",
+                )
+
         self.name = name
         self.compatible_listener_types = compatible_listener_types
         self.agent_type_id = uuid.uuid4()
-
-        self._validate_agent_type_arguments()
 
     def __str__(self) -> str:
         return f'"{self.name}" ({str(self.agent_type_id)})'
@@ -38,9 +56,11 @@ class AgentType:
 
     def add_compatible_listener_type(self, listener_type: "ListenerType") -> None:
         if not isinstance(listener_type, ListenerType):
-            raise ValueError(
-                f"Invalid listener type '{listener_type}' provided, expected a "
-                "listener type object.",
+            raise ListenerTypeConfigurationParameterTypeError(
+                error_message=(
+                    "Invalid listener type '{listener_type}' provided, expected a "
+                    "listener type object."
+                ),
             )
         if listener_type in self.compatible_listener_types:
             raise ListenerTypeAlreadyExistsError(
@@ -52,9 +72,11 @@ class AgentType:
 
     def remove_compatible_listener_type(self, listener_type: "ListenerType") -> None:
         if not isinstance(listener_type, ListenerType):
-            raise ValueError(
-                f"Invalid listener type '{listener_type}' provided, expected a "
-                "listener type object.",
+            raise AgentTypeConfigurationParameterTypeError(
+                error_message=(
+                    f"Invalid listener type '{listener_type}' provided, expected a "
+                    "listener type object."
+                ),
             )
         if listener_type not in self.compatible_listener_types:
             raise ListenerTypeNotFoundError(
@@ -65,8 +87,8 @@ class AgentType:
         listener_type.compatible_agent_types.remove(self)
 
     def is_compatible_with_listener_type(self, listener_type: "ListenerType") -> bool:
-        # If compatible_listener_types is set to None, then the agent is compatible with
-        # all listener types.
+        # If `compatible_listener_types` is set to `None`, then the agent is compatible
+        # with all listener types.
         if self.compatible_listener_types is None:
             return True
         return listener_type in self.compatible_listener_types
@@ -84,24 +106,6 @@ class AgentType:
             "agent_type_id": str(self.agent_type_id),
         }
 
-    def _validate_agent_type_arguments(self) -> None:
-        if not isinstance(self.name, str):
-            raise AgentTypeConfigurationError("The agent type's name must be a string.")
-        if not self.name:
-            raise AgentTypeConfigurationError(
-                "The agent type's name must not be an empty string.",
-            )
-        if not isinstance(self.compatible_listener_types, set):
-            raise AgentTypeConfigurationError(
-                "The agent type's provided compatible listener types must be a set.",
-            )
-        for listener_type in self.compatible_listener_types:
-            if not isinstance(listener_type, ListenerType):
-                raise AgentTypeConfigurationError(
-                    "The elements in the set of compatible listener types must be "
-                    "listener type objects.",
-                )
-
 
 class ListenerType:
     def __init__(
@@ -112,11 +116,35 @@ class ListenerType:
         if compatible_agent_types is None:
             compatible_agent_types = set()
 
+        if not isinstance(name, str):
+            raise ListenerTypeConfigurationParameterTypeError(
+                listener_type_filepath=sys.modules[self.__class__.__module__].__file__,
+                parameter_name="name",
+                parameter_type="str",
+            )
+        if not name:
+            raise EmptyListenerTypeNameError
+        if not isinstance(compatible_agent_types, set):
+            raise ListenerTypeConfigurationParameterTypeError(
+                listener_type_filepath=sys.modules[self.__class__.__module__].__file__,
+                parameter_name="compatible_agent_types",
+                parameter_type="set",
+            )
+        for agent_type in compatible_agent_types:
+            if not isinstance(agent_type, AgentType):
+                raise ListenerTypeConfigurationParameterTypeError(
+                    listener_type_filepath=sys.modules[
+                        self.__class__.__module__
+                    ].__file__,
+                    error_message=(
+                        "The elements in the set of compatible agent types must be "
+                        "agent type objects."
+                    ),
+                )
+
         self.name = name
         self.compatible_agent_types = compatible_agent_types
         self.listener_type_id = uuid.uuid4()
-
-        self._validate_listener_type_arguments()
 
     def __str__(self) -> str:
         return f'"{self.name}" ({str(self.listener_type_id)})'
@@ -156,8 +184,8 @@ class ListenerType:
         agent_type.compatible_listener_types.remove(self)
 
     def is_compatible_with_agent_type(self, agent_type: AgentType) -> bool:
-        # if compatible_agent_types is set to None, then the listener is compatible with
-        # all agent types
+        # If `compatible_agent_types` is set to `None`, then the listener is compatible
+        # with all agent types.
         if self.compatible_agent_types is None:
             return True
         return agent_type in self.compatible_agent_types
@@ -174,23 +202,3 @@ class ListenerType:
             ],
             "listener_type_id": str(self.listener_type_id),
         }
-
-    def _validate_listener_type_arguments(self) -> None:
-        if not isinstance(self.name, str):
-            raise ListenerTypeConfigurationError(
-                "The listener type's name must be a string.",
-            )
-        if not self.name:
-            raise ListenerTypeConfigurationError(
-                "The listener type's name must not be an empty string.",
-            )
-        if not isinstance(self.compatible_agent_types, set):
-            raise ListenerTypeConfigurationError(
-                "The listener type's provided compatible agent types must be a set.",
-            )
-        for agent_type in self.compatible_agent_types:
-            if not isinstance(agent_type, AgentType):
-                raise ListenerTypeConfigurationError(
-                    "The elements in the set of compatible agent types must be agent "
-                    "type objects.",
-                )

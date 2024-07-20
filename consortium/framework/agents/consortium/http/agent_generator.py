@@ -63,7 +63,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         build_context: SimpleNamespace,
     ):
         with open(
-            self.working_directory / "source" / "agent.py",
+            self.working_directory / "agent_source" / "agent.py",
             "r",
         ) as file:
             template_source_code = file.read()

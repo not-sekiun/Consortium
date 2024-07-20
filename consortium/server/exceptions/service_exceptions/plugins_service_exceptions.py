@@ -153,12 +153,12 @@ class InternalPluginProjectError(InvalidPluginProjectImplementationError):
     def __init__(
         self,
         plugin_project_folder: str,
-        error_message: str,
+        internal_error_message: str,
     ):
         super().__init__(
             message=(
                 f"Failed to load plugin project at '{plugin_project_folder}'. An "
-                f"exception occurred while loading the plugin: {error_message}"
+                f"exception occurred while loading the plugin: {internal_error_message}"
             ),
         )
 
@@ -168,11 +168,11 @@ class PluginUnloadError(PluginsServiceError):
 
 
 class InternalPluginStopError(PluginUnloadError):
-    def __init__(self, plugin: str, error_message: str):
+    def __init__(self, plugin: str, internal_error_message: str):
         super().__init__(
             message=(
                 f"Failed to unload plugin '{plugin}'. An exception occurred while "
-                f"stopping the plugin: {error_message}"
+                f"stopping the plugin: {internal_error_message}"
             ),
         )
 

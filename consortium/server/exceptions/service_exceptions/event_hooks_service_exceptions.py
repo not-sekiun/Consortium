@@ -152,12 +152,12 @@ class InternalEventHookProjectError(InvalidEventHookProjectImplementationError):
     def __init__(
         self,
         event_hook_project_folder: str,
-        error_message: str,
+        internal_error_message: str,
     ):
         super().__init__(
             message=(
                 f"Failed to load the event hook at '{event_hook_project_folder}'. An "
-                f"exception occurred while loading the event hook: {error_message}"
+                f"exception occurred while loading the event hook: {internal_error_message}"
             ),
         )
 

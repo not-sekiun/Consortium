@@ -65,7 +65,11 @@ async def get_all_users(
     "/{user_id}",
     responses={
         200: {"model": UserModel},
-        404: {"model": UserNotFoundAPIError(user_id="string").to_pydantic_model()},
+        404: {
+            "model": UserNotFoundAPIError.from_service_exception(
+                service_exception=UserNotFoundServiceError(),
+            ).to_pydantic_model(),
+        },
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
@@ -82,7 +86,9 @@ async def get_user_by_user_id(
 ) -> UserModel:
     try:
         user = users_service.get_user_by_user_id(user_id)
-    except UserNotFoundServiceError:
-        raise UserNotFoundAPIError(user_id=user_id)
+    except UserNotFoundServiceError as exc:
+        raise UserNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
 
     return UserModel(**user.to_json())

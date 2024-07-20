@@ -16,7 +16,7 @@ Exception hierarchy for options framework:
 
 from typing import Any
 
-from consortium.framework.exceptions.base_framework_exception import (
+from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
 

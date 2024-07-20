@@ -12,16 +12,16 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.listener_templates_api_exceptions import (
-    InvalidListenerTemplateOptionNameError as InvalidListenerTemplateOptionNameAPIError,
-    InvalidListenerTemplateOptionValueError as InvalidListenerTemplateOptionValueAPIError,
     ListenerTemplateNotFoundError as ListenerTemplateNotFoundAPIError,
+    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundAPIError,
+    ListenerTemplateOptionValueError as ListenerTemplateOptionValueAPIError,
+)
+from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
+    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundFrameworkError,
+    ListenerTemplateOptionValueError as ListenerTemplateOptionValueFrameworkError,
 )
 from consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions import (
     ListenerTemplateNotFoundError as ListenerTemplateNotFoundServiceError,
-)
-from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
-    ListenerTemplateOptionNotFoundError as InvalidListenerTemplateOptionNameServiceError,
-    ListenerTemplateOptionValueError as InvalidListenerTemplateOptionValueServiceError,
 )
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.models.listener_template_models import ListenerTemplateModel
@@ -48,21 +48,29 @@ listeners_service = server_singletons.listeners_service
     responses={
         201: {"model": ListenerModel},
         404: {
-            "model": ListenerTemplateNotFoundAPIError(
-                listener_template_id="string",
+            "model": ListenerTemplateNotFoundAPIError.from_service_exception(
+                service_exception=ListenerTemplateNotFoundServiceError(
+                    listener_template_id="string",
+                ),
             ).to_pydantic_model(),
         },
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model()
-            | InvalidListenerTemplateOptionValueAPIError(
-                option_name="string",
-                option_value="string",
-                message="string",
+            | ListenerTemplateOptionValueAPIError.from_framework_exception(
+                framework_exception=ListenerTemplateOptionValueFrameworkError(
+                    listener_template_str="string",
+                    option_name="string",
+                    option_value="string",
+                    error_message="{error_message}",
+                ),
             ).to_pydantic_model()
-            | InvalidListenerTemplateOptionNameAPIError(
-                option_name="string",
+            | ListenerTemplateOptionNotFoundAPIError.from_framework_exception(
+                framework_exception=ListenerTemplateOptionNotFoundFrameworkError(
+                    listener_template_str="string",
+                    option_name="string",
+                ),
             ).to_pydantic_model(),
         },
     },
@@ -79,26 +87,23 @@ def create_listener_through_listener_template_by_listener_template_id(
                 listener_template_id,
             )
         )
-    except ListenerTemplateNotFoundServiceError:
-        raise ListenerTemplateNotFoundAPIError(
-            listener_template_id=listener_template_id,
+    except ListenerTemplateNotFoundServiceError as exc:
+        raise ListenerTemplateNotFoundAPIError.from_service_exception(
+            service_exception=exc,
         )
 
     for option_name, option_value in listener_template_options.items():
         try:
             listener_template.set_option_value_by_option_name(option_name, option_value)
-        except InvalidListenerTemplateOptionNameServiceError:
-            raise InvalidListenerTemplateOptionNameAPIError(option_name=option_name)
-        except InvalidListenerTemplateOptionValueServiceError as exc:
-            raise InvalidListenerTemplateOptionValueAPIError(
-                option_name=option_name,
-                option_value=option_value,
-                message=str(exc),
+        except ListenerTemplateOptionNotFoundFrameworkError as exc:
+            raise ListenerTemplateOptionNotFoundAPIError.from_framework_exception(
+                framework_exception=exc,
+            )
+        except ListenerTemplateOptionValueFrameworkError as exc:
+            raise ListenerTemplateOptionValueAPIError.from_framework_exception(
+                framework_exception=exc,
             )
 
-    # Listener is created and added to the listeners service but not explicitly
-    # started. Starting the listener must be manually done by POSTing to the endpoint
-    # /api/listeners/{listener_id}/start.
     listener = listener_template.create_listener()
     listener_template.clear_all_options_values()
     listeners_service.add_listener(listener)
@@ -132,8 +137,10 @@ def get_all_listener_templates_info(
             ).to_pydantic_model(),
         },
         404: {
-            "model": ListenerTemplateNotFoundAPIError(
-                listener_template_id="string",
+            "model": ListenerTemplateNotFoundAPIError.from_service_exception(
+                service_exception=ListenerTemplateNotFoundServiceError(
+                    listener_template_id="string",
+                ),
             ).to_pydantic_model(),
         },
     },
@@ -155,9 +162,9 @@ def get_listener_template_info_by_listener_templates_id(
                 listener_template_id=listener_template_id,
             )
         )
-    except ListenerTemplateNotFoundServiceError:
-        raise ListenerTemplateNotFoundAPIError(
-            listener_template_id=listener_template_id,
+    except ListenerTemplateNotFoundServiceError as exc:
+        raise ListenerTemplateNotFoundAPIError.from_service_exception(
+            service_exception=exc,
         )
 
     return ListenerTemplateModel(**listener_template.to_json())

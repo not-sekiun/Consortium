@@ -128,7 +128,7 @@ class AgentGeneratorCreationError(AgentGeneratorsFrameworkError):
 class AgentGeneratorCreationParameterTypeError(AgentGeneratorCreationError):
     def __init__(
         self,
-        agent_generator_str: str,
+        agent_generator: str,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
         error_message: str = "",
@@ -136,7 +136,7 @@ class AgentGeneratorCreationParameterTypeError(AgentGeneratorCreationError):
         if not error_message:
             super().__init__(
                 message=(
-                    f"Failed to create the agent generator '{agent_generator_str}'. "
+                    f"Failed to create the agent generator '{agent_generator}'. "
                     f"The parameter '{parameter_name}' must be of type '{parameter_type}' "
                     "in the agent generator's provided parameters."
                 ),
@@ -170,13 +170,13 @@ class EmptyAgentGeneratorBuildStepNameError(AgentGeneratorBuildStepConfiguration
 class AgentGeneratorNotRunningError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
-        agent_generator_str: str,
+        agent_generator: str,
         error_message: str,
     ):
         super().__init__(
             message=(
                 f"An error occurred with the agent generator "
-                f"'{agent_generator_str}' because it is not running. "
+                f"'{agent_generator}' because it is not running. "
                 f"{error_message}"
             ),
         )
@@ -185,13 +185,13 @@ class AgentGeneratorNotRunningError(AgentGeneratorsFrameworkError):
 class AgentGeneratorAlreadyRunningError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
-        agent_generator_str: str,
+        agent_generator: str,
         error_message: str,
     ):
         super().__init__(
             message=(
                 f"An error occurred with the agent generator "
-                f"'{agent_generator_str}' because it is already running. "
+                f"'{agent_generator}' because it is already running. "
                 f"{error_message}"
             ),
         )
@@ -200,14 +200,14 @@ class AgentGeneratorAlreadyRunningError(AgentGeneratorsFrameworkError):
 class AgentGeneratorStartError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
-        agent_generator_str: str,
-        error_message: str,
+        agent_generator: str,
+        start_error_message: str,
         detail: Any,
     ):
         super().__init__(
             message=(
-                f"Failed to start the agent generator '{agent_generator_str}'. "
-                f"{error_message}"
+                f"Failed to start the agent generator '{agent_generator}'. "
+                f"{start_error_message}"
             ),
             detail=detail,
         )
@@ -216,14 +216,14 @@ class AgentGeneratorStartError(AgentGeneratorsFrameworkError):
 class AgentGeneratorBuildError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
-        agent_generator_str: str,
-        error_message: str,
+        agent_generator: str,
+        build_error_message: str,
         detail: Any,
     ):
         super().__init__(
             message=(
                 f"Failed to build an agent with the agent generator "
-                f"'{agent_generator_str}'. {error_message}"
+                f"'{agent_generator}'. {build_error_message}"
             ),
             detail=detail,
         )
@@ -232,14 +232,14 @@ class AgentGeneratorBuildError(AgentGeneratorsFrameworkError):
 class AgentGeneratorBuildStepError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
-        agent_generator_build_step_identifier: str,
-        error_message: str,
+        agent_generator_build_step: str,
+        build_step_error_message: str,
         detail: Any,
     ):
         super().__init__(
             message=(
                 f"An error occurred during the agent generator build step "
-                f"'{agent_generator_build_step_identifier}'. {error_message}"
+                f"'{agent_generator_build_step}'. {build_step_error_message}"
             ),
             detail=detail,
         )
@@ -248,14 +248,14 @@ class AgentGeneratorBuildStepError(AgentGeneratorsFrameworkError):
 class AgentGeneratorStopError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
-        agent_generator_str: str,
-        error_message: str,
+        agent_generator: str,
+        stop_error_message: str,
         detail: Any,
     ):
         super().__init__(
             message=(
-                f"Failed to stop the agent generator '{agent_generator_str}'. "
-                f"{error_message}"
+                f"Failed to stop the agent generator '{agent_generator}'. "
+                f"{stop_error_message}"
             ),
             detail=detail,
         )

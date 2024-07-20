@@ -2,3 +2,4 @@
 messages
 - Map related API and service errors together, specifically link the service error to
 the API error messages.
+- Add get_by_name service methods

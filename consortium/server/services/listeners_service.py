@@ -5,6 +5,8 @@ from loguru import logger
 
 from consortium.framework.base_listener import BaseListener
 from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (
+    ListenerAlreadyRunningError as ListenerAlreadyRunningFrameworkError,
+    ListenerNotRunningError as ListenerNotRunningFrameworkError,
     ListenerStartError as ListenerStartFrameworkError,
     ListenerStopError as ListenerStopFrameworkError,
 )
@@ -15,8 +17,9 @@ from consortium.server.exceptions.service_exceptions.listeners_service_exception
     InvalidListenerParameterNameError,
     InvalidListenerParameterValueError,
     ListenerAlreadyExistsError,
-    ListenerAlreadyRunningError,
+    ListenerAlreadyRunningError as ListenerAlreadyRunningServiceError,
     ListenerNotFoundError,
+    ListenerNotRunningError as ListenerNotRunningServiceError,
     ListenerStartError as ListenerStartServiceError,
     ListenerStopError as ListenerStopServiceError,
 )
@@ -30,18 +33,18 @@ class ListenersService:
     def __init__(self, listener_templates_service: ListenerTemplatesService):
         self._listener_templates_service = listener_templates_service
         self._listeners = {}
-        self.listeners_service_logger = logger.bind(
-            logger_name=str(self),
-        )
-        self.listeners_service_logger.debug(
-            f"Started {self}",
-        )
+        self.listeners_service_logger = logger.bind(logger_name=str(self))
+        self.listeners_service_logger.debug(f"Started {self}")
 
     def __str__(self) -> str:
         return "Consortium Listeners Service"
 
     def __repr__(self) -> str:
-        return "ListenersService()"
+        return (
+            f"ListenersService("
+            f"listener_templates_service={self._listener_templates_service!r}"
+            f")"
+        )
 
     def get_listener_by_listener_id(self, listener_id: str) -> BaseListener:
         try:
@@ -78,10 +81,15 @@ class ListenersService:
         self.listeners_service_logger.debug(f"Created listener: {listener!r}")
         return listener
 
+    def add_listener(self, listener: BaseListener) -> None:
+        if str(listener.listener_id) in self._listeners:
+            raise ListenerAlreadyExistsError
+        self._listeners[str(listener.listener_id)] = listener
+
     def remove_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == ListenerState.RUNNING:
-            raise ListenerAlreadyRunningError
+            raise ListenerAlreadyRunningServiceError
 
         removed_listener = self._listeners.pop(listener_id)
         self.listeners_service_logger.info(f"Removed listener: {removed_listener}")
@@ -122,7 +130,7 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         if listener.status.state == ListenerState.RUNNING:
-            raise ListenerAlreadyRunningError
+            raise ListenerAlreadyRunningServiceError
 
         # It should be impossible for this for loop to break out without finding
         # the listener template that matches the target listener or to trip up on a
@@ -178,27 +186,44 @@ class ListenersService:
         # existing listener. This allows us to perform the name and
         # endpoint resolution required to update the attribute without
         # inadvertently overwriting any existing state within the existing
-        # listener
+        # listener.
         temporary_listener = listener_template.create_listener()
         listener.name = temporary_listener.name
         listener.endpoint = temporary_listener.endpoint
         listener.parameters = copy.deepcopy(temporary_listener.parameters)
 
+        self.listeners_service_logger.info(
+            f"Updated parameters for listeners {listener}: {new_parameters}",
+        )
         return listener
-
-    def add_listener(self, listener: BaseListener) -> None:
-        if str(listener.listener_id) in self._listeners:
-            raise ListenerAlreadyExistsError
-        self._listeners[str(listener.listener_id)] = listener
 
     async def start_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
-        await listener.start_listener()
+        try:
+            await listener.start_listener()
+        except ListenerStartFrameworkError as exc:
+            raise ListenerStartServiceError(
+                message=str(exc),
+                detail=exc.detail,
+            ) from None
+        except ListenerAlreadyRunningFrameworkError as exc:
+            raise ListenerNotRunningServiceError(message=exc.message) from None
 
     async def stop_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
-        await listener.stop_listener()
+        try:
+            await listener.stop_listener()
+        except ListenerStopFrameworkError as exc:
+            raise ListenerStopServiceError(
+                message=str(exc),
+                detail=exc.detail,
+            ) from None
+        except ListenerNotRunningFrameworkError as exc:
+            raise ListenerNotRunningServiceError(message=exc.message) from None
 
     async def cancel_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
-        await listener.cancel_listener()
+        try:
+            await listener.cancel_listener()
+        except ListenerNotRunningFrameworkError as exc:
+            raise ListenerNotRunningServiceError(message=exc.message) from None

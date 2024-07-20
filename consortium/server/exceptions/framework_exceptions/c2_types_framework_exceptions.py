@@ -19,14 +19,50 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 )
 
 
-class ListenerTypeConfigurationError(BaseFrameworkException):
-    def __init__(self, error_message: str):
+class C2TypesFrameworkError(BaseFrameworkException):
+    pass
+
+
+class ListenerTypeConfigurationError(C2TypesFrameworkError):
+    pass
+
+
+class ListenerTypeConfigurationParameterTypeError(ListenerTypeConfigurationError):
+    def __init__(
+        self,
+        listener_type_filepath: str,
+        parameter_name: str | None = None,
+        parameter_type: str | None = None,
+        error_message: str = "",
+    ):
+        if not error_message:
+            super().__init__(
+                message=(
+                    f"Failed to configure the listener type defined at "
+                    f"'{listener_type_filepath}'. The parameter '{parameter_name}' "
+                    f"must be of type '{parameter_type}' in the listener type's "
+                    f"definition."
+                ),
+            )
+        else:
+            super().__init__(
+                message=(
+                    f"Failed to configure the listener type defined at "
+                    f"'{listener_type_filepath}'. {error_message}"
+                ),
+            )
+
+
+class EmptyListenerTypeNameError(ListenerTypeConfigurationError):
+    def __init__(self, listener_type_filepath: str):
         super().__init__(
-            f"Error in the configuration of the listener type: {error_message}",
+            f"Failed to configure the listener type defined at "
+            f"'{listener_type_filepath}'. The name provided in the listener type's "
+            f"definition during configuration cannot be empty.",
         )
 
 
-class ListenerTypeAlreadyExistsError(BaseFrameworkException):
+class ListenerTypeAlreadyExistsError(C2TypesFrameworkError):
     # Use the `ListenerType` and `AgentType` class names as strings in the type hints
     # to avoid circular import issues.
     def __init__(self, listener_type: "ListenerType", agent_type: "AgentType"):
@@ -36,7 +72,7 @@ class ListenerTypeAlreadyExistsError(BaseFrameworkException):
         )
 
 
-class ListenerTypeNotFoundError(BaseFrameworkException):
+class ListenerTypeNotFoundError(C2TypesFrameworkError):
     def __init__(self, listener_type: "ListenerType", agent_type: "AgentType"):
         super().__init__(
             f"Listener type '{listener_type}' not found in the set of compatible "
@@ -44,14 +80,37 @@ class ListenerTypeNotFoundError(BaseFrameworkException):
         )
 
 
-class AgentTypeConfigurationError(BaseFrameworkException):
-    def __init__(self, error_message: str):
-        super().__init__(
-            f"Error in the configuration of the agent type: {error_message}",
-        )
+class AgentTypeConfigurationError(C2TypesFrameworkError):
+    pass
 
 
-class AgentTypeAlreadyExistsError(BaseFrameworkException):
+class AgentTypeConfigurationParameterTypeError(ListenerTypeConfigurationError):
+    def __init__(
+        self,
+        agent_type_filepath: str,
+        parameter_name: str | None = None,
+        parameter_type: str | None = None,
+        error_message: str = "",
+    ):
+        if not error_message:
+            super().__init__(
+                message=(
+                    f"Failed to configure the agent type defined at "
+                    f"'{agent_type_filepath}'. The parameter '{parameter_name}' "
+                    f"must be of type '{parameter_type}' in the listener type's "
+                    f"definition."
+                ),
+            )
+        else:
+            super().__init__(
+                message=(
+                    f"Failed to configure the agent type defined at "
+                    f"'{agent_type_filepath}'. {error_message}"
+                ),
+            )
+
+
+class AgentTypeAlreadyExistsError(C2TypesFrameworkError):
     def __init__(self, agent_type: "AgentType", listener_type: "ListenerType"):
         super().__init__(
             f"Agent type '{agent_type}' already exists in the set of compatible agent "
@@ -59,7 +118,7 @@ class AgentTypeAlreadyExistsError(BaseFrameworkException):
         )
 
 
-class AgentTypeNotFoundError(BaseFrameworkException):
+class AgentTypeNotFoundError(C2TypesFrameworkError):
     def __init__(self, agent_type: "AgentType", listener_type: "ListenerType"):
         super().__init__(
             f"Agent type '{agent_type}' not found in the set of compatible agent "

@@ -183,7 +183,7 @@ async def log_rest_api_requests_and_responses(
             # length of the response as a JSON string
             len(json.dumps(InternalServerErrorError().to_json())),
         )
-        rest_api_logger.opt(ansi=True).error(
+        rest_api_logger.opt(ansi=True, raw=True).error(
             "<bold><red>{}</></>",
             traceback.format_exc(),
         )

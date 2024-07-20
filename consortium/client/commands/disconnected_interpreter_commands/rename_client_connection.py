@@ -54,10 +54,10 @@ class RenameClientConnectionCommand(BaseCommand):
                 )
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-            previous_client_connection_repr = repr(client_connection)
+            previous_client_connection_str = str(client_connection)
             client_connection.name = parsed_args.new_name[0]
             print_success(
-                f"Renamed client connection {previous_client_connection_repr} to: "
+                f"Renamed client connection {previous_client_connection_str} to: "
                 f'"{client_connection.name}"',
             )
         except SystemExit:

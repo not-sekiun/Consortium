@@ -205,7 +205,7 @@ class BaseListener(ABC):
                 traceback.format_exc(),
             )
             # The listener is now fatally errored.
-            self.status.transition_to_fatal(listener_str=str(self), exception=exc)
+            self.status.transition_to_fatal(listener=str(self), exception=exc)
             raise exc
 
         self._listener_task = asyncio.create_task(self._run_listener())
@@ -237,7 +237,7 @@ class BaseListener(ABC):
                 traceback.format_exc(),
             )
             # The listener is now fatally errored.
-            self.status.transition_to_fatal(listener_str=str(self), exception=exc)
+            self.status.transition_to_fatal(listener=str(self), exception=exc)
             raise exc
 
         # Signal to the listener to stop running.
@@ -268,7 +268,7 @@ class BaseListener(ABC):
                 traceback.format_exc(),
             )
             # The listener is now fatally errored.
-            self.status.transition_to_fatal(listener_str=str(self), exception=exc)
+            self.status.transition_to_fatal(listener=str(self), exception=exc)
             raise exc
 
     def to_json(self) -> dict[str, Any]:
@@ -316,7 +316,7 @@ class BaseListener(ABC):
                     )
                     # The listener is now fatally errored.
                     self.status.transition_to_fatal(
-                        listener_str=str(self),
+                        listener=str(self),
                         exception=exc,
                     )
         except Exception as exc:
@@ -324,7 +324,7 @@ class BaseListener(ABC):
                 "<bold><red>{}</></>",
                 traceback.format_exc(),
             )
-            self.status.transition_to_fatal(listener_str=str(self), exception=exc)
+            self.status.transition_to_fatal(listener=str(self), exception=exc)
             # The listener is now fatally errored.
             try:
                 await self.on_listener_errored(exc)
@@ -333,4 +333,4 @@ class BaseListener(ABC):
                     "<bold><red>{}</></>",
                     traceback.format_exc(),
                 )
-                self.status.transition_to_fatal(listener_str=str(self), exception=exc)
+                self.status.transition_to_fatal(listener=str(self), exception=exc)

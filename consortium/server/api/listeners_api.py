@@ -12,12 +12,11 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.listeners_api_exceptions import (
-    InvalidListenerParameterNameError,
-    InvalidListenerParameterValueError,
+    InvalidListenerParameterNameError as InvalidListenerParameterNameAPIError,
+    InvalidListenerParameterValueError as InvalidListenerParameterValueAPIError,
     ListenerAlreadyRunningError as ListenerAlreadyRunningAPIError,
-    ListenerCancellationError,
     ListenerNotFoundError as ListenerNotFoundAPIError,
-    ListenerNotRunningError,
+    ListenerNotRunningError as ListenerNotRunningAPIError,
     ListenerStartError as ListenerStartAPIError,
     ListenerStopError as ListenerStopAPIError,
     ListenerTemplateResolutionError,
@@ -27,12 +26,13 @@ from consortium.server.exceptions.service_exceptions.listeners_service_exception
     InvalidListenerParameterValueError as InvalidListenerParameterValueServiceError,
     ListenerAlreadyRunningError as ListenerAlreadyRunningServiceError,
     ListenerNotFoundError as ListenerNotFoundServiceError,
+    ListenerNotRunningError as ListenerNotRunningServiceError,
     ListenerStartError as ListenerStartServiceError,
+    ListenerStopError as ListenerStopServiceError,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.objects.example_objects import example_listener_type
-from consortium.server.objects.listener_objects import ListenerState
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
@@ -74,7 +74,9 @@ def get_all_listeners(
     responses={
         200: {"model": ListenerModel},
         404: {
-            "model": ListenerNotFoundAPIError(listener_id="string").to_pydantic_model(),
+            "model": ListenerNotFoundAPIError.from_service_exception(
+                ListenerNotFoundServiceError(listener_id="string"),
+            ).to_pydantic_model(),
         },
         422: {
             "model": UnprocessableEntityError(
@@ -96,17 +98,27 @@ def get_listener_by_listener_id(
         return ListenerModel(
             **listeners_service.get_listener_by_listener_id(listener_id).to_json(),
         )
-    except ListenerNotFoundServiceError:
-        raise ListenerNotFoundAPIError(listener_id=listener_id)
+    except ListenerNotFoundServiceError as exc:
+        raise ListenerNotFoundAPIError.from_service_exception(service_exception=exc)
 
 
 @router.post(
     "/{listener_id}/start",
     responses={
         200: {"model": SuccessResponseModel},
-        400: {"model": ListenerStartAPIError().to_pydantic_model()},
+        400: {
+            "model": ListenerStartAPIError.from_service_exception(
+                service_exception=ListenerStartServiceError(
+                    message="string",
+                    detail={"string": "string"},
+                ),
+                detail={"string": "string"},
+            ).to_pydantic_model(),
+        },
         404: {
-            "model": ListenerNotFoundAPIError(listener_id="string").to_pydantic_model(),
+            "model": ListenerNotFoundAPIError.from_service_exception(
+                ListenerNotFoundServiceError(listener_id="string"),
+            ).to_pydantic_model(),
         },
         409: {"model": ListenerAlreadyRunningAPIError().to_pydantic_model()},
         422: {
@@ -124,19 +136,18 @@ async def start_listener_by_listener_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        listener = listeners_service.get_listener_by_listener_id(listener_id)
-    except ListenerNotFoundServiceError:
-        raise ListenerNotFoundAPIError(listener_id=listener_id)
-
-    if listener.status.state == ListenerState.RUNNING:
-        raise ListenerAlreadyRunningAPIError(
-            message="The listener cannot be started because it is already running",
+        await listeners_service.start_listener_by_listener_id(listener_id=listener_id)
+    except ListenerStartServiceError as exc:
+        raise ListenerStartAPIError.from_service_exception(
+            service_exception=exc,
+            detail=exc.detail,
         )
-
-    try:
-        await listener.start_listener()
-    except FrameworkListenerStartError as exc:
-        raise ListenerStartError(message=exc.message, detail=exc.detail)
+    except ListenerAlreadyRunningServiceError as exc:
+        raise ListenerAlreadyRunningAPIError.from_service_exception(
+            service_exception=exc,
+        )
+    except ListenerNotFoundServiceError as exc:
+        raise ListenerNotFoundAPIError.from_service_exception(service_exception=exc)
     except Exception as exc:
         raise InternalServerErrorError(
             detail={
@@ -152,11 +163,25 @@ async def start_listener_by_listener_id(
     "/{listener_id}/stop",
     responses={
         200: {"model": SuccessResponseModel},
-        400: {"model": ListenerStopAPIError(message="string").to_pydantic_model()},
-        404: {
-            "model": ListenerNotFoundAPIError(listener_id="string").to_pydantic_model(),
+        400: {
+            "model": ListenerStopAPIError.from_service_exception(
+                service_exception=ListenerStopServiceError(
+                    message="string",
+                    detail={"string": "string"},
+                ),
+                detail={"string": "string"},
+            ).to_pydantic_model(),
         },
-        409: {"model": ListenerNotRunningError().to_pydantic_model()},
+        404: {
+            "model": ListenerNotFoundAPIError.from_service_exception(
+                service_exception=ListenerNotFoundServiceError(listener_id="string"),
+            ).to_pydantic_model(),
+        },
+        409: {
+            "model": ListenerNotRunningAPIError.from_service_exception(
+                service_exception=ListenerNotRunningServiceError(),
+            ).to_pydantic_model(),
+        },
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
@@ -172,9 +197,13 @@ async def stop_listener_by_listener_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        listener = listeners_service.get_listener_by_listener_id(listener_id)
-    except ListenerNotFoundServiceError:
-        raise ListenerNotFoundAPIError(listener_id=listener_id)
+        await listeners_service.stop_listener_by_listener_id(listener_id=listener_id)
+    except ListenerStopServiceError as exc:
+        raise ListenerStopAPIError(message=exc.message, detail=exc.detail)
+    except ListenerNotFoundServiceError as exc:
+        raise ListenerNotFoundAPIError.from_service_exception(service_exception=exc)
+    except ListenerNotRunningServiceError as exc:
+        raise ListenerNotRunningAPIError.from_service_exception(service_exception=exc)
     except Exception as exc:
         raise InternalServerErrorError(
             detail={
@@ -183,16 +212,6 @@ async def stop_listener_by_listener_id(
             },
         )
 
-    if listener.status.state != ListenerState.RUNNING:
-        raise ListenerNotRunningError(
-            message="The listener cannot be stopped because it is not running.",
-        )
-
-    try:
-        await listener.stop_listener()
-    except FrameworkListenerStopError as exc:
-        raise ListenerStopError(message=exc.message, detail=exc.detail)
-
     return SuccessResponseModel()
 
 
@@ -200,11 +219,16 @@ async def stop_listener_by_listener_id(
     "/{listener_id}/cancel",
     responses={
         200: {"model": SuccessResponseModel},
-        400: {"model": ListenerCancellationError(message="string").to_pydantic_model()},
         404: {
-            "model": ListenerNotFoundAPIError(listener_id="string").to_pydantic_model(),
+            "model": ListenerNotFoundAPIError.from_service_exception(
+                service_exception=ListenerNotFoundServiceError(listener_id="string"),
+            ).to_pydantic_model(),
         },
-        409: {"model": ListenerNotRunningError().to_pydantic_model()},
+        409: {
+            "model": ListenerNotRunningAPIError.from_service_exception(
+                service_exception=ListenerNotRunningServiceError(),
+            ).to_pydantic_model(),
+        },
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
@@ -220,19 +244,11 @@ async def cancel_listener_by_listener_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        listener = listeners_service.get_listener_by_listener_id(listener_id)
-    except ListenerNotFoundServiceError:
-        raise ListenerNotFoundAPIError(listener_id=listener_id)
-
-    if listener.status.state != ListenerState.RUNNING:
-        raise ListenerNotRunningError(
-            message="The listener cannot be cancelled because it is not running.",
-        )
-
-    try:
-        await listener.cancel_listener()
-    except FrameworkListenerCancellationError as exc:
-        raise ListenerCancellationError(message=exc.message, detail=exc.detail)
+        await listeners_service.cancel_listener_by_listener_id(listener_id=listener_id)
+    except ListenerNotFoundServiceError as exc:
+        raise ListenerNotFoundAPIError.from_service_exception(service_exception=exc)
+    except ListenerNotRunningServiceError as exc:
+        raise ListenerNotRunningAPIError.from_service_exception(service_exception=exc)
     except Exception as exc:
         raise InternalServerErrorError(
             detail={
@@ -249,20 +265,28 @@ async def cancel_listener_by_listener_id(
     responses={
         200: {"model": ListenerModel},
         404: {
-            "model": ListenerNotFoundAPIError(listener_id="string").to_pydantic_model(),
+            "model": ListenerNotFoundAPIError.from_service_exception(
+                service_exception=ListenerNotFoundServiceError(listener_id="string"),
+            ).to_pydantic_model(),
         },
         409: {"model": ListenerAlreadyRunningAPIError().to_pydantic_model()},
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model()
-            | InvalidListenerParameterNameError(
-                parameter_name="string",
+            | InvalidListenerParameterNameAPIError.from_service_exception(
+                service_exception=InvalidListenerParameterNameServiceError(
+                    parameter_name="string",
+                    listener="string",
+                ),
             ).to_pydantic_model()
-            | InvalidListenerParameterValueError(
-                parameter_name="string",
-                parameter_value="string",
-                exception=Exception("string"),
+            | InvalidListenerParameterValueAPIError.from_service_exception(
+                service_exception=InvalidListenerParameterValueServiceError(
+                    parameter_name="string",
+                    parameter_value="string",
+                    listener="string",
+                    validation_error_message="string",
+                ),
             ).to_pydantic_model(),
         },
         500: {
@@ -274,6 +298,14 @@ async def cancel_listener_by_listener_id(
 )
 def update_listener_by_listener_id(
     listener_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(
+                UserPermissions.UPDATE_LISTENER_BY_LISTENER_ID,
+            ),
+        ),
+    ],
     # The only update-able listener attributes are its name, description and parameters
     # within the listener. Note that when instantiating the listener through its
     # listener template the options of a listener template are responsible for setting
@@ -306,17 +338,27 @@ def update_listener_by_listener_id(
                     name=name,
                 )
             # ListenerTemplateResolutionError is only ever raised when a programmer
-            # error is made.
-            except ListenerTemplateResolutionError:
-                raise InternalServerErrorError
-            except ListenerAlreadyRunningServiceError:
-                raise ListenerAlreadyRunningAPIError
-            except InvalidListenerParameterNameServiceError:
-                pass
-            except InvalidListenerParameterValueServiceError:
-                pass
+            # error is made. The service will raise an AssertionError to demonstrate
+            # this, which will be caught and reraised as a
+            # ListenerTemplateResolutionError on the REST API side.
+            except AssertionError:
+                raise ListenerTemplateResolutionError
+            except ListenerAlreadyRunningServiceError as exc:
+                raise ListenerAlreadyRunningAPIError.from_service_exception(
+                    service_exception=exc,
+                )
+            except InvalidListenerParameterNameServiceError as exc:
+                raise InvalidListenerParameterNameAPIError.from_service_exception(
+                    service_exception=exc,
+                )
+            except InvalidListenerParameterValueServiceError as exc:
+                raise InvalidListenerParameterValueAPIError.from_service_exception(
+                    service_exception=exc,
+                )
     except ListenerNotFoundServiceError:
-        raise ListenerNotFoundAPIError(listener_id=listener_id)
+        raise ListenerNotFoundAPIError.from_service_exception(
+            service_exception=ListenerNotFoundServiceError(listener_id="string"),
+        )
 
     listener = listeners_service.get_listener_by_listener_id(listener_id=listener_id)
     return ListenerModel(**listener.to_json())
@@ -327,7 +369,11 @@ def update_listener_by_listener_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": ListenerNotFoundAPIError(listener_id="string").to_pydantic_model(),
+            "model": ListenerNotFoundAPIError.from_service_exception(
+                service_exception=ListenerNotFoundServiceError(
+                    listener_id="string",
+                ),
+            ).to_pydantic_model(),
         },
         409: {"model": ListenerAlreadyRunningAPIError().to_pydantic_model()},
         422: {
@@ -347,8 +393,14 @@ def delete_listener_by_listener_id(
     try:
         listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
     except ListenerNotFoundServiceError:
-        raise ListenerNotFoundAPIError(listener_id=listener_id)
-    except ListenerAlreadyRunningAPIError:
-        pass
+        raise ListenerNotFoundAPIError.from_service_exception(
+            service_exception=ListenerNotFoundServiceError(
+                listener_id="string",
+            ),
+        )
+    except ListenerAlreadyRunningServiceError as exc:
+        raise ListenerAlreadyRunningAPIError.from_service_exception(
+            service_exception=exc,
+        )
 
     return SuccessResponseModel()

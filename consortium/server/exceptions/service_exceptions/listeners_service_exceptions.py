@@ -1,12 +1,28 @@
 """
-- BaseServiceException: Base class for all exceptions raised by the listeners service.
+Exception hierarchy for the listeners service:
+
+- BaseServiceException: Base class for all exceptions raised by services.
   - ListenersServiceError: Base class for all exceptions raised by the listeners service.
-    - ListenerNotFoundError: Listener not found.
-    - ListenerAlreadyExistsError: Listener already exists.
-    - ListenerParameterUpdateError:
-      - InvalidListenerParameterNameError:
-      - InvalidListenerParameterValueError:
+    - ListenerNotFoundError: Raised when a requested listener is not found.
+    - ListenerAlreadyExistsError: Raised when attempting to add a listener that already
+    exists.
+    - ListenerOperationError: Base class for errors related to listener operations.
+      - ListenerStartError: Raised when there's an error starting a listener.
+      - ListenerStopError: Raised when there's an error stopping a listener.
+    - ListenerStateError: Base class for errors related to listener state.
+      - ListenerAlreadyRunningError: Raised when attempting an operation on an already
+      running listener.
+      - ListenerNotRunningError: Raised when attempting an operation on a non-running
+      listener.
+    - ListenerParameterUpdateError: Base class for errors related to updating listener
+    parameters.
+      - InvalidListenerParameterNameError: Raised when an invalid parameter name is
+      provided.
+      - InvalidListenerParameterValueError: Raised when an invalid parameter value is
+      provided.
 """
+
+from typing import Any
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -28,13 +44,17 @@ class ListenerNotFoundError(ListenersServiceError):
 class ListenerAlreadyExistsError(ListenersServiceError):
     def __init__(self, listener_id: str):
         super().__init__(
-            f"Failed to add the specified listener. A listener already exists with the "
-            f"listener ID '{listener_id}'.",
+            message=(
+                f"Failed to add the specified listener. A listener already exists with "
+                f"the listener ID '{listener_id}'."
+            ),
         )
 
 
 class ListenerOperationError(ListenersServiceError):
-    pass
+    def __init__(self, message: str = "", detail: Any = None):
+        self.detail = detail
+        super().__init__(message=message)
 
 
 class ListenerStartError(ListenerOperationError):
@@ -57,7 +77,7 @@ class ListenerAlreadyRunningError(ListenerStateError):
             "is already running which conflicts with the operation that was requested."
         ),
     ):
-        super().__init__(message)
+        super().__init__(message=message)
 
 
 class ListenerNotRunningError(ListenerStateError):
@@ -68,7 +88,7 @@ class ListenerNotRunningError(ListenerStateError):
             "is not running which conflicts with the operation that was requested."
         ),
     ):
-        super().__init__(message)
+        super().__init__(message=message)
 
 
 class ListenerParameterUpdateError(ListenersServiceError):
@@ -78,9 +98,11 @@ class ListenerParameterUpdateError(ListenersServiceError):
 class InvalidListenerParameterNameError(ListenerParameterUpdateError):
     def __init__(self, parameter_name: str, listener: str):
         super().__init__(
-            f"Failed to update listener parameters for listener '{listener}'. The "
-            f"provided parameter name '{parameter_name}' was not found for the "
-            f"listener.",
+            message=(
+                f"Failed to update listener parameters for listener '{listener}'. The "
+                f"provided parameter name '{parameter_name}' was not found for the "
+                f"listener."
+            ),
         )
 
 
@@ -93,7 +115,9 @@ class InvalidListenerParameterValueError(ListenerParameterUpdateError):
         validation_error_message: str,
     ):
         super().__init__(
-            f"Failed to update listener parameters for listener '{listener}'. The "
-            f"provided parameter value '{parameter_value}' failed validation for the "
-            f"parameter '{parameter_name}': {validation_error_message}",
+            message=(
+                f"Failed to update listener parameters for listener '{listener}'. The "
+                f"provided parameter value '{parameter_value}' failed validation for "
+                f"the parameter '{parameter_name}': {validation_error_message}"
+            ),
         )

@@ -44,11 +44,11 @@ class PluginStatus:
         self.state = PluginState.ERRORED
         self.exception = exception
 
-    def transition_to_fatal(self, plugin_str: str, exception: Exception) -> None:
+    def transition_to_fatal(self, plugin: str, exception: Exception) -> None:
         self.state = PluginState.FATAL
         self.exception = PluginRuntimeError(
-            plugin_str=plugin_str,
-            error_message=f"{type(exception).__name__}: {exception}",
+            plugin=plugin,
+            runtime_error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,
                 "message": str(exception),

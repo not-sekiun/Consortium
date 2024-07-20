@@ -56,10 +56,10 @@ class ListenerStatus:
         self.state = ListenerState.ERRORED
         self.exception = exception
 
-    def transition_to_fatal(self, listener_str: str, exception: Exception) -> None:
+    def transition_to_fatal(self, listener: str, exception: Exception) -> None:
         self.state = ListenerState.FATAL
         self.exception = ListenerRuntimeError(
-            listener_str=listener_str,
+            listener_str=listener,
             error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,

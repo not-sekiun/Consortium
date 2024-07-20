@@ -28,35 +28,22 @@ from consortium.server.exceptions.api_exceptions.base_api_exception import (
 
 
 class HTTPError(BaseAPIException):
-    def __init__(
-        self,
-        status_code: int,
-        code: str,
-        message: str = "",
-        detail: Any | None = None,
-    ) -> None:
-        super().__init__(
-            status_code=status_code,
-            code=code,
-            message=message,
-            detail=detail,
-        )
+    pass
 
 
 # UnauthorizedError is a special error whose to_json() method returns None. This is
 # so that the JSON data returned as part of the response body is empty to prevent C2
 # server fingerprinting from unauthorized clients.
 class UnauthorizedError(HTTPError):
+    status_code = (401,)
+    code = "UNAUTHORIZED_ERROR"
+
     def __init__(
         self,
-        status_code: int = 401,
-        code: str = "UNAUTHORIZED_ERROR",
         message: str = "Unauthorized",
         detail: Any | None = None,
     ) -> None:
         super().__init__(
-            status_code=status_code,
-            code=code,
             message=message,
             detail=detail,
         )
@@ -75,58 +62,72 @@ class UnauthorizedError(HTTPError):
 
 
 class ForbiddenError(HTTPError):
+    status_code = (403,)
+    code = "FORBIDDEN_ERROR"
+
     def __init__(
         self,
-        status_code: int = 403,
-        code: str = "FORBIDDEN_ERROR",
         message: str = "You do not have permission to access this resource.",
         detail: Any | None = None,
     ) -> None:
         super().__init__(
-            status_code=status_code,
-            code=code,
             message=message,
             detail=detail,
         )
 
 
 class NotFoundError(HTTPError):
+    status_code = (404,)
+    code = "NOT_FOUND_ERROR"
+
     def __init__(
         self,
-        status_code: int = 404,
-        code: str = "NOT_FOUND_ERROR",
         message: str = "The requested resource could not be found.",
         detail: Any | None = None,
     ) -> None:
         super().__init__(
-            status_code=status_code,
-            code=code,
             message=message,
             detail=detail,
         )
 
 
 class MethodNotAllowedError(HTTPError):
+    status_code = (405,)
+    code = "METHOD_NOT_ALLOWED_ERROR"
+
     def __init__(
         self,
-        status_code: int = 405,
-        code: str = "METHOD_NOT_ALLOWED_ERROR",
         message: str = "The requested method is not allowed for this resource.",
         detail: Any | None = None,
     ) -> None:
         super().__init__(
-            status_code=status_code,
-            code=code,
+            message=message,
+            detail=detail,
+        )
+
+
+class ConflictError(HTTPError):
+    status_code = (409,)
+    code = "CONFLICT_ERROR"
+
+    def __init__(
+        self,
+        message: str = "The request could not be completed due to a conflict with the "
+        "current state of the resource.",
+        detail: Any | None = None,
+    ) -> None:
+        super().__init__(
             message=message,
             detail=detail,
         )
 
 
 class UnprocessableEntityError(HTTPError):
+    status_code = (422,)
+    code = "UNPROCESSABLE_ENTITY_ERROR"
+
     def __init__(
         self,
-        status_code: int = 422,
-        code: str = "UNPROCESSABLE_ENTITY_ERROR",
         message: str = (
             "The request could not be processed due to it containing invalidly "
             "formatted data."
@@ -134,40 +135,36 @@ class UnprocessableEntityError(HTTPError):
         detail: Any | None = None,
     ) -> None:
         super().__init__(
-            status_code=status_code,
-            code=code,
             message=message,
             detail=detail,
         )
 
 
 class InternalServerErrorError(HTTPError):
+    status_code = (500,)
+    code = "INTERNAL_SERVER_ERROR"
+
     def __init__(
         self,
-        status_code: int = 500,
-        code: str = "INTERNAL_SERVER_ERROR",
         message: str = "An internal server error occurred. Please try again later.",
         detail: Any | None = None,
     ) -> None:
         super().__init__(
-            status_code=status_code,
-            code=code,
             message=message,
             detail=detail,
         )
 
 
 class ServiceUnavailableError(HTTPError):
+    status_code = (503,)
+    code = "SERVICE_UNAVAILABLE_ERROR"
+
     def __init__(
         self,
-        status_code: int = 503,
-        code: str = "SERVICE_UNAVAILABLE_ERROR",
         message: str = "The service is currently unavailable. Please try again later.",
         detail: Any | None = None,
     ) -> None:
         super().__init__(
-            status_code=status_code,
-            code=code,
             message=message,
             detail=detail,
         )
