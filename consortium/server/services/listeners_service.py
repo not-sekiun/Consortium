@@ -4,7 +4,12 @@ from typing import Any
 from loguru import logger
 
 from consortium.framework.base_listener import BaseListener
+from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
+    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundFrameworkError,
+    ListenerTemplateOptionValueError as ListenerTemplateOptionValueFrameworkError,
+)
 from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (
+    EmptyListenerNameError as EmptyListenerNameFrameworkError,
     ListenerAlreadyRunningError as ListenerAlreadyRunningFrameworkError,
     ListenerNotRunningError as ListenerNotRunningFrameworkError,
     ListenerStartError as ListenerStartFrameworkError,
@@ -14,6 +19,7 @@ from consortium.server.exceptions.framework_exceptions.options_framework_excepti
     OptionValueValidationError,
 )
 from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
+    EmptyListenerNameError as EmptyListenerNameServiceError,
     InvalidListenerParameterNameError,
     InvalidListenerParameterValueError,
     ListenerAlreadyExistsError,
@@ -22,6 +28,8 @@ from consortium.server.exceptions.service_exceptions.listeners_service_exception
     ListenerNotRunningError as ListenerNotRunningServiceError,
     ListenerStartError as ListenerStartServiceError,
     ListenerStopError as ListenerStopServiceError,
+    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundServiceError,
+    ListenerTemplateOptionValueError as ListenerTemplateOptionValueServiceError,
 )
 from consortium.server.objects.listener_objects import ListenerState
 from consortium.server.services.listener_templates_service import (
@@ -71,11 +79,30 @@ class ListenersService:
             listener_template_id=listener_template_id,
         )
         for option_name, option_value in options.items():
-            listener_template.set_option_value_by_option_name(
-                option_name=option_name,
-                option_value=option_value,
+            try:
+                listener_template.set_option_value_by_option_name(
+                    option_name=option_name,
+                    option_value=option_value,
+                )
+            except ListenerTemplateOptionNotFoundFrameworkError as exc:
+                raise ListenerTemplateOptionNotFoundServiceError(
+                    message=exc.message,
+                    detail=exc.detail,
+                )
+            except ListenerTemplateOptionValueFrameworkError as exc:
+                raise ListenerTemplateOptionValueServiceError(
+                    message=exc.message,
+                    detail=exc.detail,
+                )
+
+        try:
+            listener = listener_template.create_listener()
+        except EmptyListenerNameFrameworkError as exc:
+            raise EmptyListenerNameServiceError(
+                message=exc.message,
+                detail=exc.detail,
             )
-        listener = listener_template.create_listener()
+        listener_template.clear_all_option_values()
         self._listeners[str(listener.listener_id)] = listener
         self.listeners_service_logger.info(f"Created listener: {listener}")
         self.listeners_service_logger.debug(f"Created listener: {listener!r}")

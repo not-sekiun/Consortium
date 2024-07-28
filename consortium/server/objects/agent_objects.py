@@ -2,8 +2,15 @@ import uuid
 from datetime import datetime
 from typing import Any
 
+from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
+    AgentResultHasNoCorrespondingTaskError,
+    AgentResultIDNotFoundError,
+    AgentResultTaskIDNotFoundError,
+    AgentTaskNotFoundError,
+)
 from consortium.server.models.agent_models import (
     AgentResultModel,
+    AgentResultState,
     AgentTaskModel,
     AgentTaskState,
 )
@@ -38,6 +45,15 @@ class Agent:
         self._completed_tasks = {}
         self._results = {}
 
+    def __repr__(self) -> str:
+        return (
+            f"Agent(name={self.name!r}, description={self.description!r}), "
+            f"agent_data={self.agent_data!r})"
+        )
+
+    def __str__(self) -> str:
+        return f'"{self.name}" ({self.agent_id})'
+
     def add_task(self, task: AgentTaskModel) -> None:
         self._queued_tasks[str(task.task_id)] = task
 
@@ -63,9 +79,7 @@ class Agent:
         try:
             return self._queued_tasks[task_id]
         except KeyError:
-            raise ValueError(
-                f'No queued task exists with the provided task ID "{task_id}"',
-            )
+            raise AgentTaskNotFoundError(task_id=task_id)
 
     def get_all_running_tasks(self) -> list[AgentTaskModel]:
         return list(self._running_tasks)
@@ -74,9 +88,7 @@ class Agent:
         try:
             return self._running_tasks[task_id]
         except KeyError:
-            raise ValueError(
-                f'No running task exists with the provided task ID "{task_id}"',
-            )
+            raise AgentTaskNotFoundError(task_id=task_id)
 
     def get_all_completed_tasks(self) -> list[AgentTaskModel]:
         return list(self._completed_tasks)
@@ -85,9 +97,7 @@ class Agent:
         try:
             return self._completed_tasks[task_id]
         except KeyError:
-            raise ValueError(
-                f'No completed task exists with the provided task ID "{task_id}"',
-            )
+            raise AgentTaskNotFoundError(task_id=task_id)
 
     def get_all_tasks(self) -> list[AgentTaskModel]:
         return [
@@ -97,49 +107,66 @@ class Agent:
         ]
 
     def get_task_by_task_id(self, task_id: str) -> AgentTaskModel:
-        all_tasks = self.get_all_tasks()
-        for task in all_tasks:
-            if task_id == task.task_id:
+        for task in self.get_all_tasks():
+            if task_id == str(task.task_id):
                 return task
-        raise ValueError(f'No task exists with the provided task ID "{task_id}"')
+        raise AgentTaskNotFoundError(task_id=task_id)
+
+    def delete_queued_task_by_task_id(self, task_id: str):
+        try:
+            self._queued_tasks.pop(task_id)
+        except KeyError:
+            raise AgentTaskNotFoundError(task_id=task_id)
 
     def add_result(self, result: AgentResultModel) -> None:
         if result.task_id not in self._running_tasks:
-            raise ValueError(
-                f'No task exists with the provided task ID "{result.task_id}" from the '
-                f"provided result",
+            raise AgentResultHasNoCorrespondingTaskError(
+                result_id=str(result.result_id),
+                corresponding_task_id=result.task_id,
+                agent_str=str(self),
             )
         self._results[str(result.result_id)] = result
+
+        # Adding the result implies that the task is completed.
+        task = self._running_tasks.pop(result.task_id)
+        task.state = AgentTaskState.COMPLETED
+        self._completed_tasks[str(task.task_id)] = task
 
     def get_all_results(self) -> list[AgentResultModel]:
         return list(self._results.values())
 
     def get_all_successful_results(self) -> list[AgentResultModel]:
         return [
-            result for result in self._results.values() if result.status == "SUCCESS"
+            result
+            for result in self._results.values()
+            if result.status == AgentResultState.SUCCESS
         ]
 
     def get_all_failed_results(self) -> list[AgentResultModel]:
-        return [result for result in self._results.values() if result.status == "FAIL"]
+        return [
+            result
+            for result in self._results.values()
+            if result.status == AgentResultState.FAIL
+        ]
 
     def get_all_errored_results(self) -> list[AgentResultModel]:
-        return [result for result in self._results.values() if result.status == "ERROR"]
+        return [
+            result
+            for result in self._results.values()
+            if result.status == AgentResultState.ERROR
+        ]
 
     def get_result_by_task_id(self, task_id: str) -> AgentResultModel:
         for result in self._results.values():
             if result.task_id == task_id:
                 return result
-        raise ValueError(
-            f"No result exists that is associated with the provided task ID: {task_id}",
-        )
+        raise AgentResultTaskIDNotFoundError(task_id=task_id)
 
     def get_result_by_result_id(self, result_id: str) -> AgentResultModel:
         try:
             return self._results[result_id]
         except KeyError:
-            raise ValueError(
-                f"No result exists with the provided result ID: {result_id}",
-            )
+            raise AgentResultIDNotFoundError(result_id=result_id)
 
     def register_checked_in(self) -> None:
         self.datetime_last_checked_in = datetime.now()
@@ -154,12 +181,3 @@ class Agent:
             "datetime_first_checked_in": self.datetime_first_checked_in.isoformat(),
             "datetime_last_checked_in": self.datetime_last_checked_in.isoformat(),
         }
-
-    def __repr__(self) -> str:
-        return (
-            f"Agent(name={self.name!r}, description={self.description!r}), "
-            f"agent_data={self.agent_data!r})"
-        )
-
-    def __str__(self) -> str:
-        return f'"{self.name}" ({self.agent_id})'

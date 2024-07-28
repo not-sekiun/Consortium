@@ -114,3 +114,30 @@ class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateErro
                 f"'{parameter_name}': {validation_error_message}"
             ),
         )
+
+
+class AgentGeneratorCreationError(AgentGeneratorsServiceError):
+    def __init__(self, message: str = "", detail: Any = None):
+        self.detail = detail
+        super().__init__(message=message)
+
+
+# This is a wrapper exception for AgentTemplateOptionNotFoundError from the
+# agent templates framework exceptions. It just needs to pass on the message and detail
+# data from that exception.
+class AgentTemplateOptionNotFoundError(AgentGeneratorCreationError):
+    pass
+
+
+# This is a wrapper exception for AgentTemplateOptionValueError from the agent
+# templates framework exceptions. It just needs to pass on the message and detail data
+# from that exception.
+class AgentTemplateOptionValueError(AgentGeneratorCreationError):
+    pass
+
+
+# This is a wrapper exception for EmptyAgentGeneratorNameError from the agents
+# framework exceptions. It just needs to pass on the message and detail data from that
+# exception.
+class EmptyAgentGeneratorNameError(AgentGeneratorCreationError):
+    pass

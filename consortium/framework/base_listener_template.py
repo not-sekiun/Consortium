@@ -53,11 +53,11 @@ class BaseListenerTemplate(ABC):
                 parameter_name="name",
                 # Since the listener template cannot be identified by name we identify
                 # it by the filepath it was declared in.
-                listener_template_str=sys.modules[cls.__module__].__file__,
+                listener_template=sys.modules[cls.__module__].__file__,
             )
         if not isinstance(cls.name, str):
             raise ListenerTemplateConfigurationParameterTypeError(
-                listener_template_str=sys.modules[cls.__module__].__file__,
+                listener_template=sys.modules[cls.__module__].__file__,
                 parameter_name="name",
                 parameter_type="str",
             )
@@ -69,7 +69,7 @@ class BaseListenerTemplate(ABC):
         if not hasattr(cls, "listener"):
             raise RequiredListenerTemplateConfigurationParameterNotDeclaredError(
                 parameter_name="listener",
-                listener_template_str=cls.name,
+                listener_template=cls.name,
             )
 
         if cls.authors is None:
@@ -97,19 +97,19 @@ class BaseListenerTemplate(ABC):
             if option.name in option_names:
                 raise DuplicateListenerTemplateOptionNameError(
                     option_name=option.name,
-                    listener_template_str=cls.name,
+                    listener_template=cls.name,
                 )
             option_names.append(option.name)
 
         if not isinstance(cls.description, str):
             raise ListenerTemplateConfigurationParameterTypeError(
-                listener_template_str=cls.name,
+                listener_template=cls.name,
                 parameter_name="description",
                 parameter_type="str",
             )
         if not isinstance(cls.authors, set):
             raise ListenerTemplateConfigurationParameterTypeError(
-                listener_template_str=cls.name,
+                listener_template=cls.name,
                 parameter_name="authors",
                 parameter_type="set",
             )
@@ -174,7 +174,7 @@ class BaseListenerTemplate(ABC):
                 return option
         raise ListenerTemplateOptionNotFoundError(
             option_name=option_name,
-            listener_template_str=str(self),
+            listener_template=str(self),
         )
 
     def set_option_value_by_option_name(
@@ -190,7 +190,7 @@ class BaseListenerTemplate(ABC):
             raise ListenerTemplateOptionValueError(
                 option_name=option_name,
                 option_value=option_value,
-                listener_template_str=str(self),
+                listener_template=str(self),
                 error_message=str(exc),
             )
 
@@ -198,7 +198,7 @@ class BaseListenerTemplate(ABC):
         option = self.get_option_by_option_name(option_name)
         option.clear_option_value()
 
-    def clear_all_options_values(self):
+    def clear_all_option_values(self):
         for option in self.options:
             option.clear_option_value()
 

@@ -50,7 +50,8 @@ class RenameClientConnectionCommand(BaseCommand):
                 )
             except ValueError:
                 print_error(
-                    f"Invalid client connection ID: {parsed_args.client_connection_id[0]}",
+                    f"Invalid client connection ID "
+                    f"'{parsed_args.client_connection_id[0]}'",
                 )
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 

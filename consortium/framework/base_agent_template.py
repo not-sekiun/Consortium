@@ -189,7 +189,7 @@ class BaseAgentTemplate(ABC):
         option = self.get_option_by_option_name(option_name)
         option.clear_option_value()
 
-    def clear_all_options_values(self):
+    def clear_all_option_values(self):
         for option in self.options:
             option.clear_option_value()
 

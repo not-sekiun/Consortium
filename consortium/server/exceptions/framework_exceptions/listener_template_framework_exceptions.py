@@ -45,7 +45,7 @@ class ListenerTemplateConfigurationParameterTypeError(
 ):
     def __init__(
         self,
-        listener_template_str: str | None = None,
+        listener_template: str | None = None,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
         error_message: str = "",
@@ -54,7 +54,7 @@ class ListenerTemplateConfigurationParameterTypeError(
             super().__init__(
                 message=(
                     f"Failed to configure the listener template "
-                    f"'{listener_template_str}'. The parameter '{parameter_name}' "
+                    f"'{listener_template}'. The parameter '{parameter_name}' "
                     f"must be of type '{parameter_type}' in the listener template's "
                     f"definition."
                 ),
@@ -63,7 +63,7 @@ class ListenerTemplateConfigurationParameterTypeError(
             super().__init__(
                 message=(
                     f"Failed to configure the listener template "
-                    f"'{listener_template_str}'. {error_message}"
+                    f"'{listener_template}'. {error_message}"
                 ),
             )
 
@@ -71,11 +71,11 @@ class ListenerTemplateConfigurationParameterTypeError(
 class RequiredListenerTemplateConfigurationParameterNotDeclaredError(
     ListenerTemplateConfigurationParameterError,
 ):
-    def __init__(self, parameter_name: str, listener_template_str: str):
+    def __init__(self, parameter_name: str, listener_template: str):
         super().__init__(
             message=(
                 f"Failed to configure the listener template "
-                f"'{listener_template_str}'. The required parameter "
+                f"'{listener_template}'. The required parameter "
                 f"'{parameter_name}' was not declared in the listener template's "
                 f"definition."
             ),
@@ -94,10 +94,10 @@ class EmptyListenerTemplateNameError(ListenerTemplateConfigurationError):
 
 
 class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationError):
-    def __init__(self, option_name: str, listener_template_str: str):
+    def __init__(self, option_name: str, listener_template: str):
         super().__init__(
             message=(
-                f"Failed to configure the listener template {listener_template_str}'. "
+                f"Failed to configure the listener template {listener_template}'. "
                 f"The options provided to the listener template must not have "
                 f"duplicate names but the name '{option_name}' was duplicated."
             ),
@@ -109,11 +109,11 @@ class ListenerTemplateOptionError(ListenerTemplatesFrameworkError):
 
 
 class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
-    def __init__(self, option_name: str, listener_template_str: str):
+    def __init__(self, option_name: str, listener_template: str):
         super().__init__(
             message=(
                 f"Failed to access the option '{option_name}' for the listener "
-                f"template {listener_template_str}. Could not find the requested "
+                f"template {listener_template}. Could not find the requested "
                 f"option '{option_name}' in the agent template."
             ),
             detail={"option_name": option_name},
@@ -123,7 +123,7 @@ class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
 class ListenerTemplateOptionValueError(ListenerTemplateOptionError):
     def __init__(
         self,
-        listener_template_str: str,
+        listener_template: str,
         option_name: str,
         option_value: Any,
         error_message: str,
@@ -132,7 +132,7 @@ class ListenerTemplateOptionValueError(ListenerTemplateOptionError):
             message=(
                 f"Failed to set the option '{option_name}' to the value "
                 f"'{option_value}' for the listener template "
-                f"'{listener_template_str}'. {error_message}"
+                f"'{listener_template}'. {error_message}"
             ),
             detail={
                 "option_name": option_name,

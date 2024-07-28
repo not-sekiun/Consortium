@@ -8,6 +8,7 @@ from consortium.server.exceptions.api_exceptions.agent_templates_api_exceptions 
     AgentTemplateNotFoundError as AgentTemplateNotFoundAPIError,
     AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundAPIError,
     AgentTemplateOptionValueError as AgentTemplateOptionValueAPIError,
+    EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameAPIError,
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
@@ -17,8 +18,13 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnprocessableEntityError,
 )
 from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
-    AgentTemplateOptionNotFoundError,
-    AgentTemplateOptionValueError,
+    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundFrameworkError,
+    AgentTemplateOptionValueError as AgentTemplateOptionValueFrameworkError,
+)
+from consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions import (
+    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundServiceError,
+    AgentTemplateOptionValueError as AgentTemplateOptionValueServiceError,
+    EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameServiceError,
 )
 from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
     AgentTemplateNotFoundError as AgentTemplateNotFoundServiceError,
@@ -42,35 +48,51 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 agent_templates_service = server_singletons.agent_templates_service
 agent_generators_service = server_singletons.agent_generators_service
 
+_example_agent_template_option_value_framework_error = (
+    AgentTemplateOptionValueFrameworkError(
+        agent_template="string",
+        option_name="string",
+        option_value="string",
+        error_message="string",
+    )
+)
+_example_agent_template_option_not_found_framework_error = (
+    AgentTemplateOptionNotFoundFrameworkError(
+        agent_template="string",
+        option_name="string",
+    )
+)
+
 
 @router.post(
     "/{agent_template_id}",
     responses={
         201: {"model": AgentGeneratorModel},
-        422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model()
-            | AgentTemplateOptionValueAPIError.from_framework_exception(
-                framework_exception=AgentTemplateOptionValueError(
-                    agent_template="string",
-                    option_name="string",
-                    option_value="string",
-                    error_message="string",
-                ),
-            ).to_pydantic_model()
-            | AgentTemplateOptionNotFoundAPIError.from_framework_exception(
-                framework_exception=AgentTemplateOptionNotFoundError(
-                    agent_template="string",
-                    option_name="string",
-                ),
-            ).to_pydantic_model(),
-        },
         404: {
             "model": AgentTemplateNotFoundAPIError.from_service_exception(
                 service_exception=AgentTemplateNotFoundServiceError(
                     agent_template_id="string",
                 ),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
+            ).to_pydantic_model()
+            | AgentTemplateOptionValueAPIError.from_service_exception(
+                service_exception=AgentTemplateOptionNotFoundServiceError(
+                    message=_example_agent_template_option_value_framework_error.message,
+                    detail=_example_agent_template_option_value_framework_error.detail,
+                ),
+            ).to_pydantic_model()
+            | AgentTemplateOptionNotFoundAPIError.from_service_exception(
+                service_exception=AgentTemplateOptionNotFoundServiceError(
+                    message=_example_agent_template_option_not_found_framework_error.message,
+                    detail=_example_agent_template_option_not_found_framework_error.detail,
+                ),
+            ).to_pydantic_model()
+            | EmptyAgentGeneratorNameAPIError.from_service_exception(
+                service_exception=EmptyAgentGeneratorNameServiceError(),
             ).to_pydantic_model(),
         },
     },
@@ -85,34 +107,26 @@ def create_agent_generator_through_agent_template_by_agent_template_id(
     ],
 ) -> AgentGeneratorModel:
     try:
-        agent_template = (
-            agent_templates_service.get_agent_template_by_agent_template_id(
-                agent_template_id=agent_template_id,
-            )
+        agent_generator = agent_templates_service.create_agent_generator_through_agent_template_by_agent_template_id(
+            agent_template_id=agent_template_id,
+            agent_template_options=agent_template_options,
         )
     except AgentTemplateNotFoundServiceError as exc:
         raise AgentTemplateNotFoundAPIError.from_service_exception(
             service_exception=exc,
         )
-
-    for option_name, option_value in agent_template_options.items():
-        try:
-            agent_template.set_option_value_by_option_name(option_name, option_value)
-        except AgentTemplateOptionNotFoundError as exc:
-            raise AgentTemplateOptionNotFoundAPIError.from_framework_exception(
-                framework_exception=exc,
-            )
-        except AgentTemplateOptionValueError as exc:
-            raise AgentTemplateOptionValueAPIError.from_framework_exception(
-                framework_exception=exc,
-            )
-
-    # Agent generator is created and added to the agent generator service but not
-    # explicitly started. Starting the agent generator must be manually done from the
-    # /api/agent-generators endpoint.
-    agent_generator = agent_template.create_agent_generator()
-    agent_template.clear_all_option_values()
-    agent_generators_service.add_agent_generator(agent_generator)
+    except AgentTemplateOptionNotFoundServiceError as exc:
+        raise AgentTemplateOptionNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
+    except AgentTemplateOptionValueServiceError as exc:
+        raise AgentTemplateOptionValueAPIError.from_service_exception(
+            service_exception=exc,
+        )
+    except EmptyAgentGeneratorNameServiceError as exc:
+        raise EmptyAgentGeneratorNameAPIError.from_service_exception(
+            service_exception=exc,
+        )
 
     return AgentGeneratorModel(**agent_generator.to_json())
 

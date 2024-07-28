@@ -42,7 +42,7 @@ class ExitCommand(BaseCommand):
                 try:
                     await client_connection.logout()
                     print_success(
-                        f"Disconnected client connection: {client_connection}",
+                        f"Disconnected client connection {client_connection}",
                     )
                 except Exception as exc:
                     print_error(

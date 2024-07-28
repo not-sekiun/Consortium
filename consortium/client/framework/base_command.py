@@ -40,10 +40,14 @@ class BaseCommand(ABC):
             formatter_class=RawDescriptionHelpFormatter,
             epilog=self.epilog,
         )
-        self.summary = (
-            f"description: {self.parser.description}\n{self.parser.format_usage()}"
-        )
         self.configure_parser(self.parser)
+
+    # When implementations of this BaseCommand abstract base class are created the
+    # summary is automatically created as a class attribute to reflect the
+    # implementation's parser.
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.summary = f"description: {cls.description}\n{cls().parser.format_usage()}"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         pass

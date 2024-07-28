@@ -7,6 +7,11 @@ from consortium.framework.base_agent_generator import BaseAgentGenerator
 from consortium.server.exceptions.framework_exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorStartError as AgentGeneratorStartFrameworkError,
     AgentGeneratorStopError as AgentGeneratorStopFrameworkError,
+    EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameFrameworkError,
+)
+from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
+    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundFrameworkError,
+    AgentTemplateOptionValueError as AgentTemplateOptionValueFrameworkError,
 )
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
@@ -17,6 +22,9 @@ from consortium.server.exceptions.service_exceptions.agent_generators_service_ex
     AgentGeneratorNotFoundError,
     AgentGeneratorStartError as AgentGeneratorStartServiceError,
     AgentGeneratorStopError as AgentGeneratorStopServiceError,
+    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundServiceError,
+    AgentTemplateOptionValueError as AgentTemplateOptionValueServiceError,
+    EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameServiceError,
     InvalidAgentGeneratorParameterNameError,
     InvalidAgentGeneratorParameterValueError,
 )
@@ -74,12 +82,30 @@ class AgentGeneratorsService:
         )
 
         for option_name, option_value in options.items():
-            agent_template.set_option_value_by_option_name(
-                option_name=option_name,
-                option_value=option_value,
-            )
+            try:
+                agent_template.set_option_value_by_option_name(
+                    option_name=option_name,
+                    option_value=option_value,
+                )
+            except AgentTemplateOptionNotFoundFrameworkError as exc:
+                raise AgentTemplateOptionNotFoundServiceError(
+                    message=exc.message,
+                    detail=exc.detail,
+                )
+            except AgentTemplateOptionValueFrameworkError as exc:
+                raise AgentTemplateOptionValueServiceError(
+                    message=exc.message,
+                    detail=exc.detail,
+                )
 
-        agent_generator = agent_template.create_agent_generator()
+        try:
+            agent_generator = agent_template.create_agent_generator()
+        except EmptyAgentGeneratorNameFrameworkError as exc:
+            raise EmptyAgentGeneratorNameServiceError(
+                message=exc.message,
+                detail=exc.detail,
+            )
+        agent_template.clear_all_option_values()
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )

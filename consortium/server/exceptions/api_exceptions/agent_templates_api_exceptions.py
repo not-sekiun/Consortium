@@ -11,8 +11,6 @@ HTTPError:
      value is invalid.
 """
 
-from typing import Any
-
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     NotFoundError,
     UnprocessableEntityError,
@@ -29,3 +27,7 @@ class AgentTemplateOptionNotFoundError(UnprocessableEntityError):
 
 class AgentTemplateOptionValueError(UnprocessableEntityError):
     code = "AGENT_TEMPLATE_OPTION_VALUE_ERROR"
+
+
+class EmptyAgentGeneratorNameError(UnprocessableEntityError):
+    code = "EMPTY_AGENT_GENERATOR_NAME_ERROR"

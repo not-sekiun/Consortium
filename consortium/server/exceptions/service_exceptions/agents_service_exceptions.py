@@ -16,16 +16,16 @@ class AgentNotFoundError(AgentServiceError):
 
 
 class AgentTaskNotFoundError(AgentServiceError):
-    def __init__(self, agent_task_id: str):
+    def __init__(self, task_id: str):
         super().__init__(
             f"Failed to find the requested agent task. No agent task was found with the "
-            f"provided agent task ID '{agent_task_id}'.",
+            f"provided agent task ID '{task_id}'.",
         )
 
 
 class AgentResultNotFoundError(AgentServiceError):
-    def __init__(self, agent_result_id: str):
+    def __init__(self, result_id: str):
         super().__init__(
             f"Failed to find the requested agent result. No agent result was found "
-            f"with the provided agent result ID '{agent_result_id}'.",
+            f"with the provided agent result ID '{result_id}'.",
         )

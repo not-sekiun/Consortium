@@ -50,11 +50,8 @@ class BannerCommand(BaseCommand):
             number_of_running_listeners = "N/A"
             number_of_running_agents = "N/A"
             server_release_formatted_string = "N/A"
-            role = "N/A"
             connection_status_banner = (
-                "[bold white]    Connection Status  - "
-                + "[bold red]Disconnected"
-                + f"[bold white] | Logged in as N/A (role: {role})"
+                "[bold white]    Connection Status  - " "[bold red]Disconnected"
             )
         else:
             server_release = await client_connection.get_server_release()
@@ -74,30 +71,32 @@ class BannerCommand(BaseCommand):
 
             role = own_user["role"]
             if role in ("OPERATOR", "SPECTATOR"):
-                connection_status_banner = (
-                    "[bold white]    Connection Status  - "
-                    + "[bold green]Connected"
-                    + f'[bold white] | Logged in as "{client_connection.username}" (role: {role})'
-                )
-            else:  # Display the role in red for admin accounts.
-                connection_status_banner = (
-                    "[bold white]    Connection Status  - "
-                    + "[bold green]Connected"
-                    + f'[bold white] | Logged in as "{client_connection.username}" (role: '
-                    + f"[bold red]{role}"
-                    + "[bold white])"
-                )
+                role_color = "white"
+            else:  # Display the role in red for accounts with the ADMIN role.
+                role_color = "red"
+            connection_status_banner = (
+                "[bold white]    Connection Status  - "
+                f"[bold green]Connected[bold white] as '{client_connection.username}' "
+                f"([{role_color}]{role}[bold white])"
+            )
 
         random_banner_art = random.choice(banner_art)
-        author_banner = "[bold white]    Author             - Sekiun (https://github.com/not-sekiun)"
-        client_version_banner = f'[bold white]    Client Release     - v{CLIENT_RELEASE.version} "{CLIENT_RELEASE.codename}"'
+        author_banner = (
+            "[bold white]    Author             - "
+            "Sekiun (https://github.com/not-sekiun)"
+        )
+        client_version_banner = (
+            f"[bold white]    Client Release     - "
+            f"v{CLIENT_RELEASE.version} '{CLIENT_RELEASE.codename}'"
+        )
         server_version_banner = (
-            f"[bold white]    Server Release     - {server_release_formatted_string}"
+            f"[bold white]    Server Release     - "
+            f"{server_release_formatted_string}"
         )
         info_banner = (
             "[bold white]    Server Information - "
-            + f"[bold white]{number_of_running_listeners} Running listener(s) | "
-            + f"[bold white]{number_of_running_agents} Running agent(s)"
+            f"[bold white]{number_of_running_listeners} Running listener(s) | "
+            f"[bold white]{number_of_running_agents} Running agent(s)"
         )
 
         CONSOLE.print(random_banner_art)

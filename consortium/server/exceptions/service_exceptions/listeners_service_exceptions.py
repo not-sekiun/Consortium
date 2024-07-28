@@ -2,24 +2,32 @@
 Exception hierarchy for the listeners service:
 
 - BaseServiceException: Base class for all exceptions raised by services.
-  - ListenersServiceError: Base class for all exceptions raised by the listeners service.
+  - ListenersServiceError: Base class for all exceptions raised by the listeners
+    service.
     - ListenerNotFoundError: Raised when a requested listener is not found.
-    - ListenerAlreadyExistsError: Raised when attempting to add a listener that already
-    exists.
+    - ListenerAlreadyExistsError: Raised when attempting to add a listener that
+      already exists.
     - ListenerOperationError: Base class for errors related to listener operations.
       - ListenerStartError: Raised when there's an error starting a listener.
       - ListenerStopError: Raised when there's an error stopping a listener.
     - ListenerStateError: Base class for errors related to listener state.
-      - ListenerAlreadyRunningError: Raised when attempting an operation on an already
-      running listener.
+      - ListenerAlreadyRunningError: Raised when attempting an operation on an
+        already running listener.
       - ListenerNotRunningError: Raised when attempting an operation on a non-running
-      listener.
+        listener.
     - ListenerParameterUpdateError: Base class for errors related to updating listener
-    parameters.
+      parameters.
       - InvalidListenerParameterNameError: Raised when an invalid parameter name is
-      provided.
+        provided.
       - InvalidListenerParameterValueError: Raised when an invalid parameter value is
-      provided.
+        provided.
+    - ListenerCreationError: Base class for errors related to listener creation.
+      - ListenerTemplateOptionNotFoundError: Raised when a specified option is not
+        found in the listener template.
+      - ListenerTemplateOptionValueError: Raised when an invalid value is provided for
+        a listener template option.
+      - EmptyListenerNameError: Raised when the name provided for the listener is an
+        empty string.
 """
 
 from typing import Any
@@ -121,3 +129,29 @@ class InvalidListenerParameterValueError(ListenerParameterUpdateError):
                 f"the parameter '{parameter_name}': {validation_error_message}"
             ),
         )
+
+
+class ListenerCreationError(ListenersServiceError):
+    def __init__(self, message: str = "", detail: Any = None):
+        self.detail = detail
+        super().__init__(message=message)
+
+
+# This is a wrapper exception for ListenerTemplateOptionNotFoundError from the listener
+# templates framework exceptions. It just needs to pass on the message and detail data
+# from that exception.
+class ListenerTemplateOptionNotFoundError(ListenerCreationError):
+    pass
+
+
+# This is a wrapper exception for ListenerTemplateOptionValueError from the listener
+# templates framework exceptions. It just needs to pass on the message and detail data
+# from that exception.
+class ListenerTemplateOptionValueError(ListenerCreationError):
+    pass
+
+
+# This is a wrapper exception for EmptyListenerNameError from the listeners framework
+# exceptions. It just needs to pass on the message and detail data from that exception.
+class EmptyListenerNameError(ListenerCreationError):
+    pass

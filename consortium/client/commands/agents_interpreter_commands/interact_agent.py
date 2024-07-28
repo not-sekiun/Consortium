@@ -50,7 +50,7 @@ class InteractAgentCommand(BaseCommand):
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
             print_success(
-                f"Interacting with agent: {agent["name"]} ({agent["agent_id"]}).",
+                f"Interacting with agent {agent["name"]} ({agent["agent_id"]}).",
             )
 
             return ReturnStatus(
