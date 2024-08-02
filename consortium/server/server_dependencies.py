@@ -110,6 +110,7 @@ class AuthorizeUserRequest:
             UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
             UserPermissions.READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID,
             UserPermissions.TASK_AGENT_BY_AGENT_ID,
+            UserPermissions.USE_EVENTS_WEBSOCKET,
         },
         # Spectators can only read information and have even less read access than
         # operators
@@ -132,6 +133,7 @@ class AuthorizeUserRequest:
             UserPermissions.READ_AGENT_TASK_BY_AGENT_ID_AND_TASK_ID,
             UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
             UserPermissions.READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID,
+            UserPermissions.USE_EVENTS_WEBSOCKET,
         },
     }
 

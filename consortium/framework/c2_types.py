@@ -42,8 +42,11 @@ class AgentType:
                 )
 
         self.name = name
-        self.compatible_listener_types = compatible_listener_types
+        self.compatible_listener_types = set()
         self.agent_type_id = uuid.uuid4()
+
+        for listener_type in compatible_listener_types:
+            self.add_compatible_listener_type(listener_type=listener_type)
 
     def __str__(self) -> str:
         return f'"{self.name}" ({str(self.agent_type_id)})'
@@ -143,8 +146,11 @@ class ListenerType:
                 )
 
         self.name = name
-        self.compatible_agent_types = compatible_agent_types
+        self.compatible_agent_types = set()
         self.listener_type_id = uuid.uuid4()
+
+        for agent_type in compatible_agent_types:
+            self.add_compatible_agent_type(agent_type=agent_type)
 
     def __str__(self) -> str:
         return f'"{self.name}" ({str(self.listener_type_id)})'

@@ -27,9 +27,6 @@ from consortium.server.models.agent_models import (
     AgentTaskModel,
 )
 from consortium.server.models.common_models import SuccessResponseModel
-
-# TODO: Move away from the request body model to an inline definition
-# from consortium.server.models.request_body_models import AgentTaskRequestBodyModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 

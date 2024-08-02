@@ -66,7 +66,7 @@ class BannerCommand(BaseCommand):
             number_of_running_listeners = str(len(listeners))
             number_of_running_agents = str(len(agents))
             server_release_formatted_string = (
-                f'v{server_release["version"]} "{server_release["codename"]}"'
+                f"v{server_release["version"]} '{server_release["codename"]}'"
             )
 
             role = own_user["role"]

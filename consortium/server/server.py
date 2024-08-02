@@ -13,6 +13,7 @@ from consortium.server.api.agent_templates_api import (
     router as agent_templates_api_router,
 )
 from consortium.server.api.agents_api import router as agents_api_router
+from consortium.server.api.events_api import router as events_api_router
 from consortium.server.api.listener_templates_api import (
     router as listener_templates_api_router,
 )
@@ -25,7 +26,6 @@ from consortium.server.api.users_api import router as users_api_router
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import SERVER_RELEASE
-from consortium.server.server_event_handlers import register_server_event_handlers
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
@@ -51,6 +51,7 @@ class Server:
 
         self._server_logger = logger.bind(logger_name="Consortium Server")
         self._app = application_service.get_application()
+
         # Configure custom api endpoints.
         self._app.include_router(login_api_router)
         self._app.include_router(logout_api_router)
@@ -62,6 +63,7 @@ class Server:
         self._app.include_router(agent_templates_api_router)
         self._app.include_router(agent_generators_api_router)
         self._app.include_router(agents_api_router)
+        self._app.include_router(events_api_router)
 
         # Configure middleware. Order matters, the last middleware added will be the
         # first to be executed on the request and the last to be executed on the
@@ -91,12 +93,6 @@ class Server:
         # responses returned by the server and to account for custom exceptions that
         # may be raised by the server.
         register_server_exception_handlers(self._app)
-
-        # Register events. Startup events include those that load listener profiles,
-        # agent profiles, plugins, and event hooks. The START_SERVER event is also
-        # triggered by the event hooks service. The STOP_SERVER event is triggered by
-        # the event hooks service when the server is shutting down.
-        register_server_event_handlers(self._app)
 
         # TODO: Make this hack more elegant.
         # Manually modify the openapi schema to remove the default 422 response from the

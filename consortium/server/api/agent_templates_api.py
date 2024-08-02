@@ -100,16 +100,16 @@ _example_agent_template_option_not_found_framework_error = (
 )
 def create_agent_generator_through_agent_template_by_agent_template_id(
     agent_template_id: str,
-    agent_template_options: dict[str, Any],
+    options: dict[str, Any],
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.CREATE_AGENT_GENERATOR)),
     ],
 ) -> AgentGeneratorModel:
     try:
-        agent_generator = agent_templates_service.create_agent_generator_through_agent_template_by_agent_template_id(
+        agent_generator = agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
             agent_template_id=agent_template_id,
-            agent_template_options=agent_template_options,
+            options=options,
         )
     except AgentTemplateNotFoundServiceError as exc:
         raise AgentTemplateNotFoundAPIError.from_service_exception(

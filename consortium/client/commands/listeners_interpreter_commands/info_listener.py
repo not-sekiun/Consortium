@@ -62,7 +62,6 @@ class InfoListenerCommand(BaseCommand):
                 "Listener Type ID",
                 listener["listener_type"]["listener_type_id"],
             )
-            table.add_row("Listener Template ID", listener["listener_template_id"])
             listener_type_table.add_row(
                 "Name",
                 listener["listener_type"]["name"],

@@ -5,11 +5,17 @@ _modular_. The framework ships with its own listeners and agents while also allo
 users to rapidly develop their own highly customized listeners and agents.
 
 
-> [!WARNING]
-> Consortium is in active development. Backwards incompatible or
-> breaking changes may be made to the core REST API/framework/default listener and
-> agent implementations. As such, compatability is only guaranteed between clients,
-> servers, listeners, and agents of the _exact same framework version_.
+> [!CAUTION]
+> Consortium is **actively being developed** and is currently considered to be in the
+> _alpha phase_ of development. As such it should be noted that:
+>
+> 1. Backwards incompatible/breaking changes may be made to the framework at any time.
+> 2. The framework may contain major bugs.
+> 3. The framework may not be feature complete.
+> 4. Documentation will be lacking.
+>
+> I am working to resolve all these problems so please raise any problems, feature
+> requests, or bug reports in the Github issues section.
 
 ## ⚙️ Features
 - **📡 Asynchronous multiplayer/multiserver support** - Multiple clients can connect to
@@ -86,6 +92,12 @@ navigating to `/doc` or `/redoc` at the server's root URL in a web browser.
 
 > [!Note]
 > The REST API documentation is only accessible to the local host.
+
+### Server Events Websocket API Documentation
+The Consortium server provides a WebSocket API for server-initiated push events. While
+this is considered part of its API, it is _not_ documented by FastAPI due to issues
+with the OpenAPI specification. As such the WebSocket API is documented at the
+[Consortium wiki's](https://github.com/not-sekiun/Consortium/wiki) Events WebSocket API page.
 
 ### Client Documentation
 To view all commands for a particular interpreter in the client type `help`.
@@ -173,3 +185,18 @@ including:
 - Writing custom native listeners, agents, plugins, and event hooks
 - Utilizing the WebSocket API for server-initiated push events
 - Writing listeners and agents in languages other than Python
+
+
+## Credits
+This project would not have been possible without the existence of the following 
+excellently written libraries and frameworks.
+- FastAPI
+- Prompt-toolkit
+- Rich
+- Websockets
+
+On top of that many other pre-existing C2 frameworks provided the inspiration and 
+motivation to create this one.
+- Powershell-empire
+- Mythic
+- Covenant

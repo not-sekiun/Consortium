@@ -150,7 +150,6 @@ class InfoGeneratorCommand(BaseCommand):
                 ),
             )
             table.add_row("Agent Type", agent_type_table)
-            table.add_row("Agent Template ID", agent_generator["agent_template_id"])
             parameter_table = Table()
             parameter_table.add_column("Parameter")
             parameter_table.add_column("Value")

@@ -156,7 +156,7 @@ async def start_agent_generator_by_agent_generator_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        agent_generators_service.start_agent_generator_by_agent_generator_id(
+        await agent_generators_service.start_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except AgentGeneratorStartServiceError as exc:

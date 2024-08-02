@@ -43,9 +43,11 @@ class BaseAPIException(Exception):
         self,
         message: str = "",
         detail: Any = None,
+        headers: dict[str, Any] | None = None,
     ) -> None:
         self.message = message
         self.detail = detail
+        self.headers = headers
 
         super().__init__(message)
 
@@ -59,7 +61,7 @@ class BaseAPIException(Exception):
         }
 
     def to_pydantic_model(self) -> Type[BaseModel]:
-        # Prevent duplication of pydantic models to keep the OpenAPI schema clean
+        # Prevent duplication of pydantic models to keep the OpenAPI schema clean.
         for existing_pydantic_model in self._pydantic_models:
             # Check if the existing pydantic model is functionally the same as the
             # current one

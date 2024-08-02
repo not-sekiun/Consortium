@@ -100,13 +100,13 @@ _example_listener_template_option_not_found_framework_error = (
 )
 def create_listener_through_listener_template_by_listener_template_id(
     listener_template_id: str,
-    listener_template_options: dict[str, Any],
+    options: dict[str, Any],
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.CREATE_LISTENER))],
 ) -> ListenerModel:
     try:
-        listener = listener_templates_service.create_listener_through_listener_template_by_listener_template_id(
+        listener = listeners_service.create_listener_from_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
-            listener_template_options=listener_template_options,
+            options=options,
         )
     except ListenerTemplateNotFoundServiceError as exc:
         raise ListenerTemplateNotFoundAPIError.from_service_exception(

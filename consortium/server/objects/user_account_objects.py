@@ -91,3 +91,6 @@ class UserPermissions(StrEnum):
     )
     TASK_AGENT_BY_AGENT_ID = "TASK_AGENT_BY_AGENT_ID"
     DELETE_AGENT_TASK_BY_TASK_ID = "DELETE_AGENT_TASK_BY_TASK_ID"
+
+    # Permissions for the /api/events endpoint
+    USE_EVENTS_WEBSOCKET = "USE_EVENTS_WEBSOCKET"

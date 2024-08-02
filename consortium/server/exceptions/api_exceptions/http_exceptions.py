@@ -35,7 +35,7 @@ class HTTPError(BaseAPIException):
 # so that the JSON data returned as part of the response body is empty to prevent C2
 # server fingerprinting from unauthorized clients.
 class UnauthorizedError(HTTPError):
-    status_code = (401,)
+    status_code = 401
     code = "UNAUTHORIZED_ERROR"
 
     def __init__(
@@ -62,7 +62,7 @@ class UnauthorizedError(HTTPError):
 
 
 class ForbiddenError(HTTPError):
-    status_code = (403,)
+    status_code = 403
     code = "FORBIDDEN_ERROR"
 
     def __init__(
@@ -77,7 +77,7 @@ class ForbiddenError(HTTPError):
 
 
 class NotFoundError(HTTPError):
-    status_code = (404,)
+    status_code = 404
     code = "NOT_FOUND_ERROR"
 
     def __init__(
@@ -92,7 +92,7 @@ class NotFoundError(HTTPError):
 
 
 class MethodNotAllowedError(HTTPError):
-    status_code = (405,)
+    status_code = 405
     code = "METHOD_NOT_ALLOWED_ERROR"
 
     def __init__(
@@ -107,7 +107,7 @@ class MethodNotAllowedError(HTTPError):
 
 
 class ConflictError(HTTPError):
-    status_code = (409,)
+    status_code = 409
     code = "CONFLICT_ERROR"
 
     def __init__(
@@ -123,7 +123,7 @@ class ConflictError(HTTPError):
 
 
 class UnprocessableEntityError(HTTPError):
-    status_code = (422,)
+    status_code = 422
     code = "UNPROCESSABLE_ENTITY_ERROR"
 
     def __init__(
@@ -141,7 +141,7 @@ class UnprocessableEntityError(HTTPError):
 
 
 class InternalServerErrorError(HTTPError):
-    status_code = (500,)
+    status_code = 500
     code = "INTERNAL_SERVER_ERROR"
 
     def __init__(
@@ -156,7 +156,7 @@ class InternalServerErrorError(HTTPError):
 
 
 class ServiceUnavailableError(HTTPError):
-    status_code = (503,)
+    status_code = 503
     code = "SERVICE_UNAVAILABLE_ERROR"
 
     def __init__(

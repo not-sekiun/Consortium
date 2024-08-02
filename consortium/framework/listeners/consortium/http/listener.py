@@ -8,7 +8,7 @@ from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerStartError,
 )
 from consortium.framework.listeners.consortium.http.listener_type import LISTENER_TYPE
-from consortium.server.models.agent_models import AgentResultModel
+from consortium.server.models.agent_models import AgentResultModel, AgentResultState
 
 
 class Listener(BaseListener):
@@ -72,6 +72,7 @@ class Listener(BaseListener):
             # {"agent_id": agent_id, "task_id": task_id "result": result}.
             try:
                 json_request_body = await request.json()
+                print(json_request_body)
             except json.JSONDecodeError:
                 return web.Response(status=401)
 
@@ -93,7 +94,26 @@ class Listener(BaseListener):
             # in.
             agent.register_checked_in()
 
-            result = AgentResultModel(task_id=task_id, data=result)
+            print(1)
+            if result["success"] is True:
+                agent_result_state = AgentResultState.SUCCESS
+            elif result["success"] is False:
+                agent_result_state = AgentResultState.FAIL
+            else:
+                # TODO: do all data valiation with a jsonschema and raise a 401
+                return web.Response(status=401)
+
+            # TODO: Exceptions are not being properly handled and passed back to the
+            #  exception handler function. When the agent result model is initialized
+            #  with missing parameters, the error passes silently without triggering
+            #  the function. FIX THIS.
+            result = AgentResultModel(
+                task_id=task_id,
+                agent_result_state=agent_result_state,
+                message=result["message"],
+                data=result["data"],
+            )
+            print(result)
             agent.add_result(result)
             return web.Response(status=200)
 
@@ -123,4 +143,4 @@ class Listener(BaseListener):
             pass
 
     async def on_listener_errored(self, exception: Exception) -> None:
-        pass
+        print(exception)

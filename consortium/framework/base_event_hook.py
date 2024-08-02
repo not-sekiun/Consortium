@@ -1,6 +1,7 @@
 import sys
 import uuid
 from abc import ABC, abstractmethod
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -34,6 +35,7 @@ class BaseEventHook(ABC):
             # want to set on the plugin.
             if attr_name != "server" and attr_name.endswith("_service"):
                 setattr(self.server_services, attr_name, attr_value)
+        self.event_hook_project_folder = Path(__file__).parent
 
     def __init_subclass__(cls, **kwargs):
         if cls.authors is None:

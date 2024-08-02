@@ -22,6 +22,7 @@ python-multipart = "^0.0.6"
 requests = "^2.31.0"
 aiohttp = "^3.9.3"
 aioconsole = "^0.7.0"
+websockets = "^12.0"
 
 
 [tool.poetry.group.dev.dependencies]

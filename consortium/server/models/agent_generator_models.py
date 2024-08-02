@@ -37,6 +37,5 @@ class AgentGeneratorModel(BaseModel):
     description: str
     status: _AgentGeneratorStatusModel
     agent_type: AgentTypeModel
-    agent_template_id: str
     agent_generator_build_steps: list[AgentGeneratorBuildStepModel]
     parameters: dict[str, Any]

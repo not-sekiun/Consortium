@@ -25,11 +25,13 @@ from consortium.server.server_config import (
     CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
     CONSORTIUM_HOME_DIRECTORY_PATH,
 )
+from consortium.server.services.events_service import EventsService
 
 
 class EventHooksService:
-    def __init__(self):
+    def __init__(self, events_service: EventsService):
         self._event_hooks = {}
+        self._events_service = events_service
         self.event_hooks_service_logger = logger.bind(
             logger_name=str(self),
         )
@@ -212,6 +214,11 @@ class EventHooksService:
             event_hook_project_folder,
         )
         self._event_hooks[str(event_hook.event_hook_id)] = event_hook
+        for event_type in event_hook.event_types:
+            self._events_service.register_event_handler_to_event_type(
+                event_type=event_type,
+                event_handler=event_hook.on_event_hook_triggered,
+            )
         self.event_hooks_service_logger.info(f"Loaded event hook: {event_hook}")
         self.event_hooks_service_logger.debug(f"Loaded event hook: {event_hook!r}")
         return event_hook
@@ -223,9 +230,14 @@ class EventHooksService:
         try:
             event_hook = self._event_hooks.pop(event_hook_id)
         except KeyError:
-            raise ValueError(
-                "No event hook exists with the provided event hook ID: "
-                f"{event_hook_id}",
+            raise EventHookNotFoundError(
+                event_hook_id=event_hook_id,
+            )
+
+        for event_type in event_hook.event_types:
+            self._events_service.deregister_event_handler_from_event_type(
+                event_type=event_type,
+                event_handler=event_hook.on_event_hook_triggered,
             )
 
         self.event_hooks_service_logger.info(f"Unloaded event hook: {event_hook}")

@@ -5,6 +5,7 @@ from consortium.server.services.agents_service import AgentsService
 from consortium.server.services.application_service import ApplicationService
 from consortium.server.services.c2_types_service import C2TypesService
 from consortium.server.services.event_hooks_service import EventHooksService
+from consortium.server.services.events_service import EventsService
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
 from consortium.server.services.listener_templates_service import (
     ListenerTemplatesService,
@@ -41,10 +42,15 @@ c2_types_service = C2TypesService(
     agent_profiles_service=agent_profiles_service,
 )
 
+# Event hooks service needs the events service to be dependency injected into it such
+# that it can register/deregister event handlers when load/unloading/reloading event
+# hooks.
+events_service = EventsService()
+event_hooks_service = EventHooksService(events_service=events_service)
+
 # These services are instantiated independent of other services.
 agents_service = AgentsService()
 application_service = ApplicationService()
-event_hooks_service = EventHooksService()
 user_accounts_service = UserAccountsService()
 users_service = UsersService()
 # The plugins service needs to be instantiated last so that the loaded plugins have

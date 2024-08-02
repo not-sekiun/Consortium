@@ -1,0 +1,6 @@
+{
+  "event_hook": {
+    "filepath": "test_event_hook.py",
+    "symbol": "TestEventHook"
+  }
+}
