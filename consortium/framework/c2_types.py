@@ -1,11 +1,14 @@
 import sys
 import uuid
+from pathlib import Path
 
+from consortium.framework.base_agent_capability import BaseAgentCapability
 from consortium.server.exceptions.framework_exceptions.c2_types_framework_exceptions import (
     AgentTypeAlreadyExistsError,
     AgentTypeConfigurationError,
     AgentTypeConfigurationParameterTypeError,
     AgentTypeNotFoundError,
+    EmptyAgentTypeNameError,
     EmptyListenerTypeNameError,
     ListenerTypeAlreadyExistsError,
     ListenerTypeConfigurationParameterTypeError,
@@ -13,40 +16,60 @@ from consortium.server.exceptions.framework_exceptions.c2_types_framework_except
 )
 
 
-class AgentType:
-    def __init__(
-        self,
-        name: str,
-        # `ListenerType` is not defined yet at this point, so we use a forward
-        # reference.
-        compatible_listener_types: set["ListenerType"] | None = None,
-    ):
-        if compatible_listener_types is None:
-            compatible_listener_types = set()
+class BaseAgentType:
+    name: str
+    compatible_listener_types: set["BaseListenerType"] | None = None
+    agent_capabilities: set[BaseAgentCapability] | None = None
 
-        if not isinstance(name, str):
-            raise AgentTypeConfigurationError("The agent type's name must be a string.")
-        if not name:
-            raise AgentTypeConfigurationError(
-                "The agent type's name must not be an empty string.",
-            )
-        if not isinstance(compatible_listener_types, set):
-            raise AgentTypeConfigurationError(
-                "The agent type's provided compatible listener types must be a set.",
-            )
-        for listener_type in compatible_listener_types:
-            if not isinstance(listener_type, ListenerType):
-                raise AgentTypeConfigurationError(
-                    "The elements in the set of compatible listener types must be "
-                    "listener type objects.",
-                )
-
-        self.name = name
-        self.compatible_listener_types = set()
+    def __init__(self):
         self.agent_type_id = uuid.uuid4()
+        self.agent_source_filepath = Path(
+            sys.modules[self.__class__.__module__].__file__,
+        ).parents[0]
 
-        for listener_type in compatible_listener_types:
+        for listener_type in self.compatible_listener_types:
             self.add_compatible_listener_type(listener_type=listener_type)
+
+    def __init_subclass__(cls, **kwargs):
+        if cls.compatible_listener_types is None:
+            cls.compatible_listener_types = set()
+        if cls.agent_capabilities is None:
+            cls.agent_capabilities = set()
+
+        if not isinstance(cls.name, str):
+            raise AgentTypeConfigurationError("The agent type's name must be a string.")
+        if not cls.name:
+            raise EmptyAgentTypeNameError
+        if not isinstance(cls.compatible_listener_types, set):
+            raise AgentTypeConfigurationParameterTypeError(
+                agent_type_filepath=sys.modules[cls.__module__].__file__,
+                parameter_name="compatible_listener_types",
+                parameter_type="set",
+            )
+        for listener_type in cls.compatible_listener_types:
+            if not isinstance(listener_type, BaseListenerType):
+                raise AgentTypeConfigurationParameterTypeError(
+                    agent_type_filepath=sys.modules[cls.__module__].__file__,
+                    error_message=(
+                        "The elements in the set of compatible listener types must be "
+                        "listener type objects."
+                    ),
+                )
+        if not isinstance(cls.agent_capabilities, set):
+            raise AgentTypeConfigurationParameterTypeError(
+                agent_type_filepath=sys.modules[cls.__module__].__file__,
+                parameter_name="agent_capabilities",
+                parameter_type="set",
+            )
+        for agent_capability in cls.agent_capabilities:
+            if not isinstance(agent_capability, BaseAgentCapability):
+                raise AgentTypeConfigurationParameterTypeError(
+                    agent_type_filepath=sys.modules[cls.__module__].__file__,
+                    error_message=(
+                        "The elements in the set of agent capabilities must be "
+                        "agent capability objects."
+                    ),
+                )
 
     def __str__(self) -> str:
         return f'"{self.name}" ({str(self.agent_type_id)})'
@@ -57,9 +80,10 @@ class AgentType:
             f"compatible_listener_types={self.compatible_listener_types!r})"
         )
 
-    def add_compatible_listener_type(self, listener_type: "ListenerType") -> None:
-        if not isinstance(listener_type, ListenerType):
+    def add_compatible_listener_type(self, listener_type: "BaseListenerType") -> None:
+        if not isinstance(listener_type, BaseListenerType):
             raise ListenerTypeConfigurationParameterTypeError(
+                listener_type_filepath=sys.modules[self.__class__.__module__].__file__,
                 error_message=(
                     "Invalid listener type '{listener_type}' provided, expected a "
                     "listener type object."
@@ -73,9 +97,13 @@ class AgentType:
         self.compatible_listener_types.add(listener_type)
         listener_type.compatible_agent_types.add(self)
 
-    def remove_compatible_listener_type(self, listener_type: "ListenerType") -> None:
-        if not isinstance(listener_type, ListenerType):
+    def remove_compatible_listener_type(
+        self,
+        listener_type: "BaseListenerType",
+    ) -> None:
+        if not isinstance(listener_type, BaseListenerType):
             raise AgentTypeConfigurationParameterTypeError(
+                agent_type_filepath=sys.modules[self.__class__.__module__].__file__,
                 error_message=(
                     f"Invalid listener type '{listener_type}' provided, expected a "
                     "listener type object."
@@ -89,12 +117,30 @@ class AgentType:
         self.compatible_listener_types.remove(listener_type)
         listener_type.compatible_agent_types.remove(self)
 
-    def is_compatible_with_listener_type(self, listener_type: "ListenerType") -> bool:
+    def is_compatible_with_listener_type(
+        self,
+        listener_type: "BaseListenerType",
+    ) -> bool:
         # If `compatible_listener_types` is set to `None`, then the agent is compatible
         # with all listener types.
         if self.compatible_listener_types is None:
             return True
         return listener_type in self.compatible_listener_types
+
+    def get_all_compatible_listener_types(self) -> dict[str, "BaseListenerType"]:
+        return {
+            str(listener_type.listener_type_id): listener_type
+            for listener_type in self.compatible_listener_types
+        }
+
+    def get_compatible_listener_type_by_listener_type_id(
+        self,
+        listener_type_id: str,
+    ) -> "BaseListenerType":
+        for listener_type in self.compatible_listener_types:
+            if str(listener_type.listener_type_id) == listener_type_id:
+                return listener_type
+        raise ListenerTypeNotFoundError
 
     def to_json(self) -> dict[str, str]:
         return {
@@ -110,47 +156,45 @@ class AgentType:
         }
 
 
-class ListenerType:
+class BaseListenerType:
+    name: str
+    compatible_agent_types: set[BaseAgentType] | None = None
+
     def __init__(
         self,
-        name: str = "",
-        compatible_agent_types: set[AgentType] | None = None,
     ):
-        if compatible_agent_types is None:
-            compatible_agent_types = set()
+        self.listener_type_id = uuid.uuid4()
 
-        if not isinstance(name, str):
+        for agent_type in self.compatible_agent_types:
+            self.add_compatible_agent_type(agent_type=agent_type)
+
+    def __init_subclass__(cls, **kwargs):
+        if cls.compatible_agent_types is None:
+            cls.compatible_agent_types = set()
+
+        if not isinstance(cls.name, str):
             raise ListenerTypeConfigurationParameterTypeError(
-                listener_type_filepath=sys.modules[self.__class__.__module__].__file__,
+                listener_type_filepath=sys.modules[cls.__module__].__file__,
                 parameter_name="name",
                 parameter_type="str",
             )
-        if not name:
+        if not cls.name:
             raise EmptyListenerTypeNameError
-        if not isinstance(compatible_agent_types, set):
+        if not isinstance(cls.compatible_agent_types, set):
             raise ListenerTypeConfigurationParameterTypeError(
-                listener_type_filepath=sys.modules[self.__class__.__module__].__file__,
+                listener_type_filepath=sys.modules[cls.__module__].__file__,
                 parameter_name="compatible_agent_types",
                 parameter_type="set",
             )
-        for agent_type in compatible_agent_types:
-            if not isinstance(agent_type, AgentType):
+        for agent_type in cls.compatible_agent_types:
+            if not isinstance(agent_type, BaseAgentType):
                 raise ListenerTypeConfigurationParameterTypeError(
-                    listener_type_filepath=sys.modules[
-                        self.__class__.__module__
-                    ].__file__,
+                    listener_type_filepath=sys.modules[cls.__module__].__file__,
                     error_message=(
                         "The elements in the set of compatible agent types must be "
                         "agent type objects."
                     ),
                 )
-
-        self.name = name
-        self.compatible_agent_types = set()
-        self.listener_type_id = uuid.uuid4()
-
-        for agent_type in compatible_agent_types:
-            self.add_compatible_agent_type(agent_type=agent_type)
 
     def __str__(self) -> str:
         return f'"{self.name}" ({str(self.listener_type_id)})'
@@ -161,8 +205,8 @@ class ListenerType:
             f"compatible_agent_types={self.compatible_agent_types!r})"
         )
 
-    def add_compatible_agent_type(self, agent_type: AgentType) -> None:
-        if not isinstance(agent_type, AgentType):
+    def add_compatible_agent_type(self, agent_type: BaseAgentType) -> None:
+        if not isinstance(agent_type, BaseAgentType):
             raise ValueError(
                 f"Invalid agent type '{agent_type}' provided, expected an agent type "
                 "object.",
@@ -175,8 +219,8 @@ class ListenerType:
         self.compatible_agent_types.add(agent_type)
         agent_type.compatible_listener_types.add(self)
 
-    def remove_compatible_agent_type(self, agent_type: AgentType) -> None:
-        if not isinstance(agent_type, AgentType):
+    def remove_compatible_agent_type(self, agent_type: BaseAgentType) -> None:
+        if not isinstance(agent_type, BaseAgentType):
             raise ValueError(
                 f"Invalid agent type '{agent_type}' provided, expected an agent type "
                 "object",
@@ -189,12 +233,27 @@ class ListenerType:
         self.compatible_agent_types.remove(agent_type)
         agent_type.compatible_listener_types.remove(self)
 
-    def is_compatible_with_agent_type(self, agent_type: AgentType) -> bool:
+    def is_compatible_with_agent_type(self, agent_type: BaseAgentType) -> bool:
         # If `compatible_agent_types` is set to `None`, then the listener is compatible
         # with all agent types.
         if self.compatible_agent_types is None:
             return True
         return agent_type in self.compatible_agent_types
+
+    def get_all_compatible_agent_types(self) -> dict[str, BaseAgentType]:
+        return {
+            str(agent_type.agent_type_id): agent_type
+            for agent_type in self.compatible_agent_types
+        }
+
+    def get_compatible_agent_type_by_agent_type_id(
+        self,
+        agent_type_id: str,
+    ) -> BaseAgentType:
+        for agent_type in self.compatible_agent_types:
+            if str(agent_type.agent_type_id) == agent_type_id:
+                return agent_type
+        raise AgentTypeNotFoundError
 
     def to_json(self) -> dict[str, str]:
         return {

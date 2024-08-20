@@ -43,6 +43,7 @@ def main(arguments: argparse.Namespace) -> None:
         ),
         level="DEBUG" if arguments.debug else "INFO",
     )
+    # TODO: Figure out if we want to log with Rich or not?
     # logger.add(
     #     RichHandler(),
     #     format=(

@@ -1,43 +1,46 @@
 from typing import Any
 
 from consortium.framework.exceptions.base_framework_exception import (
-    BaseFrameworkException,
+    BaseRaiseOnlyFrameworkException,
 )
 
 
-class PluginStartError(BaseFrameworkException):
+class PluginStartError(BaseRaiseOnlyFrameworkException):
+    code = "PLUGIN_START_ERROR"
+
     def __init__(
         self,
         message: str = "An error occurred while attempting to start the plugin.",
         detail: Any = None,
     ) -> None:
-        self.code = "PLUGIN_START_ERROR"
         super().__init__(
             message=message,
             detail=detail,
         )
 
 
-class PluginRuntimeError(BaseFrameworkException):
+class PluginRuntimeError(BaseRaiseOnlyFrameworkException):
+    code = "PLUGIN_RUNTIME_ERROR"
+
     def __init__(
         self,
         message: str = "An error occurred while the plugin was running.",
         detail: Any = None,
     ):
-        self.code = "PLUGIN_RUNTIME_ERROR"
         super().__init__(
             message=message,
             detail=detail,
         )
 
 
-class PluginStopError(BaseFrameworkException):
+class PluginStopError(BaseRaiseOnlyFrameworkException):
+    code = "PLUGIN_STOP_ERROR"
+
     def __init__(
         self,
         message: str = "An error occurred while attempting to stop the plugin.",
         detail: Any = None,
     ) -> None:
-        self.code = "PLUGIN_STOP_ERROR"
         super().__init__(
             message=message,
             detail=detail,

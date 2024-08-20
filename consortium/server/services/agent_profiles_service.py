@@ -7,7 +7,7 @@ from loguru import logger
 
 from consortium.framework.base_agent_generator import BaseAgentGenerator
 from consortium.framework.base_agent_template import BaseAgentTemplate
-from consortium.framework.c2_types import AgentType
+from consortium.framework.c2_types import BaseAgentType
 from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
     AgentProfileLoadError,
     AgentProfileNotFoundError,
@@ -228,7 +228,7 @@ class AgentProfilesService:
                 agent_project_folder=str(agent_project_folder),
                 agent_project_symbol=str(agent_generator_symbol),
             )
-        if not isinstance(agent_type, AgentType):
+        if not isinstance(agent_type, BaseAgentType):
             raise AgentProjectInterfaceError(
                 agent_project_file_type="agent type",
                 agent_project_folder=str(agent_project_folder),

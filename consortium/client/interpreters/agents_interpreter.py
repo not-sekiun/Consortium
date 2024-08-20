@@ -11,6 +11,9 @@ from consortium.client.commands.agents_interpreter_commands.interact_agent impor
 from consortium.client.commands.agents_interpreter_commands.list_agents import (
     ListAgentsCommand,
 )
+from consortium.client.commands.agents_interpreter_commands.list_results import (
+    ListResultsCommand,
+)
 from consortium.client.commands.agents_interpreter_commands.list_tasks import (
     ListTasksCommand,
 )
@@ -29,6 +32,7 @@ AGENTS_INTERPRETER_COMMANDS = [
     InteractAgentCommand(),
     ListTasksCommand(),
     TaskCommand(),
+    ListResultsCommand(),
 ]
 
 
@@ -61,6 +65,7 @@ class AgentsInterpreter(ClientInterpreter):
                 "info_agent",
                 "interact_agent",
                 "list_tasks",
+                "list_results",
                 "task",
             ]
         }.items():

@@ -11,9 +11,10 @@ from typing import Any
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework.c2_types import ListenerType
+from consortium.framework.c2_types import BaseAgentType, BaseListenerType
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerRuntimeError,
+    ListenerSpecificAgentNotFoundError,
     ListenerStartError,
     ListenerStopError,
 )
@@ -32,8 +33,69 @@ from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.listener_objects import ListenerState, ListenerStatus
 
 
+class _AgentsManager:
+    def __init__(self):
+        self._agents_service = server_singletons.agents_service
+        self._agents = {}
+
+    def register_new_agent(
+        self,
+        agent_type: BaseAgentType,
+        name: str = "",
+        description: str = "",
+        endpoint: str = "",
+        is_admin: bool | None = None,
+        os: str | None = None,
+        version: str | None = None,
+        arch: str | None = None,
+        pid: int | None = None,
+        locale: str | None = None,
+        remote_host_address: str | None = None,
+        local_host_address: str | None = None,
+        agent_data: dict[str, Any] | None = None,
+    ) -> Agent:
+        agent = self._agents_service.create_and_add_agent(
+            agent_type=agent_type,
+            name=name,
+            description=description,
+            endpoint=endpoint,
+            is_admin=is_admin,
+            os=os,
+            version=version,
+            arch=arch,
+            pid=pid,
+            locale=locale,
+            remote_host_address=remote_host_address,
+            local_host_address=local_host_address,
+            agent_data=agent_data,
+        )
+        self._agents[str(agent.agent_id)] = agent
+        return agent
+
+    def check_in_registered_agent_by_agent_id(self, agent_id: str) -> None:
+        if agent_id not in self._agents:
+            raise ListenerSpecificAgentNotFoundError
+        agent = self._agents[agent_id]
+        agent.datetime_last_checked_in = datetime.now()
+
+    def deregister_registered_agent_by_agent_id(self, agent_id: str) -> None:
+        if agent_id not in self._agents:
+            raise ListenerSpecificAgentNotFoundError
+        self._agents_service.remove_agent_by_agent_id(agent_id=agent_id)
+        self._agents.pop(str(agent_id))
+
+    def get_all_registered_agents(self) -> list[Agent]:
+        return list(self._agents.values())
+
+    def get_registered_agent_by_agent_id(self, agent_id: str) -> Agent:
+        try:
+            return self._agents[agent_id]
+        except KeyError:
+            raise ListenerSpecificAgentNotFoundError
+
+
 class BaseListener(ABC):
-    listener_type: ListenerType
+    listener_type: BaseListenerType
 
     def __init__(
         self,
@@ -99,9 +161,10 @@ class BaseListener(ABC):
         # The implementation of the listener runtime loop should check this event
         # periodically and exit if it is set.
         self.stop_listener_event = asyncio.Event()
-        # self.agents is a local storage of agents that have registered with this
-        # listener for access within the listener.
-        self.agents = {}
+        # self.agent_manager a class that allows listeners to manage the lifetime of an
+        # agent from registration to checking in to deregistration, as well as to
+        # manage access to agents registered locally to the specific listener.
+        self.agents_manager = _AgentsManager()
         # self.listener_logger is an internal logger to use for logging within the
         # listener to standard output and log files.
         self.listener_logger = logger.bind(
@@ -124,7 +187,7 @@ class BaseListener(ABC):
                 parameter_name="listener_type",
             )
 
-        if not isinstance(cls.listener_type, ListenerType):
+        if not isinstance(cls.listener_type, BaseListenerType):
             raise ListenerConfigurationParameterTypeError(
                 listener_filepath=sys.modules[cls.__module__].__file__,
                 parameter_name="listener_type",
@@ -156,21 +219,6 @@ class BaseListener(ABC):
 
     @abstractmethod
     async def on_listener_errored(self, exception: Exception) -> None: ...
-
-    # To avoid exposing the internal workings of the AgentsService service to the
-    # implementer we instead provide a register_agent() and deregister_agent() method
-    # that can be used to handle registering and deregistering agents in the publicly
-    # exposed framework.
-    def register_agent(self, *args, **kwargs) -> Agent:
-        agent = server_singletons.agents_service.create_agent(*args, **kwargs)
-        self.agents[str(agent.agent_id)] = agent
-        return agent
-
-    def deregister_agent(self, agent: Agent):
-        server_singletons.agents_service.remove_agent_by_agent_id(
-            agent_id=str(agent.agent_id),
-        )
-        del self.agents[str(agent.agent_id)]
 
     async def start_listener(self) -> None:
         if self.status.state == ListenerState.STARTED:
@@ -289,7 +337,12 @@ class BaseListener(ABC):
             try:
                 # The listener is now running.
                 self.status.transition_to_running()
-                await self.on_listener_running()
+                from pydantic import ValidationError
+
+                try:
+                    await self.on_listener_running()
+                except ValidationError:
+                    print("-_-")
 
                 # The listener is now stopped.
                 self.status.transition_to_stopped()

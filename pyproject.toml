@@ -32,6 +32,8 @@ autoflake = "^2.3.1"
 add-trailing-comma = "^3.1.0"
 ruff = "^0.3.4"
 pre-commit = "^3.6.2"
+mkdocs = "^1.6.0"
+mkdocs-material = "^9.5.31"
 
 
 [build-system]

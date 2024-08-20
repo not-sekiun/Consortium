@@ -10,14 +10,17 @@ from consortium.client.framework.base_command import (
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_agent_result_state_string_with_color,
+    format_argparse_epilog,
+)
 from consortium.client.utils.printer_utils import CONSOLE
 
 
 class ListResultsCommand(BaseCommand):
-    name = "list_tasks"
+    name = "list_results"
     description = (
-        "List an agents tasks along with their essential information for a "
+        "List an agents results along with their essential information for a "
         "specified agent."
     )
     epilog = format_argparse_epilog(
@@ -81,20 +84,24 @@ class ListResultsCommand(BaseCommand):
                     )
                 )
             else:
-                agent_results = await client_connection.get_all_results_by_agent_id(
-                    agent_id=parsed_args.agent_id,
+                agent_results = (
+                    await client_connection.get_all_agent_results_by_agent_id(
+                        agent_id=parsed_args.agent_id,
+                    )
                 )
 
             # TODO: Add more columns to the table.
             table = Table(title="Agent Results")
             table.add_column("Task ID")
             table.add_column("Result ID")
-            table.add_column("State")
+            table.add_column("Status")
             for agent_result in agent_results:
                 table.add_row(
                     agent_result["task_id"],
                     agent_result["result_id"],
-                    agent_result["state"],
+                    format_agent_result_state_string_with_color(
+                        agent_result_state_string=agent_result["state"],
+                    ),
                 )
             CONSOLE.print(table)
         except SystemExit:

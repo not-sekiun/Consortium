@@ -12,8 +12,8 @@ from typing import Any
 
 from loguru import logger
 
-from consortium.framework.c2_types import AgentType
-from consortium.framework.exceptions.agents_framework_exceptions import (
+from consortium.framework.c2_types import BaseAgentType
+from consortium.framework.exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorBuildError,
     AgentGeneratorStartError,
     AgentGeneratorStopError,
@@ -151,7 +151,7 @@ class BaseAgentGeneratorBuildStep(ABC):
 
 
 class BaseAgentGenerator(ABC):
-    agent_type: AgentType
+    agent_type: BaseAgentType
     agent_generator_build_steps: list[BaseAgentGeneratorBuildStep] = (None,)
 
     def __init__(
@@ -233,7 +233,7 @@ class BaseAgentGenerator(ABC):
                 parameter_name="agent_type",
                 agent_generator_filepath=sys.modules[cls.__module__].__file__,
             )
-        if not isinstance(cls.agent_type, AgentType):
+        if not isinstance(cls.agent_type, BaseAgentType):
             raise AgentGeneratorConfigurationParameterTypeError(
                 agent_generator_filepath=sys.modules[cls.__module__].__file__,
                 parameter_name="agent_type",

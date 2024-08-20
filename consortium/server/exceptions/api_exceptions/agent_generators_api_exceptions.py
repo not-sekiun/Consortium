@@ -29,7 +29,7 @@ Errors for the endpoint /api/agent-generators.
 
 from typing import Any
 
-from consortium.framework.c2_types import AgentType
+from consortium.framework.c2_types import BaseAgentType
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
     BaseAPIException,
 )
@@ -50,7 +50,7 @@ class AgentTemplateResolutionError(InternalServerErrorError):
 
     def __init__(
         self,
-        agent_type: AgentType,
+        agent_type: BaseAgentType,
     ) -> None:
         super().__init__(
             message=(

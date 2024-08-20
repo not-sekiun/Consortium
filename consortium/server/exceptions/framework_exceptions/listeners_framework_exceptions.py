@@ -172,6 +172,6 @@ class ListenerStopError(ListenersFrameworkError):
         detail: Any,
     ):
         super().__init__(
-            message=(f"Failed to stop the listener '{listener_str}'. {error_message}"),
+            message=f"Failed to stop the listener '{listener_str}'. {error_message}",
             detail=detail,
         )

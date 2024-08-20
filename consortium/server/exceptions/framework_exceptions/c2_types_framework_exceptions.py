@@ -124,3 +124,12 @@ class AgentTypeNotFoundError(C2TypesFrameworkError):
             f"Agent type '{agent_type}' not found in the set of compatible agent "
             f"types for listener type: {listener_type}",
         )
+
+
+class EmptyAgentTypeNameError(ListenerTypeConfigurationError):
+    def __init__(self, agent_type_filepath: str):
+        super().__init__(
+            f"Failed to configure the agent type defined at "
+            f"'{agent_type_filepath}'. The name provided in the agent type's "
+            f"definition during configuration cannot be empty.",
+        )

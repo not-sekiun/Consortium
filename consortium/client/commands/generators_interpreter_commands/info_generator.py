@@ -101,7 +101,7 @@ class InfoGeneratorCommand(BaseCommand):
                     str(build_step["time_elapsed_in_seconds"]),
                 )
                 agent_generator_build_step_table.add_row(
-                    "State",
+                    "Status",
                     format_agent_generator_build_step_state_string_with_color(
                         build_step["status"]["state"],
                     )

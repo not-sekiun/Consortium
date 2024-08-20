@@ -11,7 +11,7 @@ from consortium.framework.base_agent_generator import (
     BaseAgentGenerator,
     BaseAgentGeneratorBuildStep,
 )
-from consortium.framework.exceptions.agents_framework_exceptions import (
+from consortium.framework.exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorBuildError,
     AgentGeneratorStartError,
 )

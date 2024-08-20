@@ -6,3 +6,9 @@ class BaseFrameworkException(Exception):
         self.message = message
         self.detail = detail
         super().__init__(message)
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "message": self.message,
+            "detail": self.detail,
+        }

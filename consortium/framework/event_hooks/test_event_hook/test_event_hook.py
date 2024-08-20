@@ -5,7 +5,7 @@ from consortium.server.objects.event_objects import Event, EventType
 class TestEventHook(BaseEventHook):
     name = "Test Event Hook"
     description = "Test event hook."
-    authors = {"Sekiun"}
+    authors = {"sekiun"}
     event_types = {EventType.START_SERVER, EventType.STOP_SERVER}
 
     async def on_event_hook_triggered(self, event: Event) -> None:

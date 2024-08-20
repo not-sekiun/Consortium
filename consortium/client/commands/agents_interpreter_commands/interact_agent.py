@@ -29,7 +29,7 @@ class InteractAgentCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_id",
-            help=("The agent ID of the agent to interact with."),
+            help="The agent ID of the agent to interact with.",
             nargs=1,
             default=None,
         )

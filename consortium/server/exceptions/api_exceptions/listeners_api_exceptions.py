@@ -26,7 +26,7 @@ Exception hierarchy for the REST API endpoint at /api/listeners.
 
 from typing import Any
 
-from consortium.framework.c2_types import ListenerType
+from consortium.framework.c2_types import BaseListenerType
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
     BaseAPIException,
 )
@@ -63,7 +63,7 @@ class ListenerTemplateResolutionError(InternalServerErrorError):
 
     def __init__(
         self,
-        listener_type: ListenerType,
+        listener_type: BaseListenerType,
     ) -> None:
         super().__init__(
             message=(

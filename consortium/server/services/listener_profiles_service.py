@@ -7,7 +7,7 @@ from loguru import logger
 
 from consortium.framework.base_listener import BaseListener
 from consortium.framework.base_listener_template import BaseListenerTemplate
-from consortium.framework.c2_types import ListenerType
+from consortium.framework.c2_types import BaseListenerType
 from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
     ListenerTemplatesFrameworkError,
 )
@@ -236,7 +236,7 @@ class ListenerProfilesService:
                 listener_project_file_type="listener template",
                 listener_project_symbol=listener_template_symbol,
             )
-        if not isinstance(listener_type, ListenerType):
+        if not isinstance(listener_type, BaseListenerType):
             raise ListenerProjectInterfaceError(
                 listener_project_folder=str(listener_project_folder),
                 listener_project_file_type="listener type",

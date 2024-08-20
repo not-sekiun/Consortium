@@ -92,7 +92,6 @@ def get_agent_by_agent_id(
         raise AgentNotFoundAPIError.from_service_exception(service_exception=exc)
 
 
-# TODO: Implement the rest of the API resources under the new exception system.
 @router.get(
     "/{agent_id}/tasks",
     responses={
@@ -195,6 +194,32 @@ def get_all_completed_agent_tasks_by_agent_id(
         return agents_service.get_all_completed_agent_tasks_by_agent_id(
             agent_id=agent_id,
         )
+    except AgentNotFoundServiceError as exc:
+        raise AgentNotFoundAPIError.from_service_exception(service_exception=exc)
+
+
+@router.get(
+    "/{agent_id}/results",
+    responses={
+        200: {"model": list[AgentTaskModel]},
+        404: {
+            "model": AgentNotFoundAPIError.from_service_exception(
+                service_exception=AgentNotFoundServiceError(agent_id="string"),
+            ).to_pydantic_model(),
+        },
+    },
+)
+def get_all_agent_results_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID),
+        ),
+    ],
+) -> list[AgentResultModel]:
+    try:
+        return agents_service.get_all_agent_results_by_agent_id(agent_id=agent_id)
     except AgentNotFoundServiceError as exc:
         raise AgentNotFoundAPIError.from_service_exception(service_exception=exc)
 

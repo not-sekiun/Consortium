@@ -1,10 +1,13 @@
 import json
 import socket
 
+import jsonschema
 from aiohttp import web
 
+from consortium.framework.agents.consortium.http.agent_type import AGENT_TYPE
 from consortium.framework.base_listener import BaseListener
 from consortium.framework.exceptions.listeners_framework_exceptions import (
+    ListenerSpecificAgentNotFoundError,
     ListenerStartError,
 )
 from consortium.framework.listeners.consortium.http.listener_type import LISTENER_TYPE
@@ -39,100 +42,120 @@ class Listener(BaseListener):
         app = web.Application()
 
         async def handle_agent_registration(request):
-            agent = self.register_agent(endpoint=request.remote)
+            # Only one agent type is supported for this listener type.
+            agent = self.agents_manager.register_new_agent(
+                agent_type=AGENT_TYPE,
+                endpoint=request.remote,
+                remote_host_address=request.remote,
+            )
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
-        async def handle_agent_get_tasks(request):
+        async def handle_agent_getting_tasks(request):
             try:
                 agent_id = request.headers["Cookie"]
-                agent = self.agents[agent_id]
-            except KeyError:
+                agent = self.agents_manager.get_agent_by_agent_id(agent_id)
+            except ListenerSpecificAgentNotFoundError:
                 return web.Response(status=401)
 
-            agent.register_checked_in()
+            self.agents_manager.check_in_registered_agent_by_agent_id(agent=agent)
 
-            queued_tasks = []
-            while True:
-                task = agent.get_next_queued_task()
+            tasks = []
+            for task in agent.get_next_agent_message_without_waiting():
                 if task is None:
                     break
-                queued_tasks.append(task)
-            tasks = [
-                {
-                    "task_id": str(task.task_id),
-                    "command": task.command,
-                    "arguments": task.arguments,
-                }
-                for task in queued_tasks
-            ]
+
+                task_json_data = json.dumps(
+                    {
+                        "task_id": task.task_id,
+                        "command": task.command,
+                        "arguments": task.arguments,
+                        "data": task.data,
+                    },
+                )
+                tasks.append(task_json_data)
             return web.json_response({"tasks": tasks}, status=200)
 
-        async def handle_agent_post_results(request):
+        async def handle_agent_posting_results(request):
             # JSON request body from the agent takes the form
             # {"agent_id": agent_id, "task_id": task_id "result": result}.
+            agent_result_schema = {
+                "type": "object",
+                "properties": {
+                    "agent_id": {"type": "string"},
+                    "task_id": {"type": "string"},
+                    "result": {
+                        "type": "object",
+                        "properties": {
+                            "success": {"type": "boolean"},
+                            "message": {"type": "string"},
+                            "data": {"type": "object"},
+                        },
+                        "required": ["success", "message", "data"],
+                    },
+                },
+                "required": ["agent_id", "task_id", "result"],
+            }
             try:
                 json_request_body = await request.json()
-                print(json_request_body)
+                jsonschema.validate(json_request_body, agent_result_schema)
             except json.JSONDecodeError:
                 return web.Response(status=401)
-
-            try:
-                agent_id = json_request_body["agent_id"]
-                task_id = json_request_body["task_id"]
-                result = json_request_body["result"]
-                agent = self.agents[agent_id]
-            except KeyError:
+            except jsonschema.ValidationError:
                 return web.Response(status=401)
 
-            # See if the task ID is valid.
+            agent_id = json_request_body["agent_id"]
+            task_id = json_request_body["task_id"]
+            result = json_request_body["result"]
+
+            # Check if the agent ID is valid.
+            try:
+                agent = self.agents_manager.get_registered_agent_by_agent_id(agent_id)
+            except ListenerSpecificAgentNotFoundError:
+                return web.Response(status=401)
+
+            # Check if the task ID is valid.
             try:
                 _ = agent.get_running_task_by_task_id(task_id)
             except ValueError:
                 return web.Response(status=401)
 
-            # Only if the task ID is valid do we deem it a valid agent that has checked
-            # in.
+            # Only if the task ID is valid do we consider it a valid agent that has
+            # checked in.
             agent.register_checked_in()
 
-            print(1)
-            if result["success"] is True:
+            if result["success"]:
                 agent_result_state = AgentResultState.SUCCESS
-            elif result["success"] is False:
-                agent_result_state = AgentResultState.FAIL
+            elif not result["success"]:
+                agent_result_state = AgentResultState.FAILED
             else:
-                # TODO: do all data valiation with a jsonschema and raise a 401
-                return web.Response(status=401)
+                assert (
+                    False
+                ), "The 'success' field in the agent result was not a boolean."
 
-            # TODO: Exceptions are not being properly handled and passed back to the
-            #  exception handler function. When the agent result model is initialized
-            #  with missing parameters, the error passes silently without triggering
-            #  the function. FIX THIS.
             result = AgentResultModel(
                 task_id=task_id,
-                agent_result_state=agent_result_state,
+                state=agent_result_state,
                 message=result["message"],
                 data=result["data"],
             )
-            print(result)
             agent.add_result(result)
             return web.Response(status=200)
 
         for url_path in registration_url_paths:
             app.add_routes([web.get(url_path, handle_agent_registration)])
         for url_path in tasks_url_paths:
-            app.add_routes([web.get(url_path, handle_agent_get_tasks)])
+            app.add_routes([web.get(url_path, handle_agent_getting_tasks)])
         for url_path in results_url_paths:
-            app.add_routes([web.post(url_path, handle_agent_post_results)])
+            app.add_routes([web.post(url_path, handle_agent_posting_results)])
 
         self.environment.runner = web.AppRunner(app)
         await self.environment.runner.setup()
         site = web.TCPSite(self.environment.runner, local_host, local_port)
         await site.start()
         await self.stop_listener_event.wait()
-        await self.environment.runner.cleanup()
 
     async def on_listener_stopped(self) -> None:
-        pass
+        await self.environment.runner.cleanup()
 
     async def on_listener_cancelled(self) -> None:
         # On cancellation, we need to stop the web server, but we may cancel the
@@ -143,4 +166,4 @@ class Listener(BaseListener):
             pass
 
     async def on_listener_errored(self, exception: Exception) -> None:
-        print(exception)
+        self.listener_logger.error(exception)

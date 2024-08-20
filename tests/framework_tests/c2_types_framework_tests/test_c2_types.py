@@ -1,6 +1,6 @@
 import pytest
 
-from consortium.framework.c2_types import AgentType, ListenerType
+from consortium.framework.c2_types import BaseAgentType, BaseListenerType
 from consortium.server.exceptions.framework_exceptions.c2_types_framework_exceptions import (
     AgentTypeAlreadyExistsError,
     AgentTypeConfigurationError,
@@ -13,12 +13,12 @@ from consortium.server.exceptions.framework_exceptions.c2_types_framework_except
 
 @pytest.fixture
 def agent_type():
-    return AgentType(name="TestAgent")
+    return BaseAgentType(name="TestAgent")
 
 
 @pytest.fixture
 def listener_type():
-    return ListenerType(name="TestListener")
+    return BaseListenerType(name="TestListener")
 
 
 def test_agent_type_creation(agent_type):
@@ -73,21 +73,21 @@ def test_remove_compatible_agent_type_not_found(listener_type, agent_type):
 
 def test_invalid_agent_type_creation():
     with pytest.raises(AgentTypeConfigurationError):
-        AgentType(
+        BaseAgentType(
             name=123,
         )
 
 
 def test_invalid_listener_type_creation():
     with pytest.raises(ListenerTypeConfigurationError):
-        ListenerType(
+        BaseListenerType(
             name=123,
         )
 
 
 def test_invalid_compatible_listener_types():
     with pytest.raises(AgentTypeConfigurationError):
-        AgentType(
+        BaseAgentType(
             name="Agent",
             compatible_listener_types=[1, 2, 3],
         )
@@ -95,7 +95,7 @@ def test_invalid_compatible_listener_types():
 
 def test_invalid_compatible_agent_types():
     with pytest.raises(ListenerTypeConfigurationError):
-        ListenerType(
+        BaseListenerType(
             name="Listener",
             compatible_agent_types=[1, 2, 3],
         )

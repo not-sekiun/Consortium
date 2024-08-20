@@ -12,6 +12,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerErrorError,
     ServiceUnavailableError,
 )
+from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
+    UserAccessTokenNotFoundError,
+)
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
@@ -87,7 +90,12 @@ async def check_if_request_is_authenticated(request: Request, call_next) -> Resp
         # ValueError: User does not exist in the users service
         # jwt.exceptions.InvalidTokenError: JSON Web Token is invalid, base exception
         # for any failure on the decode call for a token
-        except (KeyError, IndexError, ValueError, jwt.exceptions.InvalidTokenError):
+        except (
+            KeyError,
+            IndexError,
+            UserAccessTokenNotFoundError,
+            jwt.exceptions.InvalidTokenError,
+        ):
             return Response(status_code=401)
         return await call_next(request)
 

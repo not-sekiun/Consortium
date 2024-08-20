@@ -1,3 +1,3 @@
 class ModuleSource:
-    def run_module(self, _arguments, connection):
-        connection.send_string("[+] Agent is alive!")
+    def run_module(self, connection, arguments):
+        yield {"success": True, "message": "Agent is alive.", "data": {}}

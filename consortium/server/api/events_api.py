@@ -1,8 +1,10 @@
-from typing import Annotated, Callable, Coroutine
+from typing import Callable, Coroutine
 
 import jsonschema
-from fastapi import APIRouter, Depends, WebSocket, WebSocketException, status
+import jwt
+from fastapi import APIRouter, WebSocket, WebSocketException, status
 from fastapi.security import OAuth2PasswordBearer
+from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
@@ -14,10 +16,16 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.service_exceptions.events_service_exceptions import (
     EventHandlerNotRegisteredError,
 )
-from consortium.server.objects.event_objects import EventType, Event
+from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
+    UserAccessTokenNotFoundError,
+)
+from consortium.server.objects.event_objects import Event, EventType
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.objects.user_objects import User
-from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
+from consortium.server.server_config import (
+    JSON_WEB_TOKEN_ALGORITHMS,
+    JSON_WEB_TOKEN_SECRET_KEY,
+)
+from consortium.server.server_dependencies import AuthorizeUserRequest
 
 router = APIRouter(
     prefix="/api/events",
@@ -31,6 +39,8 @@ router = APIRouter(
 )
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 events_service = server_singletons.events_service
+users_service = server_singletons.users_service
+websockets_server_logger = logger.bind(logger_name="Consortium Websockets Server")
 
 _client_action_websocket_message_json_schema = {
     "type": "object",
@@ -93,7 +103,7 @@ def _get_unsubscribed_events_for_websocket_event_sender(
 ) -> list[str]:
     all_events = events_service.get_all_event_types()
     subscribed_events = _get_subscribed_events_for_websocket_event_sender(
-        websocket_event_sender=websocket_event_sender
+        websocket_event_sender=websocket_event_sender,
     )
     return list(set(all_events) - set(subscribed_events))
 
@@ -104,7 +114,7 @@ def _websocket_event_sender(websocket: WebSocket):
             {
                 "type": "event",
                 **event.to_json(),
-            }
+            },
         )
 
     return wrapper
@@ -284,14 +294,58 @@ async def _handle_websocket(websocket: WebSocket):
             )
 
 
-@router.websocket("/ws")
+@router.websocket("")
 async def websocket_endpoint(
     websocket: WebSocket,
-    user: Annotated[
-        User,
-        Depends(get_current_user),
-    ],
 ):
+    # We cannot use the user dependency here because the Request object which the
+    # `get_current_use` dependency uses to obtain the JWT token from the Authorization
+    # header is not available in the websocket endpoint. Instead, we access headers
+    # from the Websocket object. Hence, we implement authorization and authentication
+    # manually here.
+    # TODO: Fix this manual work around so that we can unify all the authorization and
+    #  authentication checks in one place across the REST API, middleware and websocket
+    #  endpoints.
+    try:
+        auth_header = websocket.headers["authorization"]
+        if not auth_header.startswith("Bearer "):
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+        encoded_json_web_token = auth_header[7:]
+        decoded_json_web_token = jwt.decode(
+            jwt=encoded_json_web_token,
+            key=JSON_WEB_TOKEN_SECRET_KEY,
+            algorithms=JSON_WEB_TOKEN_ALGORITHMS,
+        )
+        access_token = decoded_json_web_token["sub"]
+        websockets_server_logger.debug(
+            "Received WebSocket connection request with an access token in the "
+            "Authorization header.",
+        )
+        user = users_service.get_user_by_access_token(
+            access_token=access_token,
+        )
+        websockets_server_logger.info(
+            f"{user} made a WebSocket connection to the events API.",
+        )
+    except (KeyError, IndexError):
+        websockets_server_logger.debug(
+            "Failed to authorize the WebSocket connection request. The Authorization "
+            "header was not provided.",
+        )
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    except jwt.exceptions.InvalidTokenError:
+        websockets_server_logger.debug(
+            "Failed to authorize the WebSocket connection request. The value provided "
+            "for the Authorization header was not a validly formatted JSON Web Token.",
+        )
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    except UserAccessTokenNotFoundError:
+        websockets_server_logger.debug(
+            "Failed to authorize the WebSocket connection request. The access "
+            "token provided in the JSON Web Token was not found.",
+        )
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+
     # TODO: Abstract the process of authorizing users, creating roles, and editing role
     #  permissions. For now we use this hack to check permissions specifically for this
     #  websocket endpoint.
@@ -299,6 +353,10 @@ async def websocket_endpoint(
         UserPermissions.USE_EVENTS_WEBSOCKET
         not in AuthorizeUserRequest.ROLE_PERMISSIONS[user.role]
     ):
+        websockets_server_logger.debug(
+            f"Rejected WebSocket connection attempt because the user '{user}' had "
+            f"insufficient permissions to interact with the events API.",
+        )
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
     await websocket.accept()

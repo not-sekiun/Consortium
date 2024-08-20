@@ -40,7 +40,7 @@ class InteractAgentInterpreter(ClientInterpreter):
             prompt=ANSI(
                 format_rich_text_as_ansi(
                     f"[bold white]Consortium ([bold red]Agents[bold white]: "
-                    f'[bold blue]"{agent["name"]}" '
+                    f'[bold red]"{agent["name"]}" '
                     f"({agent["agent_id"]})[bold white]) > ",
                 ),
             ),

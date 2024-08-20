@@ -1,11 +1,13 @@
 from typing import Any
 
 from consortium.framework.exceptions.base_framework_exception import (
-    BaseFrameworkException,
+    BaseRaiseOnlyFrameworkException,
 )
 
 
-class AgentGeneratorStartError(BaseFrameworkException):
+class AgentGeneratorStartError(BaseRaiseOnlyFrameworkException):
+    code = "AGENT_GENERATOR_QUEUE_ERROR"
+
     def __init__(
         self,
         message: str = (
@@ -13,14 +15,15 @@ class AgentGeneratorStartError(BaseFrameworkException):
         ),
         detail: Any = None,
     ) -> None:
-        self.code = "AGENT_GENERATOR_QUEUE_ERROR"
         super().__init__(
             message=message,
             detail=detail,
         )
 
 
-class AgentGeneratorBuildError(BaseFrameworkException):
+class AgentGeneratorBuildError(BaseRaiseOnlyFrameworkException):
+    code = "AGENT_GENERATOR_BUILD_ERROR"
+
     def __init__(
         self,
         message: str = (
@@ -28,14 +31,15 @@ class AgentGeneratorBuildError(BaseFrameworkException):
         ),
         detail: Any = None,
     ):
-        self.code = "AGENT_GENERATOR_BUILD_ERROR"
         super().__init__(
             message=message,
             detail=detail,
         )
 
 
-class AgentGeneratorStopError(BaseFrameworkException):
+class AgentGeneratorStopError(BaseRaiseOnlyFrameworkException):
+    code = "AGENT_GENERATOR_STOP_ERROR"
+
     def __init__(
         self,
         message: str = (
@@ -43,7 +47,6 @@ class AgentGeneratorStopError(BaseFrameworkException):
         ),
         detail: Any = None,
     ) -> None:
-        self.code = "AGENT_GENERATOR_STOP_ERROR"
         super().__init__(
             message=message,
             detail=detail,

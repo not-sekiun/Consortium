@@ -27,11 +27,11 @@ class AgentsService:
     def __repr__(self) -> str:
         return "AgentsService()"
 
-    def create_agent(self, *args, **kwargs) -> Agent:
+    def create_and_add_agent(self, *args, **kwargs) -> Agent:
         agent = Agent(*args, **kwargs)
         self._agents[str(agent.agent_id)] = agent
-        self.agents_service_logger.info(f"Created agent: {agent}")
-        self.agents_service_logger.debug(f"Created agent: {agent!r}")
+        self.agents_service_logger.info(f"Created and added agent: {agent}")
+        self.agents_service_logger.debug(f"Created and added agent: {agent!r}")
         return agent
 
     def remove_agent_by_agent_id(self, agent_id: str) -> None:
@@ -68,7 +68,7 @@ class AgentsService:
 
     def get_all_queued_tasks_by_agent_id(self, agent_id: str) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        queued_tasks = agent.peek_all_queued_tasks()
+        queued_tasks = agent.get_all_queued_tasks()
         self.agents_service_logger.debug(
             f"Retrieved queued tasks from agent {agent_id} ({len(queued_tasks)} "
             f"retrieved)",

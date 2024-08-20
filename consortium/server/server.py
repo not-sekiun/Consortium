@@ -95,8 +95,8 @@ class Server:
         register_server_exception_handlers(self._app)
 
         # TODO: Make this hack more elegant.
-        # Manually modify the openapi schema to remove the default 422 response from the
-        # /api/login endpoint (https://github.com/tiangolo/fastapi/issues/660).
+        # Manually modify the openapi schema to remove the default 422 response from
+        # the /api/login endpoint (https://github.com/tiangolo/fastapi/issues/660).
         del self._app.openapi()["paths"]["/api/login"]["post"]["responses"]["422"]
         # Workaround to modify the openapi schema to add in null detail responses that
         # were removed. Go bug tiangolo about this issue because it still has yet to be
@@ -150,11 +150,11 @@ class Server:
                 self._app,
                 host=self.server_config.local_host,
                 port=self.server_config.local_port,
-                # Disables standard uvicorn logging through logging's dictionary config.
-                log_config={
-                    "version": 1,
-                    "disable_existing_loggers": True,
-                },
+                # Suppress most of uvicorn's logging. Weird behaviour occurs when
+                # attempting to catch/log errors for asynchronous tasks. When
+                # exceptions happen in those tasks they bypass their supposed exception
+                # handler and are raised at the uvicorn level of logging.
+                log_level="critical",
                 # Disables Uvicorn's server header to prevent C2 server fingerprinting.
                 server_header=False,
             )

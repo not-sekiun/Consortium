@@ -1,6 +1,6 @@
 from loguru import logger
 
-from consortium.framework.c2_types import AgentType, ListenerType
+from consortium.framework.c2_types import BaseAgentType, BaseListenerType
 from consortium.server.exceptions.service_exceptions.c2_types_service_exceptions import (
     AgentTypeNotFoundError,
     ListenerTypeNotFoundError,
@@ -30,7 +30,7 @@ class C2TypesService:
     def __repr__(self) -> str:
         return "C2TypesService()"
 
-    def get_all_listener_types(self) -> list[ListenerType]:
+    def get_all_listener_types(self) -> list[BaseListenerType]:
         listener_types = []
         for (
             listener_profile
@@ -55,7 +55,7 @@ class C2TypesService:
                 return listener_type
         raise ListenerTypeNotFoundError(listener_type_id=listener_type_id)
 
-    def get_all_agent_types(self) -> list[AgentType]:
+    def get_all_agent_types(self) -> list[BaseAgentType]:
         agent_types = []
         for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
             if agent_profile.agent_type not in agent_types:

@@ -45,3 +45,15 @@ class AgentResultHasNoCorrespondingTaskError(AgentsFrameworkError):
                 f"'{corresponding_task_id}', but no running task exists with that ID."
             ),
         )
+
+
+class AgentCapabilityNotFoundError(AgentsFrameworkError):
+    def __init__(self, command: str, agent_str: str, agent_type_str: str):
+        super().__init__(
+            message=(
+                f"Failed to task the agent {agent_str} with the capability "
+                f"'{command}'. The agent tasking provided contained a command that did "
+                f"not correspond with any agent capabilities in that agent's type "
+                f"'{agent_type_str}'."
+            ),
+        )

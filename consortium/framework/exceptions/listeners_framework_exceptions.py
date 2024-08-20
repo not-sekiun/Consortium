@@ -10,44 +10,61 @@
 from typing import Any
 
 from consortium.framework.exceptions.base_framework_exception import (
-    BaseFrameworkException,
+    BaseCatchOnlyFrameworkException,
+    BaseRaiseOnlyFrameworkException,
 )
 
 
-class ListenerStartError(BaseFrameworkException):
+class ListenerStartError(BaseRaiseOnlyFrameworkException):
+    code = "LISTENER_START_ERROR"
+
     def __init__(
         self,
         message: str = "An error occurred while attempting to start the listener.",
         detail: Any = None,
     ) -> None:
-        self.code = "LISTENER_START_ERROR"
         super().__init__(
             message=message,
             detail=detail,
         )
 
 
-class ListenerRuntimeError(BaseFrameworkException):
+class ListenerRuntimeError(BaseRaiseOnlyFrameworkException):
+    code = "LISTENER_RUNTIME_ERROR"
+
     def __init__(
         self,
         message: str = "An error occurred while the listener was running.",
         detail: Any = None,
     ):
-        self.code = "LISTENER_RUNTIME_ERROR"
         super().__init__(
             message=message,
             detail=detail,
         )
 
 
-class ListenerStopError(BaseFrameworkException):
+class ListenerStopError(BaseRaiseOnlyFrameworkException):
+    code = "LISTENER_STOP_ERROR"
+
     def __init__(
         self,
         message: str = "An error occurred while attempting to stop the listener.",
         detail: Any = None,
     ) -> None:
-        self.code = "LISTENER_STOP_ERROR"
         super().__init__(
             message=message,
             detail=detail,
+        )
+
+
+class ListenerSpecificAgentNotFoundError(BaseCatchOnlyFrameworkException):
+    def __init__(
+        self,
+        agent_id: str,
+    ) -> None:
+        super().__init__(
+            message=(
+                f"Failed to find the requested agent. No agent was found with the "
+                f"provided agent ID '{agent_id}'."
+            ),
         )

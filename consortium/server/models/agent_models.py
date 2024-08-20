@@ -15,15 +15,15 @@ class AgentTaskState(StrEnum):
 class AgentTaskModel(BaseModel):
     task_id: UUID = Field(default_factory=uuid4)
     command: str
-    arguments: dict[str, Any] | list[Any]
+    arguments: dict[str, Any]
     started_at: datetime = Field(default_factory=datetime.now)
     state: AgentTaskState = AgentTaskState.QUEUED
 
 
 class AgentResultState(StrEnum):
     SUCCESS = "SUCCESS"
-    FAIL = "FAIL"
-    ERROR = "ERROR"
+    FAILED = "FAILED"
+    ERRORED = "ERRORED"
 
 
 class AgentResultModel(BaseModel):
@@ -33,6 +33,20 @@ class AgentResultModel(BaseModel):
     data: dict[str, Any] | list[Any] | None = None
     task_id: str
     finished_at: datetime = Field(default_factory=datetime.now)
+
+
+class AgentMessageModel(BaseModel):
+    task_id: UUID
+    command: str
+    arguments: dict[str, Any]
+    data: dict[str, Any]
+
+
+class AgentResponseModel(BaseModel):
+    task_id: UUID
+    success: bool
+    message: str
+    data: dict[str, Any]
 
 
 class AgentModel(BaseModel):
