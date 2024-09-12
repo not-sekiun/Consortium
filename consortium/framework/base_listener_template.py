@@ -42,9 +42,6 @@ class BaseListenerTemplate(ABC):
     options: set[OptionType] | None = None
     validating_function: Callable[[dict[str, OptionType]], None] | None = None
 
-    def __init__(self):
-        self.listener_template_id = uuid.uuid4()
-
     def __init_subclass__(cls, **kwargs):
         # Check the existence of a provided listener template name first so that we can
         # reference the listener template name for every other error message.
@@ -71,9 +68,31 @@ class BaseListenerTemplate(ABC):
                 parameter_name="listener",
                 listener_template=cls.name,
             )
+        if not issubclass(cls.listener, BaseListener):
+            raise ListenerTemplateConfigurationParameterTypeError(
+                error_message=(
+                    "The listener class provided must be a listener object for "
+                    f"listener template '{cls.name}'."
+                ),
+            )
 
         if cls.authors is None:
             cls.authors = set()
+        if not isinstance(cls.authors, set):
+            raise ListenerTemplateConfigurationParameterTypeError(
+                listener_template=cls.name,
+                parameter_name="authors",
+                parameter_type="set",
+            )
+        for author in cls.authors:
+            if not isinstance(author, str):
+                raise ListenerTemplateConfigurationParameterTypeError(
+                    error_message=(
+                        "The elements in the authors set must be strings for listener "
+                        f"template '{cls.name}'."
+                    ),
+                )
+
         if cls.options is None:
             cls.options = set()
         option_names = []
@@ -107,20 +126,7 @@ class BaseListenerTemplate(ABC):
                 parameter_name="description",
                 parameter_type="str",
             )
-        if not isinstance(cls.authors, set):
-            raise ListenerTemplateConfigurationParameterTypeError(
-                listener_template=cls.name,
-                parameter_name="authors",
-                parameter_type="set",
-            )
-        for author in cls.authors:
-            if not isinstance(author, str):
-                raise ListenerTemplateConfigurationParameterTypeError(
-                    error_message=(
-                        "The elements in the authors set must be strings for listener "
-                        f"template '{cls.name}'."
-                    ),
-                )
+
         if cls.validating_function:
             if not isinstance(cls.validating_function, Callable):
                 raise ListenerTemplateConfigurationParameterTypeError(
@@ -137,6 +143,9 @@ class BaseListenerTemplate(ABC):
             # validating function class attribute is considered as just an ordinary
             # function rather than an actual method of the listener template.
             cls.validating_function = staticmethod(cls.validating_function)
+
+        cls.listener_template_id = uuid.uuid4()
+        cls.listener.creating_listener_template = cls
 
         super().__init_subclass__(**kwargs)
 
@@ -227,6 +236,7 @@ class BaseListenerTemplate(ABC):
             "listener_template_id": str(self.listener_template_id),
             "name": self.name,
             "description": self.description,
+            "listener_type": self.listener.listener_type.to_json(),
             "authors": self.authors,
             "options": {option.name: option.to_json() for option in self.options},
             "validating_function": format_docstring_to_single_line(
@@ -234,5 +244,4 @@ class BaseListenerTemplate(ABC):
             )
             if self.validating_function and self.validating_function.__doc__
             else None,
-            "listener_type": self.listener.listener_type.to_json(),
         }

@@ -26,7 +26,7 @@ class ListClientConnectionsCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_client_connections
+          list_client_connections
         """,
     )
 

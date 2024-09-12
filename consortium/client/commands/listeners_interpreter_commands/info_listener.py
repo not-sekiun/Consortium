@@ -23,7 +23,7 @@ class InfoListenerCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_listener 123e4567-e89b-12d3-a456-42661417400
+          info_listener 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -86,10 +86,28 @@ class InfoListenerCommand(BaseCommand):
             table.add_row("Parameters", parameter_table)
             table.add_row(
                 "Status",
-                format_listener_state_string_with_color(listener["status"]["state"]),
+                format_listener_state_string_with_color(listener["status"]["state"])
+                + (
+                    "(" + listener["status"]["error"]["message"] + ")"
+                    if listener["status"]["error"]
+                    else ""
+                ),
             )
             table.add_row("Datetime Created", listener["datetime_created"])
-            table.add_row("Connected Agents IDs", "\n".join(listener["agent_ids"]))
+            table.add_row(
+                "Connected Agents",
+                "\n".join(
+                    [
+                        f"'{agent["name"]}' ({agent["agent_id"]})"
+                        for agent in listener["connected_agents"]
+                    ],
+                ),
+            )
+            table.add_row(
+                "Creating Listener Template",
+                f"{listener["creating_listener_template"]["name"]} "
+                f"({listener["creating_listener_template"]["listener_template_id"]})",
+            )
 
             CONSOLE.print(table)
         except SystemExit:

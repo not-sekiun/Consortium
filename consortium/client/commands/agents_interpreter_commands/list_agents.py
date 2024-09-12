@@ -18,7 +18,7 @@ class ListAgentsCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_agents
+          list_agents
         """,
     )
 

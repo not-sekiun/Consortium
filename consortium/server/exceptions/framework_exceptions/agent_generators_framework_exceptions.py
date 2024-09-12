@@ -216,14 +216,14 @@ class AgentGeneratorStartError(AgentGeneratorsFrameworkError):
 class AgentGeneratorBuildError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
-        agent_generator: str,
+        agent_generator_str: str,
         build_error_message: str,
         detail: Any,
     ):
         super().__init__(
             message=(
                 f"Failed to build an agent with the agent generator "
-                f"'{agent_generator}'. {build_error_message}"
+                f"'{agent_generator_str}'. {build_error_message}"
             ),
             detail=detail,
         )

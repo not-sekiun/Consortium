@@ -21,7 +21,7 @@ class UnsetAgentTemplateOptionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            unset_agent_template_option option_name
+          unset_agent_template_option option_name
         """,
     )
 

@@ -22,7 +22,7 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_options_listener_template
+          list_options_listener_template
         """,
     )
 

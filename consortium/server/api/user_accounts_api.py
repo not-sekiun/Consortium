@@ -1,3 +1,4 @@
+# TODO: Potentially consolidate updating information???
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
@@ -139,14 +140,22 @@ async def create_user_account(
             password=password,
             role=role,
         )
-    except EmptyUserAccountUsernameServiceError:
-        raise EmptyUserAccountUsernameAPIError
-    except EmptyUserAccountPasswordServiceError:
-        raise EmptyUserAccountPasswordAPIError
-    except InvalidUserAccountRoleServiceError:
-        raise InvalidUserAccountRoleAPIError(role=role)
-    except UserAccountUsernameAlreadyExistsServiceError:
-        raise UserAccountUsernameAlreadyExistsAPIError(username=username)
+    except EmptyUserAccountUsernameServiceError as exc:
+        raise EmptyUserAccountUsernameAPIError.from_service_exception(
+            service_exception=exc,
+        )
+    except EmptyUserAccountPasswordServiceError as exc:
+        raise EmptyUserAccountPasswordAPIError.from_service_exception(
+            service_exception=exc,
+        )
+    except InvalidUserAccountRoleServiceError as exc:
+        raise InvalidUserAccountRoleAPIError.from_service_exception(
+            service_exception=exc,
+        )
+    except UserAccountUsernameAlreadyExistsServiceError as exc:
+        raise UserAccountUsernameAlreadyExistsAPIError.from_service_exception(
+            service_exception=exc,
+        )
     try:
         user_accounts_service.write_framework_user_accounts()
     except UserAccountsFileServiceError:

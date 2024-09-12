@@ -23,8 +23,8 @@ class HelpCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            help  # Displays the help menu listing all available commands if no command name is specified.
-            help banner
+          help  # Displays the help menu listing all available commands if no command name is specified.
+          help banner
         """,
     )
 

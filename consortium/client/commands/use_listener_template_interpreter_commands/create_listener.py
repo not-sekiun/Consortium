@@ -18,7 +18,7 @@ class CreateListenerCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            create_listener
+          create_listener
         """,
     )
 

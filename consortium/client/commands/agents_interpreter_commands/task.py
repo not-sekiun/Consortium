@@ -9,9 +9,10 @@ from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_success
+from consortium.client.utils.printer_utils import print_warning
 
 
+# TODO: Automatically resolve all the agent capabilities.
 class TaskCommand(BaseCommand):
     name = "task"
     description = (
@@ -21,7 +22,7 @@ class TaskCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            task 123e4567-e89b-12d3-a456-42661417400  command arg1 arg2
+          task 123e4567-e89b-12d3-a456-42661417400  command arg1 arg2
         """,
     )
 
@@ -47,22 +48,8 @@ class TaskCommand(BaseCommand):
         command_context: CommandContext,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
-
-            agent = await client_connection.get_agent_by_agent_id(
-                agent_id=parsed_args.agent_id[0],
-            )
-            task = await client_connection.task_agent_by_agent_id(
-                agent_id=parsed_args.agent_id[0],
-                command=parsed_args.command[0],
-                arguments=parsed_args.arguments,
-            )
-
-            print_success(
-                f'Tasked agent "{agent["name"]}" ({agent["agent_id"]}) with task ID: '
-                f'{task['task_id']}',
-            )
+            _parsed_args = self.parser.parse_args(command_context.arguments)
+            print_warning("Under construction.")
         except SystemExit:
             pass
         return ReturnStatus(type=ClientReturnStatusType.CONTINUE)

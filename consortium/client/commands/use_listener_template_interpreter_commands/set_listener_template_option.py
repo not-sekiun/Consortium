@@ -26,41 +26,41 @@ class SetListenerTemplateOptionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Note:
-            By default the type of the values provided is a string. There are several
-            ways to specify types for the values:
+          By default the type of the values provided is a string. There are several
+          ways to specify types for the values:
 
-            1. The value can be explicitly annotated with a type by appending a colon
-                followed by the type to the value. For example, "3:int" will be
-                interpreted as the integer 3.
-            2. The --value-type flag can be used to specify the type of the values. This
-                will set the type of all the values to the specified type unless
-                explicitly specified otherwise by their individual typing.
-            3. The listener template option itself may specify the type of the values.
-                This will be the default type for the values unless explicitly specified
-                otherwise by their individual typing.
+          1. The value can be explicitly annotated with a type by appending a colon
+          followed by the type to the value. For example, "3:int" will be
+          interpreted as the integer 3.
+          2. The --value-type flag can be used to specify the type of the values. This
+          will set the type of all the values to the specified type unless
+          explicitly specified otherwise by their individual typing.
+          3. The listener template option itself may specify the type of the values.
+          This will be the default type for the values unless explicitly specified
+          otherwise by their individual typing.
 
-            The --value-type flag is set for all values of a list or dictionary value.
+          The --value-type flag is set for all values of a list or dictionary value.
 
         Examples:
-            set_listener_template_option single_value_option 1  # No type was specified, if the option specified a type, the value will adopt that type, else it will be a string.
-            set_listener_template_option single_value_option some:str:str  # If you want to include the substring :str in the value itself append :str behind it.
-            set_listener_template_option single_value_option 1:int # Set the option to an integer value. This ignores the option's specified type.
-            set_listener_template_option single_value_option 1 -t int # Does the same thing as the above command.
-            set_listener_template_option choice_value_option 1 # If no type is specified, implicit type conversion is done for each choice. This choice will therefore match an integer 1 even if its value is a string.
-            set_listener_template_option choice_value_option 1 -t int # If a type is specified, implicit type conversion is not done for each choice. Hence, the the choice contains a string "1" instead of an integer 1 it will not match.
-            set_listener_template_option list_value_option 1 2 3:int  # If the list value option specifies a string type or no type at all, set the option to a list the strings 1 and 2 and an integer, 3.
-            set_listener_template_option list_value_option 1 2 3 -t int   # Set the option to a list of integers 1, 2, and 3.
-            set_listener_template_option list_value_option 1 2 3:str -t int   # Set the option to a list of integers 1, 2, and a string, 3. Individual type annotations will override the type set by the --value-type flag.
-            set_listener_template_option dictionary_value_option key1 1 key2 2 key3 3:str -t int   # Set the option to a dictionary containing integers 1, 2, and a string, 3 to their respective keys. The keys must be strings.
-            set_listener_template_option toggleable_choices_value_option choice1 choice2 choice4  # Toggle choice1 choice2, and choice4 to True, every other choice is toggled to False. The default behaviour is to toggle choices to True.
-            set_listener_template_option toggleable_choices_value_option true:bool choice2 choice4  # Does the same thing as the above command.
-            set_listener_template_option toggleable_choices_value_option false:bool choice1 choice2 choice4  # Providing a boolean as the very first value wil toggle choice1 choice2, and choice4 to False, every other choice is toggled to True.
-            set_listener_template_option toggleable_choices_value_option true:bool  # If a single boolean is provided as the value every choice will be toggled to that value.
-            set_listener_template_option toggleable_choices_value_option t:bool  # Does the same thing as the above command.
-            set_listener_template_option toggleable_choices_value_option 1:bool  # Does the same thing as the above command.
-            set_listener_template_option toggleable_choices_value_option false -t bool  # Toggle every choice to False.
-            set_listener_template_option toggleable_choices_value_option f -t bool  # Does the same thing as the above command.
-            set_listener_template_option toggleable_choices_value_option 0 -t bool  # Does the same thing as the above command.
+          set_listener_template_option single_value_option 1  # No type was specified, if the option specified a type, the value will adopt that type, else it will be a string.
+          set_listener_template_option single_value_option some:str:str  # If you want to include the substring :str in the value itself append :str behind it.
+          set_listener_template_option single_value_option 1:int # Set the option to an integer value. This ignores the option's specified type.
+          set_listener_template_option single_value_option 1 -t int # Does the same thing as the above command.
+          set_listener_template_option choice_value_option 1 # If no type is specified, implicit type conversion is done for each choice. This choice will therefore match an integer 1 even if its value is a string.
+          set_listener_template_option choice_value_option 1 -t int # If a type is specified, implicit type conversion is not done for each choice. Hence, the the choice contains a string "1" instead of an integer 1 it will not match.
+          set_listener_template_option list_value_option 1 2 3:int  # If the list value option specifies a string type or no type at all, set the option to a list the strings 1 and 2 and an integer, 3.
+          set_listener_template_option list_value_option 1 2 3 -t int   # Set the option to a list of integers 1, 2, and 3.
+          set_listener_template_option list_value_option 1 2 3:str -t int   # Set the option to a list of integers 1, 2, and a string, 3. Individual type annotations will override the type set by the --value-type flag.
+          set_listener_template_option dictionary_value_option key1 1 key2 2 key3 3:str -t int   # Set the option to a dictionary containing integers 1, 2, and a string, 3 to their respective keys. The keys must be strings.
+          set_listener_template_option toggleable_choices_value_option choice1 choice2 choice4  # Toggle choice1 choice2, and choice4 to True, every other choice is toggled to False. The default behaviour is to toggle choices to True.
+          set_listener_template_option toggleable_choices_value_option true:bool choice2 choice4  # Does the same thing as the above command.
+          set_listener_template_option toggleable_choices_value_option false:bool choice1 choice2 choice4  # Providing a boolean as the very first value wil toggle choice1 choice2, and choice4 to False, every other choice is toggled to True.
+          set_listener_template_option toggleable_choices_value_option true:bool  # If a single boolean is provided as the value every choice will be toggled to that value.
+          set_listener_template_option toggleable_choices_value_option t:bool  # Does the same thing as the above command.
+          set_listener_template_option toggleable_choices_value_option 1:bool  # Does the same thing as the above command.
+          set_listener_template_option toggleable_choices_value_option false -t bool  # Toggle every choice to False.
+          set_listener_template_option toggleable_choices_value_option f -t bool  # Does the same thing as the above command.
+          set_listener_template_option toggleable_choices_value_option 0 -t bool  # Does the same thing as the above command.
         """,
     )
 

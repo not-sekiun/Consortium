@@ -92,3 +92,26 @@ async def get_user_by_user_id(
         )
 
     return UserModel(**user.to_json())
+
+
+async def update_user_display_name_by_user_id(
+    display_name: str,
+    _: Annotated[
+        None,
+        Depends(AuthorizeUserRequest(UserPermissions.READ_USER_BY_USER_ID)),
+    ],
+) -> UserModel:
+    try:
+        user = users_service.update_user_display_name_by_user_id(
+            display_name=display_name,
+        )
+    except UserNotFoundServiceError as exc:
+        raise UserNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
+    except EmptyUserDisplayNameServiceError as exc:
+        raise EmptyUserDisplayNameAPIError.from_serivce_exception(
+            service_exception=exc,
+        )
+
+    return UserModel(**user.to_json())

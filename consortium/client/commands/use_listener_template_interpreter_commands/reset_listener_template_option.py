@@ -22,7 +22,7 @@ class ResetListenerTemplateOptionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            reset_listener_template_option option_name
+          reset_listener_template_option option_name
         """,
     )
 

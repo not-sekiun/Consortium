@@ -21,7 +21,7 @@ class UnsetListenerTemplateOptionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            unset_listener_template_option option_name
+          unset_listener_template_option option_name
         """,
     )
 

@@ -2,7 +2,10 @@ from collections.abc import AsyncGenerator
 
 from consortium.framework.base_agent_capability import BaseAgentCapability, SupportedOS
 from consortium.framework.options import SingleValueOption
-from consortium.server.models.agent_models import AgentMessageModel, AgentResponseModel
+from consortium.server.models.agent_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 
 
 class ShellCapability(BaseAgentCapability):
@@ -28,25 +31,25 @@ class ShellCapability(BaseAgentCapability):
             default_value=10,
         ),
         SingleValueOption(
-            name="shell",
+            name="shell_binary",
             description=(
-                "The full filepath to the executable of the shell to use to execute "
-                "the command."
+                "The full filepath to the binary executable of the shell to use to "
+                "execute the command."
             ),
             required=False,
             value_type=str,
         ),
     }
-    authors = {"sekiun"}
+    authors = {"Sekiun (github.com/not-sekiun)"}
 
-    async def on_agent_message_sent(
+    async def handle_sending_agent_task_messages(
         self,
-        agent_message: AgentMessageModel,
-    ) -> AsyncGenerator[AgentMessageModel]:
+        agent_message: AgentTaskMessageModel,
+    ) -> AsyncGenerator[AgentTaskMessageModel]:
         yield agent_message
 
-    async def on_agent_response_received(
+    async def handle_receiving_agent_response_messages(
         self,
-        agent_response: AgentResponseModel,
-    ) -> AsyncGenerator[AgentResponseModel]:
-        yield agent_response
+    ) -> AsyncGenerator[AgentResultMessageModel]:
+        result_message = yield
+        yield result_message

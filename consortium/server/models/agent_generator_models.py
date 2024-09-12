@@ -10,12 +10,12 @@ from consortium.server.objects.agent_generator_objects import (
 )
 
 
-class _AgentGeneratorStatusModel(BaseModel):
+class AgentGeneratorStatusModel(BaseModel):
     state: AgentGeneratorState
     error: ErrorModel | None
 
 
-class _AgentGeneratorBuildStepStatusModel(BaseModel):
+class AgentGeneratorBuildStepStatusModel(BaseModel):
     state: AgentGeneratorBuildStepState
     error: ErrorModel | None
 
@@ -28,14 +28,21 @@ class AgentGeneratorBuildStepModel(BaseModel):
     datetime_started: str | None
     datetime_stopped: str | None
     time_elapsed_in_seconds: int | None
-    status: _AgentGeneratorBuildStepStatusModel
+    status: AgentGeneratorBuildStepStatusModel
+
+
+class CreatingAgentTemplateReferenceModel(BaseModel):
+    agent_template_id: str
+    name: str
 
 
 class AgentGeneratorModel(BaseModel):
     agent_generator_id: str
     name: str
     description: str
-    status: _AgentGeneratorStatusModel
     agent_type: AgentTypeModel
-    agent_generator_build_steps: list[AgentGeneratorBuildStepModel]
     parameters: dict[str, Any]
+    status: AgentGeneratorStatusModel
+    datetime_created: str
+    agent_generator_build_steps: list[AgentGeneratorBuildStepModel]
+    creating_agent_template: CreatingAgentTemplateReferenceModel

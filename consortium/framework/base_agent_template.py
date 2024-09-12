@@ -42,9 +42,6 @@ class BaseAgentTemplate(ABC):
     options: set[OptionType] | None = None
     validating_function: Callable[[dict[str, OptionType]], None] | None = None
 
-    def __init__(self):
-        self.agent_template_id = uuid.uuid4()
-
     def __init_subclass__(cls, **kwargs):
         # Check the existence of a provided agent template name first so that we can
         # reference the agent template name for every other error message.
@@ -138,6 +135,9 @@ class BaseAgentTemplate(ABC):
             # function rather than an actual method of the agent template.
             cls.validating_function = staticmethod(cls.validating_function)
 
+        cls.agent_template_id = uuid.uuid4()
+        cls.agent_generator.creating_agent_template = cls
+
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
@@ -217,6 +217,7 @@ class BaseAgentTemplate(ABC):
             "agent_template_id": str(self.agent_template_id),
             "name": self.name,
             "description": self.description,
+            "agent_type": self.agent_generator.agent_type.to_json(),
             "authors": self.authors,
             "options": {option.name: option.to_json() for option in self.options},
             "validating_function": format_docstring_to_single_line(
@@ -224,5 +225,4 @@ class BaseAgentTemplate(ABC):
             )
             if self.validating_function and self.validating_function.__doc__
             else None,
-            "agent_type": self.agent_generator.agent_type.to_json(),
         }

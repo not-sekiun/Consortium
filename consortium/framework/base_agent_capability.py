@@ -18,7 +18,10 @@ from consortium.server.exceptions.framework_exceptions.agent_capabilities_framew
     EmptyAgentCapabilityNameError,
     RequiredAgentCapabilityConfigurationParameterNotDeclaredError,
 )
-from consortium.server.models.agent_models import AgentMessageModel, AgentResponseModel
+from consortium.server.models.agent_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 
 
 class SupportedOS(StrEnum):
@@ -59,7 +62,7 @@ class BaseAgentCapability(ABC):
         | ToggleableChoicesValueOption
     ] = None
     requires_admin = False
-    supported_oses: set[SupportedOS] = SupportedOS.ANY
+    supported_oses: set[SupportedOS] = {SupportedOS.ANY}
     authors: set[str] = None
     communication_model: AgentCapabilityCommunicationModel = (
         AgentCapabilityCommunicationModel.REQUEST_RESPONSE
@@ -160,24 +163,26 @@ class BaseAgentCapability(ABC):
 
         super().__init_subclass__(**kwargs)
 
+    @abstractmethod
+    async def handle_sending_agent_task_messages(
+        self,
+        agent_message: AgentTaskMessageModel,
+    ) -> AsyncGenerator[AgentTaskMessageModel]: ...
+
+    @abstractmethod
+    async def handle_receiving_agent_response_messages(
+        self,
+    ) -> AsyncGenerator[AgentResultMessageModel]: ...
+
     def to_json(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "description": self.description,
-            "arguments": [argument.to_json() for argument in self.arguments],
+            "arguments": {
+                argument.name: argument.to_json() for argument in self.arguments
+            },
             "requires_admin": self.requires_admin,
-            "supported_oses": [os.value for os in self.supported_oses],
+            "supported_oses": [str(os) for os in self.supported_oses],
+            "communication_model": str(self.communication_model),
             "authors": list(self.authors),
         }
-
-    @abstractmethod
-    async def on_agent_message_sent(
-        self,
-        agent_message: AgentMessageModel,
-    ) -> AsyncGenerator[AgentMessageModel]: ...
-
-    @abstractmethod
-    async def on_agent_response_received(
-        self,
-        agent_response: AgentResponseModel,
-    ) -> AsyncGenerator[AgentResponseModel]: ...

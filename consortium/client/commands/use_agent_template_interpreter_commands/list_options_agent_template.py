@@ -22,7 +22,7 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_options_agent_template
+          list_options_agent_template
         """,
     )
 

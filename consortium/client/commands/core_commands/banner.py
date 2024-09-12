@@ -22,7 +22,7 @@ class BannerCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            banner
+          banner
         """,
     )
 

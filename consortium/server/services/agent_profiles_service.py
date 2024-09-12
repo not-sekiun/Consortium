@@ -245,6 +245,7 @@ class AgentProfilesService:
             )
 
         return AgentProfile(
+            name=agent_template_object.name,
             agent_generator=agent_generator_class,
             agent_template=agent_template_object,
             agent_type=agent_type,

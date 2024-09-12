@@ -23,8 +23,8 @@ class InfoListenerTemplateCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_listener_template  # Displays detailed information for the currently selected listener template being used if the listener template ID is not specified.
-            info_listener_template 123e4567-e89b-12d3-a456-42661417400
+          info_listener_template  # Displays detailed information for the currently selected listener template being used if the listener template ID is not specified.
+          info_listener_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

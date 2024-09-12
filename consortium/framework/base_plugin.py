@@ -24,6 +24,7 @@ from consortium.server.exceptions.framework_exceptions.plugins_framework_excepti
     RequiredPluginConfigurationParameterNotDeclaredError,
 )
 from consortium.server.objects.plugin_objects import PluginState, PluginStatus
+from consortium.server.server_logging import LoggerType
 
 
 class BasePlugin(ABC):
@@ -73,6 +74,7 @@ class BasePlugin(ABC):
         self.server_services.users_service = server_singletons.users_service
         self.plugin_logger = logger.bind(
             logger_name=f"Consortium Plugin {self}",
+            logger_type=LoggerType.PLUGIN_LOGGER,
         )
 
         self._plugin_task = None

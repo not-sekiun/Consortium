@@ -49,7 +49,8 @@ class PluginsService:
     def get_plugin_from_plugin_project_folder(
         self,
         plugin_project_folder: Path,
-    ) -> BasePlugin:
+        ignore_enabled_plugin_flag: bool = False,
+    ) -> BasePlugin | None:
         plugin_project_manifest_file_path = (
             plugin_project_folder / "plugin_project_manifest.json"
         )
@@ -64,9 +65,13 @@ class PluginsService:
                     },
                     "required": ["filepath", "symbol"],
                 },
+                "enabled": {
+                    "type": "boolean",
+                },
             },
             "required": [
                 "plugin",
+                "enabled",
             ],
         }
 
@@ -91,6 +96,16 @@ class PluginsService:
                 plugin_project_folder=str(plugin_project_folder),
                 json_schema_error_message=exc.message,
             )
+
+        if (
+            not plugin_project_manifest_json["enabled"]
+            and not ignore_enabled_plugin_flag
+        ):
+            self.plugins_service_logger.warning(
+                "Skipped loading plugin from '{}' because it was disabled.",
+                str(plugin_project_folder),
+            )
+            return None
 
         # Check for valid project folder structure as specified by the manifest file.
         plugin_file = plugin_project_folder / Path(
@@ -155,7 +170,10 @@ class PluginsService:
         )
         return plugin_object
 
-    async def load_framework_plugins(self) -> None:
+    async def load_framework_plugins(
+        self,
+        ignore_enabled_plugin_flag: bool = False,
+    ) -> None:
         self.plugins_service_logger.info(f"Loading framework plugins...")
 
         plugin_project_folder_paths = []
@@ -172,6 +190,7 @@ class PluginsService:
                 asyncio.create_task(
                     self.load_plugin_from_plugin_project_folder(
                         plugin_project_folder=plugin_project_folder_path,
+                        ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
                     ),
                 ),
             )
@@ -192,6 +211,8 @@ class PluginsService:
                     "<bold><red>{}</></>",
                     "".join(traceback.format_exception(result)),
                 )
+            elif result is None:
+                continue
             else:
                 number_of_loaded_plugins += 1
 
@@ -204,6 +225,7 @@ class PluginsService:
         self,
         force_reload: bool = False,
         timeout: None | int = 5,
+        ignore_enabled_plugin_flag: bool = False,
     ) -> None:
         self.plugins_service_logger.info(f"Reloading framework plugins...")
 
@@ -247,6 +269,7 @@ class PluginsService:
                     asyncio.create_task(
                         self.load_plugin_from_plugin_project_folder(
                             plugin_project_folder=plugin_project_folder.parent,
+                            ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
                         ),
                     ),
                 )
@@ -304,9 +327,15 @@ class PluginsService:
     async def load_plugin_from_plugin_project_folder(
         self,
         plugin_project_folder: Path,
-    ) -> BasePlugin:
-        plugin = self.get_plugin_from_plugin_project_folder(plugin_project_folder)
+        ignore_enabled_plugin_flag: bool = False,
+    ) -> BasePlugin | None:
+        plugin = self.get_plugin_from_plugin_project_folder(
+            plugin_project_folder=plugin_project_folder,
+            ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
+        )
 
+        if plugin is None:  # Plugin being None implies a disabled plugin.
+            return None
         if plugin.autostart:
             try:
                 await plugin.start_plugin()
@@ -364,12 +393,17 @@ class PluginsService:
         self.plugins_service_logger.info(f"Unloaded plugin: {plugin}")
         self.plugins_service_logger.debug(f"Unloaded plugin: {plugin!r}")
 
-    async def reload_plugin_by_plugin_id(self, plugin_id: str) -> BasePlugin:
+    async def reload_plugin_by_plugin_id(
+        self,
+        plugin_id: str,
+        ignore_enabled_plugin_flag: bool = False,
+    ) -> BasePlugin:
         plugin = self.get_plugin_by_plugin_id(plugin_id)
         plugin_project_folder = plugin.plugin_project_folder
         await self.unload_plugin_by_plugin_id(plugin_id)
         plugin = await self.load_plugin_from_plugin_project_folder(
-            plugin_project_folder,
+            plugin_project_folder=plugin_project_folder,
+            ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
         )
         self.plugins_service_logger.info(f"Reloaded plugin: {plugin}")
         self.plugins_service_logger.debug(f"Reloaded plugin: {plugin!r}")

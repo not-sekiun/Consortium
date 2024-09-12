@@ -23,8 +23,8 @@ class InfoAgentTemplateCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_agent_template  # Displays detailed information for the currently selected agent template being used if the agent template ID is not specified.
-            info_agent_template 123e4567-e89b-12d3-a456-42661417400
+          info_agent_template  # Displays detailed information for the currently selected agent template being used if the agent template ID is not specified.
+          info_agent_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

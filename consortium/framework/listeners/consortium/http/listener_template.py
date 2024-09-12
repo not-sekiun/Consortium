@@ -1,7 +1,7 @@
 from consortium.framework.base_listener_template import BaseListenerTemplate
 from consortium.framework.listeners.consortium.http.listener import Listener
 from consortium.framework.options import ListValueOption, SingleValueOption
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
 
@@ -22,7 +22,7 @@ def _check_all_url_endpoints_unique(
     for element in all_url_paths:
         if element in unique_elements:
             raise OptionValueValidationError(
-                f'The provided URL path "{element}" is not unique among the the tasks, '
+                f"The provided URL path '{element}' is not unique among the the tasks, "
                 f"results and registration URL paths.",
             )
         unique_elements.add(element)

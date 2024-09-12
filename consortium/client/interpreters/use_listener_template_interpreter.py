@@ -15,6 +15,9 @@ from consortium.client.commands.use_listener_template_interpreter_commands.info_
 from consortium.client.commands.use_listener_template_interpreter_commands.info_listener_template_option import (
     InfoListenerTemplateOptionsCommand,
 )
+from consortium.client.commands.use_listener_template_interpreter_commands.launch_listener import (
+    LaunchListenerCommand,
+)
 from consortium.client.commands.use_listener_template_interpreter_commands.list_options_listener_template import (
     ListOptionsListenerTemplateCommand,
 )
@@ -65,6 +68,7 @@ class UseListenerTemplateInterpreter(ClientInterpreter):
             ResetListenerTemplateOptionCommand(),
             UnsetListenerTemplateOptionCommand(),
             CreateListenerCommand(),
+            LaunchListenerCommand(),
         ]
         # Add a "value" key to the options to store the current value of the
         # option.

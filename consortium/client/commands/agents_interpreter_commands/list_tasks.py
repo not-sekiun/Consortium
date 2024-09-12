@@ -26,9 +26,9 @@ class ListTasksCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_tasks 123e4567-e89b-12d3-a456-42661417400  # If the task state is not specified, all tasks will be listed.
-            list_tasks 123e4567-e89b-12d3-a456-42661417400  -q
-            list_tasks 123e4567-e89b-12d3-a456-42661417400  --running
+          list_tasks 123e4567-e89b-12d3-a456-42661417400  # If the task state is not specified, all tasks will be listed.
+          list_tasks 123e4567-e89b-12d3-a456-42661417400  -q
+          list_tasks 123e4567-e89b-12d3-a456-42661417400  --running
         """,
     )
 

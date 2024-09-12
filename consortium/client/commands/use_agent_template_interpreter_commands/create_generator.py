@@ -20,7 +20,7 @@ class CreateGeneratorCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            create_generator
+          create_generator
         """,
     )
 

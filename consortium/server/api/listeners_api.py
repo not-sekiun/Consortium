@@ -62,7 +62,7 @@ def get_all_listeners(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENERS)),
     ],
-):
+) -> list[ListenerModel]:
     return [
         ListenerModel(**listener.to_json())
         for listener in listeners_service.get_all_listeners()
@@ -93,7 +93,7 @@ def get_listener_by_listener_id(
             AuthorizeUserRequest(UserPermissions.READ_LISTENER_BY_LISTENER_ID),
         ),
     ],
-):
+) -> ListenerModel:
     try:
         return ListenerModel(
             **listeners_service.get_listener_by_listener_id(listener_id).to_json(),
@@ -316,9 +316,9 @@ def update_listener_by_listener_id(
     # simply not specifying any parameters when PUTing. But if the parameters are
     # present they will override the name string even if it was specified in the
     # request.
-    name: Annotated[str, Body] | None = None,
-    description: Annotated[str, Body] | None = None,
-    parameters: Annotated[dict[str, Any], Body] | None = None,
+    name: Annotated[str, Body(embed=True)] = None,
+    description: Annotated[str, Body(embed=True)] = None,
+    parameters: Annotated[dict[str, Any], Body(embed=True)] = None,
 ) -> ListenerModel:
     try:
         if name is not None:
@@ -327,18 +327,18 @@ def update_listener_by_listener_id(
                 name=name,
             )
         if description is not None:
-            listeners_service.update_listener_name_by_listener_id(
+            listeners_service.update_listener_description_by_listener_id(
                 listener_id=listener_id,
-                name=name,
+                description=description,
             )
         if parameters is not None:
             try:
-                listeners_service.update_listener_name_by_listener_id(
+                listeners_service.update_listener_parameters_by_listener_id(
                     listener_id=listener_id,
-                    name=name,
+                    parameters=parameters,
                 )
             # ListenerTemplateResolutionError is only ever raised when a programmer
-            # error is made. The service will raise an AssertionError to demonstrate
+            # error is made. The service wi ll raise an AssertionError to demonstrate
             # this, which will be caught and reraised as a
             # ListenerTemplateResolutionError on the REST API side.
             except AssertionError:

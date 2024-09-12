@@ -2,6 +2,9 @@ from pathlib import Path
 
 from consortium.framework.agents.consortium.http.agent_generator import AgentGenerator
 from consortium.framework.base_agent_template import BaseAgentTemplate
+from consortium.framework.exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.framework.options import (
     ChoiceValueOption,
     ListValueOption,
@@ -11,7 +14,7 @@ from consortium.framework.options import (
 
 def _check_jitter_percent_is_positive(jitter_percent: float):
     if jitter_percent < 0:
-        raise ValueError(
+        raise OptionValueValidationError(
             "Jitter percent cannot be less than zero.",
         )
 
@@ -21,7 +24,7 @@ def _check_filename_does_not_traverse_directories(filename: str):
     Checks that the filename does not attempt to traverse directories.
     """
     if filename != Path(filename).name:
-        raise ValueError(
+        raise OptionValueValidationError(
             "Filename cannot traverse directories.",
         )
 
@@ -41,8 +44,8 @@ def _check_all_url_endpoints_unique(
     unique_elements = set()
     for element in all_url_paths:
         if element in unique_elements:
-            raise ValueError(
-                f'The provided URL path "{element}" is not unique among the the tasks, '
+            raise OptionValueValidationError(
+                f"The provided URL path '{element}' is not unique among the the tasks, "
                 f"results and registration URL paths.",
             )
         unique_elements.add(element)
@@ -53,9 +56,9 @@ def _check_integer_is_a_valid_port_number(port: int) -> None:
     Check that the integer provided is a valid port number between 0 and 65535.
     """
     if port not in range(0, 65536):
-        raise ValueError(
+        raise OptionValueValidationError(
             f"The port number provided {port} is not a valid port number between 0 and "
-            "65535",
+            f"65535",
         )
 
 
@@ -135,7 +138,7 @@ class AgentTemplate(BaseAgentTemplate):
             description=(
                 "The percentage of the duration of the sleep time to randomly vary "
                 "sleeping by expressed as a decimal. A random value between 0 and "
-                'the value of the option "jitter_percent" is chosen to randomly '
+                "the value of the jitter percentage option is chosen to randomly "
                 "increase or decrease the duration of the sleep time by."
             ),
             default_value=0.5,
@@ -156,7 +159,7 @@ class AgentTemplate(BaseAgentTemplate):
             name="filename",
             description=(
                 "The filename of the agent to be generated. The appropriate file "
-                'extension is appended depending on the value of the "format" '
+                "extension is appended depending on the value of the 'format' "
                 "option of the generated agent."
             ),
             default_value="agent",

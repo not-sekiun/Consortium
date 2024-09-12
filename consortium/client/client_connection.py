@@ -482,7 +482,7 @@ class ClientConnection:
         return await self._request(
             method="POST",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
-            json={
+            data={
                 "command": command,
                 "arguments": arguments,
             },
@@ -558,4 +558,18 @@ class ClientConnection:
         return await self._request(
             method="GET",
             url=f"{self._api_base_url}/users/all",
+        )
+
+    @_check_if_logged_in
+    @_check_for_rest_api_error_response
+    async def task_agent_by_agent_id(
+        self,
+        agent_id: str,
+        command: str,
+        arguments: dict[str, Any],
+    ) -> dict[str, Any]:
+        return await self._request(
+            method="POST",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            json={"command": command, "arguments": arguments},
         )

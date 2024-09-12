@@ -25,7 +25,7 @@ class InfoGeneratorCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_generator 123e4567-e89b-12d3-a456-42661417400
+          info_generator 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -106,13 +106,7 @@ class InfoGeneratorCommand(BaseCommand):
                         build_step["status"]["state"],
                     )
                     + (
-                        (
-                            " ("
-                            + build_step["status"]["error"]["detail"]["type"]
-                            + ": "
-                            + build_step["status"]["error"]["detail"]["message"]
-                            + ")"
-                        )
+                        " (" + build_step["status"]["error"]["message"] + ")"
                         if build_step["status"]["error"]
                         else ""
                     ),
@@ -164,13 +158,7 @@ class InfoGeneratorCommand(BaseCommand):
                     agent_generator["status"]["state"],
                 )
                 + (
-                    (
-                        " ("
-                        + agent_generator["status"]["error"]["detail"]["type"]
-                        + ": "
-                        + agent_generator["status"]["error"]["detail"]["message"]
-                        + ")"
-                    )
+                    " (" + agent_generator["status"]["error"]["message"] + ")"
                     if agent_generator["status"]["error"]
                     else ""
                 ),

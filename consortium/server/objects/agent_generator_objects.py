@@ -55,12 +55,12 @@ class AgentGeneratorStatus:
 
     def transition_to_fatal(
         self,
-        agent_generator: str,
+        agent_generator_str: str,
         exception: Exception,
     ) -> None:
         self.state = AgentGeneratorState.FATAL
         self.exception = AgentGeneratorBuildError(
-            agent_generator=agent_generator,
+            agent_generator_str=agent_generator_str,
             build_error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,
@@ -74,9 +74,13 @@ class AgentGeneratorStatus:
         # convention with other parts of the api that use "error" instead of "exception"
         if not self.exception:
             return {"state": str(self.state), "error": None}
+        # TODO: Fix this temporary hack by formalizing the return structure of
+        #  framework exceptions???
+        error_dict = self.exception.to_json()
+        error_dict["code"] = "AGENT_GENERATOR_BUILD_ERROR"
         return {
             "state": str(self.state),
-            "error": self.exception.to_json(),
+            "error": error_dict,
         }
 
 
@@ -128,7 +132,16 @@ class AgentGeneratorBuildStepStatus:
         # Internally the identifier "exception" is more representative of what is stored
         # here. In the API we want to expose this as "error" instead to align the naming
         # convention with other parts of the api that use "error" instead of "exception"
+        # TODO: Fix this temporary hack by formalizing the return structure of
+        #  framework exceptions???
+        if not self.exception:
+            return {
+                "state": str(self.state),
+                "error": None,
+            }
+        error_dict = self.exception.to_json()
+        error_dict["code"] = "AGENT_GENERATOR_BUILD_STEP_ERROR"
         return {
             "state": str(self.state),
-            "error": self.exception.to_json() if self.exception else None,
+            "error": error_dict,
         }

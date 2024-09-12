@@ -13,13 +13,13 @@ from consortium.framework.c2_types import BaseAgentType
 class AgentType(BaseAgentType):
     name = "agents/consortium/http"
     agent_capabilities = {
-        ping_capability.PingCapability,
-        shell_capability.ShellCapability,
-        upload_capability.UploadCapability,
-        download_capability.DownloadCapability,
-        disconnect_capability.DisconnectCapability,
-        kill_capability.KillCapability,
-        sleep_capability.SleepCapability,
+        ping_capability.PingCapability(),
+        shell_capability.ShellCapability(),
+        upload_capability.UploadCapability(),
+        download_capability.DownloadCapability(),
+        disconnect_capability.DisconnectCapability(),
+        kill_capability.KillCapability(),
+        sleep_capability.SleepCapability(),
     }
 
 

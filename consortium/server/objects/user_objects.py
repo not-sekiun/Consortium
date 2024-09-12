@@ -35,13 +35,12 @@ class JSONWebToken:
 
 class User:
     def __init__(self, user_account: UserAccountModel):
-        self._user_account = user_account
+        self.user_account = user_account
 
         self.user_id = uuid.uuid4()
-        self.user_account_id = user_account.user_account_id
         self.username = user_account.username
-        self.role = user_account.role
         self.display_name = user_account.username
+        self.role = user_account.role
         self.datetime_connected = datetime.now()
         self.datetime_last_active = self.datetime_connected
 
@@ -50,10 +49,13 @@ class User:
     def to_json(self):
         return {
             "user_id": str(self.user_id),
-            "user_account_id": str(self.user_account_id),
             "username": self.username,
-            "role": self.role,
             "display_name": self.display_name,
+            "role": self.role,
+            "user_account": {
+                "user_account_id": str(self.user_account.user_account_id),
+                "username": self.user_account.username,
+            },
             "datetime_connected": self.datetime_connected,
             "datetime_last_active": self.datetime_last_active,
         }
@@ -62,4 +64,4 @@ class User:
         return f"'{self.username}' ({self.user_id})"
 
     def __repr__(self) -> str:
-        return f"User(username={self._user_account!r})"
+        return f"User(user_account={self.user_account!r})"

@@ -19,7 +19,7 @@ class ClearCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            clear
+          clear
         """,
     )
 

@@ -14,7 +14,10 @@ from consortium.framework.exceptions.agent_capabilties_framework_exception impor
     AgentCapabilityTaskingError,
 )
 from consortium.framework.options import SingleValueOption
-from consortium.server.models.agent_models import AgentMessageModel, AgentResponseModel
+from consortium.server.models.agent_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 
 
 class _UploadAgentCapabilityMessageType(StrEnum):
@@ -31,7 +34,7 @@ def _file_chunking_generator(file: BinaryIO, chunk_size: int):
         yield chunk
 
 
-def _process_file(agent_message: AgentMessageModel):
+def _process_file(agent_message: AgentTaskMessageModel):
     with open(file=str(agent_message.arguments["source"]), mode="rb") as file:
         header_message = deepcopy(agent_message)
         header_message.data["message_type"] = str(
@@ -64,7 +67,7 @@ def _process_file(agent_message: AgentMessageModel):
 
 
 def _process_directory(
-    agent_message: AgentMessageModel,
+    agent_message: AgentTaskMessageModel,
 ):
     if agent_message["data"]["recursive"]:
         filepath_iterator = Path(agent_message["data"]["source"]).rglob("*")
@@ -159,12 +162,12 @@ class UploadCapability(BaseAgentCapability):
             default_value=1024,
         ),
     }
-    authors = {"sekiun"}
+    authors = {"Sekiun (github.com/not-sekiun)"}
 
-    async def on_agent_message_sent(
+    async def handle_sending_agent_task_messages(
         self,
-        agent_message: AgentMessageModel,
-    ) -> AsyncGenerator[AgentMessageModel]:
+        agent_message: AgentTaskMessageModel,
+    ) -> AsyncGenerator[AgentTaskMessageModel]:
         path = Path(agent_message.arguments["source"])
 
         if not path.exists():
@@ -193,8 +196,8 @@ class UploadCapability(BaseAgentCapability):
             ):
                 yield message
 
-    async def on_agent_response_received(
+    async def handle_receiving_agent_response_messages(
         self,
-        agent_response: AgentResponseModel,
-    ) -> AsyncGenerator[AgentResponseModel]:
+        agent_response: AgentResultMessageModel,
+    ) -> AsyncGenerator[AgentResultMessageModel]:
         yield agent_response

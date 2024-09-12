@@ -37,6 +37,7 @@ from consortium.server.objects.agent_generator_objects import (
     AgentGeneratorState,
     AgentGeneratorStatus,
 )
+from consortium.server.server_logging import LoggerType
 
 
 class BaseAgentGeneratorBuildStep(ABC):
@@ -49,6 +50,10 @@ class BaseAgentGeneratorBuildStep(ABC):
         self.datetime_started = None
         self.datetime_stopped = None
         self.status = AgentGeneratorBuildStepStatus()
+        self.agent_generator_build_step_logger = logger.bind(
+            logger_name=f"Consortium Agent Generator Build Step {self}",
+            logger_type=LoggerType.GENERATOR_LOGGER,
+        )
 
         self.working_directory = Path(inspect.getsourcefile(self.__class__)).parent
 
@@ -216,6 +221,7 @@ class BaseAgentGenerator(ABC):
         self.stop_agent_generator_event = asyncio.Event()
         self.agent_generator_logger = logger.bind(
             logger_name=f"Consortium Agent Generator {self}",
+            logger_type=LoggerType.GENERATOR_LOGGER,
         )
 
         # asyncio type tasks are held by a weak reference by default, so they can be
@@ -318,7 +324,7 @@ class BaseAgentGenerator(ABC):
             )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(
-                agent_generator=str(self),
+                agent_generator_str=str(self),
                 exception=exc,
             )
             raise exc
@@ -352,7 +358,7 @@ class BaseAgentGenerator(ABC):
             )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(
-                agent_generator=str(self),
+                agent_generator_str=str(self),
                 exception=exc,
             )
             raise exc
@@ -387,7 +393,7 @@ class BaseAgentGenerator(ABC):
             )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(
-                agent_generator=str(self),
+                agent_generator_str=str(self),
                 exception=exc,
             )
             raise exc
@@ -395,16 +401,26 @@ class BaseAgentGenerator(ABC):
     def to_json(self):
         return {
             "agent_generator_id": str(self.agent_generator_id),
+            "name": self.name,
+            "description": self.description,
+            "agent_type": self.agent_type.to_json(),
+            "parameters": self.parameters,
+            "status": self.status.to_json(),
+            "datetime_created": self.datetime_created.isoformat(),
             "agent_generator_build_steps": [
                 agent_generator_build_step.to_json()
                 for agent_generator_build_step in self.agent_generator_build_steps
             ],
-            "name": self.name,
-            "description": self.description,
-            "status": self.status.to_json(),
-            "agent_type": self.agent_type.to_json(),
-            "parameters": self.parameters,
-            "datetime_created": self.datetime_created.isoformat(),
+            # The `creating_agent_template` class attribute is assigned to the
+            # agent generator class at runtime by its associated agent template when it
+            # is subclassed from the base agent template class. See
+            # `consortium/framework/base_agent_template.py`.
+            "creating_agent_template": {
+                "agent_template_id": str(
+                    self.creating_agent_template.agent_template_id,
+                ),
+                "name": self.creating_agent_template.name,
+            },
         }
 
     async def _run_agent_generator(self) -> None:
@@ -436,7 +452,7 @@ class BaseAgentGenerator(ABC):
                 self.status.transition_to_cancelled()
             except AgentGeneratorBuildError as exc:
                 framework_exc = AgentGeneratorBuildFrameworkError(
-                    agent_generator=str(self),
+                    agent_generator_str=str(self),
                     build_error_message=exc.message,
                     detail=exc.detail,
                 )
@@ -453,7 +469,7 @@ class BaseAgentGenerator(ABC):
                     )
                     # The agent generator is now fatally errored.
                     self.status.transition_to_fatal(
-                        agent_generator=str(self),
+                        agent_generator_str=str(self),
                         exception=exc,
                     )
         except Exception as exc:
@@ -463,7 +479,7 @@ class BaseAgentGenerator(ABC):
             )
             # The agent generator is now fatally errored.
             self.status.transition_to_fatal(
-                agent_generator=str(self),
+                agent_generator_str=str(self),
                 exception=exc,
             )
             try:
@@ -474,6 +490,6 @@ class BaseAgentGenerator(ABC):
                     traceback.format_exc(),
                 )
                 self.status.transition_to_fatal(
-                    agent_generator=str(self),
+                    agent_generator_str=str(self),
                     exception=exc,
                 )

@@ -175,15 +175,15 @@ class AgentsService:
                 return result
         raise AgentResultNotFoundError(result_id=result_id)
 
-    def task_agent_by_agent_id(
+    async def task_agent_by_agent_id(
         self,
         agent_id: str,
         command: str,
-        arguments: dict[str, Any] | list,
+        arguments: dict[str, Any],
     ) -> AgentTaskModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = AgentTaskModel(command=command, arguments=arguments)
-        agent.add_task(task=task)
+        await agent.add_task(task=task)
         return task
 
     def delete_queued_agent_task_by_task_id(self, agent_id: str, task_id: str):

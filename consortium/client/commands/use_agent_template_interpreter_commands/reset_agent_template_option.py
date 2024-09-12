@@ -22,7 +22,7 @@ class ResetAgentTemplateOptionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            reset_agent_template_option option_name
+          reset_agent_template_option option_name
         """,
     )
 

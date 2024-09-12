@@ -16,8 +16,6 @@ from consortium.framework.exceptions.base_framework_exception import (
 
 
 class ListenerStartError(BaseRaiseOnlyFrameworkException):
-    code = "LISTENER_START_ERROR"
-
     def __init__(
         self,
         message: str = "An error occurred while attempting to start the listener.",
@@ -30,8 +28,6 @@ class ListenerStartError(BaseRaiseOnlyFrameworkException):
 
 
 class ListenerRuntimeError(BaseRaiseOnlyFrameworkException):
-    code = "LISTENER_RUNTIME_ERROR"
-
     def __init__(
         self,
         message: str = "An error occurred while the listener was running.",
@@ -44,8 +40,6 @@ class ListenerRuntimeError(BaseRaiseOnlyFrameworkException):
 
 
 class ListenerStopError(BaseRaiseOnlyFrameworkException):
-    code = "LISTENER_STOP_ERROR"
-
     def __init__(
         self,
         message: str = "An error occurred while attempting to stop the listener.",

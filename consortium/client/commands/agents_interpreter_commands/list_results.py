@@ -26,9 +26,9 @@ class ListResultsCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_results 123e4567-e89b-12d3-a456-42661417400  # If the result state is not specified, all results will be listed.
-            list_results 123e4567-e89b-12d3-a456-42661417400  -s
-            list_results 123e4567-e89b-12d3-a456-42661417400  --fail
+          list_results 123e4567-e89b-12d3-a456-42661417400  # If the result state is not specified, all results will be listed.
+          list_results 123e4567-e89b-12d3-a456-42661417400  -s
+          list_results 123e4567-e89b-12d3-a456-42661417400  --fail
         """,
     )
 

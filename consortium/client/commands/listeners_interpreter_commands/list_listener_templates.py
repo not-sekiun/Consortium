@@ -18,7 +18,7 @@ class ListListenerTemplatesCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_listener_templates
+          list_listener_templates
         """,
     )
 

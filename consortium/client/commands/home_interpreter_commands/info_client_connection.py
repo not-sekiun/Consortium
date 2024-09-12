@@ -26,8 +26,8 @@ class InfoClientConnectionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_client_connection  # Displays detailed information for the current client connection if the client connection ID is not specified.
-            info_client_connection 123e4567-e89b-12d3-a456-42661417400
+          info_client_connection  # Displays detailed information for the current client connection if the client connection ID is not specified.
+          info_client_connection 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

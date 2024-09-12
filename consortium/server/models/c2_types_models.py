@@ -1,27 +1,40 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 
-class AgentTypeSummaryModel(BaseModel):
-    name: str
+class CompatibleAgentTypeModel(BaseModel):
     agent_type_id: str
-
-
-class ListenerTypeSummaryModel(BaseModel):
     name: str
-    listener_type_id: str
 
 
 class ListenerTypeModel(BaseModel):
-    name: str
     listener_type_id: str
-    # If compatible_agent_type_ids is an empty list it is compatible with no agent
+    name: str
+    # If `compatible_agent_types` is an empty list it is compatible with no agent
     # types.
-    compatible_agent_types: list[AgentTypeSummaryModel]
+    compatible_agent_types: list[CompatibleAgentTypeModel]
+
+
+class CompatibleListenerTypeModel(BaseModel):
+    listener_type_id: str
+    name: str
+
+
+class AgentCapabilityModel(BaseModel):
+    name: str
+    description: str
+    arguments: dict[str, Any]
+    requires_admin: bool
+    supported_oses: list[str]
+    communication_model: str
+    authors: list[str]
 
 
 class AgentTypeModel(BaseModel):
-    name: str
     agent_type_id: str
-    # If compatible_listener_type_ids is an empty list it is compatible with no listener
+    name: str
+    # If `compatible_listener_types` is an empty list it is compatible with no listener
     # types.
-    compatible_listener_types: list[ListenerTypeSummaryModel]
+    compatible_listener_types: list[CompatibleListenerTypeModel]
+    agent_capabilities: dict[str, AgentCapabilityModel]

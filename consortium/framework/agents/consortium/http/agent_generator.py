@@ -1,6 +1,7 @@
 import asyncio
 import shutil
 from types import SimpleNamespace
+from typing import Any
 
 from consortium.framework.agent_generator_utils.filesystem_utils import (
     TemporarilyChangeWorkingDirectory,
@@ -47,7 +48,6 @@ class CreateTemporaryDirectory(BaseAgentGeneratorBuildStep):
         if parameters["format"] == "executable":
             # Create the temporary directory, if it already exists, no error is raised.
             temporary_directory.mkdir(exist_ok=True)
-            print("Made directory", temporary_directory)
         build_context.temporary_directory = temporary_directory
 
 
@@ -59,7 +59,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
     async def on_agent_generator_build_step_running(
         self,
         stop_agent_generator_event: asyncio.Event,
-        parameters: dict,
+        parameters: dict[str, Any],
         build_context: SimpleNamespace,
     ):
         with open(
@@ -199,9 +199,9 @@ class AgentGenerator(BaseAgentGenerator):
         ):
             raise AgentGeneratorStartError(
                 message=(
-                    "The PyInstaller python package is required to build a frozen "
-                    'executable of the agent for the "format" option set to '
-                    '"executable" but was not found on the system\'s path.'
+                    "For the 'format' option set to 'executable', the PyInstaller "
+                    "python package is required to build a frozen executable of the "
+                    "agent. No such package was found on the system's path."
                 ),
             )
 

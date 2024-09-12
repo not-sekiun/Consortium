@@ -28,7 +28,8 @@ class BaseAgentType:
         ).parents[0]
 
         for listener_type in self.compatible_listener_types:
-            self.add_compatible_listener_type(listener_type=listener_type)
+            if listener_type not in self.compatible_listener_types:
+                self.add_compatible_listener_type(listener_type=listener_type)
 
     def __init_subclass__(cls, **kwargs):
         if cls.compatible_listener_types is None:
@@ -153,6 +154,10 @@ class BaseAgentType:
                 for listener_type in self.compatible_listener_types
             ],
             "agent_type_id": str(self.agent_type_id),
+            "agent_capabilities": {
+                agent_capability.name: agent_capability.to_json()
+                for agent_capability in self.agent_capabilities
+            },
         }
 
 
@@ -166,7 +171,8 @@ class BaseListenerType:
         self.listener_type_id = uuid.uuid4()
 
         for agent_type in self.compatible_agent_types:
-            self.add_compatible_agent_type(agent_type=agent_type)
+            if agent_type not in self.compatible_agent_types:
+                self.add_compatible_agent_type(agent_type=agent_type)
 
     def __init_subclass__(cls, **kwargs):
         if cls.compatible_agent_types is None:

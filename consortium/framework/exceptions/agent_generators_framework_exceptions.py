@@ -6,8 +6,6 @@ from consortium.framework.exceptions.base_framework_exception import (
 
 
 class AgentGeneratorStartError(BaseRaiseOnlyFrameworkException):
-    code = "AGENT_GENERATOR_QUEUE_ERROR"
-
     def __init__(
         self,
         message: str = (
@@ -22,8 +20,6 @@ class AgentGeneratorStartError(BaseRaiseOnlyFrameworkException):
 
 
 class AgentGeneratorBuildError(BaseRaiseOnlyFrameworkException):
-    code = "AGENT_GENERATOR_BUILD_ERROR"
-
     def __init__(
         self,
         message: str = (
@@ -38,8 +34,6 @@ class AgentGeneratorBuildError(BaseRaiseOnlyFrameworkException):
 
 
 class AgentGeneratorStopError(BaseRaiseOnlyFrameworkException):
-    code = "AGENT_GENERATOR_STOP_ERROR"
-
     def __init__(
         self,
         message: str = (

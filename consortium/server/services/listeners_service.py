@@ -127,6 +127,8 @@ class ListenersService:
         listener_id: str,
         name: str,
     ) -> BaseListener:
+        if not name:
+            raise EmptyListenerNameServiceError
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         old_name = listener.name
         listener.name = name
@@ -152,7 +154,7 @@ class ListenersService:
     def update_listener_parameters_by_listener_id(
         self,
         listener_id: str,
-        new_parameters: dict[str, Any],
+        parameters: dict[str, Any],
     ) -> BaseListener:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
@@ -177,24 +179,24 @@ class ListenersService:
         ), "Listener template resolution failed unexpectedly"
 
         for parameter_name, parameter_value in listener.parameters.items():
-            if parameter_name not in new_parameters:
+            if parameter_name not in parameters:
                 # parameter_value could be a list or a dict, so we need to perform
                 # a deep copy to prevent reference sharing.
-                new_parameters[parameter_name] = copy.deepcopy(parameter_value)
+                parameters[parameter_name] = copy.deepcopy(parameter_value)
 
-        for parameter_name, parameter_value in new_parameters.items():
+        for parameter_name, parameter_value in parameters.items():
             if parameter_name not in listener_template.options:
                 raise InvalidListenerParameterNameError(
                     parameter_name=parameter_name,
                     listener=str(listener),
                 )
-            new_parameters[parameter_name] = parameter_value
+            parameters[parameter_name] = parameter_value
 
-        # At this point new_parameters contains all the parameters that a listener
+        # At this point `parameters` contains all the parameters that a listener
         # would have. Any parameters not specified in the request body as part of
         # the JSON under the key "parameters" will be the same as the previous
         # listener.
-        for parameter_name, parameter_value in new_parameters.items():
+        for parameter_name, parameter_value in parameters.items():
             try:
                 listener_template.options[
                     parameter_name
@@ -220,7 +222,7 @@ class ListenersService:
         listener.parameters = copy.deepcopy(temporary_listener.parameters)
 
         self.listeners_service_logger.info(
-            f"Updated parameters for listeners {listener}: {new_parameters}",
+            f"Updated parameters for listeners {listener}: {parameters}",
         )
         return listener
 

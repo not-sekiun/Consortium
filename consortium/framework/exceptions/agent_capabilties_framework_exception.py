@@ -4,8 +4,6 @@ from consortium.framework.exceptions.base_framework_exception import (
 
 
 class AgentCapabilityTaskingError(BaseRaiseOnlyFrameworkException):
-    code = "AGENT_CAPABILITY_TASKING_ERROR"
-
     def __init__(
         self,
         message: str = "An error occurred while attempting to task the agent.",

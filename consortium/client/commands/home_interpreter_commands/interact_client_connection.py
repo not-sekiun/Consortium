@@ -24,7 +24,7 @@ class InteractClientConnectionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            interact_client_connection 123e4567-e89b-12d3-a456-42661417400
+          interact_client_connection 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

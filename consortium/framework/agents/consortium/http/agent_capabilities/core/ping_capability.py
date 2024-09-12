@@ -1,7 +1,10 @@
 from collections.abc import AsyncGenerator
 
 from consortium.framework.base_agent_capability import BaseAgentCapability, SupportedOS
-from consortium.server.models.agent_models import AgentMessageModel, AgentResponseModel
+from consortium.server.models.agent_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 
 
 class PingCapability(BaseAgentCapability):
@@ -9,16 +12,16 @@ class PingCapability(BaseAgentCapability):
     description = "Ping the agent."
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    authors = {"sekiun"}
+    authors = {"Sekiun (github.com/not-sekiun)"}
 
-    async def on_agent_message_sent(
+    async def handle_sending_agent_task_messages(
         self,
-        agent_message: AgentMessageModel,
-    ) -> AsyncGenerator[AgentMessageModel]:
+        agent_message: AgentTaskMessageModel,
+    ) -> AsyncGenerator[AgentTaskMessageModel]:
         yield agent_message
 
-    async def on_agent_response_received(
+    async def handle_receiving_agent_response_messages(
         self,
-        agent_response: AgentResponseModel,
-    ) -> AsyncGenerator[AgentResponseModel]:
+        agent_response: AgentResultMessageModel,
+    ) -> AsyncGenerator[AgentResultMessageModel]:
         yield agent_response

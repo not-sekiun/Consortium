@@ -24,7 +24,7 @@ def main():
         required=True,
     )
 
-    parser_server = subparsers.add_parser(
+    server_parser = subparsers.add_parser(
         name="server",
         help="Start the consortium server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -36,14 +36,29 @@ def main():
             """,
         ),
     )
-    parser_server.add_argument(
+    server_parser.add_argument(
         "-d",
         "--debug",
-        help="Start the server in debug mode",
+        help=(
+            "Start the server in debug mode. This will log messages with severity "
+            "'DEBUG' and below. Note that this flag overrides whatever log level was "
+            "set in the supplied server configuration file."
+        ),
         action="store_true",
     )
+    server_parser.add_argument(
+        "-c",
+        "--config",
+        help=(
+            "The filepath of the server configuration file to use when starting the "
+            "server. By default the server configuration file from "
+            "`data/server/server_config.json` is used."
+        ),
+        nargs="?",
+        default=None,
+    )
 
-    parser_client = subparsers.add_parser(
+    client_parser = subparsers.add_parser(
         name="client",
         help="Start the consortium client",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -55,7 +70,7 @@ def main():
             """,
         ),
     )
-    parser_client.add_argument(
+    client_parser.add_argument(
         "-d",
         "--debug",
         help="Start the client in debug mode",

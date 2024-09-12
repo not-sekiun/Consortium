@@ -26,41 +26,41 @@ class SetGeneratorParameterCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Note:
-            By default the type of the values provided is a string. There are several
-            ways to specify types for the values:
+          By default the type of the values provided is a string. There are several
+          ways to specify types for the values:
 
-            1. The value can be explicitly annotated with a type by appending a colon
-                followed by the type to the value. For example, "3:int" will be
-                interpreted as the integer 3.
-            2. The --value-type flag can be used to specify the type of the values. This
-                will set the type of all the values to the specified type unless
-                explicitly specified otherwise by their individual typing.
-            3. The agent template option itself may specify the type of the values.
-                This will be the default type for the values unless explicitly specified
-                otherwise by their individual typing.
+          1. The value can be explicitly annotated with a type by appending a colon
+          followed by the type to the value. For example, "3:int" will be
+          interpreted as the integer 3.
+          2. The --value-type flag can be used to specify the type of the values. This
+          will set the type of all the values to the specified type unless
+          explicitly specified otherwise by their individual typing.
+          3. The agent template option itself may specify the type of the values.
+          This will be the default type for the values unless explicitly specified
+          otherwise by their individual typing.
 
-            The --value-type flag is set for all values of a list or dictionary value.
+          The --value-type flag is set for all values of a list or dictionary value.
 
         Examples:
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 single_value_param 1  # No type was specified, if the option specified a type, the value will adopt that type, else it will be a string.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 single_value_param some:str:str  # If you want to include the substring :str in the value itself append :str behind it.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 single_value_param 1:int # Set the option to an integer value. This ignores the option's specified type.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 single_value_param 1 -t int # Does the same thing as the above command.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 choice_value_param 1 # If no type is specified, implicit type conversion is done for each choice. This choice will therefore match an integer 1 even if its value is a string.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 choice_value_param 1 -t int # If a type is specified, implicit type conversion is not done for each choice. Hence, the the choice contains a string "1" instead of an integer 1 it will not match.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 list_value_param 1 2 3:int  # If the list value option specifies a string type or no type at all, set the option to a list the strings 1 and 2 and an integer, 3.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 list_value_param 1 2 3 -t int   # Set the option to a list of integers 1, 2, and 3.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 list_value_param 1 2 3:str -t int   # Set the option to a list of integers 1, 2, and a string, 3. Individual type annotations will override the type set by the --value-type flag.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 dictionary_value_param key1 1 key2 2 key3 3:str -t int   # Set the option to a dictionary containing integers 1, 2, and a string, 3 to their respective keys. The keys must be strings.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param choice1 choice2 choice4  # Toggle choice1 choice2, and choice4 to True, every other choice is toggled to False. The default behaviour is to toggle choices to True.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param true:bool choice2 choice4  # Does the same thing as the above command.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param false:bool choice1 choice2 choice4  # Providing a boolean as the very first value wil toggle choice1 choice2, and choice4 to False, every other choice is toggled to True.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param true:bool  # If a single boolean is provided as the value every choice will be toggled to that value.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param t:bool  # Does the same thing as the above command.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param 1:bool  # Does the same thing as the above command.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param false -t bool  # Toggle every choice to False.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param f -t bool  # Does the same thing as the above command.
-            set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param 0 -t bool  # Does the same thing as the above command.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 single_value_param 1  # No type was specified, if the option specified a type, the value will adopt that type, else it will be a string.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 single_value_param some:str:str  # If you want to include the substring :str in the value itself append :str behind it.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 single_value_param 1:int # Set the option to an integer value. This ignores the option's specified type.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 single_value_param 1 -t int # Does the same thing as the above command.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 choice_value_param 1 # If no type is specified, implicit type conversion is done for each choice. This choice will therefore match an integer 1 even if its value is a string.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 choice_value_param 1 -t int # If a type is specified, implicit type conversion is not done for each choice. Hence, the the choice contains a string "1" instead of an integer 1 it will not match.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 list_value_param 1 2 3:int  # If the list value option specifies a string type or no type at all, set the option to a list the strings 1 and 2 and an integer, 3.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 list_value_param 1 2 3 -t int   # Set the option to a list of integers 1, 2, and 3.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 list_value_param 1 2 3:str -t int   # Set the option to a list of integers 1, 2, and a string, 3. Individual type annotations will override the type set by the --value-type flag.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 dictionary_value_param key1 1 key2 2 key3 3:str -t int   # Set the option to a dictionary containing integers 1, 2, and a string, 3 to their respective keys. The keys must be strings.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param choice1 choice2 choice4  # Toggle choice1 choice2, and choice4 to True, every other choice is toggled to False. The default behaviour is to toggle choices to True.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param true:bool choice2 choice4  # Does the same thing as the above command.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param false:bool choice1 choice2 choice4  # Providing a boolean as the very first value wil toggle choice1 choice2, and choice4 to False, every other choice is toggled to True.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param true:bool  # If a single boolean is provided as the value every choice will be toggled to that value.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param t:bool  # Does the same thing as the above command.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param 1:bool  # Does the same thing as the above command.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param false -t bool  # Toggle every choice to False.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param f -t bool  # Does the same thing as the above command.
+          set_generator_parameter 123e4567-e89b-12d3-a456-42661417400 toggleable_choices_value_param 0 -t bool  # Does the same thing as the above command.
         """,
     )
 
@@ -96,77 +96,6 @@ class SetGeneratorParameterCommand(BaseCommand):
             default=None,
             metavar="VALUE_TYPE",
         )
-
-    @staticmethod
-    def _check_value_for_value_type_annotation(
-        value: str,
-    ) -> tuple[str, str | None]:
-        # No type annotation is present in the value.
-        if ":" not in value:
-            return value, None
-
-        value_type = value.split(":")[-1]
-        # If the value type is not one of the valid value types, we return the value as
-        # is and set the value type to None.
-        if value_type == "str":
-            return ":".join(value.split(":")[:-1]), "str"
-        elif value_type == "int":
-            return ":".join(value.split(":")[:-1]), "int"
-        elif value_type == "float":
-            return ":".join(value.split(":")[:-1]), "float"
-        elif value_type == "bool":
-            return ":".join(value.split(":")[:-1]), "bool"
-        else:
-            return value, None
-
-    @staticmethod
-    def _convert_value_type(
-        value: str,
-        value_type: str,
-    ) -> str | int | float | bool | list:
-        try:
-            if value_type == "str":
-                return value
-            elif value_type == "int":
-                return int(value)
-            elif value_type == "float":
-                return float(value)
-            elif value_type == "bool":
-                # bool() of any string is True.
-                if value in {"true", "True", "t", "T", "1"}:
-                    return True
-                elif value in {"false", "False", "f", "F", "0"}:
-                    return False
-                else:
-                    raise ValueError
-        except ValueError:
-            raise ValueError(
-                f"Failed to convert value '{value}' to type '{value_type}'",
-            )
-
-    @staticmethod
-    def _resolve_value_type_from_overriding_factors(
-        value_type_flag: str | None,
-        value_type_annotation: str | None,
-        agent_template_option: dict,
-    ) -> str:
-        # By default, if no overriding factors such as the options supplied value type,
-        # the value type flag, or the value type annotation are present, we default to
-        # string.
-        value_type = "str"
-        # Check if an option already specified its type.
-        if agent_template_option["value_type"] is not None:
-            value_type = agent_template_option["value_type"]
-        # Check if the user supplied a value type flag to override the option supplied
-        # value type or to explicitly set the value type.
-        if value_type_flag is not None:
-            value_type = value_type_flag
-        # Check if the user supplied a value type annotation to override the value type
-        # flag or to explicitly set the value type.
-        if value_type_annotation is not None:
-            value_type = value_type_annotation
-
-        return value_type
 
     async def _handle_single_value_parameter(
         self,

@@ -277,32 +277,6 @@ def get_all_failed_agent_results_by_agent_id(
 
 
 @router.get(
-    "/{agent_id}/results/error",
-    responses={
-        200: {"model": list[AgentResultModel]},
-        404: {
-            "model": AgentNotFoundAPIError.from_service_exception(
-                service_exception=AgentNotFoundServiceError(agent_id="string"),
-            ).to_pydantic_model(),
-        },
-    },
-)
-def get_all_errored_agent_results_by_agent_id(
-    agent_id: str,
-    _: Annotated[
-        None,
-        Depends(
-            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID),
-        ),
-    ],
-) -> list[AgentResultModel]:
-    try:
-        return agents_service.get_all_errored_results_by_agent_id(agent_id=agent_id)
-    except AgentNotFoundServiceError as exc:
-        raise AgentNotFoundAPIError.from_service_exception(service_exception=exc)
-
-
-@router.get(
     "/{agent_id}/tasks/{task_id}",
     responses={
         200: {"model": AgentTaskModel},
@@ -387,7 +361,7 @@ def get_agent_results_by_agent_id_and_result_id(
         },
     },
 )
-def task_agent_by_agent_id(
+async def task_agent_by_agent_id(
     agent_id: str,
     command: Annotated[str, Body()],
     arguments: Annotated[dict[str, Any] | list, Body()],
@@ -399,7 +373,7 @@ def task_agent_by_agent_id(
     ],
 ) -> AgentTaskModel:
     try:
-        task = agents_service.task_agent_by_agent_id(
+        task = await agents_service.task_agent_by_agent_id(
             agent_id=agent_id,
             command=command,
             arguments=arguments,

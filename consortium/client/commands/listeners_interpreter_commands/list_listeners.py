@@ -21,7 +21,7 @@ class ListListenersCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_listeners
+          list_listeners
         """,
     )
 

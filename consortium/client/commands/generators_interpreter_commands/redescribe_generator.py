@@ -21,7 +21,7 @@ class RedescribeGeneratorCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            redescribe_generator 123e4567-e89b-12d3-a456-42661417400 "New description"
+          redescribe_generator 123e4567-e89b-12d3-a456-42661417400 "New description"
         """,
     )
 

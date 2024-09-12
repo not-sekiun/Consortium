@@ -22,11 +22,8 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 
 
 class OptionValueValidationError(BaseFrameworkException):
-    def __init__(
-        self,
-        message: str,
-    ):
-        super().__init__(message)
+    def __init__(self, message: str, detail: Any = None):
+        super().__init__(message=message, detail=detail)
 
 
 class RequiredOptionValueNotSetError(BaseFrameworkException):

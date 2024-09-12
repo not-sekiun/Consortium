@@ -6,7 +6,10 @@ from consortium.framework.base_agent_capability import (
     SupportedOS,
 )
 from consortium.framework.options import SingleValueOption
-from consortium.server.models.agent_models import AgentMessageModel, AgentResponseModel
+from consortium.server.models.agent_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 
 
 class DownloadCapability(BaseAgentCapability):
@@ -14,7 +17,7 @@ class DownloadCapability(BaseAgentCapability):
     description = "Download a file from the agent."
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    authors = {"sekiun"}
+    authors = {"Sekiun (github.com/not-sekiun)"}
     communication_model = AgentCapabilityCommunicationModel.LISTENER_DIRECTED_STREAMING
     arguments = {
         SingleValueOption(
@@ -59,14 +62,14 @@ class DownloadCapability(BaseAgentCapability):
         ),
     }
 
-    async def on_agent_message_sent(
+    async def handle_sending_agent_task_messages(
         self,
-        agent_message: AgentMessageModel,
-    ) -> AsyncGenerator[AgentMessageModel]:
+        agent_message: AgentTaskMessageModel,
+    ) -> AsyncGenerator[AgentTaskMessageModel]:
         return task
 
-    async def on_agent_response_received(
+    async def handle_receiving_agent_response_messages(
         self,
-        agent_response: AgentResponseModel,
-    ) -> AsyncGenerator[AgentResponseModel]:
+        agent_response: AgentResultMessageModel,
+    ) -> AsyncGenerator[AgentResultMessageModel]:
         return result

@@ -25,7 +25,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_listener_template_option local_host
+          info_listener_template_option local_host
         """,
     )
 

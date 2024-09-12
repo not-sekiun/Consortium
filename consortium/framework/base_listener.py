@@ -31,6 +31,7 @@ from consortium.server.exceptions.framework_exceptions.listeners_framework_excep
 )
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.listener_objects import ListenerState, ListenerStatus
+from consortium.server.server_logging import LoggerType
 
 
 class _AgentsManager:
@@ -38,7 +39,7 @@ class _AgentsManager:
         self._agents_service = server_singletons.agents_service
         self._agents = {}
 
-    def register_new_agent(
+    def register_new_connected_agent(
         self,
         agent_type: BaseAgentType,
         name: str = "",
@@ -72,22 +73,22 @@ class _AgentsManager:
         self._agents[str(agent.agent_id)] = agent
         return agent
 
-    def check_in_registered_agent_by_agent_id(self, agent_id: str) -> None:
+    def check_in_connected_agent_by_agent_id(self, agent_id: str) -> None:
         if agent_id not in self._agents:
             raise ListenerSpecificAgentNotFoundError
         agent = self._agents[agent_id]
         agent.datetime_last_checked_in = datetime.now()
 
-    def deregister_registered_agent_by_agent_id(self, agent_id: str) -> None:
+    def deregister_connected_agent_by_agent_id(self, agent_id: str) -> None:
         if agent_id not in self._agents:
             raise ListenerSpecificAgentNotFoundError
         self._agents_service.remove_agent_by_agent_id(agent_id=agent_id)
         self._agents.pop(str(agent_id))
 
-    def get_all_registered_agents(self) -> list[Agent]:
+    def get_all_connected_agents(self) -> list[Agent]:
         return list(self._agents.values())
 
-    def get_registered_agent_by_agent_id(self, agent_id: str) -> Agent:
+    def get_connected_agent_by_agent_id(self, agent_id: str) -> Agent:
         try:
             return self._agents[agent_id]
         except KeyError:
@@ -152,13 +153,14 @@ class BaseListener(ABC):
 
         self.datetime_created = datetime.now()
         self.listener_id = uuid.uuid4()
-        # Original status.state is set to INITIALIZED.
+        # Original status state is set to INITIALIZED.
         self.status = ListenerStatus()
         # self.environment is used to store any information that the listener may need
         # to store and share amongst its user defined methods.
+
         self.environment = SimpleNamespace()
-        # self.stop_listener_event used to signal to the listener runtime loop to exit.
-        # The implementation of the listener runtime loop should check this event
+        # self.stop_listener_event is used to signal to the listener runtime loop to
+        # exit. The implementation of the listener runtime loop should check this event
         # periodically and exit if it is set.
         self.stop_listener_event = asyncio.Event()
         # self.agent_manager a class that allows listeners to manage the lifetime of an
@@ -169,6 +171,7 @@ class BaseListener(ABC):
         # listener to standard output and log files.
         self.listener_logger = logger.bind(
             logger_name=f"Consortium Listener {self}",
+            logger_type=LoggerType.LISTENER_LOGGER,
         )
 
         # Asyncio type tasks are held by a weak reference by default, so they can be
@@ -201,7 +204,7 @@ class BaseListener(ABC):
 
     def __repr__(self) -> str:
         return (
-            f"Listener(listener_type={self.listener_type!r}, name={self.name!r}, "
+            f"Listener(name={self.name!r}, description={self.description!r}"
             f"endpoint={self.endpoint!r}, parameters={self.parameters!r})"
         )
 
@@ -221,11 +224,12 @@ class BaseListener(ABC):
     async def on_listener_errored(self, exception: Exception) -> None: ...
 
     async def start_listener(self) -> None:
-        if self.status.state == ListenerState.STARTED:
+        if self.status.state in (ListenerState.STARTED or ListenerState.RUNNING):
             raise ListenerAlreadyRunningError(
                 listener_str=str(self),
                 error_message=(
-                    "The listener cannot be started because it is already running."
+                    "The listener cannot be started because it is already started or "
+                    "running."
                 ),
             )
 
@@ -322,7 +326,6 @@ class BaseListener(ABC):
     def to_json(self) -> dict[str, Any]:
         return {
             "listener_id": str(self.listener_id),
-            "agent_ids": [str(agent.agent_id) for agent in self.agents.values()],
             "name": self.name,
             "description": self.description,
             "endpoint": self.endpoint,
@@ -330,6 +333,20 @@ class BaseListener(ABC):
             "parameters": self.parameters,
             "status": self.status.to_json(),
             "datetime_created": self.datetime_created.isoformat(),
+            "connected_agents": [
+                {"agent_id": str(agent.agent_id), "name": str(agent.name)}
+                for agent in self.agents_manager.get_all_connected_agents()
+            ],
+            # The `creating_listener_template` class attribute is assigned to the
+            # listener class at runtime by its associated listener template when it is
+            # subclassed from the base listener template class. See
+            # `consortium/framework/base_listener_template.py`.
+            "creating_listener_template": {
+                "listener_template_id": str(
+                    self.creating_listener_template.listener_template_id,
+                ),
+                "name": self.creating_listener_template.name,
+            },
         }
 
     async def _run_listener(self):
@@ -337,12 +354,8 @@ class BaseListener(ABC):
             try:
                 # The listener is now running.
                 self.status.transition_to_running()
-                from pydantic import ValidationError
 
-                try:
-                    await self.on_listener_running()
-                except ValidationError:
-                    print("-_-")
+                await self.on_listener_running()
 
                 # The listener is now stopped.
                 self.status.transition_to_stopped()

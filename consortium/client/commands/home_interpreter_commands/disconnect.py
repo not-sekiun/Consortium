@@ -24,8 +24,8 @@ class DisconnectCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            disconnect  # Disconnects the current client connection if the client connection ID is not specified.
-            disconnect 123e4567-e89b-12d3-a456-42661417400
+          disconnect  # Disconnects the current client connection if the client connection ID is not specified.
+          disconnect 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 

@@ -5,6 +5,9 @@ from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.client_connection import ClientConnection
 from consortium.client.commands.core_commands.agents import AgentsCommand
+from consortium.client.commands.interact_agent_interpreter_commands.agent_capability_command import (
+    construct_agent_capability_command,
+)
 from consortium.client.commands.interact_agent_interpreter_commands.info_agent import (
     InfoAgentCommand,
 )
@@ -71,7 +74,47 @@ class InteractAgentInterpreter(ClientInterpreter):
         }.items():
             nested_completer_dict[key] = value
         nested_completer_dict["help"] = {command: None for command in self.commands}
+        agent_capabilities = self.environment["agent"]["agent_type"][
+            "agent_capabilities"
+        ]
+        # Register each agent capability command to the autocompleter on each loop.
+        for agent_capability_name in agent_capabilities:
+            # TODO: resolve conflicts with existing client commands.
+            nested_completer_dict[agent_capability_name] = {
+                command: None for command in self.commands
+            }
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,
         )
+
+    async def on_enter_interpreter(self) -> None:
+        agent_capabilities = self.environment["agent"]["agent_type"][
+            "agent_capabilities"
+        ]
+
+        for agent_capability_name, agent_capability in agent_capabilities.items():
+            # Register each agent capability as a command that can be run.
+            agent_capability_command = construct_agent_capability_command(
+                agent_capability_json_data=agent_capability,
+            )
+            self.commands[agent_capability_name] = agent_capability_command
+            # Register each agent capability command in the autocompleter.
+            self.environment["commands"][agent_capability_name] = (
+                agent_capability_command
+            )
+
+    async def on_exit_interpreter(self) -> None:
+        agent_capabilities = self.environment["agent"]["agent_type"][
+            "agent_capabilities"
+        ]
+        agent_capability_names = []
+
+        for agent_capability_name in agent_capabilities:
+            agent_capability_names.append(agent_capability_name)
+
+        self.commands = [
+            command
+            for command in self.commands
+            if command.name not in agent_capability_names
+        ]

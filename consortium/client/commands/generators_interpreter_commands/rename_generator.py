@@ -15,13 +15,13 @@ from consortium.client.utils.printer_utils import print_success
 class RenameGeneratorCommand(BaseCommand):
     name = "rename_generator"
     description = (
-        "Change the name of an agent generator instance without altering its configured "
-        "parameters."
+        "Change the name of an agent generator instance without altering its "
+        "configured parameters."
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-            rename_generator 123e4567-e89b-12d3-a456-42661417400 "New name"
+          rename_generator 123e4567-e89b-12d3-a456-42661417400 "New name"
         """,
     )
 

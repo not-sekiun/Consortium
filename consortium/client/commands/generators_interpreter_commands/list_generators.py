@@ -25,7 +25,7 @@ class ListGeneratorsCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            list_generators
+          list_generators
         """,
     )
 

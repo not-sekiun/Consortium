@@ -20,7 +20,7 @@ class AgentsCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            agents
+          agents
         """,
     )
 

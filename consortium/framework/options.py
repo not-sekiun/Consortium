@@ -6,13 +6,16 @@ from enum import StrEnum
 from inspect import signature
 from typing import Any, Callable, Type
 
+from consortium.framework.exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     EmptyAvailableValuesError,
     EmptyOptionNameError,
     InvalidDefaultValueError,
     InvalidValidatingRegexError,
     OptionConfigurationParameterTypeError,
-    OptionValueValidationError,
+    OptionValueValidationError as OptionValueValidationFrameworkError,
     RequiredOptionValueNotSetError,
 )
 from consortium.server.utils.formatter_utils import format_docstring_to_single_line
@@ -78,8 +81,8 @@ def _validate_validating_function_argument(
 def _resolve_validating_function_string(
     validating_function: Callable[[Any], None],
 ) -> str | None:
-    # If a validating_function is present, we want to display the docstring of the
-    # function in the JSON output. If the function does not have a docstring, we
+    # If a `validating_function` function is present, we want to display the docstring
+    # of the function in the JSON output. If the function does not have a docstring, we
     # will display an empty string.
     if validating_function:
         if validating_function.__doc__:
@@ -88,8 +91,8 @@ def _resolve_validating_function_string(
             )
         else:
             return ""
-    # If no validating_function is present, we will return None for the corresponding
-    # JSON output.
+    # If no `validating_function` function is present, we will return `None` for the
+    # corresponding JSON output.
     else:
         return None
 
@@ -221,19 +224,19 @@ class SingleValueOption(_BaseOption):
 
     def validate_value(self, value: SimpleType) -> None:
         if not isinstance(value, (str, int, float, bool)):
-            raise OptionValueValidationError(
+            raise OptionValueValidationFrameworkError(
                 f"Value '{value}' for option '{self.name}' must be of type str, int, "
                 "float, or bool.",
             )
         if self.value_type:
             if not isinstance(value, self.value_type):
-                raise OptionValueValidationError(
+                raise OptionValueValidationFrameworkError(
                     f"Value '{value}' for option '{self.name}' failed against its "
                     f"type validation: {self.value_type}",
                 )
         if self.validating_regex:
             if re.match(self.validating_regex, str(value)) is None:
-                raise OptionValueValidationError(
+                raise OptionValueValidationFrameworkError(
                     f"Value '{value}' for option '{self.name}' failed to match its "
                     f"validating regex: {self.validating_regex}",
                 )
@@ -241,7 +244,7 @@ class SingleValueOption(_BaseOption):
             try:
                 self.validating_function(value)
             except OptionValueValidationError as exc:
-                raise OptionValueValidationError(
+                raise OptionValueValidationFrameworkError(
                     f"Value '{value}' for option '{self.name}' failed against its "
                     f"validating function: {exc}",
                 ) from None
@@ -273,11 +276,17 @@ class SingleValueOption(_BaseOption):
                 validating_regex=self.validating_regex,
             )
         if self.validating_function:
-            _validate_validating_function_argument(
-                option_name=self.name,
-                validating_function_name="validating_function",
-                validating_function=self.validating_function,
-            )
+            try:
+                _validate_validating_function_argument(
+                    option_name=self.name,
+                    validating_function_name="validating_function",
+                    validating_function=self.validating_function,
+                )
+            except OptionValueValidationError as exc:
+                raise OptionValueValidationFrameworkError(
+                    message=exc.message,
+                    detail=exc.detail,
+                ) from None
 
 
 class ListValueOption(_BaseOption):
@@ -326,25 +335,25 @@ class ListValueOption(_BaseOption):
 
     def validate_value(self, value: list[SimpleType]) -> None:
         if not isinstance(value, list):
-            raise OptionValueValidationError(
+            raise OptionValueValidationFrameworkError(
                 f"Value '{value}' for option '{self.name}' must be a list.",
             )
         for element in value:
             if self.value_type:
                 if not isinstance(element, self.value_type):
-                    raise OptionValueValidationError(
+                    raise OptionValueValidationFrameworkError(
                         f"Element '{element}' in list value for option '{self.name}' "
                         f"failed against its type validation: {self.value_type}",
                     )
             if not isinstance(element, (str, int, float, bool)):
-                raise OptionValueValidationError(
+                raise OptionValueValidationFrameworkError(
                     f"Element '{element}' in list value for option '{self.name}' must "
                     "be of type str, int, float, or bool.",
                 )
         if self.validating_regex:
             for element in value:
                 if re.match(self.validating_regex, str(element)) is None:
-                    raise OptionValueValidationError(
+                    raise OptionValueValidationFrameworkError(
                         f"Element '{element}' in list value for option '{self.name}' "
                         "failed to match its validating regex: "
                         f"{self.validating_regex}",
@@ -354,15 +363,19 @@ class ListValueOption(_BaseOption):
                 try:
                     self.validating_function(element)
                 except OptionValueValidationError as exc:
-                    raise OptionValueValidationError(
-                        f"Element '{element}' in list value for option '{self.name}' "
-                        f"failed against its validating function. {exc}",
-                    )
+                    raise OptionValueValidationFrameworkError(
+                        message=(
+                            f"Element '{element}' in list value for option "
+                            f"'{self.name}' failed against its validating function. "
+                            f"{exc}"
+                        ),
+                        detail=exc.detail,
+                    ) from None
         if not self.allow_duplicates:
             unique_elements = set()
             for element in value:
                 if element in unique_elements:
-                    raise OptionValueValidationError(
+                    raise OptionValueValidationFrameworkError(
                         f"Element '{element}' in list value for option '{self.name}' "
                         f"contains duplicate copies while the option disallows "
                         "duplicate elements.",
@@ -448,7 +461,7 @@ class ChoiceValueOption(_BaseOption):
 
     def validate_value(self, value: SimpleType) -> None:
         if value not in self.available_values:
-            raise OptionValueValidationError(
+            raise OptionValueValidationFrameworkError(
                 f"Value '{value}' for option '{self.name}' is not one of its available "
                 f"choice values {self.available_values}.",
             )
@@ -522,18 +535,18 @@ class ToggleableChoicesValueOption(_BaseOption):
 
     def validate_value(self, value: Any) -> None:
         if not isinstance(value, dict):
-            raise OptionValueValidationError(
+            raise OptionValueValidationFrameworkError(
                 f"Value '{value}' for option '{self.name}' must be a dictionary.",
             )
 
         for key, value in value.items():
             if key not in self.available_values:
-                raise OptionValueValidationError(
+                raise OptionValueValidationFrameworkError(
                     f"Key '{key}' in dictionary value for option '{self.name}' is not "
                     f"one of its available choice values {self.available_values}.",
                 )
             if not isinstance(value, bool):
-                raise OptionValueValidationError(
+                raise OptionValueValidationFrameworkError(
                     f"Value '{value}' for key '{key}' in dictionary value for option "
                     f"'{self.name}' is not a boolean.",
                 )
@@ -564,7 +577,7 @@ class ToggleableChoicesValueOption(_BaseOption):
             if not isinstance(element, (str, int, float, bool)):
                 raise OptionConfigurationParameterTypeError(
                     error_message=(
-                        f"Failed to configure option. The parameter 'available_values' "
+                        "Failed to configure option. The parameter 'available_values' "
                         "must be a set containing elements of type 'str', 'int', "
                         "'float', or 'bool' "
                     ),
@@ -625,20 +638,20 @@ class DictionaryValueOption(_BaseOption):
 
     def validate_value(self, value: dict[str, SimpleType]) -> None:
         if not isinstance(value, dict):
-            raise OptionValueValidationError(
+            raise OptionValueValidationFrameworkError(
                 f"Value '{value}' for option '{self.name}' must be a dictionary.",
             )
 
         for dict_key, dict_value in value.items():
             # The value of keys in DictionaryValueOption is always a string.
             if not isinstance(dict_key, str):
-                raise OptionValueValidationError(
+                raise OptionValueValidationFrameworkError(
                     f"Key '{dict_key}' in dictionary value for option '{self.name}' "
                     "failed against its key type validation: str",
                 )
             if self.key_validating_regex:
                 if re.match(self.key_validating_regex, str(dict_key)) is None:
-                    raise OptionValueValidationError(
+                    raise OptionValueValidationFrameworkError(
                         f"Key '{dict_key}' in dictionary value for option "
                         f"'{self.name}' failed against its key validating regex: "
                         f"{self.key_validating_regex}",
@@ -647,21 +660,24 @@ class DictionaryValueOption(_BaseOption):
                 try:
                     self.key_validating_function(dict_key)
                 except OptionValueValidationError as exc:
-                    raise OptionValueValidationError(
-                        f"Key '{dict_key}' in dictionary value for option "
-                        f"'{self.name}' failed against its key validating function: "
-                        f"{exc}",
+                    raise OptionValueValidationFrameworkError(
+                        message=(
+                            f"Key '{dict_key}' in dictionary value for option "
+                            f"'{self.name}' failed against its key validating "
+                            f"function: {exc}"
+                        ),
+                        detail=exc.detail,
                     )
             if self.value_type:
                 if not isinstance(dict_value, self.value_type):
-                    raise OptionValueValidationError(
+                    raise OptionValueValidationFrameworkError(
                         f"Value '{dict_value}' in dictionary value for option "
                         f"'{self.name}' failed to match its value type validation: "
                         f"{self.value_type}",
                     )
             if self.value_validating_regex:
                 if re.match(self.value_validating_regex, str(dict_value)) is None:
-                    raise OptionValueValidationError(
+                    raise OptionValueValidationFrameworkError(
                         f"Value '{dict_value}' in dictionary value for option "
                         f"'{self.name}' failed to match its value validating regex: "
                         f"{self.value_validating_regex}",
@@ -670,18 +686,24 @@ class DictionaryValueOption(_BaseOption):
                 try:
                     self.value_validating_function(dict_value)
                 except OptionValueValidationError as exc:
-                    raise OptionValueValidationError(
-                        f"Value '{dict_value}' in dictionary value for option "
-                        "'{self.name}' failed against its value validating function: "
-                        f"{exc}",
+                    raise OptionValueValidationFrameworkError(
+                        message=(
+                            f"Value '{dict_value}' in dictionary value for option "
+                            f"'{self.name}' failed against its value validating "
+                            f"function: {exc}"
+                        ),
+                        detail=exc.detail,
                     )
         if self.validating_function:
             try:
                 self.validating_function(value)
             except OptionValueValidationError as exc:
-                raise OptionValueValidationError(
-                    f"Value '{value}' in dictionary value for option '{self.name}' "
-                    f"failed against its validating function: {exc}",
+                raise OptionValueValidationFrameworkError(
+                    message=(
+                        f"Value '{value}' in dictionary value for option '{self.name}' "
+                        f"failed against its validating function: {exc}"
+                    ),
+                    detail=exc.detail,
                 )
 
     def to_json(

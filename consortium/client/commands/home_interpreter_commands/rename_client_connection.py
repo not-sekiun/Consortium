@@ -23,8 +23,8 @@ class RenameClientConnectionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            rename_client_connection "New name" # Renames the current client connection if the client connection ID is not specified.
-            rename_client_connection 123e4567-e89b-12d3-a456-42661417400 "New name"
+          rename_client_connection "New name" # Renames the current client connection if the client connection ID is not specified.
+          rename_client_connection 123e4567-e89b-12d3-a456-42661417400 "New name"
         """,
     )
 

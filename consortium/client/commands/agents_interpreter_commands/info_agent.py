@@ -20,7 +20,7 @@ class InfoAgentCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_agent 123e4567-e89b-12d3-a456-42661417400
+          info_agent 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -52,19 +52,48 @@ class InfoAgentCommand(BaseCommand):
             table.add_row("Name", agent["name"])
             table.add_row("Description", agent["description"])
             table.add_row("Endpoint", agent["endpoint"])
+            agent_type_table = Table()
+            agent_type_table.add_column("Information")
+            agent_type_table.add_column("Data")
+            agent_type_table.add_row(
+                "Agent Type ID",
+                agent["agent_type"]["agent_type_id"],
+            )
+            agent_type_table.add_row(
+                "Name",
+                agent["agent_type"]["name"],
+            )
+            agent_type_table.add_row(
+                "Compatible Listener Types",
+                "\n".join(
+                    [
+                        listener_type["name"]
+                        + " ("
+                        + listener_type["listener_type_id"]
+                        + ")"
+                        for listener_type in agent["agent_type"][
+                            "compatible_listener_types"
+                        ]
+                    ],
+                ),
+            )
+            table.add_row("Agent Type", agent_type_table)
+            table.add_row("Running As Admin", agent["is_admin"])
+            table.add_row("Operating System", agent["os"])
+            table.add_row("System Version", agent["version"])
+            table.add_row("System Arch", agent["arch"])
+            table.add_row("Process ID", agent["pid"])
+            table.add_row("System Locale", agent["locale"])
+            table.add_row("Remote Host Address", agent["remote_host_address"])
+            table.add_row("Local Host Address", agent["local_host_address"])
+            table.add_row("First Checked In", agent["datetime_first_checked_in"])
+            table.add_row("Last Checked In", agent["datetime_last_checked_in"])
             agent_data_table = Table(title="Agent Data")
             agent_data_table.add_column("Information")
             agent_data_table.add_column("Data")
             for key, value in agent["agent_data"].items():
                 agent_data_table.add_row(key, value)
             table.add_row("Agent Data", agent_data_table)
-            # # TODO: Figure out a standardized way to represent and print results
-            # table.add_row("Results", repr(agent["results"]))
-            table.add_row(
-                "Datetime First Checked In",
-                agent["datetime_first_checked_in"],
-            )
-            table.add_row("Datetime Last Checked In", agent["datetime_last_checked_in"])
 
             CONSOLE.print(table)
         except SystemExit:

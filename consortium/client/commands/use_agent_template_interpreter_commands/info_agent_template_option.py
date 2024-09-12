@@ -23,7 +23,7 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            info_agent_template_option remote_host
+          info_agent_template_option remote_host
         """,
     )
 

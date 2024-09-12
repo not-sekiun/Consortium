@@ -8,8 +8,6 @@ class BaseFrameworkException(Exception):
 
 
 class BaseRaiseOnlyFrameworkException(BaseFrameworkException):
-    code: str
-
     def __init__(self, message: str, detail: Any = None):
         self.message = message
         self.detail = detail

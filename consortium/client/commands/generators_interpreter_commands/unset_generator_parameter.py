@@ -21,7 +21,7 @@ class UnsetGeneratorParameterCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            unset_generator_parameter 123e4567-e89b-12d3-a456-42661417400 option_name
+          unset_generator_parameter 123e4567-e89b-12d3-a456-42661417400 option_name
         """,
     )
 

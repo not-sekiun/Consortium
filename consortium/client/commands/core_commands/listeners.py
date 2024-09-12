@@ -20,7 +20,7 @@ class ListenersCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            listeners
+          listeners
         """,
     )
 

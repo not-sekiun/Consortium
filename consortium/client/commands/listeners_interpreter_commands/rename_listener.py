@@ -21,7 +21,7 @@ class RenameListenerCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            rename_listener 123e4567-e89b-12d3-a456-42661417400 "New name"
+          rename_listener 123e4567-e89b-12d3-a456-42661417400 "New name"
         """,
     )
 
@@ -41,7 +41,7 @@ class RenameListenerCommand(BaseCommand):
         try:
             parsed_commands = self.parser.parse_args(command_context.arguments)
             client_connection = command_context.environment["client_connection"]
-            listener = client_connection.get_listener_by_listener_id(
+            listener = await client_connection.get_listener_by_listener_id(
                 listener_id=parsed_commands.listener_id[0],
             )
 

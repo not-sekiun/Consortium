@@ -36,9 +36,9 @@ class ConnectCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-            connect -c  # Connect using the default filepath to the client configuration file.
-            connect -c path/to/client_config.json  # Connect using a custom configuration file.
-            connect -u username -p password -rh server.com -rp 1234  # Connect through manually provided connection details.
+          connect -c  # Connect using the default filepath to the client configuration file.
+          connect -c path/to/client_config.json  # Connect using a custom configuration file.
+          connect -u username -p password -rh server.com -rp 1234  # Connect through manually provided connection details.
         """,
     )
 
