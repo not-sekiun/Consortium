@@ -1,7 +1,7 @@
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.commands.agents_interpreter_commands.info_agent import (
     InfoAgentCommand,
 )
@@ -17,7 +17,6 @@ from consortium.client.commands.agents_interpreter_commands.list_results import 
 from consortium.client.commands.agents_interpreter_commands.list_tasks import (
     ListTasksCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.task import TaskCommand
 from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
 from consortium.client.objects.client_interpreter_objects import ClientInterpreter
 from consortium.client.utils.data_structure_utils import (
@@ -31,13 +30,12 @@ AGENTS_INTERPRETER_COMMANDS = [
     InfoAgentCommand(),
     InteractAgentCommand(),
     ListTasksCommand(),
-    TaskCommand(),
     ListResultsCommand(),
 ]
 
 
 class AgentsInterpreter(ClientInterpreter):
-    def __init__(self, client_connection: ClientConnection):
+    def __init__(self, client_connection: ClientRESTAPIConnection):
         super().__init__(
             prompt=ANSI(
                 format_rich_text_as_ansi(
@@ -66,7 +64,6 @@ class AgentsInterpreter(ClientInterpreter):
                 "interact_agent",
                 "list_tasks",
                 "list_results",
-                "task",
             ]
         }.items():
             nested_completer_dict[key] = value

@@ -15,6 +15,12 @@ from consortium.server.services.plugins_service import PluginsService
 from consortium.server.services.user_accounts_service import UserAccountsService
 from consortium.server.services.users_service import UsersService
 
+# The event hooks, listeners, agent generators, agents, and users services need the
+# events service to be dependency injected into them so we instantiate the events
+# service first.
+events_service = EventsService()
+event_hooks_service = EventHooksService(events_service=events_service)
+
 # Agent profiles service needs to be instantiated before the agent templates service
 # because the agent templates service relies on the agent profiles service to retrieve
 # agent profiles.
@@ -24,6 +30,7 @@ agent_templates_service = AgentTemplatesService(
 )
 agent_generators_service = AgentGeneratorsService(
     agent_templates_service=agent_templates_service,
+    events_service=events_service,
 )
 
 # Listener profiles service needs to be instantiated before the listener templates
@@ -35,6 +42,7 @@ listener_templates_service = ListenerTemplatesService(
 )
 listeners_service = ListenersService(
     listener_templates_service=listener_templates_service,
+    events_service=events_service,
 )
 
 c2_types_service = C2TypesService(
@@ -42,14 +50,11 @@ c2_types_service = C2TypesService(
     agent_profiles_service=agent_profiles_service,
 )
 
-# Event hooks service needs the events service to be dependency injected into it such
-# that it can register/deregister event handlers when load/unloading/reloading event
-# hooks.
-events_service = EventsService()
-event_hooks_service = EventHooksService(events_service=events_service)
+agents_service = AgentsService(
+    events_service=events_service,
+)
 
 # These services are instantiated independent of other services.
-agents_service = AgentsService()
 application_service = ApplicationService()
 user_accounts_service = UserAccountsService()
 users_service = UsersService()

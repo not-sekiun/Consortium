@@ -21,7 +21,7 @@ from consortium.server.server_config import (
     JSON_WEB_TOKEN_SECRET_KEY,
 )
 
-rest_api_logger = logger.bind(logger_name="Consortium REST API")
+rest_api_logger = logger.bind(logger_name="REST API")
 users_service = server_singletons.users_service
 application_service = server_singletons.application_service
 

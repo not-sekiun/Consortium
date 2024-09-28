@@ -97,7 +97,7 @@ navigating to `/doc` or `/redoc` at the server's root URL in a web browser.
 The Consortium server provides a WebSocket API for server-initiated push events. While
 this is considered part of its API, it is _not_ documented by FastAPI due to issues
 with the OpenAPI specification. As such the WebSocket API is documented at the
-[Consortium wiki's](https://github.com/not-sekiun/Consortium/wiki) Events WebSocket API page.
+Consortium wiki's Events WebSocket API page.
 
 ### Client Documentation
 To view all commands for a particular interpreter in the client type `help`.
@@ -170,7 +170,15 @@ Examples:
 
 ### Complete Framework Documentation (WIP)
 The complete documentation for the Consortium framework is available at the
-[Consortium wiki](https://github.com/not-sekiun/Consortium/wiki).
+[Consortium wiki](https://github.com/not-sekiun/Consortium). This wiki is also 
+available locally under the `docs` folder from the project root. The wiki is hosted with
+`mkdocs`. To view it locally, install `mkdocs` through poetry and run it by changing 
+directory into the `docs` folder and serving the documentation locally.
+
+```shell
+cd docs
+poetry run mkdocs serve
+```
 
 The wiki provides:
 

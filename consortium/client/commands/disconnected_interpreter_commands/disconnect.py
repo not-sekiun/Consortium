@@ -47,7 +47,7 @@ class DisconnectCommand(BaseCommand):
                 print_error(str(exc))
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-            await client_connection.logout()
+            await client_connection.disconnect()
             client_connections_service.remove_client_connection(
                 client_connection,
             )

@@ -1,7 +1,7 @@
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.generators_interpreter_commands.cancel_generator import (
     CancelGeneratorCommand,
@@ -69,7 +69,7 @@ GENERATORS_INTERPRETER_COMMANDS = [
 class GeneratorsInterpreter(ClientInterpreter):
     def __init__(
         self,
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
     ):
         super().__init__(
             prompt=ANSI(

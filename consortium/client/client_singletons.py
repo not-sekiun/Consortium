@@ -1,5 +1,5 @@
-from consortium.client.services.client_connections_service import (
-    ClientConnectionsService,
+from consortium.client.services.client_rest_api_connections_service import (
+    ClientRESTAPIConnectionsService,
 )
 
-client_connections_service = ClientConnectionsService()
+client_connections_service = ClientRESTAPIConnectionsService()

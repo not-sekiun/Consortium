@@ -5,12 +5,12 @@ from typing import Any
 import aiohttp
 from loguru import logger
 
-from consortium.client.client_exceptions import (
-    AlreadyLoggedInError,
-    FailedToLoginError,
-    InvalidServerLoginResponseError,
-    NotLoggedInError,
-    RESTAPIError,
+from consortium.client.exceptions.client_rest_api_connection_exceptions import (
+    ClientRESTAPIConnectionAlreadyLoggedInError,
+    ClientRESTAPIConnectionFailedToLoginError,
+    ClientRESTAPIConnectionNotLoggedInError,
+    ClientRESTAPIOperationError,
+    InvalidServerRESTAPILoginResponseError,
 )
 from consortium.client.objects.client_objects import ClientConfig
 
@@ -19,9 +19,7 @@ def _check_if_logged_in(async_func):
     async def wrapper(*args, **kwargs):
         # args[0] is the self parameter of the method.
         if not args[0]._logged_in:
-            raise NotLoggedInError(
-                "Client is not logged in to server.",
-            )
+            raise ClientRESTAPIConnectionNotLoggedInError
 
         return await async_func(*args, **kwargs)
 
@@ -33,12 +31,12 @@ def _check_for_rest_api_error_response(async_func):
         response = await async_func(*args, **kwargs)
 
         if "error" in response and response["error"]["detail"]:
-            raise RESTAPIError(
+            raise ClientRESTAPIOperationError(
                 f"{response["error"]["code"]}: {response["error"]["message"]} "
                 f"(Detail: {response["error"]["detail"]})",
             )
         elif "error" in response and not response["error"]["detail"]:
-            raise RESTAPIError(
+            raise ClientRESTAPIOperationError(
                 f"{response["error"]["code"]}: {response["error"]["message"]}",
             )
 
@@ -47,7 +45,7 @@ def _check_for_rest_api_error_response(async_func):
     return wrapper
 
 
-class ClientConnection:
+class ClientRESTAPIConnection:
     def __init__(self, client_config: ClientConfig):
         self.client_config = client_config
         self.username = client_config.username
@@ -62,8 +60,7 @@ class ClientConnection:
 
         self._client_connection_logger = logger.bind(
             logger_name=(
-                f'Consortium Client Connection "{self.name}" '
-                f"({self.client_connection_id})"
+                f"Client Connection '{self.name}' " f"({self.client_connection_id})"
             ),
         )
         self._api_base_url = f"http://{self.remote_host}:{self.remote_port}/api"
@@ -73,7 +70,7 @@ class ClientConnection:
         return f"ClientConnection(client_config={self.client_config})"
 
     def __str__(self):
-        return f'"{self.name}" ({self.client_connection_id})'
+        return f"'{self.name}' ({self.client_connection_id})"
 
     async def _request(self, method: str, url: str, **kwargs) -> Any:
         response = await self._aiohttp_client_session.request(method, url, **kwargs)
@@ -127,11 +124,7 @@ class ClientConnection:
     # Wrapper methods for the /api/login API endpoints.
     async def login(self):
         if self._logged_in:
-            raise AlreadyLoggedInError(
-                "Client is already logged in to server (Log out from server before "
-                "attempting to log in).",
-            )
-
+            raise ClientRESTAPIConnectionAlreadyLoggedInError
         try:
             self._aiohttp_client_session = aiohttp.ClientSession()
             response = await self._aiohttp_client_session.post(
@@ -149,19 +142,12 @@ class ClientConnection:
             raise exc
 
         if response.status != 200:
-            raise FailedToLoginError(
-                "Failed to login to server. Either invalid credentials were provided "
-                "or the server is not a valid Consortium server instance.",
-            )
+            raise ClientRESTAPIConnectionFailedToLoginError
         if (
             response_json["token_type"] != "bearer"
             or "access_token" not in response_json
         ):
-            raise InvalidServerLoginResponseError(
-                "Failed to login to server because it did not return a valid OAuth2 "
-                "JSON web token. The server is likely not a valid Consortium server "
-                "instance.",
-            )
+            raise InvalidServerRESTAPILoginResponseError
 
         self.datetime_connected = datetime.now()
         self._aiohttp_client_session.headers.update(
@@ -172,7 +158,9 @@ class ClientConnection:
     # Wrapper methods for the /api/logout API endpoint.
     async def logout(self):
         if not self._logged_in:
-            raise NotLoggedInError("Client is not logged in to server.")
+            raise ClientRESTAPIConnectionNotLoggedInError(
+                "Client is not logged in to server.",
+            )
 
         await self._request(
             method="POST",
@@ -519,17 +507,6 @@ class ClientConnection:
         return await self._request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/results/fail",
-        )
-
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def get_all_errored_agent_results_by_agent_id(
-        self,
-        agent_id: str,
-    ) -> list[dict[str, Any]]:
-        return await self._request(
-            method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/results/error",
         )
 
     # Wrapper methods for the /api/users API endpoint.

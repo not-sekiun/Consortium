@@ -41,7 +41,7 @@ class PluginsService:
         self.plugins_service_logger.debug("Started Plugins Service")
 
     def __str__(self):
-        return "Consortium Plugins Service"
+        return "Plugins Service"
 
     def __repr__(self):
         return "PluginsService()"
@@ -346,7 +346,7 @@ class PluginsService:
                 )
 
         self._plugins[str(plugin.plugin_id)] = plugin
-        self.plugins_service_logger.info(f"Loaded plugin: {plugin}")
+        self.plugins_service_logger.success(f"Loaded plugin: {plugin}")
         self.plugins_service_logger.debug(f"Loaded plugin: {plugin!r}")
         return plugin
 
@@ -408,6 +408,31 @@ class PluginsService:
         self.plugins_service_logger.info(f"Reloaded plugin: {plugin}")
         self.plugins_service_logger.debug(f"Reloaded plugin: {plugin!r}")
         return plugin
+
+    async def start_plugin_by_plugin_id(self, plugin_id: str, blocking: bool = False):
+        plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
+        if not blocking:
+            await plugin.start_plugin()
+            return
+
+        await plugin.start_plugin()
+        while plugin.status.state in (PluginState.INITIALIZED, PluginState.STARTED):
+            await asyncio.sleep(0.1)
+
+    async def stop_plugin_by_plugin_id(self, plugin_id: str, blocking: bool = False):
+        plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
+
+        if not blocking:
+            await plugin.stop_plugin()
+            return
+
+        await plugin.stop_plugin()
+        while plugin.status.state == PluginState.RUNNING:
+            await asyncio.sleep(0.1)
+
+    async def restart_plugin_by_plugin_id(self, plugin_id: str):
+        await self.start_plugin_by_plugin_id(plugin_id=plugin_id, blocking=True)
+        await self.stop_plugin_by_plugin_id(plugin_id=plugin_id, blocking=True)
 
     def get_plugin_by_plugin_id(self, plugin_id: str) -> BasePlugin:
         try:

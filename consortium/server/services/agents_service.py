@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from loguru import logger
@@ -12,32 +13,46 @@ from consortium.server.exceptions.service_exceptions.agents_service_exceptions i
 )
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
 from consortium.server.objects.agent_objects import Agent
+from consortium.server.objects.event_objects import Event, EventType
+from consortium.server.services.events_service import EventsService
 
 
 class AgentsService:
-    def __init__(self):
+    def __init__(self, events_service: EventsService):
+        self._events_service = events_service
         self._agents = {}
         self.agents_service_logger = logger.bind(
             logger_name=str(self),
         )
 
     def __str__(self) -> str:
-        return "Consortium Agents Service"
+        return "Agents Service"
 
     def __repr__(self) -> str:
         return "AgentsService()"
 
-    def create_and_add_agent(self, *args, **kwargs) -> Agent:
+    async def create_and_add_agent(self, *args, **kwargs) -> Agent:
         agent = Agent(*args, **kwargs)
         self._agents[str(agent.agent_id)] = agent
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_REGISTERED,
+                data={"agent_id": agent.agent_id},
+            ),
+        )
         self.agents_service_logger.info(f"Created and added agent: {agent}")
         self.agents_service_logger.debug(f"Created and added agent: {agent!r}")
         return agent
 
-    def remove_agent_by_agent_id(self, agent_id: str) -> None:
+    async def remove_agent_by_agent_id(self, agent_id: str) -> None:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-
         del self._agents[agent_id]
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_DEREGISTERED,
+                data={"agent_id": agent.agent_id},
+            ),
+        )
         self.agents_service_logger.info(f"Removed agent: {agent}")
         self.agents_service_logger.debug(f"Removed agent: {agent!r}")
 
@@ -149,18 +164,6 @@ class AgentsService:
         )
         return failed_results
 
-    def get_all_errored_results_by_agent_id(
-        self,
-        agent_id: str,
-    ) -> list[AgentResultModel]:
-        agent = self.get_agent_by_agent_id(agent_id)
-        errored_results = agent.get_all_errored_results()
-        self.agents_service_logger.debug(
-            f"Retrieved errored results from agent {agent_id} ({len(errored_results)} "
-            f"retrieved)",
-        )
-        return errored_results
-
     def get_agent_result_by_agent_id_and_result_id(
         self,
         agent_id: str,
@@ -170,7 +173,8 @@ class AgentsService:
         for result in all_results:
             if result.result_id == result_id:
                 self.agents_service_logger.debug(
-                    f"Retrieved result {result_id} from agent {agent_id}",
+                    f"Retrieved result {result!r} from agent with agent ID "
+                    f"'{agent_id}'",
                 )
                 return result
         raise AgentResultNotFoundError(result_id=result_id)
@@ -184,7 +188,26 @@ class AgentsService:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = AgentTaskModel(command=command, arguments=arguments)
         await agent.add_task(task=task)
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_TASKED,
+                data={"agent_id": agent.agent_id},
+            ),
+        )
+        self.agents_service_logger.info(f"Tasked agent {agent} with task {task}")
+        self.agents_service_logger.debug(f"Tasked agent {agent!r} with task {task!r}")
         return task
+
+    async def check_in_agent_by_agent_id(self, agent_id: str) -> None:
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_CHECKED_IN,
+                data={"agent_id": agent.agent_id},
+            ),
+        )
+        agent.datetime_last_checked_in = datetime.now()
+        self.agents_service_logger.debug(f"Checked in agent {agent!r}")
 
     def delete_queued_agent_task_by_task_id(self, agent_id: str, task_id: str):
         agent = self.get_agent_by_agent_id(agent_id=agent_id)

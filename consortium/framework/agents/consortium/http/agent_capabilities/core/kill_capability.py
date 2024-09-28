@@ -1,10 +1,6 @@
 from collections.abc import AsyncGenerator
 
-from consortium.framework.base_agent_capability import (
-    AgentCapabilityCommunicationModel,
-    BaseAgentCapability,
-    SupportedOS,
-)
+from consortium.framework.base_agent_capability import BaseAgentCapability, SupportedOS
 from consortium.server.models.agent_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
@@ -16,7 +12,6 @@ class KillCapability(BaseAgentCapability):
     description = "Kill the agent."
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    communication_model = AgentCapabilityCommunicationModel.REQUEST_RESPONSE
     authors = {"Sekiun (github.com/not-sekiun)"}
 
     async def handle_sending_agent_task_messages(

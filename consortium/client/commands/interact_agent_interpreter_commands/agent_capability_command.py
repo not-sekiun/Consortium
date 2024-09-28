@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from typing import Any
 
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.framework.base_command import (
     BaseCommand,
     CommandContext,
@@ -13,9 +13,9 @@ from consortium.client.objects.client_return_status_objects import (
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import (
     print_error,
+    print_info,
     print_success,
     print_warning,
-    print_info,
 )
 
 
@@ -101,12 +101,13 @@ def construct_agent_capability_command(
             for argument_name, argument in agent_capability_json_data[
                 "arguments"
             ].items():
-                # Determine the number of arguments to expect based on the option type.
+                # Configure the number of arguments that the parser expects for a
+                # particular argument based on the option type.
                 if argument["option_type"] in (
                     "SINGLE_VALUE_OPTION",
                     "CHOICE_VALUE_OPTION",
                 ):
-                    nargs = 1
+                    nargs = "?"
                 elif argument["option_type"] in (
                     "LIST_VALUE_OPTION",
                     "TOGGLEABLE_CHOICES_VALUE_OPTION",
@@ -154,7 +155,13 @@ def construct_agent_capability_command(
                     nargs=nargs,
                     type=value_type,
                     required=argument["required"],
+                    # For `nargs` being set to `"?"` there are two possibilities when
+                    # it comes to assigning default values. When the flag is passed but
+                    # no argument is passed the value from `default` is used, when the
+                    # flag is not passed at all, the value from `const` is used. We make
+                    # no distinction here so we use the exact same value.
                     default=argument["default_value"],
+                    const=argument["default_value"],
                 )
 
         @staticmethod
@@ -235,7 +242,7 @@ def construct_agent_capability_command(
             value_type_flag: str | None,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientConnection,
+            client_connection: ClientRESTAPIConnection,
         ) -> None:
             parameter_value, value_type_annotation = (
                 self._check_value_for_value_type_annotation(
@@ -280,7 +287,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientConnection,
+            client_connection: ClientRESTAPIConnection,
         ) -> None:
             parameter_value, value_type_annotation = (
                 self._check_value_for_value_type_annotation(
@@ -352,7 +359,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientConnection,
+            client_connection: ClientRESTAPIConnection,
         ) -> None:
             new_parameter_values = []
             for parameter_value in parameter_values:
@@ -402,7 +409,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientConnection,
+            client_connection: ClientRESTAPIConnection,
         ) -> None:
             new_agent_generator_parameter = {}
             for index in range(0, len(parameter_values), 2):
@@ -473,7 +480,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientConnection,
+            client_connection: ClientRESTAPIConnection,
         ) -> None:
             new_agent_generator_parameter = {}
             toggled_on_values = []
@@ -568,7 +575,7 @@ def construct_agent_capability_command(
                 )
                 print_info(
                     f"Tasked agent '{command_context.environment["agent"]["name"]}' "
-                    f"({command_context.environment["agent"]["agent_id"]})"
+                    f"({command_context.environment["agent"]["agent_id"]})",
                 )
             except SystemExit:
                 pass

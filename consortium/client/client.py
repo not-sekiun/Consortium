@@ -1,14 +1,14 @@
 from aiohttp.client import ClientConnectionError
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.client_connection import ClientConnection
-from consortium.client.client_exceptions import (
-    AlreadyLoggedInError,
-    FailedToLoginError,
-    InvalidServerLoginResponseError,
-)
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.core_commands.banner import BannerCommand
+from consortium.client.exceptions.client_rest_api_connection_exceptions import (
+    ClientRESTAPIConnectionAlreadyLoggedInError,
+    ClientRESTAPIConnectionFailedToLoginError,
+    InvalidServerRESTAPILoginResponseError,
+)
 from consortium.client.framework.base_command import CommandContext
 from consortium.client.interpreters.disconnected_interpreter import (
     DisconnectedInterpreter,
@@ -27,7 +27,7 @@ class Client:
         self.client_config = client_config
 
     async def start_client(self):
-        client_connection = ClientConnection(client_config=self.client_config)
+        client_connection = ClientRESTAPIConnection(client_config=self.client_config)
 
         try:
             await client_connection.login()
@@ -37,9 +37,9 @@ class Client:
             )
         # AlreadyLoggedInError should not be raised unless a programmer error is made.
         except (
-            FailedToLoginError,
-            InvalidServerLoginResponseError,
-            AlreadyLoggedInError,
+            ClientRESTAPIConnectionFailedToLoginError,
+            InvalidServerRESTAPILoginResponseError,
+            ClientRESTAPIConnectionAlreadyLoggedInError,
             ClientConnectionError,
         ) as exc:
             print_error(f"Failed to login to server: {exc}")

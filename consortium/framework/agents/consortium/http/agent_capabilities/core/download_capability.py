@@ -1,10 +1,6 @@
 from collections.abc import AsyncGenerator
 
-from consortium.framework.base_agent_capability import (
-    AgentCapabilityCommunicationModel,
-    BaseAgentCapability,
-    SupportedOS,
-)
+from consortium.framework.base_agent_capability import BaseAgentCapability, SupportedOS
 from consortium.framework.options import SingleValueOption
 from consortium.server.models.agent_models import (
     AgentResultMessageModel,
@@ -18,7 +14,6 @@ class DownloadCapability(BaseAgentCapability):
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
     authors = {"Sekiun (github.com/not-sekiun)"}
-    communication_model = AgentCapabilityCommunicationModel.LISTENER_DIRECTED_STREAMING
     arguments = {
         SingleValueOption(
             name="source",

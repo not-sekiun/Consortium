@@ -5,10 +5,12 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.client_exceptions import (
-    RESTAPIError,
-    UnclosedDoubleQuotesError,
+from consortium.client.exceptions.client_rest_api_connection_exceptions import (
+    ClientRESTAPIOperationError,
+)
+from consortium.client.exceptions.client_interpreter_exceptions import (
     UnclosedSingleQuotesError,
+    UnclosedDoubleQuotesError,
 )
 from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.disconnected_interpreter_commands.disconnect import (
@@ -101,7 +103,7 @@ class DisconnectedInterpreter(BaseInterpreter):
     # In general, when an error is raised on the REST API side we simply print the error
     # message to the console and interrupt whichever operation we were attempting to do.
     async def on_interpreter_errored(self, exc: Exception) -> None:
-        if isinstance(exc, RESTAPIError):
+        if isinstance(exc, ClientRESTAPIOperationError):
             print_error(f"Error: {exc}")
         else:
             print_error(f"Fatal error occurred: {exc}")

@@ -73,7 +73,7 @@ class BaseAgentType:
                 )
 
     def __str__(self) -> str:
-        return f'"{self.name}" ({str(self.agent_type_id)})'
+        return f"'{self.name}' ({str(self.agent_type_id)})"
 
     def __repr__(self) -> str:
         return (
@@ -203,7 +203,7 @@ class BaseListenerType:
                 )
 
     def __str__(self) -> str:
-        return f'"{self.name}" ({str(self.listener_type_id)})'
+        return f"'{self.name}' ({str(self.listener_type_id)})"
 
     def __repr__(self) -> str:
         return (

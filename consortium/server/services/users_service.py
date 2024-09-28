@@ -15,7 +15,7 @@ class UsersService:
         self.users_service_logger.debug(f"Started {self}")
 
     def __str__(self) -> str:
-        return "Consortium Users Service"
+        return "Users Service"
 
     def __repr__(self) -> str:
         return "UsersService()"

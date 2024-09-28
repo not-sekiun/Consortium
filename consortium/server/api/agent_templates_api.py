@@ -98,7 +98,7 @@ _example_agent_template_option_not_found_framework_error = (
     },
     status_code=201,
 )
-def create_agent_generator_through_agent_template_by_agent_template_id(
+async def create_agent_generator_through_agent_template_by_agent_template_id(
     agent_template_id: str,
     options: dict[str, Any],
     _: Annotated[
@@ -107,7 +107,7 @@ def create_agent_generator_through_agent_template_by_agent_template_id(
     ],
 ) -> AgentGeneratorModel:
     try:
-        agent_generator = agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
+        agent_generator = await agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
             agent_template_id=agent_template_id,
             options=options,
         )

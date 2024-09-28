@@ -31,21 +31,28 @@ from consortium.server.exceptions.service_exceptions.listeners_service_exception
     ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundServiceError,
     ListenerTemplateOptionValueError as ListenerTemplateOptionValueServiceError,
 )
+from consortium.server.objects.event_objects import Event, EventType
 from consortium.server.objects.listener_objects import ListenerState
+from consortium.server.services.events_service import EventsService
 from consortium.server.services.listener_templates_service import (
     ListenerTemplatesService,
 )
 
 
 class ListenersService:
-    def __init__(self, listener_templates_service: ListenerTemplatesService):
+    def __init__(
+        self,
+        listener_templates_service: ListenerTemplatesService,
+        events_service: EventsService,
+    ):
         self._listener_templates_service = listener_templates_service
+        self._events_service = events_service
         self._listeners = {}
         self.listeners_service_logger = logger.bind(logger_name=str(self))
         self.listeners_service_logger.debug(f"Started {self}")
 
     def __str__(self) -> str:
-        return "Consortium Listeners Service"
+        return "Listeners Service"
 
     def __repr__(self) -> str:
         return (
@@ -70,10 +77,12 @@ class ListenersService:
         )
         return all_listeners
 
-    def create_listener_from_listener_template_by_listener_template_id(
+    async def create_listener_from_listener_template_by_listener_template_id(
         self,
         listener_template_id: str,
         options: dict[str, Any],
+        name: str | None = None,
+        description: str = "",
     ) -> BaseListener:
         listener_template = self._listener_templates_service.get_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
@@ -96,7 +105,10 @@ class ListenersService:
                 )
 
         try:
-            listener = listener_template.create_listener()
+            listener = listener_template.create_listener(
+                name=name,
+                description=description,
+            )
         except EmptyListenerNameFrameworkError as exc:
             raise EmptyListenerNameServiceError(
                 message=exc.message,
@@ -104,25 +116,43 @@ class ListenersService:
             )
         listener_template.clear_all_option_values()
         self._listeners[str(listener.listener_id)] = listener
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_CREATED,
+                data={"listener_id": listener.listener_id},
+            ),
+        )
         self.listeners_service_logger.info(f"Created listener: {listener}")
         self.listeners_service_logger.debug(f"Created listener: {listener!r}")
         return listener
 
-    def add_listener(self, listener: BaseListener) -> None:
+    async def add_listener(self, listener: BaseListener) -> None:
         if str(listener.listener_id) in self._listeners:
             raise ListenerAlreadyExistsError
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_ADDED,
+                data={"listener_id": listener.listener_id},
+            ),
+        )
         self._listeners[str(listener.listener_id)] = listener
 
-    def remove_listener_by_listener_id(self, listener_id: str) -> None:
+    async def remove_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == ListenerState.RUNNING:
             raise ListenerAlreadyRunningServiceError
 
         removed_listener = self._listeners.pop(listener_id)
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_REMOVED,
+                data={"listener_id": removed_listener.listener_id},
+            ),
+        )
         self.listeners_service_logger.info(f"Removed listener: {removed_listener}")
         self.listeners_service_logger.debug(f"Removed listener: {removed_listener!r}")
 
-    def update_listener_name_by_listener_id(
+    async def update_listener_name_by_listener_id(
         self,
         listener_id: str,
         name: str,
@@ -132,12 +162,18 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         old_name = listener.name
         listener.name = name
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_UPDATED,
+                data={"listener_id": listener.listener_id},
+            ),
+        )
         self.listeners_service_logger.info(
             f"Updated name for listener {listener}: '{old_name}' -> '{name}'",
         )
         return listener
 
-    def update_listener_description_by_listener_id(
+    async def update_listener_description_by_listener_id(
         self,
         listener_id: str,
         description: str,
@@ -145,13 +181,19 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         old_description = listener.description
         listener.description = description
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_UPDATED,
+                data={"listener_id": listener.listener_id},
+            ),
+        )
         self.listeners_service_logger.info(
             f"Updated description for listener {listener}: '{old_description}' -> "
             f"'{description}'",
         )
         return listener
 
-    def update_listener_parameters_by_listener_id(
+    async def update_listener_parameters_by_listener_id(
         self,
         listener_id: str,
         parameters: dict[str, Any],
@@ -221,6 +263,12 @@ class ListenersService:
         listener.endpoint = temporary_listener.endpoint
         listener.parameters = copy.deepcopy(temporary_listener.parameters)
 
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_UPDATED,
+                data={"listener_id": listener.listener_id},
+            ),
+        )
         self.listeners_service_logger.info(
             f"Updated parameters for listeners {listener}: {parameters}",
         )
@@ -228,6 +276,7 @@ class ListenersService:
 
     async def start_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
+
         try:
             await listener.start_listener()
         except ListenerStartFrameworkError as exc:
@@ -238,8 +287,16 @@ class ListenersService:
         except ListenerAlreadyRunningFrameworkError as exc:
             raise ListenerNotRunningServiceError(message=exc.message) from None
 
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_STARTED,
+                data={"listener_id": listener.listener_id},
+            ),
+        )
+
     async def stop_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
+
         try:
             await listener.stop_listener()
         except ListenerStopFrameworkError as exc:
@@ -250,9 +307,23 @@ class ListenersService:
         except ListenerNotRunningFrameworkError as exc:
             raise ListenerNotRunningServiceError(message=exc.message) from None
 
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_STOPPED,
+                data={"listener_id": listener.listener_id},
+            ),
+        )
+
     async def cancel_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         try:
             await listener.cancel_listener()
         except ListenerNotRunningFrameworkError as exc:
             raise ListenerNotRunningServiceError(message=exc.message) from None
+
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.LISTENER_CANCELLED,
+                data={"listener_id": listener.listener_id},
+            ),
+        )

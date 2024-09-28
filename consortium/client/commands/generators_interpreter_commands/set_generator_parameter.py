@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.framework.base_command import (
     BaseCommand,
     CommandContext,
@@ -104,7 +104,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str | None,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
     ) -> None:
         parameter_value, value_type_annotation = (
             self._check_value_for_value_type_annotation(
@@ -149,7 +149,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
     ) -> None:
         parameter_value, value_type_annotation = (
             self._check_value_for_value_type_annotation(
@@ -223,7 +223,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
     ) -> None:
         new_parameter_values = []
         for parameter_value in parameter_values:
@@ -273,7 +273,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
     ) -> None:
         new_agent_generator_parameter = {}
         for index in range(0, len(parameter_values), 2):
@@ -344,7 +344,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
     ) -> None:
         new_agent_generator_parameter = {}
         toggled_on_values = []

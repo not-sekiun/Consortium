@@ -38,6 +38,7 @@ from consortium.server.server_middleware import (
 )
 
 application_service = server_singletons.application_service
+plugins_service = server_singletons.plugins_service
 
 
 class Server:
@@ -49,7 +50,7 @@ class Server:
 
         self.status = ServerStatus.STOPPED
 
-        self._server_logger = logger.bind(logger_name="Consortium Server")
+        self._server_logger = logger.bind(logger_name="Server")
         self._app = application_service.get_application()
 
         # Configure custom api endpoints.
@@ -154,7 +155,7 @@ class Server:
                 # attempting to catch/log errors for asynchronous tasks. When
                 # exceptions happen in those tasks they bypass their supposed exception
                 # handler and are raised at the uvicorn level of logging.
-                log_level="critical",
+                log_level="error",
                 # Disables Uvicorn's server header to prevent C2 server fingerprinting.
                 server_header=False,
             )

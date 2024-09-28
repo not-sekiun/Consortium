@@ -3,6 +3,7 @@ import sys
 import traceback
 import uuid
 from abc import ABC, abstractmethod
+from pathlib import Path
 from types import SimpleNamespace
 
 from loguru import logger
@@ -73,9 +74,12 @@ class BasePlugin(ABC):
         )
         self.server_services.users_service = server_singletons.users_service
         self.plugin_logger = logger.bind(
-            logger_name=f"Consortium Plugin {self}",
+            logger_name=f"Plugin {self}",
             logger_type=LoggerType.PLUGIN_LOGGER,
         )
+        self.plugin_project_folder_path = Path(
+            sys.modules[self.__module__].__file__,
+        ).parents[0]
 
         self._plugin_task = None
 
@@ -134,7 +138,7 @@ class BasePlugin(ABC):
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f'"{self.name}" ({str(self.plugin_id)})'
+        return f"'{self.name}' ({str(self.plugin_id)})"
 
     def __repr__(self) -> str:
         return (

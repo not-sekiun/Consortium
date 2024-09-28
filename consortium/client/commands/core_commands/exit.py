@@ -40,7 +40,7 @@ class ExitCommand(BaseCommand):
                 client_connection
             ) in client_connections_service.get_all_client_connections():
                 try:
-                    await client_connection.logout()
+                    await client_connection.disconnect()
                     print_success(
                         f"Disconnected client connection {client_connection}",
                     )

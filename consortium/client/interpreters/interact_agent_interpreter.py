@@ -3,13 +3,19 @@ from typing import Any
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.commands.core_commands.agents import AgentsCommand
 from consortium.client.commands.interact_agent_interpreter_commands.agent_capability_command import (
     construct_agent_capability_command,
 )
 from consortium.client.commands.interact_agent_interpreter_commands.info_agent import (
     InfoAgentCommand,
+)
+from consortium.client.commands.interact_agent_interpreter_commands.list_results import (
+    ListResultsCommand,
+)
+from consortium.client.commands.interact_agent_interpreter_commands.list_tasks import (
+    ListTasksCommand,
 )
 from consortium.client.interpreters.agents_interpreter import (
     AGENTS_INTERPRETER_COMMANDS,
@@ -24,7 +30,7 @@ from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 class InteractAgentInterpreter(ClientInterpreter):
     def __init__(
         self,
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
         agent: dict[str, Any],
     ):
         interact_agent_interpreter_commands = [
@@ -38,6 +44,8 @@ class InteractAgentInterpreter(ClientInterpreter):
             # the context of this specific agent.
             AgentsCommand(),
             InfoAgentCommand(),
+            ListResultsCommand(),
+            ListTasksCommand(),
         ]
         super().__init__(
             prompt=ANSI(

@@ -57,3 +57,21 @@ class AgentCapabilityNotFoundError(AgentsFrameworkError):
                 f"'{agent_type_str}'."
             ),
         )
+
+
+class AgentCapabilityArgumentNotFoundError(AgentsFrameworkError):
+    def __init__(
+        self,
+        command: str,
+        argument: str,
+        agent_str: str,
+        agent_type_str: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to task the agent {agent_str} with the capability "
+                f"'{command}'. The agent tasking provided contained an argument "
+                f"'{argument}' that did not correspond with any arguments in that "
+                f"agent capability for that agent's type '{agent_type_str}'."
+            ),
+        )

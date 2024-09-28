@@ -98,13 +98,13 @@ _example_listener_template_option_not_found_framework_error = (
     },
     status_code=201,
 )
-def create_listener_through_listener_template_by_listener_template_id(
+async def create_listener_through_listener_template_by_listener_template_id(
     listener_template_id: str,
     options: dict[str, Any],
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.CREATE_LISTENER))],
 ) -> ListenerModel:
     try:
-        listener = listeners_service.create_listener_from_listener_template_by_listener_template_id(
+        listener = await listeners_service.create_listener_from_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
             options=options,
         )

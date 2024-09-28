@@ -38,7 +38,7 @@ class EventHooksService:
         self.event_hooks_service_logger.debug(f"Started {self}")
 
     def __str__(self) -> str:
-        return "Consortium Event Hooks Service"
+        return "Event Hooks Service"
 
     def __repr__(self) -> str:
         return "EventHooksService()"
@@ -156,7 +156,7 @@ class EventHooksService:
         return event_hook_object
 
     def load_framework_event_hooks(self) -> None:
-        self.event_hooks_service_logger.info(f"Loading framework event hooks...")
+        self.event_hooks_service_logger.info("Loading framework event hooks...")
 
         # Recursively search through the event hooks directory to find all event hook
         # project folders.
@@ -180,7 +180,7 @@ class EventHooksService:
         )
 
     def unload_framework_event_hooks(self) -> None:
-        self.event_hooks_service_logger.info(f"Unloading framework event hooks...")
+        self.event_hooks_service_logger.info("Unloading framework event hooks...")
 
         number_of_unloaded_event_hooks = 0
         for event_hook in self.get_all_event_hooks():
@@ -219,7 +219,7 @@ class EventHooksService:
                 event_type=event_type,
                 event_handler=event_hook.on_event_hook_triggered,
             )
-        self.event_hooks_service_logger.info(f"Loaded event hook: {event_hook}")
+        self.event_hooks_service_logger.success(f"Loaded event hook: {event_hook}")
         self.event_hooks_service_logger.debug(f"Loaded event hook: {event_hook!r}")
         return event_hook
 

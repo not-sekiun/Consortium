@@ -42,7 +42,7 @@ class AgentProfilesService:
         )
 
     def __str__(self) -> str:
-        return "Consortium Agent Profiles Service"
+        return "Agent Profiles Service"
 
     def __repr__(self) -> str:
         return "AgentProfilesService()"
@@ -270,7 +270,7 @@ class AgentProfilesService:
                 self._agent_profiles[str(agent_profile.agent_profile_id)] = (
                     agent_profile
                 )
-                self.agent_profiles_service_logger.info(
+                self.agent_profiles_service_logger.success(
                     f"Loaded agent profile: {agent_profile}",
                 )
                 self.agent_profiles_service_logger.debug(
@@ -302,7 +302,7 @@ class AgentProfilesService:
         )
         self.unload_framework_agent_profiles()
         agent_profiles = self.load_framework_agent_profiles()
-        self.agent_profiles_service_logger.info(f"Reloaded framework agent profiles.")
+        self.agent_profiles_service_logger.info("Reloaded framework agent profiles.")
         return agent_profiles
 
     def load_agent_profile_from_agent_project_folder(
@@ -324,6 +324,9 @@ class AgentProfilesService:
         except KeyError:
             raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
 
+        self.agent_profiles_service_logger.info(
+            f"Unloaded agent profile: {agent_profile}",
+        )
         self.agent_profiles_service_logger.debug(
             f"Unloaded agent profile: {agent_profile!r}",
         )
@@ -340,6 +343,9 @@ class AgentProfilesService:
 
         agent_profile = self.load_agent_profile_from_agent_project_folder(
             agent_profile.agent_project_folder_path,
+        )
+        self.agent_profiles_service_logger.info(
+            f"Reloaded agent profile: {agent_profile}",
         )
         self.agent_profiles_service_logger.debug(
             f"Reloaded agent profile: {agent_profile!r}",

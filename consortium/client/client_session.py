@@ -1,4 +1,4 @@
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.framework.base_command import ReturnStatus
 from consortium.client.interpreters.agents_interpreter import AgentsInterpreter
 from consortium.client.interpreters.generators_interpreter import GeneratorsInterpreter
@@ -20,7 +20,7 @@ from consortium.client.objects.client_return_status_objects import (
 
 
 class ClientSession:
-    def __init__(self, client_connection: ClientConnection):
+    def __init__(self, client_connection: ClientRESTAPIConnection):
         self.client_connection = client_connection
 
     async def run_client_session(self) -> ReturnStatus:

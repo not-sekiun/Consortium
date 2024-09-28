@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.objects.event_objects import Event, EventType
+from consortium.server.objects.plugin_objects import PluginState
 
 
 @asynccontextmanager
@@ -28,3 +29,9 @@ async def lifespan(_: FastAPI) -> None:
     await server_singletons.events_service.trigger_event(
         event=Event(event_type=EventType.STOP_SERVER),
     )
+    for plugin in server_singletons.plugins_service.get_all_plugins():
+        if plugin.status.state == PluginState.RUNNING:
+            await server_singletons.plugins_service.stop_plugin_by_plugin_id(
+                plugin_id=str(plugin.plugin_id),
+                blocking=True,
+            )

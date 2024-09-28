@@ -6,11 +6,11 @@ from aiohttp.client_exceptions import ClientConnectionError
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH
-from consortium.client.client_connection import ClientConnection
-from consortium.client.client_exceptions import (
-    AlreadyLoggedInError,
-    FailedToLoginError,
-    InvalidServerLoginResponseError,
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
+from consortium.client.exceptions.client_rest_api_connection_exceptions import (
+    ClientRESTAPIConnectionAlreadyLoggedInError,
+    ClientRESTAPIConnectionFailedToLoginError,
+    InvalidServerRESTAPILoginResponseError,
 )
 from consortium.client.framework.base_command import (
     BaseCommand,
@@ -173,14 +173,14 @@ class ConnectCommand(BaseCommand):
                 )
 
             try:
-                client_connection = ClientConnection(client_config=client_config)
+                client_connection = ClientRESTAPIConnection(client_config=client_config)
                 await client_connection.login()
             # AlreadyLoggedInError should not be raised unless a programmer error is
             # made.
             except (
-                FailedToLoginError,
-                InvalidServerLoginResponseError,
-                AlreadyLoggedInError,
+                ClientRESTAPIConnectionFailedToLoginError,
+                InvalidServerRESTAPILoginResponseError,
+                ClientRESTAPIConnectionAlreadyLoggedInError,
                 ClientConnectionError,
             ) as exc:
                 print_error(f"Failed to connect to server: {exc}")

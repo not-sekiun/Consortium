@@ -17,9 +17,10 @@ class EventsService:
             logger_name=str(self),
         )
         self.events_service_logger.debug(f"Started {self}")
+        self._custom_event_types = set()
 
     def __str__(self):
-        return "Consortium Events Service"
+        return "Events Service"
 
     def __repr__(self):
         return "EventsService()"

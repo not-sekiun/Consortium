@@ -1,7 +1,7 @@
 import random
 
 from consortium.client.client_config import CLIENT_RELEASE
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.framework.base_command import (
     BaseCommand,
     CommandContext,
@@ -27,7 +27,9 @@ class BannerCommand(BaseCommand):
     )
 
     @staticmethod
-    async def _display_banner(client_connection: ClientConnection | None) -> None:
+    async def _display_banner(
+        client_connection: ClientRESTAPIConnection | None,
+    ) -> None:
         star_banner = (
             "[bold white]        .        x      "
             "[bold red]------[bold white]+             `        .          *   `     --.\n"

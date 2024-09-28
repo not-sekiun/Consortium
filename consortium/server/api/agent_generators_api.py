@@ -350,7 +350,7 @@ async def cancel_agent_generator_by_agent_generator_id(
         },
     },
 )
-def update_agent_generator_by_agent_generator_id(
+async def update_agent_generator_by_agent_generator_id(
     agent_generator_id: str,
     _: Annotated[
         None,
@@ -375,18 +375,18 @@ def update_agent_generator_by_agent_generator_id(
 ) -> AgentGeneratorModel:
     try:
         if name is not None:
-            agent_generators_service.update_agent_generator_name_by_agent_generator_id(
+            await agent_generators_service.update_agent_generator_name_by_agent_generator_id(
                 agent_generator_id=agent_generator_id,
                 name=name,
             )
         if description is not None:
-            agent_generators_service.update_agent_generator_name_by_agent_generator_id(
+            await agent_generators_service.update_agent_generator_name_by_agent_generator_id(
                 agent_generator_id=agent_generator_id,
                 name=name,
             )
         if parameters is not None:
             try:
-                agent_generators_service.update_agent_generator_name_by_agent_generator_id(
+                await agent_generators_service.update_agent_generator_name_by_agent_generator_id(
                     agent_generator_id=agent_generator_id,
                     name=name,
                 )
@@ -441,7 +441,7 @@ def update_agent_generator_by_agent_generator_id(
         },
     },
 )
-def delete_agent_generator_by_agent_generator_id(
+async def delete_agent_generator_by_agent_generator_id(
     agent_generator_id: str,
     _: Annotated[
         None,
@@ -453,7 +453,7 @@ def delete_agent_generator_by_agent_generator_id(
     ],
 ):
     try:
-        agent_generators_service.remove_agent_generator_by_agent_generator_id(
+        await agent_generators_service.remove_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except AgentGeneratorNotFoundServiceError:

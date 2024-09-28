@@ -22,7 +22,7 @@ class ApplicationService:
         return self._application
 
     def __str__(self) -> str:
-        return "Consortium Application Service"
+        return "Application Service"
 
     def __repr__(self) -> str:
         return "ApplicationService()"

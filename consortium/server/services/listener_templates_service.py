@@ -23,7 +23,7 @@ class ListenerTemplatesService:
         )
 
     def __str__(self) -> str:
-        return "Consortium Listener Templates Service"
+        return "Listener Templates Service"
 
     def __repr__(self) -> str:
         return "ListenerTemplatesService()"

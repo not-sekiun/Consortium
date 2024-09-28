@@ -201,7 +201,7 @@ def get_all_completed_agent_tasks_by_agent_id(
 @router.get(
     "/{agent_id}/results",
     responses={
-        200: {"model": list[AgentTaskModel]},
+        200: {"model": list[AgentResultModel]},
         404: {
             "model": AgentNotFoundAPIError.from_service_exception(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
@@ -245,7 +245,9 @@ def get_all_successful_agent_results_by_agent_id(
     ],
 ) -> list[AgentResultModel]:
     try:
-        return agents_service.get_all_successful_results_by_agent_id(agent_id=agent_id)
+        return agents_service.get_all_successful_agent_results_by_agent_id(
+            agent_id=agent_id,
+        )
     except AgentNotFoundServiceError as exc:
         raise AgentNotFoundAPIError.from_service_exception(service_exception=exc)
 
@@ -271,7 +273,9 @@ def get_all_failed_agent_results_by_agent_id(
     ],
 ) -> list[AgentResultModel]:
     try:
-        return agents_service.get_all_failed_results_by_agent_id(agent_id=agent_id)
+        return agents_service.get_all_failed_agent_results_by_agent_id(
+            agent_id=agent_id,
+        )
     except AgentNotFoundServiceError as exc:
         raise AgentNotFoundAPIError.from_service_exception(service_exception=exc)
 
@@ -359,6 +363,7 @@ def get_agent_results_by_agent_id_and_result_id(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
             ).to_pydantic_model(),
         },
+        422: {},
     },
 )
 async def task_agent_by_agent_id(
@@ -395,7 +400,7 @@ async def task_agent_by_agent_id(
         },
     },
 )
-def delete_queued_agent_task_by_agent_id_and_task_id(
+async def delete_queued_agent_task_by_agent_id_and_task_id(
     agent_id: str,
     task_id: str,
     _: Annotated[
@@ -406,7 +411,7 @@ def delete_queued_agent_task_by_agent_id_and_task_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        agents_service.delete_agent_task_by_agent_id_and_task_id(
+        await agents_service.delete_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id,
             task_id=task_id,
         )

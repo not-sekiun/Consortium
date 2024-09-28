@@ -31,6 +31,16 @@ class ShellCapability(BaseAgentCapability):
             default_value=10,
         ),
         SingleValueOption(
+            name="blind",
+            description=(
+                "Execute the command blind without checking the output. This allows "
+                "the launching of executables that might potentially block."
+            ),
+            required=False,
+            value_type=bool,
+            default_value=False,
+        ),
+        SingleValueOption(
             name="shell_binary",
             description=(
                 "The full filepath to the binary executable of the shell to use to "

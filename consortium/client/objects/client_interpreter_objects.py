@@ -5,11 +5,13 @@ from prompt_toolkit import ANSI, HTML, PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 
-from consortium.client.client_connection import ClientConnection
-from consortium.client.client_exceptions import (
-    RESTAPIError,
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
+from consortium.client.exceptions.client_interpreter_exceptions import (
     UnclosedDoubleQuotesError,
     UnclosedSingleQuotesError,
+)
+from consortium.client.exceptions.client_rest_api_connection_exceptions import (
+    ClientRESTAPIOperationError,
 )
 from consortium.client.framework.base_command import (
     BaseCommand,
@@ -30,7 +32,7 @@ from consortium.client.utils.printer_utils import CONSOLE, print_error, print_in
 # TODO: Replace the calls to the environment variable with this at some point in the
 #  future.
 class ClientCommandContext(CommandContext):
-    client_connection: ClientConnection | None
+    client_connection: ClientRESTAPIConnection | None
 
 
 class ClientInterpreterLexer(BaseLexer):
@@ -182,7 +184,7 @@ class ClientInterpreter(BaseInterpreter):
         self,
         prompt: ANSI | HTML | str,
         commands: list[BaseCommand],
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
         additional_environment_variables: dict[str, any] = None,
     ):
         # TODO: Add resource commands and aliases to the environment variables at some
@@ -232,7 +234,7 @@ class ClientInterpreter(BaseInterpreter):
     # In general, when an error is raised on the REST API side we simply print the error
     # message to the console and interrupt whichever operation we were attempting to do.
     async def on_interpreter_errored(self, exc: Exception) -> None:
-        if isinstance(exc, RESTAPIError):
+        if isinstance(exc, ClientRESTAPIOperationError):
             print_error(f"Error: {exc}")
         else:
             print_error(f"Fatal error occurred: {exc}")

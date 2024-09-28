@@ -18,7 +18,7 @@ class AgentTemplatesService:
         )
 
     def __str__(self) -> str:
-        return "Consortium Agent Templates Service"
+        return "Agent Templates Service"
 
     def __repr__(self) -> str:
         return "AgentTemplatesService()"

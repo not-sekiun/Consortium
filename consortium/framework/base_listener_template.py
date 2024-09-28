@@ -150,7 +150,7 @@ class BaseListenerTemplate(ABC):
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f"{self.name} ({str(self.listener_template_id)})"
+        return f"'{self.name}' ({str(self.listener_template_id)})"
 
     def __repr__(self) -> str:
         options_string = "{" + ", ".join(repr(option) for option in self.options) + "}"

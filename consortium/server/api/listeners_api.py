@@ -296,7 +296,7 @@ async def cancel_listener_by_listener_id(
         },
     },
 )
-def update_listener_by_listener_id(
+async def update_listener_by_listener_id(
     listener_id: str,
     _: Annotated[
         None,
@@ -322,18 +322,18 @@ def update_listener_by_listener_id(
 ) -> ListenerModel:
     try:
         if name is not None:
-            listeners_service.update_listener_name_by_listener_id(
+            await listeners_service.update_listener_name_by_listener_id(
                 listener_id=listener_id,
                 name=name,
             )
         if description is not None:
-            listeners_service.update_listener_description_by_listener_id(
+            await listeners_service.update_listener_description_by_listener_id(
                 listener_id=listener_id,
                 description=description,
             )
         if parameters is not None:
             try:
-                listeners_service.update_listener_parameters_by_listener_id(
+                await listeners_service.update_listener_parameters_by_listener_id(
                     listener_id=listener_id,
                     parameters=parameters,
                 )
@@ -383,7 +383,7 @@ def update_listener_by_listener_id(
         },
     },
 )
-def delete_listener_by_listener_id(
+async def delete_listener_by_listener_id(
     listener_id: str,
     _: Annotated[
         None,
@@ -391,7 +391,7 @@ def delete_listener_by_listener_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
+        await listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
     except ListenerNotFoundServiceError:
         raise ListenerNotFoundAPIError.from_service_exception(
             service_exception=ListenerNotFoundServiceError(

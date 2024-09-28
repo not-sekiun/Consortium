@@ -44,7 +44,7 @@ class ListenerProfilesService:
         )
 
     def __str__(self) -> str:
-        return "Consortium Listener Profiles Service"
+        return "Listener Profiles Service"
 
     def __repr__(self) -> str:
         return "ListenerProfilesService()"
@@ -275,7 +275,7 @@ class ListenerProfilesService:
                 self._listener_profiles[str(listener_profile.listener_profile_id)] = (
                     listener_profile
                 )
-                self.listener_profiles_service_logger.info(
+                self.listener_profiles_service_logger.success(
                     f"Loaded listener profile: {listener_profile}",
                 )
                 self.listener_profiles_service_logger.debug(
@@ -313,7 +313,7 @@ class ListenerProfilesService:
         self.unload_framework_listener_profiles()
         listener_profiles = self.load_framework_listener_profiles()
         self.listener_profiles_service_logger.info(
-            f"Reloaded framework listener profiles.",
+            "Reloaded framework listener profiles.",
         )
         return listener_profiles
 
@@ -343,6 +343,9 @@ class ListenerProfilesService:
                 listener_profile_id=listener_profile_id,
             )
 
+        self.listener_profiles_service_logger.info(
+            f"Unloaded listener profile: {listener_profile}",
+        )
         self.listener_profiles_service_logger.debug(
             f"Unloaded listener profile: {listener_profile!r}",
         )
@@ -361,6 +364,9 @@ class ListenerProfilesService:
 
         listener_profile = self.load_listener_profile_from_listener_project_folder(
             listener_profile.listener_project_folder_path,
+        )
+        self.listener_profiles_service_logger.info(
+            f"Reloaded listener profile: {listener_profile}",
         )
         self.listener_profiles_service_logger.debug(
             f"Reloaded listener profile: {listener_profile!r}",

@@ -25,7 +25,7 @@ class C2TypesService:
         )
 
     def __str__(self) -> str:
-        return "Consortium C2 Types Service"
+        return "C2 Types Service"
 
     def __repr__(self) -> str:
         return "C2TypesService()"

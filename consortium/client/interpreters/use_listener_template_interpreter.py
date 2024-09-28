@@ -4,7 +4,7 @@ from typing import Any
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.commands.core_commands.listeners import ListenersCommand
 from consortium.client.commands.use_listener_template_interpreter_commands.create_listener import (
     CreateListenerCommand,
@@ -46,7 +46,7 @@ from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 class UseListenerTemplateInterpreter(ClientInterpreter):
     def __init__(
         self,
-        client_connection: ClientConnection,
+        client_connection: ClientRESTAPIConnection,
         listener_template: dict[str, Any],
     ):
         use_listener_interpreter_commands = [

@@ -40,7 +40,7 @@ class UserAccountsService:
         )
 
     def __str__(self) -> str:
-        return "Consortium User Accounts Service"
+        return "User Accounts Service"
 
     def __repr__(self) -> str:
         return "UserAccountsService()"

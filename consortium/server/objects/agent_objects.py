@@ -1,6 +1,5 @@
 import asyncio
 import uuid
-from collections import namedtuple
 from datetime import datetime
 from typing import Any
 
@@ -9,6 +8,7 @@ from loguru import logger
 from consortium.framework.base_agent_capability import BaseAgentCapability
 from consortium.framework.c2_types import BaseAgentType
 from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
+    AgentCapabilityArgumentNotFoundError,
     AgentCapabilityNotFoundError,
     AgentResultHasNoCorrespondingTaskError,
     AgentResultIDNotFoundError,
@@ -62,7 +62,7 @@ class Agent:
         self.agent_data = agent_data
 
         self.agent_logger = logger.bind(
-            logger_name=f"Consortium Agent {self}",
+            logger_name=f"Agent {self}",
             logger_type=LoggerType.AGENT_LOGGER,
         )
         self.datetime_first_checked_in = datetime.now()
@@ -125,6 +125,28 @@ class Agent:
 
         for agent_capability in self.agent_type.agent_capabilities:
             if agent_capability.name == task.command:
+                # Perform validation on the parameters passed to the options of a
+                # particular agent capability.
+                for argument_name, argument_value in task.arguments.items():
+                    if argument_name not in agent_capability.arguments:
+                        raise AgentCapabilityArgumentNotFoundError(
+                            command=agent_capability.name,
+                            argument=argument_name,
+                            agent_str=str(self),
+                            agent_type_str=str(self.agent_type),
+                        )
+                    # This specific statement allows two methods of passing in value
+                    # for an option that is not required. The REST API JSON data can
+                    # either contain the key with a value of None or not contain the
+                    # key at all.
+                    if argument_value is None:
+                        continue
+                    # OptionValueValidationError is raised here on failure to validate
+                    # the value.
+                    agent_capability.arguments[argument_name].validate_value(
+                        argument_value,
+                    )
+
                 self._queued_tasks[str(task.task_id)] = task
                 agent_capability_task_handler = asyncio.create_task(
                     _agent_capability_task_messages_generator_handler(
@@ -275,10 +297,10 @@ class Agent:
         return list(self._results.values())
 
     def get_all_successful_results(self) -> list[AgentResultModel]:
-        return [result for result in self._results.values() if result.success is True]
+        return [result for result in self._results.values() if result.success]
 
     def get_all_failed_results(self) -> list[AgentResultModel]:
-        return [result for result in self._results.values() if result.success is False]
+        return [result for result in self._results.values() if not result.success]
 
     def get_result_by_task_id(self, task_id: str) -> AgentResultModel:
         for result in self._results.values():

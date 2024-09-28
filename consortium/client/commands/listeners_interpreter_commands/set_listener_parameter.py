@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.framework.base_command import (
     BaseCommand,
     CommandContext,

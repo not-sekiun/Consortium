@@ -5,11 +5,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import BinaryIO
 
-from consortium.framework.base_agent_capability import (
-    AgentCapabilityCommunicationModel,
-    BaseAgentCapability,
-    SupportedOS,
-)
+from consortium.framework.base_agent_capability import BaseAgentCapability, SupportedOS
 from consortium.framework.exceptions.agent_capabilties_framework_exception import (
     AgentCapabilityTaskingError,
 )
@@ -119,7 +115,6 @@ class UploadCapability(BaseAgentCapability):
     )
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    communication_model = AgentCapabilityCommunicationModel.AGENT_DIRECTED_STREAMING
     arguments = {
         SingleValueOption(
             name="source",

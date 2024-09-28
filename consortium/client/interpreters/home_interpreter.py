@@ -2,7 +2,7 @@ from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.client_connection import ClientConnection
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.home_interpreter_commands.connect import ConnectCommand
 from consortium.client.commands.home_interpreter_commands.disconnect import (
@@ -33,7 +33,7 @@ client_connections_service = client_singletons.client_connections_service
 
 
 class HomeInterpreter(ClientInterpreter):
-    def __init__(self, client_connection: ClientConnection):
+    def __init__(self, client_connection: ClientRESTAPIConnection):
         home_interpreter_core_commands = [
             command for command in CORE_COMMANDS if command.name != "home"
         ]

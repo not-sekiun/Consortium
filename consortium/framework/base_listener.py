@@ -39,7 +39,7 @@ class _AgentsManager:
         self._agents_service = server_singletons.agents_service
         self._agents = {}
 
-    def register_new_connected_agent(
+    async def register_new_connected_agent(
         self,
         agent_type: BaseAgentType,
         name: str = "",
@@ -55,7 +55,7 @@ class _AgentsManager:
         local_host_address: str | None = None,
         agent_data: dict[str, Any] | None = None,
     ) -> Agent:
-        agent = self._agents_service.create_and_add_agent(
+        agent = await self._agents_service.create_and_add_agent(
             agent_type=agent_type,
             name=name,
             description=description,
@@ -73,16 +73,15 @@ class _AgentsManager:
         self._agents[str(agent.agent_id)] = agent
         return agent
 
-    def check_in_connected_agent_by_agent_id(self, agent_id: str) -> None:
+    async def check_in_connected_agent_by_agent_id(self, agent_id: str) -> None:
         if agent_id not in self._agents:
             raise ListenerSpecificAgentNotFoundError
-        agent = self._agents[agent_id]
-        agent.datetime_last_checked_in = datetime.now()
+        await self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
 
-    def deregister_connected_agent_by_agent_id(self, agent_id: str) -> None:
+    async def deregister_connected_agent_by_agent_id(self, agent_id: str) -> None:
         if agent_id not in self._agents:
             raise ListenerSpecificAgentNotFoundError
-        self._agents_service.remove_agent_by_agent_id(agent_id=agent_id)
+        await self._agents_service.remove_agent_by_agent_id(agent_id=agent_id)
         self._agents.pop(str(agent_id))
 
     def get_all_connected_agents(self) -> list[Agent]:
@@ -170,7 +169,7 @@ class BaseListener(ABC):
         # self.listener_logger is an internal logger to use for logging within the
         # listener to standard output and log files.
         self.listener_logger = logger.bind(
-            logger_name=f"Consortium Listener {self}",
+            logger_name=f"Listener {self}",
             logger_type=LoggerType.LISTENER_LOGGER,
         )
 
@@ -200,7 +199,7 @@ class BaseListener(ABC):
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f"{self.name} ({str(self.listener_id)})"
+        return f"'{self.name}' ({str(self.listener_id)})"
 
     def __repr__(self) -> str:
         return (

@@ -44,13 +44,6 @@ class SupportedOS(StrEnum):
         )[custom_os_string.upper()]
 
 
-class AgentCapabilityCommunicationModel(StrEnum):
-    REQUEST_RESPONSE = "REQUEST_RESPONSE"
-    AGENT_DIRECTED_STREAMING = "AGENT_DIRECTED_STREAMING"
-    LISTENER_DIRECTED_STREAMING = "LISTENER_DIRECTED_STREAMING"
-    BIDIRECTIONAL_STREAMING = "BIDIRECTIONAL_STREAMING"
-
-
 class BaseAgentCapability(ABC):
     name: str
     description: str = ""
@@ -64,9 +57,6 @@ class BaseAgentCapability(ABC):
     requires_admin = False
     supported_oses: set[SupportedOS] = {SupportedOS.ANY}
     authors: set[str] = None
-    communication_model: AgentCapabilityCommunicationModel = (
-        AgentCapabilityCommunicationModel.REQUEST_RESPONSE
-    )
 
     def __init_subclass__(cls, **kwargs):
         # Check the existence of a provided agent capability name first so that we can
@@ -154,12 +144,18 @@ class BaseAgentCapability(ABC):
                         f"'{cls.name}'."
                     ),
                 )
-        if not isinstance(cls.communication_model, AgentCapabilityCommunicationModel):
-            raise AgentCapabilityConfigurationParameterTypeError(
-                agent_capability=cls.name,
-                parameter_name="communication_model",
-                parameter_type="AgentCapabilityCommunicationModel",
-            )
+
+        # For convenience purposes when providing the arguments of a particular
+        # capability they are declared at the class level in a set (which also
+        # implicitly helps prevent duplicate arguments). But when we want to interact
+        # programmatically with the capability it is better to provide a dict like
+        # interface hence the redeclaration of the class argument here.
+        # TODO: Find some way to redeclare the typing of this to allow it to play nice
+        #  with IDE type suggestions.
+        arguments = {}
+        for agent_capability in cls.arguments:
+            arguments[agent_capability.name] = agent_capability
+        cls.arguments = arguments
 
         super().__init_subclass__(**kwargs)
 
@@ -179,10 +175,10 @@ class BaseAgentCapability(ABC):
             "name": self.name,
             "description": self.description,
             "arguments": {
-                argument.name: argument.to_json() for argument in self.arguments
+                argument.name: argument.to_json()
+                for argument in self.arguments.values()
             },
             "requires_admin": self.requires_admin,
             "supported_oses": [str(os) for os in self.supported_oses],
-            "communication_model": str(self.communication_model),
             "authors": list(self.authors),
         }

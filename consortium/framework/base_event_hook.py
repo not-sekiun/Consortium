@@ -25,8 +25,10 @@ class BaseEventHook(ABC):
     def __init__(self):
         self.event_hook_id = uuid.uuid4()
 
+        # TODO: Make services accessible through here as well like plugins.
+
         self.event_hook_logger = logger.bind(
-            logger_name=f"Consortium Event Hook {self}",
+            logger_name=f"Event Hook {self}",
         )
         self.environment = SimpleNamespace()
         self.server_services = SimpleNamespace()
@@ -102,7 +104,7 @@ class BaseEventHook(ABC):
         super().__init_subclass__(**kwargs)
 
     def __str__(self):
-        return f"{self.name} ({self.event_hook_id})"
+        return f"'{self.name}' ({self.event_hook_id})"
 
     def __repr__(self):
         return (

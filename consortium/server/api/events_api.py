@@ -40,7 +40,7 @@ router = APIRouter(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 events_service = server_singletons.events_service
 users_service = server_singletons.users_service
-websockets_server_logger = logger.bind(logger_name="Consortium Websockets Server")
+websockets_server_logger = logger.bind(logger_name="Websockets Server")
 
 _client_action_websocket_message_json_schema = {
     "type": "object",
@@ -135,7 +135,7 @@ async def _handle_websocket(websocket: WebSocket):
             await websocket.send_json(
                 {
                     "type": "response",
-                    "status": "error",
+                    "success": False,
                     "message": f"Failed to process the client's action message. {exc.message}",
                     "data": exc.cause,
                 },
@@ -148,7 +148,7 @@ async def _handle_websocket(websocket: WebSocket):
             await websocket.send_json(
                 {
                     "type": "response",
-                    "status": "success",
+                    "success": True,
                     "message": "Successfully retrieved all events.",
                     "data": all_events,
                 },
@@ -160,7 +160,7 @@ async def _handle_websocket(websocket: WebSocket):
             await websocket.send_json(
                 {
                     "type": "response",
-                    "status": "success",
+                    "success": True,
                     "message": "Successfully retrieved subscribed events.",
                     "data": subscribed_events,
                 },
@@ -172,7 +172,7 @@ async def _handle_websocket(websocket: WebSocket):
             await websocket.send_json(
                 {
                     "type": "response",
-                    "status": "success",
+                    "success": True,
                     "message": "Successfully retrieved unsubscribed events.",
                     "data": unsubscribed_events,
                 },
@@ -207,7 +207,7 @@ async def _handle_websocket(websocket: WebSocket):
                 await websocket.send_json(
                     {
                         "type": "response",
-                        "status": "error",
+                        "success": False,
                         "message": (
                             "Failed to subscribe to the provided events. All the "
                             "provided events must valid for a subscription request to "
@@ -227,7 +227,7 @@ async def _handle_websocket(websocket: WebSocket):
             await websocket.send_json(
                 {
                     "type": "response",
-                    "status": "success",
+                    "success": True,
                     "message": "Successfully subscribed to the provided events.",
                     "data": None,
                 },
@@ -262,7 +262,7 @@ async def _handle_websocket(websocket: WebSocket):
                 await websocket.send_json(
                     {
                         "type": "response",
-                        "status": "error",
+                        "success": False,
                         "message": (
                             "Failed to unsubscribe to the provided events. All the "
                             "provided events must valid for an unsubscription request "
@@ -282,7 +282,7 @@ async def _handle_websocket(websocket: WebSocket):
             await websocket.send_json(
                 {
                     "type": "response",
-                    "status": "success",
+                    "success": True,
                     "message": "Successfully unsubscribed from the provided events.",
                     "data": None,
                 },

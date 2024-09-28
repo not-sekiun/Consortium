@@ -50,12 +50,6 @@ class ListResultsCommand(BaseCommand):
             help="List only results that have a state of FAIL.",
             action="store_true",
         )
-        parser.add_argument(
-            "-e",
-            "--error",
-            help="List only results that have a state of ERROR.",
-            action="store_true",
-        )
 
     async def run_command(
         self,
@@ -66,20 +60,12 @@ class ListResultsCommand(BaseCommand):
             client_connection = command_context.environment["client_connection"]
 
             if parsed_args.success:
-                agent_results = (
-                    await client_connection.get_all_successful_results_by_agent_id(
-                        agent_id=parsed_args.agent_id,
-                    )
+                agent_results = await client_connection.get_all_successful_agent_results_by_agent_id(
+                    agent_id=parsed_args.agent_id,
                 )
             elif parsed_args.fail:
                 agent_results = (
-                    await client_connection.get_all_failed_results_by_agent_id(
-                        agent_id=parsed_args.agent_id,
-                    )
-                )
-            elif parsed_args.error:
-                agent_results = (
-                    await client_connection.get_all_errored_results_by_agent_id(
+                    await client_connection.get_all_failed_agent_results_by_agent_id(
                         agent_id=parsed_args.agent_id,
                     )
                 )
@@ -100,7 +86,7 @@ class ListResultsCommand(BaseCommand):
                     agent_result["task_id"],
                     agent_result["result_id"],
                     format_agent_result_state_string_with_color(
-                        agent_result_state_string=agent_result["state"],
+                        agent_result_state_string=agent_result["success"],
                     ),
                 )
             CONSOLE.print(table)

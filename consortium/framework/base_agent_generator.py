@@ -51,7 +51,7 @@ class BaseAgentGeneratorBuildStep(ABC):
         self.datetime_stopped = None
         self.status = AgentGeneratorBuildStepStatus()
         self.agent_generator_build_step_logger = logger.bind(
-            logger_name=f"Consortium Agent Generator Build Step {self}",
+            logger_name=f"Agent Generator Build Step {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
         )
 
@@ -91,7 +91,7 @@ class BaseAgentGeneratorBuildStep(ABC):
             )
 
     def __str__(self) -> str:
-        return f"{self.name} ({str(self.agent_generator_build_step_id)})"
+        return f"'{self.name}' ({str(self.agent_generator_build_step_id)})"
 
     def __repr__(self) -> str:
         return (
@@ -220,7 +220,7 @@ class BaseAgentGenerator(ABC):
         # runtime to exit.
         self.stop_agent_generator_event = asyncio.Event()
         self.agent_generator_logger = logger.bind(
-            logger_name=f"Consortium Agent Generator {self}",
+            logger_name=f"Agent Generator {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
         )
 
@@ -268,7 +268,7 @@ class BaseAgentGenerator(ABC):
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f"{self.name} ({str(self.agent_generator_id)})"
+        return f"'{self.name}' ({str(self.agent_generator_id)})"
 
     def __repr__(self) -> str:
         return (

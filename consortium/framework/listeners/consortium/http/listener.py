@@ -14,7 +14,7 @@ from consortium.framework.exceptions.listeners_framework_exceptions import (
 from consortium.framework.listeners.consortium.http.listener_type import LISTENER_TYPE
 
 # TODO: Import Error triggering wrong log message.
-from consortium.server.models.agent_models import AgentResultModel
+from consortium.server.models.agent_models import AgentResultMessageModel
 
 
 class Listener(BaseListener):
@@ -46,7 +46,7 @@ class Listener(BaseListener):
 
         async def handle_agent_registration(request):
             # Only one agent type is supported for this listener type.
-            agent = self.agents_manager.register_new_connected_agent(
+            agent = await self.agents_manager.register_new_connected_agent(
                 agent_type=AGENT_TYPE,
                 endpoint=request.remote,
                 remote_host_address=request.remote,
@@ -62,7 +62,9 @@ class Listener(BaseListener):
             except ListenerSpecificAgentNotFoundError:
                 return web.Response(status=401)
 
-            self.agents_manager.check_in_connected_agent_by_agent_id(agent_id=agent_id)
+            await self.agents_manager.check_in_connected_agent_by_agent_id(
+                agent_id=agent_id,
+            )
 
             agent_messages = []
             while True:
@@ -73,20 +75,17 @@ class Listener(BaseListener):
 
                 # TODO: Provide convenience functions to convert to and from json
                 #  strings, bytes and dictionaries.
-                agent_message_json_data = json.dumps(
-                    {
-                        "task_id": str(agent_message.task_id),
-                        "command": agent_message.command,
-                        "arguments": agent_message.arguments,
-                        "data": agent_message.data,
-                    },
-                )
+                agent_message_json_data = {
+                    "task_id": str(agent_message.task_id),
+                    "command": agent_message.command,
+                    "arguments": agent_message.arguments,
+                    "data": agent_message.data,
+                }
                 agent_messages.append(agent_message_json_data)
             return web.json_response(agent_messages, status=200)
 
         async def handle_agent_posting_results(request):
-            # JSON request body from the agent takes the form
-            # {"agent_id": agent_id, "task_id": task_id "result": result}.
+            # Validate JSON structure result from agent.
             agent_result_schema = {
                 "type": "object",
                 "properties": {
@@ -104,25 +103,24 @@ class Listener(BaseListener):
                 },
                 "required": ["agent_id", "task_id", "result"],
             }
+
             try:
                 json_request_body = await request.json()
                 jsonschema.validate(json_request_body, agent_result_schema)
             except (json.JSONDecodeError, jsonschema.ValidationError):
                 return web.Response(status=401)
 
-            # Validate the structure of json data.
-            try:
-                agent_id = json_request_body["agent_id"]
-                task_id = json_request_body["task_id"]
-                success = json_request_body["result"]["success"]
-                message = json_request_body["result"]["message"]
-                data = json_request_body["result"]["data"]
-            except ValueError:
-                return web.Response(status=401)
+            agent_id = json_request_body["agent_id"]
+            task_id = json_request_body["task_id"]
+            success = json_request_body["result"]["success"]
+            message = json_request_body["result"]["message"]
+            data = json_request_body["result"]["data"]
 
             # Check if the agent ID is valid.
             try:
-                agent = self.agents_manager.get_registered_agent_by_agent_id(agent_id)
+                agent = self.agents_manager.get_connected_agent_by_agent_id(
+                    agent_id=agent_id,
+                )
             except ListenerSpecificAgentNotFoundError:
                 return web.Response(status=401)
 
@@ -134,11 +132,13 @@ class Listener(BaseListener):
 
             # Only if the task ID is valid do we consider it a valid agent that has
             # checked in.
-            agent.register_checked_in()
+            await self.agents_manager.check_in_connected_agent_by_agent_id(
+                agent_id=agent_id,
+            )
 
             # Validate the values.
             try:
-                result = AgentResultModel(
+                result_message = AgentResultMessageModel(
                     task_id=task_id,
                     success=success,
                     message=message,
@@ -147,7 +147,7 @@ class Listener(BaseListener):
             except ValidationError:
                 return web.Response(status=401)
 
-            agent.add_result(result)
+            await agent.add_result_message(result_message=result_message)
             return web.Response(status=200)
 
         for url_path in registration_url_paths:

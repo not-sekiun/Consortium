@@ -27,7 +27,6 @@ class AgentCapabilityModel(BaseModel):
     arguments: dict[str, Any]
     requires_admin: bool
     supported_oses: list[str]
-    communication_model: str
     authors: list[str]
 
 

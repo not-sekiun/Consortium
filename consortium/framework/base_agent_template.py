@@ -141,7 +141,7 @@ class BaseAgentTemplate(ABC):
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f"{self.name} ({str(self.agent_template_id)})"
+        return f"'{self.name}' ({str(self.agent_template_id)})"
 
     def __repr__(self) -> str:
         return (

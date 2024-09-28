@@ -5,6 +5,8 @@ from loguru import logger
 
 from consortium.framework.base_agent_generator import BaseAgentGenerator
 from consortium.server.exceptions.framework_exceptions.agent_generators_framework_exceptions import (
+    AgentGeneratorAlreadyRunningError as AgentGeneratorAlreadyRunningFrameworkError,
+    AgentGeneratorNotRunningError as AgentGeneratorNotRunningFrameworkError,
     AgentGeneratorStartError as AgentGeneratorStartFrameworkError,
     AgentGeneratorStopError as AgentGeneratorStopFrameworkError,
     EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameFrameworkError,
@@ -18,8 +20,9 @@ from consortium.server.exceptions.framework_exceptions.options_framework_excepti
 )
 from consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions import (
     AgentGeneratorAlreadyExistsError,
-    AgentGeneratorAlreadyRunningError,
+    AgentGeneratorAlreadyRunningError as AgentGeneratorAlreadyRunningServiceError,
     AgentGeneratorNotFoundError,
+    AgentGeneratorNotRunningError as AgentGeneratorNotRunningServiceError,
     AgentGeneratorStartError as AgentGeneratorStartServiceError,
     AgentGeneratorStopError as AgentGeneratorStopServiceError,
     AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundServiceError,
@@ -29,18 +32,25 @@ from consortium.server.exceptions.service_exceptions.agent_generators_service_ex
     InvalidAgentGeneratorParameterValueError,
 )
 from consortium.server.objects.agent_generator_objects import AgentGeneratorState
+from consortium.server.objects.event_objects import Event, EventType
 from consortium.server.services.agent_templates_service import AgentTemplatesService
+from consortium.server.services.events_service import EventsService
 
 
 class AgentGeneratorsService:
-    def __init__(self, agent_templates_service: AgentTemplatesService):
+    def __init__(
+        self,
+        agent_templates_service: AgentTemplatesService,
+        events_service: EventsService,
+    ):
         self._agent_templates_service = agent_templates_service
+        self._events_service = events_service
         self._agent_generators = {}
         self.agent_generators_service_logger = logger.bind(logger_name=str(self))
         self.agent_generators_service_logger.debug(f"Started {self}")
 
     def __str__(self) -> str:
-        return "Consortium Agent Generators Service"
+        return "Agent Generators Service"
 
     def __repr__(self) -> str:
         return (
@@ -70,10 +80,12 @@ class AgentGeneratorsService:
         )
         return all_agent_generators
 
-    def create_agent_generator_from_agent_template_by_agent_template_id(
+    async def create_agent_generator_from_agent_template_by_agent_template_id(
         self,
         agent_template_id: str,
         options: dict[str, Any],
+        name: str | None = None,
+        description: str = "",
     ) -> BaseAgentGenerator:
         agent_template = (
             self._agent_templates_service.get_agent_template_by_agent_template_id(
@@ -99,7 +111,10 @@ class AgentGeneratorsService:
                 )
 
         try:
-            agent_generator = agent_template.create_agent_generator()
+            agent_generator = agent_template.create_agent_generator(
+                name=name,
+                description=description,
+            )
         except EmptyAgentGeneratorNameFrameworkError as exc:
             raise EmptyAgentGeneratorNameServiceError(
                 message=exc.message,
@@ -109,6 +124,12 @@ class AgentGeneratorsService:
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_CREATED,
+                data={"agent_generator_id": agent_generator.agent_generator_id},
+            ),
+        )
         self.agent_generators_service_logger.info(
             f"Created agent generator: {agent_generator}",
         )
@@ -117,7 +138,7 @@ class AgentGeneratorsService:
         )
         return agent_generator
 
-    def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
+    async def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
         if str(agent_generator.agent_generator_id) in self._agent_generators:
             raise AgentGeneratorAlreadyExistsError(
                 agent_generator_id=str(agent_generator.agent_generator_id),
@@ -126,6 +147,12 @@ class AgentGeneratorsService:
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_ADDED,
+                data={"agent_generator_id": agent_generator.agent_generator_id},
+            ),
+        )
         self.agent_generators_service_logger.info(
             f"Added agent generator: {agent_generator}",
         )
@@ -133,7 +160,7 @@ class AgentGeneratorsService:
             f"Added agent generator: {agent_generator!r}",
         )
 
-    def remove_agent_generator_by_agent_generator_id(
+    async def remove_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
     ) -> None:
@@ -141,9 +168,15 @@ class AgentGeneratorsService:
             agent_generator_id=agent_generator_id,
         )
         if agent_generator.status.state == AgentGeneratorState.RUNNING:
-            raise AgentGeneratorAlreadyRunningError
+            raise AgentGeneratorAlreadyRunningServiceError
 
         removed_agent_generator = self._agent_generators.pop(agent_generator_id)
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_REMOVED,
+                data={"agent_generator_id": removed_agent_generator.agent_generator_id},
+            ),
+        )
         self.agent_generators_service_logger.info(
             f"Removed agent generator: {removed_agent_generator}",
         )
@@ -151,7 +184,7 @@ class AgentGeneratorsService:
             f"Removed agent generator: {removed_agent_generator!r}",
         )
 
-    def update_agent_generator_name_by_agent_generator_id(
+    async def update_agent_generator_name_by_agent_generator_id(
         self,
         agent_generator_id: str,
         name: str,
@@ -161,12 +194,18 @@ class AgentGeneratorsService:
         )
         old_name = agent_generator.name
         agent_generator.name = name
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_UPDATED,
+                data={"agent_generator_id": agent_generator.agent_generator_id},
+            ),
+        )
         self.agent_generators_service_logger.info(
             f"Updated name for agent generator {agent_generator}: '{old_name}' -> '{name}'",
         )
         return agent_generator
 
-    def update_agent_generator_description_by_agent_generator_id(
+    async def update_agent_generator_description_by_agent_generator_id(
         self,
         agent_generator_id: str,
         description: str,
@@ -176,12 +215,18 @@ class AgentGeneratorsService:
         )
         old_description = agent_generator.description
         agent_generator.description = description
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_UPDATED,
+                data={"agent_generator_id": agent_generator.agent_generator_id},
+            ),
+        )
         self.agent_generators_service_logger.info(
             f"Updated description for agent generator {agent_generator}: '{old_description}' -> '{description}'",
         )
         return agent_generator
 
-    def update_agent_generator_parameters_by_agent_generator_id(
+    async def update_agent_generator_parameters_by_agent_generator_id(
         self,
         agent_generator_id: str,
         new_parameters: dict[str, Any],
@@ -191,7 +236,7 @@ class AgentGeneratorsService:
         )
 
         if agent_generator.status.state == AgentGeneratorState.RUNNING:
-            raise AgentGeneratorAlreadyRunningError
+            raise AgentGeneratorAlreadyRunningServiceError
 
         # It should be impossible for this for loop to break out without finding
         # the agent template that matches the target agent generator or to trip up on a
@@ -242,6 +287,12 @@ class AgentGeneratorsService:
         agent_generator.endpoint = temporary_agent_generator.endpoint
         agent_generator.parameters = copy.deepcopy(temporary_agent_generator.parameters)
 
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_UPDATED,
+                data={"agent_generator_id": agent_generator.agent_generator_id},
+            ),
+        )
         self.agent_generators_service_logger.info(
             f"Updated parameters for agent generator {agent_generator}: {new_parameters}",
         )
@@ -261,6 +312,17 @@ class AgentGeneratorsService:
                 message=exc.message,
                 detail=exc.detail,
             ) from None
+        except AgentGeneratorAlreadyRunningFrameworkError as exc:
+            raise AgentGeneratorAlreadyRunningServiceError(
+                message=exc.message,
+            ) from None
+
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_STARTED,
+                data={"agent_generator_id": agent_generator.agent_generator_id},
+            ),
+        )
 
     async def stop_agent_generator_by_agent_generator_id(
         self,
@@ -276,6 +338,15 @@ class AgentGeneratorsService:
                 message=exc.message,
                 detail=exc.detail,
             ) from None
+        except AgentGeneratorNotRunningFrameworkError as exc:
+            raise AgentGeneratorNotRunningServiceError(message=exc.message) from None
+
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_STOPPED,
+                data={"agent_generator_id": agent_generator.agent_generator_id},
+            ),
+        )
 
     async def cancel_agent_generator_by_agent_generator_id(
         self,
@@ -284,4 +355,14 @@ class AgentGeneratorsService:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
-        await agent_generator.cancel_agent_generator()
+        try:
+            await agent_generator.cancel_agent_generator()
+        except AgentGeneratorNotRunningFrameworkError as exc:
+            raise AgentGeneratorNotRunningServiceError(message=exc.message) from None
+
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_GENERATOR_CANCELLED,
+                data={"agent_generator_id": agent_generator.agent_generator_id},
+            ),
+        )
