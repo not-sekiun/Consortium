@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
@@ -27,7 +27,9 @@ class CreateGeneratorCommand(BaseCommand):
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
             agent_template_id = command_context.environment["agent_template"][
                 "agent_template_id"
             ]
@@ -38,7 +40,7 @@ class CreateGeneratorCommand(BaseCommand):
             agent_template_option_values = {}
             for option_name, option in agent_template_options.items():
                 agent_template_option_values[option_name] = option["value"]
-            agent_generator = await client_connection.create_agent_generator_through_agent_template_by_agent_template_id(
+            agent_generator = await client_rest_api_connection.create_agent_generator_through_agent_template_by_agent_template_id(
                 agent_template_id=agent_template_id,
                 agent_template_option_values=agent_template_option_values,
             )

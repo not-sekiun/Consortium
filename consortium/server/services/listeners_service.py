@@ -119,7 +119,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_CREATED,
-                data={"listener_id": listener.listener_id},
+                data={"listener_id": str(listener.listener_id)},
             ),
         )
         self.listeners_service_logger.info(f"Created listener: {listener}")
@@ -132,7 +132,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_ADDED,
-                data={"listener_id": listener.listener_id},
+                data={"listener_id": str(listener.listener_id)},
             ),
         )
         self._listeners[str(listener.listener_id)] = listener
@@ -146,7 +146,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_REMOVED,
-                data={"listener_id": removed_listener.listener_id},
+                data={"listener_id": str(removed_listener.listener_id)},
             ),
         )
         self.listeners_service_logger.info(f"Removed listener: {removed_listener}")
@@ -165,7 +165,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_UPDATED,
-                data={"listener_id": listener.listener_id},
+                data={"listener_id": str(listener.listener_id)},
             ),
         )
         self.listeners_service_logger.info(
@@ -184,7 +184,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_UPDATED,
-                data={"listener_id": listener.listener_id},
+                data={"listener_id": str(listener.listener_id)},
             ),
         )
         self.listeners_service_logger.info(
@@ -266,7 +266,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_UPDATED,
-                data={"listener_id": listener.listener_id},
+                data={"listener_id": str(listener.listener_id)},
             ),
         )
         self.listeners_service_logger.info(
@@ -290,7 +290,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_STARTED,
-                data={"listener_id": listener.listener_id},
+                data={"listener_id": str(listener.listener_id)},
             ),
         )
 
@@ -310,7 +310,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_STOPPED,
-                data={"listener_id": listener.listener_id},
+                data={"listener_id": str(listener.listener_id)},
             ),
         )
 
@@ -324,6 +324,6 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_CANCELLED,
-                data={"listener_id": listener.listener_id},
+                data={"listener_id": str(listener.listener_id)},
             ),
         )

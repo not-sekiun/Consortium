@@ -3,23 +3,26 @@ from argparse import ArgumentParser
 from rich.table import Table
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.framework.base_command import (
-    BaseCommand,
-    CommandContext,
-    ReturnStatus,
+from consortium.client.exceptions.client_sessions_service_exceptions import (
+    ClientSessionNotFoundError,
 )
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.repl_framework.base_command import (
+    BaseCommand,
+    CommandContext,
+    ReturnStatus,
+)
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE, print_error
 
-client_connections_service = client_singletons.client_connections_service
+client_sessions_service = client_singletons.client_sessions_service
 
 
-class InfoClientConnectionCommand(BaseCommand):
-    name = "info_client_connection"
-    description = "Display detailed information for a specific client connection."
+class InfoClientSessionCommand(BaseCommand):
+    name = "info_client_session"
+    description = "Display detailed information for a specific client session."
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -29,9 +32,9 @@ class InfoClientConnectionCommand(BaseCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "client_connection_id",
+            "client_session_id",
             help=(
-                "The client connection ID of the client connection to display detailed "
+                "The client session ID of the client session to display detailed "
                 "information for."
             ),
             nargs=1,
@@ -44,33 +47,39 @@ class InfoClientConnectionCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
+
             try:
-                client_connection = client_connections_service.get_client_connection_by_client_connection_id(
-                    parsed_args.client_connection_id[0],
+                client_session = (
+                    client_sessions_service.get_client_session_by_client_session_id(
+                        parsed_args.client_session_id[0],
+                    )
                 )
-            except ValueError as exc:
+                client_rest_api_connection = client_session.client_rest_api_connection
+            except ClientSessionNotFoundError as exc:
                 print_error(str(exc))
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
-            own_user = await client_connection.get_own_user_info()
-            server_release = await client_connection.get_server_release()
 
-            table = Table(title="Client Connection Information")
+            own_user_info = await client_rest_api_connection.get_own_user_info()
+            server_release = await client_rest_api_connection.get_server_release()
+
+            table = Table(title="Client Session Information")
             table.add_column("Information")
             table.add_column("Data")
             table.add_row(
-                "Client Connection ID",
-                str(client_connection.client_connection_id),
+                "Client Session ID",
+                str(client_session.client_session_id),
             )
-            table.add_row("Name", client_connection.name)
-            table.add_row("Description", client_connection.description)
-            table.add_row("Username", client_connection.username)
-            table.add_row("Password", client_connection.password)
-            table.add_row("Remote Host", client_connection.remote_host)
-            table.add_row("Remote Port", str(client_connection.remote_port))
-            table.add_row("Role", own_user["role"])
+            table.add_row("Name", client_session.name)
+            table.add_row("Description", client_session.description)
+            table.add_row("Username", client_session.username)
+            table.add_row("Password", client_session.password)
+            table.add_row("Remote Host", client_session.remote_host)
+            table.add_row("Remote Port", str(client_session.remote_port))
+            table.add_row("Role", own_user_info["role"])
+            table.add_row("Connected", str(client_session.connected))
             table.add_row(
                 "Datetime Connected",
-                str(client_connection.datetime_connected.isoformat()),
+                str(client_session.datetime_connected.isoformat()),
             )
             server_release_table = Table()
             server_release_table.add_column("Information")

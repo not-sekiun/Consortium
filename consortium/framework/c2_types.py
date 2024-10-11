@@ -83,10 +83,10 @@ class BaseAgentType:
 
     def add_compatible_listener_type(self, listener_type: "BaseListenerType") -> None:
         if not isinstance(listener_type, BaseListenerType):
-            raise ListenerTypeConfigurationParameterTypeError(
-                listener_type_filepath=sys.modules[self.__class__.__module__].__file__,
+            raise AgentTypeConfigurationParameterTypeError(
+                agent_type_filepath=sys.modules[self.__class__.__module__].__file__,
                 error_message=(
-                    "Invalid listener type '{listener_type}' provided, expected a "
+                    f"Invalid listener type '{listener_type}' provided, expected a "
                     "listener type object."
                 ),
             )
@@ -213,9 +213,12 @@ class BaseListenerType:
 
     def add_compatible_agent_type(self, agent_type: BaseAgentType) -> None:
         if not isinstance(agent_type, BaseAgentType):
-            raise ValueError(
-                f"Invalid agent type '{agent_type}' provided, expected an agent type "
-                "object.",
+            raise ListenerTypeConfigurationParameterTypeError(
+                listener_type_filepath=sys.modules[self.__class__.__module__].__file__,
+                error_message=(
+                    f"Invalid agent type '{agent_type}' provided, expected an agent "
+                    "type object."
+                ),
             )
         if agent_type in self.compatible_agent_types:
             raise AgentTypeAlreadyExistsError(
@@ -227,9 +230,12 @@ class BaseListenerType:
 
     def remove_compatible_agent_type(self, agent_type: BaseAgentType) -> None:
         if not isinstance(agent_type, BaseAgentType):
-            raise ValueError(
-                f"Invalid agent type '{agent_type}' provided, expected an agent type "
-                "object",
+            raise ListenerTypeConfigurationParameterTypeError(
+                listener_type_filepath=sys.modules[self.__class__.__module__].__file__,
+                error_message=(
+                    f"Invalid agent type '{agent_type}' provided, expected an agent "
+                    "type object."
+                ),
             )
         if agent_type not in self.compatible_agent_types:
             raise AgentTypeNotFoundError(

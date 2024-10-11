@@ -4,7 +4,7 @@ import traceback
 
 from loguru import logger
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import NestedCompleter
+from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.formatted_text.html import HTML
 from prompt_toolkit.patch_stdout import StdoutProxy, patch_stdout
 from prompt_toolkit.styles import Style
@@ -12,6 +12,72 @@ from prompt_toolkit.styles import Style
 import consortium.server.server_singletons as server_singletons
 from consortium.framework.base_plugin import BasePlugin
 from consortium.server.server_logging import log_formatter
+
+
+class _ServicesMethodsCompleter(Completer):
+    def __init__(self, services_methods_completion_dict: dict[str, dict[str, None]]):
+        self.services_methods_completions_dict = services_methods_completion_dict
+
+    # Checks to see if a key list exists in a dictionary. The key list is a list of
+    # keys that are traversed recursively in the dictionary. So if the key list is
+    # ['a', 'b', 'c'] then the function will check if the dictionary has a key 'a'
+    # which has a key 'b' which has a key 'c' and then for that key 'c' check all valid
+    # completions for the provided completion substring.
+    def _return_valid_completions_in_services_methods_completions_dict(
+        self,
+        key_list: list[str],
+        string_to_complete: str,
+    ) -> list[str]:
+        current_dict = self.services_methods_completions_dict
+        for key in key_list:
+            if key not in current_dict:
+                # Key list is not even valid so return an empty list. This means that no
+                # such chain of namespaces exists.
+                return []
+            current_dict = current_dict[key]
+
+        # Key list is valid but there are no more completions possible. This means that
+        # we are at the end of the chain of namespaces.
+        if current_dict is None:
+            return []
+
+        # Key list is valid and there are more completions possible. This means that we
+        # are not at the end of the chain of namespaces so we return the next valid
+        # completions if there are any.
+        valid_completions = []
+        for key in current_dict:
+            if key.startswith(string_to_complete):
+                valid_completions.append(key)
+        return valid_completions
+
+    def get_completions(self, document, complete_event):
+        space_separated_text = document.text.split()
+        if document.text.endswith(" "):
+            latest_space_separated_word = ""
+        elif document.text == "":
+            latest_space_separated_word = ""
+        else:
+            latest_space_separated_word = space_separated_text[-1]
+
+        if "." in latest_space_separated_word:
+            dot_separated_words = latest_space_separated_word.split(".")
+            for (
+                completion
+            ) in self._return_valid_completions_in_services_methods_completions_dict(
+                key_list=dot_separated_words[:-1],
+                string_to_complete=dot_separated_words[-1],
+            ):
+                yield Completion(
+                    completion,
+                    start_position=-len(dot_separated_words[-1]),
+                )
+        else:
+            for service in self.services_methods_completions_dict:
+                if service.startswith(latest_space_separated_word.lstrip()):
+                    yield Completion(
+                        service,
+                        start_position=-len(latest_space_separated_word.lstrip()),
+                    )
 
 
 def _print_custom_formatted_exception_message(
@@ -77,7 +143,7 @@ class Plugin(BasePlugin):
         # completer based on whatever services are added to the framework and made
         # publicly accessible from the `server_singletons` module. All this for a
         # fucking autocomplete feature, whew.
-        completer_dict = {
+        services_methods_completions_dict = {
             attr: {
                 method: None
                 for method in dir(getattr(server_singletons, attr))
@@ -87,7 +153,7 @@ class Plugin(BasePlugin):
             for attr in dir(server_singletons)
             if attr.endswith("_service")
         }
-        completer_dict["exit"] = None
+        services_methods_completions_dict["exit"] = None
         style = Style.from_dict(
             {
                 # User input (default text).
@@ -103,7 +169,9 @@ class Plugin(BasePlugin):
             ("class:surrounding_prompt", ") > "),
         ]
         session = PromptSession(
-            completer=NestedCompleter.from_nested_dict(completer_dict),
+            completer=_ServicesMethodsCompleter(
+                services_methods_completion_dict=services_methods_completions_dict,
+            ),
             style=style,
         )
         globals_dict = {
@@ -118,11 +186,11 @@ class Plugin(BasePlugin):
                     expression = (
                         # We need to explicitly provide the `multiline` and
                         # `bottom_toolbar` parameters here because for some reason
-                        # those parameter values modified and persisted across different
-                        # calls to `prompt_async()`. This means that if a multiline
-                        # prompt is called for `prompt_async()` once then those
-                        # parameters that made it multiline will apply to the single
-                        # line prompt too unless explicitly set otherwise.
+                        # those parameter values modified and persisted across
+                        # different calls to `prompt_async()`. This means that if a
+                        # multiline prompt is called for `prompt_async()` once then
+                        # those parameters that made it multiline will apply to the
+                        # single line prompt too unless explicitly set otherwise.
                         await session.prompt_async(
                             prompt,
                             style=style,
@@ -203,8 +271,8 @@ class Plugin(BasePlugin):
                             multiline=True,
                             prompt_continuation=prompt_continuation,
                             bottom_toolbar=HTML(
-                                "Press [Meta+Enter] or [Esc] followed by [Enter] to "
-                                "accept input. Press [Ctrl+C] to cancel input.",
+                                "<bold>Press [Meta+Enter] or [Esc] followed by [Enter] to "
+                                "accept input. Press [Ctrl+C] to cancel input.</bold>",
                             ),
                         )
                     except KeyboardInterrupt:

@@ -76,6 +76,17 @@ def main():
         help="Start the client in debug mode",
         action="store_true",
     )
+    client_parser.add_argument(
+        "-c",
+        "--config",
+        help=(
+            "The filepath of the client configuration file to use when starting the "
+            "server. By default the client configuration file from "
+            "`data/client/client_config.json` is used."
+        ),
+        nargs="?",
+        default=None,
+    )
 
     arguments = parser.parse_args()
     if arguments.command == "server":

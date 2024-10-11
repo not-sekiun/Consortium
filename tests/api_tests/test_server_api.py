@@ -1,7 +1,9 @@
 import requests
 
-from tests.common_json_response_schemas import FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA
-from tests.utils import validate_response
+from tests.api_tests.common_json_response_schemas import (
+    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+)
+from tests.api_tests.utils import validate_response
 
 SERVER_VERSION_RESPONSE_JSON_SCHEMA = {
     "type": "object",

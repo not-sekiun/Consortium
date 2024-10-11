@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from consortium.client.framework.base_lexer import TokenizedString
+from consortium.client.repl_framework.base_lexer import TokenizedString
 
 
 @dataclass

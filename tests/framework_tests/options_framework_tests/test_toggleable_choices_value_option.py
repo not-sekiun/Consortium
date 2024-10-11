@@ -1,12 +1,10 @@
 import pytest
 
-from consortium.framework.options import (
-    OptionValueValidationError,
-    RequiredOptionValueNotSetError,
-    ToggleableChoicesValueOption,
-)
+from consortium.framework.options import ToggleableChoicesValueOption
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     OptionConfigurationError,
+    OptionValueValidationError,
+    RequiredOptionValueNotSetError,
 )
 
 

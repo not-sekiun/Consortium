@@ -5,7 +5,7 @@ import json
 import pytest
 import requests
 
-from tests.utils import (
+from tests.api_tests.utils import (
     get_all_listener_template_ids,
     get_all_user_account_ids,
     validate_response,
@@ -21,7 +21,7 @@ _JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA = {
 }
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def validate_user_accounts_json_file_before_tests():
     # For end-to-end testing we assume a set of default user account credentials so that
     # the pytest framework can log in and perform tests on the REST API.
@@ -53,7 +53,7 @@ def validate_user_accounts_json_file_before_tests():
         assert user_account in default_user_accounts
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def validate_server_config_json_file_before_tests():
     # For end-to-end testing we assume a set of default server configurations so that
     # the pytest framework can perform tests on the REST API.
@@ -73,10 +73,7 @@ def validate_server_config_json_file_before_tests():
         assert server_config_json_data[key] == value
 
 
-# scope="session" means that the fixture is created once per test session and is shared
-# across all tests modules and test functions. This dramatically increases testing speed
-# because requests is very slow without the use of shared sessions.
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def admin_session():
     # login as an admin using form data to get a JSON web token, then create a session
     # that automatically adds the JSON web token to all requests
@@ -95,7 +92,7 @@ def admin_session():
     return session
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def operator_session():
     # login as an operator using form data to get a JSON web token, then create a
     # session that automatically adds the JSON web token to all requests
@@ -114,7 +111,7 @@ def operator_session():
     return session
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def spectator_session():
     # login as an operator using form data to get a JSON web token, then create a
     # session that automatically adds the JSON web token to all requests
@@ -238,7 +235,7 @@ def restore_default_user_accounts_after_test(admin_session):
     )
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def logout_all_sessions(admin_session, operator_session, spectator_session):
     # yielding None allows the fixture to run after all tests have completed
     yield None

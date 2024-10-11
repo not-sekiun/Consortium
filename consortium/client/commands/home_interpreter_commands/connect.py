@@ -2,35 +2,30 @@ import json
 from argparse import ArgumentParser
 
 import jsonschema
-from aiohttp.client_exceptions import ClientConnectionError
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.exceptions.client_rest_api_connection_exceptions import (
-    ClientRESTAPIConnectionAlreadyLoggedInError,
-    ClientRESTAPIConnectionFailedToLoginError,
-    InvalidServerRESTAPILoginResponseError,
+from consortium.client.exceptions.client_sessions_service_exceptions import (
+    ClientSessionCreationError,
 )
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
 )
-from consortium.client.objects.client_objects import ClientConfig
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
 
-client_connections_service = client_singletons.client_connections_service
+client_sessions_service = client_singletons.client_sessions_service
 
 
 class ConnectCommand(BaseCommand):
     name = "connect"
     description = (
-        "Create a new client connection to a Consortium server using a configuration "
+        "Create a new client session to a Consortium server using a configuration "
         "file or by manually specifying connection details."
     )
     epilog = format_argparse_epilog(
@@ -158,42 +153,33 @@ class ConnectCommand(BaseCommand):
                     )
                     return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-                client_config = ClientConfig(
-                    remote_host=config_data["remote_host"],
-                    remote_port=config_data["remote_port"],
-                    username=config_data["username"],
-                    password=config_data["password"],
-                )
+                username = config_data["username"]
+                password = config_data["password"]
+                remote_host = config_data["remote_host"]
+                remote_port = config_data["remote_port"]
             else:
-                client_config = ClientConfig(
-                    remote_host=parsed_args.remote_host,
-                    remote_port=parsed_args.remote_port,
-                    username=parsed_args.username,
-                    password=parsed_args.password,
-                )
+                username = parsed_args.username
+                password = parsed_args.password
+                remote_host = parsed_args.remote_host
+                remote_port = parsed_args.remote_port
 
             try:
-                client_connection = ClientRESTAPIConnection(client_config=client_config)
-                await client_connection.login()
-            # AlreadyLoggedInError should not be raised unless a programmer error is
-            # made.
-            except (
-                ClientRESTAPIConnectionFailedToLoginError,
-                InvalidServerRESTAPILoginResponseError,
-                ClientRESTAPIConnectionAlreadyLoggedInError,
-                ClientConnectionError,
-            ) as exc:
-                print_error(f"Failed to connect to server: {exc}")
+                client_session = client_sessions_service.create_and_add_client_session(
+                    username=username,
+                    password=password,
+                    remote_host=remote_host,
+                    remote_port=remote_port,
+                )
+                await client_sessions_service.connect_client_session(
+                    client_session_id=str(client_session.client_session_id),
+                )
+                print_success(
+                    f"Successfully logged into server "
+                    f"{remote_host}:{remote_port} as '{username}'.",
+                )
+            except ClientSessionCreationError as exc:
+                print_error(exc)
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
-            client_connections_service.add_client_connection(
-                client_connection=client_connection,
-            )
-
-            print_success(
-                f"Successfully connected to server "
-                f"{client_config.remote_host}:{client_config.remote_port} with client "
-                f"connection: {client_connection}",
-            )
         except SystemExit:
             pass
 

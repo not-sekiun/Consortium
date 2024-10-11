@@ -408,18 +408,25 @@ async def update_agent_generator_by_agent_generator_id(
                 raise InvalidAgentGeneratorParameterValueAPIError.from_service_exception(
                     service_exception=exc,
                 )
-    except AgentGeneratorNotFoundServiceError:
+    except AgentGeneratorNotFoundServiceError as exc:
         raise AgentGeneratorNotFoundAPIError.from_service_exception(
-            service_exception=AgentGeneratorNotFoundServiceError(
-                agent_generator_id="string",
-            ),
+            service_exception=exc,
         )
 
-    agent_generator = (
-        agent_generators_service.get_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
+    try:
+        agent_generator = (
+            agent_generators_service.get_agent_generator_by_agent_generator_id(
+                agent_generator_id=agent_generator_id,
+            )
         )
-    )
+    # If the agent generator ID provided is invalid AND no parameters were passed to be
+    # patched it is possible for the above block to execute and not raise an exception.
+    # So we still need to check for that here.
+    except AgentGeneratorNotFoundServiceError as exc:
+        raise AgentGeneratorNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
+
     return AgentGeneratorModel(**agent_generator.to_json())
 
 

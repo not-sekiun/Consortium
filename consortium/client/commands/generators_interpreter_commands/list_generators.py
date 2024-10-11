@@ -2,13 +2,13 @@ from rich import box
 from rich.panel import Panel
 from rich.table import Table
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import (
     format_agent_generator_state_string_with_color,
@@ -35,8 +35,12 @@ class ListGeneratorsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
-            all_agent_generators = await client_connection.get_all_agent_generators()
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
+            all_agent_generators = (
+                await client_rest_api_connection.get_all_agent_generators()
+            )
 
             table = Table(title="Agent Generators")
             table.add_column("Agent Generator ID")

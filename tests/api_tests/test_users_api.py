@@ -1,27 +1,39 @@
-import pytest
 import requests
 
-from tests.common_json_response_schemas import FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA
-from tests.utils import validate_response
+from tests.api_tests.common_json_response_schemas import (
+    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+)
+from tests.api_tests.utils import validate_response
 
 USER_RESPONSE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "user_id": {"type": "string"},
-        "user_account_id": {"type": "string"},
+        "display_name": {"type": "string"},
         "username": {"type": "string"},
+        "user_account": {
+            "type": "object",
+            "properties": {
+                "user_account_id": {"type": "string"},
+                "username": {"type": "string"},
+            },
+            "required": ["user_account_id", "username"],
+            "additionalProperties": False,
+        },
         "role": {"type": "string"},
         "datetime_connected": {"type": "string"},
         "datetime_last_active": {"type": "string"},
     },
     "required": [
         "user_id",
-        "user_account_id",
+        "display_name",
         "username",
         "role",
+        "user_account",
         "datetime_connected",
         "datetime_last_active",
     ],
+    "additionalProperties": False,
 }
 ALL_USERS_RESPONSE_JSON_SCHEMA = {
     "type": "array",

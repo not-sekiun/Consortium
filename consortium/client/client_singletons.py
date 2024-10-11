@@ -1,5 +1,3 @@
-from consortium.client.services.client_rest_api_connections_service import (
-    ClientRESTAPIConnectionsService,
-)
+from consortium.client.services.client_sessions_service import ClientSessionsService
 
-client_connections_service = ClientRESTAPIConnectionsService()
+client_sessions_service = ClientSessionsService()

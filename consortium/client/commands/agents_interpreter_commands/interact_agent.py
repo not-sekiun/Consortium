@@ -1,19 +1,16 @@
 from argparse import ArgumentParser
 
-import consortium.client.client_singletons as client_singletons
-from consortium.client.framework.base_command import (
-    BaseCommand,
-    CommandContext,
-    ReturnStatus,
-)
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
     InterpreterType,
 )
+from consortium.client.repl_framework.base_command import (
+    BaseCommand,
+    CommandContext,
+    ReturnStatus,
+)
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
-
-client_connections_service = client_singletons.client_connections_service
 
 
 class InteractAgentCommand(BaseCommand):
@@ -40,9 +37,11 @@ class InteractAgentCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
             try:
-                agent = await client_connection.get_agent_by_agent_id(
+                agent = await client_rest_api_connection.get_agent_by_agent_id(
                     parsed_args.agent_id[0],
                 )
             except ValueError as exc:

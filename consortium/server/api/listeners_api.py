@@ -355,12 +355,23 @@ async def update_listener_by_listener_id(
                 raise InvalidListenerParameterValueAPIError.from_service_exception(
                     service_exception=exc,
                 )
-    except ListenerNotFoundServiceError:
+    except ListenerNotFoundServiceError as exc:
         raise ListenerNotFoundAPIError.from_service_exception(
-            service_exception=ListenerNotFoundServiceError(listener_id="string"),
+            service_exception=exc,
         )
 
-    listener = listeners_service.get_listener_by_listener_id(listener_id=listener_id)
+    # If the listener ID provided is invalid AND no parameters were passed to be
+    # patched it is possible for the above block to execute and not raise an exception.
+    # So we still need to check for that here.
+    try:
+        listener = listeners_service.get_listener_by_listener_id(
+            listener_id=listener_id,
+        )
+    except ListenerNotFoundServiceError as exc:
+        raise ListenerNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
+
     return ListenerModel(**listener.to_json())
 
 

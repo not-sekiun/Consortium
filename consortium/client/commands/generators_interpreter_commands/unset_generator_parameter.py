@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
@@ -40,7 +40,9 @@ class UnsetGeneratorParameterCommand(BaseCommand):
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
             agent_template_options = command_context.environment["agent_template"][
                 "options"
             ]
@@ -55,7 +57,7 @@ class UnsetGeneratorParameterCommand(BaseCommand):
                 return ReturnStatus(ClientReturnStatusType.CONTINUE)
 
             if option["option_type"] == "LIST_VALUE_OPTION":
-                await client_connection.update_agent_generator_by_agent_generator_id(
+                await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
                     agent_generator_id=parsed_args.agent_generator_id[0],
                     new_agent_generator_attributes={
                         "parameters": {parameter_name: []},
@@ -65,7 +67,7 @@ class UnsetGeneratorParameterCommand(BaseCommand):
                     f'Option "{parameter_name}" has been unset.',
                 )
             elif option["option_type"] == "DICTIONARY_VALUE_OPTION":
-                await client_connection.update_agent_generator_by_agent_generator_id(
+                await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
                     agent_generator_id=parsed_args.agent_generator_id[0],
                     new_agent_generator_attributes={
                         "parameters": {parameter_name: {}},
@@ -81,7 +83,7 @@ class UnsetGeneratorParameterCommand(BaseCommand):
                 )
             # SINGLE_VALUE_OPTION and CHOICE_VALUE_OPTION
             else:
-                await client_connection.update_agent_generator_by_agent_generator_id(
+                await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
                     agent_generator_id=parsed_args.agent_generator_id[0],
                     new_agent_generator_attributes={
                         "parameters": {parameter_name: None},

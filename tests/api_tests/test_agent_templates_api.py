@@ -1,30 +1,81 @@
 import pytest
 import requests
 
-from tests.common_json_response_schemas import FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA
-from tests.test_agent_generators_api import AGENT_GENERATOR_RESPONSE_JSON_SCHEMA
-from tests.utils import get_all_agent_template_ids, validate_response
+from tests.api_tests.common_json_response_schemas import (
+    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+)
+from tests.api_tests.test_agent_generators_api import (
+    AGENT_GENERATOR_RESPONSE_JSON_SCHEMA,
+)
+from tests.api_tests.utils import get_all_agent_template_ids, validate_response
 
 AGENT_TEMPLATE_RESPONSE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
+        "agent_template_id": {"type": "string"},
         "name": {"type": "string"},
         "description": {"type": "string"},
         "agent_type": {
             "type": "object",
             "properties": {
-                "name": {"type": "string"},
-                "compatible_listener_type_ids": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                },
                 "agent_type_id": {"type": "string"},
+                "name": {"type": "string"},
+                "compatible_listener_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "listener_type_id": {"type": "string"},
+                            "name": {"type": "string"},
+                        },
+                        "required": ["listener_type_id", "name"],
+                        "additionalProperties": False,
+                    },
+                },
+                "agent_capabilities": {
+                    "type": "object",
+                    "patternProperties": {
+                        "(.*?)": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "description": {"type": "string"},
+                                # TODO: Include each argument type's JSON schema in the
+                                #  main JSON schema.
+                                "arguments": {"type": "object"},
+                                "requires_admin": {"type": "boolean"},
+                                "supported_oses": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
+                                "authors": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
+                            },
+                            "required": [
+                                "name",
+                                "description",
+                                "arguments",
+                                "requires_admin",
+                                "supported_oses",
+                                "authors",
+                            ],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
             },
-            "required": ["name", "compatible_listener_type_ids", "agent_type_id"],
+            "required": [
+                "agent_type_id",
+                "name",
+                "compatible_listener_types",
+                "agent_capabilities",
+            ],
+            "additionalProperties": False,
         },
         "authors": {"type": "array", "items": {"type": "string"}},
         "options": {"type": "object"},
-        "agent_template_id": {"type": "string"},
         "validating_function": {"type": ["string", "null"]},
     },
     "required": [

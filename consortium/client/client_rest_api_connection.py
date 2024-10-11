@@ -1,5 +1,4 @@
-import uuid
-from datetime import datetime
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import aiohttp
@@ -12,118 +11,64 @@ from consortium.client.exceptions.client_rest_api_connection_exceptions import (
     ClientRESTAPIOperationError,
     InvalidServerRESTAPILoginResponseError,
 )
-from consortium.client.objects.client_objects import ClientConfig
 
 
-def _check_if_logged_in(async_func):
-    async def wrapper(*args, **kwargs):
-        # args[0] is the self parameter of the method.
-        if not args[0]._logged_in:
+def _requires_authentication(
+    async_func: Callable[..., Awaitable[Any]],
+) -> Callable[..., Awaitable[Any]]:
+    async def wrapper(self, *args, **kwargs) -> Any:
+        if not self.logged_in:
             raise ClientRESTAPIConnectionNotLoggedInError
 
-        return await async_func(*args, **kwargs)
-
-    return wrapper
-
-
-def _check_for_rest_api_error_response(async_func):
-    async def wrapper(*args, **kwargs):
-        response = await async_func(*args, **kwargs)
-
-        if "error" in response and response["error"]["detail"]:
-            raise ClientRESTAPIOperationError(
-                f"{response["error"]["code"]}: {response["error"]["message"]} "
-                f"(Detail: {response["error"]["detail"]})",
-            )
-        elif "error" in response and not response["error"]["detail"]:
-            raise ClientRESTAPIOperationError(
-                f"{response["error"]["code"]}: {response["error"]["message"]}",
-            )
-
-        return response
+        return await async_func(self, *args, **kwargs)
 
     return wrapper
 
 
 class ClientRESTAPIConnection:
-    def __init__(self, client_config: ClientConfig):
-        self.client_config = client_config
-        self.username = client_config.username
-        self.password = client_config.password
-        self.remote_host = client_config.remote_host
-        self.remote_port = client_config.remote_port
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        remote_host: str,
+        remote_port: int,
+    ):
+        self.username = username
+        self.password = password
+        self.remote_host = remote_host
+        self.remote_port = remote_port
 
-        self.name = ""
-        self.description = ""
-        self.datetime_connected = None
-        self.client_connection_id = uuid.uuid4()
+        self.logged_in = False
+        self.json_web_token = None
 
-        self._client_connection_logger = logger.bind(
-            logger_name=(
-                f"Client Connection '{self.name}' " f"({self.client_connection_id})"
-            ),
+        self._client_rest_api_connection_logger = logger.bind(
+            logger_name=(str(self)),
         )
         self._api_base_url = f"http://{self.remote_host}:{self.remote_port}/api"
-        self._logged_in = False
+        self._aiohttp_client_session = None
+
+    def __str__(self) -> str:
+        return (
+            f"Client REST API connection to {self.remote_host}:{self.remote_port} as "
+            f"'{self.username}'"
+        )
 
     def __repr__(self) -> str:
-        return f"ClientConnection(client_config={self.client_config})"
+        return (
+            f"ClientRESTAPIConnection(username={self.username!r}, "
+            f"password={self.password!r}, remote_host={self.remote_host!r}, "
+            f"remote_port={self.remote_port!r})"
+        )
 
-    def __str__(self):
-        return f"'{self.name}' ({self.client_connection_id})"
+    async def __aenter__(self):
+        await self.connect()
+        return self
 
-    async def _request(self, method: str, url: str, **kwargs) -> Any:
-        response = await self._aiohttp_client_session.request(method, url, **kwargs)
-        response_json = await response.json()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.disconnect()
 
-        color_map = {
-            "1": ("<bold><blue>", "</></>"),
-            "2": ("<bold><green>", "</></>"),
-            "3": ("<bold><blue>", "</></>"),
-            "4": ("<bold><yellow>", "</></>"),
-            "5": ("<bold><red>", "</></>"),
-        }
-        if kwargs:
-            format_string = (
-                "<bold><blue>{}</></> {} {}"
-                + color_map[str(response.status)[0]][0]
-                + " {} {}"
-                + color_map[str(response.status)[0]][1]
-                + " {} {}"
-            )
-            self._client_connection_logger.opt(ansi=True).debug(
-                format_string,
-                method.upper(),
-                url,
-                kwargs,
-                response.status,
-                response.reason,
-                response.content_length,
-                response_json,
-            )
-        else:
-            format_string = (
-                "<bold><blue>{}</></> {}"
-                + color_map[str(response.status)[0]][0]
-                + " {} {}"
-                + color_map[str(response.status)[0]][1]
-                + " {} {}"
-            )
-            self._client_connection_logger.opt(ansi=True).debug(
-                format_string,
-                method.upper(),
-                url,
-                response.status,
-                response.reason,
-                response.content_length,
-                response_json,
-            )
-
-        return response_json
-
-    # Wrapper methods for the /api/login API endpoints.
-    async def login(self):
-        if self._logged_in:
+    async def connect(self) -> None:
+        if self.logged_in:
             raise ClientRESTAPIConnectionAlreadyLoggedInError
         try:
             self._aiohttp_client_session = aiohttp.ClientSession()
@@ -149,404 +94,437 @@ class ClientRESTAPIConnection:
         ):
             raise InvalidServerRESTAPILoginResponseError
 
-        self.datetime_connected = datetime.now()
+        self.json_web_token = response_json["access_token"]
         self._aiohttp_client_session.headers.update(
             {"Authorization": f"Bearer {response_json['access_token']}"},
         )
-        self._logged_in = True
+        self.logged_in = True
+
+    async def disconnect(self) -> None:
+        if not self.logged_in:
+            raise ClientRESTAPIConnectionNotLoggedInError
+
+        await self.logout()
+        self._aiohttp_client_session.headers.pop("Authorization")
+        await self._aiohttp_client_session.close()
+        self.logged_in = False
+
+    # Wrapper methods for the /api/login API endpoints.
+    async def login(self, username: str, password: str) -> dict[str, Any]:
+        return await self._make_request(
+            method="POST",
+            url=f"{self._api_base_url}/login",
+            data={
+                "username": username,
+                "password": password,
+            },
+        )
 
     # Wrapper methods for the /api/logout API endpoint.
-    async def logout(self):
-        if not self._logged_in:
-            raise ClientRESTAPIConnectionNotLoggedInError(
-                "Client is not logged in to server.",
-            )
-
-        await self._request(
+    @_requires_authentication
+    async def logout(self) -> dict[str, Any]:
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/logout",
         )
-        self._aiohttp_client_session.headers.pop("Authorization")
-        await self._aiohttp_client_session.close()
-        self._logged_in = False
 
     # Wrapper methods for the /api/server API endpoints.
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_server_release(self) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/server/release",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_server_config(self) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/server/config",
         )
 
     # Wrapper methods for the /api/listener-templates API endpoint.
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_listener_templates(self) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/listener-templates/all",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_listener_template_by_listener_template_id(
         self,
         listener_template_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/listener-templates/{listener_template_id}",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def create_listener_through_listener_template_by_listener_template_id(
         self,
         listener_template_id: str,
         listener_template_option_values: dict[str, Any],
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/listener-templates/{listener_template_id}",
             json=listener_template_option_values,
         )
 
     # Wrapper methods for the /api/listeners API endpoint.
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_listeners(self) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/listeners/all",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_listener_by_listener_id(
         self,
         listener_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/listeners/{listener_id}",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def update_listener_by_listener_id(
         self,
         listener_id: str,
         new_listener_attributes: dict[str, Any],
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="PATCH",
             url=f"{self._api_base_url}/listeners/{listener_id}",
             json=new_listener_attributes,
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def delete_listener_by_listener_id(
         self,
         listener_id: str,
     ):
-        return await self._request(
+        return await self._make_request(
             method="DELETE",
             url=f"{self._api_base_url}/listeners/{listener_id}",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def start_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/listeners/{listener_id}/start",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def stop_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/listeners/{listener_id}/stop",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def cancel_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/listeners/{listener_id}/cancel",
         )
 
     # Wrapper methods for the /api/agent-templates API endpoint.
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_agent_templates(self) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agent-templates/all",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_agent_template_by_agent_template_id(
         self,
         agent_template_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def create_agent_generator_through_agent_template_by_agent_template_id(
         self,
         agent_template_id: str,
         agent_template_option_values: dict[str, Any],
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
             json=agent_template_option_values,
         )
 
     # Wrapper methods for the /api/agent-generators API endpoint.
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_agent_generators(self) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agent-generators/all",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def update_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
         new_agent_generator_attributes: dict[str, Any],
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="PATCH",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
             json=new_agent_generator_attributes,
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def delete_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="DELETE",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def start_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}/start",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def stop_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}/stop",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def cancel_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}/cancel",
         )
 
     # Wrapper methods for the /api/agents API endpoint.
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_agents(self) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/all",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_agent_by_agent_id(self, agent_id: str) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_agent_tasks_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_queued_agent_tasks_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks/queued",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_running_agent_tasks_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks/running",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_completed_agent_tasks_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks/completed",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
-    async def task_agent_by_agent_id(
-        self,
-        agent_id: str,
-        command: str,
-        arguments: dict[str, Any] | list[Any],
-    ) -> list[dict[str, Any]]:
-        return await self._request(
-            method="POST",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
-            data={
-                "command": command,
-                "arguments": arguments,
-            },
-        )
-
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_agent_results_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/results",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_successful_agent_results_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/results/success",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_failed_agent_results_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/results/fail",
         )
 
+    @_requires_authentication
+    def get_agent_result_by_agent_id_and_result_id(
+        self,
+        agent_id: str,
+        result_id: str,
+    ):
+        return self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/results/{result_id}",
+        )
+
     # Wrapper methods for the /api/users API endpoint.
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_user_info_by_user_id(
         self,
         user_id: str,
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/users/{user_id}",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_own_user_info(self) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/users/me",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def get_all_users_info(self) -> list[dict[str, Any]]:
-        return await self._request(
+        return await self._make_request(
             method="GET",
             url=f"{self._api_base_url}/users/all",
         )
 
-    @_check_if_logged_in
-    @_check_for_rest_api_error_response
+    @_requires_authentication
     async def task_agent_by_agent_id(
         self,
         agent_id: str,
         command: str,
         arguments: dict[str, Any],
     ) -> dict[str, Any]:
-        return await self._request(
+        return await self._make_request(
             method="POST",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
             json={"command": command, "arguments": arguments},
         )
+
+    @staticmethod
+    def _check_for_rest_api_error_response(
+        response_json: dict[str, Any],
+    ) -> None:
+        if "error" in response_json and response_json["error"]["detail"]:
+            raise ClientRESTAPIOperationError(
+                f"{response_json["error"]["code"]}: "
+                f"{response_json["error"]["message"]} "
+                f"(Detail: {response_json["error"]["detail"]})",
+            )
+        elif "error" in response_json and not response_json["error"]["detail"]:
+            raise ClientRESTAPIOperationError(
+                f"{response_json["error"]["code"]}: "
+                f"{response_json["error"]["message"]}",
+            )
+
+    def _log_request_and_response(
+        self,
+        method: str,
+        url: str,
+        response: aiohttp.ClientResponse,
+        response_json: dict[str, Any],
+    ):
+        _http_response_code_to_color_string_map = {
+            1: "<bold><blue>",
+            2: "<bold><green>",
+            3: "<bold><blue>",
+            4: "<bold><yellow>",
+            5: "<bold><red>",
+        }
+        color_string = _http_response_code_to_color_string_map[response.status // 100]
+        format_string = (
+            "<bold><blue>{}</></> {} " + color_string + "{} {}" + "</></> " + "{} {}"
+        )
+        self._client_rest_api_connection_logger.opt(ansi=True).debug(
+            format_string,
+            method.upper(),
+            url,
+            response.status,
+            response.reason,
+            response.content_length,
+            response_json,
+        )
+
+    async def _make_request(self, method: str, url: str, *args, **kwargs) -> Any:
+        response = await self._aiohttp_client_session.request(
+            method,
+            url,
+            *args,
+            **kwargs,
+        )
+        response_json = await response.json()
+        self._log_request_and_response(
+            method=method,
+            url=url,
+            response=response,
+            response_json=response_json,
+        )
+        self._check_for_rest_api_error_response(response_json=response_json)
+        return response_json

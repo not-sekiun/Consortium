@@ -1,33 +1,99 @@
+import asyncio
 import json
+from collections.abc import Awaitable, Callable
+from typing import Any
 
+import jsonschema
 import websockets
+from loguru import logger
 
 from consortium.client.exceptions.client_websocket_api_connection_exceptions import (
     ClientWebsocketsAPIConnectionAlreadyConnectedError,
+    ClientWebsocketsAPIConnectionAlreadyRunningError,
     ClientWebsocketsAPIConnectionNotConnectedError,
+    ClientWebsocketsAPIConnectionNotRunningError,
+    EventHandlerNotSubscribedError,
+    EventTypeNotSubscribedError,
+    InvalidEventTypeError,
     InvalidServerWebsocketAPIConnectionResponseError,
+    SeverWebsocketsAPIErrorResponseError,
 )
+
+_websockets_api_generic_response_json_schema = {
+    "type": "object",
+    "properties": {
+        "type": {"type": "string", "enum": ["response", "event"]},
+    },
+}
+_websockets_api_action_response_json_schema = {
+    "type": "object",
+    "properties": {
+        "type": {"type": "string", "enum": ["response"]},
+        "success": {"type": "boolean"},
+        "message": {"type": "string"},
+        "data": {"type": "object"},
+    },
+}
+_websockets_api_event_response_json_schema = {
+    "type": "object",
+    "properties": {
+        "type": {"type": "string", "enum": ["event"]},
+        "event_type": {"type": "string"},
+        "data": {"type": "object"},
+    },
+}
 
 
 class ClientWebsocketsAPIConnection:
-    def __init__(self, json_web_token: str):
-        self._json_web_token = json_web_token
+    def __init__(self, remote_host: str, remote_port: int, json_web_token: str):
+        self.remote_host = remote_host
+        self.remote_port = remote_port
+        self.json_web_token = json_web_token
 
         self.connected = False
+        self.running = False
 
-    async def connect(self):
+        self._websocket = None
+        self._websocket_message_handler_task = None
+        self._client_websockets_api_connection_logger = logger.bind(
+            logger_name=str(self),
+        )
+        self._event_handlers = {}
+        self._websocket_action_response_messages_queue = asyncio.Queue()
+
+    def __str__(self) -> str:
+        return (
+            f"Client websockets API connection to "
+            f"{self.remote_host}:{self.remote_port}"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            "ClientWebsocketsAPIConnection("
+            f"remote_host={self.remote_host!r}, "
+            f"remote_port={self.remote_port!r}, "
+            f"json_web_token={self.json_web_token!r})"
+        )
+
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.disconnect()
+
+    async def connect(self) -> None:
         if self.connected:
             raise ClientWebsocketsAPIConnectionAlreadyConnectedError
 
-        websocket = await websockets.connect(
-            "ws://localhost:9999/api/events",
-            extra_headers={"Authorization": f"Bearer {self._json_web_token}"},
+        self._websocket = await websockets.connect(
+            f"ws://{self.remote_host}:{self.remote_port}/api/events",
+            extra_headers={"Authorization": f"Bearer {self.json_web_token}"},
         )
 
-        self._websocket = websocket
         self.connected = True
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         if not self.connected:
             raise ClientWebsocketsAPIConnectionNotConnectedError
 
@@ -35,28 +101,198 @@ class ClientWebsocketsAPIConnection:
 
         self.connected = False
 
-    async def send_message(
+    async def start(self) -> None:
+        if self.running:
+            raise ClientWebsocketsAPIConnectionAlreadyRunningError
+
+        self._websocket_message_handler_task = asyncio.create_task(
+            self._websocket_message_handler_loop(),
+        )
+
+        self.running = True
+
+    async def stop(self) -> None:
+        if not self.running:
+            raise ClientWebsocketsAPIConnectionNotRunningError
+
+        self._websocket_message_handler_task.cancel()
+        # There is a non-negligible amount of time that passes between the time the
+        # task is cancelled and the time the task actually stops running. So we await
+        # the task to ensure that the task has actually stopped running before we
+        # continue.
+        await self._websocket_message_handler_task
+
+        self.running = False
+
+    async def subscribe_to_event(
+        self,
+        event_type: str,
+        event_handler: Callable[[dict[str, Any]], Awaitable[None]],
+    ):
+        if event_type not in self._event_handlers:
+            # If the event type is not valid, the server will return an error response.
+            # The error response when received will raise a
+            # ServerWebsocketsAPIErrorResponseError exception that will prevent the
+            # rest of the method from executing.
+            await self._send_and_recv_message(action="subscribe", events=[event_type])
+            self._event_handlers[event_type] = [event_handler]
+        else:
+            self._event_handlers[event_type].append(event_handler)
+
+    async def unsubscribe_from_event(
+        self,
+        event_type: str,
+        event_handler: Callable[[dict[str, Any]], Awaitable[None]] | None,
+    ):
+        if event_type not in self._event_handlers:
+            raise EventTypeNotSubscribedError(event_type=event_type)
+        # If no event handler is provided, all event handlers for the event type are
+        # removed and we unsubscribe from the event over the server's websockets API
+        # because we no longer have any event handlers for the event type.
+        if event_handler is None or len(self._event_handlers[event_type]) == 1:
+            await self._send_and_recv_message(action="unsubscribe", events=[event_type])
+            del self._event_handlers[event_type]
+            return
+        if event_handler not in self._event_handlers[event_type]:
+            raise EventHandlerNotSubscribedError(event_type=event_type)
+
+        self._event_handlers[event_type].remove(event_handler)
+
+    async def get_all_events(self):
+        return (await self._send_and_recv_message(action="get_all_events"))["data"]
+
+    async def get_subscribed_events(self):
+        return (await self._send_and_recv_message(action="get_subscribed_events"))[
+            "data"
+        ]
+
+    async def get_unsubscribed_events(self):
+        return (await self._send_and_recv_message(action="get_unsubscribed_events"))[
+            "data"
+        ]
+
+    async def get_all_event_handlers(
+        self,
+    ) -> dict[str, list[Callable[[dict[str, Any]], None]]]:
+        return self._event_handlers
+
+    async def get_event_handlers_by_event_type(
+        self,
+        event_type: str,
+    ) -> list[Callable[[dict[str, Any]], None]]:
+        if event_type not in self._event_handlers:
+            raise InvalidEventTypeError(event_type=event_type)
+        return self._event_handlers.get(event_type, [])
+
+    async def _send_message(
         self,
         action: str,
         events: list[str] = None,
-    ):
+    ) -> None:
         if not self.connected:
             raise ClientWebsocketsAPIConnectionNotConnectedError
 
         if events is None:
-            await self._websocket.send(json.dumps({"action": action}))
+            message = {"action": action}
         else:
-            await self._websocket.send(json.dumps({"action": action, "events": events}))
+            message = {"action": action, "events": events}
 
-    async def recv_message(self):
+        await self._websocket.send(json.dumps(message))
+
+        self._client_websockets_api_connection_logger.debug("Sent message: {}", message)
+
+    async def _recv_message(self) -> dict[str, Any]:
         if not self.connected:
             raise ClientWebsocketsAPIConnectionNotConnectedError
 
-        message = await self._websocket.recv()
+        if not self.running:
+            message = await self._websocket.recv()
+        else:
+            # If the websocket message handler loop is running, we need to get the
+            # response message from the queue rather than from the websocket directly.
+            message = await self._websocket_action_response_messages_queue.get()
 
         try:
-            message = json.loads(message)
+            message_json = json.loads(message)
         except json.JSONDecodeError:
             raise InvalidServerWebsocketAPIConnectionResponseError
 
+        self._client_websockets_api_connection_logger.debug(
+            "Received message: {}",
+            message_json,
+        )
+
+        if not message_json["success"]:
+            raise SeverWebsocketsAPIErrorResponseError(
+                error_message=(
+                    f"{message_json["error"]["code"]}: "
+                    f"{message_json["error"]["message"]}"
+                ),
+            )
+
         return message
+
+    async def _send_and_recv_message(
+        self,
+        action: str,
+        events: list[str] = None,
+    ) -> dict[str, Any]:
+        await self._send_message(action=action, events=events)
+        return await self._recv_message()
+
+    async def _websocket_message_handler_loop(self) -> None:
+        try:
+            while True:
+                raw_message = await self._websocket.recv()
+
+                try:
+                    message = json.loads(raw_message)
+                    jsonschema.validate(
+                        message,
+                        _websockets_api_generic_response_json_schema,
+                    )
+                except (json.JSONDecodeError, jsonschema.ValidationError):
+                    raise InvalidServerWebsocketAPIConnectionResponseError
+
+                # If the message is a response message, we place it in a queue so that
+                # it can be consumed by any calls to the `_recv_message` method in the
+                # main event loop while any event messages received before the response
+                # message is sent from the server can be processed by the event
+                # handlers.
+                if message["type"] == "response":
+                    await self._websocket_action_response_messages_queue.put(
+                        raw_message,
+                    )
+                elif message["type"] == "event":
+                    event_type = message["event_type"]
+                    if event_type in self._event_handlers:
+                        for event_handler in self._event_handlers[event_type]:
+                            try:
+                                await event_handler(message)
+                            except Exception as exc:
+                                # This should never happen unless there is a bug in the
+                                # event handler itself that the developer did not catch.
+                                self._client_websockets_api_connection_logger.error(
+                                    "Failed to process the received websocket message. "
+                                    "The event handler for the event of event type "
+                                    f"'{event_type}' raised an exception: {exc}. If "
+                                    f"you are seeing this message, something very "
+                                    "wrong has happened. Please report it to the "
+                                    "developer at github.com/not-sekiun.",
+                                )
+                else:
+                    # This should never happen unless there is a mismatch between the
+                    # source code of the events API on the server side and the
+                    # websockets api connection abstraction object on the client side.
+                    self._client_websockets_api_connection_logger.error(
+                        "Failed to process the received websocket message. The message "
+                        f"type '{message['type']}' is not supported. If you are seeing "
+                        "this message, something very wrong has happened. Please "
+                        "report it to the developer at github.com/not-sekiun.",
+                    )
+        except (
+            websockets.exceptions.ConnectionClosedError,
+            websockets.exceptions.ConnectionClosedOK,
+            asyncio.CancelledError,
+        ):
+            pass

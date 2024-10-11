@@ -1,0 +1,22 @@
+class ClientSessionNotFoundError(Exception):
+    def __init__(self, client_session_id: str):
+        super().__init__(
+            "Failed to find the requested client session. No client session was found "
+            f"with the provided client session ID '{client_session_id}'",
+        )
+
+
+class ClientSessionAlreadyExistsError(Exception):
+    def __init__(self, client_session_id: str):
+        super().__init__(
+            "Failed to add the provided client session. A client session already "
+            f"exists with the provided client session ID '{client_session_id}'",
+        )
+
+
+class ClientSessionCreationError(Exception):
+    def __init__(self, remote_host: str, remote_port: int, error_message: str):
+        super().__init__(
+            "Failed to create client session. An error occurred while attempting to "
+            f"connect to the server {remote_host}:{remote_port} : {error_message}",
+        )

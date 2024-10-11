@@ -1,39 +1,49 @@
 import pytest
 import requests
 
-from tests.common_json_response_schemas import FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA
-from tests.test_listeners_api import LISTENER_RESPONSE_JSON_SCHEMA
-from tests.utils import get_all_listener_template_ids, validate_response
+from tests.api_tests.common_json_response_schemas import (
+    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+)
+from tests.api_tests.test_listeners_api import LISTENER_RESPONSE_JSON_SCHEMA
+from tests.api_tests.utils import get_all_listener_template_ids, validate_response
 
 LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
+        "listener_template_id": {"type": "string"},
         "name": {"type": "string"},
         "description": {"type": "string"},
         "listener_type": {
             "type": "object",
             "properties": {
-                "name": {"type": "string"},
                 "listener_type_id": {"type": "string"},
-                "compatible_agent_type_ids": {
+                "name": {"type": "string"},
+                "compatible_agent_types": {
                     "type": "array",
-                    "items": {"type": "string"},
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "agent_type_id": {"type": "string"},
+                            "name": {"type": "string"},
+                        },
+                        "additionalProperties": False,
+                    },
                 },
             },
-            "required": ["name", "listener_type_id", "compatible_agent_type_ids"],
+            "required": ["listener_type_id", "name", "compatible_agent_types"],
+            "additionalProperties": False,
         },
         "authors": {"type": "array", "items": {"type": "string"}},
         "options": {"type": "object"},
-        "listener_template_id": {"type": "string"},
         "validating_function": {"type": ["string", "null"]},
     },
     "required": [
+        "listener_template_id",
         "name",
         "description",
         "listener_type",
         "authors",
         "options",
-        "listener_template_id",
         "validating_function",
     ],
     "additionalProperties": False,

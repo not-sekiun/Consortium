@@ -37,7 +37,7 @@ class AgentsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_REGISTERED,
-                data={"agent_id": agent.agent_id},
+                data={"agent_id": str(agent.agent_id)},
             ),
         )
         self.agents_service_logger.info(f"Created and added agent: {agent}")
@@ -50,7 +50,7 @@ class AgentsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_DEREGISTERED,
-                data={"agent_id": agent.agent_id},
+                data={"agent_id": str(agent.agent_id)},
             ),
         )
         self.agents_service_logger.info(f"Removed agent: {agent}")
@@ -171,7 +171,7 @@ class AgentsService:
     ) -> AgentResultModel:
         all_results = self.get_all_agent_results_by_agent_id(agent_id)
         for result in all_results:
-            if result.result_id == result_id:
+            if str(result.result_id) == result_id:
                 self.agents_service_logger.debug(
                     f"Retrieved result {result!r} from agent with agent ID "
                     f"'{agent_id}'",
@@ -191,7 +191,7 @@ class AgentsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_TASKED,
-                data={"agent_id": agent.agent_id},
+                data={"agent_id": str(agent.agent_id)},
             ),
         )
         self.agents_service_logger.info(f"Tasked agent {agent} with task {task}")
@@ -203,13 +203,17 @@ class AgentsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_CHECKED_IN,
-                data={"agent_id": agent.agent_id},
+                data={"agent_id": str(agent.agent_id)},
             ),
         )
         agent.datetime_last_checked_in = datetime.now()
         self.agents_service_logger.debug(f"Checked in agent {agent!r}")
 
-    def delete_queued_agent_task_by_task_id(self, agent_id: str, task_id: str):
+    def delete_queued_agent_task_by_agent_id_and_task_id(
+        self,
+        agent_id: str,
+        task_id: str,
+    ):
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         try:
             agent.delete_queued_task_by_task_id(task_id=task_id)

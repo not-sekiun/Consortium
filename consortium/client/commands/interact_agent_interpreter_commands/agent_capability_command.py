@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 from typing import Any
 
 from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import (
@@ -242,7 +242,7 @@ def construct_agent_capability_command(
             value_type_flag: str | None,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: ClientRESTAPIConnection,
         ) -> None:
             parameter_value, value_type_annotation = (
                 self._check_value_for_value_type_annotation(
@@ -269,11 +269,13 @@ def construct_agent_capability_command(
                     f'"{parameter_name}". However, the value was still set as the user '
                     f'supplied type "{value_type}".',
                 )
-            await client_connection.update_agent_generator_by_agent_generator_id(
-                agent_generator_id=agent_generator_id,
-                new_agent_generator_attributes={
-                    "parameters": {parameter_name: parameter_value},
-                },
+            await (
+                client_rest_api_connection.update_agent_generator_by_agent_generator_id(
+                    agent_generator_id=agent_generator_id,
+                    new_agent_generator_attributes={
+                        "parameters": {parameter_name: parameter_value},
+                    },
+                )
             )
             print_success(
                 f'Set agent generator parameter "{parameter_name}" to "{parameter_value}" '
@@ -287,7 +289,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: ClientRESTAPIConnection,
         ) -> None:
             parameter_value, value_type_annotation = (
                 self._check_value_for_value_type_annotation(
@@ -313,7 +315,7 @@ def construct_agent_capability_command(
             ):
                 for choice in agent_template_option["available_values"]:
                     if parameter_value == str(choice):
-                        await client_connection.update_agent_generator_by_agent_generator_id(
+                        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
                             agent_generator_id=agent_generator_id,
                             new_agent_generator_attributes={
                                 "parameters": {parameter_name: parameter_value},
@@ -341,11 +343,13 @@ def construct_agent_capability_command(
                     f'{", ".join(agent_template_option["available_values"])}',
                 )
                 return
-            await client_connection.update_agent_generator_by_agent_generator_id(
-                agent_generator_id=agent_generator_id,
-                new_agent_generator_attributes={
-                    "parameters": {parameter_name: parameter_value},
-                },
+            await (
+                client_rest_api_connection.update_agent_generator_by_agent_generator_id(
+                    agent_generator_id=agent_generator_id,
+                    new_agent_generator_attributes={
+                        "parameters": {parameter_name: parameter_value},
+                    },
+                )
             )
             print_success(
                 f'Set agent generator parameter "{parameter_name}" to '
@@ -359,7 +363,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: ClientRESTAPIConnection,
         ) -> None:
             new_parameter_values = []
             for parameter_value in parameter_values:
@@ -391,11 +395,13 @@ def construct_agent_capability_command(
 
                 new_parameter_values.append(parameter_value)
 
-            await client_connection.update_agent_generator_by_agent_generator_id(
-                agent_generator_id=agent_generator_id,
-                new_agent_generator_attributes={
-                    "parameters": {parameter_name: new_parameter_values},
-                },
+            await (
+                client_rest_api_connection.update_agent_generator_by_agent_generator_id(
+                    agent_generator_id=agent_generator_id,
+                    new_agent_generator_attributes={
+                        "parameters": {parameter_name: new_parameter_values},
+                    },
+                )
             )
             print_success(
                 f'Set agent generator parameter "{parameter_name}" to '
@@ -409,7 +415,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: ClientRESTAPIConnection,
         ) -> None:
             new_agent_generator_parameter = {}
             for index in range(0, len(parameter_values), 2):
@@ -466,11 +472,13 @@ def construct_agent_capability_command(
 
                 new_agent_generator_parameter[key] = value
 
-            await client_connection.update_agent_generator_by_agent_generator_id(
-                agent_generator_id=agent_generator_id,
-                new_agent_generator_attributes={
-                    "parameters": {parameter_name: new_agent_generator_parameter},
-                },
+            await (
+                client_rest_api_connection.update_agent_generator_by_agent_generator_id(
+                    agent_generator_id=agent_generator_id,
+                    new_agent_generator_attributes={
+                        "parameters": {parameter_name: new_agent_generator_parameter},
+                    },
+                )
             )
 
         async def _handle_toggleable_choice_value_option(
@@ -480,7 +488,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: ClientRESTAPIConnection,
         ) -> None:
             new_agent_generator_parameter = {}
             toggled_on_values = []
@@ -546,11 +554,13 @@ def construct_agent_capability_command(
                 if choice not in toggled_on_values:
                     new_agent_generator_parameter[choice] = not toggle_value
 
-            await client_connection.update_agent_generator_by_agent_generator_id(
-                agent_generator_id=agent_generator_id,
-                new_agent_generator_attributes={
-                    "parameters": {parameter_name: new_agent_generator_parameter},
-                },
+            await (
+                client_rest_api_connection.update_agent_generator_by_agent_generator_id(
+                    agent_generator_id=agent_generator_id,
+                    new_agent_generator_attributes={
+                        "parameters": {parameter_name: new_agent_generator_parameter},
+                    },
+                )
             )
 
             print_success(
@@ -564,14 +574,18 @@ def construct_agent_capability_command(
         ) -> ReturnStatus:
             try:
                 parsed_args = self.parser.parse_args(command_context.arguments)
-                client_connection = command_context.environment["client_connection"]
+                client_rest_api_connection = command_context.environment[
+                    "client_rest_api_connection"
+                ]
                 arguments = vars(parsed_args)
                 if arguments is None:
                     arguments = {}
-                _success_response = await client_connection.task_agent_by_agent_id(
-                    agent_id=command_context.environment["agent"]["agent_id"],
-                    command=self.name,
-                    arguments=arguments,
+                _success_response = (
+                    await client_rest_api_connection.task_agent_by_agent_id(
+                        agent_id=command_context.environment["agent"]["agent_id"],
+                        command=self.name,
+                        arguments=arguments,
+                    )
                 )
                 print_info(
                     f"Tasked agent '{command_context.environment["agent"]["name"]}' "

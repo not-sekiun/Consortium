@@ -1,13 +1,13 @@
 from argparse import ArgumentParser
 
-from consortium.client.framework.base_command import (
-    BaseCommand,
-    CommandContext,
-    ReturnStatus,
-)
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
     InterpreterType,
+)
+from consortium.client.repl_framework.base_command import (
+    BaseCommand,
+    CommandContext,
+    ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info
@@ -36,7 +36,9 @@ class UseListenerTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
             currently_used_listener_template = command_context.environment[
                 "listener_template"
             ]
@@ -54,10 +56,8 @@ class UseListenerTemplateCommand(BaseCommand):
                     type=ClientReturnStatusType.CONTINUE,
                 )
 
-            listener_template = (
-                client_connection.get_listener_template_by_listener_template_id(
-                    parsed_args.listener_template_id[0],
-                )
+            listener_template = client_rest_api_connection.get_listener_template_by_listener_template_id(
+                parsed_args.listener_template_id[0],
             )
             print_info(
                 f'Using listener template: "{listener_template["name"]}" '

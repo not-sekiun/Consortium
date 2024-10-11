@@ -3,11 +3,11 @@ from enum import StrEnum
 import jsonschema
 import requests
 
-from tests.common_json_response_schemas import (
+from tests.api_tests.common_json_response_schemas import (
     METHOD_NOT_ALLOWED_ERROR_RESPONSE_JSON_SCHEMA,
     NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
 )
-from tests.utils import validate_response
+from tests.api_tests.utils import validate_response
 
 
 class _HTTPMethod(StrEnum):

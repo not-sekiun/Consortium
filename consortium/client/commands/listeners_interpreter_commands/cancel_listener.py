@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
@@ -33,14 +33,16 @@ class CancelListenerCommand(BaseCommand):
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
 
-            client_connection = command_context.environment["client_connection"]
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
 
             # If listener does not exist, a RESTAPIError is raised and caught by the
             # outer try-except block
-            listener = await client_connection.get_listener_by_listener_id(
+            listener = await client_rest_api_connection.get_listener_by_listener_id(
                 parsed_args.listener_id[0],
             )
-            _ = await client_connection.cancel_listener_by_listener_id(
+            _ = await client_rest_api_connection.cancel_listener_by_listener_id(
                 listener_id=parsed_args.listener_id[0],
             )
 

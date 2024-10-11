@@ -1,12 +1,10 @@
 import pytest
 
-from consortium.framework.options import (
-    OptionValueValidationError,
-    RequiredOptionValueNotSetError,
-    SingleValueOption,
-)
+from consortium.framework.options import SingleValueOption
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     OptionConfigurationError,
+    OptionValueValidationError,
+    RequiredOptionValueNotSetError,
 )
 
 

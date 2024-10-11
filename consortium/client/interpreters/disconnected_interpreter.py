@@ -5,85 +5,79 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 
 import consortium.client.client_singletons as client_singletons
+from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
+from consortium.client.commands.disconnected_interpreter_commands import (
+    DISCONNECTED_INTERPRETER_COMMANDS,
+)
+from consortium.client.commands.home_interpreter_commands import (
+    ConnectCommand,
+    InteractClientSessionCommand,
+    ListClientSessionsCommand,
+)
+from consortium.client.exceptions.client_interpreter_exceptions import (
+    UnclosedDoubleQuotesError,
+    UnclosedSingleQuotesError,
+)
 from consortium.client.exceptions.client_rest_api_connection_exceptions import (
     ClientRESTAPIOperationError,
 )
-from consortium.client.exceptions.client_interpreter_exceptions import (
-    UnclosedSingleQuotesError,
-    UnclosedDoubleQuotesError,
-)
-from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
-from consortium.client.commands.disconnected_interpreter_commands.disconnect import (
-    DisconnectCommand,
-)
-from consortium.client.commands.disconnected_interpreter_commands.info_client_connection import (
-    InfoClientConnectionCommand,
-)
-from consortium.client.commands.disconnected_interpreter_commands.redescribe_client_connection import (
-    RedescribeClientConnectionCommand,
-)
-from consortium.client.commands.disconnected_interpreter_commands.rename_client_connection import (
-    RenameClientConnectionCommand,
-)
-from consortium.client.commands.home_interpreter_commands.connect import ConnectCommand
-from consortium.client.commands.home_interpreter_commands.interact_client_connection import (
-    InteractClientConnectionCommand,
-)
-from consortium.client.commands.home_interpreter_commands.list_client_connections import (
-    ListClientConnectionsCommand,
-)
-from consortium.client.framework.base_interpreter import BaseInterpreter
-from consortium.client.framework.base_parser import ParsedCommand
-from consortium.client.objects.client_interpreter_objects import ClientInterpreterLexer
 from consortium.client.objects.client_return_status_objects import ReturnStatusType
+from consortium.client.repl_framework.base_interpreter import BaseInterpreter
+from consortium.client.repl_framework.base_parser import ParsedCommand
+from consortium.client.repl_interface.client_interpreter_lexer import (
+    ClientInterpreterLexer,
+)
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
 from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 from consortium.client.utils.printer_utils import CONSOLE, print_error, print_info
 
-client_connections_service = client_singletons.client_connections_service
+client_sessions_service = client_singletons.client_sessions_service
 
 
 class DisconnectedInterpreter(BaseInterpreter):
     def __init__(self):
-        disconnected_interpreter_core_commands = [
-            *[
+        combined_disconnected_interpreter_core_commands = (
+            [
                 command
                 for command in CORE_COMMANDS
                 if command.name not in ("home", "listeners", "generators", "agents")
-            ],
-            ConnectCommand(),
-            ListClientConnectionsCommand(),
-            InfoClientConnectionCommand(),
-            DisconnectCommand(),
-            RenameClientConnectionCommand(),
-            InteractClientConnectionCommand(),
-            RedescribeClientConnectionCommand(),
-        ]
+            ]
+            + DISCONNECTED_INTERPRETER_COMMANDS
+            + [
+                ConnectCommand(),
+                ListClientSessionsCommand(),
+                InteractClientSessionCommand(),
+            ]
+        )
         super().__init__(
             prompt_session=PromptSession(
                 message=ANSI(format_rich_text_as_ansi("[bold white]Consortium > ")),
                 completer=NestedCompleter.from_nested_dict(
                     {
                         command.name: None
-                        for command in disconnected_interpreter_core_commands
+                        for command in combined_disconnected_interpreter_core_commands
                     },
                 ),
                 auto_suggest=AutoSuggestFromHistory(),
             ),
             commands=[
-                *disconnected_interpreter_core_commands,
+                *combined_disconnected_interpreter_core_commands,
             ],
             lexer=ClientInterpreterLexer(),
             ignore_keyboard_interrupt=True,
             environment={
-                # Setting client_connection to None is mainly to signal to the banner
-                # core command that there is no client connection to operate on.
-                "client_connection": None,
+                # Setting `client_session`, `client_rest_api_connection`, and
+                # `client_websockets_api_connection` to `None` is mainly to signal to
+                # the banner core command that there is no client session to operate
+                # on.
+                "client_session": None,
+                "client_rest_api_connection": None,
+                "client_websockets_api_connection": None,
                 "commands": {
                     command.name: command
-                    for command in disconnected_interpreter_core_commands
+                    for command in combined_disconnected_interpreter_core_commands
                 },
             },
         )
@@ -112,22 +106,22 @@ class DisconnectedInterpreter(BaseInterpreter):
     # TODO: Find a way for interpreters to "inherit" command completions or share
     #  common command completions. Probably could just make it a parameter
     async def on_interpreter_loop(self) -> None:
-        all_client_connections = client_connections_service.get_all_client_connections()
+        all_client_sessions = client_sessions_service.get_all_client_sessions()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             nested_completer=self.prompt_session.completer,
         )
         for key, value in {
             command: {
-                str(client_connection.client_connection_id): None
-                for client_connection in all_client_connections
+                str(client_session.client_session_id): None
+                for client_session in all_client_sessions
             }
             for command in [
                 "disconnect",
-                "info_client_connection",
-                "interact_client_connection",
-                "rename_client_connection",
-                "redescribe_client_connection",
+                "info_client_session",
+                "interact_client_session",
+                "rename_client_session",
+                "redescribe_client_session",
             ]
         }.items():
             nested_completer_dict[key] = value

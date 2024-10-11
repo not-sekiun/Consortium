@@ -26,3 +26,5 @@ class ApplicationService:
 
     def __repr__(self) -> str:
         return "ApplicationService()"
+
+    # TODO: Consider if we should just move the REST API to a plugin instead.

@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
@@ -46,14 +46,14 @@ class InfoAgentTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
             if parsed_args.agent_template_id is None:
                 agent_template = command_context.environment["agent_template"]
             else:
-                agent_template = (
-                    await client_connection.get_agent_template_by_agent_template_id(
-                        parsed_args.agent_template_id,
-                    )
+                agent_template = await client_rest_api_connection.get_agent_template_by_agent_template_id(
+                    parsed_args.agent_template_id,
                 )
 
             table = Table(title="Agent Template Information")

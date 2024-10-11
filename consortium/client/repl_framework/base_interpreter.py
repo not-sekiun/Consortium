@@ -1,13 +1,13 @@
 from prompt_toolkit import PromptSession
 
-from consortium.client.framework.base_command import (
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
     ReturnStatusType,
 )
-from consortium.client.framework.base_lexer import BaseLexer, SimpleLexer
-from consortium.client.framework.base_parser import (
+from consortium.client.repl_framework.base_lexer import BaseLexer, SimpleLexer
+from consortium.client.repl_framework.base_parser import (
     BaseParser,
     ParsedCommand,
     SimpleParser,
@@ -68,14 +68,14 @@ class BaseInterpreter:
     async def on_interpreter_errored(self, exc: Exception) -> None:
         raise exc
 
-    async def run_interpreter(self):
+    async def run_interpreter(self) -> ReturnStatus:
         await self.on_enter_interpreter()
 
         while True:
             try:
                 await self.on_interpreter_loop()
-                input_string = await self.read_input()
 
+                input_string = await self.read_input()
                 if not input_string:
                     continue
 
@@ -93,8 +93,7 @@ class BaseInterpreter:
             except KeyboardInterrupt:
                 await self.on_interrupt()
                 if not self.ignore_keyboard_interrupt:
-                    break
+                    await self.on_exit_interpreter()
+                    return ReturnStatus(type=ReturnStatusType.EXIT)
             except Exception as exc:
                 await self.on_interpreter_errored(exc)
-
-        await self.on_exit_interpreter()

@@ -333,7 +333,7 @@ def get_agent_tasks_by_agent_id_and_task_id(
         },
     },
 )
-def get_agent_results_by_agent_id_and_result_id(
+def get_agent_result_by_agent_id_and_result_id(
     agent_id: str,
     result_id: str,
     _: Annotated[
@@ -411,7 +411,7 @@ async def delete_queued_agent_task_by_agent_id_and_task_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        await agents_service.delete_agent_task_by_agent_id_and_task_id(
+        await agents_service.delete_queued_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id,
             task_id=task_id,
         )

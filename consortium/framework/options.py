@@ -14,6 +14,7 @@ from consortium.server.exceptions.framework_exceptions.options_framework_excepti
     EmptyOptionNameError,
     InvalidDefaultValueError,
     InvalidValidatingRegexError,
+    OptionConfigurationError,
     OptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
     RequiredOptionValueNotSetError,
@@ -115,7 +116,10 @@ class _BaseOption(ABC):
 
         self._value = None
 
-        self._validate_option_arguments()
+        try:
+            self._validate_option_arguments()
+        except OptionValueValidationFrameworkError as exc:
+            raise OptionConfigurationError()
 
     @abstractmethod
     def validate_value(self, value: Any) -> None: ...
@@ -168,7 +172,7 @@ class _BaseOption(ABC):
         if self.default_value is not None:
             try:
                 self.validate_value(self.default_value)
-            except OptionValueValidationError as exc:
+            except OptionValueValidationFrameworkError as exc:
                 raise InvalidDefaultValueError(
                     option_name=self.name,
                     default_value=self.default_value,
@@ -606,6 +610,7 @@ class DictionaryValueOption(_BaseOption):
         self.value_validating_regex = value_validating_regex
         self.value_validating_function = value_validating_function
         self.validating_function = validating_function
+
         super().__init__(
             name=name,
             description=description,

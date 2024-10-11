@@ -1,13 +1,13 @@
 from argparse import ArgumentParser
 
 from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import (
@@ -104,7 +104,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str | None,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientRESTAPIConnection,
+        client_rest_api_connection: ClientRESTAPIConnection,
     ) -> None:
         parameter_value, value_type_annotation = (
             self._check_value_for_value_type_annotation(
@@ -131,7 +131,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                 f'"{parameter_name}". However, the value was still set as the user '
                 f'supplied type "{value_type}".',
             )
-        await client_connection.update_agent_generator_by_agent_generator_id(
+        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
             new_agent_generator_attributes={
                 "parameters": {parameter_name: parameter_value},
@@ -149,7 +149,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientRESTAPIConnection,
+        client_rest_api_connection: ClientRESTAPIConnection,
     ) -> None:
         parameter_value, value_type_annotation = (
             self._check_value_for_value_type_annotation(
@@ -175,13 +175,11 @@ class SetGeneratorParameterCommand(BaseCommand):
         ):
             for choice in agent_template_option["available_values"]:
                 if parameter_value == str(choice):
-                    await (
-                        client_connection.update_agent_generator_by_agent_generator_id(
-                            agent_generator_id=agent_generator_id,
-                            new_agent_generator_attributes={
-                                "parameters": {parameter_name: parameter_value},
-                            },
-                        )
+                    await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
+                        agent_generator_id=agent_generator_id,
+                        new_agent_generator_attributes={
+                            "parameters": {parameter_name: parameter_value},
+                        },
                     )
                     print_success(
                         f'Set agent generator parameter "{parameter_name}" to '
@@ -205,7 +203,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                 f'{", ".join(agent_template_option["available_values"])}',
             )
             return
-        await client_connection.update_agent_generator_by_agent_generator_id(
+        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
             new_agent_generator_attributes={
                 "parameters": {parameter_name: parameter_value},
@@ -223,7 +221,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientRESTAPIConnection,
+        client_rest_api_connection: ClientRESTAPIConnection,
     ) -> None:
         new_parameter_values = []
         for parameter_value in parameter_values:
@@ -255,7 +253,7 @@ class SetGeneratorParameterCommand(BaseCommand):
 
             new_parameter_values.append(parameter_value)
 
-        await client_connection.update_agent_generator_by_agent_generator_id(
+        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
             new_agent_generator_attributes={
                 "parameters": {parameter_name: new_parameter_values},
@@ -273,7 +271,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientRESTAPIConnection,
+        client_rest_api_connection: ClientRESTAPIConnection,
     ) -> None:
         new_agent_generator_parameter = {}
         for index in range(0, len(parameter_values), 2):
@@ -330,7 +328,7 @@ class SetGeneratorParameterCommand(BaseCommand):
 
             new_agent_generator_parameter[key] = value
 
-        await client_connection.update_agent_generator_by_agent_generator_id(
+        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
             new_agent_generator_attributes={
                 "parameters": {parameter_name: new_agent_generator_parameter},
@@ -344,7 +342,7 @@ class SetGeneratorParameterCommand(BaseCommand):
         value_type_flag: str,
         agent_generator_id: str,
         agent_template_option: dict,
-        client_connection: ClientRESTAPIConnection,
+        client_rest_api_connection: ClientRESTAPIConnection,
     ) -> None:
         new_agent_generator_parameter = {}
         toggled_on_values = []
@@ -410,7 +408,7 @@ class SetGeneratorParameterCommand(BaseCommand):
             if choice not in toggled_on_values:
                 new_agent_generator_parameter[choice] = not toggle_value
 
-        await client_connection.update_agent_generator_by_agent_generator_id(
+        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
             new_agent_generator_attributes={
                 "parameters": {parameter_name: new_agent_generator_parameter},
@@ -425,15 +423,15 @@ class SetGeneratorParameterCommand(BaseCommand):
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
-            agent_generator = (
-                await client_connection.get_agent_generator_by_agent_generator_id(
-                    agent_generator_id=parsed_args.agent_generator_id[0],
-                )
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
+            agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(
+                agent_generator_id=parsed_args.agent_generator_id[0],
             )
             try:
                 agent_template_options = (
-                    await client_connection.get_agent_template_by_agent_template_id(
+                    await client_rest_api_connection.get_agent_template_by_agent_template_id(
                         agent_template_id=agent_generator["agent_template_id"],
                     )
                 )["options"]
@@ -470,7 +468,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                         value_type_flag=parsed_args.value_type,
                         agent_generator_id=parsed_args.agent_generator_id[0],
                         agent_template_option=option,
-                        client_connection=client_connection,
+                        client_rest_api_connection=client_rest_api_connection,
                     )
                 elif option["option_type"] == "CHOICE_VALUE_OPTION":
                     if len(parameter_values) != 1:
@@ -487,7 +485,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                         value_type_flag=parsed_args.value_type,
                         agent_generator_id=parsed_args.agent_generator_id[0],
                         agent_template_option=option,
-                        client_connection=client_connection,
+                        client_rest_api_connection=client_rest_api_connection,
                     )
                 elif option["option_type"] == "LIST_VALUE_OPTION":
                     await self._handle_list_value_parameter(
@@ -496,7 +494,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                         value_type_flag=parsed_args.value_type,
                         agent_generator_id=parsed_args.agent_generator_id[0],
                         agent_template_option=option,
-                        client_connection=client_connection,
+                        client_rest_api_connection=client_rest_api_connection,
                     )
                 elif option["option_type"] == "DICTIONARY_VALUE_OPTION":
                     if len(parameter_values) % 2 != 0:
@@ -513,7 +511,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                         value_type_flag=parsed_args.value_type,
                         agent_generator_id=parsed_args.agent_generator_id[0],
                         agent_template_option=option,
-                        client_connection=client_connection,
+                        client_rest_api_connection=client_rest_api_connection,
                     )
                 elif option["option_type"] == "TOGGLEABLE_CHOICES_VALUE_OPTION":
                     if len(parameter_values) != 1:
@@ -530,7 +528,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                         value_type_flag=parsed_args.value_type,
                         agent_generator_id=parsed_args.agent_generator_id[0],
                         agent_template_option=option,
-                        client_connection=client_connection,
+                        client_rest_api_connection=client_rest_api_connection,
                     )
             except ValueError as exc:
                 print_error(exc)

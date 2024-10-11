@@ -1,4 +1,4 @@
-from consortium.client.framework.base_command import ReturnStatusType
+from consortium.client.repl_framework.base_command import ReturnStatusType
 
 
 class InterpreterType:
@@ -13,5 +13,5 @@ class InterpreterType:
 
 class ClientReturnStatusType(ReturnStatusType):
     SWITCH_INTERPRETER = "SWITCH_INTERPRETER"
-    EXIT_CLIENT_CONNECTION = "EXIT_CLIENT_CONNECTION"
-    SWITCH_CLIENT_CONNECTION = "SWITCH_CLIENT_CONNECTION"
+    EXIT_CLIENT_SESSION = "EXIT_CLIENT_SESSION"
+    SWITCH_CLIENT_SESSION = "SWITCH_CLIENT_SESSION"

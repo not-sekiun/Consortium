@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
@@ -57,6 +58,11 @@ class BaseAgentCapability(ABC):
     requires_admin = False
     supported_oses: set[SupportedOS] = {SupportedOS.ANY}
     authors: set[str] = None
+
+    def __init__(self):
+        self.environment = {}
+        self.send_agent_task_message_queue = asyncio.Queue()
+        self.recv_agent_result_message_queue = asyncio.Queue()
 
     def __init_subclass__(cls, **kwargs):
         # Check the existence of a provided agent capability name first so that we can
@@ -158,6 +164,28 @@ class BaseAgentCapability(ABC):
         cls.arguments = arguments
 
         super().__init_subclass__(**kwargs)
+
+    async def send_agent_task_message(
+        self,
+        agent_task_message: AgentTaskMessageModel,
+    ) -> None:
+        await self.send_agent_task_message_queue.put(agent_task_message)
+
+    async def recv_agent_result_message(
+        self,
+        timeout: int | float | None = None,
+    ) -> AgentResultMessageModel:
+        if timeout is None:
+            return await self.recv_agent_result_message_queue.get()
+        return await asyncio.wait_for(
+            self.recv_agent_result_message_queue.get(),
+            timeout=timeout,
+        )
+
+    async def run_agent_capability(
+        self,
+        agent_task_message: AgentTaskMessageModel,
+    ) -> AgentResultMessageModel: ...
 
     @abstractmethod
     async def handle_sending_agent_task_messages(

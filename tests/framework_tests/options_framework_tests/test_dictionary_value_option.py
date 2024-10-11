@@ -1,12 +1,10 @@
 import pytest
 
-from consortium.framework.options import (
-    DictionaryValueOption,
-    OptionValueValidationError,
-    RequiredOptionValueNotSetError,
-)
+from consortium.framework.options import DictionaryValueOption
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     OptionConfigurationError,
+    OptionValueValidationError,
+    RequiredOptionValueNotSetError,
 )
 
 

@@ -127,7 +127,7 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_CREATED,
-                data={"agent_generator_id": agent_generator.agent_generator_id},
+                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
         self.agent_generators_service_logger.info(
@@ -150,7 +150,7 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_ADDED,
-                data={"agent_generator_id": agent_generator.agent_generator_id},
+                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
         self.agent_generators_service_logger.info(
@@ -174,7 +174,11 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_REMOVED,
-                data={"agent_generator_id": removed_agent_generator.agent_generator_id},
+                data={
+                    "agent_generator_id": str(
+                        removed_agent_generator.agent_generator_id,
+                    ),
+                },
             ),
         )
         self.agent_generators_service_logger.info(
@@ -197,7 +201,7 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_UPDATED,
-                data={"agent_generator_id": agent_generator.agent_generator_id},
+                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
         self.agent_generators_service_logger.info(
@@ -218,7 +222,7 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_UPDATED,
-                data={"agent_generator_id": agent_generator.agent_generator_id},
+                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
         self.agent_generators_service_logger.info(
@@ -290,7 +294,7 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_UPDATED,
-                data={"agent_generator_id": agent_generator.agent_generator_id},
+                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
         self.agent_generators_service_logger.info(
@@ -320,7 +324,7 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_STARTED,
-                data={"agent_generator_id": agent_generator.agent_generator_id},
+                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
 
@@ -344,7 +348,7 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_STOPPED,
-                data={"agent_generator_id": agent_generator.agent_generator_id},
+                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
 
@@ -363,6 +367,6 @@ class AgentGeneratorsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_CANCELLED,
-                data={"agent_generator_id": agent_generator.agent_generator_id},
+                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )

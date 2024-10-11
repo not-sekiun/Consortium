@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
@@ -40,12 +40,12 @@ class InfoListenerTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
 
-            listener_template = (
-                await client_connection.get_listener_template_by_listener_template_id(
-                    parsed_args.listener_template_id[0],
-                )
+            listener_template = await client_rest_api_connection.get_listener_template_by_listener_template_id(
+                parsed_args.listener_template_id[0],
             )
 
             table = Table(title="Listener Template Information")

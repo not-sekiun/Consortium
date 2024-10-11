@@ -12,14 +12,19 @@ def validate_response(
     validator_function: Callable | None = None,
 ) -> requests.Response:
     if expected_status_code is not None:
-        assert test_response.status_code == expected_status_code
+        assert test_response.status_code == expected_status_code, (
+            f"Failed to assert response status code. Expected status code "
+            f"'{expected_status_code}' but got status code {test_response.status_code}."
+        )
     if expected_json_schema is not None:
         try:
             jsonschema.validate(test_response.json(), expected_json_schema)
         except jsonschema.exceptions.ValidationError as exc:
             pytest.fail(exc.message)
     if validator_function is not None:
-        assert validator_function(test_response)
+        assert validator_function(
+            test_response,
+        ), f"Failed to assert response with custom validator function."
 
     return test_response
 

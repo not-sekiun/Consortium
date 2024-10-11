@@ -104,25 +104,28 @@ To view all commands for a particular interpreter in the client type `help`.
 
 ```shell
 Consortium (Home) > help
-                                                                               Help Menu
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Command                      ┃ Description                                                                                                                           ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ agents                       │ Switch to the agents interpreter, the interface for managing and controlling connected agents.                                        │
-│ banner                       │ Display a banner with information and branding about the Consortium framework.                                                        │
-│ clear                        │ Clear the terminal screen.                                                                                                            │
-│ connect                      │ Create a new client connection to a Consortium server using a configuration file or by manually specifying connection details.        │
-│ disconnect                   │ Disconnect the current client connection or a specific client connection from a Consortium server                                     │
-│ exit                         │ Close the Consortium client and exit the program.                                                                                     │
-│ generators                   │ Switch to the generators interpreter, the interface for creating and managing the generation of agent payloads.                       │
-│ help                         │ Display the help summary of a specific command or display the help menu listing all available commands for the current interpreter.   │
-│ info_client_connection       │ Display detailed information for the current client connection or for a specific client connection.                                   │
-│ interact_client_connection   │ Choose a specific client connection to interact with that is associated with a specific user account instance of a Consortium server. │
-│ list_client_connections      │ List basic information for all current client connections to a Consortium server.                                                     │
-│ listeners                    │ Switch to the listeners interpreter, the interface for creating and managing listeners.                                               │
-│ redescribe_client_connection │ Change the description of the current client connection or a specific client connection.                                              │
-│ rename_client_connection     │ Rename the current client connection or a specific client connection.                                                                 │
-└──────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                                         Help Menu
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Command                   ┃ Description                                                                                                                  ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ agents                    │ Switch to the agents interpreter, the interface for managing and controlling connected agents.                               │
+│ banner                    │ Display a banner with information and branding about the Consortium framework.                                               │
+│ clear                     │ Clear the terminal screen.                                                                                                   │
+│ connect                   │ Create a new client session to a Consortium server using a configuration file or by manually specifying connection details.  │
+│ disconnect                │ Disconnect the current client session or a specific client session from a Consortium server                                  │
+│ exit                      │ Close the Consortium client and exit the program.                                                                            │
+│ generators                │ Switch to the generators interpreter, the interface for creating and managing the generation of agent payloads.              │
+│ help                      │ Display the help summary of a specific command or display the help menu listing all available commands for the current       │
+│                           │ interpreter.                                                                                                                 │
+│ home                      │ Return to the home interpreter, the main control interface of the Consortium framework.                                      │
+│ info_client_session       │ Display detailed information for the current client session or for a specific client session.                                │
+│ interact_client_session   │ Choose a specific client session to interact with that is associated with a specific user account logged into a specific     │
+│                           │ Consortium server.                                                                                                           │
+│ list_client_sessions      │ List basic information for all current client sessions to a Consortium server.                                               │
+│ listeners                 │ Switch to the listeners interpreter, the interface for creating and managing listeners.                                      │
+│ redescribe_client_session │ Change the description of the current client session or a specific client session.                                           │
+│ rename_client_session     │ Rename the current client session or a specific client session.                                                              │
+└───────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 To view the summary for a specific command, which includes all of its arguments, type
@@ -146,13 +149,13 @@ use that particular command, type `<command> --help` or
 Consortium (Home) > connect --help
 usage: connect [-h] [-c [CONFIG_FILEPATH]] [-rh HOSTNAME/IP] [-rp PORT] [-u USERNAME] [-p PASSWORD]
 
-Create a new client connection to a Consortium server using a configuration file or by manually specifying connection details.
+Create a new client session to a Consortium server using a configuration file or by manually specifying connection details.
 
 options:
   -h, --help            show this help message and exit
   -c [CONFIG_FILEPATH], --config [CONFIG_FILEPATH]
-                        The filepath to a configuration JSON file containing the client settings specifying the remote host, remote port, username, and password to use when connecting to the Consortium server. If not provided, the default filepath to the configuration file is
-                        used.
+                        The filepath to a configuration JSON file containing the client settings specifying the remote host, remote port, username, and
+                        password to use when connecting to the Consortium server. If not provided, the default filepath to the configuration file is used.
   -rh HOSTNAME/IP, --remote-host HOSTNAME/IP
                         The remote hostname or IP address of the Consortium server to connect to.
   -rp PORT, --remote-port PORT
@@ -163,16 +166,17 @@ options:
                         The password of the account to login to when connecting to the Consortium server.
 
 Examples:
-    connect -c  # Connect using the default filepath to the client configuration file.
-    connect -c path/to/client_config.json  # Connect using a custom configuration file.
-    connect -u username -p password -rh server.com -rp 1234  # Connect through manually provided connection details.
+  connect -c  # Connect using the default filepath to the client configuration file.
+  connect -c path/to/client_config.json  # Connect using a custom configuration file.
+  connect -u username -p password -rh server.com -rp 1234  # Connect through manually provided connection details.
+
 ```
 
 ### Complete Framework Documentation (WIP)
 The complete documentation for the Consortium framework is available at the
-[Consortium wiki](https://github.com/not-sekiun/Consortium). This wiki is also 
+[Consortium wiki](https://github.com/not-sekiun/Consortium). This wiki is also
 available locally under the `docs` folder from the project root. The wiki is hosted with
-`mkdocs`. To view it locally, install `mkdocs` through poetry and run it by changing 
+`mkdocs`. To view it locally, install `mkdocs` through poetry and run it by changing
 directory into the `docs` folder and serving the documentation locally.
 
 ```shell
@@ -196,15 +200,21 @@ including:
 
 
 ## Credits
-This project would not have been possible without the existence of the following 
+This project would not have been possible without the existence of the following
 excellently written libraries and frameworks.
-- FastAPI
-- Prompt-toolkit
-- Rich
-- Websockets
+- [FastAPI](https://github.com/fastapi/fastapi) for the REST API and websockets server.
+- [Prompt-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) for the
+client CLI interface.
+- [Rich](https://github.com/Textualize/rich) for modernizing and beautifying displays
+in the terminal
+- [Websockets](https://github.com/python-websockets/websockets) for the event based
+communication for the client.
 
-On top of that many other pre-existing C2 frameworks provided the inspiration and 
+On top of that many other pre-existing C2 frameworks provided the inspiration and
 motivation to create this one.
-- Powershell-empire
-- Mythic
-- Covenant
+- [Empire, formerly Powershell-Empire](https://github.com/BC-SECURITY/Empire) for some
+of the client design and UI
+- [Mythic](https://github.com/its-a-feature/Mythic) for some elements of the framework
+design
+- [Cobalt Strike](https://www.cobaltstrike.com/) for the functionality and design of
+the listeners and agents

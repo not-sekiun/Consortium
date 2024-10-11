@@ -1,6 +1,8 @@
 import argparse
 import json
 
+from pydantic import ValidationError
+
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server_config import CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH
 from consortium.server.server_logging import configure_logger
@@ -14,12 +16,32 @@ def main(arguments: argparse.Namespace) -> None:
         server_config_filepath = str(CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH)
     else:
         server_config_filepath = arguments.config
+    try:
+        with open(server_config_filepath, "r") as file:
+            json_data = json.load(fp=file)
+    except FileNotFoundError:
+        print(
+            f"Failed to start server. Could not find server configuration file at "
+            f"the provided file path '{server_config_filepath}'.",
+        )
+        return
+    except PermissionError:
+        print(
+            "Failed to start client. Permission denied when attempting to read server "
+            f"configuration file at '{server_config_filepath}'.",
+        )
+        return
+    try:
+        server_config = ServerConfigModel(**json_data)
+    except ValidationError as exc:
+        print(
+            f"Failed to start server. The provided server configuration file "
+            f"'{server_config_filepath}' does not adhere to the expected server "
+            f"configuration file JSON schema: {exc}",
+        )
+        return
 
-    # TODO: Error handling for file loading.
-    with open(server_config_filepath, "r") as file:
-        json_data = json.load(fp=file)
-    server_config = ServerConfigModel(**json_data)
-
+    # Configure logging.
     if arguments.debug:
         configure_logger(log_level="DEBUG")
     else:

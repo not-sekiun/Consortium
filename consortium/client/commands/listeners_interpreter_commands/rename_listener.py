@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
@@ -40,12 +40,14 @@ class RenameListenerCommand(BaseCommand):
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             parsed_commands = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
-            listener = await client_connection.get_listener_by_listener_id(
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
+            listener = await client_rest_api_connection.get_listener_by_listener_id(
                 listener_id=parsed_commands.listener_id[0],
             )
 
-            await client_connection.update_listener_by_listener_id(
+            await client_rest_api_connection.update_listener_by_listener_id(
                 listener_id=parsed_commands.listener_id[0],
                 new_listener_attributes={"name": parsed_commands.new_name[0]},
             )

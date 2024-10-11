@@ -1,23 +1,26 @@
 from argparse import ArgumentParser
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.framework.base_command import (
-    BaseCommand,
-    CommandContext,
-    ReturnStatus,
+from consortium.client.exceptions.client_sessions_service_exceptions import (
+    ClientSessionNotFoundError,
 )
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
+from consortium.client.repl_framework.base_command import (
+    BaseCommand,
+    CommandContext,
+    ReturnStatus,
+)
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
 
-client_connections_service = client_singletons.client_connections_service
+client_sessions_service = client_singletons.client_sessions_service
 
 
 class DisconnectCommand(BaseCommand):
     name = "disconnect"
-    description = "Disconnect a specific client connection from a Consortium server."
+    description = "Disconnect a specific client session from a Consortium server"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -27,8 +30,11 @@ class DisconnectCommand(BaseCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "client_connection_id",
-            help="The client connection ID of the client connection to disconnect.",
+            "client_session_id",
+            help=(
+                "The client session ID of the client to disconnect. If not "
+                "provided, the current client session is disconnected."
+            ),
             nargs=1,
             default=None,
         )
@@ -39,23 +45,32 @@ class DisconnectCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
+
             try:
-                client_connection = client_connections_service.get_client_connection_by_client_connection_id(
-                    parsed_args.client_connection_id[0],
+                await client_sessions_service.disconnect_client_session(
+                    client_session_id=parsed_args.client_session_id[0],
                 )
-            except ValueError as exc:
+            except ClientSessionNotFoundError as exc:
                 print_error(str(exc))
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-            await client_connection.disconnect()
-            client_connections_service.remove_client_connection(
-                client_connection,
+            client_session = (
+                client_sessions_service.get_client_session_by_client_session_id(
+                    client_session_id=parsed_args.client_session_id[0],
+                )
             )
+
             print_success(
-                f"Disconnected from server "
-                f"{client_connection.remote_host}:{client_connection.remote_port} "
-                f"with client connection: {client_connection}",
+                f"Disconnected client session {client_session} from server "
+                f"{client_session.remote_host}:{client_session.remote_port} ",
             )
+
+            client_sessions_service.remove_client_session_by_client_session_id(
+                client_session_id=str(client_session.client_session_id),
+            )
+
+            if client_session == command_context.environment["client_session"]:
+                return ReturnStatus(type=ClientReturnStatusType.EXIT_CLIENT_SESSION)
         except SystemExit:
             pass
 

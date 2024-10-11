@@ -1,8 +1,16 @@
-from typing import Callable, Coroutine
+from collections.abc import Awaitable, Callable
+from enum import StrEnum
+from typing import Any
 
 import jsonschema
 import jwt
-from fastapi import APIRouter, WebSocket, WebSocketException, status
+from fastapi import (
+    APIRouter,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+    status,
+)
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
@@ -55,13 +63,16 @@ _client_action_websocket_message_json_schema = {
                 "get_all_events",
             ],
         },
-        "event": {"type": "string", "enum": events_service.get_all_event_types()},
+        "events": {
+            "type": "array",
+            "items": {"type": "string", "enum": events_service.get_all_event_types()},
+        },
     },
     "required": ["action"],
     "allOf": [
         {
             "if": {"properties": {"action": {"enum": ["subscribe", "unsubscribe"]}}},
-            "then": {"required": ["event"]},
+            "then": {"required": ["events"]},
         },
         {
             "if": {
@@ -81,217 +92,283 @@ _client_action_websocket_message_json_schema = {
 }
 
 
-def _get_subscribed_events_for_websocket_event_sender(
-    websocket_event_sender: Callable[[Event], Coroutine[None, None, None]],
-) -> list[str]:
-    try:
-        subscribed_events = (
-            events_service.get_event_types_from_registered_event_handler(
-                event_handler=websocket_event_sender,
+class _ErrorResponseErrorCodes(StrEnum):
+    INVALID_MESSAGE_FORMAT_ERROR = "INVALID_MESSAGE_FORMAT_ERROR"
+    INVALID_EVENT_TYPE_ERROR = "INVALID_EVENT_TYPE_ERROR"
+    ALREADY_SUBSCRIBED_TO_EVENT_ERROR = "ALREADY_SUBSCRIBED_TO_EVENT_ERROR"
+    NOT_SUBSCRIBED_TO_EVENT_ERROR = "NOT_SUBSCRIBED_TO_EVENT_ERROR"
+
+
+class _WebsocketManager:
+    def __init__(self, websocket: WebSocket):
+        self._websocket = websocket
+        self._events_service = server_singletons.events_service
+
+    @staticmethod
+    def _get_subscribed_events_for_websocket_event_sender(
+        websocket_event_sender: Callable[[Event], Awaitable[None]],
+    ) -> list[str]:
+        try:
+            subscribed_events = (
+                events_service.get_event_types_from_registered_event_handler(
+                    event_handler=websocket_event_sender,
+                )
             )
+        # When this error is raised it means that particular websocket did not
+        # subscribe to any events. Hence, its send function is not registered which
+        # causes the error.
+        except EventHandlerNotRegisteredError:
+            subscribed_events = []
+        return subscribed_events
+
+    def _get_unsubscribed_events_for_websocket_event_sender(
+        self,
+        websocket_event_sender: Callable[[Event], Awaitable[None]],
+    ) -> list[str]:
+        all_events = events_service.get_all_event_types()
+        subscribed_events = self._get_subscribed_events_for_websocket_event_sender(
+            websocket_event_sender=websocket_event_sender,
         )
-    # When this error is raised it means that particular websocket did not
-    # subscribe to any events. Hence, its send function is not registered which
-    # causes the error.
-    except EventHandlerNotRegisteredError:
-        subscribed_events = []
-    return subscribed_events
+        return list(set(all_events) - set(subscribed_events))
 
-
-def _get_unsubscribed_events_for_websocket_event_sender(
-    websocket_event_sender: Callable[[Event], Coroutine[None, None, None]],
-) -> list[str]:
-    all_events = events_service.get_all_event_types()
-    subscribed_events = _get_subscribed_events_for_websocket_event_sender(
-        websocket_event_sender=websocket_event_sender,
-    )
-    return list(set(all_events) - set(subscribed_events))
-
-
-def _websocket_event_sender(websocket: WebSocket):
-    async def wrapper(event: Event):
-        await websocket.send_json(
+    async def _websocket_event_sender(self, event: Event) -> None:
+        await self._websocket.send_json(
             {
                 "type": "event",
                 **event.to_json(),
             },
         )
 
-    return wrapper
+    @staticmethod
+    def _construct_success_response_json(
+        message: str,
+        data: Any | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "type": "response",
+            "success": True,
+            "message": message,
+            "data": data,
+        }
 
+    @staticmethod
+    def _construct_error_json(
+        code: _ErrorResponseErrorCodes,
+        message: str,
+        detail: Any | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "code": code,
+            "message": message,
+            "detail": detail,
+        }
 
-async def _handle_websocket(websocket: WebSocket):
-    websocket_event_sender = _websocket_event_sender(websocket=websocket)
+    def _construct_error_response_json(
+        self,
+        code: _ErrorResponseErrorCodes,
+        message: str,
+        detail: Any | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "type": "response",
+            "success": False,
+            "error": self._construct_error_json(
+                code=code,
+                message=message,
+                detail=detail,
+            ),
+        }
 
-    while True:
-        action_message = await websocket.receive_json()
+    @staticmethod
+    def _construct_errors_response_json(
+        errors: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        return {
+            "type": "response",
+            "success": False,
+            "errors": errors,
+        }
 
+    async def _handle_get_all_events_action(self) -> None:
+        all_events = events_service.get_all_event_types()
+        await self._websocket.send_json(
+            self._construct_success_response_json(
+                message="Successfully retrieved all events.",
+                data=all_events,
+            ),
+        )
+
+    async def _handle_get_subscribed_events_action(self) -> None:
+        subscribed_events = self._get_subscribed_events_for_websocket_event_sender(
+            websocket_event_sender=self._websocket_event_sender,
+        )
+        await self._websocket.send_json(
+            self._construct_success_response_json(
+                message="Successfully retrieved subscribed events.",
+                data=subscribed_events,
+            ),
+        )
+
+    async def _handle_get_unsubscribed_events_action(self) -> None:
+        unsubscribed_events = self._get_unsubscribed_events_for_websocket_event_sender(
+            websocket_event_sender=self._websocket_event_sender,
+        )
+        await self._websocket.send_json(
+            self._construct_success_response_json(
+                message="Successfully retrieved unsubscribed events.",
+                data=unsubscribed_events,
+            ),
+        )
+
+    async def _handle_subscribe_action(self, action_message: dict[str, Any]) -> None:
+        events_to_subscribe_to = action_message["events"]
+        possible_events = list(EventType)
+        subscribed_events = self._get_subscribed_events_for_websocket_event_sender(
+            websocket_event_sender=self._websocket_event_sender,
+        )
+        errors = []
+        for event in events_to_subscribe_to:
+            if event not in possible_events:
+                errors.append(
+                    self._construct_error_json(
+                        code=_ErrorResponseErrorCodes.INVALID_EVENT_TYPE_ERROR,
+                        message=(
+                            "Failed to subscribe to event. The provided event "
+                            f"type '{event}' does not exist."
+                        ),
+                        detail={"event": event},
+                    ),
+                )
+            elif event in subscribed_events:
+                errors.append(
+                    self._construct_error_json(
+                        code=_ErrorResponseErrorCodes.ALREADY_SUBSCRIBED_TO_EVENT_ERROR,
+                        message=(
+                            "Failed to subscribe to event. The provided event "
+                            f"type '{event}' has already been subscribed to."
+                        ),
+                        detail={"event": event},
+                    ),
+                )
+
+        if errors:
+            await self._websocket.send_json(
+                self._construct_errors_response_json(
+                    errors=errors,
+                ),
+            )
+            return
+
+        for event in events_to_subscribe_to:
+            events_service.register_event_handler_to_event_type(
+                event_type=event,
+                event_handler=self._websocket_event_sender,
+            )
+        await self._websocket.send_json(
+            self._construct_success_response_json(
+                message="Successfully subscribed to the provided events.",
+            ),
+        )
+
+    async def _handle_unsubscribe_action(self, action_message: dict[str, Any]) -> None:
+        events_to_unsubscribe_from = action_message["events"]
+        subscribed_events = self._get_subscribed_events_for_websocket_event_sender(
+            websocket_event_sender=self._websocket_event_sender,
+        )
+        possible_events = list(EventType)
+        errors = []
+        for event in events_to_unsubscribe_from:
+            if event not in possible_events:
+                errors.append(
+                    self._construct_error_json(
+                        code=_ErrorResponseErrorCodes.INVALID_EVENT_TYPE_ERROR,
+                        message=(
+                            "Failed to unsubscribe from event. The provided event "
+                            f"type '{event}' does not exist."
+                        ),
+                    ),
+                )
+            elif event not in subscribed_events:
+                errors.append(
+                    self._construct_error_json(
+                        code=_ErrorResponseErrorCodes.NOT_SUBSCRIBED_TO_EVENT_ERROR,
+                        message=(
+                            "Failed to unsubscribe from event. The provided event "
+                            f"type '{event}' has not been subscribed to."
+                        ),
+                    ),
+                )
+
+        if errors:
+            await self._websocket.send_json(
+                self._construct_errors_response_json(
+                    errors=errors,
+                ),
+            )
+            return
+
+        for event in events_to_unsubscribe_from:
+            events_service.deregister_event_handler_from_event_type(
+                event_type=event,
+                event_handler=self._websocket_event_sender,
+            )
+        await self._websocket.send_json(
+            self._construct_success_response_json(
+                message="Successfully unsubscribed from the provided events.",
+            ),
+        )
+
+    async def run(self) -> None:
         try:
-            jsonschema.validate(
-                action_message,
-                _client_action_websocket_message_json_schema,
-            )
-        except jsonschema.ValidationError as exc:
-            await websocket.send_json(
-                {
-                    "type": "response",
-                    "success": False,
-                    "message": f"Failed to process the client's action message. {exc.message}",
-                    "data": exc.cause,
-                },
-            )
+            while True:
+                action_message = await self._websocket.receive_json()
 
-        action = action_message["action"]
-
-        if action == "get_all_events":
-            all_events = events_service.get_all_event_types()
-            await websocket.send_json(
-                {
-                    "type": "response",
-                    "success": True,
-                    "message": "Successfully retrieved all events.",
-                    "data": all_events,
-                },
-            )
-        elif action == "get_subscribed_events":
-            subscribed_events = _get_subscribed_events_for_websocket_event_sender(
-                websocket_event_sender=websocket_event_sender,
-            )
-            await websocket.send_json(
-                {
-                    "type": "response",
-                    "success": True,
-                    "message": "Successfully retrieved subscribed events.",
-                    "data": subscribed_events,
-                },
-            )
-        elif action == "get_unsubscribed_events":
-            unsubscribed_events = _get_unsubscribed_events_for_websocket_event_sender(
-                websocket_event_sender=websocket_event_sender,
-            )
-            await websocket.send_json(
-                {
-                    "type": "response",
-                    "success": True,
-                    "message": "Successfully retrieved unsubscribed events.",
-                    "data": unsubscribed_events,
-                },
-            )
-        elif action == "subscribe":
-            events_to_subscribe_to = action_message["events"]
-            possible_events = list(EventType)
-            subscribed_events = _get_subscribed_events_for_websocket_event_sender(
-                websocket_event_sender=websocket_event_sender,
-            )
-            invalid_events = []
-            for event in events_to_subscribe_to:
-                if event not in possible_events:
-                    invalid_events.append(
-                        {
-                            "event": event,
-                            "reason": "The event type provided does not exist.",
-                        },
+                try:
+                    jsonschema.validate(
+                        action_message,
+                        _client_action_websocket_message_json_schema,
                     )
-                elif event in subscribed_events:
-                    invalid_events.append(
-                        {
-                            "event": event,
-                            "reason": (
-                                "The event type provided has already been subscribed "
-                                "to."
+                except jsonschema.ValidationError as exc:
+                    await self._websocket.send_json(
+                        self._construct_error_response_json(
+                            code=_ErrorResponseErrorCodes.INVALID_MESSAGE_FORMAT_ERROR,
+                            message=(
+                                "Failed to process the client's action message. "
+                                f"{exc.message}"
                             ),
-                        },
-                    )
-
-            if invalid_events:
-                await websocket.send_json(
-                    {
-                        "type": "response",
-                        "success": False,
-                        "message": (
-                            "Failed to subscribe to the provided events. All the "
-                            "provided events must valid for a subscription request to "
-                            "succeed. The following events are invalid: "
-                            f"{", ".join([invalid_event["event"] for invalid_event in invalid_events])}."
+                            detail=exc.cause,
                         ),
-                        "data": invalid_events,
-                    },
-                )
-                continue
-
-            for event in events_to_subscribe_to:
-                events_service.register_event_handler_to_event_type(
-                    event_type=event,
-                    event_handler=websocket_event_sender,
-                )
-            await websocket.send_json(
-                {
-                    "type": "response",
-                    "success": True,
-                    "message": "Successfully subscribed to the provided events.",
-                    "data": None,
-                },
-            )
-        elif action == "unsubscribe":
-            events_to_unsubscribe_from = action_message["events"]
-            invalid_events = []
-            subscribed_events = _get_subscribed_events_for_websocket_event_sender(
-                websocket_event_sender=websocket_event_sender,
-            )
-            possible_events = list(EventType)
-
-            for event in events_to_unsubscribe_from:
-                if event not in possible_events:
-                    invalid_events.append(
-                        {
-                            "event": event,
-                            "reason": "The event type provided does not exist.",
-                        },
-                    )
-                elif event not in subscribed_events:
-                    invalid_events.append(
-                        {
-                            "event": event,
-                            "reason": (
-                                "The event type provided has not been subscribed to."
-                            ),
-                        },
                     )
 
-            if invalid_events:
-                await websocket.send_json(
-                    {
-                        "type": "response",
-                        "success": False,
-                        "message": (
-                            "Failed to unsubscribe to the provided events. All the "
-                            "provided events must valid for an unsubscription request "
-                            "to succeed. The following events are invalid: "
-                            f"{", ".join([invalid_event["event"] for invalid_event in invalid_events])}."
-                        ),
-                        "data": invalid_events,
-                    },
-                )
-                continue
+                action = action_message["action"]
 
-            for event in events_to_unsubscribe_from:
-                events_service.deregister_event_handler_from_event_type(
-                    event_type=event,
-                    event_handler=websocket_event_sender,
+                if action == "get_all_events":
+                    await self._handle_get_all_events_action()
+                elif action == "get_subscribed_events":
+                    await self._handle_get_subscribed_events_action()
+                elif action == "get_unsubscribed_events":
+                    await self._handle_get_unsubscribed_events_action()
+                elif action == "subscribe":
+                    await self._handle_subscribe_action(action_message=action_message)
+                elif action == "unsubscribe":
+                    await self._handle_unsubscribe_action(action_message=action_message)
+                else:
+                    # This should never happen because the JSON schema validation should
+                    # catch this error at the top and send an error response back.
+                    assert False, (
+                        "Invalid events websocket API message was received from "
+                        "client. The client's action message was not recognized."
+                    )
+        except WebSocketDisconnect:
+            for (
+                event_type
+            ) in self._events_service.get_event_types_from_registered_event_handler(
+                event_handler=self._websocket_event_sender,
+            ):
+                self._events_service.deregister_event_handler_from_event_type(
+                    event_type=event_type,
+                    event_handler=self._websocket_event_sender,
                 )
-            await websocket.send_json(
-                {
-                    "type": "response",
-                    "success": True,
-                    "message": "Successfully unsubscribed from the provided events.",
-                    "data": None,
-                },
-            )
-        else:
-            assert False, (
-                "Invalid events websocket API message was received from client. "
-                "The client's action message was not recognized."
-            )
 
 
 @router.websocket("")
@@ -360,4 +437,6 @@ async def websocket_endpoint(
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
     await websocket.accept()
-    await _handle_websocket(websocket)
+
+    websocket_manager = _WebsocketManager(websocket=websocket)
+    await websocket_manager.run()

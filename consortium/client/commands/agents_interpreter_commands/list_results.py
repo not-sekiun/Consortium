@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import (
     format_agent_result_state_string_with_color,
@@ -57,21 +57,21 @@ class ListResultsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
-            client_connection = command_context.environment["client_connection"]
+            client_rest_api_connection = command_context.environment[
+                "client_rest_api_connection"
+            ]
 
             if parsed_args.success:
-                agent_results = await client_connection.get_all_successful_agent_results_by_agent_id(
+                agent_results = await client_rest_api_connection.get_all_successful_agent_results_by_agent_id(
                     agent_id=parsed_args.agent_id,
                 )
             elif parsed_args.fail:
-                agent_results = (
-                    await client_connection.get_all_failed_agent_results_by_agent_id(
-                        agent_id=parsed_args.agent_id,
-                    )
+                agent_results = await client_rest_api_connection.get_all_failed_agent_results_by_agent_id(
+                    agent_id=parsed_args.agent_id,
                 )
             else:
                 agent_results = (
-                    await client_connection.get_all_agent_results_by_agent_id(
+                    await client_rest_api_connection.get_all_agent_results_by_agent_id(
                         agent_id=parsed_args.agent_id,
                     )
                 )

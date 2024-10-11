@@ -5,6 +5,7 @@ from typing import Any
 
 from loguru import logger
 
+import consortium.server.server_singletons as server_singletons
 from consortium.framework.base_agent_capability import BaseAgentCapability
 from consortium.framework.c2_types import BaseAgentType
 from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
@@ -22,6 +23,7 @@ from consortium.server.models.agent_models import (
     AgentTaskModel,
     AgentTaskState,
 )
+from consortium.server.objects.event_objects import Event, EventType
 from consortium.server.server_logging import LoggerType
 
 
@@ -75,6 +77,7 @@ class Agent:
         self._completed_tasks = {}
         self._results = {}
 
+        self._events_service = server_singletons.events_service
         self._agent_task_messages_queue = asyncio.Queue()
         # Each agent capability is mapped to a task by the task ID. This lets us
         # distinguish which capability a response should be sent to even if the same
@@ -141,7 +144,7 @@ class Agent:
                     # key at all.
                     if argument_value is None:
                         continue
-                    # OptionValueValidationError is raised here on failure to validate
+                    # `OptionValueValidationError` is raised here on failure to validate
                     # the value.
                     agent_capability.arguments[argument_name].validate_value(
                         argument_value,
@@ -292,6 +295,18 @@ class Agent:
             task = self._running_tasks.pop(str(result_message.task_id))
             task.state = AgentTaskState.COMPLETED
             self._completed_tasks[str(task.task_id)] = task
+
+            # Finally we fire the event to notify all event handlers that a result has
+            # been received.
+            await self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_RESULT_RECEIVED,
+                    data={
+                        "agent_id": str(self.agent_id),
+                        "result_id": str(result.result_id),
+                    },
+                ),
+            )
 
     def get_all_results(self) -> list[AgentResultModel]:
         return list(self._results.values())

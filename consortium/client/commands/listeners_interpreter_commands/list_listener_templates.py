@@ -1,12 +1,12 @@
 from rich.table import Table
 
-from consortium.client.framework.base_command import (
+from consortium.client.objects.client_return_status_objects import (
+    ClientReturnStatusType,
+)
+from consortium.client.repl_framework.base_command import (
     BaseCommand,
     CommandContext,
     ReturnStatus,
-)
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
@@ -29,7 +29,7 @@ class ListListenerTemplatesCommand(BaseCommand):
         try:
             _ = self.parser.parse_args(command_context.arguments)
             all_listener_templates = await command_context.environment[
-                "client_connection"
+                "client_rest_api_connection"
             ].get_all_listener_templates()
 
             table = Table(title="Listener Templates")
