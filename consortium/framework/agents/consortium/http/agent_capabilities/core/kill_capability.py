@@ -7,6 +7,7 @@ from consortium.server.models.agent_models import (
 )
 
 
+# TODO: Provide mechanisms to allow the capability to mark the agent as dead.
 class KillCapability(BaseAgentCapability):
     name = "kill"
     description = "Kill the agent."
@@ -14,14 +15,10 @@ class KillCapability(BaseAgentCapability):
     supported_oses = {SupportedOS.ANY}
     authors = {"Sekiun (github.com/not-sekiun)"}
 
-    async def handle_sending_agent_task_messages(
+    async def run_agent_capability(
         self,
-        agent_message: AgentTaskMessageModel,
-    ) -> AsyncGenerator[AgentTaskMessageModel]:
-        yield agent_message
-
-    async def handle_receiving_agent_response_messages(
-        self,
-        agent_response: AgentResultMessageModel,
-    ) -> AsyncGenerator[AgentResultMessageModel]:
-        yield agent_response
+        agent_task_message: AgentTaskMessageModel,
+    ) -> AgentResultMessageModel:
+        return await self.send_agent_task_message_and_recv_agent_result_message(
+            agent_task_message=agent_task_message,
+        )

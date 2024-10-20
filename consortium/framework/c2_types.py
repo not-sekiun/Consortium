@@ -1,6 +1,7 @@
 import sys
 import uuid
 from pathlib import Path
+from typing import Type
 
 from consortium.framework.base_agent_capability import BaseAgentCapability
 from consortium.server.exceptions.framework_exceptions.c2_types_framework_exceptions import (
@@ -19,7 +20,7 @@ from consortium.server.exceptions.framework_exceptions.c2_types_framework_except
 class BaseAgentType:
     name: str
     compatible_listener_types: set["BaseListenerType"] | None = None
-    agent_capabilities: set[BaseAgentCapability] | None = None
+    agent_capabilities: set[Type[BaseAgentCapability]] | None = None
 
     def __init__(self):
         self.agent_type_id = uuid.uuid4()
@@ -63,12 +64,12 @@ class BaseAgentType:
                 parameter_type="set",
             )
         for agent_capability in cls.agent_capabilities:
-            if not isinstance(agent_capability, BaseAgentCapability):
+            if not issubclass(agent_capability, BaseAgentCapability):
                 raise AgentTypeConfigurationParameterTypeError(
                     agent_type_filepath=sys.modules[cls.__module__].__file__,
                     error_message=(
                         "The elements in the set of agent capabilities must be "
-                        "agent capability objects."
+                        "agent capability classes."
                     ),
                 )
 

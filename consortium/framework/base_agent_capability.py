@@ -59,10 +59,14 @@ class BaseAgentCapability(ABC):
     supported_oses: set[SupportedOS] = {SupportedOS.ANY}
     authors: set[str] = None
 
-    def __init__(self):
-        self.environment = {}
-        self.send_agent_task_message_queue = asyncio.Queue()
-        self.recv_agent_result_message_queue = asyncio.Queue()
+    def __init__(self, agent_task_messages_queue: asyncio.Queue):
+        # The task messages queue is the overall agent task messages aggregating queue
+        # that comes from the agent. All agent capabilities share this queue.
+        self._agent_task_messages_queue = agent_task_messages_queue
+        # The agent result messages queue is per agent capability and serves
+        # essentially to allow us to demultiplex messages coming in over the wire from
+        # the listener.
+        self.agent_result_messages_queue = asyncio.Queue()
 
     def __init_subclass__(cls, **kwargs):
         # Check the existence of a provided agent capability name first so that we can
@@ -169,44 +173,42 @@ class BaseAgentCapability(ABC):
         self,
         agent_task_message: AgentTaskMessageModel,
     ) -> None:
-        await self.send_agent_task_message_queue.put(agent_task_message)
+        await self._agent_task_messages_queue.put(agent_task_message)
 
     async def recv_agent_result_message(
         self,
         timeout: int | float | None = None,
     ) -> AgentResultMessageModel:
         if timeout is None:
-            return await self.recv_agent_result_message_queue.get()
+            return await self.agent_result_messages_queue.get()
         return await asyncio.wait_for(
-            self.recv_agent_result_message_queue.get(),
+            self.agent_result_messages_queue.get(),
             timeout=timeout,
         )
 
+    async def send_agent_task_message_and_recv_agent_result_message(
+        self,
+        agent_task_message: AgentTaskMessageModel,
+        timeout: int | float | None = None,
+    ) -> AgentResultMessageModel:
+        await self.send_agent_task_message(agent_task_message)
+        return await self.recv_agent_result_message(timeout=timeout)
+
+    @abstractmethod
     async def run_agent_capability(
         self,
         agent_task_message: AgentTaskMessageModel,
     ) -> AgentResultMessageModel: ...
 
-    @abstractmethod
-    async def handle_sending_agent_task_messages(
-        self,
-        agent_message: AgentTaskMessageModel,
-    ) -> AsyncGenerator[AgentTaskMessageModel]: ...
-
-    @abstractmethod
-    async def handle_receiving_agent_response_messages(
-        self,
-    ) -> AsyncGenerator[AgentResultMessageModel]: ...
-
-    def to_json(self) -> dict[str, Any]:
+    @classmethod
+    def to_json(cls) -> dict[str, Any]:
         return {
-            "name": self.name,
-            "description": self.description,
+            "name": cls.name,
+            "description": cls.description,
             "arguments": {
-                argument.name: argument.to_json()
-                for argument in self.arguments.values()
+                argument.name: argument.to_json() for argument in cls.arguments.values()
             },
-            "requires_admin": self.requires_admin,
-            "supported_oses": [str(os) for os in self.supported_oses],
-            "authors": list(self.authors),
+            "requires_admin": cls.requires_admin,
+            "supported_oses": [str(os) for os in cls.supported_oses],
+            "authors": list(cls.authors),
         }

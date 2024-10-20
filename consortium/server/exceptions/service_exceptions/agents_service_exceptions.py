@@ -29,3 +29,21 @@ class AgentResultNotFoundError(AgentServiceError):
             f"Failed to find the requested agent result. No agent result was found "
             f"with the provided agent result ID '{result_id}'.",
         )
+
+
+class AgentTaskingError(AgentServiceError):
+    pass
+
+
+class AgentTaskingOptionValidationError(AgentTaskingError):
+    def __init__(self, agent_str: str, error_message: str):
+        super().__init__(
+            f"Failed to task agent {agent_str}. {error_message}",
+        )
+
+
+class AgentTaskingRequiredOptionValueNotSetError(AgentTaskingError):
+    def __init__(self, agent_str: str, error_message: str):
+        super().__init__(
+            f"Failed to task agent {agent_str}. {error_message}",
+        )

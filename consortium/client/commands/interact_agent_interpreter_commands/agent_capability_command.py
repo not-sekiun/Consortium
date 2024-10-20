@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from typing import Any
+from enum import StrEnum
 
 from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
@@ -19,27 +20,42 @@ from consortium.client.utils.printer_utils import (
 )
 
 
-def _generate_abbreviated_flags_from_argument_name_list(
-    parameter_name_list: list[str],
+class _OptionType(StrEnum):
+    SINGLE_VALUE_OPTION = "SINGLE_VALUE_OPTION"
+    LIST_VALUE_OPTION = "LIST_VALUE_OPTION"
+    CHOICE_VALUE_OPTION = "CHOICE_VALUE_OPTION"
+    TOGGLEABLE_CHOICES_VALUE_OPTION = "TOGGLEABLE_CHOICES_VALUE_OPTION"
+    DICTIONARY_VALUE_OPTION = "DICTIONARY_VALUE_OPTION"
+
+
+class _OptionValueType(StrEnum):
+    STRING = "str"
+    INTEGER = "int"
+    FLOATING_POINT = "float"
+    BOOLEAN = "bool"
+
+
+def _generate_abbreviated_flags_from_option_name_list(
+    option_name_list: list[str],
 ) -> dict[str, str]:
     flags = {}
     conflicts = []
 
     # Assign single-letter flags where possible on the first pass.
-    for parameter in parameter_name_list:
-        if "-" + parameter[0].lower() not in flags.values():
-            flags[parameter] = f"-{parameter[0].lower()}"
+    for name in option_name_list:
+        if "-" + name[0].lower() not in flags.values():
+            flags[name] = f"-{name[0].lower()}"
         else:
-            conflicts.append(parameter)
+            conflicts.append(name)
 
     # Resolve conflicts on the second pass by finding the next available flag.
-    for parameter in conflicts:
-        for index in range(1, len(parameter)):
-            if parameter[: index + 1].lower() not in [v[1:] for v in flags.values()]:
-                flags[parameter] = f"-{parameter[:index+1].lower()}"
+    for name in conflicts:
+        for index in range(1, len(name)):
+            if name[: index + 1].lower() not in [v[1:] for v in flags.values()]:
+                flags[name] = f"-{name[:index+1].lower()}"
                 break
         else:
-            flags[parameter] = f"-{parameter.lower()}"
+            flags[name] = f"-{name.lower()}"
 
     return flags
 
@@ -73,7 +89,7 @@ def construct_agent_capability_command(
             Examples:
               {agent_capability_json_data["name"]} --single_value_param 1  # No type was specified, if the option specified a type, the value will adopt that type, else it will be a string.
               {agent_capability_json_data["name"]} --single_value_param some:str:str  # If you want to include the substring :str in the value itself append :str behind it.
-              {agent_capability_json_data["name"]} --single_value_param 1:int # Set the option to an integer value. This ignores the option's specified type.
+              {agent_capability_json_data["name"]} --single_value_param 1:int # Set the option to an integer value. This ignores the option"s specified type.
               {agent_capability_json_data["name"]} --single_value_param 1 -t int # Does the same thing as the above command.
               {agent_capability_json_data["name"]} --choice_value_param 1 # If no type is specified, implicit type conversion is done for each choice. This choice will therefore match an integer 1 even if its value is a string.
               {agent_capability_json_data["name"]} --choice_value_param 1 -t int # If a type is specified, implicit type conversion is not done for each choice. Hence, the the choice contains a string "1" instead of an integer 1 it will not match.
@@ -94,75 +110,140 @@ def construct_agent_capability_command(
         )
 
         def configure_parser(self, parser: ArgumentParser) -> None:
-            abbreviated_flags = _generate_abbreviated_flags_from_argument_name_list(
-                list(agent_capability_json_data["arguments"].keys()),
-            )
+            # The parser checks to see if there is only one required option for an
+            # agent capability. If there is, that one required option is registered to
+            # the parser as a positional argument for convenience.
+            number_of_required_options = 0
+            for name, option in agent_capability_json_data["arguments"].items():
+                if option["required"]:
+                    number_of_required_options += 1
 
-            for argument_name, argument in agent_capability_json_data[
-                "arguments"
-            ].items():
+            # If there is one required option we only configure remaining non
+            # required options as optional options.
+            if number_of_required_options == 1:
+                abbreviated_flags = _generate_abbreviated_flags_from_option_name_list(
+                    [
+                        name
+                        for name in agent_capability_json_data["arguments"].keys()
+                        if not agent_capability_json_data["arguments"][name]["required"]
+                    ],
+                )
+            else:
+                abbreviated_flags = _generate_abbreviated_flags_from_option_name_list(
+                    [name for name in agent_capability_json_data["arguments"].keys()],
+                )
+
+            for name, option in agent_capability_json_data["arguments"].items():
                 # Configure the number of arguments that the parser expects for a
-                # particular argument based on the option type.
-                if argument["option_type"] in (
-                    "SINGLE_VALUE_OPTION",
-                    "CHOICE_VALUE_OPTION",
+                # particular agent capability based on the option type in the
+                # options json data.
+                if option["option_type"] in (
+                    _OptionType.SINGLE_VALUE_OPTION,
+                    _OptionType.CHOICE_VALUE_OPTION,
                 ):
                     nargs = "?"
-                elif argument["option_type"] in (
-                    "LIST_VALUE_OPTION",
-                    "TOGGLEABLE_CHOICES_VALUE_OPTION",
-                    "DICTIONARY_VALUE_OPTION",
+                elif option["option_type"] in (
+                    _OptionType.LIST_VALUE_OPTION,
+                    _OptionType.TOGGLEABLE_CHOICES_VALUE_OPTION,
+                    _OptionType.DICTIONARY_VALUE_OPTION,
                 ):
                     nargs = "*"
                 else:
                     assert False, (
-                        f"Unknown option type {argument["option_type"]} was present "
-                        f"for the argument '{argument_name}' in the list of options "
-                        f"for the agent capability "
-                        f"'{agent_capability_json_data["name"]}'."
+                        f"Unknown option type {option["option_type"]} was present "
+                        f"for the option '{option["name"]}' in the list of options "
+                        f"for the agent capability '{agent_capability_json_data["name"]}'."
                     )
 
-                # Determine the type of the argument based on the value type.
+                # Determine the type of the argument based on the value type in the
+                # options json data.
                 string_to_type_map = {
-                    "str": str,
-                    "int": int,
-                    "float": float,
-                    "bool": bool,
+                    _OptionValueType.STRING: str,
+                    _OptionValueType.INTEGER: int,
+                    _OptionValueType.FLOATING_POINT: float,
+                    _OptionValueType.BOOLEAN: bool,
                 }
-                if argument["option_type"] in (
-                    "SINGLE_VALUE_OPTION",
-                    "CHOICE_VALUE_OPTION",
+                if option["option_type"] in (
+                    _OptionType.SINGLE_VALUE_OPTION,
+                    _OptionType.CHOICE_VALUE_OPTION,
                 ):
-                    value_type = string_to_type_map[argument["value_type"]]
-                elif argument["option_type"] in (
-                    "LIST_VALUE_OPTION",
-                    "TOGGLEABLE_CHOICES_VALUE_OPTION",
-                    "DICTIONARY_VALUE_OPTION",
+                    value_type = string_to_type_map[option["value_type"]]
+                elif option["option_type"] in (
+                    _OptionType.LIST_VALUE_OPTION,
+                    _OptionType.TOGGLEABLE_CHOICES_VALUE_OPTION,
+                    _OptionType.DICTIONARY_VALUE_OPTION,
                 ):
                     value_type = None
                 else:
                     assert False, (
-                        f"Unknown value type {argument["value_type"]} was present "
-                        f"for the argument '{argument_name}' in the list of options "
-                        f"for the agent capability "
-                        f"'{agent_capability_json_data["name"]}'."
+                        f"Unknown value type {option["value_type"]} was present "
+                        f"for the option '{option["name"]}' in the list of options "
+                        f"for the agent capability '{agent_capability_json_data["name"]}'."
                     )
 
-                parser.add_argument(
-                    abbreviated_flags[argument_name],
-                    f"--{argument_name}",
-                    help=argument["description"],
-                    nargs=nargs,
-                    type=value_type,
-                    required=argument["required"],
-                    # For `nargs` being set to `"?"` there are two possibilities when
-                    # it comes to assigning default values. When the flag is passed but
-                    # no argument is passed the value from `default` is used, when the
-                    # flag is not passed at all, the value from `const` is used. We make
-                    # no distinction here so we use the exact same value.
-                    default=argument["default_value"],
-                    const=argument["default_value"],
-                )
+                # For the special case of a single value option with a boolean value
+                # type we allow the passing of the flag itself to automatically set the
+                # value to `True`.
+                if (
+                    option["option_type"] == _OptionType.SINGLE_VALUE_OPTION
+                    and option["value_type"] == _OptionValueType.BOOLEAN
+                ):
+                    if number_of_required_options == 1 and option["required"]:
+                        parser.add_argument(
+                            name,
+                            help=option["description"],
+                            action="store_true"
+                            if option["default_value"]
+                            else "store_false",
+                            default=option["default_value"],
+                        )
+                    else:
+                        parser.add_argument(
+                            abbreviated_flags[name],
+                            f"--{name}",
+                            help=option["description"],
+                            action="store_true"
+                            if option["default_value"]
+                            else "store_false",
+                            required=option["required"],
+                            default=option["default_value"],
+                        )
+                    continue
+
+                # Add the arguments to the parser for every other kind of option
+                # specified in the agent capability json data.
+                if number_of_required_options == 1 and option["required"]:
+                    parser.add_argument(
+                        name,
+                        help=option["description"],
+                        nargs=nargs,
+                        type=value_type,
+                        # For `nargs` being set to `"?"` there are two possibilities
+                        # when it comes to assigning default values. When the flag is
+                        # passed but no argument is passed the value from `default` is
+                        # used, when the flag is not passed at all, the value from
+                        # `const` is used. We make no distinction here so we use the
+                        # exact same value.
+                        default=option["default_value"],
+                        const=option["default_value"] if nargs == "?" else None,
+                    )
+                else:
+                    parser.add_argument(
+                        abbreviated_flags[name],
+                        f"--{name}",
+                        help=option["description"],
+                        nargs=nargs,
+                        type=value_type,
+                        required=option["required"],
+                        # For `nargs` being set to `"?"` there are two possibilities
+                        # when it comes to assigning default values. When the flag is
+                        # passed but no argument is passed the value from `default` is
+                        # used, when the flag is not passed at all, the value from
+                        # `const` is used. We make no distinction here so we use the
+                        # exact same value.
+                        default=option["default_value"],
+                        const=option["default_value"] if nargs == "?" else None,
+                    )
 
         @staticmethod
         def _check_value_for_value_type_annotation(
@@ -264,10 +345,10 @@ def construct_agent_capability_command(
                 and value_type != agent_template_option["value_type"]
             ):
                 print_warning(
-                    f'Value "{parameter_value}" of type "{value_type}" is not of the '
-                    f'expected type "{agent_template_option["value_type"]}" for option '
-                    f'"{parameter_name}". However, the value was still set as the user '
-                    f'supplied type "{value_type}".',
+                    f"Value '{parameter_value}' of type '{value_type}' is not of the "
+                    f"expected type '{agent_template_option["value_type"]}' for option "
+                    f"'{parameter_name}'. However, the value was still set as the user "
+                    f"supplied type '{value_type}'.",
                 )
             await (
                 client_rest_api_connection.update_agent_generator_by_agent_generator_id(
@@ -278,8 +359,8 @@ def construct_agent_capability_command(
                 )
             )
             print_success(
-                f'Set agent generator parameter "{parameter_name}" to "{parameter_value}" '
-                f'with type "{value_type}".',
+                f"Set agent generator parameter '{parameter_name}' to '{parameter_value}' "
+                f"with type '{value_type}'.",
             )
 
         async def _handle_choice_value_parameter(
@@ -322,14 +403,14 @@ def construct_agent_capability_command(
                             },
                         )
                         print_success(
-                            f'Set agent generator parameter "{parameter_name}" to '
-                            f'"{parameter_value}"',
+                            f"Set agent generator parameter '{parameter_name}' to "
+                            f"'{parameter_value}'",
                         )
                         return
                 print_error(
-                    f'Value "{parameter_value}" is not a valid choice for parameter '
-                    f'"{parameter_name}". Valid choices are: '
-                    f'{", ".join(agent_template_option["available_values"])}',
+                    f"Value '{parameter_value}' is not a valid choice for parameter "
+                    f"'{parameter_name}'. Valid choices are: "
+                    f"{", ".join(agent_template_option["available_values"])}",
                 )
                 return
 
@@ -338,9 +419,9 @@ def construct_agent_capability_command(
             # conversions.
             if parameter_value not in agent_template_option["available_values"]:
                 print_error(
-                    f'Value "{parameter_value}" is not a valid choice for parameter '
-                    f'"{parameter_name}". Valid choices are: '
-                    f'{", ".join(agent_template_option["available_values"])}',
+                    f"Value '{parameter_value}' is not a valid choice for parameter "
+                    f"'{parameter_name}'. Valid choices are: "
+                    f"{", ".join(agent_template_option["available_values"])}",
                 )
                 return
             await (
@@ -352,8 +433,8 @@ def construct_agent_capability_command(
                 )
             )
             print_success(
-                f'Set agent generator parameter "{parameter_name}" to '
-                f'"{parameter_value}"',
+                f"Set agent generator parameter '{parameter_name}' to "
+                f"'{parameter_value}'",
             )
 
         async def _handle_list_value_parameter(
@@ -387,10 +468,10 @@ def construct_agent_capability_command(
                     and value_type != agent_template_option["value_type"]
                 ):
                     print_warning(
-                        f'Value "{parameter_value}" of type "{value_type}" is not of the '
-                        f'expected type "{agent_template_option["value_type"]}" for '
-                        f'option "{parameter_name}". However, the value was still set as '
-                        f'the user supplied type "{value_type}"',
+                        f"Value '{parameter_value}' of type '{value_type}' is not of the "
+                        f"expected type '{agent_template_option["value_type"]}' for "
+                        f"option '{parameter_name}'. However, the value was still set as "
+                        f"the user supplied type '{value_type}'",
                     )
 
                 new_parameter_values.append(parameter_value)
@@ -404,8 +485,8 @@ def construct_agent_capability_command(
                 )
             )
             print_success(
-                f'Set agent generator parameter "{parameter_name}" to '
-                f'{agent_template_option["value"]!r}',
+                f"Set agent generator parameter '{parameter_name}' to "
+                f"{agent_template_option["value"]!r}",
             )
 
         async def _handle_dictionary_value_parameter(
@@ -438,8 +519,8 @@ def construct_agent_capability_command(
                 )
                 if key_value_type != "str":
                     print_error(
-                        f'Key "{key}" of type "{key_value_type}" is not of the expected '
-                        f'type "str" for parameter "{parameter_name}".',
+                        f"Key '{key}' of type '{key_value_type}' is not of the expected "
+                        f"type 'str' for parameter '{parameter_name}'.",
                     )
                     return
 
@@ -463,11 +544,11 @@ def construct_agent_capability_command(
                     and value_value_type != agent_template_option["value_type"]
                 ):
                     print_warning(
-                        f'Value "{value}" of type "{value_value_type}" for key "{key}" is '
-                        f'not of the expected type '
-                        f'"{agent_template_option["value_type"]}" for option '
-                        f'"{parameter_name}". However, the value was still set as the user '
-                        f'supplied type "{value_value_type}"',
+                        f"Value '{value}' of type '{value_value_type}' for key '{key}' "
+                        f"is not of the expected type "
+                        f"'{agent_template_option["value_type"]}' for option "
+                        f"'{parameter_name}'. However, the value was still set as the user "
+                        f"supplied type '{value_value_type}'",
                     )
 
                 new_agent_generator_parameter[key] = value
@@ -531,8 +612,8 @@ def construct_agent_capability_command(
                 )
                 if value_type != "str":
                     print_error(
-                        f'Value "{parameter_value}" of type "{value_type}" is not of the '
-                        f'expected type "str" for option "{parameter_name}".',
+                        f"Value '{parameter_value}' of type '{value_type}' is not of the "
+                        f"expected type 'str' for option '{parameter_name}'.",
                     )
                     return
                 parameter_value = self._convert_value_type(
@@ -541,9 +622,9 @@ def construct_agent_capability_command(
                 )
                 if parameter_value not in agent_template_option["available_values"]:
                     print_error(
-                        f'Value "{parameter_value}" is not a valid choice for option '
-                        f'"{parameter_name}". Valid choices are: '
-                        f'{", ".join(agent_template_option["available_values"])}',
+                        f"Value '{parameter_value}' is not a valid choice for option "
+                        f"'{parameter_name}'. Valid choices are: "
+                        f"{", ".join(agent_template_option["available_values"])}",
                     )
                     return
 
@@ -564,7 +645,7 @@ def construct_agent_capability_command(
             )
 
             print_success(
-                f'Set agent generator parameter "{parameter_name}" to '
+                f"Set agent generator parameter '{parameter_name}' to "
                 f"{new_agent_generator_parameter!r}",
             )
 

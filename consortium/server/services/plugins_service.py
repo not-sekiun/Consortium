@@ -49,7 +49,7 @@ class PluginsService:
     def get_plugin_from_plugin_project_folder(
         self,
         plugin_project_folder: Path,
-        ignore_enabled_plugin_flag: bool = False,
+        ignore_enabled_plugin_project_flag: bool = False,
     ) -> BasePlugin | None:
         plugin_project_manifest_file_path = (
             plugin_project_folder / "plugin_project_manifest.json"
@@ -64,15 +64,14 @@ class PluginsService:
                         "symbol": {"type": "string"},
                     },
                     "required": ["filepath", "symbol"],
+                    "additionalProperties": False,
                 },
                 "enabled": {
                     "type": "boolean",
                 },
             },
-            "required": [
-                "plugin",
-                "enabled",
-            ],
+            "required": ["plugin", "enabled"],
+            "additionalProperties": False,
         }
 
         # Check if manifest file exists and follows the correct json schema.
@@ -99,9 +98,9 @@ class PluginsService:
 
         if (
             not plugin_project_manifest_json["enabled"]
-            and not ignore_enabled_plugin_flag
+            and not ignore_enabled_plugin_project_flag
         ):
-            self.plugins_service_logger.warning(
+            self.plugins_service_logger.info(
                 "Skipped loading plugin from '{}' because it was disabled.",
                 str(plugin_project_folder),
             )
@@ -331,10 +330,11 @@ class PluginsService:
     ) -> BasePlugin | None:
         plugin = self.get_plugin_from_plugin_project_folder(
             plugin_project_folder=plugin_project_folder,
-            ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
+            ignore_enabled_plugin_project_flag=ignore_enabled_plugin_flag,
         )
 
-        if plugin is None:  # Plugin being None implies a disabled plugin.
+        # `plugin` being `None` implies a disabled plugin was attempted to be loaded.
+        if plugin is None:
             return None
         if plugin.autostart:
             try:

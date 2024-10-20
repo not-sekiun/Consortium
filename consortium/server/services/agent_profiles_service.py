@@ -47,10 +47,11 @@ class AgentProfilesService:
     def __repr__(self) -> str:
         return "AgentProfilesService()"
 
-    @staticmethod
     def get_agent_profile_from_agent_project_folder(
+        self,
         agent_project_folder: Path,
-    ) -> AgentProfile:
+        ignore_enabled_agent_project_flag: bool = False,
+    ) -> AgentProfile | None:
         # Check if project folder contains a valid manifest file.
         agent_project_manifest_file = (
             agent_project_folder / "agent_project_manifest.json"
@@ -64,6 +65,8 @@ class AgentProfilesService:
                         "filepath": {"type": "string"},
                         "symbol": {"type": "string"},
                     },
+                    "required": ["filepath", "symbol"],
+                    "additionalProperties": False,
                 },
                 "agent_template": {
                     "type": "object",
@@ -71,6 +74,8 @@ class AgentProfilesService:
                         "filepath": {"type": "string"},
                         "symbol": {"type": "string"},
                     },
+                    "required": ["filepath", "symbol"],
+                    "additionalProperties": False,
                 },
                 "agent_type": {
                     "type": "object",
@@ -78,8 +83,13 @@ class AgentProfilesService:
                         "filepath": {"type": "string"},
                         "symbol": {"type": "string"},
                     },
+                    "required": ["filepath", "symbol"],
+                    "additionalProperties": False,
                 },
+                "enabled": {"type": "boolean"},
             },
+            "required": ["agent_generator", "agent_template", "agent_type", "enabled"],
+            "additionalProperties": False,
         }
         try:
             with agent_project_manifest_file.open("r") as file:
@@ -101,6 +111,16 @@ class AgentProfilesService:
                 agent_project_folder=str(agent_project_folder),
                 json_schema_error_message=exc.message,
             )
+
+        if (
+            not agent_project_manifest_json["enabled"]
+            and not ignore_enabled_agent_project_flag
+        ):
+            self.agent_profiles_service_logger.info(
+                "Skipped loading agent from '{}' because it was disabled.",
+                str(agent_project_folder),
+            )
+            return None
 
         # Check for valid project folder structure as specified by the manifest file.
         agent_generator_file = agent_project_folder / Path(
@@ -257,33 +277,31 @@ class AgentProfilesService:
             "Loading framework agent profiles...",
         )
 
-        agent_profiles = []
         for path in CONSORTIUM_AGENTS_DIRECTORY_PATH.rglob("*"):
             if path.name != "agent_project_manifest.json":
                 continue
 
             try:
-                agent_profile = self.get_agent_profile_from_agent_project_folder(
-                    path.parent,
+                agent_profile = self.load_agent_profile_from_agent_project_folder(
+                    agent_project_folder=path.parent,
                 )
-                agent_profiles.append(agent_profile)
-                self._agent_profiles[str(agent_profile.agent_profile_id)] = (
-                    agent_profile
-                )
+
+                if agent_profile is None:
+                    continue
+
                 self.agent_profiles_service_logger.success(
-                    f"Loaded agent profile: {agent_profile}",
-                )
-                self.agent_profiles_service_logger.debug(
-                    f"Loaded agent profile: {agent_profile!r}",
+                    "Loaded agent profile: {}",
+                    agent_profile,
                 )
             except AgentProfileLoadError as exc:
                 self.agent_profiles_service_logger.error(exc)
 
+        all_agent_profiles = self.get_all_agent_profiles()
         self.agent_profiles_service_logger.info(
-            f"Loaded framework agent profiles ({len(self._agent_profiles)} "
+            f"Loaded framework agent profiles ({len(all_agent_profiles)} "
             "agent profile(s) loaded).",
         )
-        return agent_profiles
+        return all_agent_profiles
 
     def unload_framework_agent_profiles(self) -> None:
         self.agent_profiles_service_logger.info(
@@ -308,10 +326,16 @@ class AgentProfilesService:
     def load_agent_profile_from_agent_project_folder(
         self,
         agent_project_folder: Path,
-    ) -> AgentProfile:
+    ) -> AgentProfile | None:
         agent_profile = self.get_agent_profile_from_agent_project_folder(
             agent_project_folder,
         )
+
+        # `agent_profile` being `None` implies a disabled listener profile was
+        # attempted to be loaded.
+        if agent_profile is None:
+            return None
+
         self._agent_profiles[str(agent_profile.agent_profile_id)] = agent_profile
         self.agent_profiles_service_logger.debug(
             f"Loaded agent profile: {agent_profile!r}",

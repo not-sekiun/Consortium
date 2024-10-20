@@ -1,5 +1,7 @@
 import argparse
 
+from mkdocs.commands.serve import serve
+
 import consortium.client.start_client as start_client
 import consortium.server.start_server as start_server
 from consortium.client.utils.formatter_utils import format_argparse_epilog
@@ -37,6 +39,17 @@ def main():
         ),
     )
     server_parser.add_argument(
+        "-c",
+        "--config",
+        help=(
+            "The filepath of the server configuration file to use when starting the "
+            "server. By default the server configuration file from "
+            "`data/server/server_config.json` is used."
+        ),
+        nargs="?",
+        default=None,
+    )
+    server_parser.add_argument(
         "-d",
         "--debug",
         help=(
@@ -47,15 +60,17 @@ def main():
         action="store_true",
     )
     server_parser.add_argument(
-        "-c",
-        "--config",
+        "-r",
+        "--reload",
         help=(
-            "The filepath of the server configuration file to use when starting the "
-            "server. By default the server configuration file from "
-            "`data/server/server_config.json` is used."
+            "Start the server with framework reloading enabled. This will reload the "
+            "server on file changes made to the listener (`framework/listeners`), "
+            "agents (`framework/agents`), plugins (`framework/plugins`), and event "
+            "hooks (`framework/event_hooks`) framework directories where custom user "
+            "extended code is loaded from. This is helpful for developing custom "
+            "components."
         ),
-        nargs="?",
-        default=None,
+        action="store_true",
     )
 
     client_parser = subparsers.add_parser(
@@ -71,12 +86,6 @@ def main():
         ),
     )
     client_parser.add_argument(
-        "-d",
-        "--debug",
-        help="Start the client in debug mode",
-        action="store_true",
-    )
-    client_parser.add_argument(
         "-c",
         "--config",
         help=(
@@ -86,6 +95,12 @@ def main():
         ),
         nargs="?",
         default=None,
+    )
+    client_parser.add_argument(
+        "-d",
+        "--debug",
+        help="Start the client in debug mode",
+        action="store_true",
     )
 
     arguments = parser.parse_args()

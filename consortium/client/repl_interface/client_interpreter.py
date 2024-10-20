@@ -101,9 +101,11 @@ class ClientInterpreter(BaseInterpreter):
     async def on_interpreter_errored(self, exc: Exception) -> None:
         if isinstance(exc, ClientRESTAPIOperationError):
             print_error(f"Error: {exc}")
-        else:
-            print_error(f"Fatal error occurred: {exc}")
-            CONSOLE.print(f"[bold red]{traceback.format_exc()}")
+            return
+
+        print_error(f"Fatal error occurred: {exc}")
+        CONSOLE.print(f"[bold red]{traceback.format_exc()}")
+        raise exc
 
     async def run_interpreter(self) -> ReturnStatus:
         await self.on_enter_interpreter()

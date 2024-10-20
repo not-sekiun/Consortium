@@ -10,5 +10,6 @@
     "listener_type": {
         "filepath": "listener_type.py",
         "symbol": "LISTENER_TYPE"
-    }
+    },
+    "enabled": true
 }

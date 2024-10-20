@@ -10,5 +10,6 @@
     "agent_type": {
         "filepath": "agent_type.py",
         "symbol": "AGENT_TYPE"
-    }
+    },
+    "enabled": true
 }

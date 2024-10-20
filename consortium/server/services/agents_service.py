@@ -6,9 +6,15 @@ from loguru import logger
 from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
     AgentTaskNotFoundError as AgentTaskNotFoundFrameworkError,
 )
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+    RequiredOptionValueNotSetError,
+)
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
     AgentResultNotFoundError,
+    AgentTaskingOptionValidationError,
+    AgentTaskingRequiredOptionValueNotSetError,
     AgentTaskNotFoundError,
 )
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
@@ -187,7 +193,18 @@ class AgentsService:
     ) -> AgentTaskModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = AgentTaskModel(command=command, arguments=arguments)
-        await agent.add_task(task=task)
+        try:
+            await agent.add_task(task=task)
+        except OptionValueValidationError as exc:
+            raise AgentTaskingOptionValidationError(
+                agent_str=str(agent),
+                error_message=exc.message,
+            )
+        except RequiredOptionValueNotSetError as exc:
+            raise AgentTaskingRequiredOptionValueNotSetError(
+                agent_str=str(agent),
+                error_message=exc.message,
+            )
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_TASKED,

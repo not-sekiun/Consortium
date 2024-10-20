@@ -1,12 +1,13 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends
-from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.agents_api_exceptions import (
     AgentNotFoundError as AgentNotFoundAPIError,
     AgentResultNotFoundError as AgentResultNotFoundAPIError,
+    AgentTaskingOptionValueValidationError as AgentTaskingOptionValidationAPIError,
+    AgentTaskingRequiredOptionValueNotSetError as AgentTaskingRequiredOptionValueNotSetAPIError,
     AgentTaskNotFoundError as AgentTaskNotFoundAPIError,
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
@@ -19,6 +20,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError as AgentNotFoundServiceError,
     AgentResultNotFoundError as AgentResultNotFoundServiceError,
+    AgentTaskingOptionValidationError as AgentTaskingOptionValidationServiceError,
+    AgentTaskingRequiredOptionValueNotSetError as AgentTaskingRequiredOptionValueNotSetServiceError,
     AgentTaskNotFoundError as AgentTaskNotFoundServiceError,
 )
 from consortium.server.models.agent_models import (
@@ -30,6 +33,7 @@ from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
+agents_service = server_singletons.agents_service
 router = APIRouter(
     prefix="/api/agents",
     responses={
@@ -40,8 +44,6 @@ router = APIRouter(
     },
     tags=["Agents API"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
-agents_service = server_singletons.agents_service
 
 
 @router.get(
@@ -363,7 +365,20 @@ def get_agent_result_by_agent_id_and_result_id(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
             ).to_pydantic_model(),
         },
-        422: {},
+        422: {
+            "model": AgentTaskingOptionValidationAPIError.from_service_exception(
+                service_exception=AgentTaskingOptionValidationServiceError(
+                    agent_str="string",
+                    error_message="string",
+                ),
+            ).to_pydantic_model()
+            | AgentTaskingRequiredOptionValueNotSetAPIError.from_service_exception(
+                service_exception=AgentTaskingRequiredOptionValueNotSetServiceError(
+                    agent_str="string",
+                    error_message="string",
+                ),
+            ).to_pydantic_model(),
+        },
     },
 )
 async def task_agent_by_agent_id(
@@ -385,12 +400,20 @@ async def task_agent_by_agent_id(
         )
     except AgentNotFoundServiceError as exc:
         raise AgentNotFoundAPIError.from_service_exception(service_exception=exc)
+    except AgentTaskingOptionValidationServiceError as exc:
+        raise AgentTaskingOptionValidationAPIError.from_service_exception(
+            service_exception=exc,
+        )
+    except AgentTaskingRequiredOptionValueNotSetServiceError as exc:
+        raise AgentTaskingRequiredOptionValueNotSetAPIError.from_service_exception(
+            service_exception=exc,
+        )
 
     return task
 
 
 @router.delete(
-    "/{agent_id}/tasks/{task_id}",
+    "/{agent_id}/tasks/queued/{task_id}",
     responses={
         200: {"model": AgentTaskModel},
         404: {

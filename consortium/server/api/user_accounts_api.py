@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
-from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
@@ -43,6 +42,8 @@ from consortium.server.objects.user_account_objects import UserPermissions, User
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
 
+user_accounts_service = server_singletons.user_accounts_service
+users_service = server_singletons.users_service
 router = APIRouter(
     prefix="/api/user-accounts",
     responses={
@@ -53,9 +54,6 @@ router = APIRouter(
     },
     tags=["User Accounts API"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
-user_accounts_service = server_singletons.user_accounts_service
-users_service = server_singletons.users_service
 
 
 @router.get(

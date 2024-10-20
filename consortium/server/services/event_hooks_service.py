@@ -46,7 +46,8 @@ class EventHooksService:
     def get_event_hook_from_event_hook_project_folder(
         self,
         event_hook_project_folder: Path,
-    ) -> BaseEventHook:
+        ignore_enabled_event_hook_project_flag: bool = False,
+    ) -> BaseEventHook | None:
         event_hook_project_manifest_file_path = (
             event_hook_project_folder / "event_hook_project_manifest.json"
         )
@@ -60,11 +61,12 @@ class EventHooksService:
                         "symbol": {"type": "string"},
                     },
                     "required": ["filepath", "symbol"],
+                    "additionalProperties": False,
                 },
+                "enabled": {"type": "boolean"},
             },
-            "required": [
-                "event_hook",
-            ],
+            "required": ["event_hook", "enabled"],
+            "additionalProperties": False,
         }
 
         # Check if manifest file exists and follows the correct json schema.
@@ -92,6 +94,16 @@ class EventHooksService:
                 event_hook_project_folder=str(event_hook_project_folder),
                 json_schema_error_message=exc.message,
             )
+
+        if (
+            not event_hook_project_manifest_json["enabled"]
+            and not ignore_enabled_event_hook_project_flag
+        ):
+            self.event_hooks_service_logger.info(
+                "Skipped loading event hook '{}' because it was disabled.",
+                str(event_hook_project_folder),
+            )
+            return None
 
         # Check for valid project folder structure as specified by the manifest file.
         event_hook_file = event_hook_project_folder / Path(
@@ -155,29 +167,37 @@ class EventHooksService:
         )
         return event_hook_object
 
-    def load_framework_event_hooks(self) -> None:
+    def load_framework_event_hooks(self) -> list[BaseEventHook]:
         self.event_hooks_service_logger.info("Loading framework event hooks...")
 
         # Recursively search through the event hooks directory to find all event hook
         # project folders.
-        number_of_loaded_event_hooks = 0
         for path in CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH.rglob("*"):
             if path.name != "event_hook_project_manifest.json":
                 continue
 
             try:
-                self.load_event_hook_from_event_hook_project_folder(
+                event_hook = self.load_event_hook_from_event_hook_project_folder(
                     event_hook_project_folder=path.parent,
+                )
+
+                if event_hook is None:
+                    continue
+
+                self.event_hooks_service_logger.success(
+                    "Loaded event hook: {}",
+                    event_hook,
                 )
             except EventHookLoadingError as exc:
                 self.event_hooks_service_logger.error(exc)
                 continue
-            number_of_loaded_event_hooks += 1
 
+        all_event_hooks = self.get_all_event_hooks()
         self.event_hooks_service_logger.info(
-            f"Loaded framework event hooks ({number_of_loaded_event_hooks} event "
+            f"Loaded framework event hooks ({len(all_event_hooks)} event "
             "hook(s) loaded).",
         )
+        return all_event_hooks
 
     def unload_framework_event_hooks(self) -> None:
         self.event_hooks_service_logger.info("Unloading framework event hooks...")
@@ -209,10 +229,16 @@ class EventHooksService:
     def load_event_hook_from_event_hook_project_folder(
         self,
         event_hook_project_folder: Path,
-    ) -> BaseEventHook:
+    ) -> BaseEventHook | None:
         event_hook = self.get_event_hook_from_event_hook_project_folder(
             event_hook_project_folder,
         )
+
+        # `event_hook` being `None` implies a disabled event hook was attempted to be \
+        # loaded.
+        if event_hook is None:
+            return None
+
         self._event_hooks[str(event_hook.event_hook_id)] = event_hook
         for event_type in event_hook.event_types:
             self._events_service.register_event_handler_to_event_type(

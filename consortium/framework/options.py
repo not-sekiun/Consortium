@@ -98,6 +98,9 @@ def _resolve_validating_function_string(
         return None
 
 
+# TODO: Add greater than, less than, greater than equal to, lesser than equal to,
+#  maximum length and minimum length parameters/utility functions to streamline
+#  standard.
 class _BaseOption(ABC):
     def __init__(
         self,

@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
@@ -25,7 +24,6 @@ router = APIRouter(
     },
     tags=["Server API"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 
 @router.get(

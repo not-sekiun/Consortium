@@ -1,5 +1,5 @@
-from collections.abc import Awaitable, Callable
-from typing import Any
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from typing import IO, Any, Literal
 
 import aiohttp
 from loguru import logger
@@ -467,6 +467,65 @@ class ClientRESTAPIConnection:
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
             json={"command": command, "arguments": arguments},
         )
+
+    # Wrapper methods for the /api/assets API endpoint.
+    async def get_all_assets(
+        self,
+    ) -> list[dict[str, Any]]:
+        return await self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/assets/all",
+        )
+
+    # Wrapper methods for the /api/assets API endpoint.
+    async def get_asset_by_asset_id(
+        self,
+        asset_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/assets/{asset_id}",
+        )
+
+    async def download_asset_by_asset_id(
+        self,
+        asset_id: str,
+        maximum_chunk_size: int = 1024,
+    ) -> AsyncGenerator[bytes, None, None]:
+        response = await self._aiohttp_client_session.get(
+            f"{self._api_base_url}/assets/download/{asset_id}",
+        )
+        async for chunk in response.content.iter_chunked(maximum_chunk_size):
+            yield chunk
+
+    async def upload_asset(
+        self,
+        file_object: IO,
+        is_directory: bool,
+        name: str = "",
+        description: str = "",
+        asset_directory_archive_file_format: Literal[
+            ".zip",
+            ".tar",
+            ".tar.gz",
+            ".tar.bz2",
+            ".tar.xz",
+        ]
+        | None = None,
+    ) -> dict[str, Any]:
+        response = await self._aiohttp_client_session.post(
+            f"{self._api_base_url}/assets/upload",
+            data={
+                "file": file_object,
+                "is_directory": str(is_directory).lower(),
+                "name": name,
+                "description": description,
+                "asset_directory_archive_file_format": ""
+                if asset_directory_archive_file_format is None
+                else asset_directory_archive_file_format,
+            },
+        )
+        return await response.json()
 
     @staticmethod
     def _check_for_rest_api_error_response(

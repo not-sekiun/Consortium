@@ -102,8 +102,19 @@ class Client:
             elif return_status.type == ClientReturnStatusType.EXIT_CLIENT_SESSION:
                 return_status = await DisconnectedInterpreter().run_interpreter()
             elif return_status.type == ClientReturnStatusType.SWITCH_CLIENT_SESSION:
-                # The command will make sure that the client connection is valid.
-                return_status = await return_status.data["client_session"].run()
+                try:
+                    # The command will make sure that the client connection is valid.
+                    return_status = await return_status.data["client_session"].run()
+                # Catch any fatal errors raised by the client session. If a fatal error
+                # occurs in any of the interpreters it is already printed and the error
+                # reraised. We catch it here and kill the session.
+                except Exception:
+                    client_sessions_service.remove_client_session_by_client_session_id(
+                        client_session_id=return_status.data[
+                            "client_session"
+                        ].client_session_id,
+                    )
+                    return_status = await DisconnectedInterpreter().run_interpreter()
             else:
                 assert False, (
                     "Failed to handle return status from interpreter. The return "

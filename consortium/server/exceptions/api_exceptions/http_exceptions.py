@@ -122,6 +122,22 @@ class ConflictError(HTTPError):
         )
 
 
+class UnsupportedMediaTypeError(HTTPError):
+    status_code = 415
+    code = "UNSUPPORTED_MEDIA_TYPE_ERROR"
+
+    def __init__(
+        self,
+        message: str = "The request could not be completed due to an unsupported media "
+        "type being provided.",
+        detail: Any | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            detail=detail,
+        )
+
+
 class UnprocessableEntityError(HTTPError):
     status_code = 422
     code = "UNPROCESSABLE_ENTITY_ERROR"

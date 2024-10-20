@@ -1,8 +1,12 @@
+from consortium.server.server_config import (
+    CONSORTIUM_ARTIFACTS_DIRECTORY_PATH,
+    CONSORTIUM_ASSETS_DIRECTORY_PATH,
+    CONSORTIUM_PAYLOADS_DIRECTORY_PATH,
+)
 from consortium.server.services.agent_generators_service import AgentGeneratorsService
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.agents_service import AgentsService
-from consortium.server.services.application_service import ApplicationService
 from consortium.server.services.c2_types_service import C2TypesService
 from consortium.server.services.event_hooks_service import EventHooksService
 from consortium.server.services.events_service import EventsService
@@ -12,6 +16,7 @@ from consortium.server.services.listener_templates_service import (
 )
 from consortium.server.services.listeners_service import ListenersService
 from consortium.server.services.plugins_service import PluginsService
+from consortium.server.services.repository_service import RepositoryService
 from consortium.server.services.user_accounts_service import UserAccountsService
 from consortium.server.services.users_service import UsersService
 
@@ -45,6 +50,9 @@ listeners_service = ListenersService(
     events_service=events_service,
 )
 
+# C2 types service needs to be instantiated after the listener profiles service and
+# agent profiles service because it relies on both of them to retrieve listener and
+# agent type information.
 c2_types_service = C2TypesService(
     listener_profiles_service=listener_profiles_service,
     agent_profiles_service=agent_profiles_service,
@@ -55,7 +63,15 @@ agents_service = AgentsService(
 )
 
 # These services are instantiated independent of other services.
-application_service = ApplicationService()
+assets_service = RepositoryService(
+    repository_directory_path=CONSORTIUM_ASSETS_DIRECTORY_PATH,
+)
+artifacts_service = RepositoryService(
+    repository_directory_path=CONSORTIUM_ARTIFACTS_DIRECTORY_PATH,
+)
+payloads_service = RepositoryService(
+    repository_directory_path=CONSORTIUM_PAYLOADS_DIRECTORY_PATH,
+)
 user_accounts_service = UserAccountsService()
 users_service = UsersService()
 # The plugins service needs to be instantiated last so that the loaded plugins have

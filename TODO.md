@@ -10,6 +10,9 @@ passing of the agent type parameter to the register agent method.
 - When tasking agents, no automatic data validation is being performed.
 - Handler websocket 1006 disconnect message when clients forcefully disconnect
 - Figure out what objects need non empty names and which dont. Systematize this as well.
+- Handle mismatches betwen agent and listener when agents attempt to send results for
+non existent tasks
+- Handle option value validation failures when tasking agents
 
 ## Client
 - Deprecate client REST API connections service

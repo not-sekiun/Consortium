@@ -1,7 +1,6 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends
-from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
@@ -36,6 +35,8 @@ from consortium.server.objects.example_objects import example_listener_type
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
+listeners_service = server_singletons.listeners_service
+listener_templates_service = server_singletons.listener_templates_service
 router = APIRouter(
     prefix="/api/listeners",
     responses={
@@ -46,9 +47,6 @@ router = APIRouter(
     },
     tags=["Listeners API"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
-listeners_service = server_singletons.listeners_service
-listener_templates_service = server_singletons.listener_templates_service
 
 
 @router.get(

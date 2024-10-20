@@ -12,6 +12,9 @@ from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerStartError,
 )
 from consortium.framework.listeners.consortium.http.listener_type import LISTENER_TYPE
+from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
+    AgentTaskNotFoundError,
+)
 
 # TODO: Import Error triggering wrong log message.
 from consortium.server.models.agent_models import AgentResultMessageModel
@@ -42,7 +45,13 @@ class Listener(BaseListener):
         results_url_paths = self.parameters["results_url_paths"]
         registration_url_paths = self.parameters["registration_url_paths"]
 
-        app = web.Application()
+        app = web.Application(
+            # Max size of 50MB for the request body. File chunks when running
+            # download/upload tasking are limited to 25MB unencoded. Base64 encoding
+            # adds roughly 33% overhead. When we additionally account for the headers,
+            # we can expect the total size of the request to be less than 50MB.
+            client_max_size=52428800,
+        )
 
         async def handle_agent_registration(request):
             # Only one agent type is supported for this listener type.
@@ -127,7 +136,7 @@ class Listener(BaseListener):
             # Check if the task ID is valid.
             try:
                 _ = agent.get_running_task_by_task_id(task_id)
-            except ValueError:
+            except AgentTaskNotFoundError:
                 return web.Response(status=401)
 
             # Only if the task ID is valid do we consider it a valid agent that has

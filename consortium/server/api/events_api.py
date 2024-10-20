@@ -11,7 +11,6 @@ from fastapi import (
     WebSocketException,
     status,
 )
-from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
@@ -35,6 +34,9 @@ from consortium.server.server_config import (
 )
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
+events_service = server_singletons.events_service
+users_service = server_singletons.users_service
+websockets_server_logger = logger.bind(logger_name="Websockets Server")
 router = APIRouter(
     prefix="/api/events",
     responses={
@@ -45,10 +47,7 @@ router = APIRouter(
     },
     tags=["Events API"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
-events_service = server_singletons.events_service
-users_service = server_singletons.users_service
-websockets_server_logger = logger.bind(logger_name="Websockets Server")
+
 
 _client_action_websocket_message_json_schema = {
     "type": "object",

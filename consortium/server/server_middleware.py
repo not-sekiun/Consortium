@@ -23,7 +23,6 @@ from consortium.server.server_config import (
 
 rest_api_logger = logger.bind(logger_name="REST API")
 users_service = server_singletons.users_service
-application_service = server_singletons.application_service
 
 
 # this middleware checks if the server is in the process of shutting down and if so

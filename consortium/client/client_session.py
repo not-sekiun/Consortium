@@ -98,6 +98,7 @@ class ClientSession:
 
     async def run(self) -> ReturnStatus:
         interpreter = HomeInterpreter(client_session=self)
+
         while True:
             interpreter_return_status = await interpreter.run_interpreter()
             if interpreter_return_status.type in (

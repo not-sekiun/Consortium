@@ -89,7 +89,12 @@ class ListTasksCommand(BaseCommand):
                 table.add_row(
                     agent_task["task_id"],
                     agent_task["command"],
-                    " ".join(agent_task["arguments"]),
+                    ", ".join(
+                        [
+                            f"{key}={value!r}"
+                            for key, value in agent_task["arguments"].items()
+                        ],
+                    ),
                     format_agent_task_state_string_with_color(
                         agent_task_state_string=agent_task["state"],
                     ),

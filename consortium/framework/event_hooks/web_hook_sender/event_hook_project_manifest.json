@@ -1,0 +1,7 @@
+{
+  "event_hook": {
+    "filepath": "event_hook.py",
+    "symbol": "EventHook"
+  },
+  "enabled": false
+}

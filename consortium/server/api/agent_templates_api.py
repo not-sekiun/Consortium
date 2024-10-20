@@ -1,7 +1,6 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.agent_templates_api_exceptions import (
@@ -34,20 +33,6 @@ from consortium.server.models.agent_template_models import AgentTemplateModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
-router = APIRouter(
-    prefix="/api/agent-templates",
-    responses={
-        401: {"model": UnauthorizedError().to_pydantic_model()},
-        403: {"model": ForbiddenError().to_pydantic_model()},
-        405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerErrorError().to_pydantic_model()},
-    },
-    tags=["Agent Templates API"],
-)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
-agent_templates_service = server_singletons.agent_templates_service
-agent_generators_service = server_singletons.agent_generators_service
-
 _example_agent_template_option_value_framework_error = (
     AgentTemplateOptionValueFrameworkError(
         agent_template="string",
@@ -61,6 +46,18 @@ _example_agent_template_option_not_found_framework_error = (
         agent_template="string",
         option_name="string",
     )
+)
+agent_templates_service = server_singletons.agent_templates_service
+agent_generators_service = server_singletons.agent_generators_service
+router = APIRouter(
+    prefix="/api/agent-templates",
+    responses={
+        401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
+        405: {"model": MethodNotAllowedError().to_pydantic_model()},
+        500: {"model": InternalServerErrorError().to_pydantic_model()},
+    },
+    tags=["Agent Templates API"],
 )
 
 

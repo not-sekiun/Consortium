@@ -1,5 +1,3 @@
-from collections.abc import AsyncGenerator
-
 from consortium.framework.base_agent_capability import BaseAgentCapability, SupportedOS
 from consortium.framework.options import SingleValueOption
 from consortium.server.models.agent_models import (
@@ -34,32 +32,39 @@ class ShellCapability(BaseAgentCapability):
             name="blind",
             description=(
                 "Execute the command blind without checking the output. This allows "
-                "the launching of executables that might potentially block."
+                "the launching of long running executables without blocking the agent."
+                "The timeout option will not apply when this option is set."
             ),
             required=False,
             value_type=bool,
             default_value=False,
         ),
         SingleValueOption(
-            name="shell_binary",
+            name="shell",
             description=(
-                "The full filepath to the binary executable of the shell to use to "
-                "execute the command."
+                "The filepath to the binary executable of the shell to use to execute "
+                "the provided command."
             ),
             required=False,
             value_type=str,
         ),
+        SingleValueOption(
+            name="expand",
+            description=(
+                "Attempt to expand environment variables when provided while changing "
+                "directories. By default, this is disabled."
+            ),
+            required=False,
+            value_type=bool,
+            default_value=False,
+        ),
     }
     authors = {"Sekiun (github.com/not-sekiun)"}
 
-    async def handle_sending_agent_task_messages(
+    async def run_agent_capability(
         self,
-        agent_message: AgentTaskMessageModel,
-    ) -> AsyncGenerator[AgentTaskMessageModel]:
-        yield agent_message
-
-    async def handle_receiving_agent_response_messages(
-        self,
-    ) -> AsyncGenerator[AgentResultMessageModel]:
-        result_message = yield
-        yield result_message
+        agent_task_message: AgentTaskMessageModel,
+    ) -> AgentResultMessageModel:
+        return await self.send_agent_task_message_and_recv_agent_result_message(
+            agent_task_message=agent_task_message,
+        )

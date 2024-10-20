@@ -16,6 +16,8 @@ from consortium.server.exceptions.service_exceptions.user_accounts_service_excep
 from consortium.server.models.user_models import JSONWebTokenModel
 from consortium.server.server_dependencies import is_user_logged_in
 
+user_accounts_service = server_singletons.user_accounts_service
+users_service = server_singletons.users_service
 router = APIRouter(
     prefix="/api/login",
     responses={
@@ -23,8 +25,6 @@ router = APIRouter(
     },
     tags=["Login API"],
 )
-user_accounts_service = server_singletons.user_accounts_service
-users_service = server_singletons.users_service
 
 
 @router.post(

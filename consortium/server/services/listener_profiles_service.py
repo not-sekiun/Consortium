@@ -49,10 +49,11 @@ class ListenerProfilesService:
     def __repr__(self) -> str:
         return "ListenerProfilesService()"
 
-    @staticmethod
     def get_listener_profile_from_listener_project_folder(
+        self,
         listener_project_folder: Path,
-    ) -> ListenerProfile:
+        ignore_enabled_listener_project_flag: bool = False,
+    ) -> ListenerProfile | None:
         # Check if project folder contains a valid manifest file.
         listener_project_manifest_file = (
             listener_project_folder / "listener_project_manifest.json"
@@ -66,6 +67,8 @@ class ListenerProfilesService:
                         "filepath": {"type": "string"},
                         "symbol": {"type": "string"},
                     },
+                    "required": ["filepath", "symbol"],
+                    "additionalProperties": False,
                 },
                 "listener_template": {
                     "type": "object",
@@ -73,6 +76,8 @@ class ListenerProfilesService:
                         "filepath": {"type": "string"},
                         "symbol": {"type": "string"},
                     },
+                    "required": ["filepath", "symbol"],
+                    "additionalProperties": False,
                 },
                 "listener_type": {
                     "type": "object",
@@ -80,8 +85,13 @@ class ListenerProfilesService:
                         "filepath": {"type": "string"},
                         "symbol": {"type": "string"},
                     },
+                    "required": ["filepath", "symbol"],
+                    "additionalProperties": False,
                 },
+                "enabled": {"type": "boolean"},
             },
+            "required": ["listener", "listener_template", "listener_type", "enabled"],
+            "additionalProperties": False,
         }
 
         # Check if manifest file exists and follows the correct json schema.
@@ -105,6 +115,16 @@ class ListenerProfilesService:
                 listener_project_folder=str(listener_project_folder),
                 json_schema_error_message=exc.message,
             )
+
+        if (
+            not listener_project_manifest_json["enabled"]
+            and not ignore_enabled_listener_project_flag
+        ):
+            self.listener_profiles_service_logger.info(
+                "Skipped loading listener from '{}' because it was disabled.",
+                str(listener_project_folder),
+            )
+            return None
 
         # Check for valid project folder structure as specified by the manifest file.
         listener_file = listener_project_folder / Path(
@@ -260,26 +280,22 @@ class ListenerProfilesService:
             "Loading framework listener profiles...",
         )
 
-        listener_profiles = []
         for path in CONSORTIUM_LISTENERS_DIRECTORY_PATH.rglob("*"):
             if path.name != "listener_project_manifest.json":
                 continue
 
             try:
                 listener_profile = (
-                    self.get_listener_profile_from_listener_project_folder(
-                        path.parent,
+                    self.load_listener_profile_from_listener_project_folder(
+                        listener_project_folder=path.parent,
                     )
                 )
-                listener_profiles.append(listener_profile)
-                self._listener_profiles[str(listener_profile.listener_profile_id)] = (
-                    listener_profile
-                )
+
+                if listener_profile is None:
+                    continue
+
                 self.listener_profiles_service_logger.success(
                     f"Loaded listener profile: {listener_profile}",
-                )
-                self.listener_profiles_service_logger.debug(
-                    f"Loaded listener profile: {listener_profile!r}",
                 )
             except (
                 InvalidListenerProjectFolderStructureError,
@@ -289,11 +305,12 @@ class ListenerProfilesService:
             ) as exc:
                 self.listener_profiles_service_logger.error(exc)
 
+        all_listener_profiles = self.get_all_listener_profiles()
         self.listener_profiles_service_logger.info(
-            f"Loaded framework listener profiles ({len(self._listener_profiles)} "
+            f"Loaded framework listener profiles ({len(all_listener_profiles)} "
             "listener profile(s) loaded).",
         )
-        return listener_profiles
+        return all_listener_profiles
 
     def unload_framework_listener_profiles(self) -> None:
         self.listener_profiles_service_logger.info(
@@ -320,10 +337,16 @@ class ListenerProfilesService:
     def load_listener_profile_from_listener_project_folder(
         self,
         listener_project_folder: Path,
-    ) -> ListenerProfile:
+    ) -> ListenerProfile | None:
         listener_profile = self.get_listener_profile_from_listener_project_folder(
             listener_project_folder,
         )
+
+        # `listener_profile` being `None` implies a disabled listener profile was
+        # attempted to be loaded.
+        if listener_profile is None:
+            return None
+
         self._listener_profiles[str(listener_profile.listener_profile_id)] = (
             listener_profile
         )

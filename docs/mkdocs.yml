@@ -21,6 +21,7 @@ nav:
     - framework/agents-framework.md
     - framework/plugins-framework.md
     - framework/event-hooks-framework.md
+  - History: history.md
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true

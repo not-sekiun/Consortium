@@ -2,6 +2,7 @@ import socket
 import traceback
 
 import uvicorn
+from fastapi import FastAPI
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -13,6 +14,8 @@ from consortium.server.api.agent_templates_api import (
     router as agent_templates_api_router,
 )
 from consortium.server.api.agents_api import router as agents_api_router
+from consortium.server.api.artifacts_api import router as artifacts_api_router
+from consortium.server.api.assets_api import router as assets_api_router
 from consortium.server.api.events_api import router as events_api_router
 from consortium.server.api.listener_templates_api import (
     router as listener_templates_api_router,
@@ -20,12 +23,14 @@ from consortium.server.api.listener_templates_api import (
 from consortium.server.api.listeners_api import router as listeners_api_router
 from consortium.server.api.login_api import router as login_api_router
 from consortium.server.api.logout_api import router as logout_api_router
+from consortium.server.api.payloads_api import router as payloads_api_router
 from consortium.server.api.server_api import router as server_api_router
 from consortium.server.api.user_accounts_api import router as user_accounts_api_router
 from consortium.server.api.users_api import router as users_api_router
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import SERVER_RELEASE
+from consortium.server.server_event_handlers import lifespan
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
@@ -37,7 +42,9 @@ from consortium.server.server_middleware import (
     spoof_response_server_header,
 )
 
-application_service = server_singletons.application_service
+# These services need to have their managed objects stopped when the server is shutting
+# down.
+listeners_service = server_singletons.listeners_service
 plugins_service = server_singletons.plugins_service
 
 
@@ -51,7 +58,10 @@ class Server:
         self.status = ServerStatus.STOPPED
 
         self._server_logger = logger.bind(logger_name="Server")
-        self._app = application_service.get_application()
+        self._app = FastAPI(
+            swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+            lifespan=lifespan,
+        )
 
         # Configure custom api endpoints.
         self._app.include_router(login_api_router)
@@ -65,6 +75,9 @@ class Server:
         self._app.include_router(agent_generators_api_router)
         self._app.include_router(agents_api_router)
         self._app.include_router(events_api_router)
+        self._app.include_router(assets_api_router)
+        self._app.include_router(artifacts_api_router)
+        self._app.include_router(payloads_api_router)
 
         # Configure middleware. Order matters, the last middleware added will be the
         # first to be executed on the request and the last to be executed on the
@@ -145,6 +158,7 @@ class Server:
                 f"Network error occurred while attempting to bind server to target "
                 f"socket address: {exc}",
             )
+            return
 
         try:
             uvicorn.run(

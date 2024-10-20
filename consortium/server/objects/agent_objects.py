@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Type
 
 from loguru import logger
 
@@ -82,10 +82,10 @@ class Agent:
         # Each agent capability is mapped to a task by the task ID. This lets us
         # distinguish which capability a response should be sent to even if the same
         # type of agent capability is running.
-        self._pending_agent_capability_response_message_handlers = {}
-        # Task message handlers run as asyncio tasks, we add them to a set to prevent
+        self._running_agent_capabilities = {}
+        # Agent capabilities run as asyncio tasks, we add them to a set to prevent
         # their garbage collection.
-        self._agent_task_message_handler_tasks = set()
+        self._agent_capability_tasks = set()
 
     def __repr__(self) -> str:
         return (
@@ -101,31 +101,79 @@ class Agent:
     def __str__(self) -> str:
         return f"'{self.name}' ({self.agent_id})"
 
-    async def add_task(self, task: AgentTaskModel) -> None:
-        parsed_initial_agent_message_from_agent_task = AgentTaskMessageModel(
-            task_id=task.task_id,
-            command=task.command,
-            arguments=task.arguments,
+    def _move_queued_task_to_running(self, task_id: str) -> None:
+        task = self._queued_tasks.pop(task_id)
+        task.state = AgentTaskState.RUNNING
+        self._running_tasks[str(task.task_id)] = task
+
+    def _move_running_task_to_completed(self, task_id: str) -> None:
+        task = self._running_tasks.pop(task_id)
+        task.state = AgentTaskState.COMPLETED
+        self._completed_tasks[str(task.task_id)] = task
+
+    async def _manage_running_agent_capability(
+        self,
+        agent_capability: Type[BaseAgentCapability],
+        agent_task_message: AgentTaskMessageModel,
+    ) -> None:
+        async def agent_capability_task_handler(
+            agent_capability: BaseAgentCapability,
+            agent_task_message: AgentTaskMessageModel,
+        ):
+            result_message = await agent_capability.run_agent_capability(
+                agent_task_message=agent_task_message,
+            )
+
+            # Upon receiving the final aggregated result message we can remove the
+            # agent capability as it is now no longer considered to be running.
+            self._running_agent_capabilities.pop(str(agent_task_message.task_id))
+
+            result = AgentResultModel(
+                result_id=result_message.result_id,
+                success=result_message.success,
+                message=result_message.message,
+                data=result_message.data,
+                task_id=result_message.task_id,
+            )
+            self._results[str(result.result_id)] = result
+
+            # Adding the result implies that the task is completed so we can now move
+            # the task from the running tasks to the completed tasks.
+            self._move_running_task_to_completed(
+                task_id=str(result_message.task_id),
+            )
+
+            # Finally we fire the event to notify all event handlers that a result has
+            # been received.
+            await self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_RESULT_RECEIVED,
+                    data={
+                        "agent_id": str(self.agent_id),
+                        "result_id": str(result.result_id),
+                    },
+                ),
+            )
+
+        running_agent_capability = agent_capability(
+            agent_task_messages_queue=self._agent_task_messages_queue,
+        )
+        self._running_agent_capabilities[str(agent_task_message.task_id)] = (
+            running_agent_capability
         )
 
-        # The agent capability defines a method to handle whenever an agent gets sent a
-        # new task. This method receives as input the task message (the task but with
-        # non-essential information, e.g. the datetime the task was created, stripped).
-        # This method then yields further additional task messages that are to be sent
-        # out to the wire. This handler collects those yielded messages and puts them
-        # into a task message-aggregating queue to be consumed by the listener before
-        # sending out to the wire.
-        async def _agent_capability_task_messages_generator_handler(
-            handled_agent_capability: BaseAgentCapability,
-            initial_agent_message: AgentTaskMessageModel,
-        ):
-            async for (
-                agent_message
-            ) in handled_agent_capability.handle_sending_agent_task_messages(
-                agent_message=initial_agent_message,
-            ):
-                await self._agent_task_messages_queue.put(agent_message)
+        agent_capability_task = asyncio.create_task(
+            agent_capability_task_handler(
+                agent_capability=running_agent_capability,
+                agent_task_message=agent_task_message,
+            ),
+        )
+        self._agent_capability_tasks.add(agent_capability_task)
+        # Once the task is finished we have it automatically remove its own reference
+        # within the set to avoid holding references to finished tasks indefinitely.
+        agent_capability_task.add_done_callback(self._agent_capability_tasks.discard)
 
+    async def add_task(self, task: AgentTaskModel) -> None:
         for agent_capability in self.agent_type.agent_capabilities:
             if agent_capability.name == task.command:
                 # Perform validation on the parameters passed to the options of a
@@ -141,34 +189,43 @@ class Agent:
                     # This specific statement allows two methods of passing in value
                     # for an option that is not required. The REST API JSON data can
                     # either contain the key with a value of None or not contain the
-                    # key at all.
+                    # key at all. Either way, we avoid setting any value for the option.
                     if argument_value is None:
                         continue
                     # `OptionValueValidationError` is raised here on failure to validate
-                    # the value.
-                    agent_capability.arguments[argument_name].validate_value(
-                        argument_value,
+                    # the value when we attempt to set it.
+                    agent_capability.arguments[argument_name].set_option_value(
+                        value=argument_value,
                     )
 
                 self._queued_tasks[str(task.task_id)] = task
-                agent_capability_task_handler = asyncio.create_task(
-                    _agent_capability_task_messages_generator_handler(
-                        handled_agent_capability=agent_capability,
-                        initial_agent_message=parsed_initial_agent_message_from_agent_task,
-                    ),
+
+                # Now we construct the arguments dictionary based on the options. If no
+                # value was provided for a particular option this process will grab the
+                # default value from the option. If no default value or value was
+                # provided then this process will raise a `RequiredOptionNotSetError`
+                # exception.
+                arguments = {}
+                for (
+                    argument_name,
+                    argument_option,
+                ) in agent_capability.arguments.items():
+                    arguments[argument_name] = argument_option.get_option_value()
+                    # After getting the value from setting the option we have to clear
+                    # the option to prevent the value from persisting across different
+                    # taskings.
+                    argument_option.clear_option_value()
+                # Strip redundant information from the task to create a task message.
+                initial_agent_message = AgentTaskMessageModel(
+                    task_id=task.task_id,
+                    command=task.command,
+                    arguments=arguments,
                 )
-                # Add the task to a set to prevent its garbage collection.
-                self._agent_task_message_handler_tasks.add(
-                    agent_capability_task_handler,
+                await self._manage_running_agent_capability(
+                    agent_capability=agent_capability,
+                    agent_task_message=initial_agent_message,
                 )
-                # Here we create the generator (but we don't run it yet) to prime it to
-                # get ready to handle the response messages.
-                agent_capability_response_messages_handler = (
-                    agent_capability.handle_receiving_agent_response_messages()
-                )
-                self._pending_agent_capability_response_message_handlers[
-                    str(task.task_id)
-                ] = agent_capability_response_messages_handler
+
                 return
         raise AgentCapabilityNotFoundError(
             command=task.command,
@@ -180,8 +237,7 @@ class Agent:
         try:
             message = self._agent_task_messages_queue.get_nowait()
             if str(message.task_id) in self._queued_tasks:
-                running_task = self._queued_tasks.pop(str(message.task_id))
-                self._running_tasks[str(running_task.task_id)] = running_task
+                self._move_queued_task_to_running(task_id=str(message.task_id))
             return message
         except asyncio.queues.QueueEmpty:
             return None
@@ -189,8 +245,7 @@ class Agent:
     async def get_next_task_message_with_waiting(self) -> AgentTaskMessageModel:
         message = await self._agent_task_messages_queue.get()
         if str(message.task_id) in self._queued_tasks:
-            running_task = self._queued_tasks.pop(str(message.task_id))
-            self._running_tasks[str(running_task.task_id)] = running_task
+            self._move_queued_task_to_running(task_id=str(message.task_id))
         return message
 
     # This function is one which returns a list of tasks but doesn't actually remove
@@ -250,63 +305,8 @@ class Agent:
                 agent_str=str(self),
             )
 
-        pending_agent_capability_response_message_handler = (
-            self._pending_agent_capability_response_message_handlers[
-                str(result_message.task_id)
-            ]
-        )
-
-        try:
-            response_message = (
-                await pending_agent_capability_response_message_handler.asend(
-                    result_message,
-                )
-            )
-        # `TypeError` is raised when we attempt to yield from a non-started
-        # generator.
-        except TypeError:
-            # The response message handler generator was created but not
-            # started yet, so we attempt to start the generator first by
-            # sending a null value.
-            await pending_agent_capability_response_message_handler.asend(
-                None,
-            )
-            response_message = (
-                await pending_agent_capability_response_message_handler.asend(
-                    result_message,
-                )
-            )
-
-        if response_message:
-            del self._pending_agent_capability_response_message_handlers[
-                str(result_message.task_id)
-            ]
-
-            result = AgentResultModel(
-                result_id=result_message.result_id,
-                success=result_message.success,
-                message=result_message.message,
-                data=result_message.data,
-                task_id=result_message.task_id,
-            )
-            self._results[str(result.result_id)] = result
-
-            # Adding the result implies that the task is completed.
-            task = self._running_tasks.pop(str(result_message.task_id))
-            task.state = AgentTaskState.COMPLETED
-            self._completed_tasks[str(task.task_id)] = task
-
-            # Finally we fire the event to notify all event handlers that a result has
-            # been received.
-            await self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_RESULT_RECEIVED,
-                    data={
-                        "agent_id": str(self.agent_id),
-                        "result_id": str(result.result_id),
-                    },
-                ),
-            )
+        agent_capability = self._running_agent_capabilities[str(result_message.task_id)]
+        await agent_capability.agent_result_messages_queue.put(result_message)
 
     def get_all_results(self) -> list[AgentResultModel]:
         return list(self._results.values())

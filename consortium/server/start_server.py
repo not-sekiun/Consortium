@@ -3,12 +3,22 @@ import json
 
 from pydantic import ValidationError
 
+import consortium.server.server_reloader as server_reloader
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server_config import CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH
 from consortium.server.server_logging import configure_logger
 
 
 def main(arguments: argparse.Namespace) -> None:
+    # First thing we check is if reloading is enabled. If the reload flag is set, we
+    # essentially just run the entire server again (through the entry point script)
+    # with all the same arguments as before just without the reload flag (otherwise
+    # this exact same behaviour would be called again recursively). The server this
+    # time is run in a subprocess that is terminated and started whenever file changes
+    # are detected.
+    if arguments.reload:
+        server_reloader.main()
+        return
     # Load server configuration file
     if arguments.config is None:
         # Use relative pathing from the module to allow directory independent

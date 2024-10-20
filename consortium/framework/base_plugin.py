@@ -58,7 +58,8 @@ class BasePlugin(ABC):
             server_singletons.agent_generators_service
         )
         self.server_services.agents_service = server_singletons.agents_service
-        self.server_services.application_service = server_singletons.application_service
+        self.server_services.artifacts_service = server_singletons.artifacts_service
+        self.server_services.assets_service = server_singletons.assets_service
         self.server_services.c2_types_service = server_singletons.c2_types_service
         self.server_services.event_hooks_service = server_singletons.event_hooks_service
         self.server_services.listener_profiles_service = (
@@ -68,6 +69,7 @@ class BasePlugin(ABC):
             server_singletons.listener_templates_service
         )
         self.server_services.listeners_service = server_singletons.listeners_service
+        self.server_services.payloads_service = server_singletons.payloads_service
         self.server_services.plugins_service = server_singletons.plugins_service
         self.server_services.user_accounts_service = (
             server_singletons.user_accounts_service

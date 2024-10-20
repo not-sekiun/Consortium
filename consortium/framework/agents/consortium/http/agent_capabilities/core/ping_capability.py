@@ -1,5 +1,4 @@
 import asyncio
-from collections.abc import AsyncGenerator
 from datetime import datetime
 
 from consortium.framework.base_agent_capability import BaseAgentCapability, SupportedOS
@@ -40,10 +39,7 @@ def _validate_timeout_argument(timeout: float | None):
 
 class PingCapability(BaseAgentCapability):
     name = "ping"
-    description = (
-        "Ping the agent to check if it is still responsive and determine the latency "
-        "of the response."
-    )
+    description = "Ping the agent."
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
     arguments = {
@@ -60,57 +56,83 @@ class PingCapability(BaseAgentCapability):
             description=(
                 "The duration of time in seconds to wait before considering a ping to "
                 "have timed out. If not provided, there is no timeout when waiting for "
-                "a ping request to return."
+                "a response."
             ),
             required=False,
             value_type=float,
-            validating_function=_validate_iterations_argument,
+            validating_function=_validate_timeout_argument,
         ),
     }
     authors = {"Sekiun (github.com/not-sekiun)"}
 
-    async def handle_sending_agent_task_messages(
+    async def run_agent_capability(
         self,
-        agent_message: AgentTaskMessageModel,
-    ) -> AsyncGenerator[AgentTaskMessageModel]:
-        self.environment["response_received_event"] = asyncio.Event()
-        self.environment["total_expected_pings"] = agent_message.arguments["iterations"]
-        agent_message.arguments.pop("iterations")
+        agent_task_message: AgentTaskMessageModel,
+    ) -> AgentResultMessageModel:
+        iterations = agent_task_message.arguments["iterations"]
+        timeout = agent_task_message.arguments["timeout"]
 
-        self.environment["ping_start_time"] = datetime.now()
-        yield agent_message
+        # Remove the iterations and timeout arguments from the agent task message to
+        # prevent them from being sent to the agent. These arguments are unnecessary
+        # and helps keep the ping message as minimal as possible
+        agent_task_message.arguments.pop("iterations")
+        agent_task_message.arguments.pop("timeout")
 
-        # Use the event to ensure that a new ping task is only sent to the agent after
-        # the agent returned a response to the previous ping task.
-        for i in range(self.environment["total_expected_pings"] - 1):
-            await self.environment["response_received_event"].wait()
-            self.environment["ping_start_time"] = datetime.now()
-            yield agent_message
-            self.environment["response_received_event"].clear()
+        # Send the agent task message to the agent and wait for the response. This is
+        # effectively the ping.
+        ping_latencies = []
+        for _ in range(iterations):
+            try:
+                ping_started_at = datetime.now()
+                if timeout is None:
+                    _ = await self.send_agent_task_message_and_recv_agent_result_message(
+                        agent_task_message,
+                    )
+                else:
+                    await asyncio.wait_for(
+                        self.send_agent_task_message_and_recv_agent_result_message(
+                            agent_task_message,
+                        ),
+                        timeout=timeout,
+                    )
+                ping_ended_at = datetime.now()
+                ping_latencies.append(ping_ended_at - ping_started_at)
+            except asyncio.TimeoutError:
+                ping_latencies.append(None)
 
-    async def handle_receiving_agent_response_messages(
-        self,
-    ) -> AsyncGenerator[AgentResultMessageModel]:
-        message = ""
-        latencies = []
+        # Construct message after aggregating all the ping latencies.
+        message = f"Agent pings:\n"
+        for ping_index, ping_latency in enumerate(ping_latencies):
+            if ping_latency is None:
+                message += f"    Ping {ping_index + 1}: Timed out\n"
+            else:
+                message += f"    Ping {ping_index + 1}: Response received (Latency: {ping_latency})\n"
 
-        # If iterations is not provided, only ping the agent once.
-        for i in range(self.environment["total_expected_pings"]):
-            latency = datetime.now() - self.environment["ping_start_time"]
-            message += f"Ping {i + 1}: {latency}\n"
-            latencies.append(latency)
-            result_message = yield
+        # Calculate the average latency by only considering the pings that were
+        # returned successfully
+        ping_latencies = [
+            ping_latency for ping_latency in ping_latencies if ping_latency is not None
+        ]
+        if ping_latencies:
+            average_latency = sum(ping_latencies[1:], ping_latencies[0]) / len(
+                ping_latencies,
+            )
+            message += f"\nPing statistics:\n"
+            message += (
+                f"    Messages sent: {iterations} | Messages received: "
+                f"{len(ping_latencies)} | Messages timed out: "
+                f"{iterations - len(ping_latencies)} "
+                f"({(iterations - len(ping_latencies)) / iterations * 100:.2f}% loss)\n"
+            )
+            message += f"Latency statistics:\n"
+            message += (
+                f"    Maximum latency: {max(ping_latencies)} | Average latency: "
+                f"{average_latency} | Minimum latency: {min(ping_latencies)}\n"
+            )
 
-            # As long as we are not on the last iteration, set the event to allow the
-            # next ping task to be sent to the agent.
-            if i < self.environment["iterations"] - 1:
-                self.environment["response_received_event"].set()
-
-        latency_sum = latencies[0]
-        for latency in latencies[1:]:
-            latency_sum += latency
-        average_latency = latency_sum / len(latencies)
-        message += f"\nAverage latency: {average_latency}"
-        result_message.message = message
-
-        yield result_message
+        return AgentResultMessageModel(
+            task_id=agent_task_message.task_id,
+            success=True,
+            message=message,
+            data={},
+        )

@@ -1,7 +1,6 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends
-from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.agent_generators_api_exceptions import (
@@ -36,6 +35,8 @@ from consortium.server.objects.example_objects import example_agent_type
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
+agent_generators_service = server_singletons.agent_generators_service
+agent_templates_service = server_singletons.agent_templates_service
 router = APIRouter(
     prefix="/api/agent-generators",
     responses={
@@ -46,9 +47,6 @@ router = APIRouter(
     },
     tags=["Agent Generators API"],
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
-agent_generators_service = server_singletons.agent_generators_service
-agent_templates_service = server_singletons.agent_templates_service
 
 
 @router.get(

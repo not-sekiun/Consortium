@@ -1,21 +1,24 @@
 # Consortium
 Consortium is a _programming language agnostic_, and _networking protocol agnostic_
-command and control (C2) framework that is designed to be _highly extensible_ and
-_modular_. The framework ships with its own listeners and agents while also allowing
-users to rapidly develop their own highly customized listeners and agents.
+command and control (C2) framework that is designed to be _collaborative_,
+_highly extensible_, and _modular_. The framework ships with its own listeners and
+agents while also allowing users to rapidly develop their own highly customized
+listeners and agents.
 
 
 > [!CAUTION]
 > Consortium is **actively being developed** and is currently considered to be in the
-> _alpha phase_ of development. As such it should be noted that:
+> _alpha phase_ of development. The current branch `main` is essentially a developer
+> branch where I dump all code without regards to correctness. As such it should be
+> noted that:
 >
 > 1. Backwards incompatible/breaking changes may be made to the framework at any time.
-> 2. The framework may contain major bugs.
-> 3. The framework may not be feature complete.
-> 4. Documentation will be lacking.
+> 2. The framework may contain major bugs and even incomplete code that can cause crashes.
+> 3. The framework is currently not considered to be feature-complete.
+> 4. Documentation will be severely lacking and incomplete.
 >
-> I am working to resolve all these problems so please raise any problems, feature
-> requests, or bug reports in the Github issues section.
+> I am working to resolve all these and work towards a 1.0.0 release so please raise any
+> problems, feature requests, or bug reports in the GitHub issues section.
 
 ## ⚙️ Features
 - **📡 Asynchronous multiplayer/multiserver support** - Multiple clients can connect to
@@ -25,7 +28,8 @@ servers. The server runs asynchronously on FastAPI allowing for blazing fast spe
 - **🤖 High extensibility and automation** - The server supports writing custom plugins
 and event hooks in python that interface natively with the backend. The server performs
 all communications through either its REST API (for most C2 related operations) or
-its websockets endpoint (for server initiated push events)
+its websockets endpoint (for server initiated push events) allowing external
+programmatic access to the server.
 - **🔌 Modular listener-agent design** - Consortium ships with its own listeners and
 agents. However, custom listeners and agents can be added to the framework. Agents can
 be written in any language while listeners can be written in python to natively
@@ -86,18 +90,48 @@ poetry install
 
 ## 📚 Documentation
 ### Server REST API Documentation
+> [!Note]
+> The REST API documentation is only accessible to the local host.
+
 The Consortium server is powered by FastAPI, which provides a built-in Swagger UI
 for interacting with the server's REST API. The Swagger UI can be accessed by
 navigating to `/doc` or `/redoc` at the server's root URL in a web browser.
 
-> [!Note]
-> The REST API documentation is only accessible to the local host.
+Start the server first.
+
+```shell
+poetry run python consortium.py server
+```
+
+Then open a web browser to the API endpoints.
+
+#### REST API documentation for the /docs endpoint (http://localhost:9999/docs by default)
+![REST API documentation for "docs" endpoint](docs/assets/rest_api_documentation_doc_endpoint.png)
+
+#### REST API documentation for the /redoc endpoint (http://localhost:9999/redoc by default)
+![REST API documentation for "redoc" endpoint](docs/assets/rest_api_documentation_redoc_endpoint.png)
 
 ### Server Events Websocket API Documentation
 The Consortium server provides a WebSocket API for server-initiated push events. While
 this is considered part of its API, it is _not_ documented by FastAPI due to issues
 with the OpenAPI specification. As such the WebSocket API is documented at the
 Consortium wiki's Events WebSocket API page.
+
+![WebSocket API documentation for mkdocs](docs/assets/websockets_api_mkdocs.png)
+
+This documentation is hosted locally and included with the repository. To view it
+locally, install `mkdocs` through poetry (it should already be included when installing
+all dependencies) and run it by changing directory into the `docs` folder and serving
+the documentation locally.
+
+> [!NOTE]
+> The mkdocs page is still heavily a WIP and is largely incomplete. It is included here
+> only for completeness.
+
+```shell
+cd docs
+poetry run mkdocs serve
+```
 
 ### Client Documentation
 To view all commands for a particular interpreter in the client type `help`.

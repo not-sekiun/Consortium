@@ -35,20 +35,24 @@ class AgentsInterpreter(ClientInterpreter):
         all_agents = await self.environment[
             "client_rest_api_connection"
         ].get_all_agents()
+        all_assets = await self.environment[
+            "client_rest_api_connection"
+        ].get_all_assets()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-        for key, value in {
-            command: {agent["agent_id"]: None for agent in all_agents}
-            for command in [
-                "info_agent",
-                "interact_agent",
-                "list_tasks",
-                "list_results",
-            ]
-        }.items():
-            nested_completer_dict[key] = value
+        agents_completion = {agent["agent_id"]: None for agent in all_agents}
+        for command in [
+            "info_agent",
+            "interact_agent",
+            "list_tasks",
+            "list_results",
+        ]:
+            nested_completer_dict[command] = agents_completion
+        assets_completion = {asset["resource_id"]: None for asset in all_assets}
+        for command in ["download_asset", "info_asset"]:
+            nested_completer_dict[command] = assets_completion
         nested_completer_dict["help"] = {command: None for command in self.commands}
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
