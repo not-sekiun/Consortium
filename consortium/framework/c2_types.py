@@ -1,6 +1,5 @@
 import sys
 import uuid
-from pathlib import Path
 from typing import Type
 
 from consortium.framework.base_agent_capability import BaseAgentCapability
@@ -24,13 +23,6 @@ class BaseAgentType:
 
     def __init__(self):
         self.agent_type_id = uuid.uuid4()
-        self.agent_source_filepath = Path(
-            sys.modules[self.__class__.__module__].__file__,
-        ).parents[0]
-
-        for listener_type in self.compatible_listener_types:
-            if listener_type not in self.compatible_listener_types:
-                self.add_compatible_listener_type(listener_type=listener_type)
 
     def __init_subclass__(cls, **kwargs):
         if cls.compatible_listener_types is None:
@@ -72,6 +64,13 @@ class BaseAgentType:
                         "agent capability classes."
                     ),
                 )
+
+        # These listener types are the ones that were included in the compatible
+        # listener types set in the subclassing class attribute definition. However,
+        # these listener types are not yet aware of the agent type. We need to add the
+        # agent type to the compatible agent types set of each listener type.
+        for listener_type in cls.compatible_listener_types:
+            listener_type.add_compatible_agent_type(agent_type=cls())
 
     def __str__(self) -> str:
         return f"'{self.name}' ({str(self.agent_type_id)})"
@@ -166,14 +165,8 @@ class BaseListenerType:
     name: str
     compatible_agent_types: set[BaseAgentType] | None = None
 
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         self.listener_type_id = uuid.uuid4()
-
-        for agent_type in self.compatible_agent_types:
-            if agent_type not in self.compatible_agent_types:
-                self.add_compatible_agent_type(agent_type=agent_type)
 
     def __init_subclass__(cls, **kwargs):
         if cls.compatible_agent_types is None:
@@ -202,6 +195,13 @@ class BaseListenerType:
                         "agent type objects."
                     ),
                 )
+
+        # These agent types are the ones that were included in the compatible
+        # agent types set in the subclassing class attribute definition. However,
+        # these agent types are not yet aware of the listener type. We need to add the
+        # listener type to the compatible listener types set of each agent type.
+        for agent_type in cls.compatible_agent_types:
+            agent_type.add_compatible_listener_type(listener_type=cls())
 
     def __str__(self) -> str:
         return f"'{self.name}' ({str(self.listener_type_id)})"

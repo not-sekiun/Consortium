@@ -42,7 +42,7 @@ class _ServerReloaderEventHandler(FileSystemEventHandler):
         # only want to reload the server if the file changes occurred at least
         # `self._minumum_seconds_between_reloads` seconds apart to prevent rapid
         # reloading.
-        self._minimum_seconds_between_reloads = 1.0
+        self._minimum_seconds_between_reloads = 5.0
 
     def on_any_event(self, event: FileSystemEvent) -> None:
         if time.time() - self._last_reloaded < self._minimum_seconds_between_reloads:

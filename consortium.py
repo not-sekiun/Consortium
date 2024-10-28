@@ -1,7 +1,5 @@
 import argparse
 
-from mkdocs.commands.serve import serve
-
 import consortium.client.start_client as start_client
 import consortium.server.start_server as start_server
 from consortium.client.utils.formatter_utils import format_argparse_epilog

@@ -21,7 +21,7 @@ from consortium.client.repl_interface.client_interpreter import ClientInterprete
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
-from consortium.client.utils.printer_utils import print_info
+from consortium.client.utils.printer_utils import print_info, print_warning
 
 
 class InteractAgentInterpreter(ClientInterpreter):
@@ -40,7 +40,10 @@ class InteractAgentInterpreter(ClientInterpreter):
                 [
                     command
                     for command in COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS
-                    if command.name != "info_agent"
+                    if command.name
+                    not in [
+                        command.name for command in INTERACT_AGENT_INTERPRETER_COMMANDS
+                    ]
                 ]
                 + INTERACT_AGENT_INTERPRETER_COMMANDS
                 # Add back in the agents command since it's removed in the
@@ -64,6 +67,35 @@ class InteractAgentInterpreter(ClientInterpreter):
             agent_capability_command = construct_agent_capability_command(
                 agent_capability_json_data=agent_capability,
             )
+
+            # If the agent capability command name is already in the interpreter
+            # commands then we need to deconflict the command name by adding a number
+            # to the end of the command name.
+            if agent_capability_command.name in self.commands:
+                deconfliction_number = 1
+                while True:
+                    deconflicted_command_name = (
+                        agent_capability_command.name + f"_{deconfliction_number}"
+                    )
+                    if deconflicted_command_name not in self.commands:
+                        print_warning(
+                            f"The agent capability with command "
+                            f"'{agent_capability_command.name}' is conflicting with "
+                            f"the command of the same name in the interpreter. The "
+                            f"interpreter command name has been deconflicted to "
+                            f"'{deconflicted_command_name}'.",
+                        )
+                        # Update the command name to the deconflicted name for both the
+                        # command object and the agent capability name that is in the
+                        # loop.
+                        conflicted_command = self.commands.pop(
+                            agent_capability_command.name,
+                        )
+                        conflicted_command.name = deconflicted_command_name
+                        self.commands[deconflicted_command_name] = conflicted_command
+                        break
+                    deconfliction_number += 1
+
             self.commands[agent_capability_name] = agent_capability_command
             # Register each agent capability command in the autocompleter.
             self.environment["commands"][agent_capability_name] = (
@@ -74,25 +106,46 @@ class InteractAgentInterpreter(ClientInterpreter):
         all_agents = await self.environment[
             "client_rest_api_connection"
         ].get_all_agents()
+        all_assets = await self.environment[
+            "client_rest_api_connection"
+        ].get_all_assets()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-        for key, value in {
-            command: {agent["agent_id"]: None for agent in all_agents}
-            for command in [
-                "info_agent",
-                "interact_agent",
-            ]
-        }.items():
-            nested_completer_dict[key] = value
+
+        # Register commands that take the agent ID as the first positional argument to
+        # autocomplete with.
+        agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
+        for command in [
+            "info_agent",
+            "info_result",
+            "info_task",
+            "interact_agent",
+            "list_results",
+            "list_tasks",
+            "rename_agent",
+            "redescribe_agent",
+        ]:
+            nested_completer_dict[command] = agent_ids_completion
+
+        # Register commands that take the asset ID as the first positional argument to
+        # autocomplete with.
+        assets_completion = {asset["resource_id"]: None for asset in all_assets}
+        for command in ["download_asset", "info_asset"]:
+            nested_completer_dict[command] = assets_completion
+
+        # Register the help command to autocomplete with all available commands. This
+        # includes all the newly added agent capability commands that are dynamically
+        # added before this method is called.
         nested_completer_dict["help"] = {command: None for command in self.commands}
+
+        # Register each agent capability command to the autocompleter without any
+        # argument completions.
         agent_capabilities = self.environment["agent"]["agent_type"][
             "agent_capabilities"
         ]
-        # Register each agent capability command to the autocompleter on each loop.
         for agent_capability_name in agent_capabilities:
-            # TODO: resolve conflicts with existing client commands.
             nested_completer_dict[agent_capability_name] = {
                 command: None for command in self.commands
             }

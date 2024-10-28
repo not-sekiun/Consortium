@@ -54,11 +54,32 @@ class Listener(BaseListener):
         )
 
         async def handle_agent_registration(request):
+            agent_registration_schema = {
+                "type": "object",
+                "properties": {
+                    "is_admin": {"type": "boolean"},
+                    "os": {"type": "string"},
+                    "version": {"type": "string"},
+                    "arch": {"type": "string"},
+                    "pid": {"type": "integer"},
+                    "locale": {"type": "string"},
+                    "local_host_address": {"type": "string"},
+                    "hostname": {"type": "string"},
+                },
+            }
+
+            try:
+                json_request_body = await request.json()
+                jsonschema.validate(json_request_body, agent_registration_schema)
+            except (json.JSONDecodeError, jsonschema.ValidationError):
+                return web.Response(status=401)
+
             # Only one agent type is supported for this listener type.
             agent = await self.agents_manager.register_new_connected_agent(
                 agent_type=AGENT_TYPE,
                 endpoint=request.remote,
                 remote_host_address=request.remote,
+                **json_request_body,
             )
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
@@ -160,7 +181,7 @@ class Listener(BaseListener):
             return web.Response(status=200)
 
         for url_path in registration_url_paths:
-            app.add_routes([web.get(url_path, handle_agent_registration)])
+            app.add_routes([web.post(url_path, handle_agent_registration)])
         for url_path in tasks_url_paths:
             app.add_routes([web.get(url_path, handle_agent_getting_tasks)])
         for url_path in results_url_paths:

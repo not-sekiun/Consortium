@@ -35,6 +35,14 @@ from consortium.server.server_logging import LoggerType
 
 
 class _AgentsManager:
+    """
+    A class that allows listeners to manage the lifetime of an agent from registration
+    to checking in to deregistration, as well as to manage access to agents registered
+    locally to the specific listener. This class is not meant to be directly imported
+    and used, rather it is used from within the
+    [BaseListener][consortium.framework.base_listener.BaseListener] class.
+    """
+
     def __init__(self):
         self._agents_service = server_singletons.agents_service
         self._agents = {}
@@ -53,8 +61,39 @@ class _AgentsManager:
         locale: str | None = None,
         remote_host_address: str | None = None,
         local_host_address: str | None = None,
+        hostname: str | None = None,
         agent_data: dict[str, Any] | None = None,
     ) -> Agent:
+        """
+        Register a new connected agent with the listener.
+
+        Args:
+            agent_type (BaseAgentType): The agent type of the agent to be registered.
+            name (str): The human-readable name of the agent.
+            description (str): A description of the agent.
+            endpoint (str): A human-readable representation of the network endpoint that
+                uniquely identifies the agent. This is typically the socket address of
+                the agent.
+            is_admin (bool | None): A boolean that indicates whether the agent is
+                running with administrator/superuser privileges.
+            os (str | None): The operating system of the agent.
+            version (str | None): The version of the operating system that the agent is
+                running on.
+            arch (str | None): The architecture of the system that the agent is running
+                on.
+            pid (int | None): The process ID of the agent.
+            locale (str | None): The locale of the system that the agent is running on.
+            remote_host_address (str | None): The remote host address of the agent.
+            local_host_address (str | None): The local host address of the agent.
+            hostname (str | None): The hostname of the system that the agent is running
+                on.
+            agent_data (dict[str, Any] | None): A dictionary of any additional data that
+                the agent may send to the listener.
+
+        Returns:
+            Agent: An object representing the agent that was registered.
+        """
+
         agent = await self._agents_service.create_and_add_agent(
             agent_type=agent_type,
             name=name,
@@ -68,26 +107,85 @@ class _AgentsManager:
             locale=locale,
             remote_host_address=remote_host_address,
             local_host_address=local_host_address,
+            hostname=hostname,
             agent_data=agent_data,
         )
         self._agents[str(agent.agent_id)] = agent
         return agent
 
     async def check_in_connected_agent_by_agent_id(self, agent_id: str) -> None:
+        """
+        Check in a connected agent by its agent ID. This method simply updates the last
+        check-in time of the agent to indicate that the agent is still connected and
+        has called back.
+
+        Args:
+            agent_id (str): The agent ID of the agent to check in. This should be a
+                UUID4 string.
+
+        Raises:
+            ListenerSpecificAgentNotFoundError: Raised if the agent with the specified
+                agent ID is not found.
+
+        Returns:
+            None
+        """
+
         if agent_id not in self._agents:
             raise ListenerSpecificAgentNotFoundError
         await self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
 
     async def deregister_connected_agent_by_agent_id(self, agent_id: str) -> None:
+        """
+        Deregister a connected agent by its agent ID. This method removes the agent from
+        the listener's list of connected agents and also removes the agent from the
+        database. This effectively marks an agent as disconnected.
+
+        Args:
+            agent_id (str): The agent ID of the agent to deregister. This should be a
+                UUID4 string.
+
+        Raises:
+            ListenerSpecificAgentNotFoundError: Raised if the agent with the specified
+                agent ID is not found.
+
+        Returns:
+            None
+        """
+
         if agent_id not in self._agents:
             raise ListenerSpecificAgentNotFoundError
         await self._agents_service.remove_agent_by_agent_id(agent_id=agent_id)
         self._agents.pop(str(agent_id))
 
     def get_all_connected_agents(self) -> list[Agent]:
+        """
+        Get all connected agents that are registered with the specific listener that is
+        using this agent manager.
+
+        Returns:
+            list[Agent]: A list of all connected agents that are registered with the
+                specific listener that is using this agent manager.
+        """
+
         return list(self._agents.values())
 
     def get_connected_agent_by_agent_id(self, agent_id: str) -> Agent:
+        """
+        Get a connected agent by its agent ID for the specific listener that is using
+        this agent manager.
+
+        Args:
+            agent_id (str): The agent ID of the agent to get. This should be a UUID4
+                string.
+
+        Raises:
+            ListenerSpecificAgentNotFoundError: Raised if the agent with the specified
+
+        Returns:
+            Agent: The agent with the specified agent ID.
+        """
+
         try:
             return self._agents[agent_id]
         except KeyError:
@@ -95,6 +193,47 @@ class _AgentsManager:
 
 
 class BaseListener(ABC):
+    """
+    The Abstract Base Class for creating listeners. Any listener that is to be used in
+    the Consortium framework must inherit from this class and implement all of its
+    abstract methods. The listener is responsible for managing the lifecycle of agents,
+    which include: registration/de-registration, check-ins, sending tasks, and receiving
+    results.
+
+    Attributes:
+        listener_id (uuid.UUID): A UUID4 object which serves to act as a unique
+            identifier for the listener. The listener ID serves as the primary
+            identifier of the listener.
+        name (str): The human-readable name of the listener. Note that the listener's
+            name is not used to identify it and hence can be non-unique.
+        description (str): A description of the listener.
+        endpoint (str): A human-readable representation of the network endpoint that
+            uniquely identifies the listener. This is typically the socket address of
+            the listener.
+        listener_type: The listener type that the listener is associated with.
+        parameters (dict[str, Any] | None): A dictionary of parameters that the listener
+            may need for its operation. The available parameters that parameterize the
+            listener are defined in the listener's listener template, which is tied to
+            the listener by its listener type.
+        status (ListenerStatus): The status of the listener, which includes both the
+            state of the listener and any exception information as well if the listener
+            has errored.
+        datetime_created (datetime.datetime): The date and time that the listener was
+            created, or more specifically instantiated.
+        environment (types.SimpleNamespace): A namespace object that allows the
+            listener to store any variables that it wants without potentially clashing
+            with other variables in the listener. This is useful for sharing variables
+            between the listener's user-defined methods.
+        stop_listener_event (asyncio.Event): An asyncio event object that is used to
+            signal to the listener runtime loop to exit gracefully. The implementation
+            of the listener runtime loop should either check this event periodically or
+            specifically block on it and exit once it is set.
+        agents_manager (consortium.framework.base_listener._AgentsManager): A class that
+            allows listeners to manage the lifetime of an agent from registration to
+            checking in to deregistration, as well as to manage access to agents
+            registered locally to the specific listener.
+    """
+
     listener_type: BaseListenerType
 
     def __init__(
@@ -104,6 +243,23 @@ class BaseListener(ABC):
         endpoint: str = "",
         parameters: dict[str, Any] | None = None,
     ) -> None:
+        """
+        The constructor method for the `BaseListener` class. This method creates a
+        listener and is primarily parameterized by the `parameters` dictionary
+        parameter. While the constructor can be called directly, it is recommended to
+        create listeners  through their associated listener templates.
+
+        Args:
+            name (str): The human-readable name of the listener.
+            description (str): A description of the listener.
+            endpoint (str): A human-readable representation of the network endpoint
+                that uniquely identifies the listener. This is typically the socket
+                address of the listener.
+            parameters (dict[str, Any] | None): A dictionary of parameters that the
+                listener may need for its operation. The available parameters that
+                parameterize the listener are defined in the listener's listener
+                template, which is tied to the listener by its listener type.
+        """
         if parameters is None:
             parameters = {}
 
@@ -208,10 +364,110 @@ class BaseListener(ABC):
         )
 
     @abstractmethod
-    async def on_listener_started(self) -> None: ...
+    async def on_listener_started(self) -> None:
+        """
+        This method is called when the listener is started. This method is called after
+        the listener has been initialized and before the listener is running. This
+        method is intended to be overridden by the user to perform any setup that is
+        required before the listener starts running. If the listener is not ready to
+        start - typically failing some precondition - the user can raise a
+        `ListenerStartError` to abort the listener start process.
+
+        Returns:
+            None
+
+        Raises:
+            ListenerStartError: An error that is manually raised by the user to abort
+                the listener start process if preconditions are not met.
+
+        Example:
+            ```python
+            async def on_listener_started(self) -> None:
+                # `self.parameters` is the dictionary of parameters passed into the
+                # listener from the constructor.
+                local_host = self.parameters["local_host"]
+                local_port = self.parameters["local_port"]
+
+                # Try creating a socket to check if the listener can bind to the
+                # provided host and port.
+                try:
+                    test_socket = socket.socket()
+                    test_socket.bind((local_host, local_port))
+                    test_socket.close()
+                except socket.error as exc:
+                    # Raise a ListenerStartError if the listener is unable to bind to
+                    # the provided host and port. This signals to the framework that
+                    # some sort of intentional validation failed as opposed to an
+                    # unhandled exception.
+                    raise ListenerStartError(
+                        f"An error occurred while attempting to start the listener. "
+                        f"Listener was unable to bind to the provided host and port due "
+                        f"to the following socket error: {exc}",
+                    )
+            ```
+        """
 
     @abstractmethod
-    async def on_listener_running(self) -> None: ...
+    async def on_listener_running(self) -> None:
+        """
+        This method is the main runtime loop of the listener. This method is called
+        only after the listener has been started and its `on_listener_started` has run
+        to completion without raising `ListenerStartError`. This method is intended to
+        be overridden by the user to implement the listener's runtime logic. To
+        communicate to the framework that the listener has encountered some runtime
+        error, the user can raise a `ListenerRuntimeError`.
+
+        This method is expected to run indefinitely until the listener is stopped and is
+        responsible for managing the lifecycle of agents, which include:
+        registration/deregistration, check-ins, sending tasks, and receiving results.
+        The runtime loop is expected to periodically check the `stop_listener_event` to
+        determine if it should exit.
+
+        Returns:
+            None
+
+        Raises:
+            ListenerRuntimeError: An error that is manually raised by the user to
+                communicate that the listener has encountered some runtime error. This
+                will automatically be caught and change the listener's status's state
+                to `ERRORED` as opposed to `FATAL` which is reserved for unhandled
+                exceptions.
+
+        Example:
+            ```python
+            async def _handle_agent(self, reader, writer) -> None:
+                # On first callback, we need to register the agent to the agents
+                # service to make the agent available to the rest of the framework. We
+                # do this through the listener's own agents manager.
+                raw_data = await reader.read(1024 * 1024)
+                agent_data = json.loads(data.decode())
+                self.agents_manage.register_new_connected_agent(**agent_data)
+                while True:
+                    # On each subsequent callback we need to update the framework that
+                    # the agent has checked in.
+                    raw_data = await reader.read(1024 * 1024)
+                    agent_data = json.loads(data.decode())
+
+            # Simple TCP socket server that listens for callbacks from agents.
+            async def _listen_for_socket_connections(self):
+                local_host = self.parameters["local_host"]
+                local_port = self.parameters["local_port"]
+
+                server = await asyncio.start_server(
+                    client_connected_cb=self._handle_client_connection,
+                    host=local_host,
+                    port=local_port,
+                )
+
+                async with server:
+                    await server.serve_forever()
+
+            async def on_listener_running(self):
+                while True:
+                    if self.stop_listener_event.is_set():
+                        break
+            ```
+        """
 
     @abstractmethod
     async def on_listener_stopped(self) -> None: ...

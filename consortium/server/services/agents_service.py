@@ -146,7 +146,7 @@ class AgentsService:
         )
         return all_results
 
-    def get_all_successful_results_by_agent_id(
+    def get_all_successful_agent_results_by_agent_id(
         self,
         agent_id: str,
     ) -> list[AgentResultModel]:
@@ -158,7 +158,7 @@ class AgentsService:
         )
         return successful_results
 
-    def get_all_failed_results_by_agent_id(
+    def get_all_failed_agent_results_by_agent_id(
         self,
         agent_id: str,
     ) -> list[AgentResultModel]:
@@ -225,6 +225,50 @@ class AgentsService:
         )
         agent.datetime_last_checked_in = datetime.now()
         self.agents_service_logger.debug(f"Checked in agent {agent!r}")
+
+    async def update_agent_name_by_agent_id(
+        self,
+        agent_id: str,
+        name: str,
+    ) -> None:
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        old_name = agent.name
+        agent.name = name
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_UPDATED,
+                data={"agent_id": str(agent.agent_id)},
+            ),
+        )
+        self.agents_service_logger.info(
+            f"Updated agent name for agent {agent} from '{old_name}' to '{name}'",
+        )
+        self.agents_service_logger.debug(
+            f"Updated agent name for agent {agent!r} from '{old_name}' to '{name}'",
+        )
+
+    async def update_agent_description_by_agent_id(
+        self,
+        agent_id: str,
+        description: str,
+    ) -> None:
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        old_description = agent.description
+        agent.description = description
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_UPDATED,
+                data={"agent_id": str(agent.agent_id)},
+            ),
+        )
+        self.agents_service_logger.info(
+            f"Updated agent description for agent {agent} from '{old_description}' to "
+            f"'{description}'.",
+        )
+        self.agents_service_logger.debug(
+            f"Updated agent description for agent {agent!r} from '{old_description}' "
+            f"to {description}.",
+        )
 
     def delete_queued_agent_task_by_agent_id_and_task_id(
         self,

@@ -1,8 +1,11 @@
 from loguru import logger
+from aiohttp.client_exceptions import ClientConnectorError
+from websockets.exceptions import InvalidHandshake, ConnectionClosed
 
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionAlreadyExistsError,
     ClientSessionNotFoundError,
+    ClientSessionConnectionError,
 )
 
 
@@ -65,7 +68,21 @@ class ClientSessionsService:
         client_session = self.get_client_session_by_client_session_id(
             client_session_id=client_session_id,
         )
-        await client_session.connect()
+        try:
+            await client_session.connect()
+        except (ClientConnectorError, InvalidHandshake, ConnectionClosed) as exc:
+            # The client session attempts to connect to the REST API first before the
+            # websockets server. If the REST API connection fails, the client session
+            # will not attempt to connect to the websockets server. So we only need to
+            # check the case where the REST API connection succeeds but the websockets
+            # connection fails.
+            if client_session.client_rest_api_connection.logged_in:
+                await client_session.client_rest_api_connection.disconnect()
+            raise ClientSessionConnectionError(
+                remote_host=client_session.remote_host,
+                remote_port=client_session.remote_port,
+                error_message=str(exc),
+            )
         self._client_sessions_service_logger.debug(
             f"Connected client session: {client_session!r}",
         )

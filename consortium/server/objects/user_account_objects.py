@@ -90,6 +90,7 @@ class UserPermissions(StrEnum):
         "READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID"
     )
     TASK_AGENT_BY_AGENT_ID = "TASK_AGENT_BY_AGENT_ID"
+    UPDATE_AGENT_BY_AGENT_ID = "UPDATE_AGENT_BY_AGENT_ID"
     DELETE_AGENT_TASK_BY_TASK_ID = "DELETE_AGENT_TASK_BY_TASK_ID"
 
     # Permissions for the /api/events endpoint

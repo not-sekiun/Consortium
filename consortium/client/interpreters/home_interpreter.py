@@ -2,7 +2,7 @@ from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
+from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.home_interpreter_commands import (
     HOME_INTERPRETER_COMMANDS,
 )

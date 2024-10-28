@@ -3,7 +3,7 @@ from typing import Any
 from prompt_toolkit import ANSI, HTML
 from prompt_toolkit.completion import NestedCompleter
 
-from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
+from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.listeners_interpreter_commands import (
     LISTENERS_INTERPRETER_COMMANDS,
 )

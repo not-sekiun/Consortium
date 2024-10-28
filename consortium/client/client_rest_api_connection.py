@@ -390,6 +390,17 @@ class ClientRESTAPIConnection:
         )
 
     @_requires_authentication
+    def get_agent_task_by_agent_id_and_task_id(
+        self,
+        agent_id: str,
+        task_id: str,
+    ):
+        return self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks/{task_id}",
+        )
+
+    @_requires_authentication
     async def get_all_agent_results_by_agent_id(
         self,
         agent_id: str,
@@ -428,6 +439,18 @@ class ClientRESTAPIConnection:
         return self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/results/{result_id}",
+        )
+
+    @_requires_authentication
+    async def update_agent_by_agent_id(
+        self,
+        agent_id: str,
+        new_agent_attributes: dict[str, Any],
+    ) -> dict[str, Any]:
+        return await self._make_request(
+            method="PATCH",
+            url=f"{self._api_base_url}/agents/{agent_id}",
+            json=new_agent_attributes,
         )
 
     # Wrapper methods for the /api/users API endpoint.

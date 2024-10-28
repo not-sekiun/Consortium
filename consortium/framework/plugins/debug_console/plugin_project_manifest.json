@@ -3,5 +3,5 @@
     "filepath": "plugin.py",
     "symbol": "Plugin"
   },
-  "enabled": false
+  "enabled": false 
 }

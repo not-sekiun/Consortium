@@ -1,10 +1,10 @@
 import asyncio
 import sys
 from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator
 from enum import Enum, StrEnum
 from typing import Any
 
+import consortium.server.server_singletons as server_singletons
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
@@ -23,6 +23,48 @@ from consortium.server.models.agent_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
 )
+from consortium.server.objects.repository_objects import (
+    RepositoryDirectory,
+    RepositoryFile,
+)
+
+
+class AgentFileManager:
+    def __init__(self):
+        # Assets service consists of all uploaded files onto the server that are meant
+        # to be read only by agents.
+        self._assets_service = server_singletons.assets_service
+        self._artifacts_service = server_singletons.artifacts_service
+
+    def get_all_assets(self) -> list[RepositoryFile | RepositoryDirectory]:
+        return self._assets_service.get_all_repository_resources()
+
+    def get_asset_by_asset_id(
+        self,
+        asset_id: str,
+    ) -> RepositoryFile | RepositoryDirectory:
+        return self._assets_service.get_repository_resource_by_resource_id(
+            resource_id=asset_id,
+        )
+
+    def get_all_artifacts(self) -> list[RepositoryFile | RepositoryDirectory]:
+        return self._artifacts_service.get_all_repository_resources()
+
+    def get_artifact_by_artifact_id(
+        self,
+        artifact_id: str,
+    ) -> RepositoryFile | RepositoryDirectory:
+        return self._artifacts_service.get_repository_resource_by_resource_id(
+            resource_id=artifact_id,
+        )
+
+    def read_asset_by_asset_id(self, asset_id: str) -> bytes:
+        asset = self.get_asset_by_asset_id(asset_id)
+        return asset.read()
+
+    def write_artifact_by_artifact_id(self, artifact_id: str, data: bytes) -> None:
+        artifact = self.get_artifact_by_artifact_id(artifact_id)
+        artifact.write(data)
 
 
 class SupportedOS(StrEnum):
@@ -67,6 +109,7 @@ class BaseAgentCapability(ABC):
         # essentially to allow us to demultiplex messages coming in over the wire from
         # the listener.
         self.agent_result_messages_queue = asyncio.Queue()
+        self.file_manager = AgentFileManager
 
     def __init_subclass__(cls, **kwargs):
         # Check the existence of a provided agent capability name first so that we can

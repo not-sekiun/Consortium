@@ -14,10 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class RedescribeListenerCommand(BaseCommand):
     name = "redescribe_listener"
-    description = (
-        "Update the description of a listener instance for better organization and "
-        "identification."
-    )
+    description = "Change the description of a specific listener."
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -55,8 +52,8 @@ class RedescribeListenerCommand(BaseCommand):
             )
 
             print_success(
-                f"Listener {listener["name"]} ({listener["listener_id"]}) description "
-                f'updated to: "{parsed_commands.new_description[0]}"',
+                f"Listener '{listener["name"]}' ({listener["listener_id"]}) description "
+                f"updated to: '{parsed_commands.new_description[0]}'",
             )
         except SystemExit:
             pass

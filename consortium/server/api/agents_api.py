@@ -103,6 +103,11 @@ def get_agent_by_agent_id(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
             ).to_pydantic_model(),
         },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
+            ).to_pydantic_model(),
+        },
     },
 )
 def get_all_agent_tasks_by_agent_id(
@@ -127,6 +132,11 @@ def get_all_agent_tasks_by_agent_id(
         404: {
             "model": AgentNotFoundAPIError.from_service_exception(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
     },
@@ -155,6 +165,11 @@ def get_all_queued_agent_tasks_by_agent_id(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
             ).to_pydantic_model(),
         },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
+            ).to_pydantic_model(),
+        },
     },
 )
 def get_all_running_agent_tasks_by_agent_id(
@@ -179,6 +194,11 @@ def get_all_running_agent_tasks_by_agent_id(
         404: {
             "model": AgentNotFoundAPIError.from_service_exception(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
     },
@@ -209,6 +229,11 @@ def get_all_completed_agent_tasks_by_agent_id(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
             ).to_pydantic_model(),
         },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
+            ).to_pydantic_model(),
+        },
     },
 )
 def get_all_agent_results_by_agent_id(
@@ -233,6 +258,11 @@ def get_all_agent_results_by_agent_id(
         404: {
             "model": AgentNotFoundAPIError.from_service_exception(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
     },
@@ -261,6 +291,11 @@ def get_all_successful_agent_results_by_agent_id(
         404: {
             "model": AgentNotFoundAPIError.from_service_exception(
                 service_exception=AgentNotFoundServiceError(agent_id="string"),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
     },
@@ -294,6 +329,11 @@ def get_all_failed_agent_results_by_agent_id(
                 service_exception=AgentTaskNotFoundServiceError(
                     task_id="string",
                 ),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
     },
@@ -331,6 +371,11 @@ def get_agent_tasks_by_agent_id_and_task_id(
                 service_exception=AgentResultNotFoundServiceError(
                     result_id="string",
                 ),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
     },
@@ -412,6 +457,68 @@ async def task_agent_by_agent_id(
     return task
 
 
+@router.patch(
+    "/{agent_id}",
+    responses={
+        200: {"model": AgentModel},
+        404: {
+            "model": AgentNotFoundAPIError.from_service_exception(
+                service_exception=AgentNotFoundServiceError(agent_id="string"),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
+            ).to_pydantic_model(),
+        },
+    },
+)
+async def update_agent_by_agent_id(
+    agent_id: str,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(
+                UserPermissions.UPDATE_AGENT_BY_AGENT_ID,
+            ),
+        ),
+    ],
+    # The only update-able agent attributes are its name, and description within the
+    # agent.
+    name: Annotated[str, Body(embed=True)] = None,
+    description: Annotated[str, Body(embed=True)] = None,
+) -> AgentModel:
+    try:
+        if name is not None:
+            await agents_service.update_agent_name_by_agent_id(
+                agent_id=agent_id,
+                name=name,
+            )
+        if description is not None:
+            await agents_service.update_agent_description_by_agent_id(
+                agent_id=agent_id,
+                description=description,
+            )
+    except AgentNotFoundServiceError as exc:
+        raise AgentNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
+
+    # If the agent ID provided is invalid AND no parameters were passed to be
+    # patched it is possible for the above block to execute and not raise an exception.
+    # So we still need to check for that here.
+    try:
+        agent = agents_service.get_agent_by_agent_id(
+            agent_id=agent_id,
+        )
+    except AgentNotFoundServiceError as exc:
+        raise AgentNotFoundAPIError.from_service_exception(
+            service_exception=exc,
+        )
+
+    return AgentModel(**agent.to_json())
+
+
 @router.delete(
     "/{agent_id}/tasks/queued/{task_id}",
     responses={
@@ -419,6 +526,11 @@ async def task_agent_by_agent_id(
         404: {
             "model": AgentTaskNotFoundAPIError.from_service_exception(
                 service_exception=AgentTaskNotFoundServiceError(task_id="string"),
+            ).to_pydantic_model(),
+        },
+        422: {
+            "model": UnprocessableEntityError(
+                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model(),
         },
     },

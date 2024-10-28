@@ -31,6 +31,67 @@ class InfoAgentCommand(BaseCommand):
             nargs=1,
         )
 
+    @staticmethod
+    async def display_agent_info_from_agent_id(
+        client_rest_api_connection: "ClientRESTAPIConnection",
+        agent_id: str,
+    ) -> None:
+        agent = await client_rest_api_connection.get_agent_by_agent_id(
+            agent_id,
+        )
+
+        table = Table(title="Agent Information")
+        table.add_column("Information")
+        table.add_column("Data")
+        table.add_row(
+            "Agent ID",
+            agent["agent_id"],
+        )
+        table.add_row("Name", agent["name"])
+        table.add_row("Description", agent["description"])
+        table.add_row("Endpoint", agent["endpoint"])
+        agent_type_table = Table()
+        agent_type_table.add_column("Information")
+        agent_type_table.add_column("Data")
+        agent_type_table.add_row(
+            "Agent Type ID",
+            agent["agent_type"]["agent_type_id"],
+        )
+        agent_type_table.add_row(
+            "Name",
+            agent["agent_type"]["name"],
+        )
+        agent_type_table.add_row(
+            "Compatible Listener Types",
+            "\n".join(
+                [
+                    f"'{listener_type["name"]}' ({listener_type["listener_type_id"]})"
+                    for listener_type in agent["agent_type"][
+                        "compatible_listener_types"
+                    ]
+                ],
+            ),
+        )
+        table.add_row("Agent Type", agent_type_table)
+        table.add_row("Running As Admin", str(agent["is_admin"]))
+        table.add_row("Operating System", agent["os"])
+        table.add_row("System Version", agent["version"])
+        table.add_row("System Arch", agent["arch"])
+        table.add_row("Process ID", str(agent["pid"]))
+        table.add_row("System Locale", agent["locale"])
+        table.add_row("Remote Host Address", agent["remote_host_address"])
+        table.add_row("Local Host Address", agent["local_host_address"])
+        table.add_row("First Checked In", agent["datetime_first_checked_in"])
+        table.add_row("Last Checked In", agent["datetime_last_checked_in"])
+        agent_data_table = Table()
+        agent_data_table.add_column("Information")
+        agent_data_table.add_column("Data")
+        for key, value in agent["agent_data"].items():
+            agent_data_table.add_row(key, str(value))
+        table.add_row("Agent Data", agent_data_table)
+
+        CONSOLE.print(table)
+
     async def run_command(
         self,
         command_context: CommandContext,
@@ -40,64 +101,10 @@ class InfoAgentCommand(BaseCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-            agent = await client_rest_api_connection.get_agent_by_agent_id(
-                parsed_args.agent_id[0],
+            await self.display_agent_info_from_agent_id(
+                client_rest_api_connection=client_rest_api_connection,
+                agent_id=parsed_args.agent_id[0],
             )
-
-            table = Table(title="Agent Information")
-            table.add_column("Information")
-            table.add_column("Data")
-            table.add_row(
-                "Agent ID",
-                agent["agent_id"],
-            )
-            table.add_row("Name", agent["name"])
-            table.add_row("Description", agent["description"])
-            table.add_row("Endpoint", agent["endpoint"])
-            agent_type_table = Table()
-            agent_type_table.add_column("Information")
-            agent_type_table.add_column("Data")
-            agent_type_table.add_row(
-                "Agent Type ID",
-                agent["agent_type"]["agent_type_id"],
-            )
-            agent_type_table.add_row(
-                "Name",
-                agent["agent_type"]["name"],
-            )
-            agent_type_table.add_row(
-                "Compatible Listener Types",
-                "\n".join(
-                    [
-                        listener_type["name"]
-                        + " ("
-                        + listener_type["listener_type_id"]
-                        + ")"
-                        for listener_type in agent["agent_type"][
-                            "compatible_listener_types"
-                        ]
-                    ],
-                ),
-            )
-            table.add_row("Agent Type", agent_type_table)
-            table.add_row("Running As Admin", agent["is_admin"])
-            table.add_row("Operating System", agent["os"])
-            table.add_row("System Version", agent["version"])
-            table.add_row("System Arch", agent["arch"])
-            table.add_row("Process ID", agent["pid"])
-            table.add_row("System Locale", agent["locale"])
-            table.add_row("Remote Host Address", agent["remote_host_address"])
-            table.add_row("Local Host Address", agent["local_host_address"])
-            table.add_row("First Checked In", agent["datetime_first_checked_in"])
-            table.add_row("Last Checked In", agent["datetime_last_checked_in"])
-            agent_data_table = Table(title="Agent Data")
-            agent_data_table.add_column("Information")
-            agent_data_table.add_column("Data")
-            for key, value in agent["agent_data"].items():
-                agent_data_table.add_row(key, value)
-            table.add_row("Agent Data", agent_data_table)
-
-            CONSOLE.print(table)
         except SystemExit:
             pass
 

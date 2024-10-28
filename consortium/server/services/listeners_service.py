@@ -169,7 +169,10 @@ class ListenersService:
             ),
         )
         self.listeners_service_logger.info(
-            f"Updated name for listener {listener}: '{old_name}' -> '{name}'",
+            f"Updated name for listener {listener} from '{old_name}' to '{name}'.",
+        )
+        self.listeners_service_logger.debug(
+            f"Updated name for listener {listener!r} from '{old_name}' to '{name}'.",
         )
         return listener
 
@@ -188,8 +191,12 @@ class ListenersService:
             ),
         )
         self.listeners_service_logger.info(
-            f"Updated description for listener {listener}: '{old_description}' -> "
-            f"'{description}'",
+            f"Updated description for listener {listener} from '{old_description}' to "
+            f"'{description}'.",
+        )
+        self.listeners_service_logger.debug(
+            f"Updated description for listener {listener!r}: from '{old_description}' "
+            f"to '{description}'.",
         )
         return listener
 
@@ -270,7 +277,10 @@ class ListenersService:
             ),
         )
         self.listeners_service_logger.info(
-            f"Updated parameters for listeners {listener}: {parameters}",
+            f"Updated parameters for listeners {listener} to {parameters}",
+        )
+        self.listeners_service_logger.debug(
+            f"Updated parameters for listeners {listener!r} to {parameters}",
         )
         return listener
 

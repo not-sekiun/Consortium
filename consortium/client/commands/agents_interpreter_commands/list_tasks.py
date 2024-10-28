@@ -37,6 +37,7 @@ class ListTasksCommand(BaseCommand):
             "agent_id",
             help="The agent ID of the agent to list tasks for.",
             type=str,
+            nargs=1,
         )
         parser.add_argument(
             "-q",
@@ -57,6 +58,61 @@ class ListTasksCommand(BaseCommand):
             action="store_true",
         )
 
+    @staticmethod
+    async def _list_tasks_from_agent_id(
+        client_rest_api_connection: "ClientRESTAPIConnection",
+        display_task_status_queued: bool,
+        display_task_status_running: bool,
+        display_task_status_completed: bool,
+        agent_id: str,
+    ) -> None:
+        agent_tasks = []
+        if (
+            not display_task_status_queued
+            and not display_task_status_running
+            and not display_task_status_completed
+        ):
+            agent_tasks += (
+                await client_rest_api_connection.get_all_agent_tasks_by_agent_id(
+                    agent_id=agent_id,
+                )
+            )
+        if display_task_status_queued:
+            agent_tasks += (
+                await client_rest_api_connection.get_all_queued_agent_tasks_by_agent_id(
+                    agent_id=agent_id,
+                )
+            )
+        if display_task_status_running:
+            agent_tasks += await client_rest_api_connection.get_all_running_agent_tasks_by_agent_id(
+                agent_id=agent_id,
+            )
+        if display_task_status_completed:
+            agent_tasks += await client_rest_api_connection.get_all_completed_agent_tasks_by_agent_id(
+                agent_id=agent_id,
+            )
+
+        table = Table(title="Agent Tasks")
+        table.add_column("Task ID")
+        table.add_column("Command")
+        table.add_column("Arguments")
+        table.add_column("Status")
+        for agent_task in agent_tasks:
+            table.add_row(
+                agent_task["task_id"],
+                agent_task["command"],
+                ", ".join(
+                    [
+                        f"{key}={value!r}"
+                        for key, value in agent_task["arguments"].items()
+                    ],
+                ),
+                format_agent_task_state_string_with_color(
+                    agent_task_state_string=agent_task["state"],
+                ),
+            )
+        CONSOLE.print(table)
+
     async def run_command(
         self,
         command_context: CommandContext,
@@ -66,45 +122,13 @@ class ListTasksCommand(BaseCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-            if parsed_args.queued:
-                agent_tasks = await client_rest_api_connection.get_all_queued_agent_tasks_by_agent_id(
-                    agent_id=parsed_args.agent_id,
-                )
-            elif parsed_args.running:
-                agent_tasks = await client_rest_api_connection.get_all_running_agent_tasks_by_agent_id(
-                    agent_id=parsed_args.agent_id,
-                )
-            elif parsed_args.completed:
-                agent_tasks = await client_rest_api_connection.get_all_completed_agent_tasks_by_agent_id(
-                    agent_id=parsed_args.agent_id,
-                )
-            else:
-                agent_tasks = (
-                    await client_rest_api_connection.get_all_agent_tasks_by_agent_id(
-                        agent_id=parsed_args.agent_id,
-                    )
-                )
-
-            table = Table(title="Agent Tasks")
-            table.add_column("Task ID")
-            table.add_column("Command")
-            table.add_column("Arguments")
-            table.add_column("Status")
-            for agent_task in agent_tasks:
-                table.add_row(
-                    agent_task["task_id"],
-                    agent_task["command"],
-                    ", ".join(
-                        [
-                            f"{key}={value!r}"
-                            for key, value in agent_task["arguments"].items()
-                        ],
-                    ),
-                    format_agent_task_state_string_with_color(
-                        agent_task_state_string=agent_task["state"],
-                    ),
-                )
-            CONSOLE.print(table)
+            await self._list_tasks_from_agent_id(
+                client_rest_api_connection=client_rest_api_connection,
+                display_task_status_queued=parsed_args.queued,
+                display_task_status_running=parsed_args.running,
+                display_task_status_completed=parsed_args.completed,
+                agent_id=parsed_args.agent_id[0],
+            )
         except SystemExit:
             pass
 

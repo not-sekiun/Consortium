@@ -6,7 +6,7 @@ import jsonschema
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH
 from consortium.client.exceptions.client_sessions_service_exceptions import (
-    ClientSessionCreationError,
+    ClientSessionConnectionError,
 )
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
@@ -177,7 +177,7 @@ class ConnectCommand(BaseCommand):
                     f"Successfully logged into server "
                     f"{remote_host}:{remote_port} as '{username}'.",
                 )
-            except ClientSessionCreationError as exc:
+            except ClientSessionConnectionError as exc:
                 print_error(exc)
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
         except SystemExit:

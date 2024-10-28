@@ -106,10 +106,10 @@ poetry run python consortium.py server
 Then open a web browser to the API endpoints.
 
 #### REST API documentation for the /docs endpoint (http://localhost:9999/docs by default)
-![REST API documentation for "docs" endpoint](docs/assets/rest_api_documentation_doc_endpoint.png)
+![REST API documentation for "docs" endpoint](docs/readme_assets/rest_api_documentation_doc_endpoint.png)
 
 #### REST API documentation for the /redoc endpoint (http://localhost:9999/redoc by default)
-![REST API documentation for "redoc" endpoint](docs/assets/rest_api_documentation_redoc_endpoint.png)
+![REST API documentation for "redoc" endpoint](docs/readme_assets/rest_api_documentation_redoc_endpoint.png)
 
 ### Server Events Websocket API Documentation
 The Consortium server provides a WebSocket API for server-initiated push events. While
@@ -117,7 +117,7 @@ this is considered part of its API, it is _not_ documented by FastAPI due to iss
 with the OpenAPI specification. As such the WebSocket API is documented at the
 Consortium wiki's Events WebSocket API page.
 
-![WebSocket API documentation for mkdocs](docs/assets/websockets_api_mkdocs.png)
+![WebSocket API documentation for mkdocs](docs/readme_assets/websockets_api_mkdocs.png)
 
 This documentation is hosted locally and included with the repository. To view it
 locally, install `mkdocs` through poetry (it should already be included when installing

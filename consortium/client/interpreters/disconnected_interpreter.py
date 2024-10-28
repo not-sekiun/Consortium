@@ -5,7 +5,7 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
+from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.disconnected_interpreter_commands import (
     DISCONNECTED_INTERPRETER_COMMANDS,
 )

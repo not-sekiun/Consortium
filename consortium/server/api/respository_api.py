@@ -7,6 +7,7 @@
 # importing each factory function as required and adding its output to the router
 # object.
 import os
+import pathlib
 import shutil
 import tempfile
 from collections.abc import Generator
@@ -176,14 +177,14 @@ def create_download_repository_resource_by_resource_id_endpoint(
 
         if asset.is_directory:
             with tempfile.TemporaryDirectory() as temp_dir_path:
+                temp_archive_file = pathlib.Path(temp_dir_path, asset.name)
                 shutil.make_archive(
-                    base_name=asset.name,
+                    base_name=str(temp_archive_file.resolve()),
                     format="zip",
-                    root_dir=temp_dir_path,
-                    base_dir=asset.path,
+                    root_dir=asset.path,
                 )
                 return FileResponse(
-                    path=str(asset.path),
+                    path=str(temp_archive_file.with_suffix(".zip").resolve()),
                     filename=asset.name if asset.name else str(asset.resource_id),
                 )
         else:

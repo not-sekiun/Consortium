@@ -53,8 +53,8 @@ class RenameListenerCommand(BaseCommand):
             )
 
             print_success(
-                f'Listener "{listener["name"]}" ({listener["listener_id"]}) renamed '
-                f'to "{parsed_commands.new_name[0]}"',
+                f"Listener '{listener["name"]}' ({listener["listener_id"]}) renamed "
+                f"to '{parsed_commands.new_name[0]}'",
             )
         except SystemExit:
             pass

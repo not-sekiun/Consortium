@@ -40,16 +40,12 @@ class InteractAgentCommand(BaseCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-            try:
-                agent = await client_rest_api_connection.get_agent_by_agent_id(
-                    parsed_args.agent_id[0],
-                )
-            except ValueError as exc:
-                print_error(str(exc))
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+            agent = await client_rest_api_connection.get_agent_by_agent_id(
+                parsed_args.agent_id[0],
+            )
 
             print_success(
-                f"Interacting with agent {agent["name"]} ({agent["agent_id"]}).",
+                f"Interacting with agent '{agent["name"]}' ({agent["agent_id"]}).",
             )
 
             return ReturnStatus(

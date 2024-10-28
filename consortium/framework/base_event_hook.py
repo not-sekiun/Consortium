@@ -24,19 +24,18 @@ class BaseEventHook(ABC):
 
     def __init__(self):
         self.event_hook_id = uuid.uuid4()
-
-        # TODO: Make services accessible through here as well like plugins.
-
         self.event_hook_logger = logger.bind(
             logger_name=f"Event Hook {self}",
         )
         self.environment = SimpleNamespace()
-        self.server_services = SimpleNamespace()
-        for attr_name, attr_value in server_singletons.__dict__.items():
-            # server_singletons also contains a reference to the server which we don't
-            # want to set on the plugin.
-            if attr_name != "server" and attr_name.endswith("_service"):
-                setattr(self.server_services, attr_name, attr_value)
+        # Dynamically construct the `server_services` simple namespace object by
+        # iterating over the attributes of the `server_singletons` module and adding
+        # any object with an attribute that ends with `_service`.
+        services_dict = {}
+        for attr in dir(server_singletons):
+            if attr.endswith("_service"):
+                services_dict[attr] = getattr(server_singletons, attr)
+        self.server_services = SimpleNamespace(**services_dict)
         self.event_hook_project_folder = Path(__file__).parent
 
     def __init_subclass__(cls, **kwargs):

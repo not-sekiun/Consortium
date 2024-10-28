@@ -6,7 +6,7 @@ from prompt_toolkit.completion import NestedCompleter
 from consortium.client.commands.agents_interpreter_commands import (
     AGENTS_INTERPRETER_COMMANDS,
 )
-from consortium.client.commands.core_commands.core_commands import CORE_COMMANDS
+from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.repl_interface.client_interpreter import ClientInterpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
@@ -42,17 +42,31 @@ class AgentsInterpreter(ClientInterpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-        agents_completion = {agent["agent_id"]: None for agent in all_agents}
+
+        # Register commands that take the agent ID as the first positional argument to
+        # autocomplete with.
+        agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
         for command in [
             "info_agent",
+            "info_result",
+            "info_task",
             "interact_agent",
-            "list_tasks",
             "list_results",
+            "list_tasks",
+            "rename_agent",
+            "redescribe_agent",
         ]:
-            nested_completer_dict[command] = agents_completion
+            nested_completer_dict[command] = agent_ids_completion
+
+        # Register commands that take the asset ID as the first positional argument to
+        # autocomplete with.
         assets_completion = {asset["resource_id"]: None for asset in all_assets}
         for command in ["download_asset", "info_asset"]:
             nested_completer_dict[command] = assets_completion
+
+        # Register the help command to autocomplete with all available commands. This
+        # includes all the newly added agent capability commands that are dynamically
+        # added before this method is called.
         nested_completer_dict["help"] = {command: None for command in self.commands}
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(

@@ -83,7 +83,7 @@ class PingCapability(BaseAgentCapability):
         ping_latencies = []
         for _ in range(iterations):
             try:
-                ping_started_at = datetime.now()
+                datetime_ping_started = datetime.now()
                 if timeout is None:
                     _ = await self.send_agent_task_message_and_recv_agent_result_message(
                         agent_task_message,
@@ -96,7 +96,7 @@ class PingCapability(BaseAgentCapability):
                         timeout=timeout,
                     )
                 ping_ended_at = datetime.now()
-                ping_latencies.append(ping_ended_at - ping_started_at)
+                ping_latencies.append(ping_ended_at - datetime_ping_started)
             except asyncio.TimeoutError:
                 ping_latencies.append(None)
 
