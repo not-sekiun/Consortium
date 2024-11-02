@@ -1,4 +1,4 @@
-# The project is currently undergoing a major rewrite for version 3, the current version, version 2 will be made obsolete
+# The project is currently undergoing a major rewrite for version 3, the current version, version 2 will be made obsolete. See ![here](https://github.com/not-sekiun/PyIris/issues/45#issuecomment-2452972071) for more info.
 
 # The PyIris Project (Updates coming soon refer to ROADMAP.md)
 The PyIris project is a modular remote access trojan toolkit written completely in python.
