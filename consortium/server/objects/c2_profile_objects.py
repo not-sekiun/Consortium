@@ -3,11 +3,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Type
 
-from consortium.framework.base_agent_generator import BaseAgentGenerator
-from consortium.framework.base_agent_template import BaseAgentTemplate
-from consortium.framework.base_listener import BaseListener
-from consortium.framework.base_listener_template import BaseListenerTemplate
-from consortium.framework.c2_types import BaseAgentType, BaseListenerType
+from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
+from consortium.framework.agents.base_agent_template import BaseAgentTemplate
+from consortium.framework.agents.base_agent_type import BaseAgentType
+from consortium.framework.listeners.base_listener import BaseListener
+from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
+from consortium.framework.listeners.base_listener_type import BaseListenerType
 
 
 @dataclass

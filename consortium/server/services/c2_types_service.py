@@ -1,6 +1,7 @@
 from loguru import logger
 
-from consortium.framework.c2_types import BaseAgentType, BaseListenerType
+from consortium.framework.agents.base_agent_type import BaseAgentType
+from consortium.framework.listeners.base_listener_type import BaseListenerType
 from consortium.server.exceptions.service_exceptions.c2_types_service_exceptions import (
     AgentTypeNotFoundError,
     ListenerTypeNotFoundError,

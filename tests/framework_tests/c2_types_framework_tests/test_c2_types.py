@@ -1,6 +1,7 @@
 import pytest
 
-from consortium.framework.c2_types import BaseAgentType, BaseListenerType
+from consortium.framework.agents.base_agent_type import BaseAgentType
+from consortium.framework.listeners.base_listener_type import BaseListenerType
 from consortium.server.exceptions.framework_exceptions.c2_types_framework_exceptions import (
     AgentTypeAlreadyExistsError,
     AgentTypeConfigurationError,

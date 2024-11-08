@@ -5,7 +5,8 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
-from consortium.framework.base_event_hook import BaseEventHook
+from consortium.framework.event_hooks.base_event_hook import BaseEventHook
+from consortium.framework.event_hooks.event import Event, EventType
 from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exceptions import (
     EventHooksFrameworkError,
 )
@@ -20,7 +21,6 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
     InvalidEventHookProjectManifestFileJSONError,
     InvalidEventHookProjectManifestFileSchemaError,
 )
-from consortium.server.objects.event_objects import Event, EventType
 from consortium.server.server_config import (
     CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
     CONSORTIUM_HOME_DIRECTORY_PATH,

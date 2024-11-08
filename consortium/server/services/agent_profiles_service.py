@@ -5,9 +5,9 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
-from consortium.framework.base_agent_generator import BaseAgentGenerator
-from consortium.framework.base_agent_template import BaseAgentTemplate
-from consortium.framework.c2_types import BaseAgentType
+from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
+from consortium.framework.agents.base_agent_template import BaseAgentTemplate
+from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
     AgentProfileLoadError,
     AgentProfileNotFoundError,

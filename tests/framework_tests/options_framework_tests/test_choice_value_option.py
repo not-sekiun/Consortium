@@ -1,7 +1,7 @@
 import pytest
 
 from consortium.framework.options import ChoiceValueOption
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+from consortium.framework.options.exceptions import (
     OptionConfigurationError,
     OptionValueValidationError,
     RequiredOptionValueNotSetError,

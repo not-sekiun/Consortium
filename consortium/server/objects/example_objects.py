@@ -1,7 +1,8 @@
 # This file contains example objects that are used to parameterize pydantic models that
 # are declared in the response models. These objects are solely used for displaying
 # examples within the swagger UI.
-from consortium.framework.c2_types import BaseAgentType, BaseListenerType
+from consortium.framework.agents.base_agent_type import BaseAgentType
+from consortium.framework.listeners.base_listener_type import BaseListenerType
 
 
 class _ExampleListenerType(BaseListenerType):

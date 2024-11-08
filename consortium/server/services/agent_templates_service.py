@@ -1,6 +1,6 @@
 from loguru import logger
 
-from consortium.framework.base_agent_template import BaseAgentTemplate
+from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
     AgentTemplateNotFoundError,
 )

@@ -24,12 +24,12 @@ from consortium.client.commands.use_agent_template_interpreter_commands.use_agen
 )
 
 USE_AGENT_TEMPLATE_INTERPRETER_COMMANDS = [
-    CreateGeneratorCommand,
-    InfoAgentTemplateCommand,
-    InfoAgentTemplateOptionsCommand,
-    ListOptionsAgentTemplateCommand,
-    ResetAgentTemplateOptionCommand,
-    SetAgentTemplateOptionCommand,
-    UnsetAgentTemplateOptionCommand,
-    UseAgentTemplateCommand,
+    CreateGeneratorCommand(),
+    InfoAgentTemplateCommand(),
+    InfoAgentTemplateOptionsCommand(),
+    ListOptionsAgentTemplateCommand(),
+    ResetAgentTemplateOptionCommand(),
+    SetAgentTemplateOptionCommand(),
+    UnsetAgentTemplateOptionCommand(),
+    UseAgentTemplateCommand(),
 ]

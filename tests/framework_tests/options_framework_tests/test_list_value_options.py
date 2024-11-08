@@ -1,7 +1,7 @@
 import pytest
 
 from consortium.framework.options import ListValueOption
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+from consortium.framework.options.exceptions import (
     OptionConfigurationError,
     OptionValueValidationError,
     RequiredOptionValueNotSetError,
@@ -158,6 +158,14 @@ def test_to_json():
         "default_value": None,
         "allow_duplicates": False,
         "value_type": "int",
+        "minimum_length": None,
+        "maximum_length": None,
+        "lesser_than": None,
+        "greater_than": None,
+        "lesser_than_or_equal_to": None,
+        "greater_than_or_equal_to": None,
+        "minimum_elements": None,
+        "maximum_elements": None,
         "validating_regex": r"^\d+$",
         "validating_function": (
             "This is a multiline test docstring that should be formatted into a single "

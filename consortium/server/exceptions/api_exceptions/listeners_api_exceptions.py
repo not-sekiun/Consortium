@@ -26,7 +26,7 @@ Exception hierarchy for the REST API endpoint at /api/listeners.
 
 from typing import Any
 
-from consortium.framework.c2_types import BaseListenerType
+from consortium.framework.listeners.base_listener_type import BaseListenerType
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
     BaseAPIException,
 )

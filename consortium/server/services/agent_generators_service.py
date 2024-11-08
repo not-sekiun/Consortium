@@ -3,7 +3,9 @@ from typing import Any
 
 from loguru import logger
 
-from consortium.framework.base_agent_generator import BaseAgentGenerator
+from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
+from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.options.exceptions import OptionValueValidationError
 from consortium.server.exceptions.framework_exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorAlreadyRunningError as AgentGeneratorAlreadyRunningFrameworkError,
     AgentGeneratorNotRunningError as AgentGeneratorNotRunningFrameworkError,
@@ -14,9 +16,6 @@ from consortium.server.exceptions.framework_exceptions.agent_generators_framewor
 from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
     AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundFrameworkError,
     AgentTemplateOptionValueError as AgentTemplateOptionValueFrameworkError,
-)
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
-    OptionValueValidationError,
 )
 from consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions import (
     AgentGeneratorAlreadyExistsError,
@@ -32,7 +31,6 @@ from consortium.server.exceptions.service_exceptions.agent_generators_service_ex
     InvalidAgentGeneratorParameterValueError,
 )
 from consortium.server.objects.agent_generator_objects import AgentGeneratorState
-from consortium.server.objects.event_objects import Event, EventType
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.events_service import EventsService
 

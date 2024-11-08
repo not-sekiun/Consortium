@@ -1,10 +1,15 @@
 """
-- BaseFrameworkException: Base class for all framework related exceptions.
-  - ListenerStartError: Raised when an error occurs while attempting to start the
-  listener.
-  - ListenerRuntimeError: Raised when an error occurs while the listener is running.
-  - ListenerStopError: Raised when an error occurs while attempting to stop the
-  listener.
+This module defines all the exceptions that are either specifically raised by the
+listener to communicate to the framework or are caught by the listener to handle
+an error condition from the framework. The overall exception hierarchy is as follows:
+
+- [`BaseFrameworkException`]
+    - [`BaseRaiseOnlyFrameworkException`]
+        - [`ListenerStartError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerStartError]
+        - [`ListenerRuntimeError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerRuntimeError]
+        - [`ListenerStopError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerStopError]
+    - [`BaseCatchOnlyFrameworkException`]
+        - [`ListenerSpecificAgentNotFoundError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerSpecificAgentNotFoundError]
 """
 
 from typing import Any
@@ -16,6 +21,10 @@ from consortium.framework.exceptions.base_framework_exception import (
 
 
 class ListenerStartError(BaseRaiseOnlyFrameworkException):
+    """
+    Raised when an error occurs while attempting to start the listener.
+    """
+
     def __init__(
         self,
         message: str = "An error occurred while attempting to start the listener.",
@@ -28,6 +37,10 @@ class ListenerStartError(BaseRaiseOnlyFrameworkException):
 
 
 class ListenerRuntimeError(BaseRaiseOnlyFrameworkException):
+    """
+    Raised when an error occurs while the listener is running.
+    """
+
     def __init__(
         self,
         message: str = "An error occurred while the listener was running.",
@@ -40,6 +53,10 @@ class ListenerRuntimeError(BaseRaiseOnlyFrameworkException):
 
 
 class ListenerStopError(BaseRaiseOnlyFrameworkException):
+    """
+    Raised when an error occurs while attempting to stop the listener.
+    """
+
     def __init__(
         self,
         message: str = "An error occurred while attempting to stop the listener.",
@@ -52,6 +69,13 @@ class ListenerStopError(BaseRaiseOnlyFrameworkException):
 
 
 class ListenerSpecificAgentNotFoundError(BaseCatchOnlyFrameworkException):
+    """
+    Raised when the requested agent is not found with the provided agent ID when
+    attempting a specific operation with the particular
+    [agents manager object][consortium.server.objects.listener_objects.AgentsManager]
+    that is specific to a [listener object][consortium.framework.base_listener.BaseListener].
+    """
+
     def __init__(
         self,
         agent_id: str,

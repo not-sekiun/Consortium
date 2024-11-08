@@ -7,10 +7,8 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
-from consortium.framework.base_plugin import BasePlugin
-from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
-    PluginsFrameworkError,
-)
+from consortium.framework.plugins.base_plugin import BasePlugin
+from consortium.framework.plugins.exceptions import PluginsFrameworkError
 from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
     InternalPluginProjectError,
     InternalPluginStopError,
@@ -25,7 +23,7 @@ from consortium.server.exceptions.service_exceptions.plugins_service_exceptions 
     PluginStopTimeoutError,
     PluginUnloadError,
 )
-from consortium.server.objects.plugin_objects import PluginState
+from consortium.framework.plugins.plugin_status import PluginState
 from consortium.server.server_config import (
     CONSORTIUM_HOME_DIRECTORY_PATH,
     CONSORTIUM_PLUGINS_DIRECTORY_PATH,

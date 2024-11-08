@@ -27,9 +27,7 @@ Errors for the endpoint /api/agent-generators.
    generator operation.
 """
 
-from typing import Any
-
-from consortium.framework.c2_types import BaseAgentType
+from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
     BaseAPIException,
 )

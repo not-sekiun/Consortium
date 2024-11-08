@@ -2,22 +2,64 @@ from typing import Any
 
 
 class BaseFrameworkException(Exception):
+    """
+    Base exception for all framework related errors.
+
+    Attributes:
+        message (str):
+            A human-readable error message.
+    """
+
     def __init__(self, message: str):
         self.message = message
+        """
+        A human-readable error message.
+        """
         super().__init__(message)
 
 
 class BaseRaiseOnlyFrameworkException(BaseFrameworkException):
+    """
+    Base exception for all framework related errors that should only be **raised** from
+    within a framework component to explicitly communicate an error condition to the
+    calling framework.
+
+    Attributes:
+        message (str):
+            A human-readable error message.
+        detail (Any):
+            Any additional information about the error to be communicated back up to
+            the calling framework.
+    """
+
     def __init__(self, message: str, detail: Any = None):
         self.message = message
+        """
+        A human-readable error message.
+        """
         self.detail = detail
+        """
+        Any additional information about the error to be communicated back up to
+        the calling framework.
+        """
         super().__init__(message)
 
     def to_json(self) -> dict[str, Any]:
+        """
+        Convert the exception to a JSON serializable dictionary.
+
+        Returns:
+            The JSON serializable dictionary representation of the exception.
+        """
         return {
             "message": self.message,
             "detail": self.detail,
         }
 
 
-class BaseCatchOnlyFrameworkException(BaseFrameworkException): ...
+class BaseCatchOnlyFrameworkException(BaseFrameworkException):
+    """
+    Base exception for all framework related errors that should only be **caught** from
+    within a framework component to explicitly handle an error condition that arose
+    from the calling framework.
+    """

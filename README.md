@@ -1,4 +1,13 @@
+<p align="center">
+  <img width="20%" src="docs/assets/logo.png">
+</p>
+
+<p align="center"><i>Reinventing the wheel for the very last time</i></p>
+
+---
+
 # Consortium
+
 Consortium is a _programming language agnostic_, and _networking protocol agnostic_
 command and control (C2) framework that is designed to be _collaborative_,
 _highly extensible_, and _modular_. The framework ships with its own listeners and
@@ -21,6 +30,7 @@ listeners and agents.
 > problems, feature requests, or bug reports in the GitHub issues section.
 
 ## ⚙️ Features
+
 - **📡 Asynchronous multiplayer/multiserver support** - Multiple clients can connect to
 the same server to perform all C2 related operations, including the sharing of agent
 sessions. The default client allows the ability to seamlessly switch between different
@@ -39,7 +49,9 @@ with the server through its REST API.
 and more!
 
 ## ✨ Quickstart
+
 ### Prerequisites
+
 Consortium requires Python 3.12+ and uses the Poetry package manager to handle its
 Python dependencies. Git is recommended for installing and updating the framework, no
 binary releases will be provided.
@@ -51,6 +63,7 @@ binary releases will be provided.
 > Make sure your installed tools are visible on your system PATH.
 
 ### Installation
+
 1. Clone the Consortium repository with `git` and `cd` into its root folder.
 ```bash
 git clone https://github.com/not-sekiun/Consortium.git
@@ -63,6 +76,7 @@ poetry install
 ```
 
 ### Starting the Framework
+
 The Consortium C2 framework runs on a client-server model. To use the
 framework the server must be started before starting any compatible client
 to connect to the server.
@@ -78,6 +92,7 @@ poetry run python consortium.py client
 ```
 
 ### Updating
+
 1. In the project's root folder, pull the new repository changes with `git`.
 ```shell
 git pull
@@ -89,7 +104,9 @@ poetry install
 ```
 
 ## 📚 Documentation
+
 ### Server REST API Documentation
+
 > [!Note]
 > The REST API documentation is only accessible to the local host.
 
@@ -106,18 +123,21 @@ poetry run python consortium.py server
 Then open a web browser to the API endpoints.
 
 #### REST API documentation for the /docs endpoint (http://localhost:9999/docs by default)
-![REST API documentation for "docs" endpoint](docs/readme_assets/rest_api_documentation_doc_endpoint.png)
+
+![REST API documentation for "docs" endpoint](docs/assets/rest_api_documentation_doc_endpoint.png)
 
 #### REST API documentation for the /redoc endpoint (http://localhost:9999/redoc by default)
-![REST API documentation for "redoc" endpoint](docs/readme_assets/rest_api_documentation_redoc_endpoint.png)
+
+![REST API documentation for "redoc" endpoint](docs/assets/rest_api_documentation_redoc_endpoint.png)
 
 ### Server Events Websocket API Documentation
+
 The Consortium server provides a WebSocket API for server-initiated push events. While
 this is considered part of its API, it is _not_ documented by FastAPI due to issues
 with the OpenAPI specification. As such the WebSocket API is documented at the
 Consortium wiki's Events WebSocket API page.
 
-![WebSocket API documentation for mkdocs](docs/readme_assets/websockets_api_mkdocs.png)
+![WebSocket API documentation for mkdocs](docs/assets/websockets_api_mkdocs.png)
 
 This documentation is hosted locally and included with the repository. To view it
 locally, install `mkdocs` through poetry (it should already be included when installing
@@ -134,6 +154,7 @@ poetry run mkdocs serve
 ```
 
 ### Client Documentation
+
 To view all commands for a particular interpreter in the client type `help`.
 
 ```shell
@@ -207,6 +228,7 @@ Examples:
 ```
 
 ### Complete Framework Documentation (WIP)
+
 The complete documentation for the Consortium framework is available at the
 [Consortium wiki](https://github.com/not-sekiun/Consortium). This wiki is also
 available locally under the `docs` folder from the project root. The wiki is hosted with
@@ -234,6 +256,7 @@ including:
 
 
 ## Credits
+
 This project would not have been possible without the existence of the following
 excellently written libraries and frameworks.
 - [FastAPI](https://github.com/fastapi/fastapi) for the REST API and websockets server.

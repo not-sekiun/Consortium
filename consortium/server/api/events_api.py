@@ -14,6 +14,7 @@ from fastapi import (
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
+from consortium.framework.event_hooks.event import Event, EventType
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerErrorError,
@@ -26,7 +27,6 @@ from consortium.server.exceptions.service_exceptions.events_service_exceptions i
 from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
     UserAccessTokenNotFoundError,
 )
-from consortium.server.objects.event_objects import Event, EventType
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_config import (
     JSON_WEB_TOKEN_ALGORITHMS,

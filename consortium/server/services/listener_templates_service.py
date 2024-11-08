@@ -1,6 +1,6 @@
 from loguru import logger
 
-from consortium.framework.base_listener_template import BaseListenerTemplate
+from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
 from consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions import (
     ListenerTemplateNotFoundError,
 )

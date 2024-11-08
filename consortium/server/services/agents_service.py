@@ -3,12 +3,13 @@ from typing import Any
 
 from loguru import logger
 
-from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
-    AgentTaskNotFoundError as AgentTaskNotFoundFrameworkError,
-)
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.options.exceptions import (
     OptionValueValidationError,
     RequiredOptionValueNotSetError,
+)
+from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
+    AgentTaskNotFoundError as AgentTaskNotFoundFrameworkError,
 )
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
@@ -18,8 +19,7 @@ from consortium.server.exceptions.service_exceptions.agents_service_exceptions i
     AgentTaskNotFoundError,
 )
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
-from consortium.server.objects.agent_objects import Agent
-from consortium.server.objects.event_objects import Event, EventType
+from consortium.framework.agents.agent import Agent
 from consortium.server.services.events_service import EventsService
 
 

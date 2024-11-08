@@ -57,13 +57,13 @@ class GeneratorsInterpreter(ClientInterpreter):
                 for agent_generator in all_agent_generators
             }
             for command in [
-                "start_generator",
-                "stop_generator",
                 "cancel_generator",
                 "delete_generator",
                 "info_generator",
-                "rename_generator",
                 "redescribe_generator",
+                "rename_generator",
+                "start_generator",
+                "stop_generator",
             ]
         }.items():
             nested_completer_dict[key] = value
@@ -73,8 +73,8 @@ class GeneratorsInterpreter(ClientInterpreter):
                 for agent_template in all_agent_templates
             }
             for command in [
-                "use_agent_template",
                 "info_agent_template",
+                "use_agent_template",
             ]
         }.items():
             nested_completer_dict[key] = value
