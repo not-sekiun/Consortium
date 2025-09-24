@@ -15,7 +15,7 @@ class Plugin(BasePlugin):
 
     async def on_plugin_started(self) -> None:
         persistent_listeners_json_file = (
-            self.plugin_project_folder_path / "persistent_listeners.json"
+            self.plugin_project_folder / "persistent_listeners.json"
         )
         # Save a reference so the `on_plugin_stopped` method can access it
         self.environment.persistent_listeners_json_file = persistent_listeners_json_file
@@ -88,11 +88,6 @@ class Plugin(BasePlugin):
                     )
 
     async def on_plugin_running(self) -> None:
-        # TODO: If a plugin does not define a asynchronously blocking
-        #  `on_plugin_running` function it is not counted as running because it
-        #  immediately exits. Therefore the `on_plugin_stopped` method won't be called.
-        #  Hence, we need to asynchronously block in this method for the plugin to be
-        #  considered as "running". Maybe fix this behaviour?
         await self.stop_plugin_event.wait()
 
     async def on_plugin_stopped(self) -> None:

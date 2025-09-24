@@ -3,8 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework.event_hooks.event import Event, EventType
-from consortium.framework.plugins.plugin_status import PluginState
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
+from consortium.framework.plugins._plugin_status import PluginState
 
 
 @asynccontextmanager

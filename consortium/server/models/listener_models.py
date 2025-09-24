@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from consortium.framework.listeners.listener_status import ListenerState
+from consortium.framework.listeners._listener_status import ListenerState
 from consortium.server.models.c2_types_models import ListenerTypeModel
 
 

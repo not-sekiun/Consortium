@@ -26,6 +26,8 @@ Exception hierarchy for errors related to the event hooks service:
         implement the BaseEventHook interface.
         - InternalEventHookProjectError: Raised when an internal error occurs while
         handling an event hook project.
+      - IncompatibleEventHookFrameworkVersionError: Raised when an event hook is
+      incompatible with the version of the currently running framework.
     - EventHookUnloadingError: Raised when an event hook fails to unload.
 """
 
@@ -158,6 +160,23 @@ class InternalEventHookProjectError(InvalidEventHookProjectImplementationError):
             message=(
                 f"Failed to load the event hook at '{event_hook_project_folder}'. An "
                 f"exception occurred while loading the event hook: {internal_error_message}"
+            ),
+        )
+
+
+class IncompatibleEventHookFrameworkVersionError(EventHookLoadingError):
+    def __init__(
+        self,
+        event_hook_project_folder: str,
+        compatible_framework_version: str,
+        current_framework_version: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to load the event hook at '{event_hook_project_folder}'. The "
+                f"event hook requires a framework version of "
+                f"'{compatible_framework_version}' but the current framework version "
+                f"of '{current_framework_version}' does not satisfy this requirement."
             ),
         )
 

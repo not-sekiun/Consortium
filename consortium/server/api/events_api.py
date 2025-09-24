@@ -14,7 +14,8 @@ from fastapi import (
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerErrorError,

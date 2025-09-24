@@ -1,34 +1,29 @@
 """
-Exception hierarchy for errors related to the PluginsService:
+Exception hierarchy for the plugins service:
 
-- BaseServiceException: Base class for all service-related exceptions.
-  - PluginsServiceException: Base class for all errors related to the plugins service.
-    - PluginNotFoundError: Raised when a plugin is not found.
-    - PluginLoadingError: Raised when a plugin fails to load.
-      - InvalidPluginProjectManifestFileError: Raised when the plugin project manifest
-      file is invalid.
-        - InvalidPluginProjectManifestFileJSONError: Raised when the plugin project
-        manifest file is not a valid JSON file.
-        - InvalidPluginProjectManifestFileSchemaError: Raised when the plugin project
-        manifest file does not conform to the expected schema.
-      - InvalidPluginProjectFolderStructureError: Raised when the plugin project folder
-      structure is invalid.
-        - PluginProjectManifestFileNotFoundError: Raised when the plugin project
-        manifest file is not found.
-        - PluginProjectPluginFileNotFoundError: Raised when the plugin file specified
-        in the manifest is not found.
-      - InvalidPluginProjectImplementationError: Raised when a plugin project's
-      implementation is invalid.
-        - PluginProjectSymbolNotFoundError: Raised when the symbol name specified in
-        the manifest is not found in the plugin file.
-        - PluginProjectInterfaceError: Raised when the plugin class does not implement
-        the BasePlugin interface.
-        - InternalPluginProjectError: Raised when an internal error occurs while
-        handling a plugin project.
-    - PluginUnloadingError: Raised when a plugin fails to unload.
-      - InternalPluginStopError: Raised when a plugin fails to stop due to an internal
-      error.
-      - PluginStopTimeoutError: Raised when a plugin fails to stop due to a timeout.
+- [`BaseServiceException`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceException]
+    - [`PluginsServiceError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginsServiceError]
+        - [`PluginNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginNotFoundError]
+        - [`PluginLabelNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.        - [`PluginNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginNotFoundError]
+]
+        - [`PluginLoadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginLoadingError]
+            - [`InvalidPluginProjectManifestFileError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileError]
+                - [`InvalidPluginProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileJSONError]
+                - [`InvalidPluginProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileSchemaError]
+            - [`InvalidPluginProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectFolderStructureError]
+                - [`PluginProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectManifestFileNotFoundError]
+                - [`PluginProjectPluginFileNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectPluginFileNotFoundError]
+            - [`InvalidPluginProjectImplementationError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectImplementationError]
+                - [`PluginProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectSymbolNotFoundError]
+                - [`PluginProjectInterfaceError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectInterfaceError]
+                - [`InternalPluginProjectError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InternalPluginProjectError]
+            - [`IncompatiblePluginFrameworkVersionError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.IncompatiblePluginFrameworkVersionError]
+            - [`PluginAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginAlreadyRegisteredError]
+            - [`DuplicatePluginLabelError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.DuplicatePluginLabelError]
+            - [`InternalPluginStartError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InternalPluginStartError]
+        - [`PluginUnloadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginUnloadingError]
+            - [`InternalPluginStopError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InternalPluginStopError]
+            - [`PluginStopTimeoutError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginStopTimeoutError]
 """
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
@@ -37,10 +32,17 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class PluginsServiceError(BaseServiceException):
-    pass
+    """
+    Base exception for all errors that occur within the plugins service.
+    """
 
 
 class PluginNotFoundError(PluginsServiceError):
+    """
+    An error that is raised when a plugin is not found by its plugin ID within the
+    plugins service.
+    """
+
     def __init__(self, plugin_id: str):
         super().__init__(
             message=(
@@ -50,17 +52,42 @@ class PluginNotFoundError(PluginsServiceError):
         )
 
 
+class PluginLabelNotFoundError(PluginsServiceError):
+    """
+    An error that is raised when a plugin is not found by its label within the plugins
+    service.
+    """
+
+    def __init__(self, label: str):
+        super().__init__(
+            message=(
+                f"Failed to find the requested plugin. No plugin was found with the "
+                f"provided plugin label '{label}'."
+            ),
+        )
+
+
 class PluginLoadingError(PluginsServiceError):
-    pass
+    """
+    Base exception for all errors that occur during the loading of a plugin.
+    """
 
 
 class InvalidPluginProjectManifestFileError(PluginLoadingError):
-    pass
+    """
+    Base exception for all errors that occur due to loading an invalid plugin project
+    manifest file.
+    """
 
 
 class InvalidPluginProjectManifestFileJSONError(
     InvalidPluginProjectManifestFileError,
 ):
+    """
+    An error that is raised when the plugin project manifest file is not a valid JSON
+    file.
+    """
+
     def __init__(self, plugin_project_folder: str):
         super().__init__(
             message=(
@@ -74,6 +101,11 @@ class InvalidPluginProjectManifestFileJSONError(
 class InvalidPluginProjectManifestFileSchemaError(
     InvalidPluginProjectManifestFileError,
 ):
+    """
+    An error that is raised when the plugin project manifest file does not conform to
+    the expected JSON schema.
+    """
+
     def __init__(self, plugin_project_folder: str, json_schema_error_message: str):
         super().__init__(
             message=(
@@ -85,12 +117,20 @@ class InvalidPluginProjectManifestFileSchemaError(
 
 
 class InvalidPluginProjectFolderStructureError(PluginLoadingError):
-    pass
+    """
+    Base exception for all errors that occur due to the plugin being loaded having an
+    invalid plugin project folder structure.
+    """
 
 
 class PluginProjectManifestFileNotFoundError(
     InvalidPluginProjectFolderStructureError,
 ):
+    """
+    An error that is raised when the plugin project manifest file is not found in the
+    plugin project folder.
+    """
+
     def __init__(self, plugin_project_folder: str):
         super().__init__(
             message=(
@@ -104,6 +144,11 @@ class PluginProjectManifestFileNotFoundError(
 class PluginProjectPluginFileNotFoundError(
     InvalidPluginProjectFolderStructureError,
 ):
+    """
+    An error that is raised when the plugin file specified in the manifest is not
+    found in the plugin project folder.
+    """
+
     def __init__(self, plugin_file: str, plugin_project_folder: str):
         super().__init__(
             message=(
@@ -115,10 +160,18 @@ class PluginProjectPluginFileNotFoundError(
 
 
 class InvalidPluginProjectImplementationError(PluginLoadingError):
-    pass
+    """
+    Base exception for all errors that occur due to the plugin project not implementing
+    the required interface for the plugin.
+    """
 
 
 class PluginProjectSymbolNotFoundError(InvalidPluginProjectImplementationError):
+    """
+    An error that is raised when the plugin symbol name specified in the manifest is not
+    found in the plugin file.
+    """
+
     def __init__(
         self,
         symbol_name: str,
@@ -135,6 +188,11 @@ class PluginProjectSymbolNotFoundError(InvalidPluginProjectImplementationError):
 
 
 class PluginProjectInterfaceError(InvalidPluginProjectImplementationError):
+    """
+    An error that is raised when the plugin class does not implement the required
+    interface for the plugin.
+    """
+
     def __init__(
         self,
         plugin_project_folder: str,
@@ -150,6 +208,11 @@ class PluginProjectInterfaceError(InvalidPluginProjectImplementationError):
 
 
 class InternalPluginProjectError(InvalidPluginProjectImplementationError):
+    """
+    An error that is raised when an unhandled exception from within the plugin is
+    raised while loading a plugin project.
+    """
+
     def __init__(
         self,
         plugin_project_folder: str,
@@ -163,25 +226,102 @@ class InternalPluginProjectError(InvalidPluginProjectImplementationError):
         )
 
 
-class PluginUnloadError(PluginsServiceError):
-    pass
+class IncompatiblePluginFrameworkVersionError(PluginLoadingError):
+    """
+    An error that is raised when a plugin is incompatible with the current framework
+    version.
+    """
+
+    def __init__(
+        self,
+        plugin_str: str,
+        plugin_framework_version: str,
+        framework_version: str,
+    ):
+        super().__init__(
+            f"Failed to load the plugin {plugin_str}. The plugin requires a framework "
+            f"version of '{plugin_framework_version}' which is incompatible with "
+            f"the current framework version '{framework_version}'.",
+        )
 
 
-class InternalPluginStopError(PluginUnloadError):
-    def __init__(self, plugin: str, internal_error_message: str):
+class PluginAlreadyRegisteredError(PluginLoadingError):
+    """
+    An error that is raised when a plugin with the same ID is already registered in the
+    plugins service.
+    """
+
+    def __init__(self, plugin_str: str, plugin_id: str):
         super().__init__(
             message=(
-                f"Failed to unload plugin '{plugin}'. An exception occurred while "
+                f"Failed to register the plugin '{plugin_str}'. A plugin with the same ID "
+                f"'{plugin_id}' has already been registered in the plugins service."
+            ),
+        )
+
+
+class DuplicatePluginLabelError(PluginLoadingError):
+    """
+    An error that is raised when a plugin with the same `label` as the plugin being
+    registered has already been registered with the plugins service.
+    """
+
+    def __init__(self, plugin_str: str, plugin_label: str):
+        super().__init__(
+            message=(
+                f"Failed to register the plugin '{plugin_str}'. A plugin with the same "
+                f"label '{plugin_label}' has already been registered in the plugins "
+                f"service."
+            ),
+        )
+
+
+class InternalPluginStartError(PluginLoadingError):
+    """
+    An error that is raised when an unhandled exception from within the plugin is
+    raised while starting a plugin.
+    """
+
+    def __init__(self, plugin_str: str, internal_error_message: str):
+        super().__init__(
+            message=(
+                f"Failed to load the plugin '{plugin_str}'. An exception occurred while "
+                f"starting the plugin: {internal_error_message}"
+            ),
+        )
+
+
+class PluginUnloadingError(PluginsServiceError):
+    """
+    Base exception for all errors that occur during the unloading of a plugin.
+    """
+
+
+class InternalPluginStopError(PluginUnloadingError):
+    """
+    An error that is raised when an unhandled exception from within the plugin is
+    raised while stopping a plugin.
+    """
+
+    def __init__(self, plugin_str: str, internal_error_message: str):
+        super().__init__(
+            message=(
+                f"Failed to unload plugin '{plugin_str}'. An exception occurred while "
                 f"stopping the plugin: {internal_error_message}"
             ),
         )
 
 
-class PluginStopTimeoutError(PluginUnloadError):
-    def __init__(self, plugin: str):
+class PluginStopTimeoutError(PluginUnloadingError):
+    """
+    An error that is raised when a plugin fails to stop within the specified timeout
+    period.
+    """
+
+    def __init__(self, plugin_str: str):
         super().__init__(
             message=(
-                f"Failed to unload plugin '{plugin}'. The plugin timed out while "
+                f"Failed to unload plugin '{plugin_str}'. The plugin timed out while "
                 f"attempting to stop it before unloading."
             ),
         )

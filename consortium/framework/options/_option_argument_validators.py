@@ -3,8 +3,6 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Literal, Type
 
-from anyio import value
-
 from consortium.framework.options.exceptions import (
     InvalidOptionConfigurationParameterTypeError,
     InvalidOptionIterableLengthBoundError,

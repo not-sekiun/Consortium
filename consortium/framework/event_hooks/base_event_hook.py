@@ -5,9 +5,11 @@ from types import SimpleNamespace
 from typing import Any
 
 from loguru import logger
+from packaging import requirements, specifiers, version
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exceptions import (
     EmptyEventHookNameError,
     EventHookConfigurationParameterTypeError,
@@ -36,28 +38,47 @@ class BaseEventHook:
             A description of the event hook.
         authors (set[str]):
             The authors of the event hook.
+        event_hook_version:
+            The version of the event hook. This version is a `packaging.version.Version`
+            object that represents a version string. The version string must be a valid
+            version string according to the `PEP 440` specification.
+        compatible_framework_version:
+            A specifier string that specifies the compatible framework version for the
+            plugin. The specifier string must be a valid specifier string according to
+            the `PEP 440` specification.
         event_types (set[EventType | str]):
             The event types that the event hook is subscribed to.
         event_hook_logger (loguru.logger):
             A loguru `Logger` object that can be used by the event hook to log messages
-            to the framework's logging system. The logger is identified in the log messages
-            with the event hook's name and event hook ID.
+            to the framework's logging system. The logger is identified in the log
+            messages with the event hook's name and event hook ID.
         environment (types.SimpleNamespace):
             A namespace object that allows the listener to store any variables that it
             wants without potentially conflicting with other variables in the event
             hook. This is primarily used for saving state date between different
             invocations of the event hook across multiple events.
+        server_services (types.SimpleNamespace):
+            A namespace object that contains all the Consortium server services that
+            allow for programmatic access to the different framework components.
         event_hook_project_folder (pathlib.Path):
             The path to the event hook's project folder. This is the folder that
             contains the event hook's source code. This is primarily used for loading
             any custom configuration files or resources that the event hook needs to
             function.
+        third_party_dependencies:
+            The set of third-party library dependencies that this plugin depends on.
+            This plugin will not load if the plugin service cannot import these
+            third-party libraries. The format of each dependency string is specified by
+            `PEP 440` specification.
     """
 
     name: str
     description: str = ""
     authors: set[str] | None = None
+    event_hook_version: version.Version | None = None
+    compatible_framework_version: specifiers.SpecifierSet | None = None
     event_types: set[EventType | str] | None = None
+    third_party_dependencies: set[requirements.Requirement] | None = None
 
     def __init__(self):
         self.event_hook_id = uuid.uuid4()
@@ -99,7 +120,7 @@ class BaseEventHook:
             raise EmptyEventHookNameError(
                 event_hook_filepath=sys.modules[cls.__module__].__file__,
             )
-        # From here onwards we can refer to event hook by its name.
+        # From here onwards we can refer to the event hook by its name.
         if not isinstance(cls.description, str):
             raise EventHookConfigurationParameterTypeError(
                 event_hook=cls.name,
@@ -121,6 +142,18 @@ class BaseEventHook:
                         f"hook '{cls.name}'."
                     ),
                 )
+        if not isinstance(cls.event_hook_version, version.Version):
+            raise EventHookConfigurationParameterTypeError(
+                event_hook=cls.name,
+                parameter_name="event_hook_version",
+                parameter_type="packaging.version.Version",
+            )
+        if not isinstance(cls.compatible_framework_version, specifiers.SpecifierSet):
+            raise EventHookConfigurationParameterTypeError(
+                event_hook=cls.name,
+                parameter_name="compatible_framework_version",
+                parameter_type="packaging.specifiers.SpecifierSet",
+            )
         if not isinstance(cls.event_types, set):
             raise EventHookConfigurationParameterTypeError(
                 event_hook=cls.name,
@@ -136,6 +169,22 @@ class BaseEventHook:
                         f"objects for event hook '{cls.name}'."
                     ),
                 )
+        if not isinstance(cls.third_party_dependencies, set):
+            raise EventHookConfigurationParameterTypeError(
+                event_hook=cls.name,
+                parameter_name="third_party_dependencies",
+                parameter_type="set",
+            )
+        for dependency in cls.third_party_dependencies:
+            if not isinstance(dependency, requirements.Requirement):
+                raise EventHookConfigurationParameterTypeError(
+                    event_hook=cls.name,
+                    error_message=(
+                        "The elements in the third party dependencies set must be "
+                        "of type packaging.requirements.Requirement for event hook "
+                        f"'{cls.name}'."
+                    ),
+                )
 
         super().__init_subclass__(**kwargs)
 
@@ -144,13 +193,25 @@ class BaseEventHook:
 
     def __repr__(self):
         return (
-            f"BaseEventHook(name={self.name!r}, "
+            f"{self.__class__.__name__}(event_hook_id={self.event_hook_id!r},"
+            f"name={self.name!r}, "
             f"description={self.description!r}, "
             f"authors={self.authors!r}, "
-            f"event_types={self.event_types!r})"
+            f"event_hook_version={self.event_hook_version!r},"
+            f"compatible_framework_version={self.compatible_framework_version!r},"
+            f"event_types={self.event_types!r}"
+            f"event_hook_logger={self.event_hook_logger!r},"
+            f"environment={self.environment!r},"
+            f"server_services={self.server_services!r},"
+            f"event_hook_project_folder={self.event_hook_project_folder!r},"
+            f"third_party_dependencies={self.third_party_dependencies!r})"
         )
 
+    async def on_event_hook_loaded(self) -> None: ...
+
     async def on_event_hook_triggered(self, event: Event) -> None: ...
+
+    async def on_event_hook_unloaded(self) -> None: ...
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -158,5 +219,8 @@ class BaseEventHook:
             "name": self.name,
             "description": self.description,
             "authors": self.authors,
+            "event_hook_version": str(self.event_hook_version),
+            "compatible_framework_version": str(self.compatible_framework_version),
             "event_types": [str(event_type) for event_type in self.event_types],
+            "third_party_dependencies": self.third_party_dependencies,
         }

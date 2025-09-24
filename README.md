@@ -2,7 +2,7 @@
   <img width="20%" src="docs/assets/logo.png">
 </p>
 
-<p align="center"><i>Reinventing the wheel for the very last time</i></p>
+<p align="center"><i>Insert Tagline here</i></p>
 
 ---
 

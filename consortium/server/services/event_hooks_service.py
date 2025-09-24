@@ -4,9 +4,11 @@ from pathlib import Path
 
 import jsonschema
 from loguru import logger
+from packaging import version
 
+from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
-from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exceptions import (
     EventHooksFrameworkError,
 )
@@ -17,6 +19,7 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
     EventHookProjectInterfaceError,
     EventHookProjectManifestFileNotFoundError,
     EventHookProjectSymbolNotFoundError,
+    IncompatibleEventHookFrameworkVersionError,
     InternalEventHookProjectError,
     InvalidEventHookProjectManifestFileJSONError,
     InvalidEventHookProjectManifestFileSchemaError,
@@ -24,6 +27,7 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
 from consortium.server.server_config import (
     CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
     CONSORTIUM_HOME_DIRECTORY_PATH,
+    SERVER_RELEASE,
 )
 from consortium.server.services.events_service import EventsService
 
@@ -161,6 +165,21 @@ class EventHooksService:
                 internal_error_message=str(exc),
             )
 
+        # Check that the event hook supports the current version of the framework
+        # TODO: The SERVER_RELEASE.version attribute is a string consider making it,
+        #  and any other version type attribute a packaging.version.Version object.
+        if (
+            version.Version(SERVER_RELEASE.version)
+            not in event_hook_object.compatible_framework_version
+        ):
+            raise IncompatibleEventHookFrameworkVersionError(
+                event_hook_project_folder=str(event_hook_project_folder),
+                compatible_framework_version=str(
+                    event_hook_object.compatible_framework_version,
+                ),
+                current_framework_version=SERVER_RELEASE.version,
+            )
+
         self.event_hooks_service_logger.debug(
             f"Retrieved event hook {event_hook_object!r} from event hook project "
             f"folder: {event_hook_project_folder}",
@@ -234,7 +253,7 @@ class EventHooksService:
             event_hook_project_folder,
         )
 
-        # `event_hook` being `None` implies a disabled event hook was attempted to be \
+        # `event_hook` being `None` implies a disabled event hook was attempted to be
         # loaded.
         if event_hook is None:
             return None

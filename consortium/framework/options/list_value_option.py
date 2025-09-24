@@ -1,7 +1,7 @@
-from typing import Any, Callable, Type
+from typing import Callable, Type
 
-from consortium.framework.options.base_option import BaseOption
-from consortium.framework.options.option_argument_validators import (
+from consortium.framework.options._base_option import BaseOption
+from consortium.framework.options._option_argument_validators import (
     ArgumentDataTypeCheckParameters,
     validate_arguments_data_types,
     validate_iterable_length_arguments,
@@ -11,8 +11,7 @@ from consortium.framework.options.option_argument_validators import (
     validate_validating_regex_argument,
     validate_value_type_argument,
 )
-from consortium.framework.options.option_types import OptionType
-from consortium.framework.options.option_value_validators import (
+from consortium.framework.options._option_value_validators import (
     validate_iterable_element_duplication,
     validate_iterable_value_length,
     validate_value_data_type,
@@ -21,8 +20,9 @@ from consortium.framework.options.option_value_validators import (
     validate_value_regex_format,
     validate_value_string_length,
 )
-from consortium.framework.options.types import SimpleType, SimpleTypeType
-from consortium.framework.options.utils import resolve_validating_function_string
+from consortium.framework.options._types import SimpleType, SimpleTypeType
+from consortium.framework.options._utils import resolve_validating_function_string
+from consortium.framework.options.option_types import OptionType
 
 
 class ListValueOption(BaseOption):

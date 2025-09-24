@@ -15,9 +15,12 @@ from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerStartError,
     ListenerStopError,
 )
-from consortium.framework.listeners.agents_manager import AgentsManager
+from consortium.framework.listeners._agents_manager import AgentsManager
+from consortium.framework.listeners._listener_status import (
+    ListenerState,
+    ListenerStatus,
+)
 from consortium.framework.listeners.base_listener_type import BaseListenerType
-from consortium.framework.listeners.listener_status import ListenerState, ListenerStatus
 from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (
     EmptyListenerNameError,
     ListenerAlreadyRunningError,
@@ -67,10 +70,10 @@ class BaseListener(ABC):
             listener to store any variables that it wants without potentially
             conflicting with other variables in the listener. This is useful for
             sharing variables between the listener's user-defined methods.
-        stop_listener_event (asyncio.Event): An asyncio [`Event`][asyncio.Event] object
-            that is used to signal to the listener runtime loop to exit gracefully. The
-            implementation of the listener runtime loop should either check this event
-            periodically or specifically block on it and exit once it is set.
+        stop_listener_event (asyncio.Event): An asyncio event object that is used to
+            signal to the listener runtime loop to exit gracefully. The implementation
+            of the listener runtime loop should either check this event periodically or
+            specifically block on it and exit once it is set.
         agents_manager (AgentsManager): An internal Consortium framework
             `AgentsManager` object that allows listeners to manage the lifetime of the
             agents that are connected to the specific listener containing the object.
@@ -86,11 +89,6 @@ class BaseListener(ABC):
     """
 
     listener_type: BaseListenerType = None
-    """
-    consortium.framework.c2_types.BaseListenerType: The listener type that the listener
-    is associated with. The listener type serves to describes which agents the listener
-    is compatible with.
-    """
 
     def __init__(
         self,
@@ -157,10 +155,10 @@ class BaseListener(ABC):
                 ),
             )
 
-        self.name: str = name
-        self.description: str = description
-        self.endpoint: str = endpoint
-        self.parameters: dict | dict[str | Any] = parameters
+        self.name = name
+        self.description = description
+        self.endpoint = endpoint
+        self.parameters = parameters
 
         self.datetime_created = datetime.now()
         self.listener_id = uuid.uuid4()
@@ -208,120 +206,10 @@ class BaseListener(ABC):
         )
 
     @abstractmethod
-    async def on_listener_started(self) -> None:
-        """
-        This method is called when the listener is started. This method is called after
-        the listener has been initialized and before the listener is running. This
-        method is intended to be overridden by the user to perform any setup that is
-        required before the listener starts running. If the listener is not ready to
-        start - typically failing some precondition - the user can raise a
-        `ListenerStartError` to abort the listener start process.
-
-        Returns:
-            None
-
-        Raises:
-            ListenerStartError: An error that is manually raised by the user to abort
-                the listener start process if preconditions are not met.
-
-        Example:
-            ```python
-            async def on_listener_started(self) -> None:
-                # `self.parameters` is the dictionary of parameters passed into the
-                # listener from the constructor.
-                local_host = self.parameters["local_host"]
-                local_port = self.parameters["local_port"]
-
-                # Try creating a socket to check if the listener can bind to the
-                # provided host and port.
-                try:
-                    test_socket = socket.socket()
-                    test_socket.bind((local_host, local_port))
-                    test_socket.close()
-                except socket.error as exc:
-                    # Raise a ListenerStartError if the listener is unable to bind to
-                    # the provided host and port. This signals to the framework that
-                    # some sort of intentional validation failed as opposed to an
-                    # unhandled exception.
-                    raise ListenerStartError(
-                        f"An error occurred while attempting to start the listener. "
-                        f"Listener was unable to bind to the provided host and port due "
-                        f"to the following socket error: {exc}",
-                    )
-            ```
-        """
+    async def on_listener_started(self) -> None: ...
 
     @abstractmethod
-    async def on_listener_running(self) -> None:
-        """
-        This method is the main runtime loop of the listener. This method is called
-        only after the listener has been started and its
-        [`on_listener_started`][consortium.framework.base_listener.BaseListener.on_listener_started]
-        method has run to completion without raising a
-        [`ListenerStartError`][consortium.framework.exceptions.listener_framework_exceptions.ListenerStartError].
-        This method  is intended to be overridden by the user to implement the
-        listener's runtime logic. To communicate to the framework that the listener has
-        encountered some runtime error, the user can raise a
-        [`ListenerRuntimeError`][consortium.framework.exceptions.listener_framework_exceptions.ListenerRuntimeError].
-
-        This method is expected to run indefinitely until the listener is stopped and is
-        responsible for managing the lifecycle of agents, which include:
-        registration/deregistration, check-ins, sending tasks, and receiving results.
-        The runtime loop is expected to either periodically check the
-        [`stop_listener_event`][consortium.framework.base_listener.BaseListener.stop_listener_event]
-        to determine if it should exit or block indefinitely on the
-        [`stop_listener_event`][consortium.framework.base_listener.BaseListener.stop_listener_event]
-        with the `.wait()` method.
-
-        Returns:
-            None
-
-        Raises:
-            [ListenerRuntimeError][consortium.framework.exceptions.listener_framework_exceptions.ListenerRuntimeError]:
-                An error that is manually raised by the user to communicate that the
-                listener has encountered some runtime error. This will automatically be
-                caught and change the listener's
-                [status's][consortium.framework.base_listener.BaseListener.status]
-                state to [`ERRORED`][consortium.server.objects.listener_objects.ListenerStatus] as opposed to [`FATAL`][consortium.server.objects.listener_objects.ListenerStatus] which is reserved for unhandled
-                exceptions.
-
-        Example: Blocking on the [`stop_listener_event`][consortium.framework.base_listener.BaseListener.stop_listener_event] asyncio `Event` object.
-            ```python
-            async def _handle_agent(self, reader, writer) -> None:
-                # On first callback, we need to register the agent to the agents
-                # service to make the agent available to the rest of the framework. We
-                # do this through the listener's own agents manager.
-                raw_data = await reader.read(1024 * 1024)
-                agent_data = json.loads(data.decode())
-                self.agents_manage.register_new_connected_agent(**agent_data)
-                while True:
-                    # On each subsequent callback we need to update the framework that
-                    # the agent has checked in.
-                    raw_data = await reader.read(1024 * 1024)
-                    agent_data = json.loads(data.decode())
-
-            # Simple TCP socket server that listens for callbacks from agents.
-            async def _listen_for_socket_connections(self):
-                local_host = self.parameters["local_host"]
-                local_port = self.parameters["local_port"]
-
-                server = await asyncio.start_server(
-                    client_connected_cb=self._handle_client_connection,
-                    host=local_host,
-                    port=local_port,
-                )
-
-                async with server:
-                    await server.serve_forever()
-
-            async def on_listener_running(self):
-                if self.stop_listener_event.is_set():
-                    break
-            ```
-
-        Example: An example Reverse TCP listener that blocks on the [`stop_listener_event`][consortium.framework.base_listener.BaseListener.stop_listener_event] asyncio `Event` object.
-
-        """
+    async def on_listener_running(self) -> None: ...
 
     @abstractmethod
     async def on_listener_stopped(self) -> None: ...

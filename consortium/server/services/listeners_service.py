@@ -3,9 +3,10 @@ from typing import Any
 
 from loguru import logger
 
-from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
+from consortium.framework.listeners._listener_status import ListenerState
 from consortium.framework.listeners.base_listener import BaseListener
-from consortium.framework.listeners.listener_status import ListenerState
 from consortium.framework.options.exceptions import OptionValueValidationError
 from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
     ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundFrameworkError,

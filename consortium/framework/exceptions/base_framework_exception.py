@@ -34,14 +34,8 @@ class BaseRaiseOnlyFrameworkException(BaseFrameworkException):
 
     def __init__(self, message: str, detail: Any = None):
         self.message = message
-        """
-        A human-readable error message.
-        """
         self.detail = detail
-        """
-        Any additional information about the error to be communicated back up to
-        the calling framework.
-        """
+
         super().__init__(message)
 
     def to_json(self) -> dict[str, Any]:

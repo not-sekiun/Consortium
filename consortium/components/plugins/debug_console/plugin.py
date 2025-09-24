@@ -104,6 +104,7 @@ def _print_custom_formatted_exception_message(
 
 
 class Plugin(BasePlugin):
+    label = "consortium.debug_console"
     name = "Debug Interpreter Plugin"
     description = (
         "A plugin that provides an interactive debug interpreter for running arbitrary "
@@ -113,7 +114,7 @@ class Plugin(BasePlugin):
     authors = {"Sekiun (github.com/not-sekiun)"}
     autostart = True
 
-    async def on_plugin_started(self) -> None:
+    async def on_started(self) -> None:
         self.plugin_logger.info(
             "Debug interpreter is now running. All framework services are available in "
             "the environment. You can tab complete services along with their API "
@@ -133,7 +134,7 @@ class Plugin(BasePlugin):
             level=server_singletons.server.server_config.log_level,
         )
 
-    async def on_plugin_running(self) -> None:
+    async def on_running(self) -> None:
         # Super fucking cursed dictionary comprehension within a dictionary
         # comprehension. Essentially what we are doing is constructing a dictionary
         # with keys of type string, each key corresponds to the symbol of a service.
@@ -324,13 +325,16 @@ class Plugin(BasePlugin):
                         temporary_function_identifier=random_identifier,
                     )
 
-    async def on_plugin_stopped(self) -> None:
+    async def on_stopped(self) -> None:
         pass
 
-    async def on_plugin_cancelled(self) -> None:
+    async def on_completed(self) -> None:
         pass
 
-    async def on_plugin_errored(self, exc: Exception) -> None:
+    async def on_cancelled(self) -> None:
+        pass
+
+    async def on_errored(self, _exc: Exception) -> None:
         self.plugin_logger.error(
             "Debug console interpreter plugin encountered a fatal error while "
             "running. Exiting console...",

@@ -9,38 +9,38 @@ class ListenerState(StrEnum):
     """
     An `enum.StrEnum` object that represents the state of a listener as a string in all
     capital letters. This object is accessed as part of the [`ListenerStatus`][consortium.server.objects.listener_objects.ListenerStatus] object
-    that is in turn part of the [`BaseListener`][consortium.framework.BaseListener] object as its
-    [`status`][consortium.framework.BaseListener.status] instance
+    that is in turn part of the [`BaseListener`][consortium.framework.listeners.BaseListener] object as its
+    [`status`][consortium.framework.listeners.BaseListener.status] instance
     attribute.
 
     Attributes:
         INITIALIZED: The listener has been initialized and created from its constructor
             method either through its corresponding listener template or by manually
             creating the listener.
-        STARTED: The listener has been started through calling its [`start_listener()`][consortium.framework.base_listener.BaseListener.start_listener]
+        STARTED: The listener has been started through calling its [`start_listener()`][consortium.framework.listeners.base_listener.BaseListener.start_listener]
             method. Whether the listener successfully starts or not is still not yet
             known because a [`ListenerStartError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerStartError]
             may be thrown at this point.
         RUNNING: The listener is running after its [`start_listener()`][consortium.framework.listeners.BaseListener.start_listener]
             method has run to completion without raising any exceptions.
         STOPPED: The listener has been stopped gracefully after a call was made to its
-            [`stop_listener()`][consortium.framework.base_listener.BaseListener.stop_listener]
-            method. The [`on_listener_stop()'][consortium.framework.base_listener.BaseListener.on_listener_stop]
+            [`stop_listener()`][consortium.framework.listeners.base_listener.BaseListener.stop_listener]
+            method. The [`on_listener_stop()'][consortium.framework.listeners.base_listener.BaseListener.on_listener_stop]
             method has also been run to completion without raising any exceptions. The
             listener's main runtime method
-            [`on_listener_running()`][consortium.framework.base_listener.BaseListener.on_listener_running]
+            [`on_listener_running()`][consortium.framework.listeners.base_listener.BaseListener.on_listener_running]
             has also been run to completion without raising any exceptions.
         CANCELLED: The listener has been stopped forcefully through a call to its
-            [`cancel_listener()`][consortium.framework.base_listener.BaseListener.cancel_listener]
+            [`cancel_listener()`][consortium.framework.listeners.base_listener.BaseListener.cancel_listener]
             method. The listener's main runtime method has exited prematurely by
             throwing an `asyncio.CancelledError` into its main runtime loop.
         ERRORED: The listener has errored at some point through its main runtime loop
-            [`on_listener_running()`][consortium.framework.base_listener.BaseListener.on_listener_running]
+            [`on_listener_running()`][consortium.framework.listeners.base_listener.BaseListener.on_listener_running]
             method. The listener's main runtime method has exited prematurely by
-            having a [`ListenerRuntimeError`][consortium.framework.exceptions.listener_framework_exceptions.ListenerRuntimeError]
+            having a [`ListenerRuntimeError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerRuntimeError]
             be raised.
         FATAL: The listener has fatally errored at some point through its main runtime
-            loop [`on_listener_running()`][consortium.framework.base_listener.BaseListener.on_listener_running]
+            loop [`on_listener_running()`][consortium.framework.listeners.base_listener.BaseListener.on_listener_running]
             method. The difference between this state and the `ERRORED` state is that
             the particular error that caused the listener to fatally error was not
             caught and handled by the listener's main runtime loop.
@@ -54,43 +54,43 @@ class ListenerState(StrEnum):
     STARTED = "STARTED"
     """
     The listener has been started through calling its
-    [`start_listener()`][consortium.framework.base_listener.BaseListener.start_listener]
+    [`start_listener()`][consortium.framework.listeners.base_listener.BaseListener.start_listener]
     method. Whether the listener successfully starts or not is still not yet known
     because a [`ListenerStartError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerStartError]
     may be thrown at this point.
     """
     RUNNING = "RUNNING"
     """
-    The listener is running after its [`start_listener()`][consortium.framework.base_listener.BaseListener.start_listener]
+    The listener is running after its [`start_listener()`][consortium.framework.listeners.base_listener.BaseListener.start_listener]
     method has run to completion without raising any exceptions.
     """
     STOPPED = "STOPPED"
     """
     The listener has been stopped gracefully after a call was made to its
-    [`stop_listener()`][consortium.framework.base_listener.BaseListener.stop_listener]
-    method. The [`on_listener_stopped()`][consortium.framework.base_listener.BaseListener.on_listener_stopped]
+    [`stop_listener()`][consortium.framework.listeners.base_listener.BaseListener.stop_listener]
+    method. The [`on_listener_stopped()`][consortium.framework.listeners.base_listener.BaseListener.on_listener_stopped]
     method has also been run to completion without raising any exceptions. The
-    listener's main runtime method [`on_listener_running()`][consortium.framework.base_listener.BaseListener.on_listener_running]
+    listener's main runtime method [`on_listener_running()`][consortium.framework.listeners.base_listener.BaseListener.on_listener_running]
     has also been run to completion without raising any exceptions.
     """
     CANCELLED = "CANCELLED"
     """
-    The listener has been stopped forcefully through a call to its [`cancel_listener()`][consortium.framework.base_listener.BaseListener.cancel_listener]
+    The listener has been stopped forcefully through a call to its [`cancel_listener()`][consortium.framework.listeners.base_listener.BaseListener.cancel_listener]
     method. The listener's main runtime method has exited prematurely by throwing an
     [asyncio.CancelledError] into its main runtime loop.
     """
     ERRORED = "ERRORED"
     """
     The listener has errored at some point through its main runtime
-    [`on_listener_running()`][consortium.framework.base_listener.BaseListener.on_listener_running]
+    [`on_listener_running()`][consortium.framework.listeners.base_listener.BaseListener.on_listener_running]
     method. The listener's main runtime method has exited prematurely by having a
-    [`ListenerRuntimeError`][consortium.framework.exceptions.listener_framework_exceptions.ListenerRuntimeError]
+    [`ListenerRuntimeError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerRuntimeError]
     be raised.
     """
     FATAL = "FATAL"
     """
     The listener has fatally errored at some point through its main runtime
-    [`on_listener_running()`][consortium.framework.base_listener.BaseListener.on_listener_running]
+    [`on_listener_running()`][consortium.framework.listeners.base_listener.BaseListener.on_listener_running]
     method. The difference between this state and the `ERRORED` state is that the
     particular error that caused the listener to fatally error was not caught and
     handled by the listener's main runtime loop.
@@ -100,11 +100,11 @@ class ListenerState(StrEnum):
 class ListenerStatus:
     """
     An object that represents the status of a listener. This object encapsulates both
-    the [`state`][consortium.server.objects.listener_objects.ListenerState] of the
+    the [`state`][consortium.framework.listeners._listener_status.ListenerState] of the
     listener as well as any other additional error information that may be present when
-    the [`state`][consortium.server.objects.listener_objects.ListenerState] object is
+    the [`state`][consortium.framework.listeners._listener_status.ListenerState] object is
     in the `ERRORED` or `FATAL` states. This object is accessed as part of the
-    [BaseListener][consortium.framework.base_listener.BaseListener] object.
+    [BaseListener][consortium.framework.listeners.base_listener.BaseListener] object.
     """
 
     def __init__(self):

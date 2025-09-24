@@ -9,6 +9,7 @@ packages = [
     { include = "consortium.py" },
 ]
 
+
 [tool.poetry.dependencies]
 python = "^3.12"
 prompt-toolkit = "^3.0.41"

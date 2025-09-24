@@ -1,23 +1,23 @@
 from typing import Callable, Type
 
-from consortium.framework.options.base_option import BaseOption
-from consortium.framework.options.option_argument_validators import (
+from consortium.framework.options._base_option import BaseOption
+from consortium.framework.options._option_argument_validators import (
     validate_numeric_range_arguments,
     validate_string_length_arguments,
     validate_validating_function_argument,
     validate_validating_regex_argument,
     validate_value_type_argument,
 )
-from consortium.framework.options.option_types import OptionType
-from consortium.framework.options.option_value_validators import (
+from consortium.framework.options._option_value_validators import (
     validate_value_data_type,
     validate_value_numeric_range,
     validate_value_on_validating_function,
     validate_value_regex_format,
     validate_value_string_length,
 )
-from consortium.framework.options.types import SimpleType, SimpleTypeType
-from consortium.framework.options.utils import resolve_validating_function_string
+from consortium.framework.options._types import SimpleType, SimpleTypeType
+from consortium.framework.options._utils import resolve_validating_function_string
+from consortium.framework.options.option_types import OptionType
 
 
 class SingleValueOption(BaseOption):

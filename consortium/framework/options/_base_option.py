@@ -2,16 +2,16 @@ import copy
 import sys
 from typing import Any
 
+from consortium.framework.options._option_argument_validators import (
+    ArgumentDataTypeCheckParameters,
+    validate_arguments_data_types,
+)
 from consortium.framework.options.exceptions import (
     EmptyOptionNameError,
     InvalidDefaultValueError,
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
     RequiredOptionValueNotSetError,
-)
-from consortium.framework.options.option_argument_validators import (
-    ArgumentDataTypeCheckParameters,
-    validate_arguments_data_types,
 )
 from consortium.framework.options.option_types import OptionType
 

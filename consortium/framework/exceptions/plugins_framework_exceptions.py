@@ -1,41 +1,17 @@
-from typing import Any
-
-from consortium.framework.exceptions.base_framework_exception import (
-    BaseRaiseOnlyFrameworkException,
+from consortium.framework.exceptions._life_cycle_exceptions import (
+    LifeCycleRuntimeError,
+    LifeCycleStartError,
+    LifeCycleStopError,
 )
 
 
-class PluginStartError(BaseRaiseOnlyFrameworkException):
-    def __init__(
-        self,
-        message: str = "An error occurred while attempting to start the plugin.",
-        detail: Any = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+class PluginStartError(LifeCycleStartError):
+    pass
 
 
-class PluginRuntimeError(BaseRaiseOnlyFrameworkException):
-    def __init__(
-        self,
-        message: str = "An error occurred while the plugin was running.",
-        detail: Any = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+class PluginRuntimeError(LifeCycleRuntimeError):
+    pass
 
 
-class PluginStopError(BaseRaiseOnlyFrameworkException):
-    def __init__(
-        self,
-        message: str = "An error occurred while attempting to stop the plugin.",
-        detail: Any = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+class PluginStopError(LifeCycleStopError):
+    pass

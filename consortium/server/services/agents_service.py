@@ -3,7 +3,9 @@ from typing import Any
 
 from loguru import logger
 
-from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.agents._agent import Agent
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.options.exceptions import (
     OptionValueValidationError,
     RequiredOptionValueNotSetError,
@@ -19,7 +21,6 @@ from consortium.server.exceptions.service_exceptions.agents_service_exceptions i
     AgentTaskNotFoundError,
 )
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
-from consortium.framework.agents.agent import Agent
 from consortium.server.services.events_service import EventsService
 
 

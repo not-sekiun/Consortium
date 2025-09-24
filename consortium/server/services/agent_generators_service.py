@@ -4,7 +4,8 @@ from typing import Any
 from loguru import logger
 
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
-from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.options.exceptions import OptionValueValidationError
 from consortium.server.exceptions.framework_exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorAlreadyRunningError as AgentGeneratorAlreadyRunningFrameworkError,

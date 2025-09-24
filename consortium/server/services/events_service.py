@@ -2,7 +2,8 @@ from typing import Any, Callable, Coroutine
 
 from loguru import logger
 
-from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.service_exceptions.events_service_exceptions import (
     EventHandlerAlreadyRegisteredError,
     EventHandlerNotRegisteredError,

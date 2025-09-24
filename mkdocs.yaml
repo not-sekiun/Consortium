@@ -65,15 +65,22 @@ nav:
     - REST API:
       - rest-api/introduction.md
   - Framework Reference:
-    - reference/listeners-reference.md
-    - reference/agent-generators-reference.md
-    - reference/plugins-reference.md
-    - reference/event-hooks-reference.md
-    - reference/options-reference.md
+    - Framework:
+      - framework-reference/framework/listeners-reference.md
+      - framework-reference/framework/agent-generators-reference.md
+      - framework-reference/framework/plugins-reference.md
+      - framework-reference/framework/event-hooks-reference.md
+      - framework-reference/framework/options-reference.md
     - Exceptions:
-      - reference/exceptions/signalling-exceptions.md
-      - reference/exceptions/plugins-framework-exceptions.md
-      - reference/exceptions/options-framework-exceptions.md
+      - framework-reference/exceptions/signalling-exceptions.md
+      - framework-reference/exceptions/plugins-framework-exceptions.md
+      - framework-reference/exceptions/options-framework-exceptions.md
+      - framework-reference/exceptions/listeners-framework-exceptions.md
+  - Services Reference:
+      - Services:
+        - services-reference/services/plugins-service-reference.md
+      - Exceptions:
+        - services-reference/exceptions/plugins-service-exceptions.md
 
 markdown_extensions:
   - pymdownx.highlight:

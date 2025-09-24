@@ -1,11 +1,11 @@
 from typing import Any
 
+from consortium.framework.agents._agent import Agent
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerSpecificAgentNotFoundError,
 )
 from consortium.server import server_singletons as server_singletons
-from consortium.framework.agents.agent import Agent
 
 
 class AgentsManager:

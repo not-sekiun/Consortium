@@ -15,7 +15,7 @@ class Plugin(BasePlugin):
 
     async def on_plugin_started(self) -> None:
         persistent_agent_generators_json_file = (
-            self.plugin_project_folder_path / "persistent_agent_generators.json"
+            self.plugin_project_folder / "persistent_agent_generators.json"
         )
         # Save a reference so the `on_plugin_stopped` method can access it
         self.environment.persistent_agent_generators_json_file = (

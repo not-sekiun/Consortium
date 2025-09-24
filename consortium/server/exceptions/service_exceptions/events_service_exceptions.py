@@ -1,4 +1,4 @@
-from consortium.framework.event_hooks.event import EventType
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
 )

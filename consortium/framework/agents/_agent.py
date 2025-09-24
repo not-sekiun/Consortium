@@ -7,14 +7,24 @@ from loguru import logger
 
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 from consortium.framework.agents.base_agent_type import BaseAgentType
-from consortium.framework.event_hooks.event import Event, EventType
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server import server_singletons as server_singletons
-from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import \
-    AgentCapabilityArgumentNotFoundError, AgentCapabilityNotFoundError, \
-    AgentTaskNotFoundError, AgentResultHasNoCorrespondingTaskError, \
-    AgentResultTaskIDNotFoundError, AgentResultIDNotFoundError
-from consortium.server.models.agent_models import AgentTaskState, AgentTaskMessageModel, \
-    AgentResultModel, AgentTaskModel, AgentResultMessageModel
+from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
+    AgentCapabilityArgumentNotFoundError,
+    AgentCapabilityNotFoundError,
+    AgentResultHasNoCorrespondingTaskError,
+    AgentResultIDNotFoundError,
+    AgentResultTaskIDNotFoundError,
+    AgentTaskNotFoundError,
+)
+from consortium.server.models.agent_models import (
+    AgentResultMessageModel,
+    AgentResultModel,
+    AgentTaskMessageModel,
+    AgentTaskModel,
+    AgentTaskState,
+)
 from consortium.server.server_logging import LoggerType
 
 
