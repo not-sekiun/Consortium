@@ -1,47 +1,46 @@
-import abc
-import asyncio
 import pathlib
 import sys
 import traceback
 import types
 import uuid
-from typing import Any
+from typing import Any, get_type_hints
 
 import loguru
+import packaging.requirements as requirements
 import packaging.specifiers as specifiers
 import packaging.version as version
+from pydantic import ValidationError
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._life_cycles import LifeCycle, LifeCycleFatalContext
+from consortium.framework.plugins._plugin_metadata_model import PluginMetadataModel
+from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
+    BaseFrameworkException,
+)
 from consortium.server.exceptions.framework_exceptions.lifecycle_exceptions import (
     LifeCycleAlreadyStartedError,
     LifeCycleNotRunningError,
     LifeCycleStartError as LifeCycleStartFrameworkError,
     LifeCycleStopError as LifeCycleStopFrameworkError,
 )
-from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
+from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (  # IncompatiblePluginDependencyVersionError,; IncompatibleThirdPartyDependencyVersionError,; PluginDependencyNotFoundError,; PluginDependencyNotRunningError,; ThirdPartyDependencyNotFoundError,
     EmptyPluginLabelError,
-    IncompatiblePluginDependencyVersionError,
-    IncompatibleThirdPartyDependencyVersionError,
     InvalidFrameworkVersionSpecifierError,
     InvalidPluginConfigurationParameterTypeError,
     InvalidPluginDependencyVersionSpecifierError,
     InvalidPluginVersionError,
     InvalidThirdPartyDependencyVersionSpecifierError,
+    MissingPluginConfigurationParameterError,
     PluginAlreadyStartedError,
-    PluginDependencyNotFoundError,
-    PluginDependencyNotRunningError,
     PluginNotRunningError,
     PluginRuntimeError as PluginRuntimeFrameworkError,
     PluginStartError as PluginStartFrameworkError,
     PluginStopError as PluginStopFrameworkError,
-    RequiredPluginConfigurationParameterNotDeclaredError,
-    ThirdPartyDependencyNotFoundError,
 )
 from consortium.server.server_logging import LoggerType
 
 
-class BasePlugin(LifeCycle, abc.ABC):
+class BasePlugin(LifeCycle):
     label: str
     name: str | None = None
     description: str = ""
@@ -49,7 +48,7 @@ class BasePlugin(LifeCycle, abc.ABC):
     compatible_framework_version: str | None = None
     authors: set[str] | None = None
     autostart: bool = True
-    plugin_dependencies: set[tuple[str, str]] | None = None
+    plugin_dependencies: set[str] | None = None
 
     def __init__(self):
         self.plugin_id = uuid.uuid4()
@@ -73,39 +72,47 @@ class BasePlugin(LifeCycle, abc.ABC):
     def __init_subclass__(cls, **kwargs):
         cls.authors = cls.authors or set()
         cls.plugin_dependencies = cls.plugin_dependencies or set()
+        # Third-party dependencies get added in when the plugin is loaded if it declared
+        # any in its `pyproject.toml` file
+        cls.third_party_dependencies = set()
 
-        expected_attrs = {
-            "label": str,
-            "name": (str, type(None)),
-            "description": str,
-            "version": (str, type(None)),
-            "compatible_framework_version": (str, type(None)),
-            "authors": set,
-            "autostart": bool,
-            "plugin_dependencies": set,
-        }
-
+        # Use the module filepath as a reference to the plugin if its label is not defined
         plugin_str = (
-            cls.label if hasattr(cls, "label") else sys.modules[cls.__module__].__file__
+            cls.label
+            if hasattr(cls, "label")
+            else f"{cls.__name__} ({sys.modules[cls.__module__].__file__})"
         )
+        expected_attrs_and_types_map = get_type_hints(cls)
 
-        # Check all attributes exist and are of the expected base types
-        for attr, expected_type in expected_attrs.items():
+        # Check all attributes exist
+        for attr in expected_attrs_and_types_map.keys():
             if not hasattr(cls, attr):
-                raise RequiredPluginConfigurationParameterNotDeclaredError(
-                    parameter_name=attr,
+                raise MissingPluginConfigurationParameterError(
                     plugin_str=plugin_str,
-                )
-            if not isinstance(getattr(cls, attr), expected_type):
-                raise InvalidPluginConfigurationParameterTypeError(
                     parameter_name=attr,
-                    parameter_type=expected_type
-                    if isinstance(expected_type, str)
-                    else " or ".join([t.__name__ for t in expected_type]),
-                    plugin_str=plugin_str,
                 )
 
-        # Check semantics of specific attributes and reassign as needed
+        # Check all class attributes are of the expected type
+        try:
+            PluginMetadataModel(
+                label=cls.label,
+                name=cls.name,
+                description=cls.description,
+                version=cls.version,
+                compatible_framework_version=cls.compatible_framework_version,
+                authors=cls.authors,
+                autostart=cls.autostart,
+                plugin_dependencies=cls.plugin_dependencies,
+            )
+        except ValidationError as exc:
+            attr = exc.errors()[0]["loc"][0]
+            raise InvalidPluginConfigurationParameterTypeError(
+                plugin_str=plugin_str,
+                parameter_name=attr,
+                parameter_type=expected_attrs_and_types_map[attr],
+            )
+
+        # Perform semantic checking of specific attributes and reassign as needed
         if not cls.label:
             raise EmptyPluginLabelError(
                 plugin_filepath=sys.modules[cls.__module__].__file__,
@@ -129,47 +136,17 @@ class BasePlugin(LifeCycle, abc.ABC):
                 framework_version_specifier_str=cls.compatible_framework_version,
                 plugin_str=cls.label,
             )
-        for author in cls.authors:
-            if not isinstance(author, str):
-                raise InvalidPluginConfigurationParameterTypeError(
-                    plugin_str=cls.label,
-                    error_message=(
-                        "The elements in the authors set must be strings for plugin "
-                        f"'{cls.name}'."
-                    ),
-                )
-        for plugin_dependency in cls.plugin_dependencies:
-            if not isinstance(plugin_dependency, tuple):
-                raise InvalidPluginConfigurationParameterTypeError(
-                    plugin_str=cls.label,
-                    error_message=(
-                        "The elements in the plugin dependencies set must be tuples "
-                        f"for plugin '{cls.name}'."
-                    ),
-                )
-            if (
-                len(plugin_dependency) != 2
-                or not isinstance(plugin_dependency[0], str)
-                or not isinstance(plugin_dependency[1], str)
-            ):
-                raise InvalidPluginConfigurationParameterTypeError(
-                    plugin_str=cls.label,
-                    error_message=(
-                        "The elements in the plugin dependencies set must be tuples "
-                        f"of strings of length 2 for plugin '{cls.name}'."
-                    ),
-                )
         new_dependencies = set()
-        for dep in cls.plugin_dependencies:
-            name, spec = dep
+        for entry in cls.plugin_dependencies:
             try:
-                new_dependencies.add((name, specifiers.SpecifierSet(spec)))
-            except specifiers.InvalidSpecifier:
+                dependency = requirements.Requirement(entry)
+            except requirements.InvalidRequirement:
                 raise InvalidPluginDependencyVersionSpecifierError(
                     plugin_str=cls.label,
-                    plugin_dependency_name=name,
-                    plugin_dependency_version_specifier=spec,
+                    invalid_dependency_entry=entry,
                 )
+            new_dependencies.add(dependency)
+
         cls.plugin_dependencies = new_dependencies
 
         super().__init_subclass__(**kwargs)
@@ -189,8 +166,21 @@ class BasePlugin(LifeCycle, abc.ABC):
             f"authors={self.authors!r}, "
             f"autostart={self.autostart!r}, "
             f"plugin_dependencies={self.plugin_dependencies!r}, "
+            f"third_party_dependencies={self.third_party_dependencies}"
             f")"
         )
+
+    async def on_started(self) -> None: ...
+
+    async def on_running(self) -> None: ...
+
+    async def on_stopped(self) -> None: ...
+
+    async def on_completed(self) -> None: ...
+
+    async def on_cancelled(self) -> None: ...
+
+    async def on_errored(self, runtime_error: BaseFrameworkException) -> None: ...
 
     async def on_fatal(
         self,
@@ -257,6 +247,7 @@ class BasePlugin(LifeCycle, abc.ABC):
             "authors": list(self.authors),
             "autostart": self.autostart,
             "plugin_dependencies": list(map(str, self.plugin_dependencies)),
+            "third_party_dependencies": list(map(str, self.third_party_dependencies)),
             "status": self.status.to_json(),
         }
 

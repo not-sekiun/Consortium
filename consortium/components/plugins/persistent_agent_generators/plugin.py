@@ -4,6 +4,7 @@ from consortium.framework.plugins.base_plugin import BasePlugin
 
 
 class Plugin(BasePlugin):
+    label = "consortium.plugins.persistent_agent_generators_plugin"
     name = "Persistent Agent Generators Plugin"
     description = (
         "A plugin that tracks what agent generators are created right before the "

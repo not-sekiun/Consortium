@@ -1,0 +1,4 @@
+{
+  "entry_point": "plugin:Plugin",
+  "enabled": 100
+}

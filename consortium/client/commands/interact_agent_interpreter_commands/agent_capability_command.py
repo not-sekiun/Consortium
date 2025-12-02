@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
-from typing import Any
 from enum import StrEnum
+from typing import Any
 
 from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (

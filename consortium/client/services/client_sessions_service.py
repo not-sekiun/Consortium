@@ -1,11 +1,11 @@
-from loguru import logger
 from aiohttp.client_exceptions import ClientConnectorError
-from websockets.exceptions import InvalidHandshake, ConnectionClosed
+from loguru import logger
+from websockets.exceptions import ConnectionClosed, InvalidHandshake
 
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionAlreadyExistsError,
-    ClientSessionNotFoundError,
     ClientSessionConnectionError,
+    ClientSessionNotFoundError,
 )
 
 

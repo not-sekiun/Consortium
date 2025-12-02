@@ -4,6 +4,7 @@ from consortium.framework.plugins.base_plugin import BasePlugin
 
 
 class Plugin(BasePlugin):
+    label = "consortium.plugins.persistent_listeners_plugin"
     name = "Persistent Listeners Plugin"
     description = (
         "A plugin that tracks what listeners are created and running right before the "
@@ -88,7 +89,7 @@ class Plugin(BasePlugin):
                     )
 
     async def on_plugin_running(self) -> None:
-        await self.stop_plugin_event.wait()
+        await self.stop_event.wait()
 
     async def on_plugin_stopped(self) -> None:
         persistent_listeners_json_file = self.environment.persistent_listeners_json_file

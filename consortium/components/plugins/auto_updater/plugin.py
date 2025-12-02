@@ -14,6 +14,7 @@ from consortium.server.server_config import (
 
 
 class Plugin(BasePlugin):
+    label = "consortium.plugins.auto_updater_plugin"
     name = "Auto Updater Plugin"
     description = (
         "A plugin that attempts to check if there are any updates to the Consortium "

@@ -1,7 +1,0 @@
-{
-  "plugin": {
-    "filepath": "plugin.py",
-    "symbol": "Plugin"
-  },
-  "enabled": true
-}

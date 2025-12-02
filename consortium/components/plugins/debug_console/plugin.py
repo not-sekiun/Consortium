@@ -104,7 +104,7 @@ def _print_custom_formatted_exception_message(
 
 
 class Plugin(BasePlugin):
-    label = "consortium.debug_console"
+    label = "consortium.plugins.debug_console_plugin"
     name = "Debug Interpreter Plugin"
     description = (
         "A plugin that provides an interactive debug interpreter for running arbitrary "

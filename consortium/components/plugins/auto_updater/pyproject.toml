@@ -1,0 +1,6 @@
+[project]
+name = "consortium.auto-updater-plugin"
+dependencies = [
+    "prompt-toolkit",
+    "aiohttp"
+]
