@@ -3,30 +3,30 @@ import asyncio
 import enum
 from typing import Any
 
-from consortium.framework._life_cycles._life_cycle_status import (
-    LifeCycleState,
-    LifeCycleStatus,
+from consortium.framework._components._component_status import (
+    ComponentState,
+    ComponentStatus,
 )
-from consortium.framework.exceptions._life_cycle_exceptions import (
-    LifeCycleRuntimeError,
-    LifeCycleStartError,
-    LifeCycleStopError,
+from consortium.framework.exceptions._component_exceptions import (
+    ComponentRuntimeError,
+    ComponentStartError,
+    ComponentStopError,
 )
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
-from consortium.server.exceptions.framework_exceptions.lifecycle_exceptions import (
-    LifeCycleAlreadyStartedError,
-    LifeCycleNotRunningError,
-    LifeCycleRuntimeError as LifeCycleRuntimeFrameworkError,
-    LifeCycleStartError as LifeCycleStartFrameworkError,
-    LifeCycleStopError as LifeCycleStopFrameworkError,
+from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
+    ComponentAlreadyStartedError,
+    ComponentNotRunningError,
+    ComponentRuntimeError as ComponentRuntimeFrameworkError,
+    ComponentStartError as ComponentStartFrameworkError,
+    ComponentStopError as ComponentStopFrameworkError,
 )
 
 
 # Provide additional context to the `on_fatal` handler denoting which part of the
 # lifecycle the transition to fatal occurred from. Used primarily for logging.
-class LifeCycleFatalContext(enum.StrEnum):
+class ComponentLifeCycleFatalContext(enum.StrEnum):
     START = enum.auto()
     RUNNING = enum.auto()
     STOP = enum.auto()
@@ -37,9 +37,9 @@ class LifeCycleFatalContext(enum.StrEnum):
 # Life cycles are abstractions of entities that can run separately from the event loop.
 # They handle starting, stopping, cancelling and manage state transitions based on
 # signalling errors raised from hook methods.
-class LifeCycle(abc.ABC):
+class ComponentLifeCycle(abc.ABC):
     def __init__(self):
-        self.status = LifeCycleStatus()
+        self.status = ComponentStatus()
         self.stop_event = asyncio.Event()
         self._runtime_loop_task = None
 
@@ -65,7 +65,7 @@ class LifeCycle(abc.ABC):
     async def on_fatal(
         self,
         exc: Exception,
-        fatal_context: LifeCycleFatalContext,
+        fatal_context: ComponentLifeCycleFatalContext,
     ) -> None: ...
 
     @abc.abstractmethod
@@ -75,15 +75,15 @@ class LifeCycle(abc.ABC):
         if (
             self.status.state
             not in (
-                LifeCycleState.INITIALIZED,
-                LifeCycleState.STOPPED,
-                LifeCycleState.CANCELLED,
-                LifeCycleState.ERRORED,
+                ComponentState.INITIALIZED,
+                ComponentState.STOPPED,
+                ComponentState.CANCELLED,
+                ComponentState.ERRORED,
             )
-            or self.status.state == LifeCycleState.FATAL
+            or self.status.state == ComponentState.FATAL
             and self._runtime_loop_task is not None
         ):
-            raise LifeCycleAlreadyStartedError
+            raise ComponentAlreadyStartedError
 
         self.stop_event.clear()
 
@@ -91,15 +91,16 @@ class LifeCycle(abc.ABC):
 
         try:
             await self.on_started()
-        except LifeCycleStartError as exc:
+        except ComponentStartError as exc:
             self.status._transition_to_initialized()
-            raise LifeCycleStartFrameworkError(
-                message=exc.message,
+            raise ComponentStartFrameworkError(
+                component_str=str(self),
+                error_message=exc.message,
                 detail=exc.detail,
             ) from None
         except Exception as exc:
             self.status._transition_to_fatal(exception=exc)
-            await self.on_fatal(exc, fatal_context=LifeCycleFatalContext.START)
+            await self.on_fatal(exc, fatal_context=ComponentLifeCycleFatalContext.START)
             raise exc
 
         self.stop_event.clear()
@@ -107,14 +108,15 @@ class LifeCycle(abc.ABC):
         self._runtime_loop_task = asyncio.create_task(self._runtime_loop())
 
     async def stop(self) -> None:
-        if self.status.state != LifeCycleState.RUNNING:
-            raise LifeCycleNotRunningError
+        if self.status.state != ComponentState.RUNNING:
+            raise ComponentNotRunningError
 
         try:
             await self.on_stopped()
-        except LifeCycleStopError as exc:
-            raise LifeCycleStopFrameworkError(
-                message=exc.message,
+        except ComponentStopError as exc:
+            raise ComponentStopFrameworkError(
+                component_str=str(self),
+                error_message=exc.message,
                 detail=exc.detail,
             ) from None
         except Exception as exc:
@@ -124,8 +126,8 @@ class LifeCycle(abc.ABC):
         self.stop_event.set()
 
     async def cancel(self) -> None:
-        if self.status.state != LifeCycleState.RUNNING:
-            raise LifeCycleNotRunningError
+        if self.status.state != ComponentState.RUNNING:
+            raise ComponentNotRunningError
 
         self._runtime_loop_task.cancel()
 
@@ -142,7 +144,10 @@ class LifeCycle(abc.ABC):
                 await self.on_cancelled()
             except Exception as exc:
                 self.status._transition_to_fatal(exception=exc)
-                await self.on_fatal(exc=exc, fatal_context=LifeCycleFatalContext.CANCEL)
+                await self.on_fatal(
+                    exc=exc,
+                    fatal_context=ComponentLifeCycleFatalContext.CANCEL,
+                )
                 raise exc
 
     async def _runtime_loop(self) -> None:
@@ -152,23 +157,30 @@ class LifeCycle(abc.ABC):
             await self.on_completed()
         except asyncio.CancelledError:
             return
-        except LifeCycleRuntimeError as exc:
+        except ComponentRuntimeError as exc:
             self.status._transition_to_errored(
-                error=LifeCycleRuntimeFrameworkError(
-                    message=exc.message,
+                error=ComponentRuntimeFrameworkError(
+                    error_message=exc.message,
                     detail=exc.detail,
                 ),
             )
             try:
                 await self.on_errored(
-                    runtime_error=LifeCycleRuntimeFrameworkError(
-                        message=exc.message,
+                    runtime_error=ComponentRuntimeFrameworkError(
+                        component_str=str(self),
+                        error_message=exc.message,
                         detail=exc.detail,
                     ),
                 )
             except Exception as exc:
                 self.status._transition_to_fatal(exception=exc)
-                await self.on_fatal(exc=exc, fatal_context=LifeCycleFatalContext.ERROR)
+                await self.on_fatal(
+                    exc=exc,
+                    fatal_context=ComponentLifeCycleFatalContext.ERROR,
+                )
         except Exception as exc:
             self.status._transition_to_fatal(exception=exc)
-            await self.on_fatal(exc=exc, fatal_context=LifeCycleFatalContext.RUNNING)
+            await self.on_fatal(
+                exc=exc,
+                fatal_context=ComponentLifeCycleFatalContext.RUNNING,
+            )

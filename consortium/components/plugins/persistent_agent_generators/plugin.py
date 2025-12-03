@@ -76,7 +76,7 @@ class Plugin(BasePlugin):
         #  immediately exits. Therefore the `on_plugin_stopped` method won't be called.
         #  Hence, we need to asynchronously block in this method for the plugin to be
         #  considered as "running". Maybe fix this behaviour?
-        await self.stop_plugin_event.wait()
+        await self.stop_event.wait()
 
     async def on_plugin_stopped(self) -> None:
         persistent_agent_generators_json_file = (

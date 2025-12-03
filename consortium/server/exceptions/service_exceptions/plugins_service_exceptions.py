@@ -5,7 +5,6 @@ Exception hierarchy for the plugins service:
     - [`PluginsServiceError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginsServiceError]
         - [`PluginNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginNotFoundError]
         - [`PluginLabelNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginLabelNotFoundError]
-        - [`PluginNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginNotFoundError]
         - [`PluginLoadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginLoadingError]
             - [`InvalidPluginProjectManifestFileError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileError]
                 - [`InvalidPluginProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileJSONError]
@@ -24,12 +23,12 @@ Exception hierarchy for the plugins service:
             - [`PluginAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginAlreadyRegisteredError]
             - [`DuplicatePluginLabelError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.DuplicatePluginLabelError]
             - [`InternalPluginStartError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InternalPluginStartError]
-            - [`PluginDependencyError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginDependencyError]
-                - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.ThirdPartyDependencyNotFoundError]
-                - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.IncompatibleThirdPartyDependencyVersionError]
-                - [`PluginDependencyNotFoundError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginDependencyNotFoundError]
-                - [`IncompatiblePluginDependencyVersionError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.IncompatiblePluginDependencyVersionError]
-                - [`PluginDependencyNotRunningError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginDependencyNotRunningError]
+        - [`PluginDependencyError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginDependencyError]
+            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.ThirdPartyDependencyNotFoundError]
+            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.IncompatibleThirdPartyDependencyVersionError]
+            - [`PluginDependencyNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginDependencyNotFoundError]
+            - [`IncompatiblePluginDependencyVersionError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.IncompatiblePluginDependencyVersionError]
+            - [`PluginDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginDependencyNotRunningError]
         - [`PluginUnloadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginUnloadingError]
             - [`InternalPluginStopError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InternalPluginStopError]
             - [`PluginStopTimeoutError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginStopTimeoutError]
@@ -342,11 +341,13 @@ class InternalPluginStartError(
         )
 
 
-class PluginDependencyError(PluginsServiceError):
+class PluginDependencyError(PluginsServiceError, comp_excs.ComponentDependencyError):
     """
     Base exception for all errors that occur during the resolution of a plugin's
     dependencies.
     """
+
+    _COMPONENT_TYPE = "plugin"
 
 
 class ThirdPartyDependencyNotFoundError(
@@ -393,9 +394,9 @@ class IncompatibleThirdPartyDependencyVersionError(
         )
 
 
-class PluginDependencyNotFoundError(
+class ComponentDependencyNotFoundError(
     PluginDependencyError,
-    comp_excs.PluginDependencyNotFoundError,
+    comp_excs.ComponentDependencyNotFoundError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is not
@@ -405,17 +406,17 @@ class PluginDependencyNotFoundError(
     def __init__(
         self,
         plugin_str: str,
-        plugin_dependency_name: str,
+        missing_dependency: str,
     ):
         super().__init__(
             component_str=plugin_str,
-            plugin_dependency_name=plugin_dependency_name,
+            missing_dependency=missing_dependency,
         )
 
 
-class IncompatiblePluginDependencyVersionError(
+class IncompatibleComponentDependencyVersionError(
     PluginDependencyError,
-    comp_excs.IncompatiblePluginDependencyVersionError,
+    comp_excs.IncompatibleComponentDependencyVersionError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is
@@ -425,21 +426,41 @@ class IncompatiblePluginDependencyVersionError(
     def __init__(
         self,
         plugin_str: str,
-        plugin_dependency_name: str,
+        incompatible_dependency: str,
         required_version: str,
         installed_version: str,
     ):
         super().__init__(
             component_str=plugin_str,
-            plugin_dependency_name=plugin_dependency_name,
+            incompatible_dependency=incompatible_dependency,
             required_version=required_version,
             installed_version=installed_version,
         )
 
 
-class PluginDependencyNotRunningError(
+class PluginDependsOnInvalidComponentDependencyError(
     PluginDependencyError,
-    comp_excs.PluginDependencyNotRunningError,
+    comp_excs.ComponentDependsOnInvalidComponentDependencyError,
+):
+    """
+    An error that is raised when a plugin depends on another plugin dependency that
+    itself has invalid dependencies.
+    """
+
+    def __init__(
+        self,
+        plugin_str: str,
+        invalid_dependency: str,
+    ):
+        super().__init__(
+            component_str=plugin_str,
+            invalid_dependency=invalid_dependency,
+        )
+
+
+class ComponentDependencyNotRunningError(
+    PluginDependencyError,
+    comp_excs.ComponentDependencyNotRunningError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is present but
@@ -449,11 +470,11 @@ class PluginDependencyNotRunningError(
     def __init__(
         self,
         plugin_str: str,
-        plugin_dependency_name: str,
+        not_running_dependency: str,
     ):
         super().__init__(
             component_str=plugin_str,
-            plugin_dependency_name=plugin_dependency_name,
+            not_running_dependency=not_running_dependency,
         )
 
 

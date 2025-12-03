@@ -251,7 +251,7 @@ class ComponentDependencyError(ComponentsLoaderServiceError): ...
 
 class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
     _MESSAGE_TEMPLATE = (
-        "Failed to start the $C_LOWER$ '{component_project_folder}' due to a dependency "
+        "Failed to load the $C_LOWER$ '{component_project_folder}' due to a dependency "
         "error. The third-party dependency '{third_party_dependency_name}' is required "
         "but not installed. Either install that dependency or remove it from the "
         "$C_LOWER$'s definition."
@@ -270,13 +270,11 @@ class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
 
 class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
     _MESSAGE_TEMPLATE = (
-        "Failed to start the $C_LOWER$ '{component_project_folder}' due to a "
+        "Failed to load the $C_LOWER$ '{component_project_folder}' due to a "
         "dependency error. The $C_LOWER$ requires the third-party dependency "
-        "'{third_party_dependency_name}' of version "
-        "'{required_version}' but version "
-        "'{installed_version}' is installed. Either install the "
-        "dependency of the correct version or change the dependency version in "
-        "the $C_LOWER$'s definition."
+        "'{third_party_dependency_name}' of version '{required_version}' but version "
+        "'{installed_version}' was found. Either install the dependency of the correct "
+        "version or change the dependency version in the $C_LOWER$'s definition."
     )
 
     def __init__(
@@ -294,10 +292,10 @@ class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
         )
 
 
-class PluginDependencyNotFoundError(ComponentDependencyError):
+class ComponentDependencyNotFoundError(ComponentDependencyError):
     _MESSAGE_TEMPLATE = (
-        "Failed to start the $C_LOWER$ {component_str} due to a dependency error. "
-        "The plugin dependency '{plugin_dependency_name}' is required but not "
+        "Failed to load the $C_LOWER$ {component_str} due to a dependency error. "
+        "The component dependency '{missing_dependency}' is required but not "
         "installed. Either install that dependency or remove it from the $C_LOWER$'s "
         "definition."
     )
@@ -305,18 +303,18 @@ class PluginDependencyNotFoundError(ComponentDependencyError):
     def __init__(
         self,
         component_str: str,
-        plugin_dependency_name: str,
+        missing_dependency: str,
     ):
         super().__init__(
             component_str=component_str,
-            plugin_dependency_name=plugin_dependency_name,
+            missing_dependency=missing_dependency,
         )
 
 
-class IncompatiblePluginDependencyVersionError(ComponentDependencyError):
+class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
     _MESSAGE_TEMPLATE = (
-        "Failed to start the $C_LOWER$ {component_str} due to a dependency error. "
-        "The $C_LOWER$ requires the plugin dependency '{plugin_dependency_name}' of "
+        "Failed to load the $C_LOWER$ {component_str} due to a dependency error. "
+        "The $C_LOWER$ requires the component dependency '{incompatible_dependency}' of "
         "version '{required_version}' but version '{installed_version}' is installed. "
         "Either install the dependency of the correct version or change the dependency "
         "version in the $C_LOWER$'s definition."
@@ -325,31 +323,49 @@ class IncompatiblePluginDependencyVersionError(ComponentDependencyError):
     def __init__(
         self,
         component_str: str,
-        plugin_dependency_name: str,
+        incompatible_dependency: str,
         required_version: str,
         installed_version: str,
     ):
         super().__init__(
             component_str=component_str,
-            plugin_dependency_name=plugin_dependency_name,
+            incompatible_dependency=incompatible_dependency,
             required_version=required_version,
             installed_version=installed_version,
         )
 
 
-class PluginDependencyNotRunningError(ComponentDependencyError):
+class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError):
     _MESSAGE_TEMPLATE = (
-        "Failed to start the $C_LOWER$ {component_str} due to a dependency error. The "
-        "plugin dependency '{plugin_dependency_name}' that the $C_LOWER$ depends on "
+        "Failed to load the $C_LOWER$ {component_str} due to a dependency error. The "
+        "component dependency '{invalid_dependency}' that the $C_LOWER$ depends on is "
+        "invalid."
+    )
+
+    def __init__(
+        self,
+        component_str: str,
+        invalid_dependency: str,
+    ):
+        super().__init__(
+            component_str=component_str,
+            invalid_dependency=invalid_dependency,
+        )
+
+
+class ComponentDependencyNotRunningError(ComponentDependencyError):
+    _MESSAGE_TEMPLATE = (
+        "Failed to load the $C_LOWER$ {component_str} due to a dependency error. The "
+        "component dependency '{not_running_dependency}' that the $C_LOWER$ depends on "
         "is installed but not currently running."
     )
 
     def __init__(
         self,
         component_str: str,
-        plugin_dependency_name: str,
+        not_running_dependency: str,
     ):
         super().__init__(
             component_str=component_str,
-            plugin_dependency_name=plugin_dependency_name,
+            not_running_dependency=not_running_dependency,
         )

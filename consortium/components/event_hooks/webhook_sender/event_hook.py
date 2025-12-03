@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import aiohttp
@@ -7,83 +8,147 @@ from consortium.framework.event_hooks import base_event_hook, event_type
 
 
 class EventHook(base_event_hook.BaseEventHook):
+    label = "consortium.event_hooks.webhook_sender"
     name = "Webhook sender"
     description = (
         "This event hook forwards event data for any set of specific events to any set "
-        "of arbitrarily specified webhooks through an HTTP POST request. The particular "
-        "events it listens for and webhooks it sends data to are configure through the "
-        "`config.json` file in the event hook's project folder."
+        "of arbitrarily specified webhooks. The particular events it listens for and "
+        "webhooks it sends data to are configured through the `config.json` file in "
+        "the event hook's project folder. Currently supports Discord, Slack, and "
+        "generic HTTP POST webhooks."
     )
+    version = "0.1.0"
+    compatible_framework_version = ">=1.0.0"
+    authors = {"Sekiun (github.com/not-sekiun)"}
+    event_types = {"STOP_SERVER"}
 
-    async def on_event_hook_triggered(self, event):
-        # Set a flag to perform initial setup when an event hook is first called
-        if not hasattr(self.environment, "already_performed_setup"):
-            self.environment.already_performed_setup = True
-            self.environment.events_to_send = []
-            self.environment.webhooks_to_send_to = []
+    async def on_event_hook_setup(self) -> None:
+        try:
+            with (self.event_hook_project_folder / "config.json").open(
+                "r",
+            ) as config_file:
+                config = json.load(config_file)
+        except FileNotFoundError:
+            self.logger.error(
+                "Failed to load webhook sender event hook configuration file. "
+                "Configuration file `config.json` not found at the event hook's "
+                f"project folder `{self.event_hook_project_folder}`.",
+            )
+            return
+        except json.decoder.JSONDecodeError:
+            self.logger.error(
+                "Failed to load webhook sender event hook configuration "
+                "file. The configuration file does not contain valid JSON "
+                "data.",
+            )
+            return
 
-            try:
-                with (self.event_hook_project_folder / "config.json").open(
-                    "r",
-                ) as config_file:
-                    try:
-                        config = json.load(config_file)
-                    except json.decoder.JSONDecodeError:
-                        self.event_hook_logger.error(
-                            "Failed to load webhook sender event hook configuration "
-                            "file. The configuration file does not contain valid JSON "
-                            "data.",
-                        )
-                        return
-
-                    config_json_schema = {
+        config_json_schema = {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "webhooks": {
+                    "type": "array",
+                    "items": {
                         "type": "object",
                         "properties": {
-                            "events_to_send": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string",
-                                },
+                            "platform": {
+                                "type": "string",
+                                "enum": ["discord", "slack", "generic"],
                             },
-                            "webhooks_to_send_to": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string",
-                                },
-                            },
+                            "url": {"type": "string", "format": "uri"},
                         },
-                    }
-                    try:
-                        jsonschema.validate(config, config_json_schema)
-                    except jsonschema.ValidationError as exc:
-                        self.event_hook_logger.error(
-                            "Failed to load webhook sender event hook configuration "
-                            "file. The configuration file's format does not match the "
-                            "expected configuration file JSON schema :",
-                            exc.message,
-                        )
-                        return
+                    },
+                },
+                "max_retries": {
+                    "type": "integer",
+                    "minimum": 0,
+                },
+                "retry_delay_seconds": {
+                    "type": "integer",
+                    "minimum": 0,
+                },
+            },
+        }
+        try:
+            jsonschema.validate(config, config_json_schema)
+        except jsonschema.ValidationError as exc:
+            self.logger.error(
+                "Failed to load webhook sender event hook configuration "
+                "file. The configuration file's format does not match the "
+                "expected configuration file JSON schema: {}",
+                exc.message,
+            )
+            return
 
-                    for event in config["events_to_send"]:
-                        if event not in event_type.EventType:
-                            self.event_hook_logger.warning(
-                                "Failed to load webhook sender event hook configuration "
-                                f"file. The provided string '{event}' in the set of "
-                                "event types to send is not a valid event type.",
-                            )
-                            continue
-                        self.event_types.add(event)
-                    self.environment.webhooks_to_send_to = config["webhooks_to_send_to"]
-            except FileNotFoundError:
-                self.event_hook_logger.error(
-                    "Failed to load webhook sender event hook configuration file. "
-                    "Configuration file `config.json` not found at the event hook's "
-                    f"project folder `{self.event_hook_project_folder}`.",
+        for event in config["events"]:
+            if event not in event_type.EventType:
+                self.logger.warning(
+                    "The provided string '{}' in the set of event types to send is not "
+                    "a valid event type.",
+                    event,
                 )
+                continue
+            self.event_types.add(event)
 
+        self.environment.config = config
+
+    async def _post_to_webhook_with_retries(
+        self,
+        client_session: aiohttp.ClientSession,
+        webhook_url: str,
+        data: dict,
+    ) -> None:
+        max_retries = self.environment.config.get("max_retries", 3)
+        retry_delay_seconds = self.environment.config.get("retry_delay_seconds", 5)
+        for i in range(max_retries):
+            try:
+                async with client_session.post(
+                    webhook_url,
+                    json=data,
+                ) as response:
+                    if response.status == 200 or response.status == 204:
+                        return
+                    else:
+                        self.logger.warning(
+                            "Failed to send event data to webhook at '{}'. "
+                            "Received unexpected status code {}. "
+                            "Retrying... (Attempt {}/{})",
+                            webhook_url,
+                            response.status,
+                            i + 1,
+                            max_retries,
+                        )
+            except aiohttp.ClientError as exc:
+                self.logger.warning(
+                    "Failed to send event data to webhook at '{}'. "
+                    "Error: {}. Retrying... (Attempt {}/{})",
+                    webhook_url,
+                    str(exc),
+                    i + 1,
+                    max_retries,
+                )
+            await asyncio.sleep(retry_delay_seconds)
+
+    async def on_event_hook_triggered(self, event):
         async with aiohttp.ClientSession() as client_session:
-            for webhook in self.environment.webhooks_to_send_to:
-                await client_session.post(
-                    webhook,
-                    json=event.to_json(),
+            for webhook in self.environment.config["webhooks"]:
+                event_dict = event.to_json()
+                stringified_event_dict = {
+                    "event_type": str(event_dict["event_type"]),
+                    "data": event_dict["data"],
+                }  # convert `event_type` enum to str
+                if webhook["platform"] == "discord":
+                    data = {"content": str(stringified_event_dict)}
+                elif webhook["platform"] == "slack":
+                    data = {"text": str(stringified_event_dict)}
+                else:
+                    data = stringified_event_dict
+                await self._post_to_webhook_with_retries(
+                    client_session=client_session,
+                    webhook_url=webhook["url"],
+                    data=data,
                 )

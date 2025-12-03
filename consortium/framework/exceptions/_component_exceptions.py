@@ -5,7 +5,7 @@ from consortium.framework.exceptions.base_framework_exception import (
 )
 
 
-class LifeCycleStartError(BaseRaiseOnlyFrameworkException):
+class ComponentStartError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
         message: str,
@@ -17,7 +17,7 @@ class LifeCycleStartError(BaseRaiseOnlyFrameworkException):
         )
 
 
-class LifeCycleRuntimeError(BaseRaiseOnlyFrameworkException):
+class ComponentRuntimeError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
         message: str,
@@ -29,7 +29,7 @@ class LifeCycleRuntimeError(BaseRaiseOnlyFrameworkException):
         )
 
 
-class LifeCycleStopError(BaseRaiseOnlyFrameworkException):
+class ComponentStopError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
         message: str,

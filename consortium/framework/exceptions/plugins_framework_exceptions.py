@@ -1,17 +1,17 @@
-from consortium.framework.exceptions._life_cycle_exceptions import (
-    LifeCycleRuntimeError,
-    LifeCycleStartError,
-    LifeCycleStopError,
+from consortium.framework.exceptions._component_exceptions import (
+    ComponentRuntimeError,
+    ComponentStartError,
+    ComponentStopError,
 )
 
 
-class PluginStartError(LifeCycleStartError):
+class PluginStartError(ComponentStartError):
     pass
 
 
-class PluginRuntimeError(LifeCycleRuntimeError):
+class PluginRuntimeError(ComponentRuntimeError):
     pass
 
 
-class PluginStopError(LifeCycleStopError):
+class PluginStopError(ComponentStopError):
     pass

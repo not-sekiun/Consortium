@@ -3,52 +3,63 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Any, get_type_hints
+from typing import Any
 
 import loguru
-import packaging.requirements as requirements
-import packaging.specifiers as specifiers
-import packaging.version as version
-from pydantic import ValidationError
 
+import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
 import consortium.server.server_singletons as server_singletons
-from consortium.framework._life_cycles import LifeCycle, LifeCycleFatalContext
-from consortium.framework.plugins._plugin_metadata_model import PluginMetadataModel
+from consortium.framework._components import (
+    ComponentLifeCycle,
+    ComponentLifeCycleFatalContext,
+    ComponentMetadata,
+    ComponentModel,
+)
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
-from consortium.server.exceptions.framework_exceptions.lifecycle_exceptions import (
-    LifeCycleAlreadyStartedError,
-    LifeCycleNotRunningError,
-    LifeCycleStartError as LifeCycleStartFrameworkError,
-    LifeCycleStopError as LifeCycleStopFrameworkError,
+from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
+    ComponentAlreadyStartedError,
+    ComponentNotRunningError,
+    ComponentStartError as LifeCycleStartFrameworkError,
+    ComponentStopError as LifeCycleStopFrameworkError,
 )
-from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (  # IncompatiblePluginDependencyVersionError,; IncompatibleThirdPartyDependencyVersionError,; PluginDependencyNotFoundError,; PluginDependencyNotRunningError,; ThirdPartyDependencyNotFoundError,
+from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
     EmptyPluginLabelError,
     InvalidFrameworkVersionSpecifierError,
     InvalidPluginConfigurationParameterTypeError,
     InvalidPluginDependencyVersionSpecifierError,
     InvalidPluginVersionError,
-    InvalidThirdPartyDependencyVersionSpecifierError,
     MissingPluginConfigurationParameterError,
     PluginAlreadyStartedError,
     PluginNotRunningError,
-    PluginRuntimeError as PluginRuntimeFrameworkError,
     PluginStartError as PluginStartFrameworkError,
     PluginStopError as PluginStopFrameworkError,
 )
 from consortium.server.server_logging import LoggerType
+from consortium.server.utils.data_structure_utils import remap_exception
 
 
-class BasePlugin(LifeCycle):
-    label: str
-    name: str | None = None
-    description: str = ""
-    version: str | None = None
-    compatible_framework_version: str | None = None
-    authors: set[str] | None = None
+class _PluginModel(ComponentModel):
     autostart: bool = True
-    plugin_dependencies: set[str] | None = None
+
+
+class BasePlugin(ComponentMetadata, ComponentLifeCycle):
+    _METADATA_MODEL = _PluginModel
+    _EXCEPTION_MAP = {
+        comp_excs.MissingComponentConfigurationParameterError: MissingPluginConfigurationParameterError,
+        comp_excs.EmptyComponentLabelError: EmptyPluginLabelError,
+        comp_excs.InvalidComponentVersionError: InvalidPluginVersionError,
+        comp_excs.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
+        comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidPluginDependencyVersionSpecifierError,
+        comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidPluginConfigurationParameterTypeError,
+    }
+    _EXCEPTION_KWARGS_MAP = {
+        "component_str": "plugin_str",
+        "component_filepath": "plugin_filepath",
+    }
+
+    autostart: bool = True
 
     def __init__(self):
         self.plugin_id = uuid.uuid4()
@@ -61,7 +72,7 @@ class BasePlugin(LifeCycle):
             },
         )
         self.plugin_logger = loguru.logger.bind(
-            logger_name=f"Plugin {self}",
+            logger_name=f"Plugin - {self}",
             logger_type=LoggerType.PLUGIN_LOGGER,
         )
         self.plugin_project_folder = pathlib.Path(
@@ -70,89 +81,19 @@ class BasePlugin(LifeCycle):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
-        cls.authors = cls.authors or set()
-        cls.plugin_dependencies = cls.plugin_dependencies or set()
-        # Third-party dependencies get added in when the plugin is loaded if it declared
-        # any in its `pyproject.toml` file
-        cls.third_party_dependencies = set()
-
-        # Use the module filepath as a reference to the plugin if its label is not defined
-        plugin_str = (
-            cls.label
-            if hasattr(cls, "label")
-            else f"{cls.__name__} ({sys.modules[cls.__module__].__file__})"
-        )
-        expected_attrs_and_types_map = get_type_hints(cls)
-
-        # Check all attributes exist
-        for attr in expected_attrs_and_types_map.keys():
-            if not hasattr(cls, attr):
-                raise MissingPluginConfigurationParameterError(
-                    plugin_str=plugin_str,
-                    parameter_name=attr,
-                )
-
-        # Check all class attributes are of the expected type
         try:
-            PluginMetadataModel(
-                label=cls.label,
-                name=cls.name,
-                description=cls.description,
-                version=cls.version,
-                compatible_framework_version=cls.compatible_framework_version,
-                authors=cls.authors,
-                autostart=cls.autostart,
-                plugin_dependencies=cls.plugin_dependencies,
-            )
-        except ValidationError as exc:
-            attr = exc.errors()[0]["loc"][0]
-            raise InvalidPluginConfigurationParameterTypeError(
-                plugin_str=plugin_str,
-                parameter_name=attr,
-                parameter_type=expected_attrs_and_types_map[attr],
-            )
-
-        # Perform semantic checking of specific attributes and reassign as needed
-        if not cls.label:
-            raise EmptyPluginLabelError(
-                plugin_filepath=sys.modules[cls.__module__].__file__,
-            )
-        cls.name = cls.label if cls.name is None else cls.name
-        try:
-            cls.version = version.Version(cls.version) if cls.version else None
-        except version.InvalidVersion:
-            raise InvalidPluginVersionError(
-                plugin_str=cls.label,
-                version=cls.version,
-            )
-        try:
-            cls.compatible_framework_version = (
-                specifiers.SpecifierSet(cls.compatible_framework_version)
-                if cls.compatible_framework_version
-                else None
-            )
-        except specifiers.InvalidSpecifier:
-            raise InvalidFrameworkVersionSpecifierError(
-                framework_version_specifier_str=cls.compatible_framework_version,
-                plugin_str=cls.label,
-            )
-        new_dependencies = set()
-        for entry in cls.plugin_dependencies:
-            try:
-                dependency = requirements.Requirement(entry)
-            except requirements.InvalidRequirement:
-                raise InvalidPluginDependencyVersionSpecifierError(
-                    plugin_str=cls.label,
-                    invalid_dependency_entry=entry,
-                )
-            new_dependencies.add(dependency)
-
-        cls.plugin_dependencies = new_dependencies
-
+            cls._validate_metadata()
+        except comp_excs.ComponentsFrameworkError as exc:
+            raise remap_exception(
+                original_exception=exc,
+                original_kwargs=exc.exc_kwargs,
+                exception_map=cls._EXCEPTION_MAP,
+                exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
+            ) from None
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f"'{self.name}' [{self.label}] (ID: {str(self.plugin_id)})"
+        return f"{self.name} ({str(self.plugin_id)})"
 
     def __repr__(self) -> str:
         return (
@@ -164,9 +105,9 @@ class BasePlugin(LifeCycle):
             f"version={self.version!r}, "
             f"compatible_framework_version={self.compatible_framework_version!r}, "
             f"authors={self.authors!r}, "
-            f"autostart={self.autostart!r}, "
-            f"plugin_dependencies={self.plugin_dependencies!r}, "
+            f"component_dependencies={self.component_dependencies!r}, "
             f"third_party_dependencies={self.third_party_dependencies}"
+            f"autostart={self.autostart!r}, "
             f")"
         )
 
@@ -185,14 +126,14 @@ class BasePlugin(LifeCycle):
     async def on_fatal(
         self,
         exc: Exception,
-        fatal_context: LifeCycleFatalContext,
+        fatal_context: ComponentLifeCycleFatalContext,
     ) -> None:
         ctx_to_str_map = {
-            LifeCycleFatalContext.START: "starting",
-            LifeCycleFatalContext.RUNNING: "running",
-            LifeCycleFatalContext.STOP: "stopping",
-            LifeCycleFatalContext.CANCEL: "being cancelled",
-            LifeCycleFatalContext.ERROR: "handling a runtime error",
+            ComponentLifeCycleFatalContext.START: "starting",
+            ComponentLifeCycleFatalContext.RUNNING: "running",
+            ComponentLifeCycleFatalContext.STOP: "stopping",
+            ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
+            ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
         self.plugin_logger.opt(ansi=True).error(
             "<bold><red>Fatal error occurred within plugin while it was {}:</></>\n{}",
@@ -203,35 +144,35 @@ class BasePlugin(LifeCycle):
     async def start(self) -> None:
         try:
             await super().start()
-        except LifeCycleAlreadyStartedError:
+        except ComponentAlreadyStartedError:
             raise PluginAlreadyStartedError(
                 plugin_str=str(self),
             )
         except LifeCycleStartFrameworkError as exc:
             raise PluginStartFrameworkError(
                 plugin_str=str(self),
-                message=exc.message,
+                error_message=exc.message,
                 detail=exc.detail,
             )
 
     async def stop(self) -> None:
         try:
             await super().stop()
-        except LifeCycleNotRunningError:
+        except ComponentNotRunningError:
             raise PluginNotRunningError(
                 plugin_str=str(self),
             )
         except LifeCycleStopFrameworkError as exc:
             raise PluginStopFrameworkError(
                 plugin_str=str(self),
-                message=exc.message,
+                error_message=exc.message,
                 detail=exc.detail,
             )
 
     async def cancel(self) -> None:
         try:
             await super().cancel()
-        except LifeCycleNotRunningError:
+        except ComponentNotRunningError:
             raise PluginNotRunningError(
                 plugin_str=str(self),
             )
@@ -245,9 +186,9 @@ class BasePlugin(LifeCycle):
             "version": str(self.version),
             "compatible_framework_version": str(self.compatible_framework_version),
             "authors": list(self.authors),
-            "autostart": self.autostart,
-            "plugin_dependencies": list(map(str, self.plugin_dependencies)),
+            "component_dependencies": list(map(str, self.component_dependencies)),
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
+            "autostart": self.autostart,
             "status": self.status.to_json(),
         }
 

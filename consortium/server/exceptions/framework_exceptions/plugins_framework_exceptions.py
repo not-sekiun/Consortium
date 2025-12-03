@@ -1,53 +1,61 @@
-"""
-This module describes all the exceptions that can be raised by the plugins framework.
-These exceptions are distinctly different from the "signalling" exceptions that are
-present in the [`consortium.framework.exceptions`][consortium.framework.exceptions]
-module. The exceptions here do not serve any message passing or signalling purpose to or
-from the framework. Instead, they are raised when an error condition occurs and are also
-meant to be used by the REST API layer.
-
-Exception hierarchy for the plugins framework:
-
-- [`BaseFrameworkException`][consortium.server.exceptions.framework_exceptions.base_framework_exception.BaseFrameworkException]
-    - [`PluginsFrameworkError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginsFrameworkError]
-        - [`PluginConfigurationError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginConfigurationError]
-            - [`InvalidPluginConfigurationParameterTypeError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidPluginConfigurationParameterTypeError]
-            - [`MissingPluginConfigurationParameterError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.MissingPluginConfigurationParameterError]
-            - [`EmptyPluginLabelError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.EmptyPluginLabelError]
-            - [`DuplicatePluginLabelError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.DuplicatePluginLabelError]
-            - [`InvalidPluginVersionError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidPluginVersionError]
-            - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidFrameworkVersionSpecifierError]
-            - [`InvalidThirdPartyDependencyVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidThirdPartyDependencyVersionSpecifierError]
-            - [`InvalidPluginDependencyVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidPluginDependencyVersionSpecifierError]
-        - [`PluginOperationError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginOperationError]
-            - [`PluginNotRunningError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginNotRunningError]
-            - [`PluginAlreadyStartedError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginAlreadyStartedError]
-            - [`PluginStartError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginStartError]
-            - [`PluginRuntimeError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginRuntimeError]
-            - [`PluginStopError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginStopError]
-"""
-
+# """
+# This module describes all the exceptions that can be raised by the plugins framework.
+# These exceptions are distinctly different from the "signalling" exceptions that are
+# present in the [`consortium.framework.exceptions`][consortium.framework.exceptions]
+# module. The exceptions here do not serve any message passing or signalling purpose to or
+# from the framework. Instead, they are raised when an error condition occurs and are also
+# meant to be used by the REST API layer.
+#
+# Exception hierarchy for the plugins framework:
+#
+# - [`BaseFrameworkException`][consortium.server.exceptions.framework_exceptions.base_framework_exception.BaseFrameworkException]
+#     - [`PluginsFrameworkError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginsFrameworkError]
+#         - [`PluginConfigurationError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginConfigurationError]
+#             - [`InvalidPluginConfigurationParameterTypeError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidPluginConfigurationParameterTypeError]
+#             - [`MissingPluginConfigurationParameterError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.MissingPluginConfigurationParameterError]
+#             - [`EmptyPluginLabelError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.EmptyPluginLabelError]
+#             - [`DuplicatePluginLabelError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.DuplicatePluginLabelError]
+#             - [`InvalidPluginVersionError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidPluginVersionError]
+#             - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidFrameworkVersionSpecifierError]
+#             - [`InvalidThirdPartyDependencyVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidThirdPartyDependencyVersionSpecifierError]
+#             - [`InvalidPluginDependencyVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidPluginDependencyVersionSpecifierError]
+#         - [`PluginOperationError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginOperationError]
+#             - [`PluginNotRunningError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginNotRunningError]
+#             - [`PluginAlreadyStartedError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginAlreadyStartedError]
+#             - [`PluginStartError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginStartError]
+#             - [`PluginRuntimeError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginRuntimeError]
+#             - [`PluginStopError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginStopError]
+# """
 from typing import Any
 
+import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
 
 
-class PluginsFrameworkError(BaseFrameworkException):
+class PluginsFrameworkError(comp_excs.ComponentsFrameworkError, BaseFrameworkException):
     """
     Base exception for all errors that occur within the plugins framework.
     """
 
+    _COMPONENT_TYPE = "plugin"
 
-class PluginConfigurationError(PluginsFrameworkError):
+
+class PluginConfigurationError(
+    comp_excs.ComponentConfigurationError,
+    PluginsFrameworkError,
+):
     """
     Base exception for all errors that occur during the configuration of a particular
     plugin.
     """
 
 
-class InvalidPluginConfigurationParameterTypeError(PluginConfigurationError):
+class InvalidPluginConfigurationParameterTypeError(
+    comp_excs.InvalidComponentConfigurationParameterTypeError,
+    PluginConfigurationError,
+):
     """
     An error that is raised when a plugin's configuration parameter is of an invalid
     type.
@@ -56,55 +64,48 @@ class InvalidPluginConfigurationParameterTypeError(PluginConfigurationError):
     def __init__(
         self,
         plugin_str: str,
-        parameter_name: str | None = None,
-        parameter_type: str | None = None,
-        custom_error_message: str = "",
+        parameter_name: str,
+        parameter_type: str,
     ):
-        if not custom_error_message:
-            super().__init__(
-                message=(
-                    f"Failed to configure the plugin '{plugin_str}'. The parameter "
-                    f"`{parameter_name}` must be of type `{parameter_type}` in the "
-                    f"plugin's definition. Modify the plugin's `{parameter_name}` "
-                    f"class variable to be of the proper type."
-                ),
-            )
-        else:
-            super().__init__(
-                f"Failed to configure the plugin '{plugin_str}'. {custom_error_message}",
-            )
+        super().__init__(
+            component_str=plugin_str,
+            parameter_name=parameter_name,
+            parameter_type=parameter_type,
+        )
 
 
-class MissingPluginConfigurationParameterError(PluginConfigurationError):
+class MissingPluginConfigurationParameterError(
+    comp_excs.MissingComponentConfigurationParameterError,
+    PluginConfigurationError,
+):
     """
     An error that is raised when a parameter is not declared in a plugin's definition.
     """
 
     def __init__(self, parameter_name: str, plugin_str: str):
         super().__init__(
-            f"Failed to configure the plugin '{plugin_str}'. The parameter "
-            f"`{parameter_name}` was not declared in the plugin's definition. Modify "
-            f"the plugin to include `{parameter_name}` as a class variable of the "
-            f"proper type",
+            component_str=plugin_str,
+            parameter_name=parameter_name,
         )
 
 
-class EmptyPluginLabelError(PluginConfigurationError):
+class EmptyPluginLabelError(
+    comp_excs.EmptyComponentLabelError,
+    PluginConfigurationError,
+):
     """
     An error that is raised when the label provided in a plugin's definition during
     configuration is an empty string.
     """
 
     def __init__(self, plugin_filepath: str):
-        super().__init__(
-            f"Failed to configure the plugin defined at '{plugin_filepath}'. The "
-            f"label provided in the plugin's definition during configuration cannot be "
-            f"an empty string. Redeclare the plugin's `label` class attribute to be a "
-            f"unique non empty string.",
-        )
+        super().__init__(component_filepath=plugin_filepath)
 
 
-class DuplicatePluginLabelError(PluginConfigurationError):
+class DuplicatePluginLabelError(
+    comp_excs.DuplicateComponentLabelError,
+    PluginConfigurationError,
+):
     """
     An error that is raised when the label provided in the plugin's definition during
     configuration is already in use by another plugin.
@@ -112,13 +113,15 @@ class DuplicatePluginLabelError(PluginConfigurationError):
 
     def __init__(self, plugin_str: str, label: str):
         super().__init__(
-            f"Failed to configure the plugin '{plugin_str}'. The label '{label}' is "
-            "already used by another plugin. Redeclare the plugin's `label` class "
-            "attribute to be unique amongst all loaded plugins.",
+            component_str=plugin_str,
+            label=label,
         )
 
 
-class InvalidPluginVersionError(PluginConfigurationError):
+class InvalidPluginVersionError(
+    comp_excs.InvalidComponentVersionError,
+    PluginConfigurationError,
+):
     """
     An error that is raised when the plugin version string provided in the plugin's
     definition during configuration is not a valid version string according to PEP 440.
@@ -126,13 +129,15 @@ class InvalidPluginVersionError(PluginConfigurationError):
 
     def __init__(self, plugin_str: str, version: str):
         super().__init__(
-            f"Failed to configure the plugin '{plugin_str}'. The plugin version string "
-            f"provided '{version}' is not a valid versioning string. See PEP 440 for "
-            f"more details on valid versioning strings.",
+            component_str=plugin_str,
+            version=version,
         )
 
 
-class InvalidFrameworkVersionSpecifierError(PluginConfigurationError):
+class InvalidFrameworkVersionSpecifierError(
+    comp_excs.InvalidFrameworkVersionSpecifierError,
+    PluginConfigurationError,
+):
     """
     An error that is raised when the framework version specifier string provided in the
     plugin's definition during configuration is not a valid version specifier string as
@@ -141,40 +146,19 @@ class InvalidFrameworkVersionSpecifierError(PluginConfigurationError):
 
     def __init__(self, plugin_str: str, framework_version_specifier_str: str):
         super().__init__(
-            f"Failed to configure the plugin '{plugin_str}'. The framework version "
-            f"specifier string provided '{framework_version_specifier_str}' is not a "
-            "valid version specifier string. See PEP 440 for details on version "
-            "specifier strings.",
+            component_str=plugin_str,
+            framework_version_specifier_str=framework_version_specifier_str,
         )
 
 
-class InvalidThirdPartyDependencyVersionSpecifierError(PluginConfigurationError):
-    """
-    An error that is raised when the third-party dependency version specifier string
-    provided in the plugin's definition during configuration is not a valid version
-    specifier string as defined in PEP440.
-    """
-
-    def __init__(
-        self,
-        plugin_str: str,
-        third_party_dependency_name: str,
-        third_party_dependency_version_specifier: str,
-    ):
-        super().__init__(
-            f"Failed to configure the plugin '{plugin_str}'. The third-party dependency "
-            f"'{third_party_dependency_name}' version specifier string provided "
-            f"'{third_party_dependency_version_specifier}' is not a "
-            "valid version specifier string. See PEP 440 for details on version "
-            "specifier strings.",
-        )
-
-
-class InvalidPluginDependencyVersionSpecifierError(PluginConfigurationError):
+class InvalidPluginDependencyVersionSpecifierError(
+    comp_excs.InvalidComponentDependencyVersionSpecifierError,
+    PluginConfigurationError,
+):
     """
     An error that is raised when the plugin dependency version specifier string
     provided in the plugin's definition during configuration is not a valid version
-    specifier string as defined in PEP440..
+    specifier string as defined in PEP440.
     """
 
     def __init__(
@@ -183,21 +167,19 @@ class InvalidPluginDependencyVersionSpecifierError(PluginConfigurationError):
         invalid_dependency_entry: str,
     ):
         super().__init__(
-            f"Failed to configure the plugin '{plugin_str}'. The plugin's "
-            f"`plugin_dependencies` configuration parameter contains the invalid "
-            f"dependency entry '{invalid_dependency_entry}'. Check that the dependency "
-            f"parameter contains entries conforming to PEP 508.",
+            component_str=plugin_str,
+            invalid_dependency_entry=invalid_dependency_entry,
         )
 
 
-class PluginOperationError(PluginsFrameworkError):
+class PluginOperationError(comp_excs.ComponentOperationError, PluginsFrameworkError):
     """
     Base exception for all errors that occur during the operation of a particular
     plugin.
     """
 
 
-class PluginNotRunningError(PluginOperationError):
+class PluginNotRunningError(comp_excs.ComponentNotRunningError, PluginOperationError):
     """
     An error that is raised when an operation is attempted on a plugin that requires
     that plugin to already be running but the plugin is not running.
@@ -207,15 +189,13 @@ class PluginNotRunningError(PluginOperationError):
         self,
         plugin_str: str,
     ):
-        super().__init__(
-            message=(
-                f"Failed to perform the requested operation on the plugin "
-                f"{plugin_str}. The plugin is not running."
-            ),
-        )
+        super().__init__(component_str=plugin_str)
 
 
-class PluginAlreadyStartedError(PluginOperationError):
+class PluginAlreadyStartedError(
+    comp_excs.ComponentAlreadyStartedError,
+    PluginOperationError,
+):
     """
     An error that is raised when an operation is attempted on a plugin that requires
     that plugin to not already be started or running but the plugin is already started
@@ -226,15 +206,10 @@ class PluginAlreadyStartedError(PluginOperationError):
         self,
         plugin_str: str,
     ):
-        super().__init__(
-            message=(
-                f"Failed to perform the requested operation on the plugin "
-                f"{plugin_str}. The plugin is already started or running."
-            ),
-        )
+        super().__init__(component_str=plugin_str)
 
 
-class PluginStartError(PluginOperationError):
+class PluginStartError(comp_excs.ComponentStartError, PluginOperationError):
     """
     An error that is raised when a plugin fails to start.
     """
@@ -242,16 +217,17 @@ class PluginStartError(PluginOperationError):
     def __init__(
         self,
         plugin_str: str,
-        message: str,
+        error_message: str,
         detail: Any,
     ):
         super().__init__(
-            message=f"Failed to start the plugin {plugin_str}. {message}",
             detail=detail,
+            plugin_str=plugin_str,
+            error_message=error_message,
         )
 
 
-class PluginRuntimeError(PluginOperationError):
+class PluginRuntimeError(comp_excs.ComponentRuntimeError, PluginOperationError):
     """
     An error that is raised when a plugin encounters an error at runtime.
     """
@@ -259,19 +235,17 @@ class PluginRuntimeError(PluginOperationError):
     def __init__(
         self,
         plugin_str: str,
-        message: str,
+        error_message: str,
         detail: Any,
     ):
         super().__init__(
-            message=(
-                f"Failed to run the plugin {plugin_str} because it encountered an "
-                f"error at runtime. {message}"
-            ),
             detail=detail,
+            component_str=plugin_str,
+            error_message=error_message,
         )
 
 
-class PluginStopError(PluginOperationError):
+class PluginStopError(comp_excs.ComponentStopError, PluginOperationError):
     """
     An error that is raised when a plugin fails to stop.
     """
@@ -279,10 +253,11 @@ class PluginStopError(PluginOperationError):
     def __init__(
         self,
         plugin_str: str,
-        message: str,
+        error_message: str,
         detail: Any,
     ):
         super().__init__(
-            message=f"Failed to stop the plugin {plugin_str}. {message}",
             detail=detail,
+            plugin_str=plugin_str,
+            error_message=error_message,
         )

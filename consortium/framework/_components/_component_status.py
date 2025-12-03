@@ -3,12 +3,12 @@ import enum
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
-from consortium.server.exceptions.framework_exceptions.lifecycle_exceptions import (
-    LifeCycleRuntimeError,
+from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
+    ComponentRuntimeError,
 )
 
 
-class LifeCycleState(enum.StrEnum):
+class ComponentState(enum.StrEnum):
     INITIALIZED = "INITIALIZED"
     STARTED = "STARTED"
     RUNNING = "RUNNING"
@@ -19,40 +19,40 @@ class LifeCycleState(enum.StrEnum):
     FATAL = "FATAL"
 
 
-class LifeCycleStatus:
+class ComponentStatus:
     _VALID_LIFE_CYCLE_STATE_TRANSITIONS = {
-        LifeCycleState.INITIALIZED: {LifeCycleState.STARTED},
-        LifeCycleState.STARTED: {
-            LifeCycleState.INITIALIZED,
-            LifeCycleState.RUNNING,
-            LifeCycleState.FATAL,
+        ComponentState.INITIALIZED: {ComponentState.STARTED},
+        ComponentState.STARTED: {
+            ComponentState.INITIALIZED,
+            ComponentState.RUNNING,
+            ComponentState.FATAL,
         },
-        LifeCycleState.RUNNING: {
-            LifeCycleState.COMPLETED,
-            LifeCycleState.STOPPED,
-            LifeCycleState.CANCELLED,
-            LifeCycleState.ERRORED,
-            LifeCycleState.FATAL,
+        ComponentState.RUNNING: {
+            ComponentState.COMPLETED,
+            ComponentState.STOPPED,
+            ComponentState.CANCELLED,
+            ComponentState.ERRORED,
+            ComponentState.FATAL,
         },
-        LifeCycleState.STOPPED: {
-            LifeCycleState.STARTED,
-            LifeCycleState.FATAL,
+        ComponentState.STOPPED: {
+            ComponentState.STARTED,
+            ComponentState.FATAL,
         },
-        LifeCycleState.CANCELLED: {
-            LifeCycleState.STARTED,
-            LifeCycleState.FATAL,
+        ComponentState.CANCELLED: {
+            ComponentState.STARTED,
+            ComponentState.FATAL,
         },
-        LifeCycleState.ERRORED: {
-            LifeCycleState.STARTED,
-            LifeCycleState.FATAL,
+        ComponentState.ERRORED: {
+            ComponentState.STARTED,
+            ComponentState.FATAL,
         },
-        LifeCycleState.FATAL: {
-            LifeCycleState.STARTED,
+        ComponentState.FATAL: {
+            ComponentState.STARTED,
         },
     }
 
     def __init__(self):
-        self.state = LifeCycleState.INITIALIZED
+        self.state = ComponentState.INITIALIZED
         self.error = None
 
     def to_json(self):
@@ -65,7 +65,7 @@ class LifeCycleStatus:
 
     def _transition_to_state(
         self,
-        new_state: LifeCycleState,
+        new_state: ComponentState,
         error: BaseFrameworkException | None = None,
     ):
         if new_state not in self._VALID_LIFE_CYCLE_STATE_TRANSITIONS[self.state]:
@@ -74,7 +74,7 @@ class LifeCycleStatus:
                 f"state '{new_state}'.",
             )
         if (
-            new_state in (LifeCycleState.ERRORED, LifeCycleState.FATAL)
+            new_state in (ComponentState.ERRORED, ComponentState.FATAL)
             and error is None
         ):
             raise ValueError(
@@ -82,7 +82,7 @@ class LifeCycleStatus:
                 f"provided.",
             )
         if (
-            new_state not in (LifeCycleState.ERRORED, LifeCycleState.FATAL)
+            new_state not in (ComponentState.ERRORED, ComponentState.FATAL)
             and error is not None
         ):
             raise ValueError(
@@ -93,33 +93,33 @@ class LifeCycleStatus:
         self.error = error
 
     def _transition_to_initialized(self) -> None:
-        self._transition_to_state(new_state=LifeCycleState.INITIALIZED)
+        self._transition_to_state(new_state=ComponentState.INITIALIZED)
 
     def _transition_to_started(self) -> None:
-        self._transition_to_state(new_state=LifeCycleState.STARTED)
+        self._transition_to_state(new_state=ComponentState.STARTED)
 
     def _transition_to_running(self) -> None:
-        self._transition_to_state(new_state=LifeCycleState.RUNNING)
+        self._transition_to_state(new_state=ComponentState.RUNNING)
 
     def _transition_to_completed(self) -> None:
-        self._transition_to_state(new_state=LifeCycleState.COMPLETED)
+        self._transition_to_state(new_state=ComponentState.COMPLETED)
 
     def _transition_to_stopped(self) -> None:
-        self._transition_to_state(new_state=LifeCycleState.STOPPED)
+        self._transition_to_state(new_state=ComponentState.STOPPED)
 
     def _transition_to_cancelled(self) -> None:
-        self._transition_to_state(new_state=LifeCycleState.CANCELLED)
+        self._transition_to_state(new_state=ComponentState.CANCELLED)
 
     def _transition_to_errored(self, error: BaseFrameworkException) -> None:
         self._transition_to_state(
-            new_state=LifeCycleState.ERRORED,
+            new_state=ComponentState.ERRORED,
             error=error,
         )
 
     def _transition_to_fatal(self, exception: Exception) -> None:
         self._transition_to_state(
-            new_state=LifeCycleState.FATAL,
-            error=LifeCycleRuntimeError(
+            new_state=ComponentState.FATAL,
+            error=ComponentRuntimeError(
                 message=f"{type(exception).__name__}: {exception}",
                 detail={
                     "type": type(exception).__name__,
