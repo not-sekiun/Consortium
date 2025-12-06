@@ -34,10 +34,10 @@ from consortium.server.server_config import (
 class AgentProfilesService:
     def __init__(self):
         self._agent_profiles = {}
-        self.agent_profiles_service_logger = logger.bind(
+        self.logger = logger.bind(
             logger_name=str(self),
         )
-        self.agent_profiles_service_logger.debug(
+        self.logger.debug(
             f"Started {self}",
         )
 
@@ -116,7 +116,7 @@ class AgentProfilesService:
             not agent_project_manifest_json["enabled"]
             and not ignore_enabled_agent_project_flag
         ):
-            self.agent_profiles_service_logger.info(
+            self.logger.info(
                 "Skipped loading agent from '{}' because it was disabled.",
                 str(agent_project_folder),
             )
@@ -273,7 +273,7 @@ class AgentProfilesService:
         )
 
     def load_framework_agent_profiles(self) -> list[AgentProfile]:
-        self.agent_profiles_service_logger.info(
+        self.logger.info(
             "Loading framework agent profiles...",
         )
 
@@ -289,38 +289,38 @@ class AgentProfilesService:
                 if agent_profile is None:
                     continue
 
-                self.agent_profiles_service_logger.success(
+                self.logger.success(
                     "Loaded agent profile: {}",
                     agent_profile,
                 )
             except AgentProfileLoadError as exc:
-                self.agent_profiles_service_logger.error(exc)
+                self.logger.error(exc)
 
         all_agent_profiles = self.get_all_agent_profiles()
-        self.agent_profiles_service_logger.info(
+        self.logger.info(
             f"Loaded framework agent profiles ({len(all_agent_profiles)} "
             "agent profile(s) loaded).",
         )
         return all_agent_profiles
 
     def unload_framework_agent_profiles(self) -> None:
-        self.agent_profiles_service_logger.info(
+        self.logger.info(
             "Unloading framework agent profiles...",
         )
         number_of_agent_profiles = len(self._agent_profiles)
         self._agent_profiles = {}
-        self.agent_profiles_service_logger.info(
+        self.logger.info(
             f"Unloaded framework agent profiles ({number_of_agent_profiles} "
             "agent profile(s) unloaded).",
         )
 
     def reload_framework_agent_profiles(self) -> list[AgentProfile]:
-        self.agent_profiles_service_logger.info(
+        self.logger.info(
             "Reloading framework agent profiles...",
         )
         self.unload_framework_agent_profiles()
         agent_profiles = self.load_framework_agent_profiles()
-        self.agent_profiles_service_logger.info("Reloaded framework agent profiles.")
+        self.logger.info("Reloaded framework agent profiles.")
         return agent_profiles
 
     def load_agent_profile_from_agent_project_folder(
@@ -337,7 +337,7 @@ class AgentProfilesService:
             return None
 
         self._agent_profiles[str(agent_profile.agent_profile_id)] = agent_profile
-        self.agent_profiles_service_logger.debug(
+        self.logger.debug(
             f"Loaded agent profile: {agent_profile!r}",
         )
         return agent_profile
@@ -348,10 +348,10 @@ class AgentProfilesService:
         except KeyError:
             raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
 
-        self.agent_profiles_service_logger.info(
+        self.logger.info(
             f"Unloaded agent profile: {agent_profile}",
         )
-        self.agent_profiles_service_logger.debug(
+        self.logger.debug(
             f"Unloaded agent profile: {agent_profile!r}",
         )
         return agent_profile
@@ -368,17 +368,17 @@ class AgentProfilesService:
         agent_profile = self.load_agent_profile_from_agent_project_folder(
             agent_profile.agent_project_folder_path,
         )
-        self.agent_profiles_service_logger.info(
+        self.logger.info(
             f"Reloaded agent profile: {agent_profile}",
         )
-        self.agent_profiles_service_logger.debug(
+        self.logger.debug(
             f"Reloaded agent profile: {agent_profile!r}",
         )
         return agent_profile
 
     def get_all_agent_profiles(self):
         all_agent_profiles = list(self._agent_profiles.values())
-        self.agent_profiles_service_logger.debug(
+        self.logger.debug(
             f"Retrieved all agent profiles ({len(all_agent_profiles)} retrieved).",
         )
         return all_agent_profiles
@@ -389,7 +389,7 @@ class AgentProfilesService:
         except KeyError:
             raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
 
-        self.agent_profiles_service_logger.debug(
+        self.logger.debug(
             f"Retrieved agent profile: {agent_profile!r}",
         )
         return agent_profile

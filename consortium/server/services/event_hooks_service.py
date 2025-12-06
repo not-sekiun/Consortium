@@ -6,12 +6,14 @@ import consortium.server.exceptions.service_exceptions.component_loader_service_
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exceptions import (
     EventHooksFrameworkError,
 )
 from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
     ComponentDependencyNotFoundError,
     ComponentDependencyNotRunningError,
+    EventHookAlreadyRegisteredError,
     EventHookDependsOnInvalidComponentDependencyError,
     EventHookLoadingError,
     EventHookNotFoundError,
@@ -33,43 +35,43 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
     ThirdPartyDependencyNotFoundError,
 )
 from consortium.server.server_config import CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH
-from consortium.server.services.component_loader_service import ComponentLoaderService
+from consortium.server.services.component_loader_services.event_hook_loader_service import (
+    EventHookLoaderService,
+)
 from consortium.server.services.events_service import EventsService
 
 
 class EventHooksService:
+    _EXCEPTION_MAP = {
+        comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError: EventHookProjectManifestFileNotFoundError,
+        comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError: InvalidEventHookProjectManifestFileJSONError,
+        comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError: InvalidEventHookProjectManifestFileSchemaError,
+        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError: InvalidEventHookProjectPyProjectFileError,
+        comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
+        comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
+        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidEventHookProjectPyProjectFileDependencyError,
+        comp_ldr_svc_excs.ComponentProjectComponentFileNotFoundError: EventHookProjectEventHookFileNotFoundError,
+        comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError: EventHookProjectSymbolNotFoundError,
+        comp_ldr_svc_excs.ComponentProjectInterfaceError: EventHookProjectInterfaceError,
+        comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError: IncompatibleEventHookFrameworkVersionError,
+        comp_ldr_svc_excs.InternalComponentProjectError: InternalEventHookProjectError,
+        comp_ldr_svc_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
+        comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
+        comp_ldr_svc_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
+        comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError: EventHookDependsOnInvalidComponentDependencyError,
+    }
+    _EXCEPTION_KWARGS_MAP = {
+        "component_project_folder": "event_hook_project_folder",
+        "component_file": "event_hook_file",
+        "component_symbol": "event_hook_symbol",
+        "component_str": "event_hook_str",
+        "component_id": "event_hook_id",
+    }
+
     def __init__(self, events_service: EventsService):
         self._event_hooks = {}
         self._events_service = events_service
-        self._component_loader_service = ComponentLoaderService[BaseEventHook](
-            component_type=BaseEventHook,
-            component_framework_error=EventHooksFrameworkError,
-        )
-        self._exception_map = {
-            comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError: EventHookProjectManifestFileNotFoundError,
-            comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError: InvalidEventHookProjectManifestFileJSONError,
-            comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError: InvalidEventHookProjectManifestFileSchemaError,
-            comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError: InvalidEventHookProjectPyProjectFileError,
-            comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
-            comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
-            comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidEventHookProjectPyProjectFileDependencyError,
-            comp_ldr_svc_excs.ComponentProjectComponentFileNotFoundError: EventHookProjectEventHookFileNotFoundError,
-            comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError: EventHookProjectSymbolNotFoundError,
-            comp_ldr_svc_excs.ComponentProjectInterfaceError: EventHookProjectInterfaceError,
-            comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError: IncompatibleEventHookFrameworkVersionError,
-            comp_ldr_svc_excs.InternalComponentProjectError: InternalEventHookProjectError,
-            comp_ldr_svc_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
-            comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
-            comp_ldr_svc_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
-            comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError: EventHookDependsOnInvalidComponentDependencyError,
-        }
-        self._exception_kwargs_map = {
-            "component_project_folder": "event_hook_project_folder",
-            "component_file": "event_hook_file",
-            "component_symbol": "event_hook_symbol",
-            "component_str": "event_hook_str",
-            "component_id": "event_hook_id",
-        }
+        self._event_hook_loader_service = EventHookLoaderService()
         self.logger = logger.bind(
             logger_name=str(self),
         )
@@ -81,27 +83,26 @@ class EventHooksService:
     def __repr__(self) -> str:
         return "EventHooksService()"
 
-    def _map_component_errors_to_event_hook_errors(
-        self,
-        error: comp_ldr_svc_excs.ComponentsLoaderServiceError,
-    ):
-        remapped_kwargs = {
-            self._exception_kwargs_map.get(k, k): v for k, v in error.exc_kwargs.items()
-        }
-        return self._exception_map[type(error)](**remapped_kwargs)
-
     def get_event_hook_from_event_hook_project_folder(
         self,
         event_hook_project_folder: pathlib.Path,
         ignore_enabled_event_hook_flag: bool = False,
     ) -> BaseEventHook | None:
         try:
-            event_hook = self._component_loader_service.get_component_from_component_project_folder(
+            event_hook = self._event_hook_loader_service.get_component_from_component_project_folder(
                 component_project_folder=event_hook_project_folder,
                 ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
             )
-        except comp_ldr_svc_excs.ComponentLoadingError as exc:
-            raise self._map_component_errors_to_event_hook_errors(exc) from None
+        except (
+            comp_ldr_svc_excs.ComponentLoadingError,
+            comp_ldr_svc_excs.ComponentDependencyError,
+        ) as exc:
+            raise remap_exception(
+                original_exception=exc,
+                original_kwargs=exc.kwargs,
+                exception_map=self._EXCEPTION_MAP,
+                exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
+            ) from None
         if event_hook is None:
             self.logger.debug(
                 "Skipped loading event hook from '{}' because it was disabled.",
@@ -125,7 +126,7 @@ class EventHooksService:
         list[tuple[pathlib.Path, EventHookLoadingError]] | None,
     ]:
         """
-        Retrieves all event_hooks from the specified directory containing event hook project folders.
+        Retrieves all event hooks from the specified directory containing event hook project folders.
 
         Event Hooks that are specified to be disabled in their `manifest.json` will not be
         loaded unless `ignore_enabled_event_hook_flag` is set to `True`. Valid event hooks are
@@ -152,7 +153,7 @@ class EventHooksService:
             for possible exceptions raised during event hook retrieval.
         """
         retrieved, skipped, errored = (
-            self._component_loader_service.get_components_from_component_project_folder_directories(
+            self._event_hook_loader_service.get_components_from_component_project_folder_directories(
                 directory=directory,
                 ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
             )
@@ -162,11 +163,22 @@ class EventHooksService:
             error = error_tuple[1]
             # A configuration error will raise a EventHookConfigurationError which is not
             # a ComponentLoadingError, so we only remap ComponentLoadingErrors here.
-            if isinstance(error, comp_ldr_svc_excs.ComponentLoadingError):
+            if isinstance(
+                error,
+                (
+                    comp_ldr_svc_excs.ComponentLoadingError,
+                    comp_ldr_svc_excs.ComponentDependencyError,
+                ),
+            ):
                 remapped_errored.append(
                     (
                         error_tuple[0],
-                        self._map_component_errors_to_event_hook_errors(error=error),
+                        remap_exception(
+                            original_exception=error,
+                            original_kwargs=error.kwargs,
+                            exception_map=self._EXCEPTION_MAP,
+                            exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
+                        ),
                     ),
                 )
             else:
@@ -186,6 +198,11 @@ class EventHooksService:
         )
 
     async def load_event_hook(self, event_hook: BaseEventHook) -> BaseEventHook:
+        if str(event_hook.event_hook_id) in self._event_hooks:
+            raise EventHookAlreadyRegisteredError(
+                event_hook_str=str(event_hook),
+                event_hook_id=str(event_hook.event_hook_id),
+            )
         self._event_hooks[str(event_hook.event_hook_id)] = event_hook
         for event_type in event_hook.event_types:
             self._events_service.register_event_handler_to_event_type(
@@ -199,7 +216,6 @@ class EventHooksService:
                 event_hook_str=str(event_hook),
                 error_message=str(exc),
             ) from exc
-        self.logger.success(f"Loaded event hook: {event_hook}")
         self.logger.debug(f"Loaded event hook: {event_hook!r}")
         return event_hook
 
@@ -271,37 +287,36 @@ class EventHooksService:
                 str(path),
             )
         if errored:
-            for _, event_hook in errored:
+            for _, error in errored:
                 self.logger.error(
                     "├─ {}",
-                    str(event_hook),
+                    str(error),
                 )
 
         # TODO: Build in topological sorting after figuring out how to implement the
         #  dependency system?
-        failed_to_load_event_hooks = 0
+        failed_to_load = 0
         for event_hook in retrieved:
             try:
                 await self.load_event_hook(event_hook=event_hook)
                 self.logger.success("├─ Loaded event hook: {}", event_hook)
                 self.logger.debug("├─ Loaded event hook: {!r}", event_hook)
             except (EventHooksFrameworkError, EventHooksServiceError) as exc:
-                failed_to_load_event_hooks += 1
+                failed_to_load += 1
                 self.logger.error("├─ {}", exc)
 
         self.logger.info(
             "└─ Loaded event hooks from '{}' ({} event hook(s) loaded, {} event hook(s) "
             "skipped, {} event hook(s) failed to load).",
             str(CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH),
-            len(retrieved) - failed_to_load_event_hooks,
+            len(retrieved) - failed_to_load,
             len(skipped),
-            len(errored) + failed_to_load_event_hooks,
+            len(errored) + failed_to_load,
         )
 
     def unload_framework_event_hooks(self) -> None:
         self.logger.info("Unloading framework event hooks...")
-
-        number_of_unloaded_event_hooks = 0
+        unloaded_event_hooks = 0
         for event_hook in self.get_all_event_hooks():
             if (
                 event_hook.event_hook_project_folder.parent
@@ -310,11 +325,11 @@ class EventHooksService:
                 self.unload_event_hook_by_event_hook_id(
                     event_hook_id=str(event_hook.event_hook_id),
                 )
-                number_of_unloaded_event_hooks += 1
+                unloaded_event_hooks += 1
 
         self.logger.info(
-            "Unloaded framework event hooks ({} event hooks(s) unloaded).",
-            number_of_unloaded_event_hooks,
+            "Unloaded framework event hooks ({} event hook(s) unloaded).",
+            unloaded_event_hooks,
         )
 
     async def reload_framework_event_hooks(

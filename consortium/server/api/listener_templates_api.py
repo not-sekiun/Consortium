@@ -11,7 +11,6 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.listener_templates_api_exceptions import (
-    EmptyListenerNameError as EmptyListenerNameAPIError,
     ListenerTemplateNotFoundError as ListenerTemplateNotFoundAPIError,
     ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundAPIError,
     ListenerTemplateOptionValueError as ListenerTemplateOptionValueAPIError,
@@ -24,7 +23,6 @@ from consortium.server.exceptions.service_exceptions.listener_templates_service_
     ListenerTemplateNotFoundError as ListenerTemplateNotFoundServiceError,
 )
 from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
-    EmptyListenerNameError as EmptyListenerNameServiceError,
     ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundServiceError,
     ListenerTemplateOptionValueError as ListenerTemplateOptionValueServiceError,
 )
@@ -35,7 +33,7 @@ from consortium.server.server_dependencies import AuthorizeUserRequest
 
 _example_listener_template_option_value_framework_error = (
     ListenerTemplateOptionValueFrameworkError(
-        listener_template="string",
+        listener_template_str="string",
         option_name="string",
         option_value="string",
         error_message="string",
@@ -44,7 +42,7 @@ _example_listener_template_option_value_framework_error = (
 _example_listener_template_option_not_found_framework_error = (
     ListenerTemplateOptionNotFoundFrameworkError(
         option_name="string",
-        listener_template="string",
+        listener_template_str="string",
     )
 )
 listener_templates_service = server_singletons.listener_templates_service
@@ -87,10 +85,10 @@ router = APIRouter(
                     message=_example_listener_template_option_not_found_framework_error.message,
                     detail=_example_listener_template_option_not_found_framework_error.detail,
                 ),
-            ).to_pydantic_model()
-            | EmptyListenerNameAPIError.from_service_exception(
-                service_exception=EmptyListenerNameServiceError(),
             ).to_pydantic_model(),
+            # | EmptyListenerNameAPIError.from_service_exception(
+            #     service_exception=EmptyListenerNameServiceError(),
+            # ).to_pydantic_model(),
         },
     },
     status_code=201,
@@ -103,7 +101,7 @@ async def create_listener_through_listener_template_by_listener_template_id(
     try:
         listener = await listeners_service.create_listener_from_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
-            options=options,
+            parameters=options,
         )
     except ListenerTemplateNotFoundServiceError as exc:
         raise ListenerTemplateNotFoundAPIError.from_service_exception(
@@ -117,10 +115,10 @@ async def create_listener_through_listener_template_by_listener_template_id(
         raise ListenerTemplateOptionValueAPIError.from_service_exception(
             service_exception=exc,
         )
-    except EmptyListenerNameServiceError as exc:
-        raise EmptyListenerNameAPIError.from_service_exception(
-            service_exception=exc,
-        )
+    # except EmptyListenerNameServiceError as exc:
+    #     raise EmptyListenerNameAPIError.from_service_exception(
+    #         service_exception=exc,
+    #     )
 
     return ListenerModel(**listener.to_json())
 

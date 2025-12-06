@@ -21,8 +21,6 @@ Exception hierarchy for agents framework:
     - AgentGeneratorCreationError: Error occurred during agent generator creation.
       - AgentGeneratorCreationParameterTypeError: Invalid type for an agent generator
       creation parameter.
-      - EmptyAgentGeneratorNameError: The name provided for an agent generator is an
-      empty string.
     - AgentGeneratorNotRunningError: An error occurred because the requested operation
     could not be completed while the agent generator is not running.
     - AgentGeneratorAlreadyRunningError: An error occurred because the requested
@@ -143,17 +141,6 @@ class AgentGeneratorCreationParameterTypeError(AgentGeneratorCreationError):
             )
         else:
             super().__init__(message=error_message)
-
-
-class EmptyAgentGeneratorNameError(AgentGeneratorCreationError):
-    def __init__(self, agent_generator_filepath: str):
-        super().__init__(
-            message=(
-                f"Failed to create the agent generator defined at "
-                f"'{agent_generator_filepath}'. The name provided in the agent "
-                "generator's parameters during creation cannot be empty."
-            ),
-        )
 
 
 class EmptyAgentGeneratorBuildStepNameError(AgentGeneratorBuildStepConfigurationError):

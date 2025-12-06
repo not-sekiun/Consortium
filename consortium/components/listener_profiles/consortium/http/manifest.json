@@ -1,0 +1,4 @@
+{
+    "entry_point": "listener_template:ListenerTemplate",
+    "enabled": true
+}

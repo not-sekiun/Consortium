@@ -1,10 +1,21 @@
+import pathlib
 import sys
 import uuid
 from abc import ABC, abstractmethod
 from inspect import signature
-from typing import Any, Callable, Type
+from typing import Callable, get_type_hints
 
+from pydantic import ConfigDict
+
+import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
+from consortium.framework._components import ComponentMetadata, ComponentModel
+from consortium.framework.framework_types import (
+    JSONObject,
+    Primitive,
+    PrimitiveCollection,
+)
 from consortium.framework.listeners.base_listener import BaseListener
+from consortium.framework.listeners.base_listener_type import BaseListenerType
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
@@ -13,17 +24,21 @@ from consortium.framework.options import (
     ToggleableChoicesValueOption,
 )
 from consortium.framework.options.exceptions import OptionValueValidationError
+from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
     DuplicateListenerTemplateOptionNameError,
-    EmptyListenerTemplateNameError,
-    ListenerTemplateConfigurationParameterTypeError,
+    EmptyListenerTemplateLabelError,
+    InvalidFrameworkVersionSpecifierError,
+    InvalidListenerTemplateConfigurationParameterTypeError,
+    InvalidListenerTemplateDependencyVersionSpecifierError,
+    InvalidListenerTemplateVersionError,
     ListenerTemplateOptionNotFoundError,
     ListenerTemplateOptionValueError,
-    RequiredListenerTemplateConfigurationParameterNotDeclaredError,
+    MissingListenerTemplateConfigurationParameterError,
 )
 from consortium.server.utils.formatter_utils import format_docstring_to_single_line
 
-OptionType = (
+Options = (
     SingleValueOption
     | ChoiceValueOption
     | ListValueOption
@@ -32,110 +47,73 @@ OptionType = (
 )
 
 
-class BaseListenerTemplate(ABC):
-    listener: Type[BaseListener]
-    name: str
-    description: str = ""
-    authors: set[str] | None = None
-    options: set[OptionType] | None = None
-    validating_function: Callable[[dict[str, OptionType]], None] | None = None
+class _ListenerTemplateModel(ComponentModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    listener: type[BaseListener]
+    listener_type: BaseListenerType  # TODO: Make users pass in the type class instead of needing to instantiate this
+    options: set[Options] | None = None
+    validating_function: (
+        Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
+    ) = None
+
+
+class BaseListenerTemplate(ComponentMetadata, ABC):
+    _METADATA_MODEL = _ListenerTemplateModel
+    _EXCEPTION_MAP = {
+        comp_excs.MissingComponentConfigurationParameterError: MissingListenerTemplateConfigurationParameterError,
+        comp_excs.EmptyComponentLabelError: EmptyListenerTemplateLabelError,
+        comp_excs.InvalidComponentVersionError: InvalidListenerTemplateVersionError,
+        comp_excs.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
+        comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidListenerTemplateDependencyVersionSpecifierError,
+        comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidListenerTemplateConfigurationParameterTypeError,
+    }
+    _EXCEPTION_KWARGS_MAP = {
+        "component_str": "listener_template_str",
+        "component_filepath": "listener_template_filepath",
+    }
+
+    listener: type[BaseListener]
+    listener_type: BaseListenerType  # TODO: ??? make users pass in the type class instead of needing to instantiate this
+    options: set[Options] | None = None
+    validating_function: (
+        Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
+    ) = None
 
     def __init_subclass__(cls, **kwargs):
-        # Check the existence of a provided listener template name first so that we can
-        # reference the listener template name for every other error message.
-        if not hasattr(cls, "name"):
-            raise RequiredListenerTemplateConfigurationParameterNotDeclaredError(
-                parameter_name="name",
-                # Since the listener template cannot be identified by name we identify
-                # it by the filepath it was declared in.
-                listener_template=sys.modules[cls.__module__].__file__,
-            )
-        if not isinstance(cls.name, str):
-            raise ListenerTemplateConfigurationParameterTypeError(
-                listener_template=sys.modules[cls.__module__].__file__,
-                parameter_name="name",
-                parameter_type="str",
-            )
-        if not cls.name:
-            raise EmptyListenerTemplateNameError(
-                listener_template_filepath=sys.modules[cls.__module__].__file__,
-            )
+        cls.options = cls.options or set()
+        cls.listener_project_folder = pathlib.Path(
+            sys.modules[cls.__module__].__file__,
+        ).parents[0]
 
-        if not hasattr(cls, "listener"):
-            raise RequiredListenerTemplateConfigurationParameterNotDeclaredError(
-                parameter_name="listener",
-                listener_template=cls.name,
-            )
-        if not issubclass(cls.listener, BaseListener):
-            raise ListenerTemplateConfigurationParameterTypeError(
-                error_message=(
-                    "The listener class provided must be a listener object for "
-                    f"listener template '{cls.name}'."
-                ),
-            )
+        try:
+            cls._validate_metadata()
+        except comp_excs.ComponentsFrameworkError as exc:
+            raise remap_exception(
+                original_exception=exc,
+                original_kwargs=exc.exc_kwargs,
+                exception_map=cls._EXCEPTION_MAP,
+                exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
+            ) from None
 
-        if cls.authors is None:
-            cls.authors = set()
-        if not isinstance(cls.authors, set):
-            raise ListenerTemplateConfigurationParameterTypeError(
-                listener_template=cls.name,
-                parameter_name="authors",
-                parameter_type="set",
-            )
-        for author in cls.authors:
-            if not isinstance(author, str):
-                raise ListenerTemplateConfigurationParameterTypeError(
-                    error_message=(
-                        "The elements in the authors set must be strings for listener "
-                        f"template '{cls.name}'."
-                    ),
-                )
-
-        if cls.options is None:
-            cls.options = set()
+        # Check that options do not have duplicate names.
         option_names = []
         for option in cls.options:
-            if not isinstance(
-                option,
-                (
-                    SingleValueOption,
-                    ChoiceValueOption,
-                    ListValueOption,
-                    DictionaryValueOption,
-                    ToggleableChoicesValueOption,
-                ),
-            ):
-                raise ListenerTemplateConfigurationParameterTypeError(
-                    error_message=(
-                        "The elements of the options set provided must be option "
-                        f"objects for listener template '{cls.name}'."
-                    ),
-                )
             if option.name in option_names:
                 raise DuplicateListenerTemplateOptionNameError(
                     option_name=option.name,
-                    listener_template=cls.name,
+                    listener_template_str=cls.name,
                 )
             option_names.append(option.name)
 
-        if not isinstance(cls.description, str):
-            raise ListenerTemplateConfigurationParameterTypeError(
-                listener_template=cls.name,
-                parameter_name="description",
-                parameter_type="str",
-            )
-
+        # Check that signature of function is minimally valid.
         if cls.validating_function:
-            if not isinstance(cls.validating_function, Callable):
-                raise ListenerTemplateConfigurationParameterTypeError(
-                    "The validating function provided must be a callable function for "
-                    f"listener template '{cls.name}'.",
-                )
             function_signature = signature(cls.validating_function)
             if len(function_signature.parameters) != 1:
-                raise ListenerTemplateConfigurationParameterTypeError(
-                    "The validating function provided must accept exactly one "
-                    f"parameter for listener template '{cls.name}'.",
+                raise InvalidListenerTemplateConfigurationParameterTypeError(
+                    listener_template_str=cls.name,
+                    parameter_name="validating_function",
+                    parameter_type=get_type_hints(cls)["validating_function"],
                 )
             # We need to convert the validating function to a static method so that the
             # validating function class attribute is considered as just an ordinary
@@ -143,8 +121,15 @@ class BaseListenerTemplate(ABC):
             cls.validating_function = staticmethod(cls.validating_function)
 
         cls.listener_template_id = uuid.uuid4()
-        cls.listener.creating_listener_template = cls
-
+        # Remap options set to a dictionary for easier access by name.
+        cls.options = {option.name: option for option in cls.options}
+        # TODO: Fix this code. The listener needs to refer to an instance of the
+        #  listener template singleton that created it NOT its class. This assignment
+        #  needs to occur at load time by the c2 profiles service when it loads the
+        #  listener templates.
+        # Stupid fucking hack. Each listener creates a new template instance while
+        # technically it works its bad practice.
+        cls.listener.creating_listener_template = cls()
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
@@ -153,90 +138,128 @@ class BaseListenerTemplate(ABC):
     def __repr__(self) -> str:
         options_string = "{" + ", ".join(repr(option) for option in self.options) + "}"
         return (
-            f"ListenerTemplate(listener={self.listener!r}, "
-            f"name={self.name!r}, description={self.description!r}, "
-            f"authors={self.authors!r}, options={options_string}, "
-            f"validating_function={self.validating_function!r})"
+            f"ListenerTemplate("
+            f"listener_template_id={self.listener_template_id!r}, "
+            f"label={self.label!r}, "
+            f"name={self.name!r}, "
+            f"description={self.description!r}, "
+            f"version={self.version!r}, "
+            f"compatible_framework_version={self.compatible_framework_version!r}, "
+            f"authors={self.authors!r}, "
+            f"component_dependencies={self.component_dependencies!r}, "
+            f"listener={self.listener!r}, "
+            f"listener_type={self.listener_type!r}, "
+            f"options={options_string}, "
+            f"validating_function={self.validating_function!r}"
+            f")"
         )
 
     @abstractmethod
-    def resolve_listener_name(self) -> str:
-        """
-        Function that resolves the name of the listener. The name typically should be
-        provided as an `SingleValueOption` object.
-        """
-
-    @abstractmethod
-    def resolve_listener_endpoint(self) -> str:
-        """
-        Function that resolves the endpoint of the listener. The endpoint is a
-        human-readable string that uniquely represents the network node that the
-        listener is on. This is typically (but not always) the socket address of the
-        listener as provided within the options list parameter of __init__().
-        """
-
-    def get_option_by_option_name(self, option_name: str) -> OptionType:
-        for option in self.options:
-            if option.name == option_name:
-                return option
-        raise ListenerTemplateOptionNotFoundError(
-            option_name=option_name,
-            listener_template=str(self),
-        )
-
-    def set_option_value_by_option_name(
+    def resolve_listener_name(
         self,
-        option_name: str,
-        option_value: Any,
-    ) -> None:
-        option = self.get_option_by_option_name(option_name)
+        parameters: dict[str, Primitive | PrimitiveCollection],
+    ) -> str:
+        """
+        Function to resolve the name of a newly created listener.
 
-        try:
-            option.set_option_value(option_value)
-        except OptionValueValidationError as exc:
-            raise ListenerTemplateOptionValueError(
-                option_name=option_name,
-                option_value=option_value,
-                listener_template=str(self),
-                error_message=str(exc),
-            )
+        This name can be a default hard-coded value, randomly generated or computed
+        from its provided set of parameters (typically from a 'name' parameter).
+        """
 
-    def clear_option_value_by_option_name(self, option_name: str) -> None:
-        option = self.get_option_by_option_name(option_name)
-        option.clear_option_value()
+    @abstractmethod
+    def resolve_listener_endpoint(
+        self,
+        parameters: dict[str, Primitive | PrimitiveCollection],
+    ) -> str:
+        """
+        Function to resolve the endpoint of a newly created listener from the provided
+        set of parameters.
 
-    def clear_all_option_values(self):
-        for option in self.options:
-            option.clear_option_value()
+        An endpoint is a string that uniquely identifies the address that a listener
+        can be reached at. E.g. http://127.0.0.1:8000/check-in
+        """
 
     def create_listener(
         self,
         name: str | None = None,
         description: str = "",
+        parameters: dict[str, Primitive | PrimitiveCollection] | None = None,
     ) -> BaseListener:
+        """
+        Create a listener instance from this listener template using the provided
+        `name`, `description` and configuration `parameters`.
+
+        If a name is not provided, it will be resolved from the listener template's
+        `resolve_name_endpoint` method.
+        """
+
+        if parameters is None:
+            parameters = {}
+
+        # Fill in default option values for options that were not provided in the
+        # parameters dictionary.
+        for option_name, option in self.options.items():
+            if option_name not in parameters:
+                parameters[option_name] = option.default_value
+
+        # Validate entire constructed parameter set before creating the listener.
+        for option_name, value in parameters.items():
+            if option_name not in self.options:
+                raise ListenerTemplateOptionNotFoundError(
+                    listener_template_str=str(self),
+                    option_name=option_name,
+                )
+            try:
+                self.options[option_name].validate_value(value)
+            except OptionValueValidationError as exc:
+                raise ListenerTemplateOptionValueError(
+                    option_name=option_name,
+                    option_value=value,
+                    listener_template_str=str(self),
+                    error_message=str(exc),
+                )
+
+        # Check for missing required options.
+        for option_name, option in self.options.items():
+            if option.required and option_name not in parameters:
+                raise MissingListenerTemplateConfigurationParameterError(
+                    listener_template_str=str(self),
+                    parameter_name=option_name,
+                )
+
+        # Run validation function on the entire set of parameters if one was provided.
         if self.validating_function:
-            self.validating_function({option.name: option for option in self.options})
+            self.validating_function(parameters)
 
-        if name is None:
-            name = self.resolve_listener_name()
-
+        # Create listener instance. Resolving the name from the parameters only if one
+        # was not provided.
         return self.listener(
-            name=name,
+            name=self.resolve_listener_name(parameters=parameters)
+            if name is None
+            else name,
             description=description,
-            endpoint=self.resolve_listener_endpoint(),
-            parameters={
-                option.name: option.get_option_value() for option in self.options
-            },
+            endpoint=self.resolve_listener_endpoint(parameters=parameters),
+            parameters=parameters,
         )
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> JSONObject:
+        """
+        Convert the listener template metadata to a JSON serializable dictionary.
+        """
         return {
             "listener_template_id": str(self.listener_template_id),
+            "label": self.label,
             "name": self.name,
             "description": self.description,
-            "listener_type": self.listener.listener_type.to_json(),
+            "version": str(self.version),
+            "compatible_framework_version": str(self.compatible_framework_version),
             "authors": self.authors,
-            "options": {option.name: option.to_json() for option in self.options},
+            "component_dependencies": list(map(str, self.component_dependencies)),
+            "third_party_dependencies": list(map(str, self.third_party_dependencies)),
+            "listener_type": self.listener_type.to_json(),
+            "options": {
+                name: option.to_json() for name, option in self.options.items()
+            },
             "validating_function": format_docstring_to_single_line(
                 self.validating_function.__doc__,
             )

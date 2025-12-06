@@ -63,35 +63,33 @@ class InfoListenerTemplateCommand(BaseCommand):
                 "Listener Template ID",
                 listener_template["listener_template_id"],
             )
+            table.add_row(
+                "Label",
+                listener_template["label"],
+            )
             table.add_row("Name", listener_template["name"])
             table.add_row("Description", listener_template["description"])
-            listener_type_table = Table()
-            listener_type_table.add_column("Information")
-            listener_type_table.add_column("Data")
-            listener_type_table.add_row(
-                "Listener Type ID",
-                listener_template["listener_type"]["listener_type_id"],
+            table.add_row("Version", listener_template["version"])
+            table.add_row(
+                "Compatible Framework Version",
+                listener_template["compatible_framework_version"],
             )
-            listener_type_table.add_row(
-                "Name",
-                listener_template["listener_type"]["name"],
+            table.add_row("Authors", "\n".join(listener_template["authors"]))
+            table.add_row(
+                "Listener Type",
+                f"{listener_template["listener_type"]["name"]} ({listener_template["listener_type"]["listener_type_id"]})",
             )
-            listener_type_table.add_row(
+            table.add_row(
                 "Compatible Agent Types",
                 "\n".join(
                     [
-                        agent_type["name"] + " (" + agent_type["agent_type_id"] + ")"
+                        f"{agent_type["name"]} ({agent_type["agent_type_id"]})"
                         for agent_type in listener_template["listener_type"][
                             "compatible_agent_types"
                         ]
                     ],
                 ),
             )
-            table.add_row(
-                "Listener Type",
-                listener_type_table,
-            )
-            table.add_row("Authors", ", ".join(listener_template["authors"]))
             CONSOLE.print(table)
         except SystemExit:
             pass

@@ -1,13 +1,9 @@
 import abc
 import asyncio
 import enum
-from typing import Any
 
-from consortium.framework._components._component_status import (
-    ComponentState,
-    ComponentStatus,
-)
-from consortium.framework.exceptions._component_exceptions import (
+from consortium.framework._components._status import State, Status
+from consortium.framework.exceptions._component_framework_exceptions import (
     ComponentRuntimeError,
     ComponentStartError,
     ComponentStopError,
@@ -39,7 +35,7 @@ class ComponentLifeCycleFatalContext(enum.StrEnum):
 # signalling errors raised from hook methods.
 class ComponentLifeCycle(abc.ABC):
     def __init__(self):
-        self.status = ComponentStatus()
+        self.status = Status()
         self.stop_event = asyncio.Event()
         self._runtime_loop_task = None
 
@@ -68,19 +64,16 @@ class ComponentLifeCycle(abc.ABC):
         fatal_context: ComponentLifeCycleFatalContext,
     ) -> None: ...
 
-    @abc.abstractmethod
-    def to_json(self) -> dict[str, Any]: ...
-
     async def start(self) -> None:
         if (
             self.status.state
             not in (
-                ComponentState.INITIALIZED,
-                ComponentState.STOPPED,
-                ComponentState.CANCELLED,
-                ComponentState.ERRORED,
+                State.INITIALIZED,
+                State.STOPPED,
+                State.CANCELLED,
+                State.ERRORED,
             )
-            or self.status.state == ComponentState.FATAL
+            or self.status.state == State.FATAL
             and self._runtime_loop_task is not None
         ):
             raise ComponentAlreadyStartedError
@@ -99,7 +92,9 @@ class ComponentLifeCycle(abc.ABC):
                 detail=exc.detail,
             ) from None
         except Exception as exc:
-            self.status._transition_to_fatal(exception=exc)
+            self.status._transition_to_fatal(
+                error=self._construct_component_runtime_error_from_exception(exc=exc),
+            )
             await self.on_fatal(exc, fatal_context=ComponentLifeCycleFatalContext.START)
             raise exc
 
@@ -108,7 +103,7 @@ class ComponentLifeCycle(abc.ABC):
         self._runtime_loop_task = asyncio.create_task(self._runtime_loop())
 
     async def stop(self) -> None:
-        if self.status.state != ComponentState.RUNNING:
+        if self.status.state != State.RUNNING:
             raise ComponentNotRunningError
 
         try:
@@ -120,13 +115,15 @@ class ComponentLifeCycle(abc.ABC):
                 detail=exc.detail,
             ) from None
         except Exception as exc:
-            self.status._transition_to_fatal(exception=exc)
+            self.status._transition_to_fatal(
+                error=self._construct_component_runtime_error_from_exception(exc=exc),
+            )
             raise exc
 
         self.stop_event.set()
 
     async def cancel(self) -> None:
-        if self.status.state != ComponentState.RUNNING:
+        if self.status.state != State.RUNNING:
             raise ComponentNotRunningError
 
         self._runtime_loop_task.cancel()
@@ -137,18 +134,37 @@ class ComponentLifeCycle(abc.ABC):
         except asyncio.CancelledError:
             self.status._transition_to_cancelled()
         except Exception as exc:
-            self.status._transition_to_fatal(exception=exc)
+            self.status._transition_to_fatal(
+                error=self._construct_component_runtime_error_from_exception(exc=exc),
+            )
             raise exc
         finally:
             try:
                 await self.on_cancelled()
             except Exception as exc:
-                self.status._transition_to_fatal(exception=exc)
+                self.status._transition_to_fatal(
+                    error=self._construct_component_runtime_error_from_exception(
+                        exc=exc,
+                    ),
+                )
                 await self.on_fatal(
                     exc=exc,
                     fatal_context=ComponentLifeCycleFatalContext.CANCEL,
                 )
                 raise exc
+
+    def _construct_component_runtime_error_from_exception(
+        self,
+        exc,
+    ) -> ComponentRuntimeFrameworkError:
+        return ComponentRuntimeFrameworkError(
+            component_str=str(self),
+            error_message=f"{type(exc).__name__}: {exc}",
+            detail={
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        )
 
     async def _runtime_loop(self) -> None:
         try:
@@ -173,13 +189,19 @@ class ComponentLifeCycle(abc.ABC):
                     ),
                 )
             except Exception as exc:
-                self.status._transition_to_fatal(exception=exc)
+                self.status._transition_to_fatal(
+                    error=self._construct_component_runtime_error_from_exception(
+                        exc=exc,
+                    ),
+                )
                 await self.on_fatal(
                     exc=exc,
                     fatal_context=ComponentLifeCycleFatalContext.ERROR,
                 )
         except Exception as exc:
-            self.status._transition_to_fatal(exception=exc)
+            self.status._transition_to_fatal(
+                error=self._construct_component_runtime_error_from_exception(exc=exc),
+            )
             await self.on_fatal(
                 exc=exc,
                 fatal_context=ComponentLifeCycleFatalContext.RUNNING,

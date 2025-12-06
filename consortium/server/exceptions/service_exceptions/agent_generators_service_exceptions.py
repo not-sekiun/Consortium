@@ -88,11 +88,11 @@ class AgentGeneratorParameterUpdateError(AgentGeneratorsServiceError):
 
 
 class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError):
-    def __init__(self, parameter_name: str, agent_generator: str):
+    def __init__(self, agent_generator_str: str, parameter_name: str):
         super().__init__(
             message=(
                 f"Failed to update agent generator parameter for agent generator "
-                f"'{agent_generator}'. The provided parameter name '{parameter_name}' "
+                f"'{agent_generator_str}'. The provided parameter name '{parameter_name}' "
                 f"is not a valid parameter name."
             ),
         )
@@ -101,15 +101,15 @@ class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError
 class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateError):
     def __init__(
         self,
+        agent_generator_str: str,
         parameter_name: str,
         parameter_value: str,
-        agent_generator: str,
         validation_error_message: str,
     ):
         super().__init__(
             message=(
                 f"Failed to update the agent generator parameter for agent generator "
-                f"'{agent_generator}'. The provided parameter value "
+                f"'{agent_generator_str}'. The provided parameter value "
                 f"'{parameter_value}' failed validation for the parameter "
                 f"'{parameter_name}': {validation_error_message}"
             ),
@@ -133,11 +133,4 @@ class AgentTemplateOptionNotFoundError(AgentGeneratorCreationError):
 # templates framework exceptions. It just needs to pass on the message and detail data
 # from that exception.
 class AgentTemplateOptionValueError(AgentGeneratorCreationError):
-    pass
-
-
-# This is a wrapper exception for EmptyAgentGeneratorNameError from the agents
-# framework exceptions. It just needs to pass on the message and detail data from that
-# exception.
-class EmptyAgentGeneratorNameError(AgentGeneratorCreationError):
     pass

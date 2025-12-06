@@ -11,6 +11,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import ComponentMetadata, ComponentModel
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exceptions import (
     EmptyEventHookLabelError,
     InvalidEventHookConfigurationParameterTypeError,
@@ -19,7 +20,6 @@ from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exc
     InvalidFrameworkVersionSpecifierError,
     MissingEventHookConfigurationParameterError,
 )
-from consortium.server.utils.data_structure_utils import remap_exception
 
 
 class _EventHookModel(ComponentModel):
@@ -111,13 +111,13 @@ class BaseEventHook(ComponentMetadata):
             if attr.endswith("_service"):
                 services_dict[attr] = getattr(server_singletons, attr)
         self.server_services = types.SimpleNamespace(**services_dict)
-        self.event_hook_project_folder = pathlib.Path(
-            sys.modules[self.__module__].__file__,
-        ).parents[0]
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
         cls.event_types = cls.event_types or set()
+        cls.event_hook_project_folder = pathlib.Path(
+            sys.modules[cls.__module__].__file__,
+        ).parents[0]
         try:
             cls._validate_metadata()
         except comp_excs.ComponentsFrameworkError as exc:
@@ -130,7 +130,7 @@ class BaseEventHook(ComponentMetadata):
         super().__init_subclass__(**kwargs)
 
     def __str__(self):
-        return f"{self.name} ({str(self.event_hook_id)})"
+        return f"{self.name} ({self.event_hook_id})"
 
     def __repr__(self):
         return (

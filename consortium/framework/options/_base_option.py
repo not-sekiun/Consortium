@@ -1,4 +1,4 @@
-import copy
+# import copy
 import sys
 from typing import Any
 
@@ -6,12 +6,11 @@ from consortium.framework.options._option_argument_validators import (
     ArgumentDataTypeCheckParameters,
     validate_arguments_data_types,
 )
-from consortium.framework.options.exceptions import (
+from consortium.framework.options.exceptions import (  # RequiredOptionValueNotSetError,
     EmptyOptionNameError,
     InvalidDefaultValueError,
     InvalidOptionConfigurationParameterTypeError,
-    OptionValueValidationError as OptionValueValidationFrameworkError,
-    RequiredOptionValueNotSetError,
+    OptionValueValidationError,
 )
 from consortium.framework.options.option_types import OptionType
 
@@ -49,11 +48,12 @@ class BaseOption:
         self._validate_option_configuration()
 
     def __str__(self) -> str:
-        try:
-            value_display_string = repr(self.get_option_value())
-        except RequiredOptionValueNotSetError:
-            value_display_string = "UNDEFINED"
-        return f"{self.option_type} - Name: {self.name}, Value: {value_display_string}"
+        # try:
+        #     value_display_string = repr(self.get_option_value())
+        # except RequiredOptionValueNotSetError:
+        #     value_display_string = "UNDEFINED"
+        # return f"Option - {self.option_type}: {self.name}"
+        return f"{self.name} ({self.option_type})"
 
     def validate_value(self, value: Any) -> None:
         """
@@ -63,7 +63,7 @@ class BaseOption:
             value (Any): The value to validate.
 
         Raises:
-            OptionValueValidationFrameworkError: If the value is invalid.
+            OptionValueValidationError: If the value is invalid.
         """
         pass
 
@@ -81,50 +81,6 @@ class BaseOption:
             "default_value": self.default_value,
             "value": self._value,
         }
-
-    def get_option_value(self) -> Any:
-        """
-        Get the value of the option. If the value is not set and the option is required,
-        a `RequiredOptionValueNotSetError` will be raised. If the value is not set and
-        the option is not required, `None` will be returned. The value returned has been
-        deeply copied so you can safely modify it without affecting the option.
-
-        Returns:
-            Any: The value of the option.
-
-        Raises:
-            RequiredOptionValueNotSetError: If the value is not set and the option is
-                required.
-        """
-        if self._value is None:
-            if self.default_value is None:
-                if self.required:
-                    raise RequiredOptionValueNotSetError(
-                        option_name=self.name,
-                    )
-                else:
-                    return None
-            return copy.deepcopy(self.default_value)
-        return copy.deepcopy(self._value)
-
-    def set_option_value(self, value: Any) -> None:
-        """
-        Set the value of the option.
-
-        Args:
-            value (Any): The value to set the option to.
-
-        Raises:
-            OptionValueValidationError: If the value is invalid.
-        """
-        self.validate_value(value)
-        self._value = value
-
-    def clear_option_value(self) -> None:
-        """
-        Clear the value of the option.
-        """
-        self._value = None
 
     def _validate_option_arguments(self) -> None:
         # if `option_type` is not set, then it is a programmer fault.
@@ -171,7 +127,7 @@ class BaseOption:
         if self.default_value is not None:
             try:
                 self.validate_value(self.default_value)
-            except OptionValueValidationFrameworkError as exc:
+            except OptionValueValidationError as exc:
                 raise InvalidDefaultValueError(
                     option_name=self.name,
                     default_value=self.default_value,

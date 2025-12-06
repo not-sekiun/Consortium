@@ -12,7 +12,6 @@ from consortium.server.exceptions.framework_exceptions.agent_generators_framewor
     AgentGeneratorNotRunningError as AgentGeneratorNotRunningFrameworkError,
     AgentGeneratorStartError as AgentGeneratorStartFrameworkError,
     AgentGeneratorStopError as AgentGeneratorStopFrameworkError,
-    EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameFrameworkError,
 )
 from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
     AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundFrameworkError,
@@ -27,7 +26,6 @@ from consortium.server.exceptions.service_exceptions.agent_generators_service_ex
     AgentGeneratorStopError as AgentGeneratorStopServiceError,
     AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundServiceError,
     AgentTemplateOptionValueError as AgentTemplateOptionValueServiceError,
-    EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameServiceError,
     InvalidAgentGeneratorParameterNameError,
     InvalidAgentGeneratorParameterValueError,
 )
@@ -45,8 +43,8 @@ class AgentGeneratorsService:
         self._agent_templates_service = agent_templates_service
         self._events_service = events_service
         self._agent_generators = {}
-        self.agent_generators_service_logger = logger.bind(logger_name=str(self))
-        self.agent_generators_service_logger.debug(f"Started {self}")
+        self.logger = logger.bind(logger_name=str(self))
+        self.logger.debug(f"Started {self}")
 
     def __str__(self) -> str:
         return "Agent Generators Service"
@@ -67,14 +65,14 @@ class AgentGeneratorsService:
         except KeyError:
             raise AgentGeneratorNotFoundError(agent_generator_id=agent_generator_id)
 
-        self.agent_generators_service_logger.debug(
+        self.logger.debug(
             f"Retrieved agent generator: {agent_generator!r}",
         )
         return agent_generator
 
     def get_all_agent_generators(self) -> list[BaseAgentGenerator]:
         all_agent_generators = list(self._agent_generators.values())
-        self.agent_generators_service_logger.debug(
+        self.logger.debug(
             f"Retrieved all agent_generators ({len(all_agent_generators)} retrieved)",
         )
         return all_agent_generators
@@ -82,7 +80,7 @@ class AgentGeneratorsService:
     async def create_agent_generator_from_agent_template_by_agent_template_id(
         self,
         agent_template_id: str,
-        options: dict[str, Any],
+        parameters: dict[str, Any],
         name: str | None = None,
         description: str = "",
     ) -> BaseAgentGenerator:
@@ -92,34 +90,41 @@ class AgentGeneratorsService:
             )
         )
 
-        for option_name, option_value in options.items():
-            try:
-                agent_template.set_option_value_by_option_name(
-                    option_name=option_name,
-                    option_value=option_value,
-                )
-            except AgentTemplateOptionNotFoundFrameworkError as exc:
-                raise AgentTemplateOptionNotFoundServiceError(
-                    message=exc.message,
-                    detail=exc.detail,
-                )
-            except AgentTemplateOptionValueFrameworkError as exc:
-                raise AgentTemplateOptionValueServiceError(
-                    message=exc.message,
-                    detail=exc.detail,
-                )
+        # for option_name, option_value in parameters.items():
+        #     try:
+        #         agent_template.set_option_value_by_option_name(
+        #             option_name=option_name,
+        #             option_value=option_value,
+        #         )
+        #     except AgentTemplateOptionNotFoundFrameworkError as exc:
+        #         raise AgentTemplateOptionNotFoundServiceError(
+        #             message=exc.message,
+        #             detail=exc.detail,
+        #         )
+        #     except AgentTemplateOptionValueFrameworkError as exc:
+        #         raise AgentTemplateOptionValueServiceError(
+        #             message=exc.message,
+        #             detail=exc.detail,
+        #         )
 
         try:
             agent_generator = agent_template.create_agent_generator(
                 name=name,
                 description=description,
+                parameters=parameters,
             )
-        except EmptyAgentGeneratorNameFrameworkError as exc:
-            raise EmptyAgentGeneratorNameServiceError(
+        except AgentTemplateOptionNotFoundFrameworkError as exc:
+            raise AgentTemplateOptionNotFoundServiceError(
                 message=exc.message,
                 detail=exc.detail,
             )
-        agent_template.clear_all_option_values()
+        except AgentTemplateOptionValueFrameworkError as exc:
+            raise AgentTemplateOptionValueServiceError(
+                message=exc.message,
+                detail=exc.detail,
+            )
+
+        # agent_template.clear_all_option_values()
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
@@ -129,11 +134,13 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.agent_generators_service_logger.info(
-            f"Created agent generator: {agent_generator}",
+        self.logger.info(
+            "Created agent generator: {}",
+            agent_generator,
         )
-        self.agent_generators_service_logger.debug(
-            f"Created agent generator: {agent_generator!r}",
+        self.logger.debug(
+            "Created agent generator: {!r}",
+            agent_generator,
         )
         return agent_generator
 
@@ -152,10 +159,10 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.agent_generators_service_logger.info(
+        self.logger.info(
             f"Added agent generator: {agent_generator}",
         )
-        self.agent_generators_service_logger.debug(
+        self.logger.debug(
             f"Added agent generator: {agent_generator!r}",
         )
 
@@ -180,10 +187,10 @@ class AgentGeneratorsService:
                 },
             ),
         )
-        self.agent_generators_service_logger.info(
+        self.logger.info(
             f"Removed agent generator: {removed_agent_generator}",
         )
-        self.agent_generators_service_logger.debug(
+        self.logger.debug(
             f"Removed agent generator: {removed_agent_generator!r}",
         )
 
@@ -203,7 +210,7 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.agent_generators_service_logger.info(
+        self.logger.info(
             f"Updated name for agent generator {agent_generator}: '{old_name}' -> '{name}'",
         )
         return agent_generator
@@ -224,7 +231,7 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.agent_generators_service_logger.info(
+        self.logger.info(
             f"Updated description for agent generator {agent_generator}: '{old_description}' -> '{description}'",
         )
         return agent_generator
@@ -232,7 +239,7 @@ class AgentGeneratorsService:
     async def update_agent_generator_parameters_by_agent_generator_id(
         self,
         agent_generator_id: str,
-        new_parameters: dict[str, Any],
+        parameters: dict[str, Any],
     ) -> BaseAgentGenerator:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
@@ -241,63 +248,55 @@ class AgentGeneratorsService:
         if agent_generator.status.state == AgentGeneratorState.RUNNING:
             raise AgentGeneratorAlreadyRunningServiceError
 
-        # It should be impossible for this for loop to break out without finding
-        # the agent template that matches the target agent generator or to trip up on a
-        # false positive based on agent type because all agent types are
-        # unique to their respective agent generator.
-        found_agent_template = False
-        for (
-            test_agent_template
-        ) in self._agent_templates_service.get_all_agent_templates():
-            if test_agent_template.agent_type == agent_generator.agent_type:
-                found_agent_template = True
-                agent_template = test_agent_template
-                break
-        # This should never be raised unless a programmer error is made.
-        assert found_agent_template, "Agent template resolution failed unexpectedly"
+        for parameter_name, parameter_value in agent_generator.parameters.items():
+            if parameter_name not in parameters:
+                # `parameter_value` could be a list or a dict, so we need to perform
+                # a deep copy to prevent reference sharing.
+                parameters[parameter_name] = copy.deepcopy(parameter_value)
 
-        for parameter_name, parameter_value in new_parameters.items():
-            if parameter_name not in agent_template.options:
+        for parameter_name, parameter_value in parameters.items():
+            if parameter_name not in agent_generator.creating_agent_template.options:
                 raise InvalidAgentGeneratorParameterNameError(
+                    agent_generator_str=str(agent_generator),
                     parameter_name=parameter_name,
-                    agent_generator=str(agent_generator),
                 )
-
-        # At this point new_parameters contains all the parameters that an agent
-        # generator would have. Any parameters not specified in the request body as
-        # part of the JSON under the key "parameters" will be the same as the previous
-        # agent generator.
-        for parameter_name, parameter_value in new_parameters.items():
             try:
-                agent_template.options[parameter_name].set_option_value_by_option_name(
-                    parameter_value,
-                )
+                agent_generator.creating_agent_template.options[
+                    parameter_name
+                ].validate_value(value=parameter_value)
             except OptionValueValidationError as exc:
                 raise InvalidAgentGeneratorParameterValueError(
+                    agent_generator_str=str(agent_generator),
                     parameter_name=parameter_name,
                     parameter_value=str(parameter_value),
-                    agent_generator=str(agent_generator),
                     validation_error_message=str(exc),
                 )
+            parameters[parameter_name] = parameter_value
 
         # Create a temporary agent generator whose attributes we copy over to the
         # existing agent generator. This allows us to perform the name and
         # endpoint resolution required to update the attribute without
         # inadvertently overwriting any existing state within the existing
         # agent generator.
-        temporary_agent_generator = agent_template.create_agent_generator()
+        temporary_agent_generator = (
+            agent_generator.creating_agent_template.create_agent_generator(
+                parameters=parameters,
+            )
+        )
         agent_generator.name = temporary_agent_generator.name
-        agent_generator.endpoint = temporary_agent_generator.endpoint
         agent_generator.parameters = copy.deepcopy(temporary_agent_generator.parameters)
 
         await self._events_service.trigger_event(
             event=Event(
-                event_type=EventType.AGENT_GENERATOR_UPDATED,
+                event_type=EventType.LISTENER_UPDATED,
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.agent_generators_service_logger.info(
-            f"Updated parameters for agent generator {agent_generator}: {new_parameters}",
+        self.logger.info(
+            f"Updated parameters for agent generators {agent_generator} to {parameters}",
+        )
+        self.logger.debug(
+            f"Updated parameters for agent generators {agent_generator!r} to {parameters}",
         )
         return agent_generator
 

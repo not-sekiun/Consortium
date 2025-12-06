@@ -28,7 +28,6 @@ from consortium.server.exceptions.framework_exceptions.agent_generators_framewor
     AgentGeneratorStartError as AgentGeneratorStartFrameworkError,
     AgentGeneratorStopError as AgentGeneratorStopFrameworkError,
     EmptyAgentGeneratorBuildStepNameError,
-    EmptyAgentGeneratorNameError,
     RequiredAgentGeneratorBuildStepConfigurationParameterNotDeclaredError,
     RequiredAgentGeneratorConfigurationParameterNotDeclaredError,
 )
@@ -176,10 +175,6 @@ class BaseAgentGenerator(ABC):
                 agent_generator=sys.modules[self.__module__].__file__,
                 parameter_name="name",
                 parameter_type="str",
-            )
-        if not name:
-            raise EmptyAgentGeneratorNameError(
-                agent_generator_filepath=sys.modules[self.__module__].__file__,
             )
         # From here onwards we can refer to the agent generator by its assigned name.
         if not isinstance(description, str):

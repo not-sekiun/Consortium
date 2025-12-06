@@ -6,7 +6,8 @@ from aiohttp import web
 from pydantic import ValidationError
 
 from consortium.components.agents.consortium.http.agent_type import AGENT_TYPE
-from consortium.components.listeners.consortium.http.listener_type import LISTENER_TYPE
+
+# from consortium.components.listeners.consortium.http.listener_type import LISTENER_TYPE
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerSpecificAgentNotFoundError,
     ListenerStartError,
@@ -21,9 +22,9 @@ from consortium.server.models.agent_models import AgentResultMessageModel
 
 
 class Listener(BaseListener):
-    listener_type = LISTENER_TYPE
+    # listener_type = LISTENER_TYPE
 
-    async def on_listener_started(self) -> None:
+    async def on_started(self) -> None:
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
 
@@ -38,7 +39,7 @@ class Listener(BaseListener):
                 f"following socket error: {exc}",
             )
 
-    async def on_listener_running(self) -> None:
+    async def on_running(self) -> None:
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
         tasks_url_paths = self.parameters["tasks_url_paths"]
@@ -90,6 +91,8 @@ class Listener(BaseListener):
                     agent_id=agent_id,
                 )
             except ListenerSpecificAgentNotFoundError:
+                return web.Response(status=401)
+            except KeyError:  # No Cookie header provided
                 return web.Response(status=401)
 
             await self.agents_manager.check_in_connected_agent_by_agent_id(
@@ -191,12 +194,12 @@ class Listener(BaseListener):
         await self.environment.runner.setup()
         site = web.TCPSite(self.environment.runner, local_host, local_port)
         await site.start()
-        await self.stop_listener_event.wait()
+        await self.stop_event.wait()
 
-    async def on_listener_stopped(self) -> None:
+    async def on_stopped(self) -> None:
         await self.environment.runner.cleanup()
 
-    async def on_listener_cancelled(self) -> None:
+    async def on_cancelled(self) -> None:
         # On cancellation, we need to stop the web server, but we may cancel the
         # listener task before the web server is fully set up.
         try:
@@ -204,5 +207,5 @@ class Listener(BaseListener):
         except AttributeError:
             pass
 
-    async def on_listener_errored(self, exception: Exception) -> None:
-        self.listener_logger.error(exception)
+    async def on_errored(self, exception: Exception) -> None:
+        self.logger.error(exception)

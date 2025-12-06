@@ -11,6 +11,8 @@ class Plugin(BasePlugin):
         "framework exits. Upon startup again, this plugin will automatically create "
         "those generators that were previously created."
     )
+    version = "0.1.0"
+    compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
     autostart = True
 
@@ -24,7 +26,7 @@ class Plugin(BasePlugin):
         )
 
         if not persistent_agent_generators_json_file.exists():
-            self.plugin_logger.info(
+            self.logger.info(
                 f"No persistent agent generators file found. Creating new persistent "
                 f"agent generators file at: {persistent_agent_generators_json_file}",
             )
@@ -32,7 +34,7 @@ class Plugin(BasePlugin):
                 file.write("{}")
             return
 
-        self.plugin_logger.info(
+        self.logger.info(
             f"Reading persistent agent generators from: "
             f"{persistent_agent_generators_json_file}",
         )
@@ -51,7 +53,7 @@ class Plugin(BasePlugin):
         for agent_template_name, agent_generators in json_data.items():
             for agent_generator_data in agent_generators:
                 if agent_template_name not in name_to_agent_template_map:
-                    self.plugin_logger.warning(
+                    self.logger.warning(
                         f"No agent template was found with the name "
                         f"'{agent_template_name}' from the persistent agent generators "
                         f"file. The corresponding agent profile may have been renamed "
@@ -60,12 +62,12 @@ class Plugin(BasePlugin):
                     continue
                 agent_template = name_to_agent_template_map[agent_template_name]
                 agent_generator_name = agent_generator_data["name"]
-                self.plugin_logger.success(
+                self.logger.success(
                     f"Creating agent generator '{agent_generator_name}'...",
                 )
                 self.server_services.agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
                     agent_template_id=str(agent_template.agent_template_id),
-                    options=agent_generator_data["parameters"],
+                    parameters=agent_generator_data["parameters"],
                     name=agent_generator_data["name"],
                     description=agent_generator_data["description"],
                 )
@@ -104,7 +106,7 @@ class Plugin(BasePlugin):
             )
 
         if not persistent_agent_generators_json_file.exists():
-            self.plugin_logger.warning(
+            self.logger.warning(
                 f"No persistent agent generators file found even after plugin was "
                 f"started. Creating new persistent agent generators file at: "
                 f"{persistent_agent_generators_json_file}",
@@ -119,7 +121,7 @@ class Plugin(BasePlugin):
         pass
 
     async def on_plugin_errored(self, exc: Exception) -> None:
-        self.plugin_logger.opt(exception=exc).error(
+        self.logger.opt(exception=exc).error(
             "Persistent agent generators plugin encountered a fatal error while "
             "running",
         )

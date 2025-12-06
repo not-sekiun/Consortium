@@ -1,7 +1,13 @@
-from consortium.components.listeners.consortium.reverse_tcp.listener import Listener
+from consortium.components.listener_profiles.consortium.reverse_tcp.listener import (
+    Listener,
+)
+from consortium.components.listener_profiles.consortium.reverse_tcp.listener_type import (
+    LISTENER_TYPE,
+)
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
+from consortium.framework.framework_types import JSONObject
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
 from consortium.framework.options import SingleValueOption
 
@@ -18,10 +24,14 @@ def _check_integer_is_a_valid_port_number(port: int) -> None:
 
 
 class ListenerTemplate(BaseListenerTemplate):
-    listener = Listener
+    label = "consortium.listeners.http_listener"
     name = "Reverse TCP Listener"
     description = "A listener that communicates over the reverse TCP transport."
+    version = "0.1.0"
+    compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
+    listener = Listener
+    listener_type = LISTENER_TYPE
     options = {
         SingleValueOption(
             name="name",
@@ -53,10 +63,8 @@ class ListenerTemplate(BaseListenerTemplate):
         ),
     }
 
-    def resolve_listener_name(self) -> str:
-        return self.get_option_by_option_name("name").get_option_value()
+    def resolve_listener_name(self, parameters: JSONObject) -> str:
+        return parameters["name"]
 
-    def resolve_listener_endpoint(self) -> str:
-        local_host = self.get_option_by_option_name("local_host").get_option_value()
-        local_port = self.get_option_by_option_name("local_port").get_option_value()
-        return f"{local_host}:{local_port}"
+    def resolve_listener_endpoint(self, parameters: JSONObject) -> str:
+        return f"{parameters["local_host"]}:{parameters["local_host"]}"

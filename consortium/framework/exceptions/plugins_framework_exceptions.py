@@ -1,4 +1,4 @@
-from consortium.framework.exceptions._component_exceptions import (
+from consortium.framework.exceptions._component_framework_exceptions import (
     ComponentRuntimeError,
     ComponentStartError,
     ComponentStopError,

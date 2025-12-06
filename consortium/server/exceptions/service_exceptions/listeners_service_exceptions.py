@@ -26,8 +26,6 @@ Exception hierarchy for the listeners service:
         found in the listener template.
       - ListenerTemplateOptionValueError: Raised when an invalid value is provided for
         a listener template option.
-      - EmptyListenerNameError: Raised when the name provided for the listener is an
-        empty string.
 """
 
 from typing import Any
@@ -104,10 +102,10 @@ class ListenerParameterUpdateError(ListenersServiceError):
 
 
 class InvalidListenerParameterNameError(ListenerParameterUpdateError):
-    def __init__(self, parameter_name: str, listener: str):
+    def __init__(self, listener_str: str, parameter_name: str):
         super().__init__(
             message=(
-                f"Failed to update listener parameters for listener '{listener}'. The "
+                f"Failed to update listener parameters for listener '{listener_str}'. The "
                 f"provided parameter name '{parameter_name}' was not found for the "
                 f"listener."
             ),
@@ -117,14 +115,14 @@ class InvalidListenerParameterNameError(ListenerParameterUpdateError):
 class InvalidListenerParameterValueError(ListenerParameterUpdateError):
     def __init__(
         self,
+        listener_str: str,
         parameter_name: str,
         parameter_value: str,
-        listener: str,
         validation_error_message: str,
     ):
         super().__init__(
             message=(
-                f"Failed to update listener parameters for listener '{listener}'. The "
+                f"Failed to update listener parameters for listener '{listener_str}'. The "
                 f"provided parameter value '{parameter_value}' failed validation for "
                 f"the parameter '{parameter_name}': {validation_error_message}"
             ),
@@ -148,10 +146,4 @@ class ListenerTemplateOptionNotFoundError(ListenerCreationError):
 # templates framework exceptions. It just needs to pass on the message and detail data
 # from that exception.
 class ListenerTemplateOptionValueError(ListenerCreationError):
-    pass
-
-
-# This is a wrapper exception for EmptyListenerNameError from the listeners framework
-# exceptions. It just needs to pass on the message and detail data from that exception.
-class EmptyListenerNameError(ListenerCreationError):
     pass

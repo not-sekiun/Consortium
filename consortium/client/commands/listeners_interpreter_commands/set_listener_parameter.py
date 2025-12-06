@@ -105,7 +105,9 @@ class SetListenerParameterCommand(BaseCommand):
             try:
                 listener_template_options = (
                     await client_rest_api_connection.get_listener_template_by_listener_template_id(
-                        listener_template_id=listener["listener_template_id"],
+                        listener_template_id=listener["creating_listener_template"][
+                            "listener_template_id"
+                        ],
                     )
                 )["options"]
             except KeyError:

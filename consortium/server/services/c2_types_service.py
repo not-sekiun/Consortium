@@ -18,10 +18,10 @@ class C2TypesService:
     ):
         self._listener_profiles_service = listener_profiles_service
         self._agent_profiles_service = agent_profiles_service
-        self.c2_types_service_logger = logger.bind(
+        self.logger = logger.bind(
             logger_name=str(self),
         )
-        self.c2_types_service_logger.debug(
+        self.logger.debug(
             f"Started {self}",
         )
 
@@ -38,7 +38,7 @@ class C2TypesService:
         ) in self._listener_profiles_service.get_all_listener_profiles():
             if listener_profile.listener_type not in listener_types:
                 listener_types.append(listener_profile.listener_type)
-        self.c2_types_service_logger.debug(
+        self.logger.debug(
             f"Retrieved all listener types ({len(listener_types)} listener type(s) "
             f"retrieved).",
         )
@@ -50,7 +50,7 @@ class C2TypesService:
     ):
         for listener_type in self.get_all_listener_types():
             if str(listener_type.listener_type_id) == listener_type_id:
-                self.c2_types_service_logger.debug(
+                self.logger.debug(
                     f"Retrieved listener type: {listener_type!r}",
                 )
                 return listener_type
@@ -61,7 +61,7 @@ class C2TypesService:
         for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
             if agent_profile.agent_type not in agent_types:
                 agent_types.append(agent_profile.agent_type)
-        self.c2_types_service_logger.debug(
+        self.logger.debug(
             f"Retrieved all agent types ({len(agent_types)} agent type(s) retrieved).",
         )
         return agent_types
@@ -72,7 +72,7 @@ class C2TypesService:
     ):
         for agent_type in self.get_all_agent_types():
             if str(agent_type.agent_type_id) == agent_type_id:
-                self.c2_types_service_logger.debug(
+                self.logger.debug(
                     f"Retrieved agent type: {agent_type!r}",
                 )
                 return agent_type

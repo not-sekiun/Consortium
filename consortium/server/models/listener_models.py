@@ -2,18 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from consortium.framework.listeners._listener_status import ListenerState
 from consortium.server.models.c2_types_models import ListenerTypeModel
-
-
-class ListenerErrorModel(BaseModel):
-    message: str
-    detail: Any
-
-
-class ListenerStatusModel(BaseModel):
-    state: ListenerState
-    error: ListenerErrorModel | None
+from consortium.server.models.component_models import StatusModel
 
 
 class ConnectedAgentReferenceModel(BaseModel):
@@ -33,7 +23,7 @@ class ListenerModel(BaseModel):
     endpoint: str
     listener_type: ListenerTypeModel
     parameters: dict[str, Any]
-    status: ListenerStatusModel
+    status: StatusModel
     datetime_created: str
     connected_agents: list[ConnectedAgentReferenceModel]
     creating_listener_template: CreatingListenerTemplateReferenceModel

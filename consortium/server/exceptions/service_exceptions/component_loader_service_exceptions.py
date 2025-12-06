@@ -11,7 +11,7 @@ class ComponentsLoaderServiceError(BaseServiceException):
     _MESSAGE = ""
 
     def __init__(self, **kwargs):
-        self.exc_kwargs = kwargs
+        self.kwargs = kwargs
         super().__init__(message=self._MESSAGE.format(**kwargs))
 
     def __init_subclass__(cls, **kwargs):

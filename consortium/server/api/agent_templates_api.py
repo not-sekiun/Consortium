@@ -7,7 +7,6 @@ from consortium.server.exceptions.api_exceptions.agent_templates_api_exceptions 
     AgentTemplateNotFoundError as AgentTemplateNotFoundAPIError,
     AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundAPIError,
     AgentTemplateOptionValueError as AgentTemplateOptionValueAPIError,
-    EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameAPIError,
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
@@ -23,7 +22,6 @@ from consortium.server.exceptions.framework_exceptions.agent_templates_framework
 from consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions import (
     AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundServiceError,
     AgentTemplateOptionValueError as AgentTemplateOptionValueServiceError,
-    EmptyAgentGeneratorNameError as EmptyAgentGeneratorNameServiceError,
 )
 from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
     AgentTemplateNotFoundError as AgentTemplateNotFoundServiceError,
@@ -35,7 +33,7 @@ from consortium.server.server_dependencies import AuthorizeUserRequest
 
 _example_agent_template_option_value_framework_error = (
     AgentTemplateOptionValueFrameworkError(
-        agent_template="string",
+        agent_template_str="string",
         option_name="string",
         option_value="string",
         error_message="string",
@@ -43,7 +41,7 @@ _example_agent_template_option_value_framework_error = (
 )
 _example_agent_template_option_not_found_framework_error = (
     AgentTemplateOptionNotFoundFrameworkError(
-        agent_template="string",
+        agent_template_str="string",
         option_name="string",
     )
 )
@@ -87,9 +85,6 @@ router = APIRouter(
                     message=_example_agent_template_option_not_found_framework_error.message,
                     detail=_example_agent_template_option_not_found_framework_error.detail,
                 ),
-            ).to_pydantic_model()
-            | EmptyAgentGeneratorNameAPIError.from_service_exception(
-                service_exception=EmptyAgentGeneratorNameServiceError(),
             ).to_pydantic_model(),
         },
     },
@@ -106,7 +101,7 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
     try:
         agent_generator = await agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
             agent_template_id=agent_template_id,
-            options=options,
+            parameters=options,
         )
     except AgentTemplateNotFoundServiceError as exc:
         raise AgentTemplateNotFoundAPIError.from_service_exception(
@@ -118,10 +113,6 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
         )
     except AgentTemplateOptionValueServiceError as exc:
         raise AgentTemplateOptionValueAPIError.from_service_exception(
-            service_exception=exc,
-        )
-    except EmptyAgentGeneratorNameServiceError as exc:
-        raise EmptyAgentGeneratorNameAPIError.from_service_exception(
             service_exception=exc,
         )
 

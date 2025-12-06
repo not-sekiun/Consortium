@@ -15,14 +15,15 @@ from consortium.framework._components import (
     ComponentMetadata,
     ComponentModel,
 )
+from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
 from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyStartedError,
     ComponentNotRunningError,
-    ComponentStartError as LifeCycleStartFrameworkError,
-    ComponentStopError as LifeCycleStopFrameworkError,
+    ComponentStartError,
+    ComponentStopError,
 )
 from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
     EmptyPluginLabelError,
@@ -37,7 +38,6 @@ from consortium.server.exceptions.framework_exceptions.plugins_framework_excepti
     PluginStopError as PluginStopFrameworkError,
 )
 from consortium.server.server_logging import LoggerType
-from consortium.server.utils.data_structure_utils import remap_exception
 
 
 class _PluginModel(ComponentModel):
@@ -71,16 +71,16 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
                 if attr.endswith("_service")
             },
         )
-        self.plugin_logger = loguru.logger.bind(
+        self.logger = loguru.logger.bind(
             logger_name=f"Plugin - {self}",
             logger_type=LoggerType.PLUGIN_LOGGER,
         )
-        self.plugin_project_folder = pathlib.Path(
-            sys.modules[self.__module__].__file__,
-        ).parents[0]
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
+        cls.plugin_project_folder = pathlib.Path(
+            sys.modules[cls.__module__].__file__,
+        ).parents[0]
         try:
             cls._validate_metadata()
         except comp_excs.ComponentsFrameworkError as exc:
@@ -93,7 +93,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f"{self.name} ({str(self.plugin_id)})"
+        return f"{self.name} ({self.plugin_id})"
 
     def __repr__(self) -> str:
         return (
@@ -121,7 +121,8 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
     async def on_cancelled(self) -> None: ...
 
-    async def on_errored(self, runtime_error: BaseFrameworkException) -> None: ...
+    async def on_errored(self, runtime_error: BaseFrameworkException) -> None:
+        self.logger.error(runtime_error)
 
     async def on_fatal(
         self,
@@ -135,7 +136,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
-        self.plugin_logger.opt(ansi=True).error(
+        self.logger.opt(ansi=True).error(
             "<bold><red>Fatal error occurred within plugin while it was {}:</></>\n{}",
             ctx_to_str_map[fatal_context],
             traceback.format_exc(),
@@ -148,7 +149,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             raise PluginAlreadyStartedError(
                 plugin_str=str(self),
             )
-        except LifeCycleStartFrameworkError as exc:
+        except ComponentStartError as exc:
             raise PluginStartFrameworkError(
                 plugin_str=str(self),
                 error_message=exc.message,
@@ -162,7 +163,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             raise PluginNotRunningError(
                 plugin_str=str(self),
             )
-        except LifeCycleStopFrameworkError as exc:
+        except ComponentStopError as exc:
             raise PluginStopFrameworkError(
                 plugin_str=str(self),
                 error_message=exc.message,

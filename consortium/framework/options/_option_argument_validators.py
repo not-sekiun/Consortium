@@ -3,6 +3,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Literal, Type
 
+from consortium.framework.framework_types import Primitive
 from consortium.framework.options.exceptions import (
     InvalidOptionConfigurationParameterTypeError,
     InvalidOptionIterableLengthBoundError,
@@ -12,8 +13,6 @@ from consortium.framework.options.exceptions import (
     InvalidOptionValueRangeError,
     InvalidValidatingRegexError,
 )
-
-SimpleType = str | int | float | bool
 
 
 @dataclass
@@ -62,7 +61,7 @@ def validate_arguments_data_types(
 
 def validate_value_type_argument(
     option_name: str,
-    value_type: Type[SimpleType],
+    value_type: Type[Primitive],
 ) -> None:
     if value_type is not None and value_type not in {str, int, float, bool}:
         raise InvalidOptionConfigurationParameterTypeError(

@@ -12,60 +12,65 @@ an error condition from the framework. The overall exception hierarchy is as fol
         - [`ListenerSpecificAgentNotFoundError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerSpecificAgentNotFoundError]
 """
 
-from typing import Any
+# from typing import Any
 
-from consortium.framework.exceptions.base_framework_exception import (
+from consortium.framework.exceptions._component_framework_exceptions import (
+    ComponentRuntimeError,
+    ComponentStartError,
+    ComponentStopError,
+)
+from consortium.framework.exceptions.base_framework_exception import (  # BaseRaiseOnlyFrameworkException,
     BaseCatchOnlyFrameworkException,
-    BaseRaiseOnlyFrameworkException,
 )
 
 
-class ListenerStartError(BaseRaiseOnlyFrameworkException):
+class ListenerStartError(ComponentStartError):
     """
     Raised when an error occurs while attempting to start the listener.
     """
 
-    def __init__(
-        self,
-        message: str = "An error occurred while attempting to start the listener.",
-        detail: Any = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+    # def __init__(
+    #     self,
+    #     message: str = "",
+    #     detail: Any = None,
+    # ) -> None:
+    #     super().__init__(
+    #         message=message,
+    #         detail=detail,
+    #     )
 
 
-class ListenerRuntimeError(BaseRaiseOnlyFrameworkException):
+class ListenerRuntimeError(ComponentRuntimeError):
     """
     Raised when an error occurs while the listener is running.
     """
 
-    def __init__(
-        self,
-        message: str = "An error occurred while the listener was running.",
-        detail: Any = None,
-    ):
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+    #
+    # def __init__(
+    #     self,
+    #     message: str = "",
+    #     detail: Any = None,
+    # ):
+    #     super().__init__(
+    #         message=message,
+    #         detail=detail,
+    #     )
 
 
-class ListenerStopError(BaseRaiseOnlyFrameworkException):
+class ListenerStopError(ComponentStopError):
     """
     Raised when an error occurs while attempting to stop the listener.
     """
 
-    def __init__(
-        self,
-        message: str = "An error occurred while attempting to stop the listener.",
-        detail: Any = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+    # def __init__(
+    #     self,
+    #     message: str = "",
+    #     detail: Any = None,
+    # ) -> None:
+    #     super().__init__(
+    #         message=message,
+    #         detail=detail,
+    #     )
 
 
 class ListenerSpecificAgentNotFoundError(BaseCatchOnlyFrameworkException):

@@ -8,7 +8,7 @@ from consortium.framework.exceptions.base_framework_exception import (
 class ComponentStartError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
-        message: str,
+        message: str = "",
         detail: Any = None,
     ) -> None:
         super().__init__(
@@ -20,7 +20,7 @@ class ComponentStartError(BaseRaiseOnlyFrameworkException):
 class ComponentRuntimeError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
-        message: str,
+        message: str = "",
         detail: Any = None,
     ) -> None:
         super().__init__(
@@ -32,7 +32,7 @@ class ComponentRuntimeError(BaseRaiseOnlyFrameworkException):
 class ComponentStopError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
-        message: str,
+        message: str = "",
         detail: Any = None,
     ) -> None:
         super().__init__(

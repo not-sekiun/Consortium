@@ -13,7 +13,7 @@ class AgentTemplatesService:
         agent_profiles_service: AgentProfilesService,
     ):
         self._agent_profiles_service = agent_profiles_service
-        self.agent_templates_service_logger = logger.bind(
+        self.logger = logger.bind(
             logger_name=str(self),
         )
 
@@ -32,7 +32,7 @@ class AgentTemplatesService:
             for agent_profile in self._agent_profiles_service.get_all_agent_profiles()
         ]:
             if str(agent_template.agent_template_id) == agent_template_id:
-                self.agent_templates_service_logger.debug(
+                self.logger.debug(
                     f"Retrieved listener template: {agent_template!r}",
                 )
                 return agent_template
@@ -45,7 +45,7 @@ class AgentTemplatesService:
             agent_profile.agent_template
             for agent_profile in self._agent_profiles_service.get_all_agent_profiles()
         ]
-        self.agent_templates_service_logger.debug(
+        self.logger.debug(
             f"Retrieved all listener templates ({len(all_agent_templates)}"
             f"listener template(s) retrieved).",
         )

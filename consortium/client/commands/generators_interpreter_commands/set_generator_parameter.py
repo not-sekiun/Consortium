@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
@@ -10,11 +9,10 @@ from consortium.client.repl_framework.base_command import (
     ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import (
-    print_error,
-    print_success,
-    print_warning,
+from consortium.client.utils.options_utils import (
+    convert_option_value_strings_to_option_value,
 )
+from consortium.client.utils.printer_utils import print_error, print_success
 
 
 class SetGeneratorParameterCommand(BaseCommand):
@@ -97,329 +95,6 @@ class SetGeneratorParameterCommand(BaseCommand):
             metavar="VALUE_TYPE",
         )
 
-    async def _handle_single_value_parameter(
-        self,
-        parameter_name: str,
-        parameter_value: str | int | float | bool,
-        value_type_flag: str | None,
-        agent_generator_id: str,
-        agent_template_option: dict,
-        client_rest_api_connection: ClientRESTAPIConnection,
-    ) -> None:
-        parameter_value, value_type_annotation = (
-            self._check_value_for_value_type_annotation(
-                value=parameter_value,
-            )
-        )
-        value_type = self._resolve_value_type_from_overriding_factors(
-            value_type_flag=value_type_flag,
-            value_type_annotation=value_type_annotation,
-            agent_template_option=agent_template_option,
-        )
-        parameter_value = self._convert_value_type(
-            value=parameter_value,
-            value_type=value_type,
-        )
-
-        if (
-            agent_template_option["value_type"] is not None
-            and value_type != agent_template_option["value_type"]
-        ):
-            print_warning(
-                f'Value "{parameter_value}" of type "{value_type}" is not of the '
-                f'expected type "{agent_template_option["value_type"]}" for option '
-                f'"{parameter_name}". However, the value was still set as the user '
-                f'supplied type "{value_type}".',
-            )
-        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
-            new_agent_generator_attributes={
-                "parameters": {parameter_name: parameter_value},
-            },
-        )
-        print_success(
-            f'Set agent generator parameter "{parameter_name}" to "{parameter_value}" '
-            f'with type "{value_type}".',
-        )
-
-    async def _handle_choice_value_parameter(
-        self,
-        parameter_name: str,
-        parameter_value: str | int | float | bool,
-        value_type_flag: str,
-        agent_generator_id: str,
-        agent_template_option: dict,
-        client_rest_api_connection: ClientRESTAPIConnection,
-    ) -> None:
-        parameter_value, value_type_annotation = (
-            self._check_value_for_value_type_annotation(
-                value=parameter_value,
-            )
-        )
-        value_type = self._resolve_value_type_from_overriding_factors(
-            value_type_flag=value_type_flag,
-            value_type_annotation=value_type_annotation,
-            agent_template_option=agent_template_option,
-        )
-        parameter_value = self._convert_value_type(
-            value=parameter_value,
-            value_type=value_type,
-        )
-
-        # If no type was explicitly specified we perform implicit type conversions to
-        # check against the string value of each choice.
-        if (
-            value_type == "str"
-            and value_type_flag is None
-            and value_type_annotation is None
-        ):
-            for choice in agent_template_option["available_values"]:
-                if parameter_value == str(choice):
-                    await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
-                        agent_generator_id=agent_generator_id,
-                        new_agent_generator_attributes={
-                            "parameters": {parameter_name: parameter_value},
-                        },
-                    )
-                    print_success(
-                        f'Set agent generator parameter "{parameter_name}" to '
-                        f'"{parameter_value}"',
-                    )
-                    return
-            print_error(
-                f'Value "{parameter_value}" is not a valid choice for parameter '
-                f'"{parameter_name}". Valid choices are: '
-                f'{", ".join(agent_template_option["available_values"])}',
-            )
-            return
-
-        # In every other case when a value type is explicitly specified (even if that
-        # value type is a string) we do the comparison without any implicit type
-        # conversions.
-        if parameter_value not in agent_template_option["available_values"]:
-            print_error(
-                f'Value "{parameter_value}" is not a valid choice for parameter '
-                f'"{parameter_name}". Valid choices are: '
-                f'{", ".join(agent_template_option["available_values"])}',
-            )
-            return
-        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
-            new_agent_generator_attributes={
-                "parameters": {parameter_name: parameter_value},
-            },
-        )
-        print_success(
-            f'Set agent generator parameter "{parameter_name}" to '
-            f'"{parameter_value}"',
-        )
-
-    async def _handle_list_value_parameter(
-        self,
-        parameter_name: str,
-        parameter_values: list[str | int | float | bool],
-        value_type_flag: str,
-        agent_generator_id: str,
-        agent_template_option: dict,
-        client_rest_api_connection: ClientRESTAPIConnection,
-    ) -> None:
-        new_parameter_values = []
-        for parameter_value in parameter_values:
-            parameter_value, value_type_annotation = (
-                self._check_value_for_value_type_annotation(
-                    value=parameter_value,
-                )
-            )
-            value_type = self._resolve_value_type_from_overriding_factors(
-                value_type_flag=value_type_flag,
-                value_type_annotation=value_type_annotation,
-                agent_template_option=agent_template_option,
-            )
-            parameter_value = self._convert_value_type(
-                value=parameter_value,
-                value_type=value_type,
-            )
-
-            if (
-                agent_template_option["value_type"] is not None
-                and value_type != agent_template_option["value_type"]
-            ):
-                print_warning(
-                    f'Value "{parameter_value}" of type "{value_type}" is not of the '
-                    f'expected type "{agent_template_option["value_type"]}" for '
-                    f'option "{parameter_name}". However, the value was still set as '
-                    f'the user supplied type "{value_type}"',
-                )
-
-            new_parameter_values.append(parameter_value)
-
-        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
-            new_agent_generator_attributes={
-                "parameters": {parameter_name: new_parameter_values},
-            },
-        )
-        print_success(
-            f'Set agent generator parameter "{parameter_name}" to '
-            f'{agent_template_option["value"]!r}',
-        )
-
-    async def _handle_dictionary_value_parameter(
-        self,
-        parameter_name: str,
-        parameter_values: list[str | int | float | bool],
-        value_type_flag: str,
-        agent_generator_id: str,
-        agent_template_option: dict,
-        client_rest_api_connection: ClientRESTAPIConnection,
-    ) -> None:
-        new_agent_generator_parameter = {}
-        for index in range(0, len(parameter_values), 2):
-            key = parameter_values[index]
-            value = parameter_values[index + 1]
-
-            key, key_value_type_annotation = (
-                self._check_value_for_value_type_annotation(
-                    value=key,
-                )
-            )
-            key_value_type = self._resolve_value_type_from_overriding_factors(
-                value_type_flag=value_type_flag,
-                value_type_annotation=key_value_type_annotation,
-                agent_template_option=agent_template_option,
-            )
-            key = self._convert_value_type(
-                value=key,
-                value_type=key_value_type,
-            )
-            if key_value_type != "str":
-                print_error(
-                    f'Key "{key}" of type "{key_value_type}" is not of the expected '
-                    f'type "str" for parameter "{parameter_name}".',
-                )
-                return
-
-            value, value_value_type_annotation = (
-                self._check_value_for_value_type_annotation(
-                    value=value,
-                )
-            )
-            value_value_type = self._resolve_value_type_from_overriding_factors(
-                value_type_flag=value_type_flag,
-                value_type_annotation=value_value_type_annotation,
-                agent_template_option=agent_template_option,
-            )
-            value = self._convert_value_type(
-                value=value,
-                value_type=value_value_type,
-            )
-
-            if (
-                agent_template_option["value_type"] is not None
-                and value_value_type != agent_template_option["value_type"]
-            ):
-                print_warning(
-                    f'Value "{value}" of type "{value_value_type}" for key "{key}" is '
-                    f'not of the expected type '
-                    f'"{agent_template_option["value_type"]}" for option '
-                    f'"{parameter_name}". However, the value was still set as the user '
-                    f'supplied type "{value_value_type}"',
-                )
-
-            new_agent_generator_parameter[key] = value
-
-        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
-            new_agent_generator_attributes={
-                "parameters": {parameter_name: new_agent_generator_parameter},
-            },
-        )
-
-    async def _handle_toggleable_choice_value_option(
-        self,
-        parameter_name: str,
-        parameter_values: list[str | int | float | bool],
-        value_type_flag: str,
-        agent_generator_id: str,
-        agent_template_option: dict,
-        client_rest_api_connection: ClientRESTAPIConnection,
-    ) -> None:
-        new_agent_generator_parameter = {}
-        toggled_on_values = []
-        toggle_value = True
-
-        # Check for the type of toggling that should occur. Whether we should toggle
-        # all to True (only True was provided), toggle all to False (only False was
-        # provided), or toggle the provided choices to True or the provided choices to
-        # False.
-        first_option_value, value_type_annotation = (
-            self._check_value_for_value_type_annotation(
-                value=parameter_values[0],
-            )
-        )
-        value_type = self._resolve_value_type_from_overriding_factors(
-            value_type_flag=value_type_flag,
-            value_type_annotation=value_type_annotation,
-            agent_template_option=agent_template_option,
-        )
-        first_option_value = self._convert_value_type(
-            value=first_option_value,
-            value_type=value_type,
-        )
-        if value_type == "bool" and len(parameter_values) == 1:
-            toggle_value = first_option_value
-            parameter_values = agent_template_option["available_values"]
-        elif value_type == "bool" and len(parameter_values) > 1:
-            toggle_value = first_option_value
-
-        for parameter_value in parameter_values:
-            parameter_value, value_type_annotation = (
-                self._check_value_for_value_type_annotation(
-                    value=parameter_value,
-                )
-            )
-            value_type = self._resolve_value_type_from_overriding_factors(
-                value_type_flag=value_type_flag,
-                value_type_annotation=value_type_annotation,
-                agent_template_option=agent_template_option,
-            )
-            if value_type != "str":
-                print_error(
-                    f'Value "{parameter_value}" of type "{value_type}" is not of the '
-                    f'expected type "str" for option "{parameter_name}".',
-                )
-                return
-            parameter_value = self._convert_value_type(
-                value=parameter_value,
-                value_type=value_type,
-            )
-            if parameter_value not in agent_template_option["available_values"]:
-                print_error(
-                    f'Value "{parameter_value}" is not a valid choice for option '
-                    f'"{parameter_name}". Valid choices are: '
-                    f'{", ".join(agent_template_option["available_values"])}',
-                )
-                return
-
-            toggled_on_values.append(parameter_value)
-            new_agent_generator_parameter[parameter_value] = toggle_value
-
-        for choice in agent_template_option["available_values"]:
-            if choice not in toggled_on_values:
-                new_agent_generator_parameter[choice] = not toggle_value
-
-        await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
-            new_agent_generator_attributes={
-                "parameters": {parameter_name: new_agent_generator_parameter},
-            },
-        )
-
-        print_success(
-            f'Set agent generator parameter "{parameter_name}" to '
-            f"{new_agent_generator_parameter!r}",
-        )
-
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(command_context.arguments)
@@ -432,7 +107,9 @@ class SetGeneratorParameterCommand(BaseCommand):
             try:
                 agent_template_options = (
                     await client_rest_api_connection.get_agent_template_by_agent_template_id(
-                        agent_template_id=agent_generator["agent_template_id"],
+                        agent_template_id=agent_generator["creating_agent_template"][
+                            "agent_template_id"
+                        ],
                     )
                 )["options"]
             except KeyError:
@@ -442,94 +119,32 @@ class SetGeneratorParameterCommand(BaseCommand):
                 )
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
-            parameter_name = parsed_args.parameter_name[0]
-            parameter_values = parsed_args.parameter_values
             try:
-                option = agent_template_options[parameter_name]
+                option = agent_template_options[parsed_args.parameter_name[0]]
             except KeyError:
                 print_error(
-                    f'Agent generator parameter "{parameter_name}" does not exist',
+                    f"Agent generator parameter '{parsed_args.parameter_name[0]}' does not "
+                    f"exist",
                 )
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
             try:
-                if option["option_type"] == "SINGLE_VALUE_OPTION":
-                    if len(parameter_values) != 1:
-                        print_error(
-                            f"Expected 1 value for agent template option "
-                            f'"{parameter_name}" of option type '
-                            f'"{option["option_type"]}" but got '
-                            f'{len(parameter_values)} values instead.',
-                        )
-                        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
-                    await self._handle_single_value_parameter(
-                        parameter_name=parameter_name,
-                        parameter_value=parameter_values[0],
+                parameter_name, parameter_value = (
+                    convert_option_value_strings_to_option_value(
+                        option_json_data=option,
+                        value_strings=parsed_args.parameter_values,
                         value_type_flag=parsed_args.value_type,
-                        agent_generator_id=parsed_args.agent_generator_id[0],
-                        agent_template_option=option,
-                        client_rest_api_connection=client_rest_api_connection,
                     )
-                elif option["option_type"] == "CHOICE_VALUE_OPTION":
-                    if len(parameter_values) != 1:
-                        print_error(
-                            f"Expected 1 value for agent template option "
-                            f'"{parameter_name}" of option type '
-                            f'"{option["option_type"]}" but got '
-                            f'{len(parameter_values)} values instead.',
-                        )
-                        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
-                    await self._handle_choice_value_parameter(
-                        parameter_name=parameter_name,
-                        parameter_value=parameter_values[0],
-                        value_type_flag=parsed_args.value_type,
-                        agent_generator_id=parsed_args.agent_generator_id[0],
-                        agent_template_option=option,
-                        client_rest_api_connection=client_rest_api_connection,
-                    )
-                elif option["option_type"] == "LIST_VALUE_OPTION":
-                    await self._handle_list_value_parameter(
-                        parameter_name=parameter_name,
-                        parameter_values=parameter_values,
-                        value_type_flag=parsed_args.value_type,
-                        agent_generator_id=parsed_args.agent_generator_id[0],
-                        agent_template_option=option,
-                        client_rest_api_connection=client_rest_api_connection,
-                    )
-                elif option["option_type"] == "DICTIONARY_VALUE_OPTION":
-                    if len(parameter_values) % 2 != 0:
-                        print_error(
-                            f"Expected an even number of values for agent template "
-                            f'option "{parameter_name}" of option type '
-                            f'"{option["option_type"]}" but got '
-                            f'{len(parameter_values)} values instead.',
-                        )
-                        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
-                    await self._handle_dictionary_value_parameter(
-                        parameter_name=parameter_name,
-                        parameter_values=parameter_values,
-                        value_type_flag=parsed_args.value_type,
-                        agent_generator_id=parsed_args.agent_generator_id[0],
-                        agent_template_option=option,
-                        client_rest_api_connection=client_rest_api_connection,
-                    )
-                elif option["option_type"] == "TOGGLEABLE_CHOICES_VALUE_OPTION":
-                    if len(parameter_values) != 1:
-                        print_error(
-                            f"Expected 1 value for agent template option "
-                            f'"{parameter_name}" of option type '
-                            f'"{option["option_type"]}" but got '
-                            f'{len(parameter_values)} values instead.',
-                        )
-                        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
-                    await self._handle_toggleable_choice_value_option(
-                        parameter_name=parameter_name,
-                        parameter_values=parameter_values,
-                        value_type_flag=parsed_args.value_type,
-                        agent_generator_id=parsed_args.agent_generator_id[0],
-                        agent_template_option=option,
-                        client_rest_api_connection=client_rest_api_connection,
-                    )
+                )
+                await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
+                    agent_generator_id=parsed_args.agent_generator_id[0],
+                    new_agent_generator_attributes={
+                        "parameters": {parameter_name: parameter_value},
+                    },
+                )
+                print_success(
+                    f"Set agent generator parameter '{parameter_name}' to {parameter_value!r}",
+                )
             except ValueError as exc:
                 print_error(exc)
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)

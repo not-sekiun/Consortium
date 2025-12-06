@@ -3,9 +3,10 @@ from typing import Any
 
 from loguru import logger
 
+# from consortium.framework.listeners._listener_status import ListenerState
+from consortium.framework._components._status import State
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.framework.listeners._listener_status import ListenerState
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.framework.options.exceptions import OptionValueValidationError
 from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
@@ -13,14 +14,12 @@ from consortium.server.exceptions.framework_exceptions.listener_template_framewo
     ListenerTemplateOptionValueError as ListenerTemplateOptionValueFrameworkError,
 )
 from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (
-    EmptyListenerNameError as EmptyListenerNameFrameworkError,
-    ListenerAlreadyRunningError as ListenerAlreadyRunningFrameworkError,
+    ListenerAlreadyStartedError as ListenerAlreadyStartedFrameworkError,
     ListenerNotRunningError as ListenerNotRunningFrameworkError,
     ListenerStartError as ListenerStartFrameworkError,
     ListenerStopError as ListenerStopFrameworkError,
 )
 from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
-    EmptyListenerNameError as EmptyListenerNameServiceError,
     InvalidListenerParameterNameError,
     InvalidListenerParameterValueError,
     ListenerAlreadyExistsError,
@@ -47,8 +46,8 @@ class ListenersService:
         self._listener_templates_service = listener_templates_service
         self._events_service = events_service
         self._listeners = {}
-        self.listeners_service_logger = logger.bind(logger_name=str(self))
-        self.listeners_service_logger.debug(f"Started {self}")
+        self.logger = logger.bind(logger_name=str(self))
+        self.logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "Listeners Service"
@@ -66,54 +65,44 @@ class ListenersService:
         except KeyError:
             raise ListenerNotFoundError(listener_id=listener_id)
 
-        self.listeners_service_logger.debug(f"Retrieved listener: {listener!r}")
+        self.logger.debug("Retrieved listener: {!r}", listener)
         return listener
 
     def get_all_listeners(self) -> list[BaseListener]:
         all_listeners = list(self._listeners.values())
-        self.listeners_service_logger.debug(
-            f"Retrieved all listeners ({len(all_listeners)} retrieved)",
+        self.logger.debug(
+            "Retrieved all listeners ({} retrieved)",
+            len(all_listeners),
         )
         return all_listeners
 
     async def create_listener_from_listener_template_by_listener_template_id(
         self,
         listener_template_id: str,
-        options: dict[str, Any],
+        parameters: dict[str, Any],
         name: str | None = None,
         description: str = "",
     ) -> BaseListener:
         listener_template = self._listener_templates_service.get_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
         )
-        for option_name, option_value in options.items():
-            try:
-                listener_template.set_option_value_by_option_name(
-                    option_name=option_name,
-                    option_value=option_value,
-                )
-            except ListenerTemplateOptionNotFoundFrameworkError as exc:
-                raise ListenerTemplateOptionNotFoundServiceError(
-                    message=exc.message,
-                    detail=exc.detail,
-                )
-            except ListenerTemplateOptionValueFrameworkError as exc:
-                raise ListenerTemplateOptionValueServiceError(
-                    message=exc.message,
-                    detail=exc.detail,
-                )
-
         try:
             listener = listener_template.create_listener(
                 name=name,
                 description=description,
+                parameters=parameters,
             )
-        except EmptyListenerNameFrameworkError as exc:
-            raise EmptyListenerNameServiceError(
+        except ListenerTemplateOptionNotFoundFrameworkError as exc:
+            raise ListenerTemplateOptionNotFoundServiceError(
                 message=exc.message,
                 detail=exc.detail,
             )
-        listener_template.clear_all_option_values()
+        except ListenerTemplateOptionValueFrameworkError as exc:
+            raise ListenerTemplateOptionValueServiceError(
+                message=exc.message,
+                detail=exc.detail,
+            )
+
         self._listeners[str(listener.listener_id)] = listener
         await self._events_service.trigger_event(
             event=Event(
@@ -121,8 +110,8 @@ class ListenersService:
                 data={"listener_id": str(listener.listener_id)},
             ),
         )
-        self.listeners_service_logger.info(f"Created listener: {listener}")
-        self.listeners_service_logger.debug(f"Created listener: {listener!r}")
+        self.logger.info("Created listener: {}", listener)
+        self.logger.debug("Created listener: {!r}", listener)
         return listener
 
     async def add_listener(self, listener: BaseListener) -> None:
@@ -138,7 +127,7 @@ class ListenersService:
 
     async def remove_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
-        if listener.status.state == ListenerState.RUNNING:
+        if listener.status.state == State.RUNNING:
             raise ListenerAlreadyRunningServiceError
 
         removed_listener = self._listeners.pop(listener_id)
@@ -148,16 +137,14 @@ class ListenersService:
                 data={"listener_id": str(removed_listener.listener_id)},
             ),
         )
-        self.listeners_service_logger.info(f"Removed listener: {removed_listener}")
-        self.listeners_service_logger.debug(f"Removed listener: {removed_listener!r}")
+        self.logger.info("Removed listener: {}", removed_listener)
+        self.logger.debug("Removed listener: {!r}", removed_listener)
 
     async def update_listener_name_by_listener_id(
         self,
         listener_id: str,
         name: str,
     ) -> BaseListener:
-        if not name:
-            raise EmptyListenerNameServiceError
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         old_name = listener.name
         listener.name = name
@@ -167,11 +154,17 @@ class ListenersService:
                 data={"listener_id": str(listener.listener_id)},
             ),
         )
-        self.listeners_service_logger.info(
-            f"Updated name for listener {listener} from '{old_name}' to '{name}'.",
+        self.logger.info(
+            "Updated name for listener {} from '{}' to '{}'.",
+            listener,
+            old_name,
+            name,
         )
-        self.listeners_service_logger.debug(
-            f"Updated name for listener {listener!r} from '{old_name}' to '{name}'.",
+        self.logger.debug(
+            "Updated name for listener {!r} from '{}' to '{}'.",
+            listener,
+            old_name,
+            name,
         )
         return listener
 
@@ -189,13 +182,17 @@ class ListenersService:
                 data={"listener_id": str(listener.listener_id)},
             ),
         )
-        self.listeners_service_logger.info(
-            f"Updated description for listener {listener} from '{old_description}' to "
-            f"'{description}'.",
+        self.logger.info(
+            "Updated description for listener {} from '{}' to '{}'.",
+            listener,
+            old_description,
+            description,
         )
-        self.listeners_service_logger.debug(
-            f"Updated description for listener {listener!r}: from '{old_description}' "
-            f"to '{description}'.",
+        self.logger.debug(
+            "Updated description for listener {!r} from '{}' to '{}'.",
+            listener,
+            old_description,
+            description,
         )
         return listener
 
@@ -206,65 +203,42 @@ class ListenersService:
     ) -> BaseListener:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
-        if listener.status.state == ListenerState.RUNNING:
+        if listener.status.state == State.RUNNING:
             raise ListenerAlreadyRunningServiceError
-
-        # It should be impossible for this for loop to break out without finding
-        # the listener template that matches the target listener or to trip up on a
-        # false positive based on listener type because all listener types are
-        # unique to their respective listener.
-        found_listener_template = False
-        for (
-            test_listener_template
-        ) in self._listener_templates_service.get_all_listener_templates():
-            if test_listener_template.listener_type == listener.listener_type:
-                found_listener_template = True
-                listener_template = test_listener_template
-                break
-        # This should never be raised unless a programmer error is made.
-        assert (
-            found_listener_template
-        ), "Listener template resolution failed unexpectedly"
 
         for parameter_name, parameter_value in listener.parameters.items():
             if parameter_name not in parameters:
-                # parameter_value could be a list or a dict, so we need to perform
+                # `parameter_value` could be a list or a dict, so we need to perform
                 # a deep copy to prevent reference sharing.
                 parameters[parameter_name] = copy.deepcopy(parameter_value)
 
         for parameter_name, parameter_value in parameters.items():
-            if parameter_name not in listener_template.options:
+            if parameter_name not in listener.creating_listener_template.options:
                 raise InvalidListenerParameterNameError(
+                    listener_str=str(listener),
                     parameter_name=parameter_name,
-                    listener=str(listener),
                 )
-            parameters[parameter_name] = parameter_value
-
-        # At this point `parameters` contains all the parameters that a listener
-        # would have. Any parameters not specified in the request body as part of
-        # the JSON under the key "parameters" will be the same as the previous
-        # listener.
-        for parameter_name, parameter_value in parameters.items():
             try:
-                listener_template.options[
+                listener.creating_listener_template.options[
                     parameter_name
-                ].set_option_value_by_option_name(
-                    parameter_value,
-                )
+                ].validate_value(value=parameter_value)
             except OptionValueValidationError as exc:
                 raise InvalidListenerParameterValueError(
+                    listener_str=str(listener),
                     parameter_name=parameter_name,
                     parameter_value=str(parameter_value),
-                    listener=str(listener),
                     validation_error_message=str(exc),
                 )
+            parameters[parameter_name] = parameter_value
 
         # Create a temporary listener whose attributes we copy over to the
         # existing listener. This allows us to perform the name and
         # endpoint resolution required to update the attribute without
         # inadvertently overwriting any existing state within the existing
         # listener.
-        temporary_listener = listener_template.create_listener()
+        temporary_listener = listener.creating_listener_template.create_listener(
+            parameters=parameters,
+        )
         listener.name = temporary_listener.name
         listener.endpoint = temporary_listener.endpoint
         listener.parameters = copy.deepcopy(temporary_listener.parameters)
@@ -275,11 +249,15 @@ class ListenersService:
                 data={"listener_id": str(listener.listener_id)},
             ),
         )
-        self.listeners_service_logger.info(
-            f"Updated parameters for listeners {listener} to {parameters}",
+        self.logger.info(
+            "Updated parameters for listeners {} to {}",
+            listener,
+            parameters,
         )
-        self.listeners_service_logger.debug(
-            f"Updated parameters for listeners {listener!r} to {parameters}",
+        self.logger.debug(
+            "Updated parameters for listeners {!r} to {}",
+            listener,
+            parameters,
         )
         return listener
 
@@ -287,13 +265,13 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         try:
-            await listener.start_listener()
+            await listener.start()
         except ListenerStartFrameworkError as exc:
             raise ListenerStartServiceError(
                 message=str(exc),
                 detail=exc.detail,
             ) from None
-        except ListenerAlreadyRunningFrameworkError as exc:
+        except ListenerAlreadyStartedFrameworkError as exc:
             raise ListenerNotRunningServiceError(message=exc.message) from None
 
         await self._events_service.trigger_event(
@@ -307,7 +285,7 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         try:
-            await listener.stop_listener()
+            await listener.stop()
         except ListenerStopFrameworkError as exc:
             raise ListenerStopServiceError(
                 message=str(exc),
@@ -326,7 +304,7 @@ class ListenersService:
     async def cancel_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         try:
-            await listener.cancel_listener()
+            await listener.cancel()
         except ListenerNotRunningFrameworkError as exc:
             raise ListenerNotRunningServiceError(message=exc.message) from None
 

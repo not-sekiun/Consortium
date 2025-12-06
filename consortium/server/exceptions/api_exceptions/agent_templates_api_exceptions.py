@@ -27,7 +27,3 @@ class AgentTemplateOptionNotFoundError(UnprocessableEntityError):
 
 class AgentTemplateOptionValueError(UnprocessableEntityError):
     code = "AGENT_TEMPLATE_OPTION_VALUE_ERROR"
-
-
-class EmptyAgentGeneratorNameError(UnprocessableEntityError):
-    code = "EMPTY_AGENT_GENERATOR_NAME_ERROR"

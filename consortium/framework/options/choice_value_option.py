@@ -1,3 +1,4 @@
+from consortium.framework.framework_types import Primitive
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options._option_argument_validators import (
     ArgumentDataTypeCheckParameters,
@@ -8,8 +9,6 @@ from consortium.framework.options.exceptions import (
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
 from consortium.framework.options.option_types import OptionType
-
-SimpleType = str | int | float | bool
 
 
 class ChoiceValueOption(BaseOption):
@@ -29,9 +28,9 @@ class ChoiceValueOption(BaseOption):
             Whether the option is required or not. If True, the option must have a
             value set before it can be retrieved. If False, the option can be retrieved
             without a value being set.
-        default_value (SimpleType | None):
+        default_value (Primitive | None):
             The default value of the option. If `None`, the option has no default value.
-        available_values (set[SimpleType]):
+        available_values (set[Primitive]):
             The set of available values that the user can choose from. The type of each
             choice is restricted to being a `str`, `int`, `float`, or `bool`.
 
@@ -44,9 +43,9 @@ class ChoiceValueOption(BaseOption):
             Whether the option is required or not. If True, the option must have a
             value set before it can be retrieved. If False, the option can be retrieved
             without a value being set.
-        default_value (SimpleType | None):
+        default_value (Primitive | None):
             The default value of the option. If `None`, the option has no default value.
-        available_values (set[SimpleType]):
+        available_values (set[Primitive]):
             The set of available values that the user can choose from. The type of each
             choice is restricted to being a `str`, `int`, `float`, or `bool`.
 
@@ -59,8 +58,8 @@ class ChoiceValueOption(BaseOption):
             default_value="exe",
             available_values={"exe", "dll", "ps1"},
         )
-        payload_format.set_option_value("dll")
-        payload_format.set_option_value("not_a_valid_format")  # Will raise `OptionValueValidationError`
+        payload_format.validate_value("dll")
+        payload_format.validate_value("not_a_valid_format")  # Will raise `OptionValueValidationError`
         ```
     """
 
@@ -70,10 +69,10 @@ class ChoiceValueOption(BaseOption):
     def __init__(
         self,
         name: str,
-        available_values: set[SimpleType],
+        available_values: set[Primitive],
         description: str = "",
         required: bool = True,
-        default_value: SimpleType | None = None,
+        default_value: Primitive | None = None,
     ):
         self.available_values = available_values
         """
@@ -94,7 +93,7 @@ class ChoiceValueOption(BaseOption):
             f"available_values={self.available_values!r})"
         )
 
-    def validate_value(self, value: SimpleType) -> None:
+    def validate_value(self, value: Primitive) -> None:
         """
         Validate the value of the option.
 
@@ -110,7 +109,7 @@ class ChoiceValueOption(BaseOption):
                 f"choice values {self.available_values}.",
             )
 
-    def to_json(self) -> dict[str, SimpleType | list[SimpleType] | None]:
+    def to_json(self) -> dict[str, Primitive | list[Primitive] | None]:
         """
         Convert the option to a JSON serializable dictionary.
 

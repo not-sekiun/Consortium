@@ -4,9 +4,9 @@ import socket
 import struct
 from typing import Any
 
-from consortium.components.listeners.consortium.reverse_tcp.listener_type import (
-    LISTENER_TYPE,
-)
+# from consortium.components.listeners.consortium.reverse_tcp.listener_type import (
+#     LISTENER_TYPE,
+# )
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerStartError,
 )
@@ -82,9 +82,9 @@ class _AgentHandler:
 
 
 class Listener(BaseListener):
-    listener_type = LISTENER_TYPE
+    # listener_type = LISTENER_TYPE
 
-    async def on_listener_started(self) -> None:
+    async def on_started(self) -> None:
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
 
@@ -99,7 +99,7 @@ class Listener(BaseListener):
                 f"following socket error: {exc}",
             )
 
-    async def on_listener_running(self) -> None:
+    async def on_running(self) -> None:
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
 
@@ -120,13 +120,7 @@ class Listener(BaseListener):
             port=local_port,
         )
 
-        await self.stop_listener_event.wait()
+        await self.stop_event.wait()
 
-    async def on_listener_stopped(self) -> None:
-        pass
-
-    async def on_listener_cancelled(self) -> None:
-        pass
-
-    async def on_listener_errored(self, exception: Exception) -> None:
-        self.listener_logger.error(exception)
+    async def on_errored(self, exception: Exception) -> None:
+        self.logger.error(exception)

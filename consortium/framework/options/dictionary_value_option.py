@@ -4,13 +4,13 @@ from typing import Callable, Type
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
+from consortium.framework.framework_types import Primitive, PrimitiveType
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options._option_argument_validators import (
     validate_validating_function_argument,
     validate_validating_regex_argument,
     validate_value_type_argument,
 )
-from consortium.framework.options._types import SimpleType, SimpleTypeType
 from consortium.framework.options._utils import resolve_validating_function_string
 from consortium.framework.options.exceptions import (
     OptionValueValidationError as OptionValueValidationFrameworkError,
@@ -118,13 +118,13 @@ class DictionaryValueOption(BaseOption):
         name: str,
         description: str = "",
         required: bool = True,
-        default_value: dict[str, SimpleType] | None = None,
+        default_value: dict[str, Primitive] | None = None,
         key_validating_regex: str | None = None,
         key_validating_function: Callable[[str], None] | None = None,
-        value_type: SimpleTypeType | None = None,
+        value_type: PrimitiveType | None = None,
         value_validating_regex: str | None = None,
-        value_validating_function: Callable[[SimpleType], None] | None = None,
-        validating_function: Callable[[dict[str, SimpleType]], None] | None = None,
+        value_validating_function: Callable[[Primitive], None] | None = None,
+        validating_function: Callable[[dict[str, Primitive]], None] | None = None,
     ):
         self.key_validating_regex = key_validating_regex
         """
@@ -179,7 +179,7 @@ class DictionaryValueOption(BaseOption):
             f"validating_function={self.validating_function!r})"
         )
 
-    def validate_value(self, value: dict[str, SimpleType]) -> None:
+    def validate_value(self, value: dict[str, Primitive]) -> None:
         """
         Validate the value of the option.
 
@@ -260,7 +260,7 @@ class DictionaryValueOption(BaseOption):
 
     def to_json(
         self,
-    ) -> dict[str, str | bool | dict[str, SimpleType] | None]:
+    ) -> dict[str, str | bool | dict[str, Primitive] | None]:
         """
         Convert the option to a JSON serializable dictionary.
 

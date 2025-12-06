@@ -329,12 +329,12 @@ async def cancel_agent_generator_by_agent_generator_id(
             | InvalidAgentGeneratorParameterNameAPIError.from_service_exception(
                 service_exception=InvalidAgentGeneratorParameterNameServiceError(
                     parameter_name="string",
-                    agent_generator="string",
+                    agent_generator_str="string",
                 ),
             ).to_pydantic_model()
             | InvalidAgentGeneratorParameterValueAPIError.from_service_exception(
                 service_exception=InvalidAgentGeneratorParameterValueServiceError(
-                    agent_generator="string",
+                    agent_generator_str="string",
                     parameter_name="string",
                     parameter_value="string",
                     validation_error_message="string",
@@ -367,9 +367,9 @@ async def update_agent_generator_by_agent_generator_id(
     # an agent generator independently of the parameters by simply not specifying any
     # parameters when PUTing. But if the parameters are present they will override the
     # name string even if it was specified in the request.
-    name: Annotated[str, Body] | None = None,
-    description: Annotated[str, Body] | None = None,
-    parameters: Annotated[dict[str, Any], Body] | None = None,
+    name: Annotated[str, Body(embed=True)] = None,
+    description: Annotated[str, Body(embed=True)] = None,
+    parameters: Annotated[dict[str, Any], Body(embed=True)] = None,
 ) -> AgentGeneratorModel:
     try:
         if name is not None:
@@ -378,15 +378,15 @@ async def update_agent_generator_by_agent_generator_id(
                 name=name,
             )
         if description is not None:
-            await agent_generators_service.update_agent_generator_name_by_agent_generator_id(
+            await agent_generators_service.update_agent_generator_description_by_agent_generator_id(
                 agent_generator_id=agent_generator_id,
-                name=name,
+                description=description,
             )
         if parameters is not None:
             try:
-                await agent_generators_service.update_agent_generator_name_by_agent_generator_id(
+                await agent_generators_service.update_agent_generator_parameters_by_agent_generator_id(
                     agent_generator_id=agent_generator_id,
-                    name=name,
+                    parameters=parameters,
                 )
             # AgentTemplateResolutionError is only ever raised when a programmer
             # error is made. The service will raise an AssertionError to demonstrate
@@ -411,15 +411,15 @@ async def update_agent_generator_by_agent_generator_id(
             service_exception=exc,
         )
 
+    # If the agent generator ID provided is invalid AND no parameters were passed to be
+    # patched it is possible for the above block to execute and not raise an exception.
+    # So we still need to check for that here.
     try:
         agent_generator = (
             agent_generators_service.get_agent_generator_by_agent_generator_id(
                 agent_generator_id=agent_generator_id,
             )
         )
-    # If the agent generator ID provided is invalid AND no parameters were passed to be
-    # patched it is possible for the above block to execute and not raise an exception.
-    # So we still need to check for that here.
     except AgentGeneratorNotFoundServiceError as exc:
         raise AgentGeneratorNotFoundAPIError.from_service_exception(
             service_exception=exc,

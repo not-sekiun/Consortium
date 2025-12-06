@@ -15,10 +15,10 @@ class ListenerTemplatesService:
         listener_profiles_service: ListenerProfilesService,
     ):
         self._listener_profiles_service = listener_profiles_service
-        self.listener_templates_service_logger = logger.bind(
+        self.logger = logger.bind(
             logger_name=str(self),
         )
-        self.listener_templates_service_logger.debug(
+        self.logger.debug(
             f"Started {self}",
         )
 
@@ -37,7 +37,7 @@ class ListenerTemplatesService:
             for listener_profile in self._listener_profiles_service.get_all_listener_profiles()
         ]:
             if str(listener_template.listener_template_id) == listener_template_id:
-                self.listener_templates_service_logger.debug(
+                self.logger.debug(
                     f"Retrieved listener template: {listener_template!r}",
                 )
                 return listener_template
@@ -50,7 +50,7 @@ class ListenerTemplatesService:
             listener_profile.listener_template
             for listener_profile in self._listener_profiles_service.get_all_listener_profiles()
         ]
-        self.listener_templates_service_logger.debug(
+        self.logger.debug(
             f"Retrieved all listener templates ({len(all_listener_templates)}"
             f"listener template(s) retrieved).",
         )

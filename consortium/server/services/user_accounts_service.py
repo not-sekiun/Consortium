@@ -32,10 +32,10 @@ from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_P
 class UserAccountsService:
     def __init__(self):
         self._user_accounts = {}
-        self.user_accounts_service_logger = logger.bind(
+        self.logger = logger.bind(
             logger_name=str(self),
         )
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Started {self}",
         )
 
@@ -55,7 +55,7 @@ class UserAccountsService:
             raise UserAccountIDNotFoundError(
                 user_account_id=user_account_id,
             )
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Retrieved user account: {user_account!r}",
         )
 
@@ -67,7 +67,7 @@ class UserAccountsService:
     def get_user_account_by_username(self, username: str) -> UserAccountModel:
         for user_account in self._user_accounts.values():
             if user_account.username == username:
-                self.user_accounts_service_logger.debug(
+                self.logger.debug(
                     f"Retrieved user account: {user_account!r}",
                 )
                 return user_account
@@ -76,7 +76,7 @@ class UserAccountsService:
 
     def get_all_user_accounts(self) -> list[UserAccountModel]:
         all_user_accounts = list(self._user_accounts.values())
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Retrieved all user accounts ({len(all_user_accounts)} user account(s) "
             "retrieved).",
         )
@@ -107,7 +107,7 @@ class UserAccountsService:
             role=role,
         )
         self._user_accounts[str(user_account.user_account_id)] = user_account
-        self.user_accounts_service_logger.info(
+        self.logger.info(
             f"Created new user account: {user_account}",
         )
 
@@ -144,7 +144,7 @@ class UserAccountsService:
 
         old_username = user_account.username
         user_account.username = username
-        self.user_accounts_service_logger.info(
+        self.logger.info(
             f"Updated username for user account {user_account}: '{old_username}' -> "
             f"'{username}'",
         )
@@ -169,7 +169,7 @@ class UserAccountsService:
 
         old_password = user_account.password
         user_account.password = password
-        self.user_accounts_service_logger.info(
+        self.logger.info(
             f"Updated password for user account {user_account}: '{old_password}' -> "
             f"'{password}'",
         )
@@ -195,7 +195,7 @@ class UserAccountsService:
 
         old_role = user_account.role
         user_account.role = role
-        self.user_accounts_service_logger.info(
+        self.logger.info(
             f"Updated role for {user_account}: '{old_role}' -> '{role}'",
         )
 
@@ -209,7 +209,7 @@ class UserAccountsService:
             deleted_user_account = self._user_accounts.pop(str(user_account_id))
         except KeyError:
             raise UserAccountIDNotFoundError(user_account_id=user_account_id)
-        self.user_accounts_service_logger.info(
+        self.logger.info(
             f"Deleted user account: {deleted_user_account}",
         )
 
@@ -230,7 +230,7 @@ class UserAccountsService:
         if user_account.password != password:
             raise UserAccountAuthenticationError
 
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Authenticated user account: {user_account!r}",
         )
 
@@ -245,7 +245,7 @@ class UserAccountsService:
         )
         for user_account in new_user_accounts:
             self._user_accounts[str(user_account.user_account_id)] = user_account
-            self.user_accounts_service_logger.debug(
+            self.logger.debug(
                 f"Loaded user account: {user_account!r}",
             )
         return new_user_accounts
@@ -318,12 +318,12 @@ class UserAccountsService:
                     user_accounts_filepath=user_accounts_filepath,
                     duplicate_username=new_user_account.username,
                 )
-            self.user_accounts_service_logger.debug(
+            self.logger.debug(
                 f"Read user account: {new_user_account}",
             )
             new_user_accounts.append(new_user_account)
 
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Read user accounts from user accounts file ({len(new_user_accounts)} "
             "user account(s) read).",
         )
@@ -341,7 +341,7 @@ class UserAccountsService:
         serializable_user_accounts = []
 
         for user_account in self.get_all_user_accounts():
-            self.user_accounts_service_logger.debug(
+            self.logger.debug(
                 f"Writing user account: {user_account}",
             )
             serializable_user_accounts.append(
@@ -362,35 +362,35 @@ class UserAccountsService:
                 user_accounts_filepath=str(user_accounts_filepath),
             )
 
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Wrote user accounts to user accounts file ({number_of_bytes_written} "
             f"byte(s) written).",
         )
         return number_of_bytes_written
 
     def load_framework_user_accounts(self) -> bool:
-        self.user_accounts_service_logger.debug("Loading framework user accounts...")
+        self.logger.debug("Loading framework user accounts...")
 
         try:
             loaded_user_accounts = self.load_user_accounts_from_user_accounts_file(
                 user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
             )
         except UserAccountsServiceError as exc:
-            self.user_accounts_service_logger.error(exc)
+            self.logger.error(exc)
             return False
 
         for user_account in loaded_user_accounts:
-            self.user_accounts_service_logger.debug(
+            self.logger.debug(
                 f"Loaded user account: {user_account}",
             )
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Loaded framework user accounts ({len(loaded_user_accounts)} user "
             f"account(s) loaded).",
         )
         return True
 
     def reload_framework_user_accounts(self) -> bool:
-        self.user_accounts_service_logger.debug("Reloading framework user accounts...")
+        self.logger.debug("Reloading framework user accounts...")
 
         try:
             for user_account_id in list(self._user_accounts.keys()):
@@ -401,35 +401,35 @@ class UserAccountsService:
                 user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
             )
         except UserAccountsServiceError as exc:
-            self.user_accounts_service_logger.error(f"{exc.__class__.__name__}: {exc}")
+            self.logger.error(f"{exc.__class__.__name__}: {exc}")
             return False
 
         for user_account in loaded_user_accounts:
-            self.user_accounts_service_logger.debug(
+            self.logger.debug(
                 f"Reloaded user account: {user_account}",
             )
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Reloaded framework user accounts ({len(loaded_user_accounts)} user "
             f"account(s) reloaded).",
         )
         return True
 
     def write_framework_user_accounts(self) -> bool:
-        self.user_accounts_service_logger.debug("Writing framework user accounts...")
+        self.logger.debug("Writing framework user accounts...")
 
         try:
             number_of_bytes_written = self.write_user_accounts_to_user_accounts_file(
                 user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
             )
         except UserAccountsServiceError as exc:
-            self.user_accounts_service_logger.error(exc)
+            self.logger.error(exc)
             return False
 
         for user_account in self.get_all_user_accounts():
-            self.user_accounts_service_logger.debug(
+            self.logger.debug(
                 f"Wrote user account: {user_account}",
             )
-        self.user_accounts_service_logger.debug(
+        self.logger.debug(
             f"Wrote framework user accounts ({number_of_bytes_written} byte(s) "
             f"written).",
         )

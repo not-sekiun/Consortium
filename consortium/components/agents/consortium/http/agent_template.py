@@ -5,6 +5,7 @@ from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
+from consortium.framework.framework_types import JSONObject
 from consortium.framework.options import (
     ChoiceValueOption,
     ListValueOption,
@@ -12,7 +13,10 @@ from consortium.framework.options import (
 )
 
 
-def _check_jitter_percent_is_positive(jitter_percent: float):
+def _check_jitter_percent_is_non_negative(jitter_percent: float):
+    """
+    Checks that the jitter percent is non-negative.
+    """
     if jitter_percent < 0:
         raise OptionValueValidationError(
             "Jitter percent cannot be less than zero.",
@@ -30,17 +34,17 @@ def _check_filename_does_not_traverse_directories(filename: str):
 
 
 def _check_all_url_endpoints_unique(
-    options_dict: dict[str, SingleValueOption | ListValueOption],
+    parameters: JSONObject,
 ) -> None:
     """
-    Checks that the list of the tasks, results and registration URL paths are mutually
-    exclusive to one another.
+    Checks that the sets of the tasks, results and registration URL paths are mutually
+    disjoint.
     """
     all_url_paths = (
-        options_dict["tasks_url_paths"].get_option_value()
-        + options_dict["results_url_paths"].get_option_value()
+        parameters["tasks_url_paths"]
+        + parameters["results_url_paths"]
+        + parameters["registration_url_paths"]
     )
-    all_url_paths.append(options_dict["registration_url_paths"])
     unique_elements = set()
     for element in all_url_paths:
         if element in unique_elements:
@@ -63,9 +67,13 @@ def _check_integer_is_a_valid_port_number(port: int) -> None:
 
 
 class AgentTemplate(BaseAgentTemplate):
+    label = "consortium.agents.http_agent"
     name = "HTTP Agent"
     description = "An agent that communicates over the HTTP transport."
+    version = "0.1.0"
+    compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
+    agent_generator = AgentGenerator
     options = {
         SingleValueOption(
             name="name",
@@ -143,7 +151,7 @@ class AgentTemplate(BaseAgentTemplate):
             ),
             default_value=0.5,
             value_type=float,
-            validating_function=_check_jitter_percent_is_positive,
+            validating_function=_check_jitter_percent_is_non_negative,
         ),
         ChoiceValueOption(
             name="format",
@@ -167,7 +175,6 @@ class AgentTemplate(BaseAgentTemplate):
         ),
     }
     validating_function = _check_all_url_endpoints_unique
-    agent_generator = AgentGenerator
 
-    def resolve_agent_generator_name(self) -> str:
-        return self.get_option_by_option_name("name").get_option_value()
+    def resolve_agent_generator_name(self, parameters: JSONObject) -> str:
+        return parameters["name"]

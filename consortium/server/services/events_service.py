@@ -14,10 +14,10 @@ from consortium.server.exceptions.service_exceptions.events_service_exceptions i
 class EventsService:
     def __init__(self):
         self._event_handlers = {}
-        self.events_service_logger = logger.bind(
+        self.logger = logger.bind(
             logger_name=str(self),
         )
-        self.events_service_logger.debug(f"Started {self}")
+        self.logger.debug(f"Started {self}")
         self._custom_event_types = set()
 
     def __str__(self):
@@ -87,7 +87,7 @@ class EventsService:
             try:
                 await event_handler(event)
             except Exception as exc:
-                self.events_service_logger.error(
+                self.logger.error(
                     "Fatal error occurred while triggering event handler: {}",
                     exc,
                 )

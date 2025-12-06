@@ -1,5 +1,5 @@
 import sys
-from typing import get_type_hints
+from typing import Any, get_type_hints
 
 from packaging import requirements, specifiers, version
 from pydantic import BaseModel, ValidationError
@@ -36,6 +36,14 @@ class ComponentMetadata:
     component_dependencies: set[str] | None = None
 
     @classmethod
+    def _get_metadata_fields(cls) -> dict[str, Any]:
+        return {
+            key: getattr(cls, key)
+            for key in cls._METADATA_MODEL.model_fields.keys()
+            if hasattr(cls, key)
+        }
+
+    @classmethod
     def _validate_metadata(cls):
         cls.authors = cls.authors or set()
         cls.component_dependencies = cls.component_dependencies or set()
@@ -63,13 +71,7 @@ class ComponentMetadata:
         # Check all class attributes are of the expected type
         try:
             cls._METADATA_MODEL(
-                label=cls.label,
-                name=cls.name,
-                description=cls.description,
-                version=cls.version,
-                compatible_framework_version=cls.compatible_framework_version,
-                authors=cls.authors,
-                component_dependencies=cls.component_dependencies,
+                **cls._get_metadata_fields(),
             )
         except ValidationError as exc:
             attr = exc.errors()[0]["loc"][0]

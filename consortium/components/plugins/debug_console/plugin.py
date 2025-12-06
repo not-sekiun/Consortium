@@ -111,16 +111,18 @@ class Plugin(BasePlugin):
         "Python code in the context of the framework. Access to all of the "
         "frameworks services is given in the environment."
     )
+    version = "0.1.0"
+    compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
     autostart = True
 
     async def on_started(self) -> None:
-        self.plugin_logger.info(
+        self.logger.info(
             "Debug interpreter is now running. All framework services are available in "
             "the environment. You can tab complete services along with their API "
             "methods.",
         )
-        self.plugin_logger.warning(
+        self.logger.warning(
             "Whatever you do here WILL affect the state of the framework. Modify "
             "things with caution. You have been warned.",
         )
@@ -202,7 +204,7 @@ class Plugin(BasePlugin):
                     ).rstrip(" ")
 
                     if expression in ("exit", "exit()"):
-                        self.plugin_logger.success(
+                        self.logger.success(
                             "Exited the debug interpreter. Use CTRL-C to stop the "
                             "server.",
                         )
@@ -318,7 +320,7 @@ class Plugin(BasePlugin):
                             temporary_function_identifier=random_identifier,
                         )
                 except KeyboardInterrupt:
-                    self.plugin_logger.info("Use 'exit' to exit the debug interpreter.")
+                    self.logger.info("Use 'exit' to exit the debug interpreter.")
                 except Exception as exc:
                     _print_custom_formatted_exception_message(
                         exc=exc,
@@ -335,7 +337,7 @@ class Plugin(BasePlugin):
         pass
 
     async def on_errored(self, _exc: Exception) -> None:
-        self.plugin_logger.error(
+        self.logger.error(
             "Debug console interpreter plugin encountered a fatal error while "
             "running. Exiting console...",
         )

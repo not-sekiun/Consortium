@@ -28,7 +28,7 @@ from consortium.server.objects.repository_objects import (
 class RepositoryService:
     def __init__(self, repository_directory_path: pathlib.Path):
         self._repository_directory_path = repository_directory_path
-        self.repository_service_logger = logger.bind(
+        self.logger = logger.bind(
             logger_name=str(self),
         )
         self._repository_resources = {}
@@ -230,7 +230,7 @@ class RepositoryService:
         repository_resource_type = (
             "directory" if repository_resource.is_directory else "file"
         )
-        self.repository_service_logger.debug(
+        self.logger.debug(
             "Registered repository {} {}",
             repository_resource_type,
             str(repository_resource),
@@ -252,7 +252,7 @@ class RepositoryService:
         repository_resource_type = (
             "directory" if deregistered_repository_resource.is_directory else "file"
         )
-        self.repository_service_logger.debug(
+        self.logger.debug(
             "Deregistered repository {} {}",
             repository_resource_type,
             str(deregistered_repository_resource),

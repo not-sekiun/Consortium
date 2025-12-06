@@ -1,23 +1,27 @@
-from consortium.components.listeners.consortium.http.listener import Listener
+from consortium.components.listener_profiles.consortium.http.listener import Listener
+from consortium.components.listener_profiles.consortium.http.listener_type import (
+    LISTENER_TYPE,
+)
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
+from consortium.framework.framework_types import JSONObject
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
 from consortium.framework.options import ListValueOption, SingleValueOption
 
 
 def _check_all_url_endpoints_unique(
-    options_dict: dict[str, SingleValueOption | ListValueOption],
+    parameters: JSONObject,
 ) -> None:
     """
-    Checks that the list of the tasks, results and registration URL paths are mutually
-    exclusive to one another.
+    Checks that the sets of the tasks, results and registration URL paths are mutually
+    disjoint.
     """
     all_url_paths = (
-        options_dict["tasks_url_paths"].get_option_value()
-        + options_dict["results_url_paths"].get_option_value()
+        parameters["tasks_url_paths"]
+        + parameters["results_url_paths"]
+        + parameters["registration_url_paths"]
     )
-    all_url_paths.append(options_dict["registration_url_paths"])
     unique_elements = set()
     for element in all_url_paths:
         if element in unique_elements:
@@ -40,10 +44,14 @@ def _check_integer_is_a_valid_port_number(port: int) -> None:
 
 
 class ListenerTemplate(BaseListenerTemplate):
-    listener = Listener
+    label = "consortium.listeners.http_listener"
     name = "HTTP Listener"
     description = "A listener that communicates over the HTTP transport."
+    version = "0.1.0"
+    compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
+    listener = Listener
+    listener_type = LISTENER_TYPE
     options = {
         SingleValueOption(
             name="name",
@@ -111,10 +119,8 @@ class ListenerTemplate(BaseListenerTemplate):
     }
     validating_function = _check_all_url_endpoints_unique
 
-    def resolve_listener_name(self) -> str:
-        return self.get_option_by_option_name("name").get_option_value()
+    def resolve_listener_name(self, parameters: JSONObject) -> str:
+        return parameters["name"]
 
-    def resolve_listener_endpoint(self) -> str:
-        local_host = self.get_option_by_option_name("local_host").get_option_value()
-        local_port = self.get_option_by_option_name("local_port").get_option_value()
-        return f"http://{local_host}:{local_port}"
+    def resolve_listener_endpoint(self, parameters: JSONObject) -> str:
+        return f"http://{parameters["local_host"]}:{parameters["local_port"]}"

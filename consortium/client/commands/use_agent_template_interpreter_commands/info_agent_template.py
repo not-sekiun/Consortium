@@ -65,34 +65,20 @@ class InfoAgentTemplateCommand(BaseCommand):
             )
             table.add_row("Name", agent_template["name"])
             table.add_row("Description", agent_template["description"])
-            agent_type_table = Table()
-            agent_type_table.add_column("Information")
-            agent_type_table.add_column("Data")
-            agent_type_table.add_row(
-                "Agent Type ID",
-                agent_template["agent_type"]["agent_type_id"],
+            table.add_row(
+                "Agent Type",
+                f"{agent_template["agent_type"]["name"]} ({agent_template["agent_type"]["agent_type_id"]})",
             )
-            agent_type_table.add_row(
-                "Name",
-                agent_template["agent_type"]["name"],
-            )
-            agent_type_table.add_row(
+            table.add_row(
                 "Compatible Listener Types",
                 "\n".join(
                     [
-                        listener_type["name"]
-                        + " ("
-                        + listener_type["listener_type_id"]
-                        + ")"
+                        f"{listener_type["name"]} ({listener_type["listener_type_id"]})"
                         for listener_type in agent_template["agent_type"][
                             "compatible_listener_types"
                         ]
                     ],
                 ),
-            )
-            table.add_row(
-                "Agent Type",
-                agent_type_table,
             )
             table.add_row("Authors", "\n".join(agent_template["authors"]))
             CONSOLE.print(table)

@@ -1,14 +1,13 @@
 import re
 from typing import Callable, Type
 
+from consortium.framework.framework_types import Primitive
 from consortium.framework.options.exceptions import OptionValueValidationError
-
-SimpleValue = str | int | float | bool
 
 
 def validate_value_data_type(
     option_name: str,
-    option_value: SimpleValue,
+    option_value: Primitive,
     *value_types: Type,
 ) -> None:
     if not isinstance(option_value, value_types):
@@ -27,7 +26,7 @@ def validate_value_data_type(
 
 def validate_value_string_length(
     option_name: str,
-    option_value: SimpleValue,
+    option_value: Primitive,
     minimum_length: int | None,
     maximum_length: int | None,
 ) -> None:
@@ -46,7 +45,7 @@ def validate_value_string_length(
 
 def validate_value_numeric_range(
     option_name: str,
-    option_value: SimpleValue,
+    option_value: Primitive,
     greater_than: int | float | None,
     lesser_than: int | float | None,
     greater_than_or_equal_to: int | float | None,
@@ -83,7 +82,7 @@ def validate_value_numeric_range(
 
 def validate_value_regex_format(
     option_name: str,
-    option_value: SimpleValue,
+    option_value: Primitive,
     validating_regex: str | None,
 ) -> None:
     if validating_regex:
@@ -96,7 +95,7 @@ def validate_value_regex_format(
 
 def validate_value_on_validating_function(
     option_name: str,
-    option_value: SimpleValue,
+    option_value: Primitive,
     validating_function: Callable | None,
 ) -> None:
     if validating_function:
@@ -111,7 +110,7 @@ def validate_value_on_validating_function(
 
 def validate_iterable_value_length(
     option_name: str,
-    option_value: list[SimpleValue] | dict[str, SimpleValue],
+    option_value: list[Primitive] | dict[str, Primitive],
     minimum_elements: int | None,
     maximum_elements: int | None,
 ) -> None:
@@ -129,7 +128,7 @@ def validate_iterable_value_length(
 
 def validate_iterable_element_duplication(
     option_name: str,
-    option_value: list[SimpleValue],
+    option_value: list[Primitive],
     allow_duplicates: bool,
 ) -> None:
     if not allow_duplicates:

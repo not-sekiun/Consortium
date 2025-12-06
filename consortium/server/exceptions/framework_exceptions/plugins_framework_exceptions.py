@@ -28,13 +28,16 @@
 # """
 from typing import Any
 
-import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
+import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_framework_excs
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
 
 
-class PluginsFrameworkError(comp_excs.ComponentsFrameworkError, BaseFrameworkException):
+class PluginsFrameworkError(
+    comp_framework_excs.ComponentsFrameworkError,
+    BaseFrameworkException,
+):
     """
     Base exception for all errors that occur within the plugins framework.
     """
@@ -43,7 +46,7 @@ class PluginsFrameworkError(comp_excs.ComponentsFrameworkError, BaseFrameworkExc
 
 
 class PluginConfigurationError(
-    comp_excs.ComponentConfigurationError,
+    comp_framework_excs.ComponentConfigurationError,
     PluginsFrameworkError,
 ):
     """
@@ -53,7 +56,7 @@ class PluginConfigurationError(
 
 
 class InvalidPluginConfigurationParameterTypeError(
-    comp_excs.InvalidComponentConfigurationParameterTypeError,
+    comp_framework_excs.InvalidComponentConfigurationParameterTypeError,
     PluginConfigurationError,
 ):
     """
@@ -75,14 +78,14 @@ class InvalidPluginConfigurationParameterTypeError(
 
 
 class MissingPluginConfigurationParameterError(
-    comp_excs.MissingComponentConfigurationParameterError,
+    comp_framework_excs.MissingComponentConfigurationParameterError,
     PluginConfigurationError,
 ):
     """
     An error that is raised when a parameter is not declared in a plugin's definition.
     """
 
-    def __init__(self, parameter_name: str, plugin_str: str):
+    def __init__(self, plugin_str: str, parameter_name: str):
         super().__init__(
             component_str=plugin_str,
             parameter_name=parameter_name,
@@ -90,7 +93,7 @@ class MissingPluginConfigurationParameterError(
 
 
 class EmptyPluginLabelError(
-    comp_excs.EmptyComponentLabelError,
+    comp_framework_excs.EmptyComponentLabelError,
     PluginConfigurationError,
 ):
     """
@@ -103,7 +106,7 @@ class EmptyPluginLabelError(
 
 
 class DuplicatePluginLabelError(
-    comp_excs.DuplicateComponentLabelError,
+    comp_framework_excs.DuplicateComponentLabelError,
     PluginConfigurationError,
 ):
     """
@@ -119,7 +122,7 @@ class DuplicatePluginLabelError(
 
 
 class InvalidPluginVersionError(
-    comp_excs.InvalidComponentVersionError,
+    comp_framework_excs.InvalidComponentVersionError,
     PluginConfigurationError,
 ):
     """
@@ -135,7 +138,7 @@ class InvalidPluginVersionError(
 
 
 class InvalidFrameworkVersionSpecifierError(
-    comp_excs.InvalidFrameworkVersionSpecifierError,
+    comp_framework_excs.InvalidFrameworkVersionSpecifierError,
     PluginConfigurationError,
 ):
     """
@@ -152,7 +155,7 @@ class InvalidFrameworkVersionSpecifierError(
 
 
 class InvalidPluginDependencyVersionSpecifierError(
-    comp_excs.InvalidComponentDependencyVersionSpecifierError,
+    comp_framework_excs.InvalidComponentDependencyVersionSpecifierError,
     PluginConfigurationError,
 ):
     """
@@ -172,14 +175,20 @@ class InvalidPluginDependencyVersionSpecifierError(
         )
 
 
-class PluginOperationError(comp_excs.ComponentOperationError, PluginsFrameworkError):
+class PluginOperationError(
+    comp_framework_excs.ComponentOperationError,
+    PluginsFrameworkError,
+):
     """
     Base exception for all errors that occur during the operation of a particular
     plugin.
     """
 
 
-class PluginNotRunningError(comp_excs.ComponentNotRunningError, PluginOperationError):
+class PluginNotRunningError(
+    comp_framework_excs.ComponentNotRunningError,
+    PluginOperationError,
+):
     """
     An error that is raised when an operation is attempted on a plugin that requires
     that plugin to already be running but the plugin is not running.
@@ -193,7 +202,7 @@ class PluginNotRunningError(comp_excs.ComponentNotRunningError, PluginOperationE
 
 
 class PluginAlreadyStartedError(
-    comp_excs.ComponentAlreadyStartedError,
+    comp_framework_excs.ComponentAlreadyStartedError,
     PluginOperationError,
 ):
     """
@@ -209,7 +218,7 @@ class PluginAlreadyStartedError(
         super().__init__(component_str=plugin_str)
 
 
-class PluginStartError(comp_excs.ComponentStartError, PluginOperationError):
+class PluginStartError(comp_framework_excs.ComponentStartError, PluginOperationError):
     """
     An error that is raised when a plugin fails to start.
     """
@@ -227,7 +236,10 @@ class PluginStartError(comp_excs.ComponentStartError, PluginOperationError):
         )
 
 
-class PluginRuntimeError(comp_excs.ComponentRuntimeError, PluginOperationError):
+class PluginRuntimeError(
+    comp_framework_excs.ComponentRuntimeError,
+    PluginOperationError,
+):
     """
     An error that is raised when a plugin encounters an error at runtime.
     """
@@ -245,7 +257,7 @@ class PluginRuntimeError(comp_excs.ComponentRuntimeError, PluginOperationError):
         )
 
 
-class PluginStopError(comp_excs.ComponentStopError, PluginOperationError):
+class PluginStopError(comp_framework_excs.ComponentStopError, PluginOperationError):
     """
     An error that is raised when a plugin fails to stop.
     """

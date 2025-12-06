@@ -1,10 +1,18 @@
-import sys
 import uuid
 from abc import ABC, abstractmethod
 from inspect import signature
-from typing import Any, Callable, Type
+from typing import Callable, Type, get_type_hints
 
+from pydantic import ConfigDict
+
+import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
+from consortium.framework._components import ComponentMetadata, ComponentModel
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
+from consortium.framework.framework_types import (
+    JSONObject,
+    Primitive,
+    PrimitiveCollection,
+)
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
@@ -13,17 +21,21 @@ from consortium.framework.options import (
     ToggleableChoicesValueOption,
 )
 from consortium.framework.options.exceptions import OptionValueValidationError
-from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
-    AgentTemplateConfigurationParameterTypeError,
+from consortium.framework.utils.exception_utils import remap_exception
+from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (  # AgentTemplateConfigurationParameterTypeError,; EmptyAgentTemplateNameError,; RequiredAgentTemplateConfigurationParameterNotDeclaredError,
     AgentTemplateOptionNotFoundError,
     AgentTemplateOptionValueError,
     DuplicateAgentTemplateOptionNameError,
-    EmptyAgentTemplateNameError,
-    RequiredAgentTemplateConfigurationParameterNotDeclaredError,
+    EmptyAgentTemplateLabelError,
+    InvalidAgentTemplateConfigurationParameterTypeError,
+    InvalidAgentTemplateDependencyVersionSpecifierError,
+    InvalidAgentTemplateVersionError,
+    InvalidFrameworkVersionSpecifierError,
+    MissingAgentTemplateConfigurationParameterError,
 )
 from consortium.server.utils.formatter_utils import format_docstring_to_single_line
 
-OptionType = (
+Options = (
     SingleValueOption
     | ChoiceValueOption
     | ListValueOption
@@ -32,101 +44,69 @@ OptionType = (
 )
 
 
-class BaseAgentTemplate(ABC):
+class _AgentTemplateModel(ComponentModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    agent_generator: type[BaseAgentGenerator]
+    options: set[Options] | None = None
+    validating_function: (
+        Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
+    ) = None
+
+
+class BaseAgentTemplate(ComponentMetadata, ABC):
+    # name: str
+    # description: str = ""
+    # authors: set[str] | None = None
+    _METADATA_MODEL = _AgentTemplateModel
+    _EXCEPTION_MAP = {
+        comp_excs.MissingComponentConfigurationParameterError: MissingAgentTemplateConfigurationParameterError,
+        comp_excs.EmptyComponentLabelError: EmptyAgentTemplateLabelError,
+        comp_excs.InvalidComponentVersionError: InvalidAgentTemplateVersionError,
+        comp_excs.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
+        comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidAgentTemplateDependencyVersionSpecifierError,
+        comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidAgentTemplateConfigurationParameterTypeError,
+    }
+    _EXCEPTION_KWARGS_MAP = {
+        "component_str": "agent_template_str",
+        "component_filepath": "agent_template_filepath",
+    }
+
     agent_generator: Type[BaseAgentGenerator]
-    name: str
-    description: str = ""
-    authors: set[str] | None = None
-    options: set[OptionType] | None = None
-    validating_function: Callable[[dict[str, OptionType]], None] | None = None
+    options: set[Options] | None = None
+    validating_function: Callable[[dict[str, Options]], None] | None = None
 
     def __init_subclass__(cls, **kwargs):
-        # Check the existence of a provided agent template name first so that we can
-        # reference the agent template name for every other error message.
-        if not hasattr(cls, "name"):
-            raise RequiredAgentTemplateConfigurationParameterNotDeclaredError(
-                parameter_name="name",
-                # Since the agent template cannot be identified by name we identify
-                # it by the filepath it was declared in.
-                agent_template=sys.modules[cls.__module__].__file__,
-            )
-        if not isinstance(cls.name, str):
-            raise AgentTemplateConfigurationParameterTypeError(
-                agent_template=sys.modules[cls.__module__].__file__,
-                parameter_name="name",
-                parameter_type="str",
-            )
-        if not cls.name:
-            raise EmptyAgentTemplateNameError(
-                agent_template_filepath=sys.modules[cls.__module__].__file__,
-            )
+        cls.options = cls.options or set()
 
-        if not hasattr(cls, "agent_generator"):
-            raise RequiredAgentTemplateConfigurationParameterNotDeclaredError(
-                parameter_name="agent_generator",
-                agent_template=cls.name,
-            )
+        try:
+            cls._validate_metadata()
+        except comp_excs.ComponentsFrameworkError as exc:
+            raise remap_exception(
+                original_exception=exc,
+                original_kwargs=exc.exc_kwargs,
+                exception_map=cls._EXCEPTION_MAP,
+                exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
+            ) from None
 
-        if cls.authors is None:
-            cls.authors = set()
-        if cls.options is None:
-            cls.options = set()
+        # Check that options do not have duplicate names.
         option_names = []
         for option in cls.options:
-            if not isinstance(
-                option,
-                (
-                    SingleValueOption,
-                    ChoiceValueOption,
-                    ListValueOption,
-                    DictionaryValueOption,
-                    ToggleableChoicesValueOption,
-                ),
-            ):
-                raise AgentTemplateConfigurationParameterTypeError(
-                    error_message=(
-                        "The elements of the options set provided must be option "
-                        f"objects for agent template '{cls.name}'."
-                    ),
-                )
             if option.name in option_names:
                 raise DuplicateAgentTemplateOptionNameError(
                     option_name=option.name,
-                    agent_template=cls.name,
+                    agent_template_str=cls.name,
                 )
             option_names.append(option.name)
 
-        if not isinstance(cls.description, str):
-            raise AgentTemplateConfigurationParameterTypeError(
-                agent_template=cls.name,
-                parameter_name="description",
-                parameter_type="str",
-            )
-        if not isinstance(cls.authors, set):
-            raise AgentTemplateConfigurationParameterTypeError(
-                agent_template=cls.name,
-                parameter_name="authors",
-                parameter_type="set",
-            )
-        for author in cls.authors:
-            if not isinstance(author, str):
-                raise AgentTemplateConfigurationParameterTypeError(
-                    error_message=(
-                        "The elements in the authors set must be strings for listener "
-                        f"template '{cls.name}'."
-                    ),
-                )
+        # Check that signature of function is minimally valid.
         if cls.validating_function:
-            if not isinstance(cls.validating_function, Callable):
-                raise AgentTemplateConfigurationParameterTypeError(
-                    "The validating function provided must be a callable function for "
-                    f"agent template '{cls.name}'.",
-                )
             function_signature = signature(cls.validating_function)
             if len(function_signature.parameters) != 1:
-                raise AgentTemplateConfigurationParameterTypeError(
-                    "The validating function provided must accept exactly one "
-                    f"parameter for agent template '{cls.name}'.",
+                raise InvalidAgentTemplateConfigurationParameterTypeError(
+                    agent_template_str=cls.name,
+                    parameter_name="validating_function",
+                    parameter_type=get_type_hints(cls)["validating_function"],
                 )
             # We need to convert the validating function to a static method so that the
             # validating function class attribute is considered as just an ordinary
@@ -134,93 +114,175 @@ class BaseAgentTemplate(ABC):
             cls.validating_function = staticmethod(cls.validating_function)
 
         cls.agent_template_id = uuid.uuid4()
-        cls.agent_generator.creating_agent_template = cls
-
+        # Remap options set to a dictionary for easier access by name.
+        cls.options = {option.name: option for option in cls.options}
+        # TODO: Remove this same stupid fuckass hack as the listener template
+        cls.agent_generator.creating_agent_template = cls()
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
         return f"'{self.name}' ({str(self.agent_template_id)})"
 
     def __repr__(self) -> str:
+        options_string = "{" + ", ".join(repr(option) for option in self.options) + "}"
         return (
-            f"AgentTemplate(agent_generator={self.agent_generator!r}, "
-            f"name={self.name!r}, description={self.description!r}, "
-            f"authors={self.authors!r}, options={self.options!r}, "
-            f"validating_function={self.validating_function!r})"
+            f"AgentTemplate("
+            f"agent_template_id={self.agent_template_id!r}, "
+            f"label={self.label!r}, "
+            f"name={self.name!r}, "
+            f"description={self.description!r}, "
+            f"version={self.version!r}, "
+            f"compatible_framework_version={self.compatible_framework_version!r}, "
+            f"authors={self.authors!r}, "
+            f"component_dependencies={self.component_dependencies!r}, "
+            f"agent_generator={self.agent_generator!r}, "
+            f"options={options_string}, "
+            f"validating_function={self.validating_function!r}"
+            f")"
         )
 
     @abstractmethod
-    def resolve_agent_generator_name(self) -> str:
-        """
-        Function that resolves the name of the agent generator. The name typically
-        should be provided as an SingleOption object within the options list parameter
-        of the __init__ method of the agent template.
-        """
-
-    def get_option_by_option_name(self, option_name: str) -> OptionType:
-        for option in self.options:
-            if option.name == option_name:
-                return option
-        raise AgentTemplateOptionNotFoundError(
-            option_name=option_name,
-            agent_template=self.name,
-        )
-
-    def set_option_value_by_option_name(
+    def resolve_agent_generator_name(
         self,
-        option_name: str,
-        option_value: Any,
-    ) -> None:
-        option = self.get_option_by_option_name(option_name)
+        parameters: dict[str, Primitive | PrimitiveCollection],
+    ) -> str:
+        """
+        Function to resolve the name of a newly created agent generator.
 
-        try:
-            option.set_option_value(option_value)
-        except OptionValueValidationError as exc:
-            raise AgentTemplateOptionValueError(
-                option_name=option_name,
-                option_value=option_value,
-                agent_template=self.name,
-                error_message=str(exc),
-            )
-
-    def clear_option_value_by_option_name(self, option_name: str) -> None:
-        option = self.get_option_by_option_name(option_name)
-        option.clear_option_value()
-
-    def clear_all_option_values(self):
-        for option in self.options:
-            option.clear_option_value()
+        This name can be a default hard-coded value, randomly generated or computed
+        from its provided set of parameters (typically from a 'name' parameter).
+        """
 
     def create_agent_generator(
         self,
         name: str | None = None,
         description: str = "",
+        parameters: dict[str, Primitive | PrimitiveCollection] | None = None,
     ) -> BaseAgentGenerator:
+        """
+        Create an agent generator instance from this agent template using the provided
+        `name`, `description` and configuration `parameters`.
+
+        If a name is not provided, it will be resolved from the agent template's
+        `resolve_name_endpoint` method.
+        """
+        if parameters is None:
+            parameters = {}
+
+        # Fill in default option values for options that were not provided in the
+        # parameters dictionary.
+        for option_name, option in self.options.items():
+            if option_name not in parameters:
+                parameters[option_name] = option.default_value
+
+        # Validate entire constructed parameter set before creating the agent generator.
+        for option_name, value in parameters.items():
+            if option_name not in self.options:
+                raise AgentTemplateOptionNotFoundError(
+                    agent_template_str=str(self),
+                    option_name=option_name,
+                )
+            try:
+                self.options[option_name].validate_value(value)
+            except OptionValueValidationError as exc:
+                raise AgentTemplateOptionValueError(
+                    option_name=option_name,
+                    option_value=value,
+                    agent_template_str=str(self),
+                    error_message=str(exc),
+                )
+
+        # Check for missing required options.
+        for option_name, option in self.options.items():
+            if option.required and option_name not in parameters:
+                raise MissingAgentTemplateConfigurationParameterError(
+                    agent_template_str=str(self),
+                    parameter_name=option_name,
+                )
+
+        # Run validation function on the entire set of parameters if one was provided.
         if self.validating_function:
-            self.validating_function({option.name: option for option in self.options})
+            self.validating_function(parameters)
 
-        if name is None:
-            name = self.resolve_agent_generator_name()
-
+        # Create agent generator instance. Resolving the name from the parameters only if one
+        # was not provided.
         return self.agent_generator(
-            name=name,
+            name=self.resolve_agent_generator_name(parameters=parameters)
+            if name is None
+            else name,
             description=description,
-            parameters={
-                option.name: option.get_option_value() for option in self.options
-            },
+            parameters=parameters,
         )
 
-    def to_json(self) -> dict[str, Any]:
+        # if self.validating_function:
+        #     self.validating_function({option.name: option for option in self.options})
+        #
+        # if name is None:
+        #     name = self.resolve_agent_generator_name()
+        #
+        # return self.agent_generator(
+        #     name=name,
+        #     description=description,
+        #     parameters={
+        #         option.name: option.get_option_value() for option in self.options
+        #     },
+        # )
+
+    def to_json(self) -> JSONObject:
+        """
+        Convert the agent template metadata to a JSON serializable dictionary.
+        """
         return {
             "agent_template_id": str(self.agent_template_id),
+            "label": self.label,
             "name": self.name,
             "description": self.description,
-            "agent_type": self.agent_generator.agent_type.to_json(),
+            "version": str(self.version),
+            "compatible_framework_version": str(self.compatible_framework_version),
             "authors": self.authors,
-            "options": {option.name: option.to_json() for option in self.options},
+            "component_dependencies": list(map(str, self.component_dependencies)),
+            "third_party_dependencies": list(map(str, self.third_party_dependencies)),
+            "agent_type": self.agent_generator.agent_type.to_json(),
+            "options": {
+                name: option.to_json() for name, option in self.options.items()
+            },
             "validating_function": format_docstring_to_single_line(
                 self.validating_function.__doc__,
             )
             if self.validating_function and self.validating_function.__doc__
             else None,
         }
+
+    # def get_option_by_option_name(self, option_name: str) -> Options:
+    #     for option in self.options:
+    #         if option.name == option_name:
+    #             return option
+    #     raise AgentTemplateOptionNotFoundError(
+    #         option_name=option_name,
+    #         agent_template=self.name,
+    #     )
+    #
+    # def set_option_value_by_option_name(
+    #     self,
+    #     option_name: str,
+    #     option_value: Any,
+    # ) -> None:
+    #     option = self.get_option_by_option_name(option_name)
+    #
+    #     try:
+    #         option.set_option_value(option_value)
+    #     except OptionValueValidationError as exc:
+    #         raise AgentTemplateOptionValueError(
+    #             option_name=option_name,
+    #             option_value=option_value,
+    #             agent_template=self.name,
+    #             error_message=str(exc),
+    #         )
+    #
+    # def clear_option_value_by_option_name(self, option_name: str) -> None:
+    #     option = self.get_option_by_option_name(option_name)
+    #     option.clear_option_value()
+    #
+    # def clear_all_option_values(self):
+    #     for option in self.options:
+    #         option.clear_option_value()

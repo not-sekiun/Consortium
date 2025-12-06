@@ -11,6 +11,8 @@ class Plugin(BasePlugin):
         "framework exits. Upon startup again, this plugin will automatically create "
         "and run those listeners that were previously created and running again."
     )
+    version = "0.1.0"
+    compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
     autostart = True
 
@@ -22,7 +24,7 @@ class Plugin(BasePlugin):
         self.environment.persistent_listeners_json_file = persistent_listeners_json_file
 
         if not persistent_listeners_json_file.exists():
-            self.plugin_logger.info(
+            self.logger.info(
                 f"No persistent listeners file found. Creating new persistent "
                 f"listeners file at: {persistent_listeners_json_file}",
             )
@@ -30,7 +32,7 @@ class Plugin(BasePlugin):
                 file.write("{}")
             return
 
-        self.plugin_logger.info(
+        self.logger.info(
             f"Reading persistent listeners from: {persistent_listeners_json_file}",
         )
         with persistent_listeners_json_file.open("r") as file:
@@ -49,7 +51,7 @@ class Plugin(BasePlugin):
         for listener_template_name, listeners in json_data.items():
             for listener_data in listeners:
                 if listener_template_name not in name_to_listener_template_map:
-                    self.plugin_logger.warning(
+                    self.logger.warning(
                         f"No listener template was found with the name "
                         f"'{listener_template_name}' from the persistent listeners "
                         f"file. The corresponding listener profile may have been "
@@ -61,14 +63,14 @@ class Plugin(BasePlugin):
                 ]
                 listener_name = listener_data["name"]
                 if listener_data["previously_running"]:
-                    self.plugin_logger.success(
+                    self.logger.success(
                         f"Creating and starting listener '{listener_name}'...",
                     )
                     listener = await self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
                         ),
-                        options=listener_data["parameters"],
+                        parameters=listener_data["parameters"],
                         name=listener_data["name"],
                         description=listener_data["description"],
                     )
@@ -76,14 +78,14 @@ class Plugin(BasePlugin):
                         listener_id=str(listener.listener_id),
                     )
                 else:
-                    self.plugin_logger.success(
+                    self.logger.success(
                         f"Creating listener '{listener_name}'...",
                     )
                     await self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
                         ),
-                        options=listener_data["parameters"],
+                        parameters=listener_data["parameters"],
                         name=listener_data["name"],
                         description=listener_data["description"],
                     )
@@ -114,7 +116,7 @@ class Plugin(BasePlugin):
             )
 
         if not persistent_listeners_json_file.exists():
-            self.plugin_logger.warning(
+            self.logger.warning(
                 f"No persistent listeners file found even after plugin was "
                 f"started. Creating new persistent listeners file at: "
                 f"{persistent_listeners_json_file}",
@@ -129,6 +131,6 @@ class Plugin(BasePlugin):
         pass
 
     async def on_plugin_errored(self, exc: Exception) -> None:
-        self.plugin_logger.opt(exception=exc).error(
+        self.logger.opt(exception=exc).error(
             "Persistent listeners plugin encountered a fatal error while running",
         )

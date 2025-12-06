@@ -275,14 +275,14 @@ async def cancel_listener_by_listener_id(
             | InvalidListenerParameterNameAPIError.from_service_exception(
                 service_exception=InvalidListenerParameterNameServiceError(
                     parameter_name="string",
-                    listener="string",
+                    listener_str="string",
                 ),
             ).to_pydantic_model()
             | InvalidListenerParameterValueAPIError.from_service_exception(
                 service_exception=InvalidListenerParameterValueServiceError(
                     parameter_name="string",
                     parameter_value="string",
-                    listener="string",
+                    listener_str="string",
                     validation_error_message="string",
                 ),
             ).to_pydantic_model(),
@@ -336,7 +336,7 @@ async def update_listener_by_listener_id(
                     parameters=parameters,
                 )
             # ListenerTemplateResolutionError is only ever raised when a programmer
-            # error is made. The service wi ll raise an AssertionError to demonstrate
+            # error is made. The service will raise an AssertionError to demonstrate
             # this, which will be caught and reraised as a
             # ListenerTemplateResolutionError on the REST API side.
             except AssertionError:

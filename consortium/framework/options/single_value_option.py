@@ -1,5 +1,6 @@
 from typing import Callable, Type
 
+from consortium.framework.framework_types import Primitive, PrimitiveType
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options._option_argument_validators import (
     validate_numeric_range_arguments,
@@ -15,7 +16,6 @@ from consortium.framework.options._option_value_validators import (
     validate_value_regex_format,
     validate_value_string_length,
 )
-from consortium.framework.options._types import SimpleType, SimpleTypeType
 from consortium.framework.options._utils import resolve_validating_function_string
 from consortium.framework.options.option_types import OptionType
 
@@ -149,8 +149,8 @@ class SingleValueOption(BaseOption):
         name: str,
         description: str = "",
         required: bool = True,
-        default_value: SimpleType | None = None,
-        value_type: SimpleTypeType | None = None,
+        default_value: Primitive | None = None,
+        value_type: PrimitiveType | None = None,
         minimum_length: int | None = None,
         maximum_length: int | None = None,
         greater_than: int | None = None,
@@ -158,7 +158,7 @@ class SingleValueOption(BaseOption):
         greater_than_or_equal_to: int | None = None,
         lesser_than_or_equal_to: int | None = None,
         validating_regex: str | None = None,
-        validating_function: Callable[[SimpleType], None] | None = None,
+        validating_function: Callable[[Primitive], None] | None = None,
     ):
         self.value_type = value_type
         """
@@ -229,7 +229,7 @@ class SingleValueOption(BaseOption):
             f"validating_function={self.validating_function!r})"
         )
 
-    def validate_value(self, value: SimpleType) -> None:
+    def validate_value(self, value: Primitive) -> None:
         """
         Validate the value of the option.
 
@@ -269,7 +269,7 @@ class SingleValueOption(BaseOption):
             validating_function=self.validating_function,
         )
 
-    def to_json(self) -> dict[str, SimpleType | None]:
+    def to_json(self) -> dict[str, Primitive | None]:
         """
         Convert the option to a JSON serializable dictionary.
 

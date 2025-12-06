@@ -27,7 +27,3 @@ class ListenerTemplateOptionNotFoundError(UnprocessableEntityError):
 
 class ListenerTemplateOptionValueError(UnprocessableEntityError):
     code = "LISTENER_TEMPLATE_OPTION_VALUE_ERROR"
-
-
-class EmptyListenerNameError(UnprocessableEntityError):
-    code = "EMPTY_LISTENER_NAME_ERROR"

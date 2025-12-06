@@ -20,6 +20,7 @@ BaseFrameworkException: Base class for all framework exceptions.
     option.
 """
 
+import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
@@ -29,72 +30,219 @@ class AgentTemplatesFrameworkError(BaseFrameworkException):
     pass
 
 
-class AgentTemplateConfigurationError(AgentTemplatesFrameworkError):
-    pass
+# class AgentTemplateConfigurationError(AgentTemplatesFrameworkError):
+#     pass
 
 
-class AgentTemplateConfigurationParameterError(AgentTemplateConfigurationError):
-    pass
+# class AgentTemplateConfigurationParameterError(AgentTemplateConfigurationError):
+#     pass
+#
+#
+# class AgentTemplateConfigurationParameterTypeError(
+#     AgentTemplateConfigurationParameterError,
+# ):
+#     def __init__(
+#         self,
+#         agent_template: str | None = None,
+#         parameter_name: str | None = None,
+#         parameter_type: str | None = None,
+#         error_message: str = "",
+#     ):
+#         if not error_message:
+#             super().__init__(
+#                 message=(
+#                     f"Failed to configure the agent template '{agent_template}'. "
+#                     f"The parameter '{parameter_name}' must be of type "
+#                     f"'{parameter_type}' in the agent template's definition."
+#                 ),
+#             )
+#         else:
+#             super().__init__(
+#                 message=(
+#                     f"Failed to configure the agent template '{agent_template}'. "
+#                     f"{error_message}"
+#                 ),
+#             )
 
 
-class AgentTemplateConfigurationParameterTypeError(
-    AgentTemplateConfigurationParameterError,
+# class RequiredAgentTemplateConfigurationParameterNotDeclaredError(
+#     AgentTemplateConfigurationParameterError,
+# ):
+#     def __init__(self, agent_template_str: str, parameter_name: str):
+#         super().__init__(
+#             message=(
+#                 f"Failed to configure the agent template '{agent_template_str}'. "
+#                 f"The required parameter '{parameter_name}' was not declared in the "
+#                 f"agent template's definition."
+#             ),
+#         )
+#
+#
+# # class EmptyAgentTemplateNameError(AgentTemplateConfigurationError):
+# #     def __init__(self, agent_template_filepath: str):
+# #         super().__init__(
+# #             message=(
+# #                 f"Failed to configure the agent template defined at "
+# #                 f"'{agent_template_filepath}'. The name provided in the agent "
+# #                 f"template's definition during configuration cannot be empty."
+# #             ),
+# #         )
+#
+#
+# class DuplicateAgentTemplateOptionNameError(AgentTemplateConfigurationError):
+#     def __init__(self, agent_template_str: str, option_name: str):
+#         super().__init__(
+#             message=(
+#                 f"Failed to configure the agent template {agent_template_str}'. The "
+#                 f"options provided to the agent template must not have duplicate "
+#                 f"names but the name '{option_name}' was duplicated."
+#             ),
+#         )
+
+
+class AgentTemplateConfigurationError(
+    comp_excs.ComponentConfigurationError,
+    AgentTemplatesFrameworkError,
 ):
+    """
+    Base exception for all errors that occur during the configuration of a particular
+    agent template.
+    """
+
+    _COMPONENT_TYPE = "agent template"
+
+
+class InvalidAgentTemplateConfigurationParameterTypeError(
+    comp_excs.InvalidComponentConfigurationParameterTypeError,
+    AgentTemplateConfigurationError,
+):
+    """
+    An error that is raised when an agent template's configuration parameter is of an invalid
+    type.
+    """
+
     def __init__(
         self,
-        agent_template: str | None = None,
-        parameter_name: str | None = None,
-        parameter_type: str | None = None,
-        error_message: str = "",
+        agent_template_str: str,
+        parameter_name: str,
+        parameter_type: str,
     ):
-        if not error_message:
-            super().__init__(
-                message=(
-                    f"Failed to configure the agent template '{agent_template}'. "
-                    f"The parameter '{parameter_name}' must be of type "
-                    f"'{parameter_type}' in the agent template's definition."
-                ),
-            )
-        else:
-            super().__init__(
-                message=(
-                    f"Failed to configure the agent template '{agent_template}'. "
-                    f"{error_message}"
-                ),
-            )
-
-
-class RequiredAgentTemplateConfigurationParameterNotDeclaredError(
-    AgentTemplateConfigurationParameterError,
-):
-    def __init__(self, parameter_name: str, agent_template: str):
         super().__init__(
-            message=(
-                f"Failed to configure the agent template '{agent_template}'. "
-                f"The required parameter '{parameter_name}' was not declared in the "
-                f"agent template's definition."
-            ),
+            component_str=agent_template_str,
+            parameter_name=parameter_name,
+            parameter_type=parameter_type,
         )
 
 
-class EmptyAgentTemplateNameError(AgentTemplateConfigurationError):
-    def __init__(self, agent_template_filepath: str):
+class MissingAgentTemplateConfigurationParameterError(
+    comp_excs.MissingComponentConfigurationParameterError,
+    AgentTemplateConfigurationError,
+):
+    """
+    An error that is raised when a parameter is not declared in an agent template's definition.
+    """
+
+    def __init__(self, agent_template_str: str, parameter_name: str):
         super().__init__(
-            message=(
-                f"Failed to configure the agent template defined at "
-                f"'{agent_template_filepath}'. The name provided in the agent "
-                f"template's definition during configuration cannot be empty."
-            ),
+            component_str=agent_template_str,
+            parameter_name=parameter_name,
+        )
+
+
+class EmptyAgentTemplateLabelError(
+    comp_excs.EmptyComponentLabelError,
+    AgentTemplateConfigurationError,
+):
+    """
+    An error that is raised when the label provided in an agent template's definition during
+    configuration is an empty string.
+    """
+
+    def __init__(self, agent_template_filepath: str):
+        super().__init__(component_filepath=agent_template_filepath)
+
+
+class DuplicateAgentTemplateLabelError(
+    comp_excs.DuplicateComponentLabelError,
+    AgentTemplateConfigurationError,
+):
+    """
+    An error that is raised when the label provided in the agent template's definition during
+    configuration is already in use by another agent template.
+    """
+
+    def __init__(self, agent_template_str: str, label: str):
+        super().__init__(
+            component_str=agent_template_str,
+            label=label,
+        )
+
+
+class InvalidAgentTemplateVersionError(
+    comp_excs.InvalidComponentVersionError,
+    AgentTemplateConfigurationError,
+):
+    """
+    An error that is raised when the agent template version string provided in the agent template's
+    definition during configuration is not a valid version string according to PEP 440.
+    """
+
+    def __init__(self, agent_template_str: str, version: str):
+        super().__init__(
+            component_str=agent_template_str,
+            version=version,
+        )
+
+
+class InvalidFrameworkVersionSpecifierError(
+    comp_excs.InvalidFrameworkVersionSpecifierError,
+    AgentTemplateConfigurationError,
+):
+    """
+    An error that is raised when the framework version specifier string provided in the
+    agent template's definition during configuration is not a valid version specifier string as
+    defined in PEP440.
+    """
+
+    def __init__(
+        self,
+        agent_template_str: str,
+        framework_version_specifier_str: str,
+    ):
+        super().__init__(
+            component_str=agent_template_str,
+            framework_version_specifier_str=framework_version_specifier_str,
+        )
+
+
+class InvalidAgentTemplateDependencyVersionSpecifierError(
+    comp_excs.InvalidComponentDependencyVersionSpecifierError,
+    AgentTemplateConfigurationError,
+):
+    """
+    An error that is raised when the agent template dependency version specifier string
+    provided in the agent template's definition during configuration is not a valid version
+    specifier string as defined in PEP440.
+    """
+
+    def __init__(
+        self,
+        agent_template_str: str,
+        invalid_dependency_entry: str,
+    ):
+        super().__init__(
+            component_str=agent_template_str,
+            invalid_dependency_entry=invalid_dependency_entry,
         )
 
 
 class DuplicateAgentTemplateOptionNameError(AgentTemplateConfigurationError):
-    def __init__(self, option_name: str, agent_template: str):
+    def __init__(self, agent_template_str: str, option_name: str):
         super().__init__(
             message=(
-                f"Failed to configure the agent template {agent_template}'. The "
-                f"options provided to the agent template must not have duplicate "
-                f"names but the name '{option_name}' was duplicated."
+                f"Failed to configure the agent template {agent_template_str}'. "
+                f"The options provided to the agent template must not have "
+                f"duplicate names but the name '{option_name}' was duplicated."
             ),
         )
 
@@ -104,11 +252,11 @@ class AgentTemplateOptionError(AgentTemplatesFrameworkError):
 
 
 class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
-    def __init__(self, option_name: str, agent_template: str):
+    def __init__(self, agent_template_str: str, option_name: str):
         super().__init__(
             message=(
                 f"Failed to access the option '{option_name}' for the agent template "
-                f"{agent_template}. Could not find the requested option "
+                f"{agent_template_str}. Could not find the requested option "
                 f"'{option_name}' in the agent template."
             ),
         )
@@ -117,7 +265,7 @@ class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
 class AgentTemplateOptionValueError(AgentTemplateOptionError):
     def __init__(
         self,
-        agent_template: str,
+        agent_template_str: str,
         option_name: str,
         option_value: str,
         error_message: str,
@@ -125,7 +273,7 @@ class AgentTemplateOptionValueError(AgentTemplateOptionError):
         super().__init__(
             message=(
                 f"Failed to set the option '{option_name}' to the value "
-                f"'{option_value}' for the agent template '{agent_template}'. "
+                f"'{option_value}' for the agent template '{agent_template_str}'. "
                 f"{error_message}"
             ),
         )

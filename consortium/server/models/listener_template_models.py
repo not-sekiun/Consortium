@@ -7,9 +7,12 @@ from consortium.server.models.c2_types_models import ListenerTypeModel
 
 class ListenerTemplateModel(BaseModel):
     listener_template_id: str
+    label: str
     name: str
     description: str
-    listener_type: ListenerTypeModel
+    version: str
+    compatible_framework_version: str
     authors: list[str]
+    listener_type: ListenerTypeModel
     options: dict[str, Any]
     validating_function: None | str

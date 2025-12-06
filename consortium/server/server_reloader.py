@@ -11,7 +11,7 @@ from watchdog.observers import Observer
 from consortium.server.server_config import (
     CONSORTIUM_AGENTS_DIRECTORY_PATH,
     CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
-    CONSORTIUM_LISTENERS_DIRECTORY_PATH,
+    CONSORTIUM_LISTENER_PROFILES_DIRECTORY_PATH,
     CONSORTIUM_PLUGINS_DIRECTORY_PATH,
 )
 
@@ -81,7 +81,7 @@ def main() -> None:
     )
 
     observed_directories = [
-        str(CONSORTIUM_LISTENERS_DIRECTORY_PATH.resolve()),
+        str(CONSORTIUM_LISTENER_PROFILES_DIRECTORY_PATH.resolve()),
         str(CONSORTIUM_AGENTS_DIRECTORY_PATH.resolve()),
         str(CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH.resolve()),
         str(CONSORTIUM_PLUGINS_DIRECTORY_PATH.resolve()),

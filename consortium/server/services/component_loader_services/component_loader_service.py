@@ -39,14 +39,19 @@ from consortium.server.server_config import (
 ComponentType = TypeVar("ComponentType")
 
 
+# Default base service that loads components from component project folders. Expects to
+# load a single component from each component project folder. Used by the plugins and
+# event hooks system.
 class ComponentLoaderService(Generic[ComponentType]):
-    def __init__(
-        self,
-        component_type: type[ComponentType],
-        component_framework_error: type[Exception],
-    ):
-        self._component_type = component_type
-        self._component_framework_error = component_framework_error
+    _component_type: type[ComponentType]
+    _component_framework_error: type[Exception]
+    _manifest_json_schema: dict[str, Any]
+
+    @staticmethod
+    def _get_manifest_json_file_path(
+        component_project_folder: pathlib.Path,
+    ) -> pathlib.Path:
+        return component_project_folder / "manifest.json"
 
     @staticmethod
     def _validate_manifest_json_file(
@@ -86,6 +91,16 @@ class ComponentLoaderService(Generic[ComponentType]):
         return manifest_json["enabled"]
 
     @staticmethod
+    def _validate_component_enabled(
+        enabled: bool,
+        ignore_enabled_component_flag: bool,
+    ) -> bool:
+        # Check if the component project is enabled or not.
+        if not enabled and not ignore_enabled_component_flag:
+            return False
+        return True
+
+    @staticmethod
     def _get_entry_point_from_manifest_json(
         component_project_folder: pathlib.Path,
         manifest_json: dict[str, Any],
@@ -103,14 +118,10 @@ class ComponentLoaderService(Generic[ComponentType]):
         return component_module, component_symbol
 
     @staticmethod
-    def _validate_component_enabled(
-        enabled: bool,
-        ignore_enabled_component_flag: bool,
-    ) -> bool:
-        # Check if the component project is enabled or not.
-        if not enabled and not ignore_enabled_component_flag:
-            return False
-        return True
+    def _get_pyproject_toml_file_path(
+        component_project_folder: pathlib.Path,
+    ) -> pathlib.Path:
+        return component_project_folder / "pyproject.toml"
 
     @staticmethod
     def _validate_pyproject_toml_file_third_party_dependencies(
@@ -162,6 +173,14 @@ class ComponentLoaderService(Generic[ComponentType]):
                     invalid_dependency_entry=entry,
                 )
         return dependencies
+
+    @staticmethod
+    def _attach_third_party_dependencies_to_component_class(
+        component_class: type[ComponentType],
+        dependencies: set[requirements.Requirement],
+    ) -> type[ComponentType]:
+        component_class.third_party_dependencies = dependencies
+        return component_class
 
     def _validate_component_project_folder_structure(
         self,
@@ -218,7 +237,37 @@ class ComponentLoaderService(Generic[ComponentType]):
                 internal_error_message=str(exc),
             )
 
-    def _validate_component_class_inheritance(
+    @staticmethod
+    def _get_component_framework_version_compatibility(
+        component_class: type[ComponentType],
+    ) -> version.Version:
+        return component_class.compatible_framework_version
+
+    def _validate_component_framework_version_compatibility(
+        self,
+        component_class: type[ComponentType],
+    ) -> None:
+        component_framework_version = (
+            self._get_component_framework_version_compatibility(
+                component_class=component_class,
+            )
+        )
+        # Check the component's framework version compatibility if not specified, assume
+        # it is compatible.
+        if (
+            component_framework_version
+            and version.Version(SERVER_RELEASE.version)
+            not in component_framework_version
+        ):
+            raise IncompatibleComponentFrameworkVersionError(
+                component_str=str(component_class),
+                required_version=str(
+                    component_class.compatible_framework_version,
+                ),
+                current_version=SERVER_RELEASE.version,
+            )
+
+    def _validate_component_class(
         self,
         component_class: type,
         component_project_folder: pathlib.Path,
@@ -242,23 +291,12 @@ class ComponentLoaderService(Generic[ComponentType]):
             )
 
     @staticmethod
-    def _validate_component_framework_version_compatibility(
-        component_object: Any,
-    ) -> None:
-        # Check the component's framework version compatibility if not specified, assume
-        # it is compatible.
-        if (
-            component_object.compatible_framework_version
-            and version.Version(SERVER_RELEASE.version)
-            not in component_object.compatible_framework_version
-        ):
-            raise IncompatibleComponentFrameworkVersionError(
-                component_str=str(component_object),
-                required_version=str(
-                    component_object.compatible_framework_version,
-                ),
-                current_version=SERVER_RELEASE.version,
-            )
+    def _post_validate_component_object(
+        component_object: ComponentType,
+    ) -> ComponentType:
+        # Hook for any post validation steps that need to be performed on the component
+        # class after all validation has been performed.
+        return component_object
 
     def get_component_from_component_project_folder(
         self,
@@ -267,16 +305,10 @@ class ComponentLoaderService(Generic[ComponentType]):
     ) -> ComponentType | None:
         manifest_json = self._validate_manifest_json_file(
             component_project_folder=component_project_folder,
-            manifest_file_path=component_project_folder / "manifest.json",
-            manifest_json_schema={
-                "type": "object",
-                "properties": {
-                    "entry_point": {"type": "string"},
-                    "enabled": {"type": "boolean"},
-                },
-                "required": ["entry_point", "enabled"],
-                "additionalProperties": False,
-            },
+            manifest_file_path=self._get_manifest_json_file_path(
+                component_project_folder=component_project_folder,
+            ),
+            manifest_json_schema=self._manifest_json_schema,
         )
         enabled = self._get_enabled_status_from_manifest_json(
             manifest_json=manifest_json,
@@ -292,23 +324,30 @@ class ComponentLoaderService(Generic[ComponentType]):
             return None
         dependencies = self._validate_pyproject_toml_file_third_party_dependencies(
             component_project_folder=component_project_folder,
-            pyproject_filepath=component_project_folder / "pyproject.toml",
+            pyproject_filepath=self._get_pyproject_toml_file_path(
+                component_project_folder=component_project_folder,
+            ),
         )
         component_class = self._validate_component_project_folder_structure(
             component_project_folder=component_project_folder,
             component_module=component_module,
             component_symbol=component_symbol,
         )
-        component_class.third_party_dependencies = dependencies
-        component_object = self._validate_component_class_inheritance(
+        component_class = self._attach_third_party_dependencies_to_component_class(
+            component_class=component_class,
+            dependencies=dependencies,
+        )
+        self._validate_component_framework_version_compatibility(
+            component_class=component_class,
+        )
+        component_object = self._validate_component_class(
             component_class=component_class,
             component_project_folder=component_project_folder,
             component_symbol=component_symbol,
         )
-        self._validate_component_framework_version_compatibility(
+        return self._post_validate_component_object(
             component_object=component_object,
         )
-        return component_object
 
     def get_components_from_component_project_folder_directories(
         self,
@@ -339,7 +378,11 @@ class ComponentLoaderService(Generic[ComponentType]):
                     retrieved_components.append(component)
                 else:
                     skipped_components.append(component_project_folder_path)
-            except (ComponentLoadingError, ComponentConfigurationError) as exc:
+            except (
+                ComponentLoadingError,
+                ComponentConfigurationError,
+                ComponentDependencyError,
+            ) as exc:
                 errored_components.append((component_project_folder_path, exc))
         return retrieved_components, skipped_components, errored_components
 

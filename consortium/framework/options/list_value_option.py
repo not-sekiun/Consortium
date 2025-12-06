@@ -1,5 +1,6 @@
 from typing import Callable, Type
 
+from consortium.framework.framework_types import Primitive, PrimitiveType
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options._option_argument_validators import (
     ArgumentDataTypeCheckParameters,
@@ -20,7 +21,6 @@ from consortium.framework.options._option_value_validators import (
     validate_value_regex_format,
     validate_value_string_length,
 )
-from consortium.framework.options._types import SimpleType, SimpleTypeType
 from consortium.framework.options._utils import resolve_validating_function_string
 from consortium.framework.options.option_types import OptionType
 
@@ -164,9 +164,9 @@ class ListValueOption(BaseOption):
         name: str,
         description: str = "",
         required: bool = True,
-        default_value: list[SimpleType] | None = None,
+        default_value: list[Primitive] | None = None,
         allow_duplicates: bool = True,
-        value_type: SimpleTypeType | None = None,
+        value_type: PrimitiveType | None = None,
         minimum_length: int | None = None,
         maximum_length: int | None = None,
         greater_than: int | None = None,
@@ -176,7 +176,7 @@ class ListValueOption(BaseOption):
         minimum_elements: int | None = None,
         maximum_elements: int | None = None,
         validating_regex: str | None = None,
-        validating_function: Callable[[SimpleType], None] | None = None,
+        validating_function: Callable[[Primitive], None] | None = None,
     ):
         self.allow_duplicates = allow_duplicates
         self.value_type = value_type
@@ -262,7 +262,7 @@ class ListValueOption(BaseOption):
             f"validating_function={self.validating_function!r})"
         )
 
-    def validate_value(self, value: list[SimpleType]) -> None:
+    def validate_value(self, value: list[Primitive]) -> None:
         """
         Validate the value of the option.
 
@@ -322,7 +322,7 @@ class ListValueOption(BaseOption):
 
     def to_json(
         self,
-    ) -> dict[str, str | bool | list[SimpleType] | None]:
+    ) -> dict[str, str | bool | list[Primitive] | None]:
         """
         Convert the option to a JSON serializable dictionary.
 

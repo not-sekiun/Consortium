@@ -332,7 +332,7 @@ class Listener:
         """
         return True
 
-    def start_listener(self):
+    def start(self):
         """
         Start listener in a thread, all agents that connect are put into the agent_connection dict
         """
@@ -347,7 +347,7 @@ class Listener:
             return True
         return False
 
-    def stop_listener(self):
+    def stop(self):
         """
         Stop listener thread if it is running, disconnect all connected agents in the agent_connection dict
         """
@@ -364,7 +364,7 @@ class Listener:
 class Interface:
     def __init__(self):
         self._listener = Listener("0.0.0.0", 9999)
-        self._listener.start_listener()
+        self._listener.start()
 
     def _shlex_text(self, s, platform="this"):
         if platform == "this":
@@ -477,7 +477,7 @@ class Interface:
                     continue
                 self._interact_interface(args[0])
             elif command == "exit":
-                self._listener.stop_listener()
+                self._listener.stop()
                 break
             else:
                 print("[-] Invalid command")
