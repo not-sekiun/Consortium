@@ -78,8 +78,8 @@ def get_all_agent_generators(
             ).to_pydantic_model(),
         },
         404: {
-            "model": AgentGeneratorNotFoundAPIError.from_service_exception(
-                service_exception=AgentGeneratorNotFoundServiceError(
+            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorNotFoundServiceError(
                     agent_generator_id="string",
                 ),
             ).to_pydantic_model(),
@@ -105,9 +105,9 @@ def get_agent_generator_by_agent_generator_id(
             ).to_json(),
         )
     except AgentGeneratorNotFoundServiceError as exc:
-        raise AgentGeneratorNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
 
 @router.post(
@@ -115,18 +115,18 @@ def get_agent_generator_by_agent_generator_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": AgentGeneratorNotFoundAPIError.from_service_exception(
-                service_exception=AgentGeneratorNotFoundServiceError(
+            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorNotFoundServiceError(
                     agent_generator_id="string",
                 ),
             ).to_pydantic_model(),
         },
         409: {
-            "model": AgentGeneratorAlreadyRunningAPIError.from_service_exception(
-                service_exception=AgentGeneratorAlreadyRunningServiceError(),
+            "model": AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorAlreadyRunningServiceError(),
             ).to_pydantic_model()
-            | AgentGeneratorStartAPIError.from_service_exception(
-                service_exception=AgentGeneratorStartServiceError(
+            | AgentGeneratorStartAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorStartServiceError(
                     message="string",
                     detail={"string": "string"},
                 ),
@@ -155,24 +155,24 @@ async def start_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except AgentGeneratorStartServiceError as exc:
-        raise AgentGeneratorStartAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorStartAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except AgentGeneratorAlreadyRunningServiceError as exc:
-        raise AgentGeneratorAlreadyRunningAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except AgentGeneratorNotFoundServiceError as exc:
-        raise AgentGeneratorNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except Exception as exc:
         raise InternalServerErrorError(
             detail={
                 "type": type(exc).__name__,
                 "message": str(exc),
             },
-        )
+        ) from None
 
     return SuccessResponseModel()
 
@@ -182,18 +182,18 @@ async def start_agent_generator_by_agent_generator_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": AgentGeneratorNotFoundAPIError.from_service_exception(
-                service_exception=AgentGeneratorNotFoundServiceError(
+            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorNotFoundServiceError(
                     agent_generator_id="string",
                 ),
             ).to_pydantic_model(),
         },
         409: {
-            "model": AgentGeneratorNotRunningAPIError.from_service_exception(
-                service_exception=AgentGeneratorNotRunningServiceError(),
+            "model": AgentGeneratorNotRunningAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorNotRunningServiceError(),
             ).to_pydantic_model()
-            | AgentGeneratorStopAPIError.from_service_exception(
-                service_exception=AgentGeneratorStopServiceError(
+            | AgentGeneratorStopAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorStopServiceError(
                     message="string",
                     detail={"string": "string"},
                 ),
@@ -222,22 +222,24 @@ async def stop_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except AgentGeneratorNotFoundServiceError as exc:
-        raise AgentGeneratorNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except AgentGeneratorStopServiceError as exc:
-        raise AgentGeneratorStopAPIError.from_service_exception(service_exception=exc)
+        raise AgentGeneratorStopAPIError.from_consortium_exception(
+            consortium_exception=exc
+        ) from None
     except AgentGeneratorNotRunningServiceError as exc:
-        raise AgentGeneratorNotRunningAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorNotRunningAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except Exception as exc:
         raise InternalServerErrorError(
             detail={
                 "type": type(exc).__name__,
                 "message": str(exc),
             },
-        )
+        ) from None
 
     return SuccessResponseModel()
 
@@ -247,15 +249,15 @@ async def stop_agent_generator_by_agent_generator_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": AgentGeneratorNotFoundAPIError.from_service_exception(
-                service_exception=AgentGeneratorNotFoundServiceError(
+            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorNotFoundServiceError(
                     agent_generator_id="string",
                 ),
             ).to_pydantic_model(),
         },
         409: {
-            "model": AgentGeneratorNotRunningAPIError.from_service_exception(
-                service_exception=AgentGeneratorNotRunningServiceError(),
+            "model": AgentGeneratorNotRunningAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorNotRunningServiceError(),
             ).to_pydantic_model(),
         },
         422: {
@@ -281,20 +283,20 @@ async def cancel_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except AgentGeneratorNotFoundServiceError as exc:
-        raise AgentGeneratorNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except AgentGeneratorNotRunningServiceError as exc:
-        raise AgentGeneratorNotRunningAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorNotRunningAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except Exception as exc:
         raise InternalServerErrorError(
             detail={
                 "type": type(exc).__name__,
                 "message": str(exc),
             },
-        )
+        ) from None
 
     return SuccessResponseModel()
 
@@ -304,29 +306,29 @@ async def cancel_agent_generator_by_agent_generator_id(
     responses={
         200: {"model": AgentGeneratorModel},
         404: {
-            "model": AgentGeneratorNotFoundAPIError.from_service_exception(
-                service_exception=AgentGeneratorNotFoundServiceError(
+            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorNotFoundServiceError(
                     agent_generator_id="string",
                 ),
             ).to_pydantic_model(),
         },
         409: {
-            "model": AgentGeneratorAlreadyRunningAPIError.from_service_exception(
-                service_exception=AgentGeneratorAlreadyRunningServiceError(),
+            "model": AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorAlreadyRunningServiceError(),
             ).to_pydantic_model(),
         },
         422: {
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model()
-            | InvalidAgentGeneratorParameterNameAPIError.from_service_exception(
-                service_exception=InvalidAgentGeneratorParameterNameServiceError(
+            | InvalidAgentGeneratorParameterNameAPIError.from_consortium_exception(
+                consortium_exception=InvalidAgentGeneratorParameterNameServiceError(
                     parameter_name="string",
                     agent_generator_str="string",
                 ),
             ).to_pydantic_model()
-            | InvalidAgentGeneratorParameterValueAPIError.from_service_exception(
-                service_exception=InvalidAgentGeneratorParameterValueServiceError(
+            | InvalidAgentGeneratorParameterValueAPIError.from_consortium_exception(
+                consortium_exception=InvalidAgentGeneratorParameterValueServiceError(
                     agent_generator_str="string",
                     parameter_name="string",
                     parameter_value="string",
@@ -386,23 +388,23 @@ async def update_agent_generator_by_agent_generator_id(
             # this, which will be caught and reraised as a
             # AgentGeneratorTemplateResolutionError on the REST API side.
             except AssertionError:
-                raise AgentTemplateResolutionError
+                raise AgentTemplateResolutionError from None
             except AgentGeneratorAlreadyRunningServiceError as exc:
-                raise AgentGeneratorAlreadyRunningAPIError.from_service_exception(
-                    service_exception=exc,
-                )
+                raise AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
+                    consortium_exception=exc,
+                ) from None
             except InvalidAgentGeneratorParameterNameServiceError as exc:
-                raise InvalidAgentGeneratorParameterNameAPIError.from_service_exception(
-                    service_exception=exc,
-                )
+                raise InvalidAgentGeneratorParameterNameAPIError.from_consortium_exception(
+                    consortium_exception=exc,
+                ) from None
             except InvalidAgentGeneratorParameterValueServiceError as exc:
-                raise InvalidAgentGeneratorParameterValueAPIError.from_service_exception(
-                    service_exception=exc,
-                )
+                raise InvalidAgentGeneratorParameterValueAPIError.from_consortium_exception(
+                    consortium_exception=exc,
+                ) from None
     except AgentGeneratorNotFoundServiceError as exc:
-        raise AgentGeneratorNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     # If the agent generator ID provided is invalid AND no parameters were passed to be
     # patched it is possible for the above block to execute and not raise an exception.
@@ -414,9 +416,9 @@ async def update_agent_generator_by_agent_generator_id(
             )
         )
     except AgentGeneratorNotFoundServiceError as exc:
-        raise AgentGeneratorNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return AgentGeneratorModel(**agent_generator.to_json())
 
@@ -426,15 +428,15 @@ async def update_agent_generator_by_agent_generator_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": AgentGeneratorNotFoundAPIError.from_service_exception(
-                service_exception=AgentGeneratorNotFoundServiceError(
+            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorNotFoundServiceError(
                     agent_generator_id="string",
                 ),
             ).to_pydantic_model(),
         },
         409: {
-            "model": AgentGeneratorAlreadyRunningAPIError.from_service_exception(
-                service_exception=AgentGeneratorAlreadyRunningServiceError(),
+            "model": AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
+                consortium_exception=AgentGeneratorAlreadyRunningServiceError(),
             ).to_pydantic_model(),
         },
     },
@@ -455,14 +457,14 @@ async def delete_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except AgentGeneratorNotFoundServiceError:
-        raise AgentGeneratorNotFoundAPIError.from_service_exception(
-            service_exception=AgentGeneratorNotFoundServiceError(
+        raise AgentGeneratorNotFoundAPIError.from_consortium_exception(
+            consortium_exception=AgentGeneratorNotFoundServiceError(
                 agent_generator_id="string",
             ),
-        )
+        ) from None
     except AgentGeneratorAlreadyRunningServiceError as exc:
-        raise AgentGeneratorAlreadyRunningAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return SuccessResponseModel()

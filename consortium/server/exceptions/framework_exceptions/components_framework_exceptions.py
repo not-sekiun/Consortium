@@ -21,7 +21,7 @@ Exception hierarchy for the components framework:
             - [`InvalidComponentDependencyVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError]
         - [`ComponentOperationError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentOperationError]
             - [`ComponentNotRunningError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentNotRunningError]
-            - [`ComponentAlreadyStartedError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentAlreadyStartedError]
+            - [`ComponentAlreadyRunningError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentAlreadyRunningError]
             - [`ComponentStartError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentStartError]
             - [`ComponentRuntimeError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentRuntimeError]
             - [`ComponentStopError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentStopError]
@@ -259,14 +259,14 @@ class ComponentNotRunningError(ComponentOperationError):
         super().__init__(component_str=component_str)
 
 
-class ComponentAlreadyStartedError(ComponentOperationError):
+class ComponentAlreadyRunningError(ComponentOperationError):
     """
     An error that is raised when an operation is attempted on a component that requires
     that component to not already be started or running but the component is already started
     or running.
     """
 
-    code = "COMPONENT_ALREADY_STARTED_ERROR"
+    code = "COMPONENT_ALREADY_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to perform the requested operation on the $C_LOWER$ "

@@ -1,7 +1,8 @@
 import inspect
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, Type
+from typing import Any, Literal
 
 from consortium.framework.framework_types import Primitive
 from consortium.framework.options.exceptions import (
@@ -18,7 +19,7 @@ from consortium.framework.options.exceptions import (
 @dataclass
 class ArgumentDataTypeCheckParameters:
     value: Any
-    expected_data_type: Type | set[Type]
+    expected_data_type: type | set[type]
     # If an error message is provided we will use that error message instead of
     # attempting to construct a default error message.
     error_message: str | None = None
@@ -38,7 +39,7 @@ def validate_arguments_data_types(
             if parameter.error_message is None:
                 parameter.error_message = (
                     f"The parameter '{parameter.value}' must be one of the types "
-                    f"{", ".join([f"`{data_type}`" for data_type in parameter.expected_data_type])} "
+                    f"{', '.join([f'`{data_type}`' for data_type in parameter.expected_data_type])} "
                     f"for option '{option_name}'."
                 )
             if not isinstance(parameter.value, tuple(parameter.expected_data_type)):
@@ -53,7 +54,7 @@ def validate_arguments_data_types(
                     error_message=parameter.error_message,
                 )
         else:
-            assert False, (
+            raise AssertionError(
                 f"Invalid data type '{parameter.expected_data_type}' provided for "
                 "`expected_data_type`."
             )
@@ -61,7 +62,7 @@ def validate_arguments_data_types(
 
 def validate_value_type_argument(
     option_name: str,
-    value_type: Type[Primitive],
+    value_type: type[Primitive],
 ) -> None:
     if value_type is not None and value_type not in {str, int, float, bool}:
         raise InvalidOptionConfigurationParameterTypeError(
@@ -75,7 +76,7 @@ def validate_value_type_argument(
 
 def validate_string_length_arguments(
     option_name: str,
-    option_value_type: Type,
+    option_value_type: type,
     minimum_length: int | None,
     maximum_length: int | None,
 ) -> None:
@@ -95,8 +96,8 @@ def validate_string_length_arguments(
             raise InvalidOptionConfigurationParameterTypeError(
                 option_name=option_name,
                 error_message=(
-                    f"The parameters `minimum_length` and `maximum_length` are only "
-                    f"applicable to options with a value type of `str`."
+                    "The parameters `minimum_length` and `maximum_length` are only "
+                    "applicable to options with a value type of `str`."
                 ),
             )
         if minimum_length is not None and minimum_length < 0:
@@ -123,7 +124,7 @@ def validate_string_length_arguments(
 
 def validate_numeric_range_arguments(
     option_name: str,
-    option_value_type: Type,
+    option_value_type: type,
     greater_than: int,
     lesser_than: int,
     greater_than_or_equal_to: int,
@@ -219,7 +220,7 @@ def validate_validating_regex_argument(
                 option_name=option_name,
                 validating_regex=validating_regex,
                 regex_error_message=str(exc),
-            )
+            ) from None
 
 
 def validate_validating_function_argument(

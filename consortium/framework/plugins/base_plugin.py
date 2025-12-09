@@ -20,7 +20,7 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
     BaseFrameworkException,
 )
 from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
-    ComponentAlreadyStartedError,
+    ComponentAlreadyRunningError,
     ComponentNotRunningError,
     ComponentStartError,
     ComponentStopError,
@@ -32,7 +32,7 @@ from consortium.server.exceptions.framework_exceptions.plugins_framework_excepti
     InvalidPluginDependencyVersionSpecifierError,
     InvalidPluginVersionError,
     MissingPluginConfigurationParameterError,
-    PluginAlreadyStartedError,
+    PluginAlreadyRunningError,
     PluginNotRunningError,
     PluginStartError,
     PluginStopError,
@@ -145,8 +145,8 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     async def start(self) -> None:
         try:
             await super().start()
-        except ComponentAlreadyStartedError:
-            raise PluginAlreadyStartedError(
+        except ComponentAlreadyRunningError:
+            raise PluginAlreadyRunningError(
                 plugin_str=str(self),
             ) from None
         except ComponentStartError as exc:

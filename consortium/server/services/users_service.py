@@ -52,7 +52,6 @@ class UsersService:
         user = self.get_user_by_user_id(user_id=user_id)
         old_display_name = user.display_name
         user.display_name = new_display_name
-
         self._logger.info(
             "Updated user display name for {}: '{}' -> '{}'",
             user,

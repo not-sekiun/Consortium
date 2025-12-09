@@ -52,33 +52,33 @@ class UserAccessTokenNotFoundError(UserNotFoundError):
         )
 
 
-class EmptyUserDisplayNameError(UsersServiceError):
-    code = "EMPTY_USER_DISPLAY_NAME_ERROR"
+# class EmptyUserDisplayNameError(UsersServiceError):
+#     code = "EMPTY_USER_DISPLAY_NAME_ERROR"
+#
+#     def __init__(
+#         self,
+#         user_str: str,
+#     ):
+#         super().__init__(
+#             message=(
+#                 f"Failed to update the display name for user '{user_str}'. Display "
+#                 f"name cannot be empty."
+#             ),
+#         )
 
-    def __init__(
-        self,
-        user_str: str,
-    ):
-        super().__init__(
-            message=(
-                f"Failed to update the display name for user '{user_str}'. Display "
-                f"name cannot be empty."
-            ),
-        )
 
-
-class IdenticalUserDisplayNameError(UsersServiceError):
-    code = "IDENTICAL_USER_DISPLAY_NAME_ERROR"
-
-    def __init__(
-        self,
-        user_str: str,
-        display_name: str,
-    ):
-        super().__init__(
-            message=(
-                f"Failed to update the display name for user '{user_str}'. Display "
-                f"name '{display_name}' is identical to the currently used display "
-                f"name."
-            ),
-        )
+# class IdenticalUserDisplayNameError(UsersServiceError):
+#     code = "IDENTICAL_USER_DISPLAY_NAME_ERROR"
+#
+#     def __init__(
+#         self,
+#         user_str: str,
+#         display_name: str,
+#     ):
+#         super().__init__(
+#             message=(
+#                 f"Failed to update the display name for user '{user_str}'. Display "
+#                 f"name '{display_name}' is identical to the currently used display "
+#                 f"name."
+#             ),
+#         )

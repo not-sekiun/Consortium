@@ -61,8 +61,8 @@ router.add_api_route(
     responses={
         200: {"model": RepositoryDirectoryModel | RepositoryFileModel},
         404: {
-            "model": ArtifactNotFoundError.from_service_exception(
-                service_exception=RepositoryResourceNotFoundError(
+            "model": ArtifactNotFoundError.from_consortium_exception(
+                consortium_exception=RepositoryResourceNotFoundError(
                     resource_id="string",
                 ),
             ).to_pydantic_model(),
@@ -81,8 +81,8 @@ router.add_api_route(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": ArtifactNotFoundError.from_service_exception(
-                service_exception=RepositoryResourceNotFoundError(
+            "model": ArtifactNotFoundError.from_consortium_exception(
+                consortium_exception=RepositoryResourceNotFoundError(
                     resource_id="string",
                 ),
             ).to_pydantic_model(),
@@ -101,8 +101,8 @@ router.add_api_route(
     response_class=FileResponse,
     responses={
         404: {
-            "model": ArtifactNotFoundError.from_service_exception(
-                service_exception=RepositoryResourceNotFoundError(
+            "model": ArtifactNotFoundError.from_consortium_exception(
+                consortium_exception=RepositoryResourceNotFoundError(
                     resource_id="string",
                 ),
             ).to_pydantic_model(),

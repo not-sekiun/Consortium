@@ -175,9 +175,9 @@ def _handle_choice_value_option_parameter(
             if value == str(choice):
                 return option_json_data["name"], value
         raise ValueError(
-            f"Failed to set option '{option_json_data["name"]}' to value '{value}'. "
+            f"Failed to set option '{option_json_data['name']}' to value '{value}'. "
             f"The provided value is not a valid choice. Valid choices are: "
-            f"{", ".join(f"'{option_json_data["available_values"]}'")}",
+            f"{', '.join(f"'{option_json_data['available_values']}'")}",
         )
 
     # In every other case when a value type is explicitly specified (even if that
@@ -185,9 +185,9 @@ def _handle_choice_value_option_parameter(
     # conversions.
     if value not in option_json_data["available_values"]:
         raise ValueError(
-            f"Failed to set option '{option_json_data["name"]}' to value '{value}'. "
+            f"Failed to set option '{option_json_data['name']}' to value '{value}'. "
             f"The provided value is not a valid choice. Valid choices are: "
-            f"{", ".join(f"'{option_json_data["available_values"]}'")}",
+            f"{', '.join(f"'{option_json_data['available_values']}'")}",
         )
 
 
@@ -217,7 +217,7 @@ def _handle_dictionary_value_option_parameter(
 
         if key_value_type != "str":
             raise ValueError(
-                f"Failed to set option '{option_json_data["name"]}' to value "
+                f"Failed to set option '{option_json_data['name']}' to value "
                 f"'{value_strings}'. Key '{key_string}' of type '{key_value_type}' is "
                 f"not of the expected type 'str'. All keys for dictionary options must "
                 f"be of type 'str'.",
@@ -247,8 +247,8 @@ def _handle_dictionary_value_option_parameter(
             print_warning(
                 f"Value '{dict_value}' of type '{dict_value_type}' for key "
                 f"'{key_string}' is not of the expected type "
-                f"'{option_json_data["value_type"]}' for option "
-                f"'{option_json_data["name"]}'. However, the value was still set as "
+                f"'{option_json_data['value_type']}' for option "
+                f"'{option_json_data['name']}'. However, the value was still set as "
                 f"the user supplied type '{dict_value_string}'.",
             )
 
@@ -308,7 +308,7 @@ def _handle_toggleable_choice_value_option_parameter(
         # specific boolean value.
         if value_type != "str":
             raise ValueError(
-                f"Failed to set option '{option_json_data["name"]}'. Value "
+                f"Failed to set option '{option_json_data['name']}'. Value "
                 f"'{parameter_value_string}' of type '{value_type}' is not of the "
                 f"expected type 'str'. All choices for toggleable options must be of "
                 f"type 'str'.",
@@ -321,10 +321,10 @@ def _handle_toggleable_choice_value_option_parameter(
         )
         if parameter_value_string not in option_json_data["available_values"]:
             raise ValueError(
-                f"Failed to set option '{option_json_data["name"]}' to value "
+                f"Failed to set option '{option_json_data['name']}' to value "
                 f"'{parameter_value_string}'. The provided value is not a valid "
                 f"choice. Valid choices are: "
-                f"{", ".join(f"'{option_json_data["available_values"]}'")}.",
+                f"{', '.join(f"'{option_json_data['available_values']}'")}.",
             )
 
         toggled_on_values.append(parameter_value_string)
@@ -345,8 +345,8 @@ def convert_option_value_strings_to_option_value(
     if option_json_data["option_type"] == "SINGLE_VALUE_OPTION":
         if len(value_strings) != 1:
             raise ValueError(
-                f"Expected 1 value for option '{option_json_data["name"]}' of option "
-                f"type '{option_json_data["option_type"]}' but got "
+                f"Expected 1 value for option '{option_json_data['name']}' of option "
+                f"type '{option_json_data['option_type']}' but got "
                 f"{len(value_strings)} values instead.",
             )
         return _handle_single_value_option_parameter(
@@ -363,8 +363,8 @@ def convert_option_value_strings_to_option_value(
     elif option_json_data["option_type"] == "CHOICE_VALUE_OPTION":
         if len(value_strings) != 1:
             raise ValueError(
-                f"Expected 1 value for option '{option_json_data["name"]}' of option "
-                f"type '{option_json_data["option_type"]}' but got "
+                f"Expected 1 value for option '{option_json_data['name']}' of option "
+                f"type '{option_json_data['option_type']}' but got "
                 f"{len(value_strings)} values instead.",
             )
         return _handle_choice_value_option_parameter(
@@ -376,8 +376,8 @@ def convert_option_value_strings_to_option_value(
         if len(value_strings) % 2 != 0:
             raise ValueError(
                 f"Expected an even number of values for "
-                f"option '{option_json_data["name"]}' of option type "
-                f"'{option_json_data["option_type"]}' but got "
+                f"option '{option_json_data['name']}' of option type "
+                f"'{option_json_data['option_type']}' but got "
                 f"{len(value_strings)} values instead.",
             )
         return _handle_dictionary_value_option_parameter(
@@ -389,8 +389,8 @@ def convert_option_value_strings_to_option_value(
         if len(value_strings) < 1:
             raise ValueError(
                 f"Expected at least 1 value for option "
-                f"'{option_json_data["name"]}' of option type "
-                f"'{option_json_data["option_type"]}' but got {len(value_strings)} "
+                f"'{option_json_data['name']}' of option type "
+                f"'{option_json_data['option_type']}' but got {len(value_strings)} "
                 f"values instead.",
             )
         return _handle_toggleable_choice_value_option_parameter(
@@ -399,7 +399,7 @@ def convert_option_value_strings_to_option_value(
             option_json_data=option_json_data,
         )
     else:
-        assert False, (
-            f"Failed to set option '{option_json_data["name"]}'. The option type "
-            f"'{option_json_data["option_type"]}' is not valid."
+        raise AssertionError(
+            f"Failed to set option '{option_json_data['name']}'. The option type "
+            f"'{option_json_data['option_type']}' is not valid."
         )

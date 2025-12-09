@@ -1,6 +1,5 @@
 import asyncio
 import inspect
-import json
 import sys
 import traceback
 import uuid
@@ -17,29 +16,33 @@ from consortium.framework._components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
 )
-from consortium.framework.agents.base_agent_type import BaseAgentType
-from consortium.framework.exceptions.agent_generators_framework_exceptions import (
-    AgentGeneratorBuildError,
-    AgentGeneratorStartError,
-    AgentGeneratorStopError,
+from consortium.framework.exceptions._component_framework_exceptions import (
+    ComponentStartError,
+    ComponentStopError,
 )
+
+# from consortium.framework.exceptions.agent_generators_framework_exceptions import (
+#     AgentGeneratorBuildError,
+#     AgentGeneratorStartError,
+#     AgentGeneratorStopError,
+# )
 from consortium.server.exceptions.framework_exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorAlreadyRunningError,
-    AgentGeneratorBuildError as AgentGeneratorBuildFrameworkError,
+    AgentGeneratorBuildError,
     AgentGeneratorBuildStepConfigurationParameterTypeError,
     AgentGeneratorConfigurationParameterTypeError,
     AgentGeneratorCreationParameterTypeError,
     AgentGeneratorNotRunningError,
-    AgentGeneratorStartError as AgentGeneratorStartFrameworkError,
-    AgentGeneratorStopError as AgentGeneratorStopFrameworkError,
-    EmptyAgentGeneratorBuildStepNameError,
+    AgentGeneratorStartError,
+    AgentGeneratorStopError,
     MissingAgentGeneratorConfigurationParameterError,
-    RequiredAgentGeneratorBuildStepConfigurationParameterNotDeclaredError,
+)
+from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
+    ComponentAlreadyRunningError,
+    ComponentNotRunningError,
 )
 from consortium.server.objects.agent_generator_objects import (
     AgentGeneratorBuildStepStatus,
-    AgentGeneratorState,
-    AgentGeneratorStatus,
 )
 from consortium.server.server_logging import LoggerType
 
@@ -91,7 +94,7 @@ class BaseAgentGeneratorBuildStep(ABC):
                 agent_generator_build_step_str=cls.name,
                 parameter_name=attr,
                 parameter_type=str(expected_attrs_and_types_map[attr]),
-            )
+            ) from None
 
     def __str__(self) -> str:
         return f"'{self.name}' ({str(self.agent_generator_build_step_id)})"
@@ -289,6 +292,42 @@ class BaseAgentGenerator(ComponentLifeCycle):
             ctx_to_str_map[fatal_context],
             traceback.format_exc(),
         )
+
+    async def start(self) -> None:
+        try:
+            await super().start()
+        except ComponentAlreadyRunningError:
+            raise AgentGeneratorAlreadyRunningError(
+                agent_generator_str=str(self),
+            ) from None
+        except ComponentStartError as exc:
+            raise AgentGeneratorStartError(
+                agent_generator_str=str(self),
+                error_message=exc.message,
+                detail=exc.detail,
+            ) from None
+
+    async def stop(self) -> None:
+        try:
+            await super().stop()
+        except ComponentNotRunningError:
+            raise AgentGeneratorNotRunningError(
+                agent_generator_str=str(self),
+            ) from None
+        except ComponentStopError as exc:
+            raise AgentGeneratorStopError(
+                agent_generator_str=str(self),
+                error_message=exc.message,
+                detail=exc.detail,
+            ) from None
+
+    async def cancel(self) -> None:
+        try:
+            await super().cancel()
+        except ComponentNotRunningError:
+            raise AgentGeneratorNotRunningError(
+                agent_generator_str=str(self),
+            ) from None
 
     def to_json(self):
         return {

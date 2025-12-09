@@ -32,55 +32,64 @@ class ListenersFrameworkError(BaseFrameworkException):
     code = "LISTENERS_FRAMEWORK_ERROR"
 
 
-class ListenerConfigurationError(
-    comp_excs.ComponentConfigurationError,
-    ListenersFrameworkError,
-):
-    """
-    Base exception for all errors that occur during the configuration of a particular
-    listener.
-    """
-
-    code = "LISTENER_CONFIGURATION_ERROR"
-
-    _COMPONENT_TYPE = "listener"
-
-
-class InvalidListenerConfigurationParameterTypeError(ListenerConfigurationError):
-    code = "INVALID_LISTENER_CONFIGURATION_PARAMETER_TYPE_ERROR"
-
-    def __init__(
-        self,
-        listener_str: str,
-        parameter_name: str | None = None,
-        parameter_type: str | None = None,
-    ):
-        super().__init__(
-            message=(
-                f"Failed to configure the listener defined at "
-                f"'{listener_str}'. The parameter '{parameter_name}' must be "
-                f"of type '{parameter_type}' in the listener's definition."
-            ),
-        )
+# class ListenerConfigurationError(
+#     comp_excs.ComponentConfigurationError,
+#     ListenersFrameworkError,
+# ):
+#     """
+#     Base exception for all errors that occur during the configuration of a particular
+#     listener.
+#     """
+#
+#     code = "LISTENER_CONFIGURATION_ERROR"
+#
+#     _COMPONENT_TYPE = "listener"
 
 
-class MissingListenerConfigurationParameterError(
-    ListenerConfigurationError,
-):
-    code = "MISSING_LISTENER_CONFIGURATION_PARAMETER_ERROR"
+# class InvalidListenerConfigurationParameterTypeError(
+#     ListenerConfigurationError,
+#     comp_excs.InvalidComponentConfigurationParameterTypeError,
+# ):
+#     code = "INVALID_LISTENER_CONFIGURATION_PARAMETER_TYPE_ERROR"
+#
+#     def __init__(
+#         self,
+#         listener_str: str,
+#         parameter_name: str | None = None,
+#         parameter_type: str | None = None,
+#     ):
+#         super().__init__(
+#             component_str=listener_str,
+#             parameter_name=parameter_name,
+#             parameter_type=parameter_type,
+#         )
+#         # super().__init__(
+#         #     message=(
+#         #         f"Failed to configure the listener defined at "
+#         #         f"'{listener_str}'. The parameter '{parameter_name}' must be "
+#         #         f"of type '{parameter_type}' in the listener's definition."
+#         #     ),
+#         # )
 
-    def __init__(self, listener_str: str, parameter_name: str):
-        super().__init__(
-            component_str=listener_str,
-            parameter_name=parameter_name,
-        )
-        # super().__init__(
-        #     message=(
-        #         f"Failed to configure the listener defined at '{listener_str}'. "
-        #         f"The required parameter '{parameter_name}' was not declared in the "
-        #         f"listener's definition."
-        #     ),
-        # )
+
+# class MissingListenerConfigurationParameterError(
+#     ListenerConfigurationError,
+#     comp_excs.MissingComponentConfigurationParameterError
+# ):
+#     code = "MISSING_LISTENER_CONFIGURATION_PARAMETER_ERROR"
+#
+#     def __init__(self, listener_str: str, parameter_name: str):
+#         super().__init__(
+#             component_str=listener_str,
+#             parameter_name=parameter_name,
+#         )
+#         # super().__init__(
+#         #     message=(
+#         #         f"Failed to configure the listener defined at '{listener_str}'. "
+#         #         f"The required parameter '{parameter_name}' was not declared in the "
+#         #         f"listener's definition."
+#         #     ),
+#         # )
 
 
 class ListenerOperationError(
@@ -115,8 +124,8 @@ class ListenerNotRunningError(
         super().__init__(component_str=listener_str)
 
 
-class ListenerAlreadyStartedError(
-    comp_excs.ComponentAlreadyStartedError,
+class ListenerAlreadyRunningError(
+    comp_excs.ComponentAlreadyRunningError,
     ListenerOperationError,
 ):
     """
@@ -125,7 +134,7 @@ class ListenerAlreadyStartedError(
     or running.
     """
 
-    code = "LISTENER_ALREADY_STARTED_ERROR"
+    code = "LISTENER_ALREADY_RUNNING_ERROR"
 
     def __init__(
         self,
@@ -148,9 +157,9 @@ class ListenerStartError(comp_excs.ComponentStartError, ListenerOperationError):
         detail: Any,
     ):
         super().__init__(
-            detail=detail,
             listener_str=listener_str,
             error_message=error_message,
+            detail=detail,
         )
 
 
@@ -168,9 +177,9 @@ class ListenerRuntimeError(comp_excs.ComponentRuntimeError, ListenerOperationErr
         detail: Any,
     ):
         super().__init__(
-            detail=detail,
             component_str=listener_str,
             error_message=error_message,
+            detail=detail,
         )
 
 
@@ -188,9 +197,9 @@ class ListenerStopError(comp_excs.ComponentStopError, ListenerOperationError):
         detail: Any,
     ):
         super().__init__(
-            detail=detail,
-            listener_str=listener_str,
+            component_str=listener_str,
             error_message=error_message,
+            detail=detail,
         )
 
 
@@ -206,22 +215,29 @@ class ListenerCreationParameterTypeError(ListenerCreationError):
         listener_str: str,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
-        error_message: str = "",
+        # error_message: str = "",
     ):
-        if not error_message:
-            super().__init__(
-                message=(
-                    f"Failed to create the listener '{listener_str}'. The parameter "
-                    f"'{parameter_name}' must be of type '{parameter_type}' in the "
-                    f"listener's provided parameters."
-                ),
-            )
-        else:
-            super().__init__(
-                message=(
-                    f"Failed to create the listener '{listener_str}'. {error_message}"
-                ),
-            )
+        super().__init__(
+            message=(
+                f"Failed to create the listener '{listener_str}'. The parameter "
+                f"'{parameter_name}' must be of type '{parameter_type}' in the "
+                f"listener's provided parameters."
+            ),
+        )
+        # if not error_message:
+        #     super().__init__(
+        #         message=(
+        #             f"Failed to create the listener '{listener_str}'. The parameter "
+        #             f"'{parameter_name}' must be of type '{parameter_type}' in the "
+        #             f"listener's provided parameters."
+        #         ),
+        #     )
+        # else:
+        #     super().__init__(
+        #         message=(
+        #             f"Failed to create the listener '{listener_str}'. {error_message}"
+        #         ),
+        #     )
 
 
 # class ListenerNotRunningError(ListenersFrameworkError):

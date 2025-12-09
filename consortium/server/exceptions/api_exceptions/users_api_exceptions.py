@@ -1,10 +1,10 @@
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     NotFoundError,
-    UnprocessableEntityError,
+    # UnprocessableEntityError,
 )
 
 
 class UserNotFoundError(NotFoundError): ...
 
 
-class EmptyUserDisplayNameError(UnprocessableEntityError): ...
+# class EmptyUserDisplayNameError(UnprocessableEntityError): ...

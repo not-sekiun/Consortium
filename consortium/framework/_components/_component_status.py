@@ -66,17 +66,17 @@ class Status:
         error: BaseFrameworkException | None = None,
     ):
         if new_state not in self._VALID_STATE_TRANSITIONS[self.state]:
-            assert False, (
+            raise AssertionError(
                 f"Invalid state transition from current state '{self.state}' to new "
                 f"state '{new_state}'.",
             )
         if new_state in (State.ERRORED, State.FATAL) and error is None:
-            assert False, (
+            raise AssertionError(
                 f"When transitioning to the '{new_state}' state, an error must be "
                 f"provided.",
             )
         if new_state not in (State.ERRORED, State.FATAL) and error is not None:
-            assert False, (
+            raise AssertionError(
                 f"When transitioning to the '{new_state}' state, no error should be "
                 f"provided.",
             )

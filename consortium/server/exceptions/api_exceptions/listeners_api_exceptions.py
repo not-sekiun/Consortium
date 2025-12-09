@@ -24,12 +24,7 @@ Exception hierarchy for the REST API endpoint at /api/listeners.
    - ListenerStopError: Raised when an error occurs while stopping a listener.
 """
 
-from typing import Any
-
 from consortium.framework.listeners.base_listener_type import BaseListenerType
-from consortium.server.exceptions.api_exceptions.base_api_exception import (
-    BaseAPIException,
-)
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ConflictError,
     InternalServerErrorError,

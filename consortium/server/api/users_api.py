@@ -62,8 +62,8 @@ async def get_all_users(
     responses={
         200: {"model": UserModel},
         404: {
-            "model": api_excs.UserNotFoundError.from_service_exception(
-                service_exception=svc_excs.UserIDNotFoundError(user_id="user_id"),
+            "model": api_excs.UserNotFoundError.from_consortium_exception(
+                consortium_exception=svc_excs.UserIDNotFoundError(user_id="user_id"),
             ).to_pydantic_model(),
         },
         422: {
@@ -82,10 +82,10 @@ async def get_user_by_user_id(
 ) -> UserModel:
     try:
         user = users_service.get_user_by_user_id(user_id)
-    except svc_excs.UserNotFoundError as exc:
-        raise api_excs.UserNotFoundError.from_service_exception(
-            service_exception=exc,
-        )
+    except svc_excs.UserIDNotFoundError as exc:
+        raise api_excs.UserNotFoundError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return UserModel(**user.to_json())
 
@@ -96,17 +96,17 @@ async def get_user_by_user_id(
     responses={
         200: {"model": UserModel},
         404: {
-            "model": api_excs.UserNotFoundError.from_service_exception(
-                service_exception=svc_excs.UserIDNotFoundError(user_id="user_id"),
+            "model": api_excs.UserNotFoundError.from_consortium_exception(
+                consortium_exception=svc_excs.UserIDNotFoundError(user_id="user_id"),
             ).to_pydantic_model(),
         },
-        422: {
-            "model": api_excs.EmptyUserDisplayNameError.from_service_exception(
-                service_exception=svc_excs.EmptyUserDisplayNameError(
-                    user_str="user",
-                ),
-            ).to_pydantic_model(),
-        },
+        # 422: {
+        #     "model": api_excs.EmptyUserDisplayNameError.from_consortium_exception(
+        #         consortium_exception=svc_excs.EmptyUserDisplayNameError(
+        #             user_str="user",
+        #         ),
+        #     ).to_pydantic_model(),
+        # },
     },
 )
 async def update_user_display_name_by_user_id(
@@ -120,13 +120,13 @@ async def update_user_display_name_by_user_id(
         user = users_service.update_user_display_name_by_user_id(
             display_name=display_name,
         )
-    except svc_excs.UserNotFoundError as exc:
-        raise api_excs.UserNotFoundError.from_service_exception(
-            service_exception=exc,
-        )
-    except svc_excs.EmptyUserDisplayNameError as exc:
-        raise api_excs.EmptyUserDisplayNameError.from_service_exception(
-            service_exception=exc,
-        )
+    except svc_excs.UserIDNotFoundError as exc:
+        raise api_excs.UserNotFoundError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
+    # except svc_excs.EmptyUserDisplayNameError as exc:
+    #     raise api_excs.EmptyUserDisplayNameError.from_consortium_exception(
+    #         consortium_exception=exc,
+    #     )
 
     return UserModel(**user.to_json())

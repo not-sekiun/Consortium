@@ -125,7 +125,7 @@
 #         error: PluginRuntimeError | None = None,
 #     ) -> None:
 #         if plugin_state not in self._VALID_PLUGIN_STATE_TRANSITIONS[self.state]:
-#             assert False, (
+#             raise AssertionError(
 #                 f"Invalid state transition from current plugin state '{self.state}' to "
 #                 f"new plugin state '{plugin_state}'"
 #             )

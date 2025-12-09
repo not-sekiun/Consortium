@@ -64,8 +64,8 @@ router = APIRouter(
     responses={
         201: {"model": ListenerModel},
         404: {
-            "model": ListenerTemplateNotFoundAPIError.from_service_exception(
-                service_exception=ListenerTemplateNotFoundServiceError(
+            "model": ListenerTemplateNotFoundAPIError.from_consortium_exception(
+                consortium_exception=ListenerTemplateNotFoundServiceError(
                     listener_template_id="string",
                 ),
             ).to_pydantic_model(),
@@ -74,14 +74,14 @@ router = APIRouter(
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model()
-            | ListenerTemplateOptionValueAPIError.from_service_exception(
-                service_exception=ListenerTemplateOptionValueServiceError(
+            | ListenerTemplateOptionValueAPIError.from_consortium_exception(
+                consortium_exception=ListenerTemplateOptionValueServiceError(
                     message=_example_listener_template_option_value_framework_error.message,
                     detail=_example_listener_template_option_value_framework_error.detail,
                 ),
             ).to_pydantic_model()
-            | ListenerTemplateOptionNotFoundAPIError.from_service_exception(
-                service_exception=ListenerTemplateOptionNotFoundServiceError(
+            | ListenerTemplateOptionNotFoundAPIError.from_consortium_exception(
+                consortium_exception=ListenerTemplateOptionNotFoundServiceError(
                     message=_example_listener_template_option_not_found_framework_error.message,
                     detail=_example_listener_template_option_not_found_framework_error.detail,
                 ),
@@ -104,17 +104,17 @@ async def create_listener_through_listener_template_by_listener_template_id(
             parameters=options,
         )
     except ListenerTemplateNotFoundServiceError as exc:
-        raise ListenerTemplateNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise ListenerTemplateNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except ListenerTemplateOptionNotFoundServiceError as exc:
-        raise ListenerTemplateOptionNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise ListenerTemplateOptionNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except ListenerTemplateOptionValueServiceError as exc:
-        raise ListenerTemplateOptionValueAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise ListenerTemplateOptionValueAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     # except EmptyListenerNameServiceError as exc:
     #     raise EmptyListenerNameAPIError.from_service_exception(
     #         service_exception=exc,
@@ -149,8 +149,8 @@ def get_all_listener_templates_info(
             ).to_pydantic_model(),
         },
         404: {
-            "model": ListenerTemplateNotFoundAPIError.from_service_exception(
-                service_exception=ListenerTemplateNotFoundServiceError(
+            "model": ListenerTemplateNotFoundAPIError.from_consortium_exception(
+                consortium_exception=ListenerTemplateNotFoundServiceError(
                     listener_template_id="string",
                 ),
             ).to_pydantic_model(),
@@ -175,8 +175,8 @@ def get_listener_template_info_by_listener_templates_id(
             )
         )
     except ListenerTemplateNotFoundServiceError as exc:
-        raise ListenerTemplateNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise ListenerTemplateNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return ListenerTemplateModel(**listener_template.to_json())

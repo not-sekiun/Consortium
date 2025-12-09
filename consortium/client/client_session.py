@@ -149,7 +149,7 @@ class ClientSession:
                         agent=interpreter_return_status.data["agent"],
                     )
                 else:
-                    assert False, (
+                    raise AssertionError(
                         "Failed to switch to interpreter with interpreter type "
                         f"'{interpreter_type}'. Invalid interpreter type was returned "
                         "as part of the return status."

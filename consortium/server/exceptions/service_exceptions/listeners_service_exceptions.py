@@ -87,7 +87,8 @@ class ListenerAlreadyRunningError(ListenerStateError):
         self,
         message: str = (
             "Failed to perform the requested operation on the listener. The listener "
-            "is already running which conflicts with the operation that was requested."
+            "has already been started which conflicts with the operation that was "
+            "requested."
         ),
     ):
         super().__init__(message=message)

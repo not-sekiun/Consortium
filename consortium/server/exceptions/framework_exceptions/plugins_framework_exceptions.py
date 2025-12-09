@@ -21,7 +21,7 @@
 #             - [`InvalidPluginDependencyVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.InvalidPluginDependencyVersionSpecifierError]
 #         - [`PluginOperationError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginOperationError]
 #             - [`PluginNotRunningError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginNotRunningError]
-#             - [`PluginAlreadyStartedError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginAlreadyStartedError]
+#             - [`PluginAlreadyRunningError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginAlreadyRunningError]
 #             - [`PluginStartError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginStartError]
 #             - [`PluginRuntimeError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginRuntimeError]
 #             - [`PluginStopError`][consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions.PluginStopError]
@@ -223,8 +223,8 @@ class PluginNotRunningError(
         super().__init__(component_str=plugin_str)
 
 
-class PluginAlreadyStartedError(
-    comp_framework_excs.ComponentAlreadyStartedError,
+class PluginAlreadyRunningError(
+    comp_framework_excs.ComponentAlreadyRunningError,
     PluginOperationError,
 ):
     """
@@ -233,7 +233,7 @@ class PluginAlreadyStartedError(
     or running.
     """
 
-    code = "PLUGIN_ALREADY_STARTED_ERROR"
+    code = "PLUGIN_ALREADY_RUNNING_ERROR"
 
     def __init__(
         self,

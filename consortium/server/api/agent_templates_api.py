@@ -64,8 +64,8 @@ router = APIRouter(
     responses={
         201: {"model": AgentGeneratorModel},
         404: {
-            "model": AgentTemplateNotFoundAPIError.from_service_exception(
-                service_exception=AgentTemplateNotFoundServiceError(
+            "model": AgentTemplateNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentTemplateNotFoundServiceError(
                     agent_template_id="string",
                 ),
             ).to_pydantic_model(),
@@ -74,14 +74,14 @@ router = APIRouter(
             "model": UnprocessableEntityError(
                 detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
             ).to_pydantic_model()
-            | AgentTemplateOptionValueAPIError.from_service_exception(
-                service_exception=AgentTemplateOptionNotFoundServiceError(
+            | AgentTemplateOptionValueAPIError.from_consortium_exception(
+                consortium_exception=AgentTemplateOptionNotFoundServiceError(
                     message=_example_agent_template_option_value_framework_error.message,
                     detail=_example_agent_template_option_value_framework_error.detail,
                 ),
             ).to_pydantic_model()
-            | AgentTemplateOptionNotFoundAPIError.from_service_exception(
-                service_exception=AgentTemplateOptionNotFoundServiceError(
+            | AgentTemplateOptionNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentTemplateOptionNotFoundServiceError(
                     message=_example_agent_template_option_not_found_framework_error.message,
                     detail=_example_agent_template_option_not_found_framework_error.detail,
                 ),
@@ -104,17 +104,17 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
             parameters=options,
         )
     except AgentTemplateNotFoundServiceError as exc:
-        raise AgentTemplateNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentTemplateNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except AgentTemplateOptionNotFoundServiceError as exc:
-        raise AgentTemplateOptionNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentTemplateOptionNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
     except AgentTemplateOptionValueServiceError as exc:
-        raise AgentTemplateOptionValueAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentTemplateOptionValueAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return AgentGeneratorModel(**agent_generator.to_json())
 
@@ -144,8 +144,8 @@ def get_all_agent_templates(
     responses={
         200: {"model": AgentTemplateModel},
         404: {
-            "model": AgentTemplateNotFoundAPIError.from_service_exception(
-                service_exception=AgentTemplateNotFoundServiceError(
+            "model": AgentTemplateNotFoundAPIError.from_consortium_exception(
+                consortium_exception=AgentTemplateNotFoundServiceError(
                     agent_template_id="string",
                 ),
             ).to_pydantic_model(),
@@ -175,8 +175,8 @@ def get_agent_template_by_agent_template_id(
             )
         )
     except AgentTemplateNotFoundServiceError as exc:
-        raise AgentTemplateNotFoundAPIError.from_service_exception(
-            service_exception=exc,
-        )
+        raise AgentTemplateNotFoundAPIError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return AgentTemplateModel(**agent_template.to_json())

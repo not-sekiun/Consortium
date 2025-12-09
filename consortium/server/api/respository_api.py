@@ -10,8 +10,8 @@ import os
 import pathlib
 import shutil
 import tempfile
-from collections.abc import Generator
-from typing import Annotated, Callable, Literal, Type
+from collections.abc import Callable, Generator
+from typing import Annotated, Literal
 
 from fastapi import Depends, Form, UploadFile
 from fastapi.responses import FileResponse
@@ -71,9 +71,9 @@ def create_get_all_repository_resources_endpoint(
                     ),
                 )
             else:
-                assert (
-                    False
-                ), f"Unknown repository resource type: {type(repository_resource)}"
+                raise AssertionError(
+                    f"Unknown repository resource type: {type(repository_resource)}"
+                )
         return repository_models
 
     return get_all_repository_resources
@@ -82,7 +82,7 @@ def create_get_all_repository_resources_endpoint(
 def create_get_repository_resource_by_resource_id_endpoint(
     repository_service: RepositoryService,
     get_repository_resource_by_resource_id_permission: UserPermissions,
-    repository_resource_not_found_api_error: Type[NotFoundError],
+    repository_resource_not_found_api_error: type[NotFoundError],
 ) -> Callable:
     async def get_repository_resource_by_resource_id(
         resource_id: str,
@@ -100,9 +100,9 @@ def create_get_repository_resource_by_resource_id_endpoint(
                 )
             )
         except RepositoryResourceNotFoundError as exc:
-            raise repository_resource_not_found_api_error.from_service_exception(
-                service_exception=exc,
-            )
+            raise repository_resource_not_found_api_error.from_consortium_exception(
+                consortium_exception=exc,
+            ) from None
 
         if isinstance(repository_resource, RepositoryDirectory):
             return RepositoryDirectoryModel(
@@ -113,9 +113,9 @@ def create_get_repository_resource_by_resource_id_endpoint(
                 **repository_resource.to_json(),
             )
         else:
-            assert (
-                False
-            ), f"Unknown repository resource type: {type(repository_resource)}"
+            raise AssertionError(
+                f"Unknown repository resource type: {type(repository_resource)}"
+            )
 
     return get_repository_resource_by_resource_id
 
@@ -123,7 +123,7 @@ def create_get_repository_resource_by_resource_id_endpoint(
 def create_delete_repository_resource_by_resource_id_endpoint(
     repository_service: RepositoryService,
     delete_repository_resource_by_resource_id_permission: UserPermissions,
-    repository_resource_not_found_api_error: Type[NotFoundError],
+    repository_resource_not_found_api_error: type[NotFoundError],
 ) -> Callable:
     async def delete_repository_resource_by_resource_id(
         resource_id: str,
@@ -141,9 +141,9 @@ def create_delete_repository_resource_by_resource_id_endpoint(
                 resource_id=resource_id,
             )
         except RepositoryResourceNotFoundError as exc:
-            raise repository_resource_not_found_api_error.from_service_exception(
-                service_exception=exc,
-            )
+            raise repository_resource_not_found_api_error.from_consortium_exception(
+                consortium_exception=exc,
+            ) from None
 
         return SuccessResponseModel()
 
@@ -153,7 +153,7 @@ def create_delete_repository_resource_by_resource_id_endpoint(
 def create_download_repository_resource_by_resource_id_endpoint(
     repository_service: RepositoryService,
     download_repository_resource_by_resource_id_permission: UserPermissions,
-    repository_resource_not_found_api_error: Type[NotFoundError],
+    repository_resource_not_found_api_error: type[NotFoundError],
 ) -> Callable:
     async def download_repository_resource_by_resource_id(
         resource_id: str,
@@ -171,9 +171,9 @@ def create_download_repository_resource_by_resource_id_endpoint(
                 resource_id=resource_id,
             )
         except RepositoryResourceNotFoundError as exc:
-            raise repository_resource_not_found_api_error.from_service_exception(
-                service_exception=exc,
-            )
+            raise repository_resource_not_found_api_error.from_consortium_exception(
+                consortium_exception=exc,
+            ) from None
 
         if asset.is_directory:
             with tempfile.TemporaryDirectory() as temp_dir_path:
@@ -199,10 +199,10 @@ def create_download_repository_resource_by_resource_id_endpoint(
 def create_upload_repository_resource_endpoint(
     repository_service: RepositoryService,
     upload_repository_resource_permission: UserPermissions,
-    repository_directory_archive_file_format_not_specified_api_error: Type[
+    repository_directory_archive_file_format_not_specified_api_error: type[
         RepositoryDirectoryArchiveFileFormatNotSpecifiedError
     ],
-    invalid_repository_directory_archive_file_format_api_error: Type[
+    invalid_repository_directory_archive_file_format_api_error: type[
         InvalidRepositoryDirectoryArchiveFileFormatError
     ],
 ) -> Callable:
@@ -225,7 +225,7 @@ def create_upload_repository_resource_endpoint(
             ".tar.xz",
         ] = Form(default=None),
     ):
-        def file_chunk_generator(file: UploadFile) -> Generator[bytes, None, None]:
+        def file_chunk_generator(file: UploadFile) -> Generator[bytes]:
             while chunk := file.file.read(1024):
                 yield chunk
 

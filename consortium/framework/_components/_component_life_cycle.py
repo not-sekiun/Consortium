@@ -12,7 +12,7 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
     BaseFrameworkException,
 )
 from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
-    ComponentAlreadyStartedError,
+    ComponentAlreadyRunningError,
     ComponentNotRunningError,
     ComponentRuntimeError as ComponentRuntimeFrameworkError,
     ComponentStartError as ComponentStartFrameworkError,
@@ -76,7 +76,7 @@ class ComponentLifeCycle(abc.ABC):
             or self.status.state == State.FATAL
             and self._runtime_loop_task is not None
         ):
-            raise ComponentAlreadyStartedError
+            raise ComponentAlreadyRunningError
 
         self.stop_event.clear()
 

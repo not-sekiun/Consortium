@@ -355,7 +355,7 @@ class _WebsocketManager:
                 else:
                     # This should never happen because the JSON schema validation should
                     # catch this error at the top and send an error response back.
-                    assert False, (
+                    raise AssertionError(
                         "Invalid events websocket API message was received from "
                         "client. The client's action message was not recognized."
                     )
@@ -409,19 +409,19 @@ async def websocket_endpoint(
             "Failed to authorize the WebSocket connection request. The Authorization "
             "header was not provided.",
         )
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
     except jwt.exceptions.InvalidTokenError:
         websockets_server_logger.debug(
             "Failed to authorize the WebSocket connection request. The value provided "
             "for the Authorization header was not a validly formatted JSON Web Token.",
         )
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
     except UserAccessTokenNotFoundError:
         websockets_server_logger.debug(
             "Failed to authorize the WebSocket connection request. The access "
             "token provided in the JSON Web Token was not found.",
         )
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
 
     # TODO: Abstract the process of authorizing users, creating roles, and editing role
     #  permissions. For now we use this hack to check permissions specifically for this

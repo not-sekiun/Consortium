@@ -1,13 +1,14 @@
-from typing import Any, Generic, Type, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, create_model
 
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
+from consortium.server.exceptions.base_consortium_exception import (
+    BaseConsortiumError,
 )
-from consortium.server.exceptions.service_exceptions.base_service_exception import (
-    BaseServiceException,
-)
+
+# from consortium.server.exceptions.service_exceptions.base_service_exception import (
+#     BaseServiceException,
+# )
 
 T = TypeVar("T")
 
@@ -21,7 +22,7 @@ class BaseAPIException(Exception):
     # with the same name will cause the OpenAPI schema to attempt name mangling leading
     # to ugly schema names. Note that _pydantic_models is a list that is shared amongst
     # all instances of this class and its subclasses.
-    _pydantic_models = list()
+    _pydantic_models = []
 
     # We do not combine the non-null and null detail error models into a single model
     # because an error response will only ever return ONE of the two, not possibly
@@ -60,7 +61,7 @@ class BaseAPIException(Exception):
             },
         }
 
-    def to_pydantic_model(self) -> Type[BaseModel]:
+    def to_pydantic_model(self) -> type[BaseModel]:
         # Prevent duplication of pydantic models to keep the OpenAPI schema clean.
         for existing_pydantic_model in self._pydantic_models:
             # Check if the existing pydantic model is functionally the same as the
@@ -104,31 +105,32 @@ class BaseAPIException(Exception):
         return pydantic_model
 
     @classmethod
-    def from_service_exception(
+    def from_consortium_exception(
         cls,
-        service_exception: BaseServiceException,
-        detail: dict[str, Any] | None = None,
-    ) -> "BaseAPIException":
-        if detail is None:
-            detail = service_exception.detail
+        consortium_exception: BaseConsortiumError,
+        # detail: dict[str, Any] | None = None,
+    ) -> BaseAPIException:
+        # if detail is None:
+        #     detail = consortium_exception.detail
         api_exception = cls(
-            message=service_exception.message,
-            detail=detail,
+            message=consortium_exception.message,
+            detail=consortium_exception.detail,
+            # detail=detail,
         )
-        api_exception.code = service_exception.code
+        api_exception.code = consortium_exception.code
         return api_exception
 
-    # TODO: Might have to add `code` support here as well depending on how we want to
-    # map framework exceptions to API exceptions
-    @classmethod
-    def from_framework_exception(
-        cls,
-        framework_exception: BaseFrameworkException,
-        detail: dict[str, Any] | None = None,
-    ) -> "BaseAPIException":
-        if detail is None:
-            detail = framework_exception.detail
-        return cls(
-            message=framework_exception.message,
-            detail=detail,
-        )
+    # # TODO: Might have to add `code` support here as well depending on how we want to
+    # # map framework exceptions to API exceptions
+    # @classmethod
+    # def from_framework_exception(
+    #     cls,
+    #     framework_exception: BaseFrameworkException,
+    #     detail: dict[str, Any] | None = None,
+    # ) -> "BaseAPIException":
+    #     if detail is None:
+    #         detail = framework_exception.detail
+    #     return cls(
+    #         message=framework_exception.message,
+    #         detail=detail,
+    #     )

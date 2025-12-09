@@ -252,7 +252,7 @@ class InvalidOptionValueRangeError(OptionConfigurationError):
         ):
             erroneous_comparison_type = "greater than or equal to"
         else:
-            assert False, (
+            raise AssertionError(
                 "The provided values for the minimum range parameter name "
                 f"'{minimum_range_parameter_name}' and maximum range parameter name "
                 f"'{maximum_range_parameter_name}' are invalid."

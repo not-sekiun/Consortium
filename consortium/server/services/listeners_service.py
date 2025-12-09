@@ -9,28 +9,38 @@ from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.framework.options.exceptions import OptionValueValidationError
-from consortium.server.exceptions.framework_exceptions.listener_templates_framework_exceptions import (
-    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundFrameworkError,
-    ListenerTemplateOptionValueError as ListenerTemplateOptionValueFrameworkError,
+
+# mport (
+#     (ListenerTemplateOptionNotFoundError as listener_templates_framework_excs.ListenerTemplateOptionNotFoundError,
+#     ListenerTemplateOptionValueError as listener_templates_framework_excs.ListenerTemplateOptionValueError),
+# )
+from consortium.server.exceptions.framework_exceptions import (
+    listener_templates_framework_exceptions as listener_templates_framework_excs,
+    listeners_framework_exceptions as listeners_framework_excs,
 )
-from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (
-    ListenerAlreadyStartedError as ListenerAlreadyStartedFrameworkError,
-    ListenerNotRunningError as ListenerNotRunningFrameworkError,
-    ListenerStartError as ListenerStartFrameworkError,
-    ListenerStopError as ListenerStopFrameworkError,
+
+# import (
+#     ListenerAlreadyRunningError as framework_excs.ListenerAlreadyRunningError,
+#     svc_excs.ListenerNotRunningError as framework_excs.svc_excs.ListenerNotRunningError,
+#     ListenerStartError as framework_excs.ListenerStartError,
+#     ListenerStopError as framework_excs.ListenerStopError,
+# )
+from consortium.server.exceptions.service_exceptions import (
+    listeners_service_exceptions as listeners_service_excs,
 )
-from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
-    InvalidListenerParameterNameError,
-    InvalidListenerParameterValueError,
-    ListenerAlreadyExistsError,
-    ListenerAlreadyRunningError as ListenerAlreadyRunningServiceError,
-    ListenerNotFoundError,
-    ListenerNotRunningError as ListenerNotRunningServiceError,
-    ListenerStartError as ListenerStartServiceError,
-    ListenerStopError as ListenerStopServiceError,
-    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundServiceError,
-    ListenerTemplateOptionValueError as ListenerTemplateOptionValueServiceError,
-)
+
+# import (
+#     svc_excs.InvalidListenerParameterNameError,
+#     svc_excs.InvalidListenerParameterValueError,
+#     svc_excs.ListenerAlreadyExistsError,
+#     ListenerAlreadyRunningError as svc_excs.ListenerAlreadyRunningError,
+#     svc_excs.ListenerNotFoundError,
+#     svc_excs.ListenerNotRunningError as svc_excs.ListenerNotRunningError,
+#     ListenerStartError as svc_excs.ListenerStartError,
+#     ListenerStopError as svc_excs.ListenerStopError,
+#     ListenerTemplateOptionNotFoundError as svc_excs.ListenerTemplateOptionNotFoundError,
+#     ListenerTemplateOptionValueError as svc_excs.ListenerTemplateOptionValueError,
+# )
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.listener_templates_service import (
     ListenerTemplatesService,
@@ -63,7 +73,9 @@ class ListenersService:
         try:
             listener = self._listeners[listener_id]
         except KeyError:
-            raise ListenerNotFoundError(listener_id=listener_id) from None
+            raise listeners_service_excs.ListenerNotFoundError(
+                listener_id=listener_id
+            ) from None
 
         self._logger.debug("Retrieved listener: {!r}", listener)
         return listener
@@ -92,13 +104,17 @@ class ListenersService:
                 description=description,
                 parameters=parameters,
             )
-        except ListenerTemplateOptionNotFoundFrameworkError as exc:
-            raise ListenerTemplateOptionNotFoundServiceError(
+        except (
+            listener_templates_framework_excs.ListenerTemplateOptionNotFoundError
+        ) as exc:
+            raise listeners_service_excs.ListenerTemplateOptionNotFoundError(
                 message=exc.message,
                 detail=exc.detail,
             ) from None
-        except ListenerTemplateOptionValueFrameworkError as exc:
-            raise ListenerTemplateOptionValueServiceError(
+        except (
+            listener_templates_framework_excs.ListenerTemplateOptionValueError
+        ) as exc:
+            raise listeners_service_excs.ListenerTemplateOptionValueError(
                 message=exc.message,
                 detail=exc.detail,
             ) from None
@@ -116,7 +132,7 @@ class ListenersService:
 
     async def add_listener(self, listener: BaseListener) -> None:
         if str(listener.listener_id) in self._listeners:
-            raise ListenerAlreadyExistsError
+            raise listeners_service_excs.ListenerAlreadyExistsError
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_ADDED,
@@ -128,7 +144,7 @@ class ListenersService:
     async def remove_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == State.RUNNING:
-            raise ListenerAlreadyRunningServiceError
+            raise listeners_service_excs.ListenerAlreadyRunningError
 
         removed_listener = self._listeners.pop(listener_id)
         await self._events_service.trigger_event(
@@ -204,7 +220,7 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         if listener.status.state == State.RUNNING:
-            raise ListenerAlreadyRunningServiceError
+            raise listeners_service_excs.ListenerAlreadyRunningError
 
         for parameter_name, parameter_value in listener.parameters.items():
             if parameter_name not in parameters:
@@ -214,7 +230,7 @@ class ListenersService:
 
         for parameter_name, parameter_value in parameters.items():
             if parameter_name not in listener.creating_listener_template.options:
-                raise InvalidListenerParameterNameError(
+                raise listeners_service_excs.InvalidListenerParameterNameError(
                     listener_str=str(listener),
                     parameter_name=parameter_name,
                 )
@@ -223,7 +239,7 @@ class ListenersService:
                     parameter_name
                 ].validate_value(value=parameter_value)
             except OptionValueValidationError as exc:
-                raise InvalidListenerParameterValueError(
+                raise listeners_service_excs.InvalidListenerParameterValueError(
                     listener_str=str(listener),
                     parameter_name=parameter_name,
                     parameter_value=str(parameter_value),
@@ -266,13 +282,15 @@ class ListenersService:
 
         try:
             await listener.start()
-        except ListenerStartFrameworkError as exc:
-            raise ListenerStartServiceError(
+        except listeners_framework_excs.ListenerStartError as exc:
+            raise listeners_service_excs.ListenerStartError(
                 message=str(exc),
                 detail=exc.detail,
             ) from None
-        except ListenerAlreadyStartedFrameworkError as exc:
-            raise ListenerNotRunningServiceError(message=exc.message) from None
+        except listeners_framework_excs.ListenerAlreadyRunningError as exc:
+            raise listeners_service_excs.ListenerAlreadyRunningError(
+                message=exc.message
+            ) from None
 
         await self._events_service.trigger_event(
             event=Event(
@@ -286,13 +304,15 @@ class ListenersService:
 
         try:
             await listener.stop()
-        except ListenerStopFrameworkError as exc:
-            raise ListenerStopServiceError(
+        except listeners_framework_excs.ListenerStopError as exc:
+            raise listeners_service_excs.ListenerStopError(
                 message=str(exc),
                 detail=exc.detail,
             ) from None
-        except ListenerNotRunningFrameworkError as exc:
-            raise ListenerNotRunningServiceError(message=exc.message) from None
+        except listeners_framework_excs.svc_excs.ListenerNotRunningError as exc:
+            raise listeners_service_excs.ListenerNotRunningError(
+                message=exc.message
+            ) from None
 
         await self._events_service.trigger_event(
             event=Event(
@@ -305,8 +325,10 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         try:
             await listener.cancel()
-        except ListenerNotRunningFrameworkError as exc:
-            raise ListenerNotRunningServiceError(message=exc.message) from None
+        except listeners_framework_excs.svc_excs.ListenerNotRunningError as exc:
+            raise listeners_service_excs.ListenerNotRunningError(
+                message=exc.message
+            ) from None
 
         await self._events_service.trigger_event(
             event=Event(

@@ -116,7 +116,7 @@ class Client:
                     )
                     return_status = await DisconnectedInterpreter().run_interpreter()
             else:
-                assert False, (
+                raise AssertionError(
                     "Failed to handle return status from interpreter. The return "
                     f"status type '{return_status.type}' is not supported."
                 )

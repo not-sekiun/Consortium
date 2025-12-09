@@ -52,7 +52,7 @@ def _generate_abbreviated_flags_from_option_name_list(
     for name in conflicts:
         for index in range(1, len(name)):
             if name[: index + 1].lower() not in [v[1:] for v in flags.values()]:
-                flags[name] = f"-{name[:index+1].lower()}"
+                flags[name] = f"-{name[: index + 1].lower()}"
                 break
         else:
             flags[name] = f"-{name.lower()}"
@@ -64,7 +64,7 @@ def _generate_abbreviated_flags_from_option_name_list(
 # that are present.
 def construct_agent_capability_command(
     agent_capability_json_data: dict[str, Any],
-) -> "BaseCommand":
+) -> BaseCommand:
     class AgentCapabilityCommand(BaseCommand):
         name = agent_capability_json_data["name"]
         description = agent_capability_json_data["description"]
@@ -114,7 +114,7 @@ def construct_agent_capability_command(
             # agent capability. If there is, that one required option is registered to
             # the parser as a positional argument for convenience.
             number_of_required_options = 0
-            for name, option in agent_capability_json_data["arguments"].items():
+            for _, option in agent_capability_json_data["arguments"].items():
                 if option["required"]:
                     number_of_required_options += 1
 
@@ -130,7 +130,7 @@ def construct_agent_capability_command(
                 )
             else:
                 abbreviated_flags = _generate_abbreviated_flags_from_option_name_list(
-                    [name for name in agent_capability_json_data["arguments"].keys()],
+                    list(agent_capability_json_data["arguments"].keys()),
                 )
 
             for name, option in agent_capability_json_data["arguments"].items():
@@ -149,10 +149,10 @@ def construct_agent_capability_command(
                 ):
                     nargs = "*"
                 else:
-                    assert False, (
-                        f"Unknown option type {option["option_type"]} was present "
-                        f"for the option '{option["name"]}' in the list of options "
-                        f"for the agent capability '{agent_capability_json_data["name"]}'."
+                    raise AssertionError(
+                        f"Unknown option type {option['option_type']} was present "
+                        f"for the option '{option['name']}' in the list of options "
+                        f"for the agent capability '{agent_capability_json_data['name']}'."
                     )
 
                 # Determine the type of the argument based on the value type in the
@@ -175,10 +175,10 @@ def construct_agent_capability_command(
                 ):
                     value_type = None
                 else:
-                    assert False, (
-                        f"Unknown value type {option["value_type"]} was present "
-                        f"for the option '{option["name"]}' in the list of options "
-                        f"for the agent capability '{agent_capability_json_data["name"]}'."
+                    raise AssertionError(
+                        f"Unknown value type {option['value_type']} was present "
+                        f"for the option '{option['name']}' in the list of options "
+                        f"for the agent capability '{agent_capability_json_data['name']}'."
                     )
 
                 # For the special case of a single value option with a boolean value
@@ -290,7 +290,7 @@ def construct_agent_capability_command(
             except ValueError:
                 raise ValueError(
                     f"Failed to convert value '{value}' to type '{value_type}'",
-                )
+                ) from None
 
         @staticmethod
         def _resolve_value_type_from_overriding_factors(
@@ -346,7 +346,7 @@ def construct_agent_capability_command(
             ):
                 print_warning(
                     f"Value '{parameter_value}' of type '{value_type}' is not of the "
-                    f"expected type '{agent_template_option["value_type"]}' for option "
+                    f"expected type '{agent_template_option['value_type']}' for option "
                     f"'{parameter_name}'. However, the value was still set as the user "
                     f"supplied type '{value_type}'.",
                 )
@@ -410,7 +410,7 @@ def construct_agent_capability_command(
                 print_error(
                     f"Value '{parameter_value}' is not a valid choice for parameter "
                     f"'{parameter_name}'. Valid choices are: "
-                    f"{", ".join(agent_template_option["available_values"])}",
+                    f"{', '.join(agent_template_option['available_values'])}",
                 )
                 return
 
@@ -421,7 +421,7 @@ def construct_agent_capability_command(
                 print_error(
                     f"Value '{parameter_value}' is not a valid choice for parameter "
                     f"'{parameter_name}'. Valid choices are: "
-                    f"{", ".join(agent_template_option["available_values"])}",
+                    f"{', '.join(agent_template_option['available_values'])}",
                 )
                 return
             await (
@@ -469,7 +469,7 @@ def construct_agent_capability_command(
                 ):
                     print_warning(
                         f"Value '{parameter_value}' of type '{value_type}' is not of the "
-                        f"expected type '{agent_template_option["value_type"]}' for "
+                        f"expected type '{agent_template_option['value_type']}' for "
                         f"option '{parameter_name}'. However, the value was still set as "
                         f"the user supplied type '{value_type}'",
                     )
@@ -486,7 +486,7 @@ def construct_agent_capability_command(
             )
             print_success(
                 f"Set agent generator parameter '{parameter_name}' to "
-                f"{agent_template_option["value"]!r}",
+                f"{agent_template_option['value']!r}",
             )
 
         async def _handle_dictionary_value_parameter(
@@ -546,7 +546,7 @@ def construct_agent_capability_command(
                     print_warning(
                         f"Value '{value}' of type '{value_value_type}' for key '{key}' "
                         f"is not of the expected type "
-                        f"'{agent_template_option["value_type"]}' for option "
+                        f"'{agent_template_option['value_type']}' for option "
                         f"'{parameter_name}'. However, the value was still set as the user "
                         f"supplied type '{value_value_type}'",
                     )
@@ -624,7 +624,7 @@ def construct_agent_capability_command(
                     print_error(
                         f"Value '{parameter_value}' is not a valid choice for option "
                         f"'{parameter_name}'. Valid choices are: "
-                        f"{", ".join(agent_template_option["available_values"])}",
+                        f"{', '.join(agent_template_option['available_values'])}",
                     )
                     return
 
@@ -669,8 +669,8 @@ def construct_agent_capability_command(
                     )
                 )
                 print_info(
-                    f"Tasked agent '{command_context.environment["agent"]["name"]}' "
-                    f"({command_context.environment["agent"]["agent_id"]})",
+                    f"Tasked agent '{command_context.environment['agent']['name']}' "
+                    f"({command_context.environment['agent']['agent_id']})",
                 )
             except SystemExit:
                 pass

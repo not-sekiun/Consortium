@@ -4,19 +4,16 @@ import socket
 import struct
 from typing import Any
 
-# from consortium.components.listeners.consortium.reverse_tcp.listener_type import (
-#     LISTENER_TYPE,
-# )
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerStartError,
 )
-from consortium.framework.listeners.base_listener import BaseListener
+from consortium.framework.listeners import BaseListener
 
 
 class _AgentHandler:
     def __init__(
         self,
-        agents_manager: "AgentsManager",
+        agents_manager,
         reader: asyncio.StreamReader,
         writer: asyncio.StreamWriter,
     ):
@@ -45,7 +42,7 @@ class _AgentHandler:
     async def _send_message(self, message: dict[str, Any]) -> None:
         message_bytes = json.dumps(message).encode()
         if len(message_bytes) > 2**32:
-            assert False, (
+            raise AssertionError(
                 "The message to be sent is too large to be sent over the reverse TCP "
                 "transport.",
             )
@@ -82,8 +79,6 @@ class _AgentHandler:
 
 
 class Listener(BaseListener):
-    # listener_type = LISTENER_TYPE
-
     async def on_started(self) -> None:
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
@@ -92,12 +87,12 @@ class Listener(BaseListener):
             test_socket = socket.socket()
             test_socket.bind((local_host, local_port))
             test_socket.close()
-        except socket.error as exc:
+        except OSError as exc:
             raise ListenerStartError(
                 f"An error occurred while attempting to start the listener. Listener "
                 f"was unable to bind to the provided host and port due to the "
                 f"following socket error: {exc}",
-            )
+            ) from None
 
     async def on_running(self) -> None:
         local_host = self.parameters["local_host"]

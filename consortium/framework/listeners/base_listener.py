@@ -17,13 +17,13 @@ from consortium.framework.exceptions.listeners_framework_exceptions import (
 )
 from consortium.framework.listeners._agents_manager import AgentsManager
 from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
-    ComponentAlreadyStartedError,
+    ComponentAlreadyRunningError,
     ComponentNotRunningError,
     ComponentStartError,
     ComponentStopError,
 )
 from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (  # ListenerRuntimeError as ListenerRuntimeFrameworkError,
-    ListenerAlreadyStartedError,
+    ListenerAlreadyRunningError,
     ListenerCreationParameterTypeError,
     ListenerNotRunningError,
     ListenerStartError,
@@ -188,16 +188,16 @@ class BaseListener(ComponentLifeCycle):  # ABC):
     async def start(self) -> None:
         try:
             await super().start()
-        except ComponentAlreadyStartedError:
-            raise ListenerAlreadyStartedError(
+        except ComponentAlreadyRunningError:
+            raise ListenerAlreadyRunningError(
                 listener_str=str(self),
-            )
+            ) from None
         except ComponentStartError as exc:
             raise ListenerStartError(
                 listener_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
-            )
+            ) from None
 
     async def stop(self) -> None:
         try:
@@ -205,13 +205,13 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         except ComponentNotRunningError:
             raise ListenerNotRunningError(
                 listener_str=str(self),
-            )
+            ) from None
         except ComponentStopError as exc:
             raise ListenerStopError(
                 listener_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
-            )
+            ) from None
 
     async def cancel(self) -> None:
         try:
@@ -219,7 +219,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         except ComponentNotRunningError:
             raise ListenerNotRunningError(
                 listener_str=str(self),
-            )
+            ) from None
 
     def to_json(self) -> dict[str, Any]:
         return {
