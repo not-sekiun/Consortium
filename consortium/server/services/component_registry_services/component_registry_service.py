@@ -1,7 +1,6 @@
 import pathlib
 import uuid
 from abc import ABC, abstractmethod
-from typing import Generic
 
 from consortium.server.exceptions.service_exceptions.component_service_exceptions import (
     ComponentAlreadyRegisteredError,
@@ -11,13 +10,9 @@ from consortium.server.exceptions.service_exceptions.component_service_exception
 from consortium.server.services.component_loader_services.component_loader_service import (
     ComponentLoaderService,
 )
-from consortium.server.services.component_registry_services.component_registry_service_types import (
-    Component,
-    ComponentLoadingError,
-)
 
 
-class ComponentRegistryService(Generic[Component, ComponentLoadingError], ABC):
+class ComponentRegistryService[Component, ComponentLoadingError](ABC):
     _component_loader_service: ComponentLoaderService[Component]
 
     def __init__(
@@ -42,11 +37,19 @@ class ComponentRegistryService(Generic[Component, ComponentLoadingError], ABC):
     def _get_component_project_folder(self, component: Component) -> pathlib.Path: ...
 
     # Runs after a component is registered.
-    async def _component_load_procedure(self, component: Component) -> Component:
+    async def _component_load_procedure(
+        self,
+        component: Component,
+        context: dict,
+    ) -> Component:
         return component
 
     # Runs before a component is deregistered.
-    async def _component_unload_procedure(self, component: Component) -> Component:
+    async def _component_unload_procedure(
+        self,
+        component: Component,
+        context: dict,
+    ) -> Component:
         return component
 
     def get_component_from_component_project_folder(
@@ -114,13 +117,22 @@ class ComponentRegistryService(Generic[Component, ComponentLoadingError], ABC):
         self.register_component(component=component)
         return component
 
-    async def load_component(self, component: Component) -> Component:
+    async def load_component(
+        self,
+        component: Component,
+        context: dict | None = None,
+    ) -> Component:
+        if context is None:
+            context = {}
         if str(self._get_component_id(component=component)) in self._components:
             raise ComponentAlreadyRegisteredError(
                 component_str=str(component),
                 component_id=str(self._get_component_id(component=component)),
             )
-        component = await self._component_load_procedure(component=component)
+        component = await self._component_load_procedure(
+            component=component,
+            context=context,
+        )
         self._components[str(self._get_component_id(component=component))] = component
         return component
 
@@ -128,33 +140,52 @@ class ComponentRegistryService(Generic[Component, ComponentLoadingError], ABC):
         self,
         component_project_folder: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
+        context: dict | None = None,
     ) -> Component | None:
+        if context is None:
+            context = {}
         component = self.get_component_from_component_project_folder(
             component_project_folder=component_project_folder,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
         if component is None:
             return None
-        return await self.load_component(component=component)
+        return await self.load_component(component=component, context=context)
 
-    async def unload_component_by_component_id(self, component_id: str) -> None:
+    async def unload_component_by_component_id(
+        self,
+        component_id: str,
+        context: dict | None = None,
+    ) -> None:
+        if context is None:
+            context = {}
         component = self.get_component_by_component_id(component_id=component_id)
-        await self._component_unload_procedure(component=component)
+        await self._component_unload_procedure(component=component, context=context)
         del self._components[component_id]
 
     async def reload_component_by_component_id(
         self,
         component_id: str,
         ignore_enabled_component_flag: bool = False,
+        load_context: dict | None = None,
+        unload_context: dict | None = None,
     ) -> Component | None:
+        if load_context is None:
+            load_context = {}
+        if unload_context is None:
+            unload_context = {}
         component = self.get_component_by_component_id(component_id=component_id)
         component_project_folder = self._get_component_project_folder(
             component=component,
         )
-        await self.unload_component_by_component_id(component_id=component_id)
+        await self.unload_component_by_component_id(
+            component_id=component_id,
+            context=unload_context,
+        )
         return await self.load_component_from_component_project_folder(
             component_project_folder=component_project_folder,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
+            context=load_context,
         )
 
     def get_component_by_component_id(self, component_id: str) -> Component:

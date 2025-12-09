@@ -24,10 +24,10 @@ class CompatibleListenerTypeModel(BaseModel):
 class AgentCapabilityModel(BaseModel):
     name: str
     description: str
-    arguments: dict[str, Any]
+    options: dict[str, Any]
+    authors: list[str]
     requires_admin: bool
     supported_oses: list[str]
-    authors: list[str]
 
 
 class AgentTypeModel(BaseModel):

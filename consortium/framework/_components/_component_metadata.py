@@ -14,7 +14,7 @@ from consortium.server.exceptions.framework_exceptions.components_framework_exce
 )
 
 
-class ComponentModel(BaseModel):
+class ComponentMetadataModel(BaseModel):
     label: str
     name: str | None = None
     description: str = ""
@@ -25,7 +25,7 @@ class ComponentModel(BaseModel):
 
 
 class ComponentMetadata:
-    _METADATA_MODEL = ComponentModel
+    _METADATA_MODEL = ComponentMetadataModel
 
     label: str
     name: str | None = None
@@ -79,7 +79,7 @@ class ComponentMetadata:
                 component_str=component_str,
                 parameter_name=attr,
                 parameter_type=str(expected_attrs_and_types_map[attr]),
-            )
+            ) from None
 
         # Perform semantic checking of specific attributes and reassign as needed
         if not cls.label:
@@ -93,7 +93,7 @@ class ComponentMetadata:
             raise InvalidComponentVersionError(
                 component_str=cls.label,
                 version=cls.version,
-            )
+            ) from None
         try:
             cls.compatible_framework_version = (
                 specifiers.SpecifierSet(cls.compatible_framework_version)
@@ -104,7 +104,7 @@ class ComponentMetadata:
             raise InvalidFrameworkVersionSpecifierError(
                 framework_version_specifier_str=cls.compatible_framework_version,
                 component_str=cls.label,
-            )
+            ) from None
         new_dependencies = set()
         for entry in cls.component_dependencies:
             try:
@@ -113,7 +113,7 @@ class ComponentMetadata:
                 raise InvalidComponentDependencyVersionSpecifierError(
                     component_str=cls.label,
                     invalid_dependency_entry=entry,
-                )
+                ) from None
             new_dependencies.add(dependency)
 
         cls.component_dependencies = new_dependencies

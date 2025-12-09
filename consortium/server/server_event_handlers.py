@@ -3,9 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 import consortium.server.server_singletons as server_singletons
+
+# from consortium.framework.plugins._plugin_status import PluginState
+from consortium.framework._components._component_status import State
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.framework.plugins._plugin_status import PluginState
 
 
 @asynccontextmanager
@@ -31,7 +33,7 @@ async def lifespan(_: FastAPI) -> None:
         event=Event(event_type=EventType.STOP_SERVER),
     )
     for plugin in server_singletons.plugins_service.get_all_plugins():
-        if plugin.status.state == PluginState.RUNNING:
+        if plugin.status.state == State.RUNNING:
             await server_singletons.plugins_service.stop_plugin_by_plugin_id(
                 plugin_id=str(plugin.plugin_id),
                 blocking=True,

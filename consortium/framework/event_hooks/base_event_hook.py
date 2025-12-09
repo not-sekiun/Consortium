@@ -8,7 +8,7 @@ from loguru import logger
 
 import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
 import consortium.server.server_singletons as server_singletons
-from consortium.framework._components import ComponentMetadata, ComponentModel
+from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.utils.exception_utils import remap_exception
@@ -22,7 +22,7 @@ from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exc
 )
 
 
-class _EventHookModel(ComponentModel):
+class _EventHookModel(ComponentMetadataModel):
     event_types: set[EventType] | None = None
 
 

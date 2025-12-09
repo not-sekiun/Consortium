@@ -16,7 +16,6 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
     EventHookProjectManifestFileNotFoundError,
     EventHookProjectSymbolNotFoundError,
     EventHookSetupError,
-    EventHooksServiceError,
     EventHookTeardownError,
     IncompatibleComponentDependencyVersionError,
     IncompatibleEventHookFrameworkVersionError,
@@ -90,6 +89,7 @@ class EventHookRegistryService(
     async def _component_load_procedure(
         self,
         component: BaseEventHook,
+        context: dict,
     ) -> BaseEventHook:
         for event_type in component.event_types:
             self._events_service.register_event_handler_to_event_type(
@@ -108,6 +108,7 @@ class EventHookRegistryService(
     async def _component_unload_procedure(
         self,
         component: BaseEventHook,
+        context: dict,
     ) -> BaseEventHook:
         try:
             await component.on_event_hook_teardown()
@@ -115,7 +116,7 @@ class EventHookRegistryService(
             raise EventHookTeardownError(
                 event_hook_str=str(component),
                 error_message=str(exc),
-            )
+            ) from None
         for event_type in component.event_types:
             self._events_service.deregister_event_handler_from_event_type(
                 event_type=event_type,

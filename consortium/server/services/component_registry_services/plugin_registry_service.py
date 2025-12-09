@@ -3,12 +3,8 @@ import pathlib
 import uuid
 
 import consortium.server.exceptions.service_exceptions.component_service_exceptions as comp_ldr_svc_excs
-from consortium.framework._components._component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
-)
-from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (  # PluginLabelNotFoundError,
+from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
     ComponentDependencyNotFoundError,
     ComponentDependencyNotRunningError,
     DuplicatePluginLabelError,
@@ -73,52 +69,56 @@ class PluginRegistryService(
     def _get_component_project_folder(self, component: BasePlugin) -> pathlib.Path:
         return component.plugin_project_folder
 
-    async def _component_load_procedure(self, component: BasePlugin) -> BasePlugin:
+    async def _component_load_procedure(
+        self,
+        component: BasePlugin,
+        context: dict,
+    ) -> BasePlugin:
+        timeout = context["timeout"]
         if component.autostart:
-            try:
-                await component.start()
-            except BaseFrameworkException:
-                raise
+            await asyncio.wait_for(component.start(), timeout=timeout)
         return component
 
-    # async def _component_unload_procedure(self, component: BasePlugin) -> BasePlugin:
-    #     if component.status.state == State.RUNNING:
+    # async def _component_unload_procedure(self, component: BasePlugin, context: dict) -> BasePlugin:
+    #     if component.status.state != State.RUNNING:
+    #         return component
+    #
+    #     timeout = context["timeout"]
+    #     force_unload = context["force_unload"]
+    #     logger = context["logger"]
+    #
+    #     async def _wait_for_plugin_running_state_change() -> None:
+    #         while component.status.state == State.RUNNING:
+    #             await asyncio.sleep(1)
+    #
+    #     async def _stop_plugin() -> None:
     #         try:
     #             await component.stop()
-    #         except BaseFrameworkException:
-    #             if not force_unload:
-    #                 raise
-    #         except Exception as exc:
-    #             if not force_unload:
-    #                 raise InternalPluginStopError(
-    #                     plugin_str=str(component),
-    #                     internal_error_message=str(exc),
-    #                 ) from exc
+    #             # Ensure that the stop plugin event has been set before proceeding to
+    #             # wait on the timeout.
+    #             await component.stop_event.wait()
+    #             await _wait_for_plugin_running_state_change()
+    #         except asyncio.CancelledError:
+    #             pass
     #
-    #         # Ensure that the stop plugin event has been set before proceeding to wait
-    #         # on the timeout.
-    #         await component.stop_event.wait()
-    #         if timeout is None:
-    #             while component.status.state == State.RUNNING:
-    #                 await asyncio.sleep(1)
-    #         else:
-    #             # Every second check if the plugin has stopped and break early if it
-    #             # has.
-    #             for _ in range(timeout):
-    #                 if component.status.state != State.RUNNING:
-    #                     break
-    #                 await asyncio.sleep(1)
-    #
-    #         # Check the state after the timeout and determine if we forcefully need to
-    #         # cancel the plugin.
-    #         if component.status.state != State.STOPPED:
-    #             if not force_unload:
-    #                 raise PluginStopTimeoutError(plugin_str=str(component))
-    #             else:
-    #                 self.logger.warning(
-    #                     f"Forcing plugin cancellation for plugin {component} because its "
-    #                     f"timeout exceeded the specified duration: {timeout} second(s).",
-    #                 )
-    #                 await component.cancel()
+    #     try:
+    #         await asyncio.wait_for(_stop_plugin(), timeout=timeout)
+    #     except asyncio.TimeoutError:
+    #         if not force_unload:
+    #             raise PluginStopTimeoutError(plugin_str=str(component))
+    #         logger.warning(
+    #             f"Forcing plugin cancellation for plugin {component} because "
+    #             f"its timeout exceeded the specified duration: {timeout} "
+    #             f"second(s).",
+    #         )
+    #         await component.cancel()
+    #     except Exception as exc:
+    #         if not force_unload:
+    #             raise exc
+    #         logger.error(
+    #             f"An error occurred while stopping plugin {component}. "
+    #             f"Forcing plugin cancellation. Error: {exc}",
+    #         )
+    #         await component.cancel()
     #
     #     return component

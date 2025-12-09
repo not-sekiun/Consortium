@@ -4,7 +4,7 @@ from consortium.framework._components._component_life_cycle import (
 )
 from consortium.framework._components._component_metadata import (
     ComponentMetadata,
-    ComponentModel,
+    ComponentMetadataModel,
 )
 from consortium.framework._components._component_status import State
 
@@ -13,5 +13,5 @@ __all__ = [
     "ComponentLifeCycleFatalContext",
     "State",
     "ComponentMetadata",
-    "ComponentModel",
+    "ComponentMetadataModel",
 ]

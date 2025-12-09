@@ -10,3 +10,4 @@ __pycache__/
 .idea/
 .pytest_cache/
 .ruff_cache/
+.venv/

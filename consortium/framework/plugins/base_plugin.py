@@ -13,7 +13,7 @@ from consortium.framework._components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
     ComponentMetadata,
-    ComponentModel,
+    ComponentMetadataModel,
 )
 from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
@@ -34,13 +34,13 @@ from consortium.server.exceptions.framework_exceptions.plugins_framework_excepti
     MissingPluginConfigurationParameterError,
     PluginAlreadyStartedError,
     PluginNotRunningError,
-    PluginStartError as PluginStartFrameworkError,
-    PluginStopError as PluginStopFrameworkError,
+    PluginStartError,
+    PluginStopError,
 )
 from consortium.server.server_logging import LoggerType
 
 
-class _PluginModel(ComponentModel):
+class _PluginModel(ComponentMetadataModel):
     autostart: bool = True
 
 
@@ -148,13 +148,13 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         except ComponentAlreadyStartedError:
             raise PluginAlreadyStartedError(
                 plugin_str=str(self),
-            )
+            ) from None
         except ComponentStartError as exc:
-            raise PluginStartFrameworkError(
+            raise PluginStartError(
                 plugin_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
-            )
+            ) from None
 
     async def stop(self) -> None:
         try:
@@ -162,13 +162,13 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         except ComponentNotRunningError:
             raise PluginNotRunningError(
                 plugin_str=str(self),
-            )
+            ) from None
         except ComponentStopError as exc:
-            raise PluginStopFrameworkError(
+            raise PluginStopError(
                 plugin_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
-            )
+            ) from None
 
     async def cancel(self) -> None:
         try:
@@ -176,7 +176,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         except ComponentNotRunningError:
             raise PluginNotRunningError(
                 plugin_str=str(self),
-            )
+            ) from None
 
     def to_json(self) -> dict[str, Any]:
         return {

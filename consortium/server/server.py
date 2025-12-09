@@ -57,7 +57,7 @@ class Server:
 
         self.status = ServerStatus.STOPPED
 
-        self._server_logger = logger.bind(logger_name="Server")
+        self._logger = logger.bind(logger_name="Server")
         self._app = FastAPI(
             swagger_ui_parameters={"defaultModelsExpandDepth": -1},
             lifespan=lifespan,
@@ -132,13 +132,13 @@ class Server:
     def _shutdown_server(self) -> None:
         # TODO: run all the necessary shutdown procedures, this is where we gracefully
         #  shutdown listeners, notify clients and agents of the shutdown, etc.
-        self._server_logger.info("Shutting down server...")
+        self._logger.info("Shutting down server...")
         self.status = ServerStatus.SHUTTING_DOWN
 
     def start_server(self) -> None:
         # Manually start the server with the uvicorn backend and disable the uvicorn
         # logger
-        self._server_logger.info(
+        self._logger.info(
             f'Starting server (v{SERVER_RELEASE.version} "{SERVER_RELEASE.codename}") '
             f"at {self.server_config.local_host}:{self.server_config.local_port}...",
         )
@@ -153,8 +153,8 @@ class Server:
                 (self.server_config.local_host, self.server_config.local_port),
             )
             test_sock.close()
-        except socket.error as exc:
-            self._server_logger.error(
+        except OSError as exc:
+            self._logger.error(
                 f"Network error occurred while attempting to bind server to target "
                 f"socket address: {exc}",
             )
@@ -186,9 +186,11 @@ class Server:
             return
 
         # Uvicorn blocks the main thread until a keyboard interrupt is sent to it
-        # signifying a shutdown. Execution is continued here where we can perform any
-        # graceful shutdowns such as notifying clients and agents of the shutdown as
-        # well as killing any running listeners.
+        # signifying a shutdown. Execution is continued here where we can perform
+        # any graceful shutdowns such as notifying clients and agents of the
+        # shutdown as well as killing any running listeners.
         self._shutdown_server()
-        self._server_logger.info("Server shutdown complete. See you again ^_^")
+        # print(1)
+        self._logger.info("Server shutdown complete. See you again ^_^")
+        # print(2)
         self.status = ServerStatus.STOPPED

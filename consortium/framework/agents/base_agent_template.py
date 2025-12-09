@@ -2,13 +2,14 @@ import pathlib
 import sys
 import uuid
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from inspect import signature
-from typing import Callable, get_type_hints
+from typing import get_type_hints
 
 from pydantic import ConfigDict
 
 import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
-from consortium.framework._components import ComponentMetadata, ComponentModel
+from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.framework_types import (
@@ -47,7 +48,7 @@ Options = (
 )
 
 
-class _AgentTemplateModel(ComponentModel):
+class _AgentTemplateModel(ComponentMetadataModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     agent_generator: type[BaseAgentGenerator]
@@ -195,7 +196,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
                     option_value=value,
                     agent_template_str=str(self),
                     error_message=str(exc),
-                )
+                ) from None
 
         # Check for missing required options.
         for option_name, option in self.options.items():

@@ -4,7 +4,8 @@ import pathlib
 
 from loguru import logger
 
-from consortium.framework.plugins._plugin_status import PluginState
+# from consortium.framework.plugins._plugin_status import PluginState
+from consortium.framework._components._component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
@@ -238,6 +239,7 @@ class PluginsService:
         self,
         plugin_project_folder: pathlib.Path,
         ignore_enabled_plugin_flag: bool = False,
+        timeout: int | None = 5,
     ) -> BasePlugin | None:
         """
         Loads a plugin from its project folder. The plugin is registered to the plugin
@@ -252,6 +254,7 @@ class PluginsService:
                 project files are stored.
             ignore_enabled_plugin_flag (bool): Optional flag indicating whether the
                 'enabled' status of the plugin should be ignored. Defaults to False.
+            timeout (int): The maximum time in seconds to wait for the plugin to start.
 
         Returns:
             BasePlugin | None: Returns the loaded plugin instance if successful, or
@@ -262,6 +265,7 @@ class PluginsService:
         plugin = await self._plugin_registry_service.load_component_from_component_project_folder(
             component_project_folder=plugin_project_folder,
             ignore_enabled_component_flag=ignore_enabled_plugin_flag,
+            context={"timeout": timeout},
         )
         self.logger.success("Loaded plugin: {}", plugin)
         self.logger.debug("Loaded plugin: {!r}", plugin)
@@ -270,8 +274,8 @@ class PluginsService:
     async def unload_plugin_by_plugin_id(
         self,
         plugin_id: str,
+        timeout: int | None = 5,
         force_unload: bool = False,
-        timeout: None | int = 5,
     ) -> None:
         """
         Unloads a plugin identified by its `plugin_id`, stopping its execution if
@@ -297,16 +301,23 @@ class PluginsService:
             PluginStopTimeoutError: If the plugin fails to stop within the specified
                 timeout, and force_unload is set to False.
         """
+        # plugin = await self._plugin_registry_service.unload_component_by_component_id(
+        #     component_id=plugin_id,
+        #     context={"timeout": timeout, "force_unload": force_unload, "logger": self.logger},
+        # )
+        # self.logger.info("Unloaded plugin: {}", plugin)
+        # self.logger.debug("Unloaded plugin: {!r}", plugin)
+
         # This call will implicitly do a check to see if the plugin id is valid or not
         # so we do not need to check it again.
         plugin = self.get_plugin_by_plugin_id(plugin_id)
 
-        if plugin.status.state == PluginState.RUNNING:
+        if plugin.status.state == State.RUNNING:
             try:
                 await plugin.stop()
-            except BaseFrameworkException:
+            except BaseFrameworkException as exc:
                 if not force_unload:
-                    raise
+                    raise exc
             except Exception as exc:
                 if not force_unload:
                     raise exc
@@ -315,19 +326,19 @@ class PluginsService:
             # on the timeout.
             await plugin.stop_event.wait()
             if timeout is None:
-                while plugin.status.state == PluginState.RUNNING:
+                while plugin.status.state == State.RUNNING:
                     await asyncio.sleep(1)
             else:
                 # Every second check if the plugin has stopped and break early if it
                 # has.
                 for _ in range(timeout):
-                    if plugin.status.state != PluginState.RUNNING:
+                    if plugin.status.state != State.RUNNING:
                         break
                     await asyncio.sleep(1)
 
             # Check the state after the timeout and determine if we forcefully need to
             # cancel the plugin.
-            if plugin.status.state != PluginState.STOPPED:
+            if plugin.status.state != State.STOPPED:
                 if not force_unload:
                     raise PluginStopTimeoutError(plugin_str=str(plugin))
                 else:
@@ -345,6 +356,9 @@ class PluginsService:
         self,
         plugin_id: str,
         ignore_enabled_plugin_flag: bool = False,
+        load_timeout: int | None = 5,
+        unload_timeout: int | None = 5,
+        force_unload: bool = False,
     ) -> BasePlugin | None:
         """
         Reloads a plugin by its plugin ID. This operation consists of unloading the
@@ -354,6 +368,11 @@ class PluginsService:
             plugin_id: The unique identifier of the plugin to be reloaded.
             ignore_enabled_plugin_flag: A flag indicating whether to ignore the
                 enabled plugin status during the reloading process. Defaults to False.
+            load_timeout: The maximum duration in seconds to wait for the plugin to
+            unload_timeout: The maximum duration in seconds to wait for the plugin to
+                unload. If set to None, it will wait indefinitely.
+            force_unload: Whether to forcibly unload the plugin if it fails to stop
+                within the timeout period.
 
         Returns:
             BasePlugin: The reloaded plugin instance if successful, or None if the
@@ -365,12 +384,33 @@ class PluginsService:
             and [load_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.load_plugin_from_plugin_project_folder]
             for possible exceptions raised during the unload and load processes.
         """
+        # plugin = await self._plugin_registry_service.reload_component_by_component_id(
+        #     component_id=plugin_id,
+        #     ignore_enabled_component_flag=ignore_enabled_plugin_flag,
+        #     load_context={
+        #         "timeout": load_timeout,
+        #     },
+        #     unload_context={
+        #         "timeout": unload_timeout,
+        #         "force_unload": force_unload,
+        #         "logger": self.logger,
+        #     },
+        # )
+        # self.logger.info("Reloaded plugin: {}", plugin)
+        # self.logger.debug("Reloaded plugin: {!r}", plugin)
+        # return plugin
+
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
         plugin_project_folder = plugin.plugin_project_folder
-        await self.unload_plugin_by_plugin_id(plugin_id=plugin_id)
+        await self.unload_plugin_by_plugin_id(
+            plugin_id=plugin_id,
+            timeout=unload_timeout,
+            force_unload=force_unload,
+        )
         plugin = await self.load_plugin_from_plugin_project_folder(
             plugin_project_folder=plugin_project_folder,
             ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
+            timeout=load_timeout,
         )
         self.logger.info("Reloaded plugin: {}", plugin)
         self.logger.debug("Reloaded plugin: {!r}", plugin)
@@ -380,7 +420,7 @@ class PluginsService:
         self,
         ignore_enabled_plugin_flag: bool = False,
     ) -> None:
-        self.logger.info(f"Loading framework plugins...")
+        self.logger.info("Loading framework plugins...")
         retrieved, skipped, errored = (
             self.get_plugins_from_plugin_project_folder_directories(
                 directory=CONSORTIUM_PLUGINS_DIRECTORY_PATH,
@@ -467,7 +507,7 @@ class PluginsService:
         force_unload: bool = False,
         timeout: None | int = 5,
     ) -> None:
-        self.logger.info(f"Unloading framework plugins...")
+        self.logger.info("Unloading framework plugins...")
 
         number_of_unloaded_plugins = 0
         unload_plugin_tasks = []
@@ -505,7 +545,7 @@ class PluginsService:
         timeout: None | int = 5,
         ignore_enabled_plugin_flag: bool = False,
     ) -> None:
-        self.logger.info(f"Reloading framework plugins...")
+        self.logger.info("Reloading framework plugins...")
 
         unload_plugin_tasks = []
         load_plugin_tasks = []
@@ -561,7 +601,7 @@ class PluginsService:
             if isinstance(result, PluginLoadingError):
                 self.logger.error(result)
 
-        self.logger.info(f"Reloaded framework plugins.")
+        self.logger.info("Reloaded framework plugins.")
 
     async def start_plugin_by_plugin_id(
         self,
@@ -604,7 +644,7 @@ class PluginsService:
 
         if not blocking:
             return
-        while plugin.status.state in (PluginState.INITIALIZED, PluginState.STARTED):
+        while plugin.status.state in (State.INITIALIZED, State.STARTED):
             await asyncio.sleep(0.1)
 
     async def stop_plugin_by_plugin_id(
@@ -635,7 +675,7 @@ class PluginsService:
 
         if not blocking:
             return
-        while plugin.status.state == PluginState.RUNNING:
+        while plugin.status.state == State.RUNNING:
             await asyncio.sleep(0.1)
 
     async def restart_plugin_by_plugin_id(
@@ -661,15 +701,15 @@ class PluginsService:
             for possible exceptions raised during stopping and starting the plugin.
         """
 
-        async def _restart_plugin_task():
+        async def _restart_plugin():
             # Block and wait for the plugin to stop before immediately starting again.
             await self.stop_plugin_by_plugin_id(plugin_id=plugin_id, blocking=True)
             await self.start_plugin_by_plugin_id(plugin_id=plugin_id, blocking=True)
 
         if blocking:
-            await _restart_plugin_task()
+            await _restart_plugin()
         else:
-            task = asyncio.create_task(_restart_plugin_task())
+            task = asyncio.create_task(_restart_plugin())
             self._restart_plugin_tasks.add(task)
             task.add_done_callback(
                 lambda finished_task: self._restart_plugin_tasks.remove(finished_task),

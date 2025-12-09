@@ -1,3 +1,18 @@
+import asyncio
+
+
+async def wait_me():
+    raise ZeroDivisionError
+    await asyncio.sleep(1)
+
+
+async def waiter():
+    await asyncio.wait_for(wait_me(), timeout=2)
+
+
+asyncio.run(waiter())
+
+
 # from pydantic import BaseModel, ValidationError
 # from typing import get_type_hints
 #
