@@ -114,15 +114,6 @@ def get_agent_generator_by_agent_generator_id(
     "/{agent_generator_id}/start",
     responses={
         200: {"model": SuccessResponseModel},
-        400: {
-            "model": AgentGeneratorStartAPIError.from_service_exception(
-                service_exception=AgentGeneratorStartServiceError(
-                    message="string",
-                    detail={"string": "string"},
-                ),
-                detail={"string": "string"},
-            ).to_pydantic_model(),
-        },
         404: {
             "model": AgentGeneratorNotFoundAPIError.from_service_exception(
                 service_exception=AgentGeneratorNotFoundServiceError(
@@ -133,6 +124,12 @@ def get_agent_generator_by_agent_generator_id(
         409: {
             "model": AgentGeneratorAlreadyRunningAPIError.from_service_exception(
                 service_exception=AgentGeneratorAlreadyRunningServiceError(),
+            ).to_pydantic_model()
+            | AgentGeneratorStartAPIError.from_service_exception(
+                service_exception=AgentGeneratorStartServiceError(
+                    message="string",
+                    detail={"string": "string"},
+                ),
             ).to_pydantic_model(),
         },
         422: {
@@ -160,7 +157,6 @@ async def start_agent_generator_by_agent_generator_id(
     except AgentGeneratorStartServiceError as exc:
         raise AgentGeneratorStartAPIError.from_service_exception(
             service_exception=exc,
-            detail=exc.detail,
         )
     except AgentGeneratorAlreadyRunningServiceError as exc:
         raise AgentGeneratorAlreadyRunningAPIError.from_service_exception(
@@ -185,15 +181,6 @@ async def start_agent_generator_by_agent_generator_id(
     "/{agent_generator_id}/stop",
     responses={
         200: {"model": SuccessResponseModel},
-        400: {
-            "model": AgentGeneratorStopAPIError.from_service_exception(
-                service_exception=AgentGeneratorStopServiceError(
-                    message="string",
-                    detail={"string": "string"},
-                ),
-                detail={"string": "string"},
-            ).to_pydantic_model(),
-        },
         404: {
             "model": AgentGeneratorNotFoundAPIError.from_service_exception(
                 service_exception=AgentGeneratorNotFoundServiceError(
@@ -204,6 +191,12 @@ async def start_agent_generator_by_agent_generator_id(
         409: {
             "model": AgentGeneratorNotRunningAPIError.from_service_exception(
                 service_exception=AgentGeneratorNotRunningServiceError(),
+            ).to_pydantic_model()
+            | AgentGeneratorStopAPIError.from_service_exception(
+                service_exception=AgentGeneratorStopServiceError(
+                    message="string",
+                    detail={"string": "string"},
+                ),
             ).to_pydantic_model(),
         },
         422: {

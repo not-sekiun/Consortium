@@ -39,7 +39,7 @@ class DelayCapability(BaseAgentCapability):
     description = "Adjust the delay between agent check-ins."
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    arguments = {
+    options = {
         SingleValueOption(
             name="duration",
             description=(

@@ -13,74 +13,30 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
     PluginsFrameworkError,
 )
-from consortium.server.exceptions.service_exceptions import (
-    component_loader_service_exceptions as comp_ldr_svc_excs,
-)
 from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
-    ComponentDependencyNotFoundError,
-    ComponentDependencyNotRunningError,
-    DuplicatePluginLabelError,
-    IncompatibleComponentDependencyVersionError,
-    IncompatiblePluginFrameworkVersionError,
-    IncompatibleThirdPartyDependencyVersionError,
-    InternalPluginProjectError,
-    InternalPluginStartError,
-    InternalPluginStopError,
-    InvalidPluginProjectManifestFileJSONError,
-    InvalidPluginProjectManifestFileSchemaError,
-    InvalidPluginProjectPyProjectFileDependencyError,
-    InvalidPluginProjectPyProjectFileError,
-    PluginAlreadyRegisteredError,
-    PluginDependsOnInvalidComponentDependencyError,
-    PluginLabelNotFoundError,
     PluginLoadingError,
-    PluginNotFoundError,
-    PluginProjectInterfaceError,
-    PluginProjectManifestFileNotFoundError,
-    PluginProjectPluginFileNotFoundError,
-    PluginProjectSymbolNotFoundError,
     PluginsServiceError,
     PluginStopTimeoutError,
     PluginUnloadingError,
-    ThirdPartyDependencyNotFoundError,
 )
 from consortium.server.server_config import CONSORTIUM_PLUGINS_DIRECTORY_PATH
 from consortium.server.services.component_loader_services.plugin_loader_service import (
     PluginLoaderService,
 )
+from consortium.server.services.component_registry_services.plugin_registry_service import (
+    PluginRegistryService,
+)
 
 
 class PluginsService:
-    _EXCEPTION_MAP = {
-        comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError: PluginProjectManifestFileNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError: InvalidPluginProjectManifestFileJSONError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError: InvalidPluginProjectManifestFileSchemaError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError: InvalidPluginProjectPyProjectFileError,
-        comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
-        comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidPluginProjectPyProjectFileDependencyError,
-        comp_ldr_svc_excs.ComponentProjectComponentFileNotFoundError: PluginProjectPluginFileNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError: PluginProjectSymbolNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectInterfaceError: PluginProjectInterfaceError,
-        comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError: IncompatiblePluginFrameworkVersionError,
-        comp_ldr_svc_excs.InternalComponentProjectError: InternalPluginProjectError,
-        comp_ldr_svc_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
-        comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
-        comp_ldr_svc_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
-        comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError: PluginDependsOnInvalidComponentDependencyError,
-    }
-    _EXCEPTION_KWARGS_MAP = {
-        "component_project_folder": "plugin_project_folder",
-        "component_file": "plugin_file",
-        "component_symbol": "plugin_symbol",
-        "component_str": "plugin_str",
-        "component_id": "plugin_id",
-    }
-
     def __init__(self):
         self._plugins = {}
-        self._restart_plugin_tasks = set()
         self._plugin_loader_service = PluginLoaderService()
+        self._plugin_registry_service = PluginRegistryService(
+            component_loader_service=self._plugin_loader_service,
+            component_framework_directory=CONSORTIUM_PLUGINS_DIRECTORY_PATH,
+        )
+        self._restart_plugin_tasks = set()
         self.logger = logger.bind(
             logger_name=str(self),
         )
@@ -135,23 +91,12 @@ class PluginsService:
             InternalPluginProjectError: If an unhandled exception is raised within the
                 plugin while initializing the plugin.
         """
-        try:
-            plugin = (
-                self._plugin_loader_service.get_component_from_component_project_folder(
-                    component_project_folder=plugin_project_folder,
-                    ignore_enabled_component_flag=ignore_enabled_plugin_flag,
-                )
+        plugin = (
+            self._plugin_registry_service.get_component_from_component_project_folder(
+                component_project_folder=plugin_project_folder,
+                ignore_enabled_component_flag=ignore_enabled_plugin_flag,
             )
-        except (
-            comp_ldr_svc_excs.ComponentLoadingError,
-            comp_ldr_svc_excs.ComponentDependencyError,
-        ) as exc:
-            raise remap_exception(
-                original_exception=exc,
-                original_kwargs=exc.kwargs,
-                exception_map=self._EXCEPTION_MAP,
-                exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
-            ) from None
+        )
         if plugin is None:
             self.logger.debug(
                 "Skipped loading plugin from '{}' because it was disabled.",
@@ -202,48 +147,23 @@ class PluginsService:
             for possible exceptions raised during plugin retrieval.
         """
         retrieved, skipped, errored = (
-            self._plugin_loader_service.get_components_from_component_project_folder_directories(
+            self._plugin_registry_service.get_components_from_component_project_folder_directories(
                 directory=directory,
                 ignore_enabled_component_flag=ignore_enabled_plugin_flag,
             )
         )
-        remapped_errored = []
-        for error_tuple in errored:
-            error = error_tuple[1]
-            # A configuration error will raise a PluginConfigurationError which is not
-            # a ComponentLoadingError, so we only remap ComponentLoadingErrors here.
-            if isinstance(
-                error,
-                (
-                    comp_ldr_svc_excs.ComponentsLoaderServiceError,
-                    comp_ldr_svc_excs.ComponentDependencyError,
-                ),
-            ):
-                remapped_errored.append(
-                    (
-                        error_tuple[0],
-                        remap_exception(
-                            original_exception=error,
-                            original_kwargs=error.kwargs,
-                            exception_map=self._EXCEPTION_MAP,
-                            exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
-                        ),
-                    ),
-                )
-            else:
-                remapped_errored.append(error_tuple)
         self.logger.debug(
             "Retrieved plugins from '{}' ({} plugin(s) retrieved, {} plugin(s) "
             "skipped, {} plugin(s) failed to load)",
             directory,
             len(retrieved),
             len(skipped),
-            len(remapped_errored),
+            len(errored),
         )
         return (
             retrieved,
             skipped,
-            remapped_errored,
+            errored,
         )
 
     def register_plugin(
@@ -275,33 +195,8 @@ class PluginsService:
             IncompatiblePluginDependencyVersionError: If the plugin depends on another
                 plugin that is registered but has an incompatible version.
         """
-        if str(plugin.plugin_id) in self._plugins:
-            raise PluginAlreadyRegisteredError(
-                plugin_str=str(plugin),
-                plugin_id=str(plugin.plugin_id),
-            )
-        if plugin.label and plugin.label in [
-            plugin.label for plugin in self._plugins.values() if plugin.label
-        ]:
-            raise DuplicatePluginLabelError(
-                plugin_str=str(plugin),
-                label=plugin.label,
-            )
-        try:
-            self._plugin_loader_service.validate_component_component_dependencies(
-                component=plugin,
-                registered_components=self.get_all_plugins(),
-            )
-        except comp_ldr_svc_excs.ComponentDependencyError as exc:
-            raise remap_exception(
-                original_exception=exc,
-                original_kwargs=exc.kwargs,
-                exception_map=self._EXCEPTION_MAP,
-                exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
-            ) from None
-
-        self._plugins[str(plugin.plugin_id)] = plugin
-        self.logger.debug(f"Registered plugin: {plugin!r}")
+        self._plugin_registry_service.register_component(component=plugin)
+        self.logger.debug("Registered plugin: {!r}", plugin)
 
     def register_plugin_from_plugin_project_folder(
         self,
@@ -332,16 +227,11 @@ class PluginsService:
             and [register_plugin][consortium.server.services.plugins_service.PluginsService.register_plugin]
             for possible exceptions raised during plugin retrieval.
         """
-        plugin = self.get_plugin_from_plugin_project_folder(
-            plugin_project_folder=plugin_project_folder,
-            ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
+        plugin = self._plugin_registry_service.register_component_from_component_project_folder(
+            component_project_folder=plugin_project_folder,
+            ignore_enabled_component_flag=ignore_enabled_plugin_flag,
         )
-        # If `plugin` is `None`, it implies a disabled plugin was attempted to be
-        # registered.
-        if plugin is None:
-            return None
-
-        self.register_plugin(plugin=plugin)
+        self.logger.debug("Registered plugin: {!r}", plugin)
         return plugin
 
     async def load_plugin_from_plugin_project_folder(
@@ -369,25 +259,10 @@ class PluginsService:
 
         Raises:
         """
-        plugin = self.register_plugin_from_plugin_project_folder(
-            plugin_project_folder=plugin_project_folder,
-            ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
+        plugin = await self._plugin_registry_service.load_component_from_component_project_folder(
+            component_project_folder=plugin_project_folder,
+            ignore_enabled_component_flag=ignore_enabled_plugin_flag,
         )
-        # `plugin` being `None` implies a disabled plugin was attempted to be loaded.
-        if plugin is None:
-            return None
-
-        if plugin.autostart:
-            try:
-                await plugin.start()
-            except BaseFrameworkException:
-                raise
-            except Exception as exc:
-                raise InternalPluginStartError(
-                    plugin_str=str(plugin),
-                    internal_error_message=str(exc),
-                ) from exc
-
         self.logger.success("Loaded plugin: {}", plugin)
         self.logger.debug("Loaded plugin: {!r}", plugin)
         return plugin
@@ -434,10 +309,7 @@ class PluginsService:
                     raise
             except Exception as exc:
                 if not force_unload:
-                    raise InternalPluginStopError(
-                        plugin_str=str(plugin),
-                        internal_error_message=str(exc),
-                    ) from exc
+                    raise exc
 
             # Ensure that the stop plugin event has been set before proceeding to wait
             # on the timeout.
@@ -466,8 +338,8 @@ class PluginsService:
                     await plugin.cancel()
 
         del self._plugins[plugin_id]
-        self.logger.info(f"Unloaded plugin: {plugin}")
-        self.logger.debug(f"Unloaded plugin: {plugin!r}")
+        self.logger.info("Unloaded plugin: {}", plugin)
+        self.logger.debug("Unloaded plugin: {!r}", plugin)
 
     async def reload_plugin_by_plugin_id(
         self,
@@ -500,8 +372,8 @@ class PluginsService:
             plugin_project_folder=plugin_project_folder,
             ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
         )
-        self.logger.info(f"Reloaded plugin: {plugin}")
-        self.logger.debug(f"Reloaded plugin: {plugin!r}")
+        self.logger.info("Reloaded plugin: {}", plugin)
+        self.logger.debug("Reloaded plugin: {!r}", plugin)
         return plugin
 
     async def load_framework_plugins(
@@ -567,16 +439,19 @@ class PluginsService:
                         await plugin.start()
                     except BaseFrameworkException:
                         raise
-                    except Exception as exc:
-                        raise InternalPluginStartError(
-                            plugin_str=str(plugin),
-                            internal_error_message=str(exc),
-                        ) from exc
                 self.logger.success("├─ Loaded plugin: {}", plugin)
                 self.logger.debug("├─ Loaded plugin: {!r}", plugin)
             except (PluginsFrameworkError, PluginsServiceError) as exc:
                 failed_to_load += 1
                 self.logger.error("├─ {}", str(exc))
+            except Exception as exc:
+                failed_to_load += 1
+                self.logger.error(
+                    "├─ Failed to load the plugin {}. An unhandled exception occurred "
+                    "while starting the plugin: {}",
+                    plugin,
+                    str(exc),
+                )
 
         self.logger.info(
             "└─ Loaded plugins from '{}' ({} plugin(s) loaded, {} plugin(s) "
@@ -814,11 +689,9 @@ class PluginsService:
         Raises:
             PluginNotFoundError: If the plugin id is not found in the service.
         """
-        try:
-            plugin = self._plugins[plugin_id]
-        except KeyError:
-            raise PluginNotFoundError(plugin_id=plugin_id)
-
+        plugin = self._plugin_registry_service.get_component_by_component_id(
+            component_id=plugin_id,
+        )
         self.logger.debug("Retrieved plugin: {!r}", plugin)
         return plugin
 
@@ -835,16 +708,7 @@ class PluginsService:
         Raises:
             PluginLabelNotFoundError: If the plugin label is not found in the service.
         """
-        plugins = []
-        for plugin in self.get_all_plugins():
-            if plugin.label == label:
-                self.logger.debug("Retrieved plugin: {!r}", plugin)
-                plugins.append(plugin)
-
-        if plugins:
-            return plugins
-        else:
-            raise PluginLabelNotFoundError(label=label)
+        return self._plugin_registry_service.get_components_by_label(label=label)
 
     def get_all_plugins(self) -> list[BasePlugin]:
         """
@@ -853,8 +717,9 @@ class PluginsService:
         Returns:
             list[BasePlugin]: A list of all plugins loaded in the service.
         """
+        plugins = self._plugin_registry_service.get_all_components()
         self.logger.debug(
             "Retrieved all plugins ({} plugin(s) retrieved).",
-            len(self._plugins),
+            len(plugins),
         )
-        return list(self._plugins.values())
+        return plugins

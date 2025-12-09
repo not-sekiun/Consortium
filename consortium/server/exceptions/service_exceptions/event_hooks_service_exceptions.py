@@ -31,52 +31,65 @@ Exception hierarchy for errors related to the event hooks service:
     - EventHookUnloadingError: Raised when an event hook fails to unload.
 """
 
-import consortium.server.exceptions.service_exceptions.component_loader_service_exceptions as comp_excs
+import consortium.server.exceptions.service_exceptions.component_service_exceptions as comp_svc_excs
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
 )
 
 
 class EventHooksServiceError(BaseServiceException):
-    pass
+    code = "EVENT_HOOKS_SERVICE_ERROR"
 
 
-class EventHookNotFoundError(EventHooksServiceError):
+class EventHookNotFoundError(
+    EventHooksServiceError,
+    comp_svc_excs.ComponentNotFoundError,
+):
+    """
+    An error that is raised when an event hook with the specified ID is not found.
+    """
+
+    code = "EVENT_HOOK_NOT_FOUND_ERROR"
+    _COMPONENT_TYPE = "event hook"
+
     def __init__(self, event_hook_id: str):
-        super().__init__(
-            message=(
-                f"Failed to find the requested event hook. No event hook was found "
-                f"with the provided event hook ID '{event_hook_id}'."
-            ),
-        )
+        super().__init__(component_id=event_hook_id)
 
 
-class EventHookLoadingError(EventHooksServiceError, comp_excs.ComponentLoadingError):
+class EventHookLoadingError(
+    EventHooksServiceError,
+    comp_svc_excs.ComponentLoadingError,
+):
     """
     Base exception for all errors that occur during the loading of an event hook.
     """
 
+    code = "EVENT_HOOK_LOADING_ERROR"
     _COMPONENT_TYPE = "event hook"
 
 
 class InvalidEventHookProjectManifestFileError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectManifestFileError,
+    comp_svc_excs.InvalidComponentProjectManifestFileError,
 ):
     """
     Base exception for all errors that occur due to loading an invalid event hook project
     manifest `manifest.json` file.
     """
 
+    code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_ERROR"
+
 
 class InvalidEventHookProjectManifestFileJSONError(
     InvalidEventHookProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileJSONError,
+    comp_svc_excs.InvalidComponentProjectManifestFileJSONError,
 ):
     """
     An error that is raised when the event hook project manifest file is not a valid JSON
     file.
     """
+
+    code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     def __init__(self, event_hook_project_folder: str):
         super().__init__(component_project_folder=event_hook_project_folder)
@@ -84,12 +97,14 @@ class InvalidEventHookProjectManifestFileJSONError(
 
 class InvalidEventHookProjectManifestFileSchemaError(
     InvalidEventHookProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileSchemaError,
+    comp_svc_excs.InvalidComponentProjectManifestFileSchemaError,
 ):
     """
     An error that is raised when the event hook project manifest file does not conform to
     the expected JSON schema.
     """
+
+    code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
 
     def __init__(self, event_hook_project_folder: str, json_schema_error_message: str):
         super().__init__(
@@ -100,21 +115,25 @@ class InvalidEventHookProjectManifestFileSchemaError(
 
 class InvalidEventHookProjectPyProjectFileError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileError,
+    comp_svc_excs.InvalidComponentProjectPyProjectFileError,
 ):
     """
     Base exception for all errors that occur due to loading an invalid `pyproject.toml`
     file.
     """
 
+    code = "INVALID_EVENT_HOOK_PROJECT_PY_PROJECT_FILE_ERROR"
+
 
 class InvalidEventHookProjectPyProjectFileTOMLError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_svc_excs.InvalidComponentProjectPyProjectFileTOMLError,
 ):
     """
     An error that is raised when the `pyproject.toml` file is not a valid TOML file
     """
+
+    code = "INVALID_EVENT_HOOK_PROJECT_PY_PROJECT_FILE_TOML_ERROR"
 
     def __init__(self, event_hook_project_folder: str):
         super().__init__(component_project_folder=event_hook_project_folder)
@@ -122,12 +141,14 @@ class InvalidEventHookProjectPyProjectFileTOMLError(
 
 class InvalidEventHookProjectPyProjectFileDependencyError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_svc_excs.InvalidComponentProjectPyProjectFileDependencyError,
 ):
     """
     An error that is raised when the `pyproject.toml` file contains invalid dependency
     entries.
     """
+
+    code = "INVALID_EVENT_HOOK_PROJECT_PY_PROJECT_FILE_DEPENDENCY_ERROR"
 
     def __init__(self, event_hook_project_folder: str, invalid_dependency_entry: str):
         super().__init__(
@@ -138,22 +159,26 @@ class InvalidEventHookProjectPyProjectFileDependencyError(
 
 class InvalidEventHookProjectFolderStructureError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectFolderStructureError,
+    comp_svc_excs.InvalidComponentProjectFolderStructureError,
 ):
     """
     Base exception for all errors that occur due to the event hook being loaded having an
     invalid event hook project folder structure.
     """
 
+    code = "INVALID_EVENT_HOOK_PROJECT_FOLDER_STRUCTURE_ERROR"
+
 
 class EventHookProjectManifestFileNotFoundError(
     InvalidEventHookProjectFolderStructureError,
-    comp_excs.ComponentProjectManifestFileNotFoundError,
+    comp_svc_excs.ComponentProjectManifestFileNotFoundError,
 ):
     """
     An error that is raised when the event hook project manifest file is not found in the
     event hook project folder.
     """
+
+    code = "EVENT_HOOK_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     def __init__(self, event_hook_project_folder: str):
         super().__init__(component_project_folder=event_hook_project_folder)
@@ -161,12 +186,14 @@ class EventHookProjectManifestFileNotFoundError(
 
 class EventHookProjectEventHookFileNotFoundError(
     InvalidEventHookProjectFolderStructureError,
-    comp_excs.ComponentProjectComponentFileNotFoundError,
+    comp_svc_excs.ComponentProjectComponentFileNotFoundError,
 ):
     """
     An error that is raised when the event hook file specified in the manifest is not
     found in the event hook project folder.
     """
+
+    code = "EVENT_HOOK_PROJECT_EVENT_HOOK_FILE_NOT_FOUND_ERROR"
 
     def __init__(self, event_hook_project_folder: str, event_hook_file: str):
         super().__init__(
@@ -177,22 +204,26 @@ class EventHookProjectEventHookFileNotFoundError(
 
 class InvalidEventHookProjectImplementationError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectImplementationError,
+    comp_svc_excs.InvalidComponentProjectImplementationError,
 ):
     """
     Base exception for all errors that occur due to the event hook project not implementing
     the required interface for the event hook.
     """
 
+    code = "INVALID_EVENT_HOOK_PROJECT_IMPLEMENTATION_ERROR"
+
 
 class EventHookProjectSymbolNotFoundError(
     InvalidEventHookProjectImplementationError,
-    comp_excs.ComponentProjectSymbolNotFoundError,
+    comp_svc_excs.ComponentProjectSymbolNotFoundError,
 ):
     """
     An error that is raised when the event hook symbol name specified in the manifest is not
     found in the event hook file.
     """
+
+    code = "EVENT_HOOK_PROJECT_SYMBOL_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -209,12 +240,14 @@ class EventHookProjectSymbolNotFoundError(
 
 class EventHookProjectInterfaceError(
     InvalidEventHookProjectImplementationError,
-    comp_excs.ComponentProjectInterfaceError,
+    comp_svc_excs.ComponentProjectInterfaceError,
 ):
     """
     An error that is raised when the event hook class does not implement the required
     interface for the event hook.
     """
+
+    code = "EVENT_HOOK_PROJECT_INTERFACE_ERROR"
 
     def __init__(
         self,
@@ -229,12 +262,14 @@ class EventHookProjectInterfaceError(
 
 class InternalEventHookProjectError(
     InvalidEventHookProjectImplementationError,
-    comp_excs.InternalComponentProjectError,
+    comp_svc_excs.InternalComponentProjectError,
 ):
     """
     An error that is raised when an unhandled exception from within the event hook is
     raised while loading an event hook project.
     """
+
+    code = "INTERNAL_EVENT_HOOK_PROJECT_ERROR"
 
     def __init__(
         self,
@@ -249,12 +284,14 @@ class InternalEventHookProjectError(
 
 class IncompatibleEventHookFrameworkVersionError(
     EventHookLoadingError,
-    comp_excs.IncompatibleComponentFrameworkVersionError,
+    comp_svc_excs.IncompatibleComponentFrameworkVersionError,
 ):
     """
     An error that is raised when an event hook is incompatible with the current framework
     version.
     """
+
+    code = "INCOMPATIBLE_EVENT_HOOK_FRAMEWORK_VERSION_ERROR"
 
     def __init__(
         self,
@@ -271,12 +308,14 @@ class IncompatibleEventHookFrameworkVersionError(
 
 class EventHookAlreadyRegisteredError(
     EventHookLoadingError,
-    comp_excs.ComponentAlreadyRegisteredError,
+    comp_svc_excs.ComponentAlreadyRegisteredError,
 ):
     """
     An error that is raised when an event hook with the same ID is already registered in the
     event hooks service.
     """
+
+    code = "EVENT_HOOK_ALREADY_REGISTERED_ERROR"
 
     def __init__(self, event_hook_str: str, event_hook_id: str):
         super().__init__(component_str=event_hook_str, component_id=event_hook_id)
@@ -284,12 +323,14 @@ class EventHookAlreadyRegisteredError(
 
 class DuplicateEventHookLabelError(
     EventHookLoadingError,
-    comp_excs.DuplicateComponentLabelError,
+    comp_svc_excs.DuplicateComponentLabelError,
 ):
     """
     An error that is raised when an event hook with the same `label` as the event hook being
     registered has already been registered with the event hooks service.
     """
+
+    code = "DUPLICATE_EVENT_HOOK_LABEL_ERROR"
 
     def __init__(self, event_hook_str: str, label: str):
         super().__init__(
@@ -298,42 +339,47 @@ class DuplicateEventHookLabelError(
         )
 
 
-class InternalEventHookStartError(
-    EventHookLoadingError,
-    comp_excs.InternalComponentStartError,
-):
-    """
-    An error that is raised when an unhandled exception from within the event hook is
-    raised while starting an event hook.
-    """
-
-    def __init__(self, event_hook_str: str, internal_error_message: str):
-        super().__init__(
-            component_str=event_hook_str,
-            internal_error_message=internal_error_message,
-        )
+# class InternalEventHookSetupError(
+#     EventHookLoadingError,
+#     # comp_excs.InternalComponentStartError,
+# ):
+#     """
+#     An error that is raised when an unhandled exception from within the event hook is
+#     raised while setting up an event hook.
+#     """
+#
+#     def __init__(self, event_hook_str: str, internal_error_message: str):
+#         super().__init__(
+#             message=(
+#                 f"Failed to load the event hook '{event_hook_str}'. An exception "
+#                 f"occurred while setting up the event hook: {internal_error_message}"
+#             )
+#         )
 
 
 class EventHookDependencyError(
     EventHooksServiceError,
-    comp_excs.ComponentDependencyError,
+    comp_svc_excs.ComponentDependencyError,
 ):
     """
     Base exception for all errors that occur during the resolution of an event hook's
     dependencies.
     """
 
+    code = "EVENT_HOOK_DEPENDENCY_ERROR"
     _COMPONENT_TYPE = "event hook"
 
 
 class ThirdPartyDependencyNotFoundError(
     EventHookDependencyError,
-    comp_excs.ThirdPartyDependencyNotFoundError,
+    comp_svc_excs.ThirdPartyDependencyNotFoundError,
 ):
     """
     An error that is raised when a third-party dependency required by an event hook is not
     installed.
     """
+
+    code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -348,12 +394,14 @@ class ThirdPartyDependencyNotFoundError(
 
 class IncompatibleThirdPartyDependencyVersionError(
     EventHookDependencyError,
-    comp_excs.IncompatibleThirdPartyDependencyVersionError,
+    comp_svc_excs.IncompatibleThirdPartyDependencyVersionError,
 ):
     """
     An error that is raised when a third-party dependency required by an event hook is
     incompatible with the event hook.
     """
+
+    code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
 
     def __init__(
         self,
@@ -372,12 +420,14 @@ class IncompatibleThirdPartyDependencyVersionError(
 
 class ComponentDependencyNotFoundError(
     EventHookDependencyError,
-    comp_excs.ComponentDependencyNotFoundError,
+    comp_svc_excs.ComponentDependencyNotFoundError,
 ):
     """
     An error that is raised when an event hook dependency required by an event hook is not
     installed.
     """
+
+    code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -392,12 +442,14 @@ class ComponentDependencyNotFoundError(
 
 class IncompatibleComponentDependencyVersionError(
     EventHookDependencyError,
-    comp_excs.IncompatibleComponentDependencyVersionError,
+    comp_svc_excs.IncompatibleComponentDependencyVersionError,
 ):
     """
     An error that is raised when an event hook dependency required by an event hook is
     incompatible with the event hook.
     """
+
+    code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
 
     def __init__(
         self,
@@ -416,12 +468,14 @@ class IncompatibleComponentDependencyVersionError(
 
 class EventHookDependsOnInvalidComponentDependencyError(
     EventHookDependencyError,
-    comp_excs.ComponentDependsOnInvalidComponentDependencyError,
+    comp_svc_excs.ComponentDependsOnInvalidComponentDependencyError,
 ):
     """
     An error that is raised when an event hook depends on another event hook dependency that
     itself has invalid dependencies.
     """
+
+    code = "EVENT_HOOK_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
 
     def __init__(
         self,
@@ -436,12 +490,14 @@ class EventHookDependsOnInvalidComponentDependencyError(
 
 class ComponentDependencyNotRunningError(
     EventHookDependencyError,
-    comp_excs.ComponentDependencyNotRunningError,
+    comp_svc_excs.ComponentDependencyNotRunningError,
 ):
     """
     An error that is raised when an event hook dependency required by an event hook is present but
     not currently running.
     """
+
+    code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
 
     def __init__(
         self,
@@ -455,10 +511,12 @@ class ComponentDependencyNotRunningError(
 
 
 class EventHookOperationError(EventHooksServiceError):
-    pass
+    code = "EVENT_HOOK_OPERATION_ERROR"
 
 
 class EventHookSetupError(EventHookOperationError):
+    code = "EVENT_HOOK_SETUP_ERROR"
+
     def __init__(self, event_hook_str: str, error_message: str):
         super().__init__(
             message=(
@@ -469,6 +527,8 @@ class EventHookSetupError(EventHookOperationError):
 
 
 class EventHookTeardownError(EventHooksServiceError):
+    code = "EVENT_HOOK_TEARDOWN_ERROR"
+
     def __init__(self, event_hook_str: str, error_message: str):
         super().__init__(
             message=(

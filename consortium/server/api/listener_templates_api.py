@@ -15,7 +15,7 @@ from consortium.server.exceptions.api_exceptions.listener_templates_api_exceptio
     ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundAPIError,
     ListenerTemplateOptionValueError as ListenerTemplateOptionValueAPIError,
 )
-from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
+from consortium.server.exceptions.framework_exceptions.listener_templates_framework_exceptions import (
     ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundFrameworkError,
     ListenerTemplateOptionValueError as ListenerTemplateOptionValueFrameworkError,
 )

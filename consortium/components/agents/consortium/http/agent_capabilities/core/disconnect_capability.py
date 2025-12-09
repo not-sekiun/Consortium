@@ -29,7 +29,7 @@ def _validate_duration_argument(duration: float):
 class DisconnectCapability(BaseAgentCapability):
     name = "disconnect"
     description = "Disconnect the agent."
-    arguments = {
+    options = {
         SingleValueOption(
             name="duration",
             description=(

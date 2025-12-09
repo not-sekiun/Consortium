@@ -31,10 +31,8 @@
 #         - InternalListenerProjectError: Raised when an internal error occurs while
 #         handling a listener project.
 # """
-
-# from typing import Literal
 from consortium.server.exceptions.service_exceptions import (
-    component_loader_service_exceptions as comp_ldr_svc_excs,
+    component_service_exceptions as comp_svc_excs,
 )
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -42,49 +40,61 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class ListenerProfilesServiceError(BaseServiceException):
-    pass
+    code = "LISTENER_PROFILES_SERVICE_ERROR"
 
 
-class ListenerProfileNotFoundError(ListenerProfilesServiceError):
+class ListenerProfileNotFoundError(
+    ListenerProfilesServiceError,
+    comp_svc_excs.ComponentNotFoundError,
+):
+    """
+    An error that is raised when a listener profile is not found in the listener
+    profiles service.
+    """
+
+    code = "LISTENER_PROFILE_NOT_FOUND_ERROR"
+
+    _COMPONENT_TYPE = "listener profile"
+
     def __init__(self, listener_profile_id: str):
-        super().__init__(
-            message=(
-                f"Failed to find the requested listener profile. No listener profile "
-                f"was found with the provided listener profile ID "
-                f"'{listener_profile_id}'."
-            ),
-        )
+        super().__init__(component_id=listener_profile_id)
 
 
 class ListenerProfileLoadingError(
     ListenerProfilesServiceError,
-    comp_ldr_svc_excs.ComponentLoadingError,
+    comp_svc_excs.ComponentLoadingError,
 ):
     """
     Base exception for all errors that occur during the loading of a listener profile.
     """
+
+    code = "LISTENER_PROFILE_LOADING_ERROR"
 
     _COMPONENT_TYPE = "listener profile"
 
 
 class InvalidListenerProfileProjectManifestFileError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectManifestFileError,
+    comp_svc_excs.InvalidComponentProjectManifestFileError,
 ):
     """
     Base exception for all errors that occur due to loading an invalid listener profile project
     manifest `manifest.json` file.
     """
 
+    code = "INVALID_LISTENER_PROFILE_PROJECT_MANIFEST_FILE_ERROR"
+
 
 class InvalidListenerProfileProjectManifestFileJSONError(
     InvalidListenerProfileProjectManifestFileError,
-    comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError,
+    comp_svc_excs.InvalidComponentProjectManifestFileJSONError,
 ):
     """
     An error that is raised when the listener profile project manifest file is not a valid JSON
     file.
     """
+
+    code = "INVALID_LISTENER_PROFILE_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     def __init__(self, listener_profile_project_folder: str):
         super().__init__(component_project_folder=listener_profile_project_folder)
@@ -92,12 +102,14 @@ class InvalidListenerProfileProjectManifestFileJSONError(
 
 class InvalidListenerProfileProjectManifestFileSchemaError(
     InvalidListenerProfileProjectManifestFileError,
-    comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError,
+    comp_svc_excs.InvalidComponentProjectManifestFileSchemaError,
 ):
     """
     An error that is raised when the listener profile project manifest file does not conform to
     the expected JSON schema.
     """
+
+    code = "INVALID_LISTENER_PROFILE_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
 
     def __init__(
         self,
@@ -112,21 +124,25 @@ class InvalidListenerProfileProjectManifestFileSchemaError(
 
 class InvalidListenerProfileProjectPyProjectFileError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError,
+    comp_svc_excs.InvalidComponentProjectPyProjectFileError,
 ):
     """
     Base exception for all errors that occur due to loading an invalid `pyproject.toml`
     file.
     """
 
+    code = "INVALID_LISTENER_PROFILE_PROJECT_PY_PROJECT_FILE_ERROR"
+
 
 class InvalidListenerProfileProjectPyProjectFileTOMLError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_svc_excs.InvalidComponentProjectPyProjectFileTOMLError,
 ):
     """
     An error that is raised when the `pyproject.toml` file is not a valid TOML file
     """
+
+    code = "INVALID_LISTENER_PROFILE_PROJECT_PY_PROJECT_FILE_TOML_ERROR"
 
     def __init__(self, listener_profile_project_folder: str):
         super().__init__(component_project_folder=listener_profile_project_folder)
@@ -134,12 +150,14 @@ class InvalidListenerProfileProjectPyProjectFileTOMLError(
 
 class InvalidListenerProfileProjectPyProjectFileDependencyError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_svc_excs.InvalidComponentProjectPyProjectFileDependencyError,
 ):
     """
     An error that is raised when the `pyproject.toml` file contains invalid dependency
     entries.
     """
+
+    code = "INVALID_LISTENER_PROFILE_PROJECT_PY_PROJECT_FILE_DEPENDENCY_ERROR"
 
     def __init__(
         self,
@@ -154,22 +172,26 @@ class InvalidListenerProfileProjectPyProjectFileDependencyError(
 
 class InvalidListenerProfileProjectFolderStructureError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectFolderStructureError,
+    comp_svc_excs.InvalidComponentProjectFolderStructureError,
 ):
     """
     Base exception for all errors that occur due to the listener profile being loaded having an
     invalid listener profile project folder structure.
     """
 
+    code = "INVALID_LISTENER_PROFILE_PROJECT_FOLDER_STRUCTURE_ERROR"
+
 
 class ListenerProfileProjectManifestFileNotFoundError(
     InvalidListenerProfileProjectFolderStructureError,
-    comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError,
+    comp_svc_excs.ComponentProjectManifestFileNotFoundError,
 ):
     """
     An error that is raised when the listener profile project manifest file is not found in the
     listener profile project folder.
     """
+
+    code = "LISTENER_PROFILE_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     def __init__(self, listener_profile_project_folder: str):
         super().__init__(component_project_folder=listener_profile_project_folder)
@@ -177,12 +199,14 @@ class ListenerProfileProjectManifestFileNotFoundError(
 
 class ListenerProfileProjectListenerProfileFileNotFoundError(
     InvalidListenerProfileProjectFolderStructureError,
-    comp_ldr_svc_excs.ComponentProjectComponentFileNotFoundError,
+    comp_svc_excs.ComponentProjectComponentFileNotFoundError,
 ):
     """
     An error that is raised when the listener profile file specified in the manifest is not
     found in the listener profile project folder.
     """
+
+    code = "LISTENER_PROFILE_PROJECT_LISTENER_PROFILE_FILE_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -197,22 +221,26 @@ class ListenerProfileProjectListenerProfileFileNotFoundError(
 
 class InvalidListenerProfileProjectImplementationError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectImplementationError,
+    comp_svc_excs.InvalidComponentProjectImplementationError,
 ):
     """
     Base exception for all errors that occur due to the listener profile project not implementing
     the required interface for the listener profile.
     """
 
+    code = "INVALID_LISTENER_PROFILE_PROJECT_IMPLEMENTATION_ERROR"
+
 
 class ListenerProfileProjectSymbolNotFoundError(
     InvalidListenerProfileProjectImplementationError,
-    comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError,
+    comp_svc_excs.ComponentProjectSymbolNotFoundError,
 ):
     """
     An error that is raised when the listener profile symbol name specified in the manifest is not
     found in the listener profile file.
     """
+
+    code = "LISTENER_PROFILE_PROJECT_SYMBOL_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -229,12 +257,14 @@ class ListenerProfileProjectSymbolNotFoundError(
 
 class ListenerProfileProjectInterfaceError(
     InvalidListenerProfileProjectImplementationError,
-    comp_ldr_svc_excs.ComponentProjectInterfaceError,
+    comp_svc_excs.ComponentProjectInterfaceError,
 ):
     """
     An error that is raised when the listener profile class does not implement the required
     interface for the listener profile.
     """
+
+    code = "LISTENER_PROFILE_PROJECT_INTERFACE_ERROR"
 
     def __init__(
         self,
@@ -249,12 +279,14 @@ class ListenerProfileProjectInterfaceError(
 
 class InternalListenerProfileProjectError(
     InvalidListenerProfileProjectImplementationError,
-    comp_ldr_svc_excs.InternalComponentProjectError,
+    comp_svc_excs.InternalComponentProjectError,
 ):
     """
     An error that is raised when an unhandled exception from within the listener profile is
     raised while loading a listener profile project.
     """
+
+    code = "INTERNAL_LISTENER_PROFILE_PROJECT_ERROR"
 
     def __init__(
         self,
@@ -269,12 +301,14 @@ class InternalListenerProfileProjectError(
 
 class IncompatibleListenerProfileFrameworkVersionError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError,
+    comp_svc_excs.IncompatibleComponentFrameworkVersionError,
 ):
     """
     An error that is raised when a listener profile is incompatible with the current framework
     version.
     """
+
+    code = "INCOMPATIBLE_LISTENER_PROFILE_FRAMEWORK_VERSION_ERROR"
 
     def __init__(
         self,
@@ -291,12 +325,14 @@ class IncompatibleListenerProfileFrameworkVersionError(
 
 class ListenerProfileAlreadyRegisteredError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.ComponentAlreadyRegisteredError,
+    comp_svc_excs.ComponentAlreadyRegisteredError,
 ):
     """
     An error that is raised when a listener profile with the same ID is already registered in the
     listener profiles service.
     """
+
+    code = "LISTENER_PROFILE_ALREADY_REGISTERED_ERROR"
 
     def __init__(self, listener_profile_str: str, listener_profile_id: str):
         super().__init__(
@@ -307,12 +343,14 @@ class ListenerProfileAlreadyRegisteredError(
 
 class DuplicateListenerProfileLabelError(
     ListenerProfileLoadingError,
-    comp_ldr_svc_excs.DuplicateComponentLabelError,
+    comp_svc_excs.DuplicateComponentLabelError,
 ):
     """
     An error that is raised when a listener profile with the same `label` as the listener profile being
     registered has already been registered with the listener profiles service.
     """
+
+    code = "DUPLICATE_LISTENER_PROFILE_LABEL_ERROR"
 
     def __init__(self, listener_profile_str: str, label: str):
         super().__init__(
@@ -323,24 +361,28 @@ class DuplicateListenerProfileLabelError(
 
 class ListenerProfileDependencyError(
     ListenerProfilesServiceError,
-    comp_ldr_svc_excs.ComponentDependencyError,
+    comp_svc_excs.ComponentDependencyError,
 ):
     """
     Base exception for all errors that occur during the resolution of a plugin's
     dependencies.
     """
 
+    code = "LISTENER_PROFILE_DEPENDENCY_ERROR"
+
     _COMPONENT_TYPE = "listener profile"
 
 
 class ThirdPartyDependencyNotFoundError(
     ListenerProfileDependencyError,
-    comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError,
+    comp_svc_excs.ThirdPartyDependencyNotFoundError,
 ):
     """
     An error that is raised when a third-party dependency required by a plugin is not
     installed.
     """
+
+    code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -355,12 +397,14 @@ class ThirdPartyDependencyNotFoundError(
 
 class IncompatibleThirdPartyDependencyVersionError(
     ListenerProfileDependencyError,
-    comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError,
+    comp_svc_excs.IncompatibleThirdPartyDependencyVersionError,
 ):
     """
     An error that is raised when a third-party dependency required by a plugin is
     incompatible with the plugin.
     """
+
+    code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
 
     def __init__(
         self,
@@ -379,12 +423,14 @@ class IncompatibleThirdPartyDependencyVersionError(
 
 class ComponentDependencyNotFoundError(
     ListenerProfileDependencyError,
-    comp_ldr_svc_excs.ComponentDependencyNotFoundError,
+    comp_svc_excs.ComponentDependencyNotFoundError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is not
     installed.
     """
+
+    code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -399,12 +445,14 @@ class ComponentDependencyNotFoundError(
 
 class IncompatibleComponentDependencyVersionError(
     ListenerProfileDependencyError,
-    comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError,
+    comp_svc_excs.IncompatibleComponentDependencyVersionError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is
     incompatible with the plugin.
     """
+
+    code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
 
     def __init__(
         self,
@@ -423,12 +471,14 @@ class IncompatibleComponentDependencyVersionError(
 
 class ListenerProfileDependsOnInvalidComponentDependencyError(
     ListenerProfileDependencyError,
-    comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError,
+    comp_svc_excs.ComponentDependsOnInvalidComponentDependencyError,
 ):
     """
     An error that is raised when a plugin depends on another plugin dependency that
     itself has invalid dependencies.
     """
+
+    code = "LISTENER_PROFILE_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
 
     def __init__(
         self,
@@ -443,12 +493,14 @@ class ListenerProfileDependsOnInvalidComponentDependencyError(
 
 class ComponentDependencyNotRunningError(
     ListenerProfileDependencyError,
-    comp_ldr_svc_excs.ComponentDependencyNotRunningError,
+    comp_svc_excs.ComponentDependencyNotRunningError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is present but
     not currently running.
     """
+
+    code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
 
     def __init__(
         self,

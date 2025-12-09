@@ -18,10 +18,12 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class AgentGeneratorsServiceError(BaseServiceException):
-    pass
+    code = "AGENT_GENERATORS_SERVICE_ERROR"
 
 
 class AgentGeneratorNotFoundError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_NOT_FOUND_ERROR"
+
     def __init__(self, agent_generator_id: str):
         super().__init__(
             message=(
@@ -32,6 +34,8 @@ class AgentGeneratorNotFoundError(AgentGeneratorsServiceError):
 
 
 class AgentGeneratorAlreadyExistsError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_ALREADY_EXISTS_ERROR"
+
     def __init__(self, agent_generator_id: str):
         super().__init__(
             message=(
@@ -42,24 +46,27 @@ class AgentGeneratorAlreadyExistsError(AgentGeneratorsServiceError):
 
 
 class AgentGeneratorOperationError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_OPERATION_ERROR"
+
     def __init__(self, message: str = "", detail: Any = None):
-        self.detail = detail
-        super().__init__(message=message)
+        super().__init__(message=message, detail=detail)
 
 
 class AgentGeneratorStartError(AgentGeneratorOperationError):
-    pass
+    code = "AGENT_GENERATOR_START_ERROR"
 
 
 class AgentGeneratorStopError(AgentGeneratorOperationError):
-    pass
+    code = "AGENT_GENERATOR_STOP_ERROR"
 
 
 class AgentGeneratorStateError(AgentGeneratorsServiceError):
-    pass
+    code = "AGENT_GENERATOR_STATE_ERROR"
 
 
 class AgentGeneratorAlreadyRunningError(AgentGeneratorStateError):
+    code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
+
     def __init__(
         self,
         message: str = (
@@ -72,6 +79,8 @@ class AgentGeneratorAlreadyRunningError(AgentGeneratorStateError):
 
 
 class AgentGeneratorNotRunningError(AgentGeneratorStateError):
+    code = "AGENT_GENERATOR_NOT_RUNNING_ERROR"
+
     def __init__(
         self,
         message: str = (
@@ -84,10 +93,12 @@ class AgentGeneratorNotRunningError(AgentGeneratorStateError):
 
 
 class AgentGeneratorParameterUpdateError(AgentGeneratorsServiceError):
-    pass
+    code = "AGENT_GENERATOR_PARAMETER_UPDATE_ERROR"
 
 
 class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError):
+    code = "INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"
+
     def __init__(self, agent_generator_str: str, parameter_name: str):
         super().__init__(
             message=(
@@ -99,6 +110,8 @@ class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError
 
 
 class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateError):
+    code = "INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR"
+
     def __init__(
         self,
         agent_generator_str: str,
@@ -117,20 +130,21 @@ class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateErro
 
 
 class AgentGeneratorCreationError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_CREATION_ERROR"
+
     def __init__(self, message: str = "", detail: Any = None):
-        self.detail = detail
-        super().__init__(message=message)
+        super().__init__(message=message, detail=detail)
 
 
 # This is a wrapper exception for AgentTemplateOptionNotFoundError from the
 # agent templates framework exceptions. It just needs to pass on the message and detail
 # data from that exception.
 class AgentTemplateOptionNotFoundError(AgentGeneratorCreationError):
-    pass
+    code = "AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"
 
 
 # This is a wrapper exception for AgentTemplateOptionValueError from the agent
 # templates framework exceptions. It just needs to pass on the message and detail data
 # from that exception.
 class AgentTemplateOptionValueError(AgentGeneratorCreationError):
-    pass
+    code = "AGENT_TEMPLATE_OPTION_VALUE_ERROR"

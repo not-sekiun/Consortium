@@ -2,22 +2,20 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
+from consortium.client.commands.generators_interpreter_commands.info_agent_template import (
+    InfoAgentTemplateCommand as GeneratorsInterpreterInfoAgentTemplateCommand,
+)
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
-    ReturnStatus,
-)
+from consortium.client.repl_framework.base_command import CommandContext, ReturnStatus
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
 
 
-class InfoAgentTemplateCommand(BaseCommand):
-    name = "info_agent_template"
+class InfoAgentTemplateCommand(GeneratorsInterpreterInfoAgentTemplateCommand):
     description = (
-        "Display detailed information for a specific agent template or for the "
+        "Display detailed information about a specific agent template or about the "
         "currently selected agent template being used."
     )
     epilog = format_argparse_epilog(
@@ -55,33 +53,7 @@ class InfoAgentTemplateCommand(BaseCommand):
                 agent_template = await client_rest_api_connection.get_agent_template_by_agent_template_id(
                     parsed_args.agent_template_id,
                 )
-
-            table = Table(title="Agent Template Information")
-            table.add_column("Information")
-            table.add_column("Data")
-            table.add_row(
-                "Agent Template ID",
-                agent_template["agent_template_id"],
-            )
-            table.add_row("Name", agent_template["name"])
-            table.add_row("Description", agent_template["description"])
-            table.add_row(
-                "Agent Type",
-                f"{agent_template["agent_type"]["name"]} ({agent_template["agent_type"]["agent_type_id"]})",
-            )
-            table.add_row(
-                "Compatible Listener Types",
-                "\n".join(
-                    [
-                        f"{listener_type["name"]} ({listener_type["listener_type_id"]})"
-                        for listener_type in agent_template["agent_type"][
-                            "compatible_listener_types"
-                        ]
-                    ],
-                ),
-            )
-            table.add_row("Authors", "\n".join(agent_template["authors"]))
-            CONSOLE.print(table)
+            self._display_agent_template_info(agent_template=agent_template)
         except SystemExit:
             pass
 

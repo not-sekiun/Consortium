@@ -3,7 +3,6 @@ import shutil
 from types import SimpleNamespace
 from typing import Any
 
-from consortium.components.agents.consortium.http.agent_type import AGENT_TYPE
 from consortium.framework.agents.agent_generator_utils.filesystem_utils import (
     TemporarilyChangeWorkingDirectory,
 )
@@ -38,17 +37,17 @@ class CreateTemporaryDirectory(BaseAgentGeneratorBuildStep):
     )
     ignore_failure = False
 
-    async def on_agent_generator_build_step_running(
+    async def on_running(
         self,
-        stop_agent_generator_event: asyncio.Event,
+        stop_event: asyncio.Event,
         parameters: dict,
-        build_context: SimpleNamespace,
+        environment: SimpleNamespace,
     ):
         temporary_directory = self.working_directory / ".tmp"
         if parameters["format"] == "executable":
             # Create the temporary directory, if it already exists, no error is raised.
             temporary_directory.mkdir(exist_ok=True)
-        build_context.temporary_directory = temporary_directory
+        environment.temporary_directory = temporary_directory
 
 
 class BuildAgent(BaseAgentGeneratorBuildStep):
@@ -56,11 +55,11 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
     description = "Build the agent source code into the desired format."
     ignore_failure = False
 
-    async def on_agent_generator_build_step_running(
+    async def on_running(
         self,
-        stop_agent_generator_event: asyncio.Event,
+        stop_event: asyncio.Event,
         parameters: dict[str, Any],
-        build_context: SimpleNamespace,
+        environment: SimpleNamespace,
     ):
         with open(
             self.working_directory / "agent_source" / "_agent.py",
@@ -104,7 +103,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                     1,
                 )
             )
-            build_context.source_code = source_code
+            environment.source_code = source_code
 
 
 class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
@@ -114,30 +113,30 @@ class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
         "executable with pyinstaller if specified by the 'format' option."
     )
 
-    async def on_agent_generator_build_step_running(
+    async def on_running(
         self,
-        stop_agent_generator_event: asyncio.Event,
+        stop_event: asyncio.Event,
         parameters: dict,
-        build_context: SimpleNamespace,
+        environment: SimpleNamespace,
     ):
         if parameters["format"] == "script":
             with open(
                 CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / (parameters["filename"] + ".py"),
                 "w",
             ) as file:
-                file.write(build_context.source_code)
+                file.write(environment.source_code)
         elif parameters["format"] == "executable":
-            temporary_agent_file_path = build_context.temporary_directory / "tmp.py"
+            temporary_agent_file_path = environment.temporary_directory / "tmp.py"
 
             with open(temporary_agent_file_path, "w") as file:
-                file.write(build_context.source_code)
+                file.write(environment.source_code)
 
             # Changing back to the previous working directory is crucial to avoid any
             # issues with deleting the temporary directory after building the agent due
             # to the server process still "using" the directory while it is in that
             # directory
             with TemporarilyChangeWorkingDirectory(
-                new_working_directory=build_context.temporary_directory,
+                new_working_directory=environment.temporary_directory,
             ):
                 command_result = await run_command(
                     "pyinstaller",
@@ -155,7 +154,7 @@ class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
                     )
 
                 shutil.move(
-                    str(build_context.temporary_directory / "dist" / "tmp.exe"),
+                    str(environment.temporary_directory / "dist" / "tmp.exe"),
                     str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / parameters["filename"])
                     + ".exe",
                 )
@@ -164,7 +163,7 @@ class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
                 CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / (parameters["filename"] + ".txt"),
                 "w",
             ) as file:
-                file.write('python -c "' + repr(build_context.source_code) + '"')
+                file.write('python -c "' + repr(environment.source_code) + '"')
 
 
 class CleanupTemporaryDirectory(BaseAgentGeneratorBuildStep):
@@ -175,11 +174,11 @@ class CleanupTemporaryDirectory(BaseAgentGeneratorBuildStep):
     )
     ignore_failure = False
 
-    async def on_agent_generator_build_step_running(
+    async def on_running(
         self,
-        stop_agent_generator_event: asyncio.Event,
+        stop_event: asyncio.Event,
         parameters: dict,
-        build_context: SimpleNamespace,
+        environment: SimpleNamespace,
     ):
         _cleanup_temporary_directory()
 
@@ -191,9 +190,8 @@ class AgentGenerator(BaseAgentGenerator):
         ExportAgentArtifact(),
         CleanupTemporaryDirectory(),
     ]
-    agent_type = AGENT_TYPE
 
-    async def on_agent_generator_started(self) -> None:
+    async def on_started(self) -> None:
         if self.parameters["format"] == "executable" and (
             shutil.which("pyinstaller") is None or shutil.which("python") is None
         ):
@@ -205,16 +203,12 @@ class AgentGenerator(BaseAgentGenerator):
                 ),
             )
 
-    async def on_agent_generator_completed(self) -> None:
-        # Cleanup temporary directory agent generator build step is guaranteed to have
-        # run already.
-        pass
-
-    async def on_agent_generator_stopped(self) -> None:
+    async def on_stopped(self) -> None:
         _cleanup_temporary_directory()
 
-    async def on_agent_generator_cancelled(self) -> None:
+    async def on_cancelled(self) -> None:
         _cleanup_temporary_directory()
 
-    async def on_agent_generator_errored(self, exception: Exception) -> None:
+    async def on_errored(self, error: AgentGeneratorBuildError) -> None:
+        await super().on_errored(error=error)
         _cleanup_temporary_directory()

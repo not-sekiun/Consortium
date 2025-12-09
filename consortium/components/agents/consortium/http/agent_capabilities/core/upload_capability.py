@@ -118,7 +118,7 @@ class UploadCapability(BaseAgentCapability):
     )
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    arguments = {
+    options = {
         SingleValueOption(
             name="source",
             description=(

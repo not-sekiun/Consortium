@@ -4,10 +4,12 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class RepositoryServiceError(BaseServiceException):
-    pass
+    code = "REPOSITORY_SERVICE_ERROR"
 
 
 class RepositoryResourceNotFoundError(RepositoryServiceError):
+    code = "REPOSITORY_RESOURCE_NOT_FOUND_ERROR"
+
     def __init__(self, resource_id: str):
         super().__init__(
             message=(
@@ -18,6 +20,8 @@ class RepositoryResourceNotFoundError(RepositoryServiceError):
 
 
 class RepositoryFileNotFoundError(RepositoryServiceError):
+    code = "REPOSITORY_FILE_NOT_FOUND_ERROR"
+
     def __init__(self, resource_id: str):
         super().__init__(
             message=(
@@ -28,6 +32,8 @@ class RepositoryFileNotFoundError(RepositoryServiceError):
 
 
 class RepositoryDirectoryNotFoundError(RepositoryServiceError):
+    code = "REPOSITORY_DIRECTORY_NOT_FOUND_ERROR"
+
     def __init__(self, resource_id: str):
         super().__init__(
             message=(
@@ -38,6 +44,8 @@ class RepositoryDirectoryNotFoundError(RepositoryServiceError):
 
 
 class RepositoryResourceAlreadyExistsError(RepositoryServiceError):
+    code = "REPOSITORY_RESOURCE_ALREADY_EXISTS_ERROR"
+
     def __init__(self, resource_id: str):
         super().__init__(
             message=(
@@ -49,6 +57,8 @@ class RepositoryResourceAlreadyExistsError(RepositoryServiceError):
 
 
 class InvalidRepositoryMetadataFile(RepositoryServiceError):
+    code = "INVALID_REPOSITORY_METADATA_FILE_ERROR"
+
     def __init__(self, repository_directory: str, error_message: str = ""):
         super().__init__(
             message=(

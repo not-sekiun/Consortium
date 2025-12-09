@@ -34,6 +34,43 @@ class InfoListenerTemplateCommand(BaseCommand):
             nargs=1,
         )
 
+    def _display_listener_template_info(self, listener_template: dict) -> None:
+        table = Table(title="Listener Template Information")
+        table.add_column("Information")
+        table.add_column("Data")
+        table.add_row(
+            "Listener Template ID",
+            listener_template["listener_template_id"],
+        )
+        table.add_row(
+            "Label",
+            listener_template["label"],
+        )
+        table.add_row("Name", listener_template["name"])
+        table.add_row("Description", listener_template["description"])
+        table.add_row("Version", listener_template["version"])
+        table.add_row(
+            "Compatible Framework Version",
+            listener_template["compatible_framework_version"],
+        )
+        table.add_row("Authors", "\n".join(listener_template["authors"]))
+        table.add_row(
+            "Listener Type",
+            f"{listener_template["listener_type"]["name"]} ({listener_template["listener_type"]["listener_type_id"]})",
+        )
+        table.add_row(
+            "Compatible Agent Types",
+            "\n".join(
+                [
+                    f"{agent_type["name"]} ({agent_type["agent_type_id"]})"
+                    for agent_type in listener_template["listener_type"][
+                        "compatible_agent_types"
+                    ]
+                ],
+            ),
+        )
+        CONSOLE.print(table)
+
     async def run_command(
         self,
         command_context: CommandContext,
@@ -43,48 +80,10 @@ class InfoListenerTemplateCommand(BaseCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-
             listener_template = await client_rest_api_connection.get_listener_template_by_listener_template_id(
                 parsed_args.listener_template_id[0],
             )
-
-            table = Table(title="Listener Template Information")
-            table.add_column("Information")
-            table.add_column("Data")
-            table.add_row(
-                "Listener Template ID",
-                listener_template["listener_template_id"],
-            )
-            table.add_row("Name", listener_template["name"])
-            table.add_row("Description", listener_template["description"])
-            listener_type_table = Table()
-            listener_type_table.add_column("Information")
-            listener_type_table.add_column("Data")
-            listener_type_table.add_row(
-                "Listener Type ID",
-                listener_template["listener_type"]["listener_type_id"],
-            )
-            listener_type_table.add_row(
-                "Name",
-                listener_template["listener_type"]["name"],
-            )
-            listener_type_table.add_row(
-                "Compatible Agent Types",
-                "\n".join(
-                    [
-                        agent_type["name"] + " (" + agent_type["agent_type_id"] + ")"
-                        for agent_type in listener_template["listener_type"][
-                            "compatible_agent_types"
-                        ]
-                    ],
-                ),
-            )
-            table.add_row(
-                "Listener Type",
-                listener_type_table,
-            )
-            table.add_row("Authors", ", ".join(listener_template["authors"]))
-            CONSOLE.print(table)
+            self._display_listener_template_info(listener_template=listener_template)
         except SystemExit:
             pass
 

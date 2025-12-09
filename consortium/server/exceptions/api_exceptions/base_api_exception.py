@@ -37,7 +37,7 @@ class BaseAPIException(Exception):
     class NullDetailErrorModel(BaseModel):
         code: str
         message: str
-        detail: type(None)
+        detail: type[None]
 
     def __init__(
         self,
@@ -109,17 +109,26 @@ class BaseAPIException(Exception):
         service_exception: BaseServiceException,
         detail: dict[str, Any] | None = None,
     ) -> "BaseAPIException":
-        return cls(
+        if detail is None:
+            detail = service_exception.detail
+        api_exception = cls(
             message=service_exception.message,
             detail=detail,
         )
+        api_exception.code = service_exception.code
+        return api_exception
 
+    # TODO: Might have to add `code` support here as well depending on how we want to
+    # map framework exceptions to API exceptions
     @classmethod
     def from_framework_exception(
         cls,
         framework_exception: BaseFrameworkException,
+        detail: dict[str, Any] | None = None,
     ) -> "BaseAPIException":
+        if detail is None:
+            detail = framework_exception.detail
         return cls(
             message=framework_exception.message,
-            detail=framework_exception.detail,
+            detail=detail,
         )

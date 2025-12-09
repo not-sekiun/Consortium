@@ -1,19 +1,19 @@
 import pathlib
 
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
-from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
+from consortium.server.exceptions.framework_exceptions.listener_templates_framework_exceptions import (
     ListenerTemplatesFrameworkError,
 )
 from consortium.server.objects.c2_profile_objects import ListenerProfile
 from consortium.server.services.component_loader_services.component_loader_service import (
+    Component,
     ComponentLoaderService,
     ComponentLoadingError,
-    ComponentType,
 )
 
 
 class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate]):
-    _component_type = BaseListenerTemplate
+    _component_type = BaseListenerTemplate  # TODO: Fix type mismatch this only describes the input but not output type
     _component_framework_error = ListenerTemplatesFrameworkError
     _manifest_json_schema = {
         "type": "object",
@@ -38,7 +38,7 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
             listener_type=component_object.listener_type,
         )
 
-    # Change the return type to ListenerProfile for both methods
+    # Change the return type to ListenerProfile for IDE type checking
     def get_component_from_component_project_folder(
         self,
         component_project_folder: pathlib.Path,
@@ -49,12 +49,13 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
 
+    # Change the return type to ListenerProfile for IDE type checking
     def get_components_from_component_project_folder_directories(
         self,
         directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> tuple[
-        list[ComponentType],
+        list[Component],
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:

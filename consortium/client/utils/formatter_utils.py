@@ -23,82 +23,77 @@ def format_argparse_epilog(epilog_string: str) -> str:
 
 # Format the color of agent generator state strings to be rendered by rich's console.
 def format_agent_generator_state_string_with_color(
-    agent_generator_state_string: str,
+    state_str: str,
 ) -> str:
     state_string_to_colored_state_string_map = {
         "RUNNING": "[bold yellow]RUNNING[/]",
         "COMPLETED": "[bold green]COMPLETED[/]",
         "ERRORED": "[bold red]ERRORED[/]",
-        "FATAL": "[bold red on white]FATAL[/]",
+        "FATAL": "[bold white on red]FATAL[/]",
     }
 
-    if agent_generator_state_string in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[agent_generator_state_string]
-    return agent_generator_state_string
+    if state_str in state_string_to_colored_state_string_map:
+        return state_string_to_colored_state_string_map[state_str]
+    return state_str
 
 
 # Format the color of listener state strings to be rendered by rich's console.
 def format_listener_state_string_with_color(
-    listener_state_string: str,
+    state_str: str,
 ) -> str:
     state_string_to_colored_state_string_map = {
         "RUNNING": "[bold green]RUNNING[/]",
         "ERRORED": "[bold red]ERRORED[/]",
-        "FATAL": "[bold red on white]FATAL[/]",
+        "FATAL": "[bold white on red]FATAL[/]",
     }
-    if listener_state_string in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[listener_state_string]
-    return listener_state_string
+    if state_str in state_string_to_colored_state_string_map:
+        return state_string_to_colored_state_string_map[state_str]
+    return state_str
 
 
 # Format the color of agent generator build step state strings to be rendered by rich's
 # console.
 def format_agent_generator_build_step_state_string_with_color(
-    agent_generator_build_step_state_string: str,
+    state_str: str,
 ) -> str:
     state_string_to_colored_state_string_map = {
         "RUNNING": "[bold yellow]RUNNING[/]",
         "COMPLETED": "[bold green]COMPLETED[/]",
         "ERRORED": "[bold red]ERRORED[/]",
-        "FATAL": "[bold red on white]FATAL[/]",
+        "FATAL": "[bold white on red]FATAL[/]",
     }
 
-    if (
-        agent_generator_build_step_state_string
-        in state_string_to_colored_state_string_map
-    ):
-        return state_string_to_colored_state_string_map[
-            agent_generator_build_step_state_string
-        ]
-    return agent_generator_build_step_state_string
+    if state_str in state_string_to_colored_state_string_map:
+        return state_string_to_colored_state_string_map[state_str]
+    return state_str
 
 
 def format_agent_result_state_string_with_color(
-    agent_result_state_string: str,
+    state_str: str,
 ) -> str:
     state_string_to_colored_state_string_map = {
         "SUCCESS": "[bold green]SUCCESS[/]",
         "FAILED": "[bold red]FAILED[/]",
-        "ERRORED": "[bold red on white]ERRORED[/]",
+        "ERRORED": "[bold white on red]ERRORED[/]",
     }
 
-    if agent_result_state_string in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[agent_result_state_string]
-    return agent_result_state_string
+    if state_str in state_string_to_colored_state_string_map:
+        return state_string_to_colored_state_string_map[state_str]
+    return state_str
 
 
 def format_agent_task_state_string_with_color(
-    agent_task_state_string: str,
+    state_str: str,
 ) -> str:
     state_string_to_colored_state_string_map = {
         "RUNNING": "[bold yellow]RUNNING[/]",
         "COMPLETED": "[bold green]COMPLETED[/]",
     }
 
-    if agent_task_state_string in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[agent_task_state_string]
-    return agent_task_state_string
+    if state_str in state_string_to_colored_state_string_map:
+        return state_string_to_colored_state_string_map[state_str]
+    return state_str
 
 
-def format_snake_case_to_title(snake_case_string: str) -> str:
-    return " ".join([word.capitalize() for word in snake_case_string.split("_")])
+def format_snake_case_to_title(snake_case_str: str) -> str:
+    return " ".join([word.capitalize() for word in snake_case_str.split("_")])

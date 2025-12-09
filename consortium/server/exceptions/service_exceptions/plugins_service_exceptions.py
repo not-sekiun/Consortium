@@ -35,7 +35,7 @@ Exception hierarchy for the plugins service:
 """
 
 from consortium.server.exceptions.service_exceptions import (
-    component_loader_service_exceptions as comp_ldr_svc_excs,
+    component_service_exceptions as comp_ldr_svc_excs,
 )
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -47,41 +47,47 @@ class PluginsServiceError(BaseServiceException):
     Base exception for all errors that occur within the plugins service.
     """
 
+    code = "PLUGINS_SERVICE_ERROR"
 
-class PluginNotFoundError(PluginsServiceError):
+
+class PluginNotFoundError(
+    PluginsServiceError,
+    comp_ldr_svc_excs.ComponentNotFoundError,
+):
     """
     An error that is raised when a plugin is not found by its plugin ID within the
     plugins service.
     """
 
+    code = "PLUGIN_NOT_FOUND_ERROR"
+
+    _COMPONENT_TYPE = "plugin"
+
     def __init__(self, plugin_id: str):
-        super().__init__(
-            message=(
-                f"Failed to find the requested plugin. No plugin was found with the "
-                f"provided plugin ID '{plugin_id}'."
-            ),
-        )
+        super().__init__(component_id=plugin_id)
 
 
-class PluginLabelNotFoundError(PluginsServiceError):
-    """
-    An error that is raised when a plugin is not found by its label within the plugins
-    service.
-    """
-
-    def __init__(self, label: str):
-        super().__init__(
-            message=(
-                f"Failed to find the requested plugin. No plugin was found with the "
-                f"provided plugin label '{label}'."
-            ),
-        )
+# class PluginLabelNotFoundError(PluginsServiceError):
+#     """
+#     An error that is raised when a plugin is not found by its label within the plugins
+#     service.
+#     """
+#
+#     def __init__(self, label: str):
+#         super().__init__(
+#             message=(
+#                 f"Failed to find the requested plugin. No plugin was found with the "
+#                 f"provided plugin label '{label}'."
+#             ),
+#         )
 
 
 class PluginLoadingError(PluginsServiceError, comp_ldr_svc_excs.ComponentLoadingError):
     """
     Base exception for all errors that occur during the loading of a plugin.
     """
+
+    code = "PLUGIN_LOADING_ERROR"
 
     _COMPONENT_TYPE = "plugin"
 
@@ -95,6 +101,8 @@ class InvalidPluginProjectManifestFileError(
     manifest `manifest.json` file.
     """
 
+    code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_ERROR"
+
 
 class InvalidPluginProjectManifestFileJSONError(
     InvalidPluginProjectManifestFileError,
@@ -104,6 +112,8 @@ class InvalidPluginProjectManifestFileJSONError(
     An error that is raised when the plugin project manifest file is not a valid JSON
     file.
     """
+
+    code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     def __init__(self, plugin_project_folder: str):
         super().__init__(component_project_folder=plugin_project_folder)
@@ -117,6 +127,8 @@ class InvalidPluginProjectManifestFileSchemaError(
     An error that is raised when the plugin project manifest file does not conform to
     the expected JSON schema.
     """
+
+    code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
 
     def __init__(self, plugin_project_folder: str, json_schema_error_message: str):
         super().__init__(
@@ -134,6 +146,8 @@ class InvalidPluginProjectPyProjectFileError(
     file.
     """
 
+    code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_ERROR"
+
 
 class InvalidPluginProjectPyProjectFileTOMLError(
     PluginLoadingError,
@@ -142,6 +156,8 @@ class InvalidPluginProjectPyProjectFileTOMLError(
     """
     An error that is raised when the `pyproject.toml` file is not a valid TOML file
     """
+
+    code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     def __init__(self, plugin_project_folder: str):
         super().__init__(component_project_folder=plugin_project_folder)
@@ -155,6 +171,8 @@ class InvalidPluginProjectPyProjectFileDependencyError(
     An error that is raised when the `pyproject.toml` file contains invalid dependency
     entries.
     """
+
+    code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     def __init__(self, plugin_project_folder: str, invalid_dependency_entry: str):
         super().__init__(
@@ -172,6 +190,8 @@ class InvalidPluginProjectFolderStructureError(
     invalid plugin project folder structure.
     """
 
+    code = "INVALID_PLUGIN_PROJECT_FOLDER_STRUCTURE_ERROR"
+
 
 class PluginProjectManifestFileNotFoundError(
     InvalidPluginProjectFolderStructureError,
@@ -181,6 +201,8 @@ class PluginProjectManifestFileNotFoundError(
     An error that is raised when the plugin project manifest file is not found in the
     plugin project folder.
     """
+
+    code = "PLUGIN_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     def __init__(self, plugin_project_folder: str):
         super().__init__(component_project_folder=plugin_project_folder)
@@ -194,6 +216,8 @@ class PluginProjectPluginFileNotFoundError(
     An error that is raised when the plugin file specified in the manifest is not
     found in the plugin project folder.
     """
+
+    code = "PLUGIN_PROJECT_PLUGIN_FILE_NOT_FOUND_ERROR"
 
     def __init__(self, plugin_project_folder: str, plugin_file: str):
         super().__init__(
@@ -211,6 +235,8 @@ class InvalidPluginProjectImplementationError(
     the required interface for the plugin.
     """
 
+    code = "INVALID_PLUGIN_PROJECT_IMPLEMENTATION_ERROR"
+
 
 class PluginProjectSymbolNotFoundError(
     InvalidPluginProjectImplementationError,
@@ -220,6 +246,8 @@ class PluginProjectSymbolNotFoundError(
     An error that is raised when the plugin symbol name specified in the manifest is not
     found in the plugin file.
     """
+
+    code = "PLUGIN_PROJECT_SYMBOL_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -243,6 +271,8 @@ class PluginProjectInterfaceError(
     interface for the plugin.
     """
 
+    code = "PLUGIN_PROJECT_INTERFACE_ERROR"
+
     def __init__(
         self,
         plugin_project_folder: str,
@@ -263,6 +293,8 @@ class InternalPluginProjectError(
     raised while loading a plugin project.
     """
 
+    code = "INTERNAL_PLUGIN_PROJECT_ERROR"
+
     def __init__(
         self,
         plugin_project_folder: str,
@@ -282,6 +314,8 @@ class IncompatiblePluginFrameworkVersionError(
     An error that is raised when a plugin is incompatible with the current framework
     version.
     """
+
+    code = "INCOMPATIBLE_PLUGIN_FRAMEWORK_VERSION_ERROR"
 
     def __init__(
         self,
@@ -305,6 +339,8 @@ class PluginAlreadyRegisteredError(
     plugins service.
     """
 
+    code = "PLUGIN_ALREADY_REGISTERED_ERROR"
+
     def __init__(self, plugin_str: str, plugin_id: str):
         super().__init__(component_str=plugin_str, component_id=plugin_id)
 
@@ -318,6 +354,8 @@ class DuplicatePluginLabelError(
     registered has already been registered with the plugins service.
     """
 
+    code = "DUPLICATE_PLUGIN_LABEL_ERROR"
+
     def __init__(self, plugin_str: str, label: str):
         super().__init__(
             component_str=plugin_str,
@@ -325,20 +363,24 @@ class DuplicatePluginLabelError(
         )
 
 
-class InternalPluginStartError(
-    PluginLoadingError,
-    comp_ldr_svc_excs.InternalComponentStartError,
-):
-    """
-    An error that is raised when an unhandled exception from within the plugin is
-    raised while starting a plugin.
-    """
-
-    def __init__(self, plugin_str: str, internal_error_message: str):
-        super().__init__(
-            component_str=plugin_str,
-            internal_error_message=internal_error_message,
-        )
+# class InternalPluginStartError(
+#     PluginLoadingError,
+#     # comp_ldr_svc_excs.InternalComponentStartError,
+# ):
+#     """
+#     An error that is raised when an unhandled exception from within the plugin is
+#     raised while starting a plugin.
+#     """
+#
+#     code = "INTERNAL_PLUGIN_START_ERROR"
+#
+#     def __init__(self, plugin_str: str, internal_error_message: str):
+#         super().__init__(
+#             message=(
+#                 f"Failed to load the plugin '{plugin_str}'. An exception occurred "
+#                 f"while starting the plugin: {internal_error_message}"
+#             ),
+#         )
 
 
 class PluginDependencyError(
@@ -349,6 +391,8 @@ class PluginDependencyError(
     Base exception for all errors that occur during the resolution of a plugin's
     dependencies.
     """
+
+    code = "PLUGIN_DEPENDENCY_ERROR"
 
     _COMPONENT_TYPE = "plugin"
 
@@ -361,6 +405,8 @@ class ThirdPartyDependencyNotFoundError(
     An error that is raised when a third-party dependency required by a plugin is not
     installed.
     """
+
+    code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
     def __init__(
         self,
@@ -381,6 +427,8 @@ class IncompatibleThirdPartyDependencyVersionError(
     An error that is raised when a third-party dependency required by a plugin is
     incompatible with the plugin.
     """
+
+    code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
 
     def __init__(
         self,
@@ -406,6 +454,8 @@ class ComponentDependencyNotFoundError(
     installed.
     """
 
+    code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         plugin_str: str,
@@ -425,6 +475,8 @@ class IncompatibleComponentDependencyVersionError(
     An error that is raised when a plugin dependency required by a plugin is
     incompatible with the plugin.
     """
+
+    code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
 
     def __init__(
         self,
@@ -450,6 +502,8 @@ class PluginDependsOnInvalidComponentDependencyError(
     itself has invalid dependencies.
     """
 
+    code = "PLUGIN_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
+
     def __init__(
         self,
         plugin_str: str,
@@ -470,6 +524,8 @@ class ComponentDependencyNotRunningError(
     not currently running.
     """
 
+    code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
+
     def __init__(
         self,
         plugin_str: str,
@@ -486,20 +542,24 @@ class PluginUnloadingError(PluginsServiceError):
     Base exception for all errors that occur during the unloading of a plugin.
     """
 
+    code = "PLUGIN_UNLOADING_ERROR"
 
-class InternalPluginStopError(PluginUnloadingError):
-    """
-    An error that is raised when an unhandled exception from within the plugin is
-    raised while stopping a plugin.
-    """
 
-    def __init__(self, plugin_str: str, internal_error_message: str):
-        super().__init__(
-            message=(
-                f"Failed to unload plugin '{plugin_str}'. An exception occurred while "
-                f"stopping the plugin: {internal_error_message}"
-            ),
-        )
+# class InternalPluginStopError(PluginUnloadingError):
+#     """
+#     An error that is raised when an unhandled exception from within the plugin is
+#     raised while stopping a plugin.
+#     """
+#
+#     code = "INTERNAL_PLUGIN_STOP_ERROR"
+#
+#     def __init__(self, plugin_str: str, internal_error_message: str):
+#         super().__init__(
+#             message=(
+#                 f"Failed to unload plugin '{plugin_str}'. An exception occurred while "
+#                 f"stopping the plugin: {internal_error_message}"
+#             ),
+#         )
 
 
 class PluginStopTimeoutError(PluginUnloadingError):
@@ -507,6 +567,8 @@ class PluginStopTimeoutError(PluginUnloadingError):
     An error that is raised when a plugin fails to stop within the specified timeout
     period.
     """
+
+    code = "PLUGIN_STOP_TIMEOUT_ERROR"
 
     def __init__(self, plugin_str: str):
         super().__init__(

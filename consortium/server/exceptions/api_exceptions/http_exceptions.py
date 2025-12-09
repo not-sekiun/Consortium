@@ -27,8 +27,7 @@ from consortium.server.exceptions.api_exceptions.base_api_exception import (
 )
 
 
-class HTTPError(BaseAPIException):
-    pass
+class HTTPError(BaseAPIException): ...
 
 
 # UnauthorizedError is a special error whose to_json() method returns None. This is

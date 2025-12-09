@@ -6,15 +6,12 @@ class BaseFrameworkException(Exception):
     Base exception for all framework related errors.
 
     Attributes:
-        message (str):
+        message:
             A human-readable error message.
     """
 
     def __init__(self, message: str):
         self.message = message
-        """
-        A human-readable error message.
-        """
         super().__init__(message)
 
 
@@ -25,9 +22,9 @@ class BaseRaiseOnlyFrameworkException(BaseFrameworkException):
     calling framework.
 
     Attributes:
-        message (str):
+        message:
             A human-readable error message.
-        detail (Any):
+        detail:
             Any additional information about the error to be communicated back up to
             the calling framework.
     """
@@ -37,18 +34,6 @@ class BaseRaiseOnlyFrameworkException(BaseFrameworkException):
         self.detail = detail
 
         super().__init__(message)
-
-    def to_json(self) -> dict[str, Any]:
-        """
-        Convert the exception to a JSON serializable dictionary.
-
-        Returns:
-            The JSON serializable dictionary representation of the exception.
-        """
-        return {
-            "message": self.message,
-            "detail": self.detail,
-        }
 
 
 class BaseCatchOnlyFrameworkException(BaseFrameworkException):

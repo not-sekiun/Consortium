@@ -38,24 +38,19 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 )
 
 
-class ListenerNotFoundError(NotFoundError):
-    code = "LISTENER_NOT_FOUND_ERROR"
+class ListenerNotFoundError(NotFoundError): ...
 
 
-class InvalidListenerParameterNameError(UnprocessableEntityError):
-    code = "INVALID_LISTENER_PARAMETER_NAME_ERROR"
+class InvalidListenerParameterNameError(UnprocessableEntityError): ...
 
 
-class InvalidListenerParameterValueError(UnprocessableEntityError):
-    code = "INVALID_LISTENER_PARAMETER_VALUE_ERROR"
+class InvalidListenerParameterValueError(UnprocessableEntityError): ...
 
 
-class ListenerAlreadyRunningError(ConflictError):
-    code = "LISTENER_ALREADY_RUNNING_ERROR"
+class ListenerAlreadyRunningError(ConflictError): ...
 
 
-class ListenerNotRunningError(ConflictError):
-    code = "LISTENER_NOT_RUNNING_ERROR"
+class ListenerNotRunningError(ConflictError): ...
 
 
 class ListenerTemplateResolutionError(InternalServerErrorError):
@@ -75,11 +70,7 @@ class ListenerTemplateResolutionError(InternalServerErrorError):
         )
 
 
-class ListenerStartError(BaseAPIException):
-    status_code = 400
-    code = "LISTENER_START_ERROR"
+class ListenerStartError(ConflictError): ...
 
 
-class ListenerStopError(BaseAPIException):
-    status_code = 400
-    code = "LISTENER_STOP_ERROR"
+class ListenerStopError(ConflictError): ...

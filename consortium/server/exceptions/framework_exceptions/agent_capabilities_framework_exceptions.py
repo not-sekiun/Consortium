@@ -4,54 +4,53 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 
 
 class AgentCapabilitiesFrameworkError(BaseFrameworkException):
-    pass
+    code = "AGENT_CAPABILITIES_FRAMEWORK_ERROR"
 
 
 class AgentCapabilityConfigurationParameterError(AgentCapabilitiesFrameworkError):
-    pass
+    code = "AGENT_CAPABILITY_CONFIGURATION_PARAMETER_ERROR"
 
 
 class AgentCapabilityConfigurationParameterTypeError(
     AgentCapabilityConfigurationParameterError,
 ):
+    code = "AGENT_CAPABILITY_CONFIGURATION_PARAMETER_TYPE_ERROR"
+
     def __init__(
         self,
-        agent_capability: str | None = None,
+        agent_capability_filepath: str | None = None,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
-        error_message: str = "",
     ):
-        if not error_message:
-            super().__init__(
-                message=(
-                    f"Failed to configure the agent capability '{agent_capability}'. "
-                    f"The parameter '{parameter_name}' must be of type "
-                    f"'{parameter_type}' in the agent capability's definition."
-                ),
-            )
-        else:
-            super().__init__(
-                message=(
-                    f"Failed to configure the agent capability '{agent_capability}'. "
-                    f"{error_message}"
-                ),
-            )
-
-
-class RequiredAgentCapabilityConfigurationParameterNotDeclaredError(
-    AgentCapabilityConfigurationParameterError,
-):
-    def __init__(self, parameter_name: str, agent_capability: str):
         super().__init__(
             message=(
-                f"Failed to configure the agent capability '{agent_capability}'. "
-                f"The required parameter '{parameter_name}' was not declared in the "
-                f"agent capability's definition."
+                f"Failed to configure the agent capability "
+                f"'{agent_capability_filepath}'. The parameter '{parameter_name}' "
+                f"must be of type '{parameter_type}' in the agent capability's "
+                f"definition."
+            ),
+        )
+
+
+class MissingAgentCapabilityConfigurationParameterError(
+    AgentCapabilityConfigurationParameterError,
+):
+    code = "MISSING_AGENT_CAPABILITY_CONFIGURATION_PARAMETER_ERROR"
+
+    def __init__(self, agent_capability_filepath: str, parameter_name: str):
+        super().__init__(
+            message=(
+                f"Failed to configure the agent capability "
+                f"'{agent_capability_filepath}'. The required parameter "
+                f"'{parameter_name}' was not declared in the agent capability's "
+                f"definition."
             ),
         )
 
 
 class EmptyAgentCapabilityNameError(AgentCapabilitiesFrameworkError):
+    code = "EMPTY_AGENT_CAPABILITY_NAME_ERROR"
+
     def __init__(self, agent_capability_filepath: str):
         super().__init__(
             message=(
@@ -62,22 +61,27 @@ class EmptyAgentCapabilityNameError(AgentCapabilitiesFrameworkError):
         )
 
 
-class DuplicateAgentCapabilityArgumentNameError(AgentCapabilitiesFrameworkError):
-    def __init__(self, argument_name: str, agent_capability: str):
+class DuplicateAgentCapabilityOptionNameError(AgentCapabilitiesFrameworkError):
+    code = "DUPLICATE_AGENT_CAPABILITY_OPTION_NAME_ERROR"
+
+    def __init__(self, agent_capability_filepath: str, argument_name: str):
         super().__init__(
             message=(
-                f"Failed to configure the agent capability {agent_capability}'. The "
-                f"arguments provided to the agent capability must not have duplicate "
-                f"names but the name '{argument_name}' was duplicated."
+                f"Failed to configure the agent capability "
+                f"{agent_capability_filepath}'. The options provided to the agent "
+                f"capability must not have duplicate names but the name "
+                f"'{argument_name}' was duplicated."
             ),
         )
 
 
 class CustomOSStringAlreadyRegisteredError(AgentCapabilitiesFrameworkError):
-    def __init__(self, custom_os_string: str):
+    code = "CUSTOM_OS_STRING_ALREADY_REGISTERED_ERROR"
+
+    def __init__(self, custom_os_str: str):
         super().__init__(
             message=(
                 f"Failed to configure the agent capability. The custom OS string "
-                f"provided '{custom_os_string}' has already been registered."
+                f"provided '{custom_os_str}' has already been registered."
             ),
         )

@@ -15,14 +15,16 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class UsersServiceError(BaseServiceException):
-    pass
+    code = "USERS_SERVICE_ERROR"
 
 
 class UserNotFoundError(UsersServiceError):
-    pass
+    code = "USER_NOT_FOUND_ERROR"
 
 
 class UserIDNotFoundError(UserNotFoundError):
+    code = "USER_ID_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         user_id: str,
@@ -36,6 +38,8 @@ class UserIDNotFoundError(UserNotFoundError):
 
 
 class UserAccessTokenNotFoundError(UserNotFoundError):
+    code = "USER_ACCESS_TOKEN_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         access_token: str,
@@ -49,6 +53,8 @@ class UserAccessTokenNotFoundError(UserNotFoundError):
 
 
 class EmptyUserDisplayNameError(UsersServiceError):
+    code = "EMPTY_USER_DISPLAY_NAME_ERROR"
+
     def __init__(
         self,
         user_str: str,
@@ -62,6 +68,8 @@ class EmptyUserDisplayNameError(UsersServiceError):
 
 
 class IdenticalUserDisplayNameError(UsersServiceError):
+    code = "IDENTICAL_USER_DISPLAY_NAME_ERROR"
+
     def __init__(
         self,
         user_str: str,

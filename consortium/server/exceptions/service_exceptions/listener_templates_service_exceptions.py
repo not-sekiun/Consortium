@@ -13,10 +13,12 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class ListenerTemplatesServiceError(BaseServiceException):
-    pass
+    code = "LISTENER_TEMPLATES_SERVICE_ERROR"
 
 
 class ListenerTemplateNotFoundError(ListenerTemplatesServiceError):
+    code = "LISTENER_TEMPLATE_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         listener_template_id: str,

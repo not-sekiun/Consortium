@@ -108,7 +108,7 @@ class ListTasksCommand(BaseCommand):
                     ],
                 ),
                 format_agent_task_state_string_with_color(
-                    agent_task_state_string=agent_task["state"],
+                    state_str=agent_task["state"],
                 ),
             )
         CONSOLE.print(table)

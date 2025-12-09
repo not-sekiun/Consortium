@@ -111,7 +111,7 @@ class Listener(BaseListener):
                 agent_message_json_data = {
                     "task_id": str(agent_message.task_id),
                     "command": agent_message.command,
-                    "arguments": agent_message.arguments,
+                    "arguments": agent_message.options,
                     "data": agent_message.data,
                 }
                 agent_messages.append(agent_message_json_data)

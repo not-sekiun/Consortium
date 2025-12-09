@@ -28,7 +28,7 @@ class SleepCapability(BaseAgentCapability):
     description = "Make the agent sleep for a specified number of seconds."
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    arguments = {
+    options = {
         SingleValueOption(
             name="duration",
             description="The duration in seconds that the agent should sleep for.",

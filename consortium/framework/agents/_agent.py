@@ -106,12 +106,12 @@ class Agent:
 
     def _move_queued_task_to_running(self, task_id: str) -> None:
         task = self._queued_tasks.pop(task_id)
-        task.state = AgentTaskState.RUNNING
+        task.environment = AgentTaskState.RUNNING
         self._running_tasks[str(task.task_id)] = task
 
     def _move_running_task_to_completed(self, task_id: str) -> None:
         task = self._running_tasks.pop(task_id)
-        task.state = AgentTaskState.COMPLETED
+        task.environment = AgentTaskState.COMPLETED
         self._completed_tasks[str(task.task_id)] = task
 
     async def _manage_running_agent_capability(
@@ -182,7 +182,7 @@ class Agent:
                 # Perform validation on the parameters passed to the options of a
                 # particular agent capability.
                 for argument_name, argument_value in task.arguments.items():
-                    if argument_name not in agent_capability.arguments:
+                    if argument_name not in agent_capability.options:
                         raise AgentCapabilityArgumentNotFoundError(
                             command=agent_capability.name,
                             argument=argument_name,
@@ -197,7 +197,7 @@ class Agent:
                         continue
                     # `OptionValueValidationError` is raised here on failure to validate
                     # the value when we attempt to set it.
-                    agent_capability.arguments[argument_name].set_option_value(
+                    agent_capability.options[argument_name].set_option_value(
                         value=argument_value,
                     )
 
@@ -212,7 +212,7 @@ class Agent:
                 for (
                     argument_name,
                     argument_option,
-                ) in agent_capability.arguments.items():
+                ) in agent_capability.options.items():
                     arguments[argument_name] = argument_option.get_option_value()
                     # After getting the value from setting the option we have to clear
                     # the option to prevent the value from persisting across different

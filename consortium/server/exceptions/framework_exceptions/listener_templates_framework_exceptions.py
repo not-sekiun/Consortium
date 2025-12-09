@@ -30,7 +30,7 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 
 
 class ListenerTemplatesFrameworkError(BaseFrameworkException):
-    pass
+    code = "LISTENER_TEMPLATES_FRAMEWORK_ERROR"
 
 
 class ListenerTemplateConfigurationError(
@@ -41,6 +41,8 @@ class ListenerTemplateConfigurationError(
     Base exception for all errors that occur during the configuration of a particular
     listener template.
     """
+
+    code = "LISTENER_TEMPLATE_CONFIGURATION_ERROR"
 
     _COMPONENT_TYPE = "listener template"
 
@@ -53,6 +55,8 @@ class InvalidListenerTemplateConfigurationParameterTypeError(
     An error that is raised when a listener template's configuration parameter is of an invalid
     type.
     """
+
+    code = "INVALID_LISTENER_TEMPLATE_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
         self,
@@ -75,6 +79,8 @@ class MissingListenerTemplateConfigurationParameterError(
     An error that is raised when a parameter is not declared in a listener template's definition.
     """
 
+    code = "MISSING_LISTENER_TEMPLATE_CONFIGURATION_PARAMETER_ERROR"
+
     def __init__(self, listener_template_str: str, parameter_name: str):
         super().__init__(
             component_str=listener_template_str,
@@ -91,6 +97,8 @@ class EmptyListenerTemplateLabelError(
     configuration is an empty string.
     """
 
+    code = "EMPTY_LISTENER_TEMPLATE_LABEL_ERROR"
+
     def __init__(self, listener_template_filepath: str):
         super().__init__(component_filepath=listener_template_filepath)
 
@@ -103,6 +111,8 @@ class DuplicateListenerTemplateLabelError(
     An error that is raised when the label provided in the listener template's definition during
     configuration is already in use by another listener template.
     """
+
+    code = "DUPLICATE_LISTENER_TEMPLATE_LABEL_ERROR"
 
     def __init__(self, listener_template_str: str, label: str):
         super().__init__(
@@ -120,6 +130,8 @@ class InvalidListenerTemplateVersionError(
     definition during configuration is not a valid version string according to PEP 440.
     """
 
+    code = "INVALID_LISTENER_TEMPLATE_VERSION_ERROR"
+
     def __init__(self, listener_template_str: str, version: str):
         super().__init__(
             component_str=listener_template_str,
@@ -136,6 +148,8 @@ class InvalidFrameworkVersionSpecifierError(
     listener template's definition during configuration is not a valid version specifier string as
     defined in PEP440.
     """
+
+    code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
 
     def __init__(
         self,
@@ -158,6 +172,8 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
     specifier string as defined in PEP440.
     """
 
+    code = "INVALID_LISTENER_TEMPLATE_DEPENDENCY_VERSION_SPECIFIER_ERROR"
+
     def __init__(
         self,
         listener_template_str: str,
@@ -170,6 +186,8 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
 
 
 class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationError):
+    code = "DUPLICATE_LISTENER_TEMPLATE_OPTION_NAME_ERROR"
+
     def __init__(self, listener_template_str: str, option_name: str):
         super().__init__(
             message=(
@@ -248,10 +266,12 @@ class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationErro
 
 
 class ListenerTemplateOptionError(ListenerTemplatesFrameworkError):
-    pass
+    code = "LISTENER_TEMPLATE_OPTION_ERROR"
 
 
 class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
+    code = "LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"
+
     def __init__(self, listener_template_str: str, option_name: str):
         super().__init__(
             message=(
@@ -264,6 +284,8 @@ class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
 
 
 class ListenerTemplateOptionValueError(ListenerTemplateOptionError):
+    code = "LISTENER_TEMPLATE_OPTION_VALUE_ERROR"
+
     def __init__(
         self,
         listener_template_str: str,

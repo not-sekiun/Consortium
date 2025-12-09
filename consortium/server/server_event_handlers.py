@@ -12,8 +12,8 @@ from consortium.framework.plugins._plugin_status import PluginState
 async def lifespan(_: FastAPI) -> None:
     # Startup events occur before the yield.
     server_singletons.user_accounts_service.load_framework_user_accounts()
-    server_singletons.listener_profiles_service.load_framework_listener_profiles()
-    server_singletons.agent_profiles_service.load_framework_agent_profiles()
+    await server_singletons.listener_profiles_service.load_framework_listener_profiles()
+    await server_singletons.agent_profiles_service.load_framework_agent_profiles()
     await server_singletons.event_hooks_service.load_framework_event_hooks()
     # When the FastAPI server starts up we want to load all framework plugins from the
     # server framework's plugins folder that contains all the plugin project folders.

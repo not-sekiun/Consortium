@@ -1,13 +1,16 @@
+import pathlib
+import sys
 import uuid
 from abc import ABC, abstractmethod
 from inspect import signature
-from typing import Callable, Type, get_type_hints
+from typing import Callable, get_type_hints
 
 from pydantic import ConfigDict
 
 import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
 from consortium.framework._components import ComponentMetadata, ComponentModel
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
+from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.framework_types import (
     JSONObject,
     Primitive,
@@ -48,6 +51,7 @@ class _AgentTemplateModel(ComponentModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     agent_generator: type[BaseAgentGenerator]
+    agent_type: BaseAgentType
     options: set[Options] | None = None
     validating_function: (
         Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
@@ -55,9 +59,6 @@ class _AgentTemplateModel(ComponentModel):
 
 
 class BaseAgentTemplate(ComponentMetadata, ABC):
-    # name: str
-    # description: str = ""
-    # authors: set[str] | None = None
     _METADATA_MODEL = _AgentTemplateModel
     _EXCEPTION_MAP = {
         comp_excs.MissingComponentConfigurationParameterError: MissingAgentTemplateConfigurationParameterError,
@@ -72,19 +73,23 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         "component_filepath": "agent_template_filepath",
     }
 
-    agent_generator: Type[BaseAgentGenerator]
+    agent_generator: type[BaseAgentGenerator]
+    agent_type: BaseAgentType
     options: set[Options] | None = None
     validating_function: Callable[[dict[str, Options]], None] | None = None
 
     def __init_subclass__(cls, **kwargs):
         cls.options = cls.options or set()
+        cls.agent_project_folder = pathlib.Path(
+            sys.modules[cls.__module__].__file__,
+        ).parents[0]
 
         try:
             cls._validate_metadata()
         except comp_excs.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
-                original_kwargs=exc.exc_kwargs,
+                original_kwargs=exc.kwargs,
                 exception_map=cls._EXCEPTION_MAP,
                 exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
             ) from None
@@ -214,20 +219,6 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             parameters=parameters,
         )
 
-        # if self.validating_function:
-        #     self.validating_function({option.name: option for option in self.options})
-        #
-        # if name is None:
-        #     name = self.resolve_agent_generator_name()
-        #
-        # return self.agent_generator(
-        #     name=name,
-        #     description=description,
-        #     parameters={
-        #         option.name: option.get_option_value() for option in self.options
-        #     },
-        # )
-
     def to_json(self) -> JSONObject:
         """
         Convert the agent template metadata to a JSON serializable dictionary.
@@ -252,37 +243,3 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             if self.validating_function and self.validating_function.__doc__
             else None,
         }
-
-    # def get_option_by_option_name(self, option_name: str) -> Options:
-    #     for option in self.options:
-    #         if option.name == option_name:
-    #             return option
-    #     raise AgentTemplateOptionNotFoundError(
-    #         option_name=option_name,
-    #         agent_template=self.name,
-    #     )
-    #
-    # def set_option_value_by_option_name(
-    #     self,
-    #     option_name: str,
-    #     option_value: Any,
-    # ) -> None:
-    #     option = self.get_option_by_option_name(option_name)
-    #
-    #     try:
-    #         option.set_option_value(option_value)
-    #     except OptionValueValidationError as exc:
-    #         raise AgentTemplateOptionValueError(
-    #             option_name=option_name,
-    #             option_value=option_value,
-    #             agent_template=self.name,
-    #             error_message=str(exc),
-    #         )
-    #
-    # def clear_option_value_by_option_name(self, option_name: str) -> None:
-    #     option = self.get_option_by_option_name(option_name)
-    #     option.clear_option_value()
-    #
-    # def clear_all_option_values(self):
-    #     for option in self.options:
-    #         option.clear_option_value()

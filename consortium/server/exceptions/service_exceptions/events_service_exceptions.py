@@ -5,10 +5,12 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class EventsServiceError(BaseServiceException):
-    pass
+    code = "EVENTS_SERVICE_ERROR"
 
 
 class EventHandlerAlreadyRegisteredError(EventsServiceError):
+    code = "EVENT_HANDLER_ALREADY_REGISTERED_ERROR"
+
     def __init__(self, event_type: EventType):
         super().__init__(
             message=(
@@ -20,6 +22,8 @@ class EventHandlerAlreadyRegisteredError(EventsServiceError):
 
 
 class EventHandlerNotRegisteredError(EventsServiceError):
+    code = "EVENT_HANDLER_NOT_REGISTERED_ERROR"
+
     def __init__(self, event_type: EventType):
         super().__init__(
             message=(

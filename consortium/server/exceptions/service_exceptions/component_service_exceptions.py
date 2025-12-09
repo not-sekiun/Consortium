@@ -3,7 +3,9 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 )
 
 
-class ComponentsLoaderServiceError(BaseServiceException):
+class ComponentsServiceError(BaseServiceException):
+    code = "COMPONENTS_SERVICE_ERROR"
+
     _COMPONENT_TYPE = "component"
     _MESSAGE_TEMPLATE = ""  # Holds the pure template string
     # Holds the template string that has the $C_LOWER$ and $C_CAPITAL$ replaced by the
@@ -27,15 +29,19 @@ class ComponentsLoaderServiceError(BaseServiceException):
         )
 
 
-class ComponentLoadingError(ComponentsLoaderServiceError): ...
+class ComponentLoadingError(ComponentsServiceError):
+    code = "COMPONENT_LOADING_ERROR"
 
 
-class InvalidComponentProjectManifestFileError(ComponentLoadingError): ...
+class InvalidComponentProjectManifestFileError(ComponentLoadingError):
+    code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_ERROR"
 
 
 class InvalidComponentProjectManifestFileJSONError(
     InvalidComponentProjectManifestFileError,
 ):
+    code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_JSON_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
         "The $C_LOWER$ project manifest file 'manifest.json' is not a valid JSON "
@@ -49,6 +55,8 @@ class InvalidComponentProjectManifestFileJSONError(
 class InvalidComponentProjectManifestFileSchemaError(
     InvalidComponentProjectManifestFileError,
 ):
+    code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
         "The $C_LOWER$ project manifest file 'manifest.json' failed JSON schema "
@@ -62,10 +70,13 @@ class InvalidComponentProjectManifestFileSchemaError(
         )
 
 
-class InvalidComponentProjectPyProjectFileError(ComponentLoadingError): ...
+class InvalidComponentProjectPyProjectFileError(ComponentLoadingError):
+    code = "INVALID_COMPONENT_PROJECT_PY_PROJECT_FILE_ERROR"
 
 
 class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
+    code = "INVALID_COMPONENT_PROJECT_PY_PROJECT_FILE_TOML_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
         "The 'pyproject.toml' file specified is not a valid TOML file."
@@ -76,6 +87,8 @@ class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
 
 
 class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError):
+    code = "INVALID_COMPONENT_PROJECT_PY_PROJECT_FILE_DEPENDENCY_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
         "The 'pyproject.toml' file specified contains the invalid dependency "
@@ -90,12 +103,15 @@ class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError)
         )
 
 
-class InvalidComponentProjectFolderStructureError(ComponentLoadingError): ...
+class InvalidComponentProjectFolderStructureError(ComponentLoadingError):
+    code = "INVALID_COMPONENT_PROJECT_FOLDER_STRUCTURE_ERROR"
 
 
 class ComponentProjectManifestFileNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
+    code = "COMPONENT_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
         "The $C_LOWER$ project manifest file 'manifest.json' was not found in the "
@@ -110,6 +126,8 @@ class ComponentProjectManifestFileNotFoundError(
 class ComponentProjectComponentFileNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
+    code = "COMPONENT_PROJECT_COMPONENT_FILE_NOT_FOUND_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
         "The $C_LOWER$ file '{component_file}' specified in the $C_LOWER$ project's "
@@ -124,10 +142,13 @@ class ComponentProjectComponentFileNotFoundError(
         )
 
 
-class InvalidComponentProjectImplementationError(ComponentLoadingError): ...
+class InvalidComponentProjectImplementationError(ComponentLoadingError):
+    code = "INVALID_COMPONENT_PROJECT_IMPLEMENTATION_ERROR"
 
 
 class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationError):
+    code = "COMPONENT_PROJECT_SYMBOL_NOT_FOUND_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load $C_LOWER$ project at '{component_project_folder}'. The "
         "symbol name '{symbol_name}' specified in the $C_LOWER$ project's "
@@ -150,6 +171,8 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
 
 
 class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError):
+    code = "COMPONENT_PROJECT_INTERFACE_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
         "The $C_LOWER$ in the $C_LOWER$ project does not implement the required "
@@ -169,6 +192,8 @@ class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError)
 
 
 class InternalComponentProjectError(InvalidComponentProjectImplementationError):
+    code = "INTERNAL_COMPONENT_PROJECT_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load $C_LOWER$ project at '{component_project_folder}'. An "
         "exception occurred while loading the $C_LOWER$: {internal_error_message}"
@@ -186,6 +211,8 @@ class InternalComponentProjectError(InvalidComponentProjectImplementationError):
 
 
 class IncompatibleComponentFrameworkVersionError(ComponentLoadingError):
+    code = "INCOMPATIBLE_COMPONENT_FRAMEWORK_VERSION_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ {component_str}. The $C_LOWER$ requires a "
         "framework version of '{required_version}' which is incompatible "
@@ -206,6 +233,8 @@ class IncompatibleComponentFrameworkVersionError(ComponentLoadingError):
 
 
 class ComponentAlreadyRegisteredError(ComponentLoadingError):
+    code = "COMPONENT_ALREADY_REGISTERED_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to register the $C_LOWER$ '{component_str}'. A $C_LOWER$ with the same "
         "ID '{component_id}' has already been registered in the $C_LOWER$s service."
@@ -219,6 +248,8 @@ class ComponentAlreadyRegisteredError(ComponentLoadingError):
 
 
 class DuplicateComponentLabelError(ComponentLoadingError):
+    code = "DUPLICATE_COMPONENT_LABEL_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to register the $C_LOWER$ '{component_str}'. A $C_LOWER$ with the same "
         "label '{label}' has already been registered in the $C_LOWER$s "
@@ -233,23 +264,13 @@ class DuplicateComponentLabelError(ComponentLoadingError):
         )
 
 
-class InternalComponentStartError(ComponentLoadingError):
-    _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ '{component_str}'. An exception occurred "
-        "while starting the $C_LOWER$: {internal_error_message}"
-    )
-
-    def __init__(self, component_str: str, internal_error_message: str):
-        super().__init__(
-            component_str=component_str,
-            internal_error_message=internal_error_message,
-        )
-
-
-class ComponentDependencyError(ComponentsLoaderServiceError): ...
+class ComponentDependencyError(ComponentsServiceError):
+    code = "COMPONENT_DEPENDENCY_ERROR"
 
 
 class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
+    code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ '{component_project_folder}' due to a dependency "
         "error. The third-party dependency '{third_party_dependency_name}' is required "
@@ -269,6 +290,8 @@ class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
 
 
 class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
+    code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ '{component_project_folder}' due to a "
         "dependency error. The $C_LOWER$ requires the third-party dependency "
@@ -293,6 +316,8 @@ class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
 
 
 class ComponentDependencyNotFoundError(ComponentDependencyError):
+    code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ {component_str} due to a dependency error. "
         "The component dependency '{missing_dependency}' is required but not "
@@ -312,6 +337,8 @@ class ComponentDependencyNotFoundError(ComponentDependencyError):
 
 
 class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
+    code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ {component_str} due to a dependency error. "
         "The $C_LOWER$ requires the component dependency '{incompatible_dependency}' of "
@@ -336,6 +363,8 @@ class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
 
 
 class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError):
+    code = "COMPONENT_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ {component_str} due to a dependency error. The "
         "component dependency '{invalid_dependency}' that the $C_LOWER$ depends on is "
@@ -354,6 +383,8 @@ class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError
 
 
 class ComponentDependencyNotRunningError(ComponentDependencyError):
+    code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ {component_str} due to a dependency error. The "
         "component dependency '{not_running_dependency}' that the $C_LOWER$ depends on "
@@ -369,3 +400,15 @@ class ComponentDependencyNotRunningError(ComponentDependencyError):
             component_str=component_str,
             not_running_dependency=not_running_dependency,
         )
+
+
+class ComponentNotFoundError(ComponentsServiceError):
+    code = "COMPONENT_NOT_FOUND_ERROR"
+
+    _MESSAGE_TEMPLATE = (
+        "Faield to find the requested $C_LOWER$. No $C_LOWER$ was found with the "
+        "provided $C_LOWER$ ID '{component_id}'."
+    )
+
+    def __init__(self, component_id: str):
+        super().__init__(component_id=component_id)

@@ -4,14 +4,16 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 
 
 class RepositoryFrameworkError(BaseFrameworkException):
-    pass
+    code = "REPOSITORY_FRAMEWORK_ERROR"
 
 
 class RepositoryFileError(RepositoryFrameworkError):
-    pass
+    code = "REPOSITORY_FILE_ERROR"
 
 
 class RepositoryFileAlreadyExistsError(RepositoryFileError):
+    code = "REPOSITORY_FILE_ALREADY_EXISTS_ERROR"
+
     def __init__(self, repository_file_str: str) -> None:
         super().__init__(
             f"Failed to perform the requested operation on the file {repository_file_str}. The "
@@ -20,6 +22,8 @@ class RepositoryFileAlreadyExistsError(RepositoryFileError):
 
 
 class RepositoryFileDoesNotExistError(RepositoryFileError):
+    code = "REPOSITORY_FILE_DOES_NOT_EXIST_ERROR"
+
     def __init__(self, repository_file_str: str) -> None:
         super().__init__(
             f"Failed to perform the requested operation on the file {repository_file_str}. The "
@@ -28,10 +32,12 @@ class RepositoryFileDoesNotExistError(RepositoryFileError):
 
 
 class RepositoryDirectoryError(RepositoryFrameworkError):
-    pass
+    code = "REPOSITORY_DIRECTORY_ERROR"
 
 
 class RepositoryDirectoryAlreadyExistsError(RepositoryDirectoryError):
+    code = "REPOSITORY_DIRECTORY_ALREADY_EXISTS_ERROR"
+
     def __init__(self, repository_directory_str: str) -> None:
         super().__init__(
             "Failed to perform the requested operation on the directory "
@@ -40,6 +46,8 @@ class RepositoryDirectoryAlreadyExistsError(RepositoryDirectoryError):
 
 
 class RepositoryDirectoryDoesNotExistError(RepositoryDirectoryError):
+    code = "REPOSITORY_DIRECTORY_DOES_NOT_EXIST_ERROR"
+
     def __init__(self, repository_directory_str: str) -> None:
         super().__init__(
             "Failed to perform the requested operation on the directory "
@@ -48,6 +56,8 @@ class RepositoryDirectoryDoesNotExistError(RepositoryDirectoryError):
 
 
 class RepositoryDirectoryRelativePathNotFoundError(RepositoryDirectoryError):
+    code = "REPOSITORY_DIRECTORY_RELATIVE_PATH_NOT_FOUND_ERROR"
+
     def __init__(self, relative_path: str, repository_directory_str: str) -> None:
         super().__init__(
             f"Failed to perform the requested operation on the path '{relative_path}' "
@@ -57,6 +67,8 @@ class RepositoryDirectoryRelativePathNotFoundError(RepositoryDirectoryError):
 
 
 class RepositoryDirectoryRelativeFileAlreadyExistsError(RepositoryDirectoryError):
+    code = "REPOSITORY_DIRECTORY_RELATIVE_FILE_ALREADY_EXISTS_ERROR"
+
     def __init__(self, relative_file_path: str, repository_directory_str: str) -> None:
         super().__init__(
             "Failed to perform the requested operation on the file "
@@ -66,6 +78,8 @@ class RepositoryDirectoryRelativeFileAlreadyExistsError(RepositoryDirectoryError
 
 
 class RepositoryDirectoryRelativeFileNotFoundError(RepositoryDirectoryError):
+    code = "REPOSITORY_DIRECTORY_RELATIVE_FILE_NOT_FOUND_ERROR"
+
     def __init__(self, relative_file_path: str, repository_directory_str: str) -> None:
         super().__init__(
             "Failed to perform the requested operation on the file "
@@ -75,6 +89,8 @@ class RepositoryDirectoryRelativeFileNotFoundError(RepositoryDirectoryError):
 
 
 class RepositoryDirectoryRelativePathIsNotAFileError(RepositoryDirectoryError):
+    code = "REPOSITORY_DIRECTORY_RELATIVE_PATH_IS_NOT_A_FILE_ERROR"
+
     def __init__(self, relative_path: str, repository_directory_str: str) -> None:
         super().__init__(
             f"Failed to perform the requested operation on the path '{relative_path}' "
@@ -84,6 +100,8 @@ class RepositoryDirectoryRelativePathIsNotAFileError(RepositoryDirectoryError):
 
 
 class RepositoryDirectoryRelativeDirectoryNotFoundError(RepositoryDirectoryError):
+    code = "REPOSITORY_DIRECTORY_RELATIVE_DIRECTORY_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         relative_directory_path: str,
@@ -97,6 +115,8 @@ class RepositoryDirectoryRelativeDirectoryNotFoundError(RepositoryDirectoryError
 
 
 class InvalidRepositoryDirectoryArchiveFileFormatError(RepositoryDirectoryError):
+    code = "INVALID_REPOSITORY_DIRECTORY_ARCHIVE_FILE_FORMAT_ERROR"
+
     def __init__(self) -> None:
         super().__init__(
             "Failed to create the directory. The format of the provided archive file "

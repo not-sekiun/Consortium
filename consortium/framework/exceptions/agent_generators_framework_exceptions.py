@@ -1,47 +1,26 @@
-from typing import Any
-
-from consortium.framework.exceptions.base_framework_exception import (
-    BaseRaiseOnlyFrameworkException,
+from consortium.framework.exceptions._component_framework_exceptions import (
+    ComponentRuntimeError,
+    ComponentStartError,
+    ComponentStopError,
 )
 
 
-class AgentGeneratorStartError(BaseRaiseOnlyFrameworkException):
-    def __init__(
-        self,
-        message: str = (
-            "An error occurred while attempting to queue the agent generator."
-        ),
-        detail: Any = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+class AgentGeneratorStartError(ComponentStartError):
+    """
+    Raise this exception to signal that an error occurred while attempting to start the
+    agent generator to abort the start process.
+    """
 
 
-class AgentGeneratorBuildError(BaseRaiseOnlyFrameworkException):
-    def __init__(
-        self,
-        message: str = (
-            "An error occurred while the agent generator was building the agent."
-        ),
-        detail: Any = None,
-    ):
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+class AgentGeneratorBuildError(ComponentRuntimeError):
+    """
+    Raise this exception to signal that an error occurred while the agent generator was
+    building the agent.
+    """
 
 
-class AgentGeneratorStopError(BaseRaiseOnlyFrameworkException):
-    def __init__(
-        self,
-        message: str = (
-            "An error occurred while attempting to stop the agent generator."
-        ),
-        detail: Any = None,
-    ) -> None:
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+class AgentGeneratorStopError(ComponentStopError):
+    """
+    Raise this exception to signal that an error occurred while attempting to stop the
+    agent generator and to abort the stop process.
+    """

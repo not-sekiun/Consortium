@@ -1,7 +1,5 @@
-from consortium.components.listener_profiles.consortium.reverse_tcp.listener import (
-    Listener,
-)
-from consortium.components.listener_profiles.consortium.reverse_tcp.listener_type import (
+from consortium.components.listeners.consortium.reverse_tcp.listener import Listener
+from consortium.components.listeners.consortium.reverse_tcp.listener_type import (
     LISTENER_TYPE,
 )
 from consortium.framework.exceptions.options_framework_exceptions import (

@@ -25,7 +25,7 @@ from consortium.framework.options import (
 )
 from consortium.framework.options.exceptions import OptionValueValidationError
 from consortium.framework.utils.exception_utils import remap_exception
-from consortium.server.exceptions.framework_exceptions.listener_template_framework_exceptions import (
+from consortium.server.exceptions.framework_exceptions.listener_templates_framework_exceptions import (
     DuplicateListenerTemplateOptionNameError,
     EmptyListenerTemplateLabelError,
     InvalidFrameworkVersionSpecifierError,
@@ -91,7 +91,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         except comp_excs.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
-                original_kwargs=exc.exc_kwargs,
+                original_kwargs=exc.kwargs,
                 exception_map=cls._EXCEPTION_MAP,
                 exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
             ) from None
@@ -123,13 +123,6 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         cls.listener_template_id = uuid.uuid4()
         # Remap options set to a dictionary for easier access by name.
         cls.options = {option.name: option for option in cls.options}
-        # TODO: Fix this code. The listener needs to refer to an instance of the
-        #  listener template singleton that created it NOT its class. This assignment
-        #  needs to occur at load time by the c2 profiles service when it loads the
-        #  listener templates.
-        # Stupid fucking hack. Each listener creates a new template instance while
-        # technically it works its bad practice.
-        cls.listener.creating_listener_template = cls()
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:

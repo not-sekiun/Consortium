@@ -28,7 +28,8 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 )
 
 
-class ListenersFrameworkError(BaseFrameworkException): ...
+class ListenersFrameworkError(BaseFrameworkException):
+    code = "LISTENERS_FRAMEWORK_ERROR"
 
 
 class ListenerConfigurationError(
@@ -40,10 +41,14 @@ class ListenerConfigurationError(
     listener.
     """
 
+    code = "LISTENER_CONFIGURATION_ERROR"
+
     _COMPONENT_TYPE = "listener"
 
 
 class InvalidListenerConfigurationParameterTypeError(ListenerConfigurationError):
+    code = "INVALID_LISTENER_CONFIGURATION_PARAMETER_TYPE_ERROR"
+
     def __init__(
         self,
         listener_str: str,
@@ -62,6 +67,8 @@ class InvalidListenerConfigurationParameterTypeError(ListenerConfigurationError)
 class MissingListenerConfigurationParameterError(
     ListenerConfigurationError,
 ):
+    code = "MISSING_LISTENER_CONFIGURATION_PARAMETER_ERROR"
+
     def __init__(self, listener_str: str, parameter_name: str):
         super().__init__(
             component_str=listener_str,
@@ -85,6 +92,8 @@ class ListenerOperationError(
     listener.
     """
 
+    code = "LISTENER_OPERATION_ERROR"
+
     _COMPONENT_TYPE = "listener"
 
 
@@ -96,6 +105,8 @@ class ListenerNotRunningError(
     An error that is raised when an operation is attempted on a listener that requires
     that listener to already be running but the listener is not running.
     """
+
+    code = "LISTENER_NOT_RUNNING_ERROR"
 
     def __init__(
         self,
@@ -114,6 +125,8 @@ class ListenerAlreadyStartedError(
     or running.
     """
 
+    code = "LISTENER_ALREADY_STARTED_ERROR"
+
     def __init__(
         self,
         listener_str: str,
@@ -125,6 +138,8 @@ class ListenerStartError(comp_excs.ComponentStartError, ListenerOperationError):
     """
     An error that is raised when a listener fails to start.
     """
+
+    code = "LISTENER_START_ERROR"
 
     def __init__(
         self,
@@ -144,6 +159,8 @@ class ListenerRuntimeError(comp_excs.ComponentRuntimeError, ListenerOperationErr
     An error that is raised when a listener encounters an error at runtime.
     """
 
+    code = "LISTENER_RUNTIME_ERROR"
+
     def __init__(
         self,
         listener_str: str,
@@ -162,6 +179,8 @@ class ListenerStopError(comp_excs.ComponentStopError, ListenerOperationError):
     An error that is raised when a listener fails to stop.
     """
 
+    code = "LISTENER_STOP_ERROR"
+
     def __init__(
         self,
         listener_str: str,
@@ -176,10 +195,12 @@ class ListenerStopError(comp_excs.ComponentStopError, ListenerOperationError):
 
 
 class ListenerCreationError(ListenersFrameworkError):
-    pass
+    code = "LISTENER_CREATION_ERROR"
 
 
 class ListenerCreationParameterTypeError(ListenerCreationError):
+    code = "LISTENER_CREATION_PARAMETER_TYPE_ERROR"
+
     def __init__(
         self,
         listener_str: str,

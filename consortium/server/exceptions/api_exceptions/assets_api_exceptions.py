@@ -5,8 +5,7 @@ from consortium.server.exceptions.api_exceptions.repository_api_exceptions impor
 )
 
 
-class AssetNotFoundError(NotFoundError):
-    code = "ASSET_NOT_FOUND_ERROR"
+class AssetNotFoundError(NotFoundError): ...
 
 
 class AssetDirectoryArchiveFileFormatNotSpecifiedError(

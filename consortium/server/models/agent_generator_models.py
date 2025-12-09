@@ -4,15 +4,10 @@ from pydantic import BaseModel
 
 from consortium.server.models.c2_types_models import AgentTypeModel
 from consortium.server.models.common_models import ErrorModel
+from consortium.server.models.component_models import StatusModel
 from consortium.server.objects.agent_generator_objects import (
     AgentGeneratorBuildStepState,
-    AgentGeneratorState,
 )
-
-
-class AgentGeneratorStatusModel(BaseModel):
-    state: AgentGeneratorState
-    error: ErrorModel | None
 
 
 class AgentGeneratorBuildStepStatusModel(BaseModel):
@@ -42,7 +37,7 @@ class AgentGeneratorModel(BaseModel):
     description: str
     agent_type: AgentTypeModel
     parameters: dict[str, Any]
-    status: AgentGeneratorStatusModel
+    status: StatusModel
     datetime_created: str
     agent_generator_build_steps: list[AgentGeneratorBuildStepModel]
     creating_agent_template: CreatingAgentTemplateReferenceModel

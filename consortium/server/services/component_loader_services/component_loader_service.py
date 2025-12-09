@@ -12,7 +12,7 @@ import packaging.version as version
 from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
     ComponentConfigurationError,
 )
-from consortium.server.exceptions.service_exceptions.component_loader_service_exceptions import (
+from consortium.server.exceptions.service_exceptions.component_service_exceptions import (
     ComponentDependencyError,
     ComponentDependencyNotFoundError,
     ComponentDependsOnInvalidComponentDependencyError,
@@ -36,14 +36,14 @@ from consortium.server.server_config import (
     SERVER_RELEASE,
 )
 
-ComponentType = TypeVar("ComponentType")
+Component = TypeVar("Component")
 
 
 # Default base service that loads components from component project folders. Expects to
 # load a single component from each component project folder. Used by the plugins and
 # event hooks system.
-class ComponentLoaderService(Generic[ComponentType]):
-    _component_type: type[ComponentType]
+class ComponentLoaderService(Generic[Component]):
+    _component_type: type[Component]
     _component_framework_error: type[Exception]
     _manifest_json_schema: dict[str, Any]
 
@@ -176,9 +176,9 @@ class ComponentLoaderService(Generic[ComponentType]):
 
     @staticmethod
     def _attach_third_party_dependencies_to_component_class(
-        component_class: type[ComponentType],
+        component_class: type[Component],
         dependencies: set[requirements.Requirement],
-    ) -> type[ComponentType]:
+    ) -> type[Component]:
         component_class.third_party_dependencies = dependencies
         return component_class
 
@@ -187,7 +187,7 @@ class ComponentLoaderService(Generic[ComponentType]):
         component_project_folder: pathlib.Path,
         component_module: str,
         component_symbol: str,
-    ) -> type[ComponentType]:
+    ) -> type[Component]:
         # Check for a valid component project folder structure as specified by the
         # manifest file.
         component_file = pathlib.Path(
@@ -239,13 +239,13 @@ class ComponentLoaderService(Generic[ComponentType]):
 
     @staticmethod
     def _get_component_framework_version_compatibility(
-        component_class: type[ComponentType],
+        component_class: type[Component],
     ) -> version.Version:
         return component_class.compatible_framework_version
 
     def _validate_component_framework_version_compatibility(
         self,
-        component_class: type[ComponentType],
+        component_class: type[Component],
     ) -> None:
         component_framework_version = (
             self._get_component_framework_version_compatibility(
@@ -272,7 +272,7 @@ class ComponentLoaderService(Generic[ComponentType]):
         component_class: type,
         component_project_folder: pathlib.Path,
         component_symbol: str,
-    ) -> ComponentType:
+    ) -> Component:
         # Check for correct inheritance and instantiation of classes.
         if not issubclass(component_class, self._component_type):
             raise ComponentProjectInterfaceError(
@@ -292,8 +292,8 @@ class ComponentLoaderService(Generic[ComponentType]):
 
     @staticmethod
     def _post_validate_component_object(
-        component_object: ComponentType,
-    ) -> ComponentType:
+        component_object: Component,
+    ) -> Component:
         # Hook for any post validation steps that need to be performed on the component
         # class after all validation has been performed.
         return component_object
@@ -302,7 +302,7 @@ class ComponentLoaderService(Generic[ComponentType]):
         self,
         component_project_folder: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
-    ) -> ComponentType | None:
+    ) -> Component | None:
         manifest_json = self._validate_manifest_json_file(
             component_project_folder=component_project_folder,
             manifest_file_path=self._get_manifest_json_file_path(
@@ -354,7 +354,7 @@ class ComponentLoaderService(Generic[ComponentType]):
         directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> tuple[
-        list[ComponentType],
+        list[Component],
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:
@@ -388,8 +388,8 @@ class ComponentLoaderService(Generic[ComponentType]):
 
     @staticmethod
     def validate_component_component_dependencies(
-        component: ComponentType,
-        registered_components: list[ComponentType],
+        component: Component,
+        registered_components: list[Component],
     ) -> bool:
         label_registered_component_map = {
             registered_component.label: registered_component
@@ -422,11 +422,11 @@ class ComponentLoaderService(Generic[ComponentType]):
         #  ie an event hook depends on a listener and a plugin to be installed. Keep as
         #  `Any` for now
         self,
-        components: list[ComponentType],
+        components: list[Component],
         already_loaded_components: list[Any],
     ) -> tuple[
-        list[ComponentType],
-        list[tuple[ComponentType, ComponentDependencyError]],
+        list[Component],
+        list[tuple[Component, ComponentDependencyError]],
     ]:
         already_loaded_label_component_map = {
             component.label: component for component in already_loaded_components

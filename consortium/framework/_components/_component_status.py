@@ -3,9 +3,6 @@ import enum
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
-from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
-    ComponentRuntimeError,
-)
 
 
 class State(enum.StrEnum):
@@ -20,7 +17,7 @@ class State(enum.StrEnum):
 
 
 class Status:
-    _VALID_LIFE_CYCLE_STATE_TRANSITIONS = {
+    _VALID_STATE_TRANSITIONS = {
         State.INITIALIZED: {State.STARTED},
         State.STARTED: {
             State.INITIALIZED,
@@ -68,7 +65,7 @@ class Status:
         new_state: State,
         error: BaseFrameworkException | None = None,
     ):
-        if new_state not in self._VALID_LIFE_CYCLE_STATE_TRANSITIONS[self.state]:
+        if new_state not in self._VALID_STATE_TRANSITIONS[self.state]:
             assert False, (
                 f"Invalid state transition from current state '{self.state}' to new "
                 f"state '{new_state}'.",
@@ -80,7 +77,7 @@ class Status:
             )
         if new_state not in (State.ERRORED, State.FATAL) and error is not None:
             assert False, (
-                f"When transitioning to the '{new_state}' state, no error must be "
+                f"When transitioning to the '{new_state}' state, no error should be "
                 f"provided.",
             )
         self.state = new_state
@@ -105,10 +102,7 @@ class Status:
         self._transition_to_state(new_state=State.CANCELLED)
 
     def _transition_to_errored(self, error: BaseFrameworkException) -> None:
-        self._transition_to_state(
-            new_state=State.ERRORED,
-            error=error,
-        )
+        self._transition_to_state(new_state=State.ERRORED, error=error)
 
     def _transition_to_fatal(self, error: BaseFrameworkException) -> None:
         self._transition_to_state(new_state=State.FATAL, error=error)

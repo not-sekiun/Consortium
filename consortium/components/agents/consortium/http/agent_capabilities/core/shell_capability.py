@@ -14,7 +14,7 @@ class ShellCapability(BaseAgentCapability):
     description = "Execute a command using the system shell on the agent."
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    arguments = {
+    options = {
         SingleValueOption(
             name="command",
             description="The command to execute on the agent.",

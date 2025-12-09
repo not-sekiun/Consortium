@@ -20,7 +20,7 @@ class EventHook(base_event_hook.BaseEventHook):
     version = "0.1.0"
     compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
-    event_types = {"STOP_SERVER"}
+    event_types = {"STOP_SERVER", "START_SERVER"}
 
     async def on_event_hook_setup(self) -> None:
         try:

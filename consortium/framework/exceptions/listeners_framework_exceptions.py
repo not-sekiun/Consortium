@@ -12,8 +12,6 @@ an error condition from the framework. The overall exception hierarchy is as fol
         - [`ListenerSpecificAgentNotFoundError`][consortium.framework.exceptions.listeners_framework_exceptions.ListenerSpecificAgentNotFoundError]
 """
 
-# from typing import Any
-
 from consortium.framework.exceptions._component_framework_exceptions import (
     ComponentRuntimeError,
     ComponentStartError,
@@ -26,53 +24,27 @@ from consortium.framework.exceptions.base_framework_exception import (  # BaseRa
 
 class ListenerStartError(ComponentStartError):
     """
-    Raised when an error occurs while attempting to start the listener.
+    Raise this exception to signal that an error occurred while attempting to start the
+    listener and to abort the start process.
     """
-
-    # def __init__(
-    #     self,
-    #     message: str = "",
-    #     detail: Any = None,
-    # ) -> None:
-    #     super().__init__(
-    #         message=message,
-    #         detail=detail,
-    #     )
 
 
 class ListenerRuntimeError(ComponentRuntimeError):
     """
-    Raised when an error occurs while the listener is running.
+    Raise this exception to signal that an error occurred while the listener was
+    running.
     """
-
-    #
-    # def __init__(
-    #     self,
-    #     message: str = "",
-    #     detail: Any = None,
-    # ):
-    #     super().__init__(
-    #         message=message,
-    #         detail=detail,
-    #     )
 
 
 class ListenerStopError(ComponentStopError):
     """
-    Raised when an error occurs while attempting to stop the listener.
+    Raise this exception to signal that an error occurred while attempting to stop the
+    listener and to abort the stop process.
     """
 
-    # def __init__(
-    #     self,
-    #     message: str = "",
-    #     detail: Any = None,
-    # ) -> None:
-    #     super().__init__(
-    #         message=message,
-    #         detail=detail,
-    #     )
 
-
+# TODO: Maybe use the standard AgentNotFoundError from the service instead of creating
+#  a new one?
 class ListenerSpecificAgentNotFoundError(BaseCatchOnlyFrameworkException):
     """
     Raised when the requested agent is not found with the provided agent ID when

@@ -74,6 +74,8 @@ class EventHooksFrameworkError(
     Base exception for all errors that occur within the event hooks framework.
     """
 
+    code = "EVENT_HOOKS_FRAMEWORK_ERROR"
+
     _COMPONENT_TYPE = "event hook"
 
 
@@ -86,6 +88,8 @@ class EventHookConfigurationError(
     event hook.
     """
 
+    code = "EVENT_HOOK_CONFIGURATION_ERROR"
+
 
 class InvalidEventHookConfigurationParameterTypeError(
     comp_excs.InvalidComponentConfigurationParameterTypeError,
@@ -95,6 +99,8 @@ class InvalidEventHookConfigurationParameterTypeError(
     An error that is raised when an event hook's configuration parameter is of an
     invalid type.
     """
+
+    code = "INVALID_EVENT_HOOK_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
         self,
@@ -118,6 +124,8 @@ class MissingEventHookConfigurationParameterError(
     definition.
     """
 
+    code = "MISSING_EVENT_HOOK_CONFIGURATION_PARAMETER_ERROR"
+
     def __init__(self, parameter_name: str, event_hook_str: str):
         super().__init__(
             component_str=event_hook_str,
@@ -134,6 +142,8 @@ class EmptyEventHookLabelError(
     configuration is an empty string.
     """
 
+    code = "EMPTY_EVENT_HOOK_LABEL_ERROR"
+
     def __init__(self, event_hook_filepath: str):
         super().__init__(component_filepath=event_hook_filepath)
 
@@ -146,6 +156,8 @@ class DuplicateEventHookLabelError(
     An error that is raised when the label provided in the event hook's definition during
     configuration is already in use by another event hook.
     """
+
+    code = "DUPLICATE_EVENT_HOOK_LABEL_ERROR"
 
     def __init__(self, event_hook_str: str, label: str):
         super().__init__(
@@ -162,6 +174,8 @@ class InvalidEventHookVersionError(
     An error that is raised when the event hook version string provided in the event hook's
     definition during configuration is not a valid version string according to PEP 440.
     """
+
+    code = "INVALID_EVENT_HOOK_VERSION_ERROR"
 
     def __init__(self, event_hook_str: str, version: str):
         super().__init__(
@@ -180,6 +194,8 @@ class InvalidFrameworkVersionSpecifierError(
     defined in PEP440.
     """
 
+    code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
+
     def __init__(self, event_hook_str: str, framework_version_specifier_str: str):
         super().__init__(
             component_str=event_hook_str,
@@ -196,6 +212,8 @@ class InvalidEventHookDependencyVersionSpecifierError(
     provided in the event hook's definition during configuration is not a valid version
     specifier string as defined in PEP440.
     """
+
+    code = "INVALID_EVENT_HOOK_DEPENDENCY_VERSION_SPECIFIER_ERROR"
 
     def __init__(
         self,

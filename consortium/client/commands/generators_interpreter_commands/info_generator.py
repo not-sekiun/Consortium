@@ -118,32 +118,21 @@ class InfoGeneratorCommand(BaseCommand):
                 "Agent generator build steps",
                 Group(*agent_generator_build_steps_tables),
             )
-            agent_type_table = Table()
-            agent_type_table.add_column("Information")
-            agent_type_table.add_column("Data")
-            agent_type_table.add_row(
-                "Agent Type ID",
-                agent_generator["agent_type"]["agent_type_id"],
+            table.add_row(
+                "Agent Type",
+                f"{agent_generator["agent_type"]["name"]} ({agent_generator["agent_type"]["agent_type_id"]})",
             )
-            agent_type_table.add_row(
-                "Name",
-                agent_generator["agent_type"]["name"],
-            )
-            agent_type_table.add_row(
+            table.add_row(
                 "Compatible Listener Types",
                 "\n".join(
                     [
-                        listener_type["name"]
-                        + " ("
-                        + listener_type["listener_type_id"]
-                        + ")"
+                        f"{listener_type["name"]} ({listener_type["listener_type_id"]})"
                         for listener_type in agent_generator["agent_type"][
                             "compatible_listener_types"
                         ]
                     ],
                 ),
             )
-            table.add_row("Agent Type", agent_type_table)
             parameter_table = Table()
             parameter_table.add_column("Parameter")
             parameter_table.add_column("Value")
@@ -155,7 +144,7 @@ class InfoGeneratorCommand(BaseCommand):
             table.add_row(
                 "Status",
                 format_agent_generator_state_string_with_color(
-                    agent_generator["status"]["state"],
+                    state_str=agent_generator["status"]["state"],
                 )
                 + (
                     " (" + agent_generator["status"]["error"]["message"] + ")"

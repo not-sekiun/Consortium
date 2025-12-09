@@ -11,6 +11,7 @@ from consortium.client.repl_framework.base_command import (
     ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import (
+    format_agent_generator_build_step_state_string_with_color,
     format_agent_generator_state_string_with_color,
     format_argparse_epilog,
 )
@@ -57,13 +58,12 @@ class ListGeneratorsCommand(BaseCommand):
                         completed_agent_generator_build_steps += 1
 
                     agent_generator_build_steps_summary.append(
-                        {
-                            "QUEUED": f"[bold white]QUEUED    [/]{agent_generator_build_step["name"]}",
-                            "RUNNING": f"[bold yellow]RUNNING   [/]{agent_generator_build_step["name"]}",
-                            "COMPLETED": f"[bold green]COMPLETED [/]{agent_generator_build_step["name"]}",
-                            "ERRORED": f"[bold red]ERRORED   [/]{agent_generator_build_step["name"]}",
-                            "FATAL": f"[bold red]FATAL     [/]{agent_generator_build_step["name"]}",
-                        }[agent_generator_build_step["status"]["state"]],
+                        f"{agent_generator_build_step["name"]} "
+                        f"({
+                            format_agent_generator_build_step_state_string_with_color(
+                                state_str=agent_generator_build_step["status"]["state"]
+                            )
+                        })",
                     )
                 agent_generator_build_steps_summary_string = "\n".join(
                     agent_generator_build_steps_summary,

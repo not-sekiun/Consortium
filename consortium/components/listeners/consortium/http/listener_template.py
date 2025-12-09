@@ -1,7 +1,5 @@
-from consortium.components.listener_profiles.consortium.http.listener import Listener
-from consortium.components.listener_profiles.consortium.http.listener_type import (
-    LISTENER_TYPE,
-)
+from consortium.components.listeners.consortium.http.listener import Listener
+from consortium.components.listeners.consortium.http.listener_type import LISTENER_TYPE
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )

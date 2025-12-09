@@ -27,7 +27,7 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 
 
 class AgentTemplatesFrameworkError(BaseFrameworkException):
-    pass
+    code = "AGENT_TEMPLATES_FRAMEWORK_ERROR"
 
 
 # class AgentTemplateConfigurationError(AgentTemplatesFrameworkError):
@@ -109,6 +109,8 @@ class AgentTemplateConfigurationError(
     agent template.
     """
 
+    code = "AGENT_TEMPLATE_CONFIGURATION_ERROR"
+
     _COMPONENT_TYPE = "agent template"
 
 
@@ -120,6 +122,8 @@ class InvalidAgentTemplateConfigurationParameterTypeError(
     An error that is raised when an agent template's configuration parameter is of an invalid
     type.
     """
+
+    code = "INVALID_AGENT_TEMPLATE_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
         self,
@@ -142,6 +146,8 @@ class MissingAgentTemplateConfigurationParameterError(
     An error that is raised when a parameter is not declared in an agent template's definition.
     """
 
+    code = "MISSING_AGENT_TEMPLATE_CONFIGURATION_PARAMETER_ERROR"
+
     def __init__(self, agent_template_str: str, parameter_name: str):
         super().__init__(
             component_str=agent_template_str,
@@ -158,6 +164,8 @@ class EmptyAgentTemplateLabelError(
     configuration is an empty string.
     """
 
+    code = "EMPTY_AGENT_TEMPLATE_LABEL_ERROR"
+
     def __init__(self, agent_template_filepath: str):
         super().__init__(component_filepath=agent_template_filepath)
 
@@ -170,6 +178,8 @@ class DuplicateAgentTemplateLabelError(
     An error that is raised when the label provided in the agent template's definition during
     configuration is already in use by another agent template.
     """
+
+    code = "DUPLICATE_AGENT_TEMPLATE_LABEL_ERROR"
 
     def __init__(self, agent_template_str: str, label: str):
         super().__init__(
@@ -187,6 +197,8 @@ class InvalidAgentTemplateVersionError(
     definition during configuration is not a valid version string according to PEP 440.
     """
 
+    code = "INVALID_AGENT_TEMPLATE_VERSION_ERROR"
+
     def __init__(self, agent_template_str: str, version: str):
         super().__init__(
             component_str=agent_template_str,
@@ -203,6 +215,8 @@ class InvalidFrameworkVersionSpecifierError(
     agent template's definition during configuration is not a valid version specifier string as
     defined in PEP440.
     """
+
+    code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
 
     def __init__(
         self,
@@ -225,6 +239,8 @@ class InvalidAgentTemplateDependencyVersionSpecifierError(
     specifier string as defined in PEP440.
     """
 
+    code = "INVALID_AGENT_TEMPLATE_DEPENDENCY_VERSION_SPECIFIER_ERROR"
+
     def __init__(
         self,
         agent_template_str: str,
@@ -237,6 +253,8 @@ class InvalidAgentTemplateDependencyVersionSpecifierError(
 
 
 class DuplicateAgentTemplateOptionNameError(AgentTemplateConfigurationError):
+    code = "DUPLICATE_AGENT_TEMPLATE_OPTION_NAME_ERROR"
+
     def __init__(self, agent_template_str: str, option_name: str):
         super().__init__(
             message=(
@@ -248,10 +266,12 @@ class DuplicateAgentTemplateOptionNameError(AgentTemplateConfigurationError):
 
 
 class AgentTemplateOptionError(AgentTemplatesFrameworkError):
-    pass
+    code = "AGENT_TEMPLATE_OPTION_ERROR"
 
 
 class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
+    code = "AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"
+
     def __init__(self, agent_template_str: str, option_name: str):
         super().__init__(
             message=(
@@ -263,6 +283,8 @@ class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
 
 
 class AgentTemplateOptionValueError(AgentTemplateOptionError):
+    code = "AGENT_TEMPLATE_OPTION_VALUE_ERROR"
+
     def __init__(
         self,
         agent_template_str: str,

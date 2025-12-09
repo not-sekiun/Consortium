@@ -17,13 +17,10 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 )
 
 
-class AgentTemplateNotFoundError(NotFoundError):
-    code = "AGENT_TEMPLATE_NOT_FOUND_ERROR"
+class AgentTemplateNotFoundError(NotFoundError): ...
 
 
-class AgentTemplateOptionNotFoundError(UnprocessableEntityError):
-    code = "AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"
+class AgentTemplateOptionNotFoundError(UnprocessableEntityError): ...
 
 
-class AgentTemplateOptionValueError(UnprocessableEntityError):
-    code = "AGENT_TEMPLATE_OPTION_VALUE_ERROR"
+class AgentTemplateOptionValueError(UnprocessableEntityError): ...

@@ -39,6 +39,8 @@ class ComponentsFrameworkError(BaseFrameworkException):
     Base exception for all errors that occur within the components framework.
     """
 
+    code = "COMPONENTS_FRAMEWORK_ERROR"
+
     _COMPONENT_TYPE = "component"
     _MESSAGE_TEMPLATE = ""  # Holds the pure template string
     # Holds the template string that has the $C_LOWER$ and $C_CAPITAL$ replaced by the
@@ -46,7 +48,7 @@ class ComponentsFrameworkError(BaseFrameworkException):
     _MESSAGE = ""
 
     def __init__(self, message: str | None = None, detail: Any = None, **kwargs):
-        self.exc_kwargs = kwargs
+        self.kwargs = kwargs
         if message:
             super().__init__(message=message, detail=detail)
         else:
@@ -71,12 +73,16 @@ class ComponentConfigurationError(ComponentsFrameworkError):
     component.
     """
 
+    code = "COMPONENT_CONFIGURATION_ERROR"
+
 
 class InvalidComponentConfigurationParameterTypeError(ComponentConfigurationError):
     """
     An error that is raised when a component's configuration parameter is of an invalid
     type.
     """
+
+    code = "INVALID_COMPONENT_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to configure the $C_LOWER$ '{component_str}'. The parameter "
@@ -103,6 +109,8 @@ class MissingComponentConfigurationParameterError(ComponentConfigurationError):
     An error that is raised when a parameter is not declared in a component's definition.
     """
 
+    code = "MISSING_COMPONENT_CONFIGURATION_PARAMETER_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to configure the $C_LOWER$ '{component_str}'. The parameter "
         "`{parameter_name}` was not declared in the $C_LOWER$'s definition. Modify the "
@@ -123,6 +131,8 @@ class EmptyComponentLabelError(ComponentConfigurationError):
     configuration is an empty string.
     """
 
+    code = "EMPTY_COMPONENT_LABEL_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to configure the $C_LOWER$ defined at '{component_filepath}'. The "
         "label provided in the $C_LOWER$'s definition during configuration cannot be "
@@ -140,6 +150,8 @@ class DuplicateComponentLabelError(ComponentConfigurationError):
     configuration is already in use by another component.
     """
 
+    code = "DUPLICATE_COMPONENT_LABEL_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to configure the $C_LOWER$ '{component_str}'. The label '{label}' is "
         "already used by another $C_LOWER$. Redeclare the $C_LOWER$'s `label` class "
@@ -155,6 +167,8 @@ class InvalidComponentVersionError(ComponentConfigurationError):
     An error that is raised when the component version string provided in the component's
     definition during configuration is not a valid version string according to PEP 440.
     """
+
+    code = "INVALID_COMPONENT_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to configure the $C_LOWER$ '{component_str}'. The $C_LOWER$ version "
@@ -173,6 +187,8 @@ class InvalidFrameworkVersionSpecifierError(ComponentConfigurationError):
     defined in PEP440.
     """
 
+    code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to configure the $C_LOWER$ '{component_str}'. The framework version "
         "specifier string provided '{framework_version_specifier_str}' is not a "
@@ -187,37 +203,14 @@ class InvalidFrameworkVersionSpecifierError(ComponentConfigurationError):
         )
 
 
-# class InvalidThirdPartyDependencyVersionSpecifierError(ComponentConfigurationError):
-#     """
-#     An error that is raised when the third-party dependency version specifier string
-#     provided in the component's definition during configuration is not a valid version
-#     specifier string as defined in PEP440.
-#     """
-#     _MESSAGE_TEMPLATE = (
-#         "Failed to configure the $C_LOWER$ '{component_str}'. The third-party "
-#         "dependency '{third_party_dependency_name}' version specifier string provided "
-#         "'{third_party_dependency_version_specifier}' is not a "
-#         "valid version specifier string. See PEP 440 for details on version "
-#         "specifier strings."
-#     )
-#
-#     def __init__(
-#         self,
-#         component_str: str,
-#         third_party_dependency_name: str,
-#         third_party_dependency_version_specifier: str,
-#     ):
-#         super().__init__(component_str=component_str,
-#                          third_party_dependency_name=third_party_dependency_name,
-#                          third_party_dependency_version_specifier=third_party_dependency_version_specifier)
-
-
 class InvalidComponentDependencyVersionSpecifierError(ComponentConfigurationError):
     """
     An error that is raised when the component dependency version specifier string
     provided in the component's definition during configuration is not a valid version
     specifier string as defined in PEP440.
     """
+
+    code = "INVALID_COMPONENT_DEPENDENCY_VERSION_SPECIFIER_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to configure the $C_LOWER$ '{component_str}'. The component's "
@@ -243,12 +236,16 @@ class ComponentOperationError(ComponentsFrameworkError):
     component.
     """
 
+    code = "COMPONENT_OPERATION_ERROR"
+
 
 class ComponentNotRunningError(ComponentOperationError):
     """
     An error that is raised when an operation is attempted on a component that requires
     that component to already be running but the component is not running.
     """
+
+    code = "COMPONENT_NOT_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to perform the requested operation on the $C_LOWER$ "
@@ -269,6 +266,8 @@ class ComponentAlreadyStartedError(ComponentOperationError):
     or running.
     """
 
+    code = "COMPONENT_ALREADY_STARTED_ERROR"
+
     _MESSAGE_TEMPLATE = (
         "Failed to perform the requested operation on the $C_LOWER$ "
         "'{component_str}'. The $C_LOWER$ is already started or running."
@@ -285,6 +284,8 @@ class ComponentStartError(ComponentOperationError):
     """
     An error that is raised when a component fails to start.
     """
+
+    code = "COMPONENT_START_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to start the $C_LOWER$ '{component_str}'. {error_message}"
@@ -308,6 +309,8 @@ class ComponentRuntimeError(ComponentOperationError):
     An error that is raised when a component encounters an error at runtime.
     """
 
+    code = "COMPONENT_RUNTIME_ERROR"
+
     _MESSAGE_TEMPLATE = "Failed to run the $C_LOWER$ '{component_str}'. {error_message}"
 
     def __init__(
@@ -322,11 +325,20 @@ class ComponentRuntimeError(ComponentOperationError):
             error_message=error_message,
         )
 
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "code": self.code,
+            "message": self.message,
+            "detail": self.detail,
+        }
+
 
 class ComponentStopError(ComponentOperationError):
     """
     An error that is raised when a component fails to stop.
     """
+
+    code = "COMPONENT_STOP_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to stop the $C_LOWER$ '{component_str}'. {error_message}"

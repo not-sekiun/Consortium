@@ -183,7 +183,7 @@ class Plugin(BasePlugin):
             if attr.endswith("_service")
         }
 
-        with patch_stdout():
+        with patch_stdout(raw=True):
             while True:
                 try:
                     expression = (
@@ -198,8 +198,6 @@ class Plugin(BasePlugin):
                             prompt,
                             style=style,
                             multiline=False,
-                            # Empty string to remove the bottom toolbar.
-                            bottom_toolbar="",
                         )
                     ).rstrip(" ")
 

@@ -308,7 +308,7 @@ class AgentGeneratorsService:
             agent_generator_id=agent_generator_id,
         )
         try:
-            await agent_generator.start_agent_generator()
+            await agent_generator.start()
         except AgentGeneratorStartFrameworkError as exc:
             raise AgentGeneratorStartServiceError(
                 message=exc.message,
@@ -334,7 +334,7 @@ class AgentGeneratorsService:
             agent_generator_id=agent_generator_id,
         )
         try:
-            await agent_generator.stop_agent_generator()
+            await agent_generator.stop()
         except AgentGeneratorStopFrameworkError as exc:
             raise AgentGeneratorStopServiceError(
                 message=exc.message,
@@ -358,7 +358,7 @@ class AgentGeneratorsService:
             agent_generator_id=agent_generator_id,
         )
         try:
-            await agent_generator.cancel_agent_generator()
+            await agent_generator.cancel()
         except AgentGeneratorNotRunningFrameworkError as exc:
             raise AgentGeneratorNotRunningServiceError(message=exc.message) from None
 

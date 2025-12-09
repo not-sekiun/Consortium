@@ -4,10 +4,12 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class AgentServiceError(BaseServiceException):
-    pass
+    code = "AGENT_SERVICE_ERROR"
 
 
 class AgentNotFoundError(AgentServiceError):
+    code = "AGENT_NOT_FOUND_ERROR"
+
     def __init__(self, agent_id: str):
         super().__init__(
             f"Failed to find the requested agent. No agent was found with the "
@@ -16,6 +18,8 @@ class AgentNotFoundError(AgentServiceError):
 
 
 class AgentTaskNotFoundError(AgentServiceError):
+    code = "AGENT_TASK_NOT_FOUND_ERROR"
+
     def __init__(self, task_id: str):
         super().__init__(
             f"Failed to find the requested agent task. No agent task was found with the "
@@ -24,6 +28,8 @@ class AgentTaskNotFoundError(AgentServiceError):
 
 
 class AgentResultNotFoundError(AgentServiceError):
+    code = "AGENT_RESULT_NOT_FOUND_ERROR"
+
     def __init__(self, result_id: str):
         super().__init__(
             f"Failed to find the requested agent result. No agent result was found "
@@ -32,10 +38,12 @@ class AgentResultNotFoundError(AgentServiceError):
 
 
 class AgentTaskingError(AgentServiceError):
-    pass
+    code = "AGENT_TASKING_ERROR"
 
 
 class AgentTaskingOptionValidationError(AgentTaskingError):
+    code = "AGENT_TASKING_OPTION_VALIDATION_ERROR"
+
     def __init__(self, agent_str: str, error_message: str):
         super().__init__(
             f"Failed to task agent {agent_str}. {error_message}",
@@ -43,6 +51,8 @@ class AgentTaskingOptionValidationError(AgentTaskingError):
 
 
 class AgentTaskingRequiredOptionValueNotSetError(AgentTaskingError):
+    code = "AGENT_TASKING_REQUIRED_OPTION_VALUE_NOT_SET_ERROR"
+
     def __init__(self, agent_str: str, error_message: str):
         super().__init__(
             f"Failed to task agent {agent_str}. {error_message}",

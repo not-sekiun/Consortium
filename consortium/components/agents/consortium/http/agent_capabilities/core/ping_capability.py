@@ -45,7 +45,7 @@ class PingCapability(BaseAgentCapability):
     description = "Ping the agent."
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
-    arguments = {
+    options = {
         SingleValueOption(
             name="iterations",
             description="The number of times to ping the agent.",

@@ -13,10 +13,12 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class AgentTemplatesServiceError(BaseServiceException):
-    pass
+    code = "AGENT_TEMPLATES_SERVICE_ERROR"
 
 
 class AgentTemplateNotFoundError(AgentTemplatesServiceError):
+    code = "AGENT_TEMPLATE_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         agent_template_id: str,

@@ -1,13 +1,7 @@
-from typing import Any
-
 from pydantic import BaseModel
 
-from consortium.framework._components._status import State
-
-
-class ErrorModel(BaseModel):
-    message: str
-    detail: Any
+from consortium.framework._components._component_status import State
+from consortium.server.models.common_models import ErrorModel
 
 
 class StatusModel(BaseModel):

@@ -36,10 +36,12 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class ListenersServiceError(BaseServiceException):
-    pass
+    code = "LISTENERS_SERVICE_ERROR"
 
 
 class ListenerNotFoundError(ListenersServiceError):
+    code = "LISTENER_NOT_FOUND_ERROR"
+
     def __init__(self, listener_id: str):
         super().__init__(
             f"Failed to find the requested listener. No listener was found with the "
@@ -48,6 +50,8 @@ class ListenerNotFoundError(ListenersServiceError):
 
 
 class ListenerAlreadyExistsError(ListenersServiceError):
+    code = "LISTENER_ALREADY_EXISTS_ERROR"
+
     def __init__(self, listener_id: str):
         super().__init__(
             message=(
@@ -58,24 +62,27 @@ class ListenerAlreadyExistsError(ListenersServiceError):
 
 
 class ListenerOperationError(ListenersServiceError):
+    code = "LISTENER_OPERATION_ERROR"
+
     def __init__(self, message: str = "", detail: Any = None):
-        self.detail = detail
-        super().__init__(message=message)
+        super().__init__(message=message, detail=detail)
 
 
 class ListenerStartError(ListenerOperationError):
-    pass
+    code = "LISTENER_START_ERROR"
 
 
 class ListenerStopError(ListenerOperationError):
-    pass
+    code = "LISTENER_STOP_ERROR"
 
 
 class ListenerStateError(ListenersServiceError):
-    pass
+    code = "LISTENER_STATE_ERROR"
 
 
 class ListenerAlreadyRunningError(ListenerStateError):
+    code = "LISTENER_ALREADY_RUNNING_ERROR"
+
     def __init__(
         self,
         message: str = (
@@ -87,6 +94,8 @@ class ListenerAlreadyRunningError(ListenerStateError):
 
 
 class ListenerNotRunningError(ListenerStateError):
+    code = "LISTENER_NOT_RUNNING_ERROR"
+
     def __init__(
         self,
         message: str = (
@@ -98,10 +107,12 @@ class ListenerNotRunningError(ListenerStateError):
 
 
 class ListenerParameterUpdateError(ListenersServiceError):
-    pass
+    code = "LISTENER_PARAMETER_UPDATE_ERROR"
 
 
 class InvalidListenerParameterNameError(ListenerParameterUpdateError):
+    code = "INVALID_LISTENER_PARAMETER_NAME_ERROR"
+
     def __init__(self, listener_str: str, parameter_name: str):
         super().__init__(
             message=(
@@ -113,6 +124,8 @@ class InvalidListenerParameterNameError(ListenerParameterUpdateError):
 
 
 class InvalidListenerParameterValueError(ListenerParameterUpdateError):
+    code = "INVALID_LISTENER_PARAMETER_VALUE_ERROR"
+
     def __init__(
         self,
         listener_str: str,
@@ -130,20 +143,21 @@ class InvalidListenerParameterValueError(ListenerParameterUpdateError):
 
 
 class ListenerCreationError(ListenersServiceError):
+    code = "LISTENER_CREATION_ERROR"
+
     def __init__(self, message: str = "", detail: Any = None):
-        self.detail = detail
-        super().__init__(message=message)
+        super().__init__(message=message, detail=detail)
 
 
 # This is a wrapper exception for ListenerTemplateOptionNotFoundError from the listener
 # templates framework exceptions. It just needs to pass on the message and detail data
 # from that exception.
 class ListenerTemplateOptionNotFoundError(ListenerCreationError):
-    pass
+    code = "LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"
 
 
 # This is a wrapper exception for ListenerTemplateOptionValueError from the listener
 # templates framework exceptions. It just needs to pass on the message and detail data
 # from that exception.
 class ListenerTemplateOptionValueError(ListenerCreationError):
-    pass
+    code = "LISTENER_TEMPLATE_OPTION_VALUE_ERROR"

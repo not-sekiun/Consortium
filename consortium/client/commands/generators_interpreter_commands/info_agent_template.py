@@ -16,7 +16,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class InfoAgentTemplateCommand(BaseCommand):
     name = "info_agent_template"
-    description = "Display detailed information for a specific agent template."
+    description = "Display detailed information about a specific agent template."
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -34,6 +34,43 @@ class InfoAgentTemplateCommand(BaseCommand):
             nargs=1,
         )
 
+    def _display_agent_template_info(self, agent_template: dict) -> None:
+        table = Table(title="Agent Template Information")
+        table.add_column("Information")
+        table.add_column("Data")
+        table.add_row(
+            "Agent Template ID",
+            agent_template["agent_template_id"],
+        )
+        table.add_row(
+            "Label",
+            agent_template["label"],
+        )
+        table.add_row("Name", agent_template["name"])
+        table.add_row("Description", agent_template["description"])
+        table.add_row("Version", agent_template["version"])
+        table.add_row(
+            "Compatible Framework Version",
+            agent_template["compatible_framework_version"],
+        )
+        table.add_row("Authors", "\n".join(agent_template["authors"]))
+        table.add_row(
+            "Agent Type",
+            f"{agent_template["agent_type"]["name"]} ({agent_template["agent_type"]["agent_type_id"]})",
+        )
+        table.add_row(
+            "Compatible Listener Types",
+            "\n".join(
+                [
+                    f"{listener_type["name"]} ({listener_type["listener_type_id"]})"
+                    for listener_type in agent_template["agent_type"][
+                        "compatible_listener_types"
+                    ]
+                ],
+            ),
+        )
+        CONSOLE.print(table)
+
     async def run_command(
         self,
         command_context: CommandContext,
@@ -46,47 +83,7 @@ class InfoAgentTemplateCommand(BaseCommand):
             agent_template = await client_rest_api_connection.get_agent_template_by_agent_template_id(
                 parsed_args.agent_template_id[0],
             )
-
-            table = Table(title="Agent Template Information")
-            table.add_column("Information")
-            table.add_column("Data")
-            table.add_row(
-                "Agent Template ID",
-                agent_template["agent_template_id"],
-            )
-            table.add_row("Name", agent_template["name"])
-            table.add_row("Description", agent_template["description"])
-            agent_type_table = Table()
-            agent_type_table.add_column("Information")
-            agent_type_table.add_column("Data")
-            agent_type_table.add_row(
-                "Agent Type ID",
-                agent_template["agent_type"]["agent_type_id"],
-            )
-            agent_type_table.add_row(
-                "Name",
-                agent_template["agent_type"]["name"],
-            )
-            agent_type_table.add_row(
-                "Compatible Listener Types",
-                "\n".join(
-                    [
-                        listener_type["name"]
-                        + " ("
-                        + listener_type["listener_type_id"]
-                        + ")"
-                        for listener_type in agent_template["agent_type"][
-                            "compatible_listener_types"
-                        ]
-                    ],
-                ),
-            )
-            table.add_row(
-                "Agent Type",
-                agent_type_table,
-            )
-            table.add_row("Authors", "\n".join(agent_template["authors"]))
-            CONSOLE.print(table)
+            self._display_agent_template_info(agent_template=agent_template)
         except SystemExit:
             pass
 

@@ -3,6 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends
 
 import consortium.server.server_singletons as server_singletons
+from consortium.server.exceptions.api_exceptions import (
+    user_accounts_api_exceptions as api_excs,
+)
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerErrorError,
@@ -10,27 +13,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
-from consortium.server.exceptions.api_exceptions.user_accounts_api_exceptions import (
-    EmptyUserAccountPasswordError as EmptyUserAccountPasswordAPIError,
-    EmptyUserAccountUsernameError as EmptyUserAccountUsernameAPIError,
-    IdenticalUserAccountPasswordError as IdenticalUserAccountPasswordAPIError,
-    IdenticalUserAccountRoleError as IdenticalUserAccountRoleAPIError,
-    IdenticalUserAccountUsernameError as IdenticalUserAccountUsernameAPIError,
-    InvalidUserAccountRoleError as InvalidUserAccountRoleAPIError,
-    UserAccountAuthenticationError as UserAccountAuthenticationAPIError,
-    UserAccountNotFoundError as UserAccountNotFoundAPIError,
-    UserAccountUsernameAlreadyExistsError as UserAccountUsernameAlreadyExistsAPIError,
-)
-from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
-    EmptyUserAccountPasswordError as EmptyUserAccountPasswordServiceError,
-    EmptyUserAccountUsernameError as EmptyUserAccountUsernameServiceError,
-    IdenticalUserAccountPasswordError as IdenticalUserAccountPasswordServiceError,
-    IdenticalUserAccountRoleError as IdenticalUserAccountRoleServiceError,
-    IdenticalUserAccountUsernameError as IdenticalUserAccountUsernameServiceError,
-    InvalidUserAccountRoleError as InvalidUserAccountRoleServiceError,
-    UserAccountIDNotFoundError as UserAccountIDNotFoundServiceError,
-    UserAccountsFileError as UserAccountsFileServiceError,
-    UserAccountUsernameAlreadyExistsError as UserAccountUsernameAlreadyExistsServiceError,
+from consortium.server.exceptions.service_exceptions import (
+    user_accounts_service_exceptions as svc_excs,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.request_data_models import (
@@ -76,8 +60,8 @@ async def get_all_user_accounts(
     responses={
         200: {"model": UserAccountModel},
         404: {
-            "model": UserAccountNotFoundAPIError.from_service_exception(
-                service_exception=UserAccountIDNotFoundServiceError(
+            "model": api_excs.UserAccountNotFoundError.from_service_exception(
+                service_exception=svc_excs.UserAccountIDNotFoundError(
                     user_account_id="string",
                 ),
             ).to_pydantic_model(),
@@ -97,8 +81,10 @@ async def get_user_account_by_user_account_id(
         return user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-    except UserAccountIDNotFoundServiceError as exc:
-        raise UserAccountNotFoundAPIError.from_service_exception(service_exception=exc)
+    except svc_excs.UserAccountIDNotFoundError as exc:
+        raise api_excs.UserAccountNotFoundError.from_service_exception(
+            service_exception=exc,
+        )
 
 
 @router.post(
@@ -106,19 +92,19 @@ async def get_user_account_by_user_account_id(
     responses={
         201: {"model": UserAccountModel},
         422: {
-            "model": UserAccountUsernameAlreadyExistsAPIError.from_service_exception(
-                service_exception=UserAccountUsernameAlreadyExistsServiceError.during_user_account_creation(
+            "model": api_excs.UserAccountUsernameAlreadyExistsError.from_service_exception(
+                service_exception=svc_excs.UserAccountUsernameAlreadyExistsError.during_user_account_creation(
                     username="string",
                 ),
             ).to_pydantic_model()
-            | EmptyUserAccountUsernameAPIError.from_service_exception(
-                service_exception=EmptyUserAccountUsernameServiceError(),
+            | api_excs.EmptyUserAccountUsernameError.from_service_exception(
+                service_exception=svc_excs.EmptyUserAccountUsernameError(),
             ).to_pydantic_model()
-            | EmptyUserAccountPasswordAPIError.from_service_exception(
-                service_exception=EmptyUserAccountPasswordServiceError(),
+            | api_excs.EmptyUserAccountPasswordError.from_service_exception(
+                service_exception=svc_excs.EmptyUserAccountPasswordError(),
             ).to_pydantic_model()
-            | InvalidUserAccountRoleAPIError.from_service_exception(
-                service_exception=InvalidUserAccountRoleServiceError.during_user_account_creation(
+            | api_excs.InvalidUserAccountRoleError.from_service_exception(
+                service_exception=svc_excs.InvalidUserAccountRoleError.during_user_account_creation(
                     role="string",
                 ),
             ).to_pydantic_model(),
@@ -141,25 +127,25 @@ async def create_user_account(
             password=password,
             role=role,
         )
-    except EmptyUserAccountUsernameServiceError as exc:
-        raise EmptyUserAccountUsernameAPIError.from_service_exception(
+    except svc_excs.EmptyUserAccountUsernameError as exc:
+        raise api_excs.EmptyUserAccountUsernameError.from_service_exception(
             service_exception=exc,
         )
-    except EmptyUserAccountPasswordServiceError as exc:
-        raise EmptyUserAccountPasswordAPIError.from_service_exception(
+    except svc_excs.EmptyUserAccountPasswordError as exc:
+        raise api_excs.EmptyUserAccountPasswordError.from_service_exception(
             service_exception=exc,
         )
-    except InvalidUserAccountRoleServiceError as exc:
-        raise InvalidUserAccountRoleAPIError.from_service_exception(
+    except svc_excs.InvalidUserAccountRoleError as exc:
+        raise api_excs.InvalidUserAccountRoleError.from_service_exception(
             service_exception=exc,
         )
-    except UserAccountUsernameAlreadyExistsServiceError as exc:
-        raise UserAccountUsernameAlreadyExistsAPIError.from_service_exception(
+    except svc_excs.UserAccountUsernameAlreadyExistsError as exc:
+        raise api_excs.UserAccountUsernameAlreadyExistsError.from_service_exception(
             service_exception=exc,
         )
     try:
         user_accounts_service.write_framework_user_accounts()
-    except UserAccountsFileServiceError:
+    except svc_excs.UserAccountsFileError:
         raise InternalServerErrorError()
 
     return new_user_account
@@ -169,32 +155,32 @@ async def create_user_account(
     "/me/username",
     responses={
         200: {"model": UserAccountModel},
-        403: {"model": UserAccountAuthenticationAPIError().to_pydantic_model()},
+        403: {"model": api_excs.UserAccountAuthenticationError().to_pydantic_model()},
         404: {
-            "model": UserAccountNotFoundAPIError.from_service_exception(
-                service_exception=UserAccountIDNotFoundServiceError(
+            "model": api_excs.UserAccountNotFoundError.from_service_exception(
+                service_exception=svc_excs.UserAccountIDNotFoundError(
                     user_account_id="string",
                 ),
             ).to_pydantic_model(),
         },
         422: {
-            "model": IdenticalUserAccountUsernameAPIError.from_service_exception(
-                service_exception=IdenticalUserAccountUsernameServiceError(
+            "model": api_excs.IdenticalUserAccountUsernameError.from_service_exception(
+                service_exception=svc_excs.IdenticalUserAccountUsernameError(
                     username="string",
                     user_account_str="string",
                 ),
             ).to_pydantic_model()
-            | UserAccountUsernameAlreadyExistsAPIError.from_service_exception(
-                service_exception=UserAccountUsernameAlreadyExistsServiceError.during_user_account_modification(
+            | api_excs.UserAccountUsernameAlreadyExistsError.from_service_exception(
+                service_exception=svc_excs.UserAccountUsernameAlreadyExistsError.during_user_account_modification(
                     username="string",
                     user_account="string",
                 ),
             ).to_pydantic_model()
-            | EmptyUserAccountPasswordAPIError.from_service_exception(
-                service_exception=EmptyUserAccountPasswordServiceError(),
+            | api_excs.EmptyUserAccountPasswordError.from_service_exception(
+                service_exception=svc_excs.EmptyUserAccountPasswordError(),
             ).to_pydantic_model()
-            | IdenticalUserAccountPasswordAPIError.from_service_exception(
-                service_exception=IdenticalUserAccountPasswordServiceError(
+            | api_excs.IdenticalUserAccountPasswordError.from_service_exception(
+                service_exception=svc_excs.IdenticalUserAccountPasswordError(
                     user_account_str="string",
                 ),
             ).to_pydantic_model(),
@@ -209,8 +195,10 @@ def update_own_user_account(
         user_account = user_accounts_service.get_user_account_by_username(
             username=user.username,
         )
-    except UserAccountIDNotFoundServiceError as exc:
-        raise UserAccountNotFoundAPIError.from_service_exception(service_exception=exc)
+    except svc_excs.UserAccountIDNotFoundError as exc:
+        raise api_excs.UserAccountNotFoundError.from_service_exception(
+            service_exception=exc,
+        )
 
     if request_data.username:
         old_user_account_username = user_account.username
@@ -221,17 +209,17 @@ def update_own_user_account(
                     username=request_data.username,
                 )
             )
-        except UserAccountUsernameAlreadyExistsServiceError as exc:
-            raise UserAccountUsernameAlreadyExistsAPIError.from_service_exception(
+        except svc_excs.UserAccountUsernameAlreadyExistsError as exc:
+            raise api_excs.UserAccountUsernameAlreadyExistsError.from_service_exception(
                 service_exception=exc,
             )
-        except IdenticalUserAccountUsernameServiceError as exc:
-            raise IdenticalUserAccountUsernameAPIError.from_service_exception(
+        except svc_excs.IdenticalUserAccountUsernameError as exc:
+            raise api_excs.IdenticalUserAccountUsernameError.from_service_exception(
                 service_exception=exc,
             )
         try:
             user_accounts_service.write_framework_user_accounts()
-        except UserAccountsFileServiceError:
+        except svc_excs.UserAccountsFileError:
             raise InternalServerErrorError()
         for user in users_service.get_all_users():
             if user.username == old_user_account_username:
@@ -240,7 +228,7 @@ def update_own_user_account(
         old_password = request_data.password.old_password
         new_password = request_data.password.new_password
         if old_password != user_account.password:
-            raise UserAccountAuthenticationAPIError
+            raise api_excs.UserAccountAuthenticationError
 
         try:
             user_account = (
@@ -249,12 +237,12 @@ def update_own_user_account(
                     password=new_password,
                 )
             )
-        except EmptyUserAccountPasswordServiceError as exc:
-            raise EmptyUserAccountPasswordAPIError.from_service_exception(
+        except svc_excs.EmptyUserAccountPasswordError as exc:
+            raise api_excs.EmptyUserAccountPasswordError.from_service_exception(
                 service_exception=exc,
             )
-        except IdenticalUserAccountPasswordServiceError as exc:
-            raise IdenticalUserAccountPasswordAPIError.from_service_exception(
+        except svc_excs.IdenticalUserAccountPasswordError as exc:
+            raise api_excs.IdenticalUserAccountPasswordError.from_service_exception(
                 service_exception=exc,
             )
 
@@ -266,35 +254,35 @@ def update_own_user_account(
     responses={
         200: {"model": UserAccountModel},
         404: {
-            "model": UserAccountNotFoundAPIError.from_service_exception(
-                service_exception=UserAccountIDNotFoundServiceError(
+            "model": api_excs.UserAccountNotFoundError.from_service_exception(
+                service_exception=svc_excs.UserAccountIDNotFoundError(
                     user_account_id="string",
                 ),
             ).to_pydantic_model(),
         },
         422: {
-            "model": IdenticalUserAccountUsernameAPIError.from_service_exception(
-                service_exception=IdenticalUserAccountUsernameServiceError(
+            "model": api_excs.IdenticalUserAccountUsernameError.from_service_exception(
+                service_exception=svc_excs.IdenticalUserAccountUsernameError(
                     username="string",
                     user_account_str="string",
                 ),
             ).to_pydantic_model()
-            | UserAccountUsernameAlreadyExistsAPIError.from_service_exception(
-                service_exception=UserAccountUsernameAlreadyExistsServiceError.during_user_account_modification(
+            | api_excs.UserAccountUsernameAlreadyExistsError.from_service_exception(
+                service_exception=svc_excs.UserAccountUsernameAlreadyExistsError.during_user_account_modification(
                     username="string",
                     user_account="string",
                 ),
             ).to_pydantic_model()
-            | EmptyUserAccountPasswordAPIError.from_service_exception(
-                service_exception=EmptyUserAccountPasswordServiceError(),
+            | api_excs.EmptyUserAccountPasswordError.from_service_exception(
+                service_exception=svc_excs.EmptyUserAccountPasswordError(),
             ).to_pydantic_model()
-            | IdenticalUserAccountPasswordAPIError.from_service_exception(
-                service_exception=IdenticalUserAccountPasswordServiceError(
+            | api_excs.IdenticalUserAccountPasswordError.from_service_exception(
+                service_exception=svc_excs.IdenticalUserAccountPasswordError(
                     user_account_str="string",
                 ),
             ).to_pydantic_model()
-            | IdenticalUserAccountRoleAPIError.from_service_exception(
-                service_exception=IdenticalUserAccountRoleServiceError(
+            | api_excs.IdenticalUserAccountRoleError.from_service_exception(
+                service_exception=svc_excs.IdenticalUserAccountRoleError(
                     role=UserRole.ADMIN,
                     user_account_str="string",
                 ),
@@ -310,8 +298,10 @@ def update_user_account_by_user_account_id(
         user_account = user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-    except UserAccountIDNotFoundServiceError as exc:
-        raise UserAccountNotFoundAPIError.from_service_exception(service_exception=exc)
+    except svc_excs.UserAccountIDNotFoundError as exc:
+        raise api_excs.UserAccountNotFoundError.from_service_exception(
+            service_exception=exc,
+        )
 
     if request_data.username:
         old_user_account_username = user_account.username
@@ -322,17 +312,17 @@ def update_user_account_by_user_account_id(
                     username=request_data.username,
                 )
             )
-        except UserAccountUsernameAlreadyExistsServiceError as exc:
-            raise UserAccountUsernameAlreadyExistsAPIError.from_service_exception(
+        except svc_excs.UserAccountUsernameAlreadyExistsError as exc:
+            raise api_excs.UserAccountUsernameAlreadyExistsError.from_service_exception(
                 service_exception=exc,
             )
-        except IdenticalUserAccountUsernameServiceError as exc:
-            raise IdenticalUserAccountUsernameAPIError.from_service_exception(
+        except svc_excs.IdenticalUserAccountUsernameError as exc:
+            raise api_excs.IdenticalUserAccountUsernameError.from_service_exception(
                 service_exception=exc,
             )
         try:
             user_accounts_service.write_framework_user_accounts()
-        except UserAccountsFileServiceError:
+        except svc_excs.UserAccountsFileError:
             raise InternalServerErrorError()
         for user in users_service.get_all_users():
             if user.username == old_user_account_username:
@@ -345,12 +335,12 @@ def update_user_account_by_user_account_id(
                     password=request_data.password,
                 )
             )
-        except EmptyUserAccountPasswordServiceError as exc:
-            raise EmptyUserAccountPasswordAPIError.from_service_exception(
+        except svc_excs.EmptyUserAccountPasswordError as exc:
+            raise api_excs.EmptyUserAccountPasswordError.from_service_exception(
                 service_exception=exc,
             )
-        except IdenticalUserAccountPasswordServiceError as exc:
-            raise IdenticalUserAccountPasswordAPIError.from_service_exception(
+        except svc_excs.IdenticalUserAccountPasswordError as exc:
+            raise api_excs.IdenticalUserAccountPasswordError.from_service_exception(
                 service_exception=exc,
             )
     if request_data.role:
@@ -358,8 +348,8 @@ def update_user_account_by_user_account_id(
             user_account = user_accounts_service.get_user_account_by_user_account_id(
                 user_account_id=user_account_id,
             )
-        except UserAccountIDNotFoundServiceError as exc:
-            raise UserAccountNotFoundAPIError.from_service_exception(
+        except svc_excs.UserAccountIDNotFoundError as exc:
+            raise api_excs.UserAccountNotFoundError.from_service_exception(
                 service_exception=exc,
             )
 
@@ -371,8 +361,8 @@ def update_user_account_by_user_account_id(
                     role=request_data.role,
                 )
             )
-        except IdenticalUserAccountRoleServiceError as exc:
-            raise IdenticalUserAccountRoleAPIError.from_service_exception(
+        except svc_excs.IdenticalUserAccountRoleError as exc:
+            raise api_excs.IdenticalUserAccountRoleError.from_service_exception(
                 service_exception=exc,
             )
         for user in users_service.get_all_users():
@@ -381,7 +371,7 @@ def update_user_account_by_user_account_id(
 
     try:
         user_accounts_service.write_framework_user_accounts()
-    except UserAccountsFileServiceError:
+    except svc_excs.UserAccountsFileError:
         raise InternalServerErrorError()
 
     return user_account
@@ -392,8 +382,8 @@ def update_user_account_by_user_account_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": UserAccountNotFoundAPIError.from_service_exception(
-                service_exception=UserAccountIDNotFoundServiceError(
+            "model": api_excs.UserAccountNotFoundError.from_service_exception(
+                service_exception=svc_excs.UserAccountIDNotFoundError(
                     user_account_id="string",
                 ),
             ).to_pydantic_model(),
@@ -420,11 +410,13 @@ async def delete_user_account_by_user_account_id(
         user_accounts_service.delete_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-    except UserAccountIDNotFoundServiceError as exc:
-        raise UserAccountNotFoundAPIError.from_service_exception(service_exception=exc)
+    except svc_excs.UserAccountIDNotFoundError as exc:
+        raise api_excs.UserAccountNotFoundError.from_service_exception(
+            service_exception=exc,
+        )
     try:
         user_accounts_service.write_framework_user_accounts()
-    except UserAccountsFileServiceError:
+    except svc_excs.UserAccountsFileError:
         raise InternalServerErrorError()
 
     return SuccessResponseModel()

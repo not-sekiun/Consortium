@@ -39,12 +39,11 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 )
 
 
-class AgentGeneratorNotFoundError(NotFoundError):
-    code = "AGENT_GENERATOR_NOT_FOUND_ERROR"
+class AgentGeneratorNotFoundError(NotFoundError): ...
 
 
 class AgentTemplateResolutionError(InternalServerErrorError):
-    code = ("AGENT_TEMPLATE_RESOLUTION_ERROR",)
+    code = "AGENT_TEMPLATE_RESOLUTION_ERROR"
 
     def __init__(
         self,
@@ -59,29 +58,19 @@ class AgentTemplateResolutionError(InternalServerErrorError):
         )
 
 
-class InvalidAgentGeneratorParameterNameError(UnprocessableEntityError):
-    code = "INVALID_LISTENER_PARAMETER_NAME_ERROR"
+class InvalidAgentGeneratorParameterNameError(UnprocessableEntityError): ...
 
 
-class InvalidAgentGeneratorParameterValueError(UnprocessableEntityError):
-    code = "INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR"
+class InvalidAgentGeneratorParameterValueError(UnprocessableEntityError): ...
 
 
-class AgentGeneratorAlreadyRunningError(ConflictError):
-    code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
+class AgentGeneratorAlreadyRunningError(ConflictError): ...
 
 
-class AgentGeneratorNotRunningError(ConflictError):
-    code = "AGENT_GENERATOR_NOT_RUNNING_ERROR"
+class AgentGeneratorNotRunningError(ConflictError): ...
 
 
-class AgentGeneratorStartError(BaseAPIException):
-    # TODO: Consider making BaseAPIException's status code default to 400 to further
-    #  cut code. No code: write nothing, deploy nowhere.
-    status_code = 400
-    code = "AGENT_GENERATOR_START_ERROR"
+class AgentGeneratorStartError(ConflictError): ...
 
 
-class AgentGeneratorStopError(BaseAPIException):
-    status_code = 400
-    code = "AGENT_GENERATOR_STOP_ERROR"
+class AgentGeneratorStopError(ConflictError): ...

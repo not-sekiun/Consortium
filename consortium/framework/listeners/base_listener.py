@@ -1,9 +1,6 @@
-# import json
 import sys
 import traceback
 import uuid
-
-# from abc import ABC, abstractmethod
 from datetime import datetime
 from types import SimpleNamespace
 from typing import Any, get_type_hints
@@ -15,16 +12,10 @@ from consortium.framework._components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
 )
-from consortium.framework.exceptions.listeners_framework_exceptions import (  # ListenerStartError,; ListenerStopError,
+from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerRuntimeError,
 )
 from consortium.framework.listeners._agents_manager import AgentsManager
-
-# from consortium.framework.listeners._listener_status import (
-#     ListenerState,
-#     ListenerStatus,
-# )
-# from consortium.framework.listeners.base_listener_type import BaseListenerType
 from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyStartedError,
     ComponentNotRunningError,
@@ -32,17 +23,13 @@ from consortium.server.exceptions.framework_exceptions.components_framework_exce
     ComponentStopError,
 )
 from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (  # ListenerRuntimeError as ListenerRuntimeFrameworkError,
-    InvalidListenerConfigurationParameterTypeError,
     ListenerAlreadyStartedError,
     ListenerCreationParameterTypeError,
     ListenerNotRunningError,
-    ListenerStartError as ListenerStartFrameworkError,
-    ListenerStopError as ListenerStopFrameworkError,
-    MissingListenerConfigurationParameterError,
+    ListenerStartError,
+    ListenerStopError,
 )
 from consortium.server.server_logging import LoggerType
-
-# import pathlib
 
 
 class _BaseListenerParametersModel(BaseModel):
@@ -91,8 +78,6 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             creation through a template.
     """
 
-    # listener_type: BaseListenerType = None
-
     def __init__(
         self,
         name: str = "",
@@ -134,7 +119,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             for err in exc.errors():
                 raise ListenerCreationParameterTypeError(
                     listener_str=sys.modules[self.__module__].__file__,
-                    parameter_name=".".join(str(loc) for loc in err["loc"]),
+                    parameter_name=err["loc"][0],
                     parameter_type=get_type_hints(_BaseListenerParametersModel)[
                         err["loc"]
                     ],
@@ -179,8 +164,8 @@ class BaseListener(ComponentLifeCycle):  # ABC):
 
     async def on_cancelled(self) -> None: ...
 
-    async def on_errored(self, runtime_error: ListenerRuntimeError) -> None:
-        self.logger.error(runtime_error)
+    async def on_errored(self, error: ListenerRuntimeError) -> None:
+        self.logger.error(error)
 
     async def on_fatal(
         self,
@@ -208,7 +193,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
                 listener_str=str(self),
             )
         except ComponentStartError as exc:
-            raise ListenerStartFrameworkError(
+            raise ListenerStartError(
                 listener_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
@@ -222,7 +207,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
                 listener_str=str(self),
             )
         except ComponentStopError as exc:
-            raise ListenerStopFrameworkError(
+            raise ListenerStopError(
                 listener_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
@@ -250,10 +235,8 @@ class BaseListener(ComponentLifeCycle):  # ABC):
                 {"agent_id": str(agent.agent_id), "name": str(agent.name)}
                 for agent in self.agents_manager.get_all_connected_agents()
             ],
-            # The `creating_listener_template` class attribute is assigned to the
-            # listener class at runtime by its associated listener template when it is
-            # subclassed from the base listener template class. See
-            # `consortium/framework/base_listener_template.py`.
+            # `creating_listener_template` is assigned to the listener class by the
+            # listener profile loader at load time.
             "creating_listener_template": {
                 "listener_template_id": str(
                     self.creating_listener_template.listener_template_id,
@@ -261,195 +244,3 @@ class BaseListener(ComponentLifeCycle):  # ABC):
                 "name": self.creating_listener_template.name,
             },
         }
-
-        # if not isinstance("name", str):
-        #     # The listener is identified by its name, but at this point we are still
-        #     # validating the name parameter, so we refer to it by its filepath for now.
-        #     raise ListenerCreationParameterTypeError(
-        #         listener_str=sys.modules[self.__module__].__file__,
-        #         parameter_name="name",
-        #         parameter_type="str",
-        #     )
-        # if not isinstance("description", str):
-        #     raise ListenerCreationParameterTypeError(
-        #         listener_str=name,
-        #         parameter_name="description",
-        #         parameter_type="str",
-        #     )
-        # if not isinstance("endpoint", str):
-        #     raise ListenerCreationParameterTypeError(
-        #         listener_str=name,
-        #         parameter_name="endpoint",
-        #         parameter_type="str",
-        #     )
-        # try:
-        #     json.dumps(parameters)
-        # except json.JSONDecodeError:
-        #     raise ListenerCreationParameterTypeError(
-        #         listener_str=name,
-        #         error_message=(
-        #             "The parameter 'parameters' must be a dictionary with string keys "
-        #             "and values that are either: str, int, float, bool, None, lists of "
-        #             "these types, or nested dictionaries of the same structure to "
-        #             "ensure JSON serializability."
-        #         ),
-        #     )
-        # self.status = ListenerStatus()
-        # self.stop_listener_event = asyncio.Event()
-        # # Asyncio type tasks are held by a weak reference by default, so they can be
-        # # garbage collected at any time mid-execution, to prevent this we have to store
-        # # a reference of the task in a variable. We declare the variable here and assign
-        # # it in start_listener() later on.
-        # self._listener_task = None
-
-    # async def start(self) -> None:
-    #     if self.status.state in (ListenerState.STARTED or ListenerState.RUNNING):
-    #         raise ListenerAlreadyStartedError(
-    #             listener_str=str(self),
-    #             error_message=(
-    #                 "The listener cannot be started because it is already started or "
-    #                 "running."
-    #             ),
-    #         )
-    #
-    #     # Clear the signal to the listener to stop running if it is set, so it won't
-    #     # instantly stop.
-    #     self.stop_listener_event.clear()
-    #
-    #     # The listener is now started.
-    #     self.status._transition_to_started()
-    #     try:
-    #         await self.on_started()
-    #     # ListenerStartError is raised within on_listener_started() to abort the
-    #     # listener start process if preconditions are not met.
-    #     except ListenerStartError as exc:
-    #         # The listener is now initialized.
-    #         self.status._transition_to_initialized()
-    #         raise ListenerStartFrameworkError(
-    #             listener_str=str(self),
-    #             error_message=exc.message,
-    #             detail=exc.detail,
-    #         ) from None
-    #     except Exception as exc:
-    #         self.logger.opt(ansi=True).error(
-    #             "<bold><red>{}</></>",
-    #             traceback.format_exc(),
-    #         )
-    #         # The listener is now fatally errored.
-    #         self.status._transition_to_fatal(listener=str(self), exception=exc)
-    #         raise exc
-    #
-    #     self._listener_task = asyncio.create_task(self._run_listener())
-    #
-    # async def stop(self) -> None:
-    #     if self.status.state != ListenerState.RUNNING:
-    #         raise ListenerNotRunningError(
-    #             listener_str=str(self),
-    #             error_message=(
-    #                 "The listener cannot be stopped because it is not running."
-    #             ),
-    #         )
-    #
-    #     try:
-    #         await self.on_stopped()
-    #     # ListenerStopError is raised within on_listener_stopped() to abort the
-    #     # listener stop process if preconditions are not met.
-    #     except ListenerStopError as exc:
-    #         # The listener has not changed from its running state.
-    #         self.status._transition_to_running()
-    #         raise ListenerStopFrameworkError(
-    #             listener_str=str(self),
-    #             error_message=exc.message,
-    #             detail=exc.detail,
-    #         )
-    #     except Exception as exc:
-    #         self.logger.opt(ansi=True).error(
-    #             "<bold><red>{}</></>",
-    #             traceback.format_exc(),
-    #         )
-    #         # The listener is now fatally errored.
-    #         self.status._transition_to_fatal(listener=str(self), exception=exc)
-    #         raise exc
-    #
-    #     # Signal to the listener to stop running.
-    #     self.stop_listener_event.set()
-    #
-    # async def cancel(self) -> None:
-    #     if self.status.state != ListenerState.RUNNING:
-    #         raise ListenerNotRunningError(
-    #             listener_str=str(self),
-    #             error_message=(
-    #                 "The listener cannot be cancelled because it is not running."
-    #             ),
-    #         )
-    #
-    #     # Cancel the listener.
-    #     self._listener_task.cancel()
-    #
-    #     # Wait for the task to finish. Then remove the task reference.
-    #     while not self._listener_task.done():
-    #         await asyncio.sleep(0.1)
-    #     self._listener_task = None
-    #
-    #     try:
-    #         await self.on_cancelled()
-    #     except Exception as exc:
-    #         self.logger.opt(ansi=True).error(
-    #             "<bold><red>{}</></>",
-    #             traceback.format_exc(),
-    #         )
-    #         # The listener is now fatally errored.
-    #         self.status._transition_to_fatal(listener=str(self), exception=exc)
-    #         raise exc
-    #
-    # async def _run_listener(self):
-    #     try:
-    #         try:
-    #             # The listener is now running.
-    #             self.status._transition_to_running()
-    #
-    #             await self.on_running()
-    #
-    #             # The listener is now stopped.
-    #             self.status._transition_to_stopped()
-    #             self._listener_task = None
-    #         except asyncio.CancelledError:
-    #             # The listener is now cancelled
-    #             self.status._transition_to_cancelled()
-    #         except ListenerRuntimeError as exc:
-    #             framework_exc = ListenerRuntimeFrameworkError(
-    #                 listener_str=str(self),
-    #                 error_message=exc.message,
-    #                 detail=exc.detail,
-    #             )
-    #             # The listener is now errored.
-    #             self.status._transition_to_errored(exception=framework_exc)
-    #             try:
-    #                 # `on_listener_errored()` should receive the unwrapped 'raw'
-    #                 # exception.
-    #                 await self.on_errored(exception=exc)
-    #             except Exception as exc:
-    #                 self.logger.opt(ansi=True).error(
-    #                     "<bold><red>{}</></>",
-    #                     traceback.format_exc(),
-    #                 )
-    #                 # The listener is now fatally errored.
-    #                 self.status._transition_to_fatal(
-    #                     listener=str(self),
-    #                     exception=exc,
-    #                 )
-    #     except Exception as exc:
-    #         self.logger.opt(ansi=True).error(
-    #             "<bold><red>{}</></>",
-    #             traceback.format_exc(),
-    #         )
-    #         self.status._transition_to_fatal(listener=str(self), exception=exc)
-    #         # The listener is now fatally errored.
-    #         try:
-    #             await self.on_errored(exc)
-    #         except Exception as exc:
-    #             self.logger.opt(ansi=True).error(
-    #                 "<bold><red>{}</></>",
-    #                 traceback.format_exc(),
-    #             )
-    #             self.status._transition_to_fatal(listener=str(self), exception=exc)

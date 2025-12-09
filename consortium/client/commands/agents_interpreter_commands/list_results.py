@@ -96,7 +96,7 @@ class ListResultsCommand(BaseCommand):
                 agent_result["task_id"],
                 agent_tasks_dict[agent_result["task_id"]]["command"],
                 format_agent_result_state_string_with_color(
-                    agent_result_state_string=str(agent_result["success"]),
+                    state_str=str(agent_result["success"]),
                 ),
             )
         CONSOLE.print(table)

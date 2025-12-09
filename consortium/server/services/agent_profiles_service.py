@@ -1,30 +1,21 @@
-import importlib
-import json
-from pathlib import Path
+import pathlib
 
-import jsonschema
 from loguru import logger
 
-from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
-from consortium.framework.agents.base_agent_template import BaseAgentTemplate
-from consortium.framework.agents.base_agent_type import BaseAgentType
+from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
+    AgentTemplatesFrameworkError,
+)
 from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
-    AgentProfileLoadError,
-    AgentProfileNotFoundError,
-    AgentProjectAgentGeneratorFileNotFoundError,
-    AgentProjectAgentTemplateFileNotFoundError,
-    AgentProjectAgentTypeFileNotFoundError,
-    AgentProjectInterfaceError,
-    AgentProjectManifestFileInvalidJSONError,
-    AgentProjectManifestFileNotFoundError,
-    AgentProjectManifestFileSchemaError,
-    AgentProjectSymbolNotFoundError,
-    InternalAgentProjectError,
+    AgentProfileLoadingError,
+    AgentProfilesServiceError,
 )
 from consortium.server.objects.c2_profile_objects import AgentProfile
-from consortium.server.server_config import (
-    CONSORTIUM_AGENTS_DIRECTORY_PATH,
-    CONSORTIUM_HOME_DIRECTORY_PATH,
+from consortium.server.server_config import CONSORTIUM_AGENTS_DIRECTORY_PATH
+from consortium.server.services.component_loader_services.agent_profile_loader_service import (
+    AgentProfileLoaderService,
+)
+from consortium.server.services.component_registry_services.agent_profile_registry_service import (
+    AgentProfileRegistryService,
 )
 
 
@@ -33,13 +24,13 @@ from consortium.server.server_config import (
 # forward facing REST API should not have access to this service.
 class AgentProfilesService:
     def __init__(self):
-        self._agent_profiles = {}
-        self.logger = logger.bind(
-            logger_name=str(self),
+        self._agent_profile_loader_service = AgentProfileLoaderService()
+        self._agent_profile_registry_service = AgentProfileRegistryService(
+            component_loader_service=self._agent_profile_loader_service,
+            component_framework_directory=CONSORTIUM_AGENTS_DIRECTORY_PATH,
         )
-        self.logger.debug(
-            f"Started {self}",
-        )
+        self.logger = logger.bind(logger_name=str(self))
+        self.logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "Agent Profiles Service"
@@ -47,349 +38,199 @@ class AgentProfilesService:
     def __repr__(self) -> str:
         return "AgentProfilesService()"
 
-    def get_agent_profile_from_agent_project_folder(
+    def get_agent_profile_from_agent_profile_project_folder(
         self,
-        agent_project_folder: Path,
-        ignore_enabled_agent_project_flag: bool = False,
+        agent_profile_project_folder: pathlib.Path,
+        ignore_enabled_agent_profile_flag: bool = False,
     ) -> AgentProfile | None:
-        # Check if project folder contains a valid manifest file.
-        agent_project_manifest_file = (
-            agent_project_folder / "agent_project_manifest.json"
+        agent_profile = self._agent_profile_registry_service.get_component_from_component_project_folder(
+            component_project_folder=agent_profile_project_folder,
+            ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
         )
-        agent_project_manifest_json_schema = {
-            "type": "object",
-            "properties": {
-                "agent_generator": {
-                    "type": "object",
-                    "properties": {
-                        "filepath": {"type": "string"},
-                        "symbol": {"type": "string"},
-                    },
-                    "required": ["filepath", "symbol"],
-                    "additionalProperties": False,
-                },
-                "agent_template": {
-                    "type": "object",
-                    "properties": {
-                        "filepath": {"type": "string"},
-                        "symbol": {"type": "string"},
-                    },
-                    "required": ["filepath", "symbol"],
-                    "additionalProperties": False,
-                },
-                "agent_type": {
-                    "type": "object",
-                    "properties": {
-                        "filepath": {"type": "string"},
-                        "symbol": {"type": "string"},
-                    },
-                    "required": ["filepath", "symbol"],
-                    "additionalProperties": False,
-                },
-                "enabled": {"type": "boolean"},
-            },
-            "required": ["agent_generator", "agent_template", "agent_type", "enabled"],
-            "additionalProperties": False,
-        }
-        try:
-            with agent_project_manifest_file.open("r") as file:
-                agent_project_manifest_json = json.load(fp=file)
-                jsonschema.validate(
-                    instance=agent_project_manifest_json,
-                    schema=agent_project_manifest_json_schema,
-                )
-        except FileNotFoundError:
-            raise AgentProjectManifestFileNotFoundError(
-                agent_project_folder=str(agent_project_folder),
+        if agent_profile is None:
+            self.logger.debug(
+                "Skipped loading agent profile from '{}' because it was disabled.",
+                str(agent_profile_project_folder),
             )
-        except json.JSONDecodeError:
-            raise AgentProjectManifestFileInvalidJSONError(
-                agent_project_folder=str(agent_project_folder),
+        else:
+            self.logger.debug(
+                "Retrieved agent profile {} from agent profile project folder: {}",
+                repr(agent_profile),
+                str(agent_profile_project_folder),
             )
-        except jsonschema.ValidationError as exc:
-            raise AgentProjectManifestFileSchemaError(
-                agent_project_folder=str(agent_project_folder),
-                json_schema_error_message=exc.message,
-            )
+        return agent_profile
 
-        if (
-            not agent_project_manifest_json["enabled"]
-            and not ignore_enabled_agent_project_flag
-        ):
+    def get_agent_profiles_from_agent_profile_project_folder_directories(
+        self,
+        directory: pathlib.Path,
+        ignore_enabled_agent_profile_flag: bool = False,
+    ) -> tuple[
+        list[AgentProfile],
+        list[pathlib.Path],
+        list[tuple[pathlib.Path, AgentProfileLoadingError]] | None,
+    ]:
+        retrieved, skipped, errored = (
+            self._agent_profile_registry_service.get_components_from_component_project_folder_directories(
+                directory=directory,
+                ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+            )
+        )
+        self.logger.debug(
+            "Retrieved agent profiles from '{}' ({} agent profile(s) retrieved, {} agent profile(s) "
+            "skipped, {} agent profile(s) failed to load)",
+            directory,
+            len(retrieved),
+            len(skipped),
+            len(errored),
+        )
+        return (
+            retrieved,
+            skipped,
+            errored,
+        )
+
+    async def load_agent_profile(self, agent_profile: AgentProfile) -> None:
+        agent_profile = await self._agent_profile_registry_service.load_component(
+            component=agent_profile,
+        )
+        self.logger.debug("Loaded agent profile: {}", agent_profile)
+
+    async def load_agent_profile_from_agent_profile_project_folder(
+        self,
+        agent_profile_project_folder: pathlib.Path,
+        ignore_enabled_agent_profile_flag: bool = False,
+    ) -> AgentProfile | None:
+        agent_profile = await self._agent_profile_registry_service.load_component_from_component_project_folder(
+            component_project_folder=agent_profile_project_folder,
+            ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+        )
+        if agent_profile is None:
+            self.logger.warning(
+                "Agent profile could not be loaded from {} because it is currently "
+                "disabled. Either enable it in its manifest or force load it by "
+                "setting the `ignore_enabled_agent_profile_flag` to `True`.",
+                str(agent_profile_project_folder),
+            )
+        self.logger.debug("Loaded agent profile: {}", agent_profile)
+        return agent_profile
+
+    async def unload_agent_profile_by_agent_profile_id(
+        self,
+        agent_profile_id: str,
+    ) -> None:
+        agent_profile = await (
+            self._agent_profile_registry_service.unload_component_by_component_id(
+                component_id=agent_profile_id,
+            )
+        )
+        self.logger.info("Unloaded agent profile: {}", agent_profile)
+        self.logger.debug("Unloaded agent profile: {!r}", agent_profile)
+
+    async def reload_agent_profile_by_agent_profile_id(
+        self,
+        agent_profile_id: str,
+        ignore_enabled_agent_profile_flag: bool = False,
+    ) -> AgentProfile:
+        agent_profile = await (
+            self._agent_profile_registry_service.reload_component_by_component_id(
+                component_id=agent_profile_id,
+                ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+            )
+        )
+        if agent_profile is None:
+            self.logger.warning(
+                "Agent profile with ID '{}' could not be reloaded because it is "
+                "currently disabled. Either enable it in its manifest or force reload "
+                "it by setting the `ignore_enabled_agent_profile_flag` to `True`.",
+                agent_profile_id,
+            )
+        self.logger.info("Reloaded agent profile: {}", agent_profile)
+        self.logger.debug("Reloaded agent profile: {!r}", agent_profile)
+        return agent_profile
+
+    async def load_framework_agent_profiles(
+        self,
+        ignore_enabled_agent_profile_flag: bool = False,
+    ) -> None:
+        self.logger.info("Loading framework agent profiles...")
+        retrieved, skipped, errored = (
+            self.get_agent_profiles_from_agent_profile_project_folder_directories(
+                directory=CONSORTIUM_AGENTS_DIRECTORY_PATH,
+                ignore_enabled_agent_profile_flag=ignore_enabled_agent_profile_flag,
+            )
+        )
+        for path in skipped:
             self.logger.info(
-                "Skipped loading agent from '{}' because it was disabled.",
-                str(agent_project_folder),
+                "├─ Skipped loading agent profile from '{}' because it was disabled.",
+                str(path),
             )
-            return None
+        if errored:
+            for _, error in errored:
+                self.logger.error(
+                    "├─ {}",
+                    str(error),
+                )
 
-        # Check for valid project folder structure as specified by the manifest file.
-        agent_generator_file = agent_project_folder / Path(
-            agent_project_manifest_json["agent_generator"]["filepath"],
-        )
-        agent_template_file = agent_project_folder / Path(
-            agent_project_manifest_json["agent_template"]["filepath"],
-        )
-        agent_type_file = agent_project_folder / Path(
-            agent_project_manifest_json["agent_type"]["filepath"],
-        )
-
-        if not agent_generator_file.exists():
-            raise AgentProjectAgentGeneratorFileNotFoundError(
-                agent_project_folder=str(agent_project_folder),
-                agent_generator_file=str(agent_generator_file),
-            )
-        if not agent_template_file.exists():
-            raise AgentProjectAgentTemplateFileNotFoundError(
-                agent_project_folder=str(agent_project_folder),
-                agent_template_file=str(agent_template_file),
-            )
-        if not agent_type_file.exists():
-            raise AgentProjectAgentTypeFileNotFoundError(
-                agent_project_folder=str(agent_project_folder),
-                agent_type_file=str(agent_type_file),
-            )
-
-        # Check for valid symbol names in the required agent project files.
-        agent_generator_module_path = ".".join(
-            agent_generator_file.relative_to(
-                CONSORTIUM_HOME_DIRECTORY_PATH,
-            ).parts,
-        )[: -len(".py")]
-        agent_generator_symbol = agent_project_manifest_json["agent_generator"][
-            "symbol"
-        ]
-        agent_template_module_path = ".".join(
-            agent_template_file.relative_to(
-                CONSORTIUM_HOME_DIRECTORY_PATH,
-            ).parts,
-        )[: -len(".py")]
-        agent_template_symbol = agent_project_manifest_json["agent_template"]["symbol"]
-        agent_type_module_path = ".".join(
-            agent_type_file.relative_to(
-                CONSORTIUM_HOME_DIRECTORY_PATH,
-            ).parts,
-        )[: -len(".py")]
-        agent_type_symbol = agent_project_manifest_json["agent_type"]["symbol"]
-
-        try:
-            agent_generator_module = importlib.import_module(
-                agent_generator_module_path,
-            )
-            agent_generator_class = getattr(
-                agent_generator_module,
-                agent_generator_symbol,
-            )
-        except (ImportError, AttributeError):
-            raise AgentProjectSymbolNotFoundError(
-                symbol_name=str(agent_generator_symbol),
-                agent_project_file=str(agent_generator_file),
-                agent_project_file_type="agent generator",
-                agent_project_folder=str(agent_project_folder),
-            )
-        except Exception as exc:
-            raise InternalAgentProjectError(
-                agent_project_file_type="agent generator",
-                agent_project_folder=str(agent_project_folder),
-                error_message=str(exc),
-            )
-
-        try:
-            agent_template_module = importlib.import_module(
-                agent_template_module_path,
-            )
-            agent_template_class = getattr(
-                agent_template_module,
-                agent_template_symbol,
-            )
-        except (ImportError, AttributeError):
-            raise AgentProjectSymbolNotFoundError(
-                symbol_name=str(agent_generator_symbol),
-                agent_project_file=str(agent_generator_file),
-                agent_project_file_type="agent template",
-                agent_project_folder=str(agent_project_folder),
-            )
-        except Exception as exc:
-            raise InternalAgentProjectError(
-                agent_project_file_type="agent template",
-                agent_project_folder=str(agent_project_folder),
-                error_message=str(exc),
-            )
-
-        try:
-            agent_type_module = importlib.import_module(agent_type_module_path)
-            agent_type = getattr(
-                agent_type_module,
-                agent_type_symbol,
-            )
-        except (ImportError, AttributeError):
-            raise AgentProjectSymbolNotFoundError(
-                symbol_name=str(agent_generator_symbol),
-                agent_project_file=str(agent_generator_file),
-                agent_project_file_type="agent type",
-                agent_project_folder=str(agent_project_folder),
-            )
-        except Exception as exc:
-            raise InternalAgentProjectError(
-                agent_project_file_type="agent type",
-                agent_project_folder=str(agent_project_folder),
-                error_message=str(exc),
-            )
-
-        # Check for correct inheritance and instantiation of classes.
-        if not issubclass(agent_generator_class, BaseAgentGenerator):
-            raise AgentProjectInterfaceError(
-                agent_project_file_type="agent generator",
-                agent_project_folder=str(agent_project_folder),
-                agent_project_symbol=str(agent_generator_symbol),
-            )
-        if not issubclass(agent_template_class, BaseAgentTemplate):
-            raise AgentProjectInterfaceError(
-                agent_project_file_type="agent template",
-                agent_project_folder=str(agent_project_folder),
-                agent_project_symbol=str(agent_generator_symbol),
-            )
-        if not isinstance(agent_type, BaseAgentType):
-            raise AgentProjectInterfaceError(
-                agent_project_file_type="agent type",
-                agent_project_folder=str(agent_project_folder),
-                agent_project_symbol=str(agent_generator_symbol),
-            )
-
-        try:
-            agent_template_object = agent_template_class()
-        except Exception as exc:
-            raise InternalAgentProjectError(
-                agent_project_file_type="agent template",
-                agent_project_folder=str(agent_project_folder),
-                error_message=str(exc),
-            )
-
-        return AgentProfile(
-            name=agent_template_object.name,
-            agent_generator=agent_generator_class,
-            agent_template=agent_template_object,
-            agent_type=agent_type,
-            agent_project_folder_path=agent_project_folder,
-        )
-
-    def load_framework_agent_profiles(self) -> list[AgentProfile]:
-        self.logger.info(
-            "Loading framework agent profiles...",
-        )
-
-        for path in CONSORTIUM_AGENTS_DIRECTORY_PATH.rglob("*"):
-            if path.name != "agent_project_manifest.json":
-                continue
-
+        # TODO: Build in topological sorting after figuring out how to implement the
+        #  dependency system?
+        failed_to_load = 0
+        for agent_profile in retrieved:
             try:
-                agent_profile = self.load_agent_profile_from_agent_project_folder(
-                    agent_project_folder=path.parent,
+                await self.load_agent_profile(agent_profile=agent_profile)
+                self.logger.success("├─ Loaded agent profile: {}", agent_profile)
+                self.logger.debug("├─ Loaded agent profile: {!r}", agent_profile)
+            except (
+                AgentTemplatesFrameworkError,
+                AgentProfilesServiceError,
+            ) as exc:
+                failed_to_load += 1
+                self.logger.error("├─ {}", exc)
+
+        self.logger.info(
+            "└─ Loaded agent profiles from '{}' ({} agent profile(s) loaded, {} agent profile(s) "
+            "skipped, {} agent profile(s) failed to load).",
+            str(CONSORTIUM_AGENTS_DIRECTORY_PATH),
+            len(retrieved) - failed_to_load,
+            len(skipped),
+            len(errored) + failed_to_load,
+        )
+
+    async def unload_framework_agent_profiles(self) -> None:
+        self.logger.info("Unloading framework agent profiles...")
+        unloaded_agent_profiles = 0
+        for agent_profile in self.get_all_agent_profiles():
+            if (
+                agent_profile.agent_project_folder.parent
+                == CONSORTIUM_AGENTS_DIRECTORY_PATH
+            ):
+                await self.unload_agent_profile_by_agent_profile_id(
+                    agent_profile_id=str(agent_profile.agent_profile_id),
                 )
-
-                if agent_profile is None:
-                    continue
-
-                self.logger.success(
-                    "Loaded agent profile: {}",
-                    agent_profile,
-                )
-            except AgentProfileLoadError as exc:
-                self.logger.error(exc)
-
-        all_agent_profiles = self.get_all_agent_profiles()
+                unloaded_agent_profiles += 1
         self.logger.info(
-            f"Loaded framework agent profiles ({len(all_agent_profiles)} "
-            "agent profile(s) loaded).",
-        )
-        return all_agent_profiles
-
-    def unload_framework_agent_profiles(self) -> None:
-        self.logger.info(
-            "Unloading framework agent profiles...",
-        )
-        number_of_agent_profiles = len(self._agent_profiles)
-        self._agent_profiles = {}
-        self.logger.info(
-            f"Unloaded framework agent profiles ({number_of_agent_profiles} "
-            "agent profile(s) unloaded).",
+            "Unloaded framework agent profiles ({} agent profile(s) unloaded).",
+            unloaded_agent_profiles,
         )
 
-    def reload_framework_agent_profiles(self) -> list[AgentProfile]:
-        self.logger.info(
-            "Reloading framework agent profiles...",
-        )
-        self.unload_framework_agent_profiles()
-        agent_profiles = self.load_framework_agent_profiles()
+    async def reload_framework_agent_profiles(self) -> None:
+        self.logger.info("Reloading framework agent profiles...")
+        await self.unload_framework_agent_profiles()
+        await self.load_framework_agent_profiles()
         self.logger.info("Reloaded framework agent profiles.")
+
+    def get_all_agent_profiles(self) -> list[AgentProfile]:
+        agent_profiles = self._agent_profile_registry_service.get_all_components()
+        self.logger.debug(
+            "Retrieved all agent profiles ({} retrieved).",
+            len(agent_profiles),
+        )
         return agent_profiles
 
-    def load_agent_profile_from_agent_project_folder(
-        self,
-        agent_project_folder: Path,
-    ) -> AgentProfile | None:
-        agent_profile = self.get_agent_profile_from_agent_project_folder(
-            agent_project_folder,
+    def get_agent_profile_by_agent_profile_id(self, agent_profile_id) -> AgentProfile:
+        agent_profile = (
+            self._agent_profile_registry_service.get_component_by_component_id(
+                component_id=agent_profile_id,
+            )
         )
-
-        # `agent_profile` being `None` implies a disabled listener profile was
-        # attempted to be loaded.
-        if agent_profile is None:
-            return None
-
-        self._agent_profiles[str(agent_profile.agent_profile_id)] = agent_profile
-        self.logger.debug(
-            f"Loaded agent profile: {agent_profile!r}",
-        )
-        return agent_profile
-
-    def unload_agent_profile_by_agent_profile_id(self, agent_profile_id) -> None:
-        try:
-            agent_profile = self._agent_profiles.pop(agent_profile_id)
-        except KeyError:
-            raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
-
-        self.logger.info(
-            f"Unloaded agent profile: {agent_profile}",
-        )
-        self.logger.debug(
-            f"Unloaded agent profile: {agent_profile!r}",
-        )
-        return agent_profile
-
-    def reload_agent_profile_by_agent_profile_id(
-        self,
-        agent_profile_id,
-    ) -> AgentProfile:
-        try:
-            agent_profile = self._agent_profiles.pop(agent_profile_id)
-        except KeyError:
-            raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
-
-        agent_profile = self.load_agent_profile_from_agent_project_folder(
-            agent_profile.agent_project_folder_path,
-        )
-        self.logger.info(
-            f"Reloaded agent profile: {agent_profile}",
-        )
-        self.logger.debug(
-            f"Reloaded agent profile: {agent_profile!r}",
-        )
-        return agent_profile
-
-    def get_all_agent_profiles(self):
-        all_agent_profiles = list(self._agent_profiles.values())
-        self.logger.debug(
-            f"Retrieved all agent profiles ({len(all_agent_profiles)} retrieved).",
-        )
-        return all_agent_profiles
-
-    def get_agent_profile_by_agent_profile_id(self, agent_profile_id):
-        try:
-            agent_profile = self._agent_profiles[agent_profile_id]
-        except KeyError:
-            raise AgentProfileNotFoundError(agent_profile_id=agent_profile_id)
-
-        self.logger.debug(
-            f"Retrieved agent profile: {agent_profile!r}",
-        )
+        self.logger.debug("Retrieved agent profile: {!r}", agent_profile)
         return agent_profile

@@ -15,10 +15,12 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class C2TypesServiceError(BaseServiceException):
-    pass
+    code = "C2_TYPES_SERVICE_ERROR"
 
 
 class ListenerTypeNotFoundError(C2TypesServiceError):
+    code = "LISTENER_TYPE_NOT_FOUND_ERROR"
+
     def __init__(self, listener_type_id: str):
         super().__init__(
             message=(
@@ -30,6 +32,8 @@ class ListenerTypeNotFoundError(C2TypesServiceError):
 
 
 class AgentTypeNotFoundError(C2TypesServiceError):
+    code = "AGENT_TYPE_NOT_FOUND_ERROR"
+
     def __init__(self, agent_type_id: str):
         super().__init__(
             message=(

@@ -4,10 +4,12 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 
 
 class AgentsFrameworkError(BaseFrameworkException):
-    pass
+    code = "AGENTS_FRAMEWORK_ERROR"
 
 
 class AgentTaskNotFoundError(AgentsFrameworkError):
+    code = "AGENT_TASK_NOT_FOUND_ERROR"
+
     def __init__(self, task_id: str):
         super().__init__(
             f"Failed to find the requested agent task. No agent task was found with "
@@ -16,10 +18,12 @@ class AgentTaskNotFoundError(AgentsFrameworkError):
 
 
 class AgentResultNotFoundError(AgentsFrameworkError):
-    pass
+    code = "AGENT_RESULT_NOT_FOUND_ERROR"
 
 
 class AgentResultIDNotFoundError(AgentResultNotFoundError):
+    code = "AGENT_RESULT_ID_NOT_FOUND_ERROR"
+
     def __init__(self, result_id: str):
         super().__init__(
             f"Failed to find the requested agent result. No agent result was found "
@@ -28,6 +32,8 @@ class AgentResultIDNotFoundError(AgentResultNotFoundError):
 
 
 class AgentResultTaskIDNotFoundError(AgentResultNotFoundError):
+    code = "AGENT_RESULT_TASK_ID_NOT_FOUND_ERROR"
+
     def __init__(self, task_id: str):
         super().__init__(
             f"Failed to find the requested agent result. No agent result was found "
@@ -37,6 +43,8 @@ class AgentResultTaskIDNotFoundError(AgentResultNotFoundError):
 
 
 class AgentResultHasNoCorrespondingTaskError(AgentsFrameworkError):
+    code = "AGENT_RESULT_HAS_NO_CORRESPONDING_TASK_ERROR"
+
     def __init__(self, result_id: str, corresponding_task_id: str, agent_str: str):
         super().__init__(
             message=(
@@ -48,6 +56,8 @@ class AgentResultHasNoCorrespondingTaskError(AgentsFrameworkError):
 
 
 class AgentCapabilityNotFoundError(AgentsFrameworkError):
+    code = "AGENT_CAPABILITY_NOT_FOUND_ERROR"
+
     def __init__(self, command: str, agent_str: str, agent_type_str: str):
         super().__init__(
             message=(
@@ -60,6 +70,8 @@ class AgentCapabilityNotFoundError(AgentsFrameworkError):
 
 
 class AgentCapabilityArgumentNotFoundError(AgentsFrameworkError):
+    code = "AGENT_CAPABILITY_ARGUMENT_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         command: str,

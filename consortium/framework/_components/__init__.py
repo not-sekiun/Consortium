@@ -6,7 +6,7 @@ from consortium.framework._components._component_metadata import (
     ComponentMetadata,
     ComponentModel,
 )
-from consortium.framework._components._status import State
+from consortium.framework._components._component_status import State
 
 __all__ = [
     "ComponentLifeCycle",

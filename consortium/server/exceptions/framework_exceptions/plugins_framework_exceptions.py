@@ -42,6 +42,8 @@ class PluginsFrameworkError(
     Base exception for all errors that occur within the plugins framework.
     """
 
+    code = "PLUGINS_FRAMEWORK_ERROR"
+
     _COMPONENT_TYPE = "plugin"
 
 
@@ -54,6 +56,8 @@ class PluginConfigurationError(
     plugin.
     """
 
+    code = "PLUGIN_CONFIGURATION_ERROR"
+
 
 class InvalidPluginConfigurationParameterTypeError(
     comp_framework_excs.InvalidComponentConfigurationParameterTypeError,
@@ -63,6 +67,8 @@ class InvalidPluginConfigurationParameterTypeError(
     An error that is raised when a plugin's configuration parameter is of an invalid
     type.
     """
+
+    code = "INVALID_PLUGIN_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
         self,
@@ -85,6 +91,8 @@ class MissingPluginConfigurationParameterError(
     An error that is raised when a parameter is not declared in a plugin's definition.
     """
 
+    code = "MISSING_PLUGIN_CONFIGURATION_PARAMETER_ERROR"
+
     def __init__(self, plugin_str: str, parameter_name: str):
         super().__init__(
             component_str=plugin_str,
@@ -101,6 +109,8 @@ class EmptyPluginLabelError(
     configuration is an empty string.
     """
 
+    code = "EMPTY_PLUGIN_LABEL_ERROR"
+
     def __init__(self, plugin_filepath: str):
         super().__init__(component_filepath=plugin_filepath)
 
@@ -113,6 +123,8 @@ class DuplicatePluginLabelError(
     An error that is raised when the label provided in the plugin's definition during
     configuration is already in use by another plugin.
     """
+
+    code = "DUPLICATE_PLUGIN_LABEL_ERROR"
 
     def __init__(self, plugin_str: str, label: str):
         super().__init__(
@@ -129,6 +141,8 @@ class InvalidPluginVersionError(
     An error that is raised when the plugin version string provided in the plugin's
     definition during configuration is not a valid version string according to PEP 440.
     """
+
+    code = "INVALID_PLUGIN_VERSION_ERROR"
 
     def __init__(self, plugin_str: str, version: str):
         super().__init__(
@@ -147,6 +161,8 @@ class InvalidFrameworkVersionSpecifierError(
     defined in PEP440.
     """
 
+    code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
+
     def __init__(self, plugin_str: str, framework_version_specifier_str: str):
         super().__init__(
             component_str=plugin_str,
@@ -163,6 +179,8 @@ class InvalidPluginDependencyVersionSpecifierError(
     provided in the plugin's definition during configuration is not a valid version
     specifier string as defined in PEP440.
     """
+
+    code = "INVALID_PLUGIN_DEPENDENCY_VERSION_SPECIFIER_ERROR"
 
     def __init__(
         self,
@@ -184,6 +202,8 @@ class PluginOperationError(
     plugin.
     """
 
+    code = "PLUGIN_OPERATION_ERROR"
+
 
 class PluginNotRunningError(
     comp_framework_excs.ComponentNotRunningError,
@@ -193,6 +213,8 @@ class PluginNotRunningError(
     An error that is raised when an operation is attempted on a plugin that requires
     that plugin to already be running but the plugin is not running.
     """
+
+    code = "PLUGIN_NOT_RUNNING_ERROR"
 
     def __init__(
         self,
@@ -211,6 +233,8 @@ class PluginAlreadyStartedError(
     or running.
     """
 
+    code = "PLUGIN_ALREADY_STARTED_ERROR"
+
     def __init__(
         self,
         plugin_str: str,
@@ -222,6 +246,8 @@ class PluginStartError(comp_framework_excs.ComponentStartError, PluginOperationE
     """
     An error that is raised when a plugin fails to start.
     """
+
+    code = "PLUGIN_START_ERROR"
 
     def __init__(
         self,
@@ -244,6 +270,8 @@ class PluginRuntimeError(
     An error that is raised when a plugin encounters an error at runtime.
     """
 
+    code = "PLUGIN_RUNTIME_ERROR"
+
     def __init__(
         self,
         plugin_str: str,
@@ -261,6 +289,8 @@ class PluginStopError(comp_framework_excs.ComponentStopError, PluginOperationErr
     """
     An error that is raised when a plugin fails to stop.
     """
+
+    code = "PLUGIN_STOP_ERROR"
 
     def __init__(
         self,

@@ -17,13 +17,10 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 )
 
 
-class ListenerTemplateNotFoundError(NotFoundError):
-    code = "LISTENER_TEMPLATE_NOT_FOUND_ERROR"
+class ListenerTemplateNotFoundError(NotFoundError): ...
 
 
-class ListenerTemplateOptionNotFoundError(UnprocessableEntityError):
-    code = "LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"
+class ListenerTemplateOptionNotFoundError(UnprocessableEntityError): ...
 
 
-class ListenerTemplateOptionValueError(UnprocessableEntityError):
-    code = "LISTENER_TEMPLATE_OPTION_VALUE_ERROR"
+class ListenerTemplateOptionValueError(UnprocessableEntityError): ...

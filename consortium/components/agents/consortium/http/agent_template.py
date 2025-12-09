@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from consortium.components.agents.consortium.http.agent_generator import AgentGenerator
+from consortium.components.agents.consortium.http.agent_type import AGENT_TYPE
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
@@ -74,6 +75,7 @@ class AgentTemplate(BaseAgentTemplate):
     compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
     agent_generator = AgentGenerator
+    agent_type = AGENT_TYPE
     options = {
         SingleValueOption(
             name="name",

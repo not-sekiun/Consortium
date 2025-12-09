@@ -45,7 +45,7 @@ class DownloadCapability(BaseAgentCapability):
     requires_admin = False
     supported_oses = {SupportedOS.ANY}
     authors = {"Sekiun (github.com/not-sekiun)"}
-    arguments = {
+    options = {
         SingleValueOption(
             name="source",
             description=(

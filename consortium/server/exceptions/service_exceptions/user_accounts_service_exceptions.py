@@ -39,14 +39,16 @@ from consortium.server.objects.user_account_objects import UserRole
 
 
 class UserAccountsServiceError(BaseServiceException):
-    pass
+    code = "USER_ACCOUNTS_SERVICE_ERROR"
 
 
 class UserAccountNotFoundError(UserAccountsServiceError):
-    pass
+    code = "USER_ACCOUNT_NOT_FOUND_ERROR"
 
 
 class UserAccountIDNotFoundError(UserAccountNotFoundError):
+    code = "USER_ACCOUNT_ID_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         user_account_id: str,
@@ -60,6 +62,8 @@ class UserAccountIDNotFoundError(UserAccountNotFoundError):
 
 
 class UserAccountUsernameNotFoundError(UserAccountNotFoundError):
+    code = "USER_ACCOUNT_USERNAME_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         username: str,
@@ -73,10 +77,12 @@ class UserAccountUsernameNotFoundError(UserAccountNotFoundError):
 
 
 class UserAccountsFileError(UserAccountsServiceError):
-    pass
+    code = "USER_ACCOUNTS_FILE_ERROR"
 
 
 class UserAccountsFileNotFoundError(UserAccountsFileError):
+    code = "USER_ACCOUNTS_FILE_NOT_FOUND_ERROR"
+
     def __init__(
         self,
         user_accounts_filepath: str,
@@ -90,10 +96,12 @@ class UserAccountsFileNotFoundError(UserAccountsFileError):
 
 
 class UserAccountsFileAccessError(UserAccountsFileError):
-    pass
+    code = "USER_ACCOUNTS_FILE_ACCESS_ERROR"
 
 
 class UserAccountsFileReadAccessError(UserAccountsFileAccessError):
+    code = "USER_ACCOUNTS_FILE_READ_ACCESS_ERROR"
+
     def __init__(
         self,
         user_accounts_filepath: str,
@@ -108,6 +116,8 @@ class UserAccountsFileReadAccessError(UserAccountsFileAccessError):
 
 
 class UserAccountsFileWriteAccessError(UserAccountsFileAccessError):
+    code = "USER_ACCOUNTS_FILE_WRITE_ACCESS_ERROR"
+
     def __init__(
         self,
         user_accounts_filepath: str,
@@ -122,6 +132,8 @@ class UserAccountsFileWriteAccessError(UserAccountsFileAccessError):
 
 
 class UserAccountsFilepathIsDirectoryError(UserAccountsFileError):
+    code = "USER_ACCOUNTS_FILEPATH_IS_DIRECTORY_ERROR"
+
     def __init__(
         self,
         user_accounts_filepath: str,
@@ -136,6 +148,8 @@ class UserAccountsFilepathIsDirectoryError(UserAccountsFileError):
 
 
 class UserAccountsFileIsNotJSONError(UserAccountsFileError):
+    code = "USER_ACCOUNTS_FILE_IS_NOT_JSON_ERROR"
+
     def __init__(
         self,
         user_accounts_filepath: str,
@@ -150,6 +164,8 @@ class UserAccountsFileIsNotJSONError(UserAccountsFileError):
 
 
 class UserAccountsFileSchemaError(UserAccountsFileError):
+    code = "USER_ACCOUNTS_FILE_SCHEMA_ERROR"
+
     def __init__(
         self,
         user_accounts_filepath: str,
@@ -167,6 +183,8 @@ class UserAccountsFileSchemaError(UserAccountsFileError):
 class UserAccountsFileContainsDuplicateUsernamesError(
     UserAccountsFileError,
 ):
+    code = "USER_ACCOUNTS_FILE_CONTAINS_DUPLICATE_USERNAMES_ERROR"
+
     def __init__(
         self,
         user_accounts_filepath: str | Path,
@@ -182,6 +200,8 @@ class UserAccountsFileContainsDuplicateUsernamesError(
 
 
 class UserAccountAuthenticationError(UserAccountsServiceError):
+    code = "USER_ACCOUNT_AUTHENTICATION_ERROR"
+
     def __init__(
         self,
     ):
@@ -194,10 +214,12 @@ class UserAccountAuthenticationError(UserAccountsServiceError):
 
 
 class UserAccountManagementError(UserAccountsServiceError):
-    pass
+    code = "USER_ACCOUNT_MANAGEMENT_ERROR"
 
 
 class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
+    code = "USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR"
+
     @classmethod
     def during_user_account_creation(
         cls,
@@ -239,6 +261,8 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
 
 
 class EmptyUserAccountUsernameError(UserAccountManagementError):
+    code = "EMPTY_USER_ACCOUNT_USERNAME_ERROR"
+
     @classmethod
     def during_user_account_creation(cls) -> "EmptyUserAccountUsernameError":
         return cls(
@@ -262,6 +286,8 @@ class EmptyUserAccountUsernameError(UserAccountManagementError):
 
 
 class EmptyUserAccountPasswordError(UserAccountManagementError):
+    code = "EMPTY_USER_ACCOUNT_PASSWORD_ERROR"
+
     @classmethod
     def during_user_account_creation(cls) -> "EmptyUserAccountPasswordError":
         return cls(
@@ -285,6 +311,8 @@ class EmptyUserAccountPasswordError(UserAccountManagementError):
 
 
 class InvalidUserAccountRoleError(UserAccountManagementError):
+    code = "INVALID_USER_ACCOUNT_ROLE_ERROR"
+
     @classmethod
     def during_user_account_creation(cls, role: str) -> "InvalidUserAccountRoleError":
         return cls(
@@ -311,6 +339,8 @@ class InvalidUserAccountRoleError(UserAccountManagementError):
 
 
 class IdenticalUserAccountUsernameError(UserAccountManagementError):
+    code = "IDENTICAL_USER_ACCOUNT_USERNAME_ERROR"
+
     def __init__(self, user_account_str: str, username: str):
         super().__init__(
             message=(
@@ -322,6 +352,8 @@ class IdenticalUserAccountUsernameError(UserAccountManagementError):
 
 
 class IdenticalUserAccountPasswordError(UserAccountManagementError):
+    code = "IDENTICAL_USER_ACCOUNT_PASSWORD_ERROR"
+
     def __init__(self, user_account_str: str):
         super().__init__(
             message=(
@@ -332,6 +364,8 @@ class IdenticalUserAccountPasswordError(UserAccountManagementError):
 
 
 class IdenticalUserAccountRoleError(UserAccountManagementError):
+    code = "IDENTICAL_USER_ACCOUNT_ROLE_ERROR"
+
     def __init__(self, user_account_str: str, role: str | UserRole):
         super().__init__(
             message=(

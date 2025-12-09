@@ -61,7 +61,7 @@ class AgentGeneratorStatus:
         self.state = AgentGeneratorState.FATAL
         self.exception = AgentGeneratorBuildError(
             agent_generator_str=agent_generator_str,
-            build_error_message=f"{type(exception).__name__}: {exception}",
+            error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,
                 "message": str(exception),
@@ -120,8 +120,8 @@ class AgentGeneratorBuildStepStatus:
     ) -> None:
         self.state = AgentGeneratorBuildStepState.FATAL
         self.exception = AgentGeneratorBuildStepError(
-            agent_generator_build_step=agent_generator_build_step_identifier,
-            build_step_error_message=f"{type(exception).__name__}: {exception}",
+            agent_generator_build_step_str=agent_generator_build_step_identifier,
+            error_message=f"{type(exception).__name__}: {exception}",
             detail={
                 "type": type(exception).__name__,
                 "message": str(exception),

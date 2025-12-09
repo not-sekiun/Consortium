@@ -88,7 +88,7 @@ class ClientWebsocketsAPIConnection:
 
         self._websocket = await websockets.connect(
             f"ws://{self.remote_host}:{self.remote_port}/api/events",
-            extra_headers={"Authorization": f"Bearer {self.json_web_token}"},
+            additional_headers={"Authorization": f"Bearer {self.json_web_token}"},
         )
 
         self.connected = True

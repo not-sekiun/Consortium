@@ -2,7 +2,7 @@ import abc
 import asyncio
 import enum
 
-from consortium.framework._components._status import State, Status
+from consortium.framework._components._component_status import State, Status
 from consortium.framework.exceptions._component_framework_exceptions import (
     ComponentRuntimeError,
     ComponentStartError,
@@ -55,7 +55,7 @@ class ComponentLifeCycle(abc.ABC):
     async def on_cancelled(self) -> None: ...
 
     @abc.abstractmethod
-    async def on_errored(self, runtime_error: BaseFrameworkException) -> None: ...
+    async def on_errored(self, error: BaseFrameworkException) -> None: ...
 
     @abc.abstractmethod
     async def on_fatal(
@@ -182,7 +182,7 @@ class ComponentLifeCycle(abc.ABC):
             )
             try:
                 await self.on_errored(
-                    runtime_error=ComponentRuntimeFrameworkError(
+                    error=ComponentRuntimeFrameworkError(
                         component_str=str(self),
                         error_message=exc.message,
                         detail=exc.detail,
