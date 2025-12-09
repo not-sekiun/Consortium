@@ -13,7 +13,7 @@ class AgentTemplatesService:
         agent_profiles_service: AgentProfilesService,
     ):
         self._agent_profiles_service = agent_profiles_service
-        self.logger = logger.bind(
+        self._logger = logger.bind(
             logger_name=str(self),
         )
 
@@ -32,8 +32,9 @@ class AgentTemplatesService:
             for agent_profile in self._agent_profiles_service.get_all_agent_profiles()
         ]:
             if str(agent_template.agent_template_id) == agent_template_id:
-                self.logger.debug(
-                    f"Retrieved listener template: {agent_template!r}",
+                self._logger.debug(
+                    "Retrieved listener template: {!r}",
+                    agent_template,
                 )
                 return agent_template
         raise AgentTemplateNotFoundError(
@@ -45,8 +46,8 @@ class AgentTemplatesService:
             agent_profile.agent_template
             for agent_profile in self._agent_profiles_service.get_all_agent_profiles()
         ]
-        self.logger.debug(
-            f"Retrieved all listener templates ({len(all_agent_templates)}"
-            f"listener template(s) retrieved).",
+        self._logger.debug(
+            "Retrieved all listener templates ({} listener template(s) retrieved).",
+            len(all_agent_templates),
         )
         return all_agent_templates

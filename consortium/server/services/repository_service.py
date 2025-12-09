@@ -28,7 +28,7 @@ from consortium.server.objects.repository_objects import (
 class RepositoryService:
     def __init__(self, repository_directory_path: pathlib.Path):
         self._repository_directory_path = repository_directory_path
-        self.logger = logger.bind(
+        self._logger = logger.bind(
             logger_name=str(self),
         )
         self._repository_resources = {}
@@ -67,7 +67,7 @@ class RepositoryService:
                                 "is_directory": {"type": "boolean"},
                             },
                             "required": [
-                                "resource_id" "name",
+                                "resource_idname",
                                 "description",
                                 "size",
                                 "exists_on_disk",
@@ -123,7 +123,7 @@ class RepositoryService:
                             "JSON data."
                         ),
                         repository_directory=str(self._repository_directory_path),
-                    )
+                    ) from None
                 except jsonschema.ValidationError as exc:
                     raise InvalidRepositoryMetadataFile(
                         error_message=(
@@ -131,7 +131,7 @@ class RepositoryService:
                             f"JSON that conforms to the expected JSON schema. {exc}"
                         ),
                         repository_directory=str(self._repository_directory_path),
-                    )
+                    ) from None
 
             # The repository service does some special preprocessing for files or
             # directories that are registered to it. It takes the original path and sets
@@ -141,7 +141,7 @@ class RepositoryService:
             # in the repository directory because all repository entities are stored at
             # the root of the repository directory.
             for (
-                resource_id,
+                _,
                 repository_resource_json,
             ) in repository_metadata.items():
                 if repository_resource_json["is_directory"]:
@@ -174,7 +174,7 @@ class RepositoryService:
                         # Take into account the old file extension from the originally
                         # provided file name.
                         path=self._repository_directory_path
-                        / f"{repository_resource_json["resource_id"]}{os.path.splitext(repository_resource_json["name"])[1] if repository_resource_json["name"] else ""}",
+                        / f"{repository_resource_json['resource_id']}{os.path.splitext(repository_resource_json['name'])[1] if repository_resource_json['name'] else ''}",
                     )
                     repository_file.resource_id = repository_resource_json[
                         "resource_id"
@@ -230,7 +230,7 @@ class RepositoryService:
         repository_resource_type = (
             "directory" if repository_resource.is_directory else "file"
         )
-        self.logger.debug(
+        self._logger.debug(
             "Registered repository {} {}",
             repository_resource_type,
             str(repository_resource),
@@ -247,12 +247,12 @@ class RepositoryService:
         except KeyError:
             raise RepositoryResourceNotFoundError(
                 resource_id=resource_id,
-            )
+            ) from None
 
         repository_resource_type = (
             "directory" if deregistered_repository_resource.is_directory else "file"
         )
-        self.logger.debug(
+        self._logger.debug(
             "Deregistered repository {} {}",
             repository_resource_type,
             str(deregistered_repository_resource),
@@ -260,11 +260,7 @@ class RepositoryService:
 
     def create_repository_file(
         self,
-        data: str
-        | bytes
-        | IO
-        | Generator[bytes, None, None]
-        | Generator[str, None, None],
+        data: str | bytes | IO | Generator[bytes] | Generator[str],
         is_binary: bool = True,
         name: str | None = None,
         description: str = "",
@@ -279,7 +275,7 @@ class RepositoryService:
             # Preserve the original file extension provided from the file name
             # parameter.
             path=self._repository_directory_path
-            / f"{unique_resource_id}{os.path.splitext(name)[1] if name else ""}",
+            / f"{unique_resource_id}{os.path.splitext(name)[1] if name else ''}",
             name=name if name else unique_resource_id,
             description=description,
         )
@@ -313,7 +309,7 @@ class RepositoryService:
 
     def create_repository_directory(
         self,
-        archive_file: bytes | Generator[bytes, None, None] | BinaryIO,
+        archive_file: bytes | Generator[bytes] | BinaryIO,
         format: Literal["zip", "tar", "gztar", "bztar", "xztar"] = "zip",
         name: str | None = None,
         description: str = "",
@@ -425,7 +421,7 @@ class RepositoryService:
         except KeyError:
             raise RepositoryResourceNotFoundError(
                 resource_id=resource_id,
-            )
+            ) from None
 
     def get_repository_file_by_resource_id(self, resource_id: str) -> RepositoryFile:
         file_system_resource = self.get_repository_resource_by_resource_id(

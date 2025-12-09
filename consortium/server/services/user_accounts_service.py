@@ -32,12 +32,10 @@ from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_P
 class UserAccountsService:
     def __init__(self):
         self._user_accounts = {}
-        self.logger = logger.bind(
+        self._logger = logger.bind(
             logger_name=str(self),
         )
-        self.logger.debug(
-            f"Started {self}",
-        )
+        self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "User Accounts Service"
@@ -54,10 +52,8 @@ class UserAccountsService:
         except KeyError:
             raise UserAccountIDNotFoundError(
                 user_account_id=user_account_id,
-            )
-        self.logger.debug(
-            f"Retrieved user account: {user_account!r}",
-        )
+            ) from None
+        self._logger.debug("Retrieved user account: {!r}", user_account)
 
         # Always return a deep copy of the user account to prevent the caller from
         # modifying the original user account by interacting with the instantiated user
@@ -67,18 +63,16 @@ class UserAccountsService:
     def get_user_account_by_username(self, username: str) -> UserAccountModel:
         for user_account in self._user_accounts.values():
             if user_account.username == username:
-                self.logger.debug(
-                    f"Retrieved user account: {user_account!r}",
-                )
+                self._logger.debug("Retrieved user account: {!r}", user_account)
                 return user_account
 
         raise UserAccountUsernameNotFoundError(username=username)
 
     def get_all_user_accounts(self) -> list[UserAccountModel]:
         all_user_accounts = list(self._user_accounts.values())
-        self.logger.debug(
-            f"Retrieved all user accounts ({len(all_user_accounts)} user account(s) "
-            "retrieved).",
+        self._logger.debug(
+            "Retrieved all user accounts ({} user account(s) retrieved).",
+            len(all_user_accounts),
         )
 
         return all_user_accounts
@@ -107,9 +101,7 @@ class UserAccountsService:
             role=role,
         )
         self._user_accounts[str(user_account.user_account_id)] = user_account
-        self.logger.info(
-            f"Created new user account: {user_account}",
-        )
+        self._logger.info("Created new user account: {}", user_account)
 
         return user_account
 
@@ -144,9 +136,11 @@ class UserAccountsService:
 
         old_username = user_account.username
         user_account.username = username
-        self.logger.info(
-            f"Updated username for user account {user_account}: '{old_username}' -> "
-            f"'{username}'",
+        self._logger.info(
+            "Updated username for user account {}: '{}' -> '{}'",
+            user_account,
+            old_username,
+            username,
         )
 
         return user_account
@@ -169,9 +163,11 @@ class UserAccountsService:
 
         old_password = user_account.password
         user_account.password = password
-        self.logger.info(
-            f"Updated password for user account {user_account}: '{old_password}' -> "
-            f"'{password}'",
+        self._logger.info(
+            "Updated password for user account {}: '{}' -> '{}'",
+            user_account,
+            old_password,
+            password,
         )
         return user_account
 
@@ -195,8 +191,11 @@ class UserAccountsService:
 
         old_role = user_account.role
         user_account.role = role
-        self.logger.info(
-            f"Updated role for {user_account}: '{old_role}' -> '{role}'",
+        self._logger.info(
+            "Updated role for {}: '{}' -> '{}'",
+            user_account,
+            old_role,
+            role,
         )
 
         return user_account
@@ -208,10 +207,8 @@ class UserAccountsService:
         try:
             deleted_user_account = self._user_accounts.pop(str(user_account_id))
         except KeyError:
-            raise UserAccountIDNotFoundError(user_account_id=user_account_id)
-        self.logger.info(
-            f"Deleted user account: {deleted_user_account}",
-        )
+            raise UserAccountIDNotFoundError(user_account_id=user_account_id) from None
+        self._logger.info("Deleted user account: {}", deleted_user_account)
 
     def authenticate_user_account_credentials(
         self,
@@ -224,15 +221,13 @@ class UserAccountsService:
         try:
             user_account = self.get_user_account_by_username(username=username)
         except UserAccountUsernameNotFoundError:
-            raise UserAccountAuthenticationError
+            raise UserAccountAuthenticationError from None
         if username not in existing_usernames:
             raise UserAccountAuthenticationError
         if user_account.password != password:
             raise UserAccountAuthenticationError
 
-        self.logger.debug(
-            f"Authenticated user account: {user_account!r}",
-        )
+        self._logger.debug("Authenticated user account: {!r}", user_account)
 
         return user_account
 
@@ -245,9 +240,7 @@ class UserAccountsService:
         )
         for user_account in new_user_accounts:
             self._user_accounts[str(user_account.user_account_id)] = user_account
-            self.logger.debug(
-                f"Loaded user account: {user_account!r}",
-            )
+            self._logger.debug("Loaded user account: {!r}", user_account)
         return new_user_accounts
 
     def read_user_accounts_from_user_accounts_file(
@@ -289,15 +282,15 @@ class UserAccountsService:
             raise UserAccountsFileSchemaError(
                 user_accounts_filepath=str(user_accounts_filepath),
                 json_schema_error_message=exc.message,
-            )
+            ) from None
         except json.JSONDecodeError:
             raise UserAccountsFileIsNotJSONError(
                 user_accounts_filepath=str(user_accounts_filepath),
-            )
+            ) from None
         except PermissionError:
             raise UserAccountsFileReadAccessError(
                 user_accounts_filepath=str(user_accounts_filepath),
-            )
+            ) from None
 
         existing_usernames = [
             user_account.username for user_account in self.get_all_user_accounts()
@@ -318,14 +311,12 @@ class UserAccountsService:
                     user_accounts_filepath=user_accounts_filepath,
                     duplicate_username=new_user_account.username,
                 )
-            self.logger.debug(
-                f"Read user account: {new_user_account}",
-            )
+            self._logger.debug("Read user account: {}", new_user_account)
             new_user_accounts.append(new_user_account)
 
-        self.logger.debug(
-            f"Read user accounts from user accounts file ({len(new_user_accounts)} "
-            "user account(s) read).",
+        self._logger.debug(
+            "Read user accounts from user accounts file ({} user account(s) read).",
+            len(new_user_accounts),
         )
         return new_user_accounts
 
@@ -341,9 +332,7 @@ class UserAccountsService:
         serializable_user_accounts = []
 
         for user_account in self.get_all_user_accounts():
-            self.logger.debug(
-                f"Writing user account: {user_account}",
-            )
+            self._logger.debug("Writing user account: {}", user_account)
             serializable_user_accounts.append(
                 {
                     "username": user_account.username,
@@ -360,37 +349,35 @@ class UserAccountsService:
         except PermissionError:
             raise UserAccountsFileWriteAccessError(
                 user_accounts_filepath=str(user_accounts_filepath),
-            )
+            ) from None
 
-        self.logger.debug(
-            f"Wrote user accounts to user accounts file ({number_of_bytes_written} "
-            f"byte(s) written).",
+        self._logger.debug(
+            "Wrote user accounts to user accounts file ({} byte(s) written).",
+            number_of_bytes_written,
         )
         return number_of_bytes_written
 
     def load_framework_user_accounts(self) -> bool:
-        self.logger.debug("Loading framework user accounts...")
+        self._logger.debug("Loading framework user accounts...")
 
         try:
             loaded_user_accounts = self.load_user_accounts_from_user_accounts_file(
                 user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
             )
         except UserAccountsServiceError as exc:
-            self.logger.error(exc)
+            self._logger.error(exc)
             return False
 
         for user_account in loaded_user_accounts:
-            self.logger.debug(
-                f"Loaded user account: {user_account}",
-            )
-        self.logger.debug(
-            f"Loaded framework user accounts ({len(loaded_user_accounts)} user "
-            f"account(s) loaded).",
+            self._logger.debug("Loaded user account: {}", user_account)
+        self._logger.debug(
+            "Loaded framework user accounts ({} user account(s) loaded).",
+            len(loaded_user_accounts),
         )
         return True
 
     def reload_framework_user_accounts(self) -> bool:
-        self.logger.debug("Reloading framework user accounts...")
+        self._logger.debug("Reloading framework user accounts...")
 
         try:
             for user_account_id in list(self._user_accounts.keys()):
@@ -401,36 +388,35 @@ class UserAccountsService:
                 user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
             )
         except UserAccountsServiceError as exc:
-            self.logger.error(f"{exc.__class__.__name__}: {exc}")
+            self._logger.error("{}: {}", exc.__class__.__name__, exc)
             return False
 
         for user_account in loaded_user_accounts:
-            self.logger.debug(
-                f"Reloaded user account: {user_account}",
-            )
-        self.logger.debug(
-            f"Reloaded framework user accounts ({len(loaded_user_accounts)} user "
-            f"account(s) reloaded).",
+            self._logger.debug("Reloaded user account: {}", user_account)
+        self._logger.debug(
+            "Reloaded framework user accounts ({} user account(s) reloaded).",
+            len(loaded_user_accounts),
         )
         return True
 
     def write_framework_user_accounts(self) -> bool:
-        self.logger.debug("Writing framework user accounts...")
+        self._logger.debug("Writing framework user accounts...")
 
         try:
             number_of_bytes_written = self.write_user_accounts_to_user_accounts_file(
                 user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
             )
         except UserAccountsServiceError as exc:
-            self.logger.error(exc)
+            self._logger.error(exc)
             return False
 
         for user_account in self.get_all_user_accounts():
-            self.logger.debug(
-                f"Wrote user account: {user_account}",
+            self._logger.debug(
+                "Wrote user account: {}",
+                user_account,
             )
-        self.logger.debug(
-            f"Wrote framework user accounts ({number_of_bytes_written} byte(s) "
-            f"written).",
+        self._logger.debug(
+            "Wrote framework user accounts ({} byte(s) written).",
+            number_of_bytes_written,
         )
         return True

@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import json
 
 from pydantic import ValidationError
@@ -9,7 +10,7 @@ from consortium.server.server_config import CONSORTIUM_SERVER_CONFIG_JSON_FILE_P
 from consortium.server.server_logging import configure_logger
 
 
-def main(arguments: argparse.Namespace) -> None:
+async def _start_server(arguments: argparse.Namespace) -> None:
     # First thing we check is if reloading is enabled. If the reload flag is set, we
     # essentially just run the entire server again (through the entry point script)
     # with all the same arguments as before just without the reload flag (otherwise
@@ -27,7 +28,7 @@ def main(arguments: argparse.Namespace) -> None:
     else:
         server_config_filepath = arguments.config
     try:
-        with open(server_config_filepath, "r") as file:
+        with open(server_config_filepath) as file:
             json_data = json.load(fp=file)
     except FileNotFoundError:
         print(
@@ -66,4 +67,11 @@ def main(arguments: argparse.Namespace) -> None:
 
     # Configure server and create a reference to it in the server singletons module.
     server_singletons.server = Server(server_config=server_config)
-    server_singletons.server.start_server()
+    await server_singletons.server.start_server()
+
+
+def main(arguments: argparse.Namespace) -> None:
+    try:
+        asyncio.run(_start_server(arguments=arguments))
+    except KeyboardInterrupt:
+        pass

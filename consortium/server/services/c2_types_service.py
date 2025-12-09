@@ -18,11 +18,12 @@ class C2TypesService:
     ):
         self._listener_profiles_service = listener_profiles_service
         self._agent_profiles_service = agent_profiles_service
-        self.logger = logger.bind(
+        self._logger = logger.bind(
             logger_name=str(self),
         )
-        self.logger.debug(
-            f"Started {self}",
+        self._logger.debug(
+            "Started {}",
+            self,
         )
 
     def __str__(self) -> str:
@@ -38,9 +39,9 @@ class C2TypesService:
         ) in self._listener_profiles_service.get_all_listener_profiles():
             if listener_profile.listener_type not in listener_types:
                 listener_types.append(listener_profile.listener_type)
-        self.logger.debug(
-            f"Retrieved all listener types ({len(listener_types)} listener type(s) "
-            f"retrieved).",
+        self._logger.debug(
+            "Retrieved all listener types ({} listener type(s) retrieved).",
+            len(listener_types),
         )
         return listener_types
 
@@ -50,8 +51,9 @@ class C2TypesService:
     ):
         for listener_type in self.get_all_listener_types():
             if str(listener_type.listener_type_id) == listener_type_id:
-                self.logger.debug(
-                    f"Retrieved listener type: {listener_type!r}",
+                self._logger.debug(
+                    "Retrieved listener type: {!r}",
+                    listener_type,
                 )
                 return listener_type
         raise ListenerTypeNotFoundError(listener_type_id=listener_type_id)
@@ -61,8 +63,9 @@ class C2TypesService:
         for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
             if agent_profile.agent_type not in agent_types:
                 agent_types.append(agent_profile.agent_type)
-        self.logger.debug(
-            f"Retrieved all agent types ({len(agent_types)} agent type(s) retrieved).",
+        self._logger.debug(
+            "Retrieved all agent types ({} agent type(s) retrieved).",
+            len(agent_types),
         )
         return agent_types
 
@@ -72,8 +75,9 @@ class C2TypesService:
     ):
         for agent_type in self.get_all_agent_types():
             if str(agent_type.agent_type_id) == agent_type_id:
-                self.logger.debug(
-                    f"Retrieved agent type: {agent_type!r}",
+                self._logger.debug(
+                    "Retrieved agent type: {!r}",
+                    agent_type,
                 )
                 return agent_type
         raise AgentTypeNotFoundError(agent_type_id=agent_type_id)

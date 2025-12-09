@@ -1,5 +1,8 @@
 import socket
 import traceback
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
@@ -7,6 +10,9 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 import consortium.server.server_singletons as server_singletons
+from consortium.framework._components._component_status import State
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.api.agent_generators_api import (
     router as agent_generators_api_router,
 )
@@ -30,7 +36,6 @@ from consortium.server.api.users_api import router as users_api_router
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import SERVER_RELEASE
-from consortium.server.server_event_handlers import lifespan
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
@@ -42,10 +47,13 @@ from consortium.server.server_middleware import (
     spoof_response_server_header,
 )
 
-# These services need to have their managed objects stopped when the server is shutting
-# down.
-listeners_service = server_singletons.listeners_service
+user_accounts_service = server_singletons.user_accounts_service
+listener_profiles_service = server_singletons.listener_profiles_service
+agent_profiles_service = server_singletons.agent_profiles_service
+event_hooks_service = server_singletons.event_hooks_service
 plugins_service = server_singletons.plugins_service
+events_service = server_singletons.events_service
+listeners_service = server_singletons.listeners_service
 
 
 class Server:
@@ -60,7 +68,7 @@ class Server:
         self._logger = logger.bind(logger_name="Server")
         self._app = FastAPI(
             swagger_ui_parameters={"defaultModelsExpandDepth": -1},
-            lifespan=lifespan,
+            lifespan=self._lifespan,
         )
 
         # Configure custom api endpoints.
@@ -129,21 +137,45 @@ class Server:
                     }
                     schema["examples"][0]["error"] = reordered_dict
 
-    def _shutdown_server(self) -> None:
-        # TODO: run all the necessary shutdown procedures, this is where we gracefully
-        #  shutdown listeners, notify clients and agents of the shutdown, etc.
-        self._logger.info("Shutting down server...")
-        self.status = ServerStatus.SHUTTING_DOWN
-
-    def start_server(self) -> None:
-        # Manually start the server with the uvicorn backend and disable the uvicorn
-        # logger
+    @asynccontextmanager
+    async def _lifespan(self, _app: FastAPI) -> AsyncGenerator[None, Any]:
         self._logger.info(
             f'Starting server (v{SERVER_RELEASE.version} "{SERVER_RELEASE.codename}") '
             f"at {self.server_config.local_host}:{self.server_config.local_port}...",
         )
         self.status = ServerStatus.RUNNING
+        await self._server_start_up_procedure()
+        yield
+        self._logger.info("Shutting down server...")
+        self.status = ServerStatus.SHUTTING_DOWN
+        await self._server_shutdown_procedure()
+        self._logger.info("Server shutdown complete. See you again ^_^")
+        await self._logger.complete()
+        self.status = ServerStatus.STOPPED
 
+    @staticmethod
+    async def _server_shutdown_procedure() -> None:
+        # Gracefully stop all running plugins.
+        for plugin in server_singletons.plugins_service.get_all_plugins():
+            if plugin.status.state == State.RUNNING:
+                await server_singletons.plugins_service.stop_plugin_by_plugin_id(
+                    plugin_id=str(plugin.plugin_id),
+                    blocking=True,
+                )
+
+    @staticmethod
+    async def _server_start_up_procedure() -> None:
+        # Setup all services and emit startup event.
+        server_singletons.user_accounts_service.load_framework_user_accounts()
+        await server_singletons.listener_profiles_service.load_framework_listener_profiles()
+        await server_singletons.agent_profiles_service.load_framework_agent_profiles()
+        await server_singletons.event_hooks_service.load_framework_event_hooks()
+        await server_singletons.plugins_service.load_framework_plugins()
+        await server_singletons.events_service.trigger_event(
+            event=Event(event_type=EventType.START_SERVER),
+        )
+
+    async def start_server(self) -> None:
         # Uvicorn will ordinarily warn of an already bound socket through its logger,
         # but we disabled it, so we need to do our own socket check to see if the
         # address is bindable.
@@ -160,8 +192,10 @@ class Server:
             )
             return
 
+        # Manually start the server with the uvicorn backend and disable the uvicorn
+        # logger
         try:
-            uvicorn.run(
+            config = uvicorn.Config(
                 self._app,
                 host=self.server_config.local_host,
                 port=self.server_config.local_port,
@@ -173,6 +207,8 @@ class Server:
                 # Disables Uvicorn's server header to prevent C2 server fingerprinting.
                 server_header=False,
             )
+            server = uvicorn.Server(config)
+            await server.serve()
         # This except block triggered before the server runs. Any other exceptions that
         # skip past the middleware are handled internally by uvicorn and will NOT
         # trigger this except block. The traceback can be disabled by setting the
@@ -183,14 +219,3 @@ class Server:
                 "was starting:\n{}</></>",
                 traceback.format_exc(),
             )
-            return
-
-        # Uvicorn blocks the main thread until a keyboard interrupt is sent to it
-        # signifying a shutdown. Execution is continued here where we can perform
-        # any graceful shutdowns such as notifying clients and agents of the
-        # shutdown as well as killing any running listeners.
-        self._shutdown_server()
-        # print(1)
-        self._logger.info("Server shutdown complete. See you again ^_^")
-        # print(2)
-        self.status = ServerStatus.STOPPED

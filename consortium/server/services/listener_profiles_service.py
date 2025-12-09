@@ -29,8 +29,8 @@ class ListenerProfilesService:
             component_loader_service=self._listener_profile_loader_service,
             component_framework_directory=CONSORTIUM_LISTENERS_DIRECTORY_PATH,
         )
-        self.logger = logger.bind(logger_name=str(self))
-        self.logger.debug("Started {}", self)
+        self._logger = logger.bind(logger_name=str(self))
+        self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "Listener Profiles Service"
@@ -48,13 +48,14 @@ class ListenerProfilesService:
             ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
         )
         if listener_profile is None:
-            self.logger.debug(
+            self._logger.debug(
                 "Skipped loading listener profile from '{}' because it was disabled.",
                 str(listener_profile_project_folder),
             )
         else:
-            self.logger.debug(
-                "Retrieved listener profile {} from listener profile project folder: {}",
+            self._logger.debug(
+                "Retrieved listener profile {} from listener profile project "
+                "folder: {}",
                 repr(listener_profile),
                 str(listener_profile_project_folder),
             )
@@ -75,9 +76,10 @@ class ListenerProfilesService:
                 ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
             )
         )
-        self.logger.debug(
-            "Retrieved listener profiles from '{}' ({} listener profile(s) retrieved, {} listener profile(s) "
-            "skipped, {} listener profile(s) failed to load)",
+        self._logger.debug(
+            "Retrieved listener profiles from '{}' ({} listener profile(s) "
+            "retrieved, {} listener profile(s) skipped, {} listener profile(s) "
+            "failed to load)",
             directory,
             len(retrieved),
             len(skipped),
@@ -93,7 +95,7 @@ class ListenerProfilesService:
         listener_profile = await self._listener_profile_registry_service.load_component(
             component=listener_profile,
         )
-        self.logger.debug("Loaded listener profile: {}", listener_profile)
+        self._logger.debug("Loaded listener profile: {}", listener_profile)
 
     async def load_listener_profile_from_listener_profile_project_folder(
         self,
@@ -105,13 +107,14 @@ class ListenerProfilesService:
             ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
         )
         if listener_profile is None:
-            self.logger.warning(
-                "Listener profile could not be loaded from {} because it is currently "
-                "disabled. Either enable it in its manifest or force load it by "
-                "setting the `ignore_enabled_listener_profile_flag` to `True`.",
+            self._logger.warning(
+                "Listener profile could not be loaded from {} because it is "
+                "currently disabled. Either enable it in its manifest or force "
+                "load it by setting the `ignore_enabled_listener_profile_flag` to "
+                "`True`.",
                 str(listener_profile_project_folder),
             )
-        self.logger.debug("Loaded listener profile: {}", listener_profile)
+        self._logger.debug("Loaded listener profile: {}", listener_profile)
         return listener_profile
 
     async def unload_listener_profile_by_listener_profile_id(
@@ -123,8 +126,8 @@ class ListenerProfilesService:
                 component_id=listener_profile_id,
             )
         )
-        self.logger.info("Unloaded listener profile: {}", listener_profile)
-        self.logger.debug("Unloaded listener profile: {!r}", listener_profile)
+        self._logger.info("Unloaded listener profile: {}", listener_profile)
+        self._logger.debug("Unloaded listener profile: {!r}", listener_profile)
 
     async def reload_listener_profile_by_listener_profile_id(
         self,
@@ -138,21 +141,22 @@ class ListenerProfilesService:
             )
         )
         if listener_profile is None:
-            self.logger.warning(
+            self._logger.warning(
                 "Listener profile with ID '{}' could not be reloaded because it is "
-                "currently disabled. Either enable it in its manifest or force reload "
-                "it by setting the `ignore_enabled_listener_profile_flag` to `True`.",
+                "currently disabled. Either enable it in its manifest or force "
+                "reload it by setting the `ignore_enabled_listener_profile_flag` to "
+                "`True`.",
                 listener_profile_id,
             )
-        self.logger.info("Reloaded listener profile: {}", listener_profile)
-        self.logger.debug("Reloaded listener profile: {!r}", listener_profile)
+        self._logger.info("Reloaded listener profile: {}", listener_profile)
+        self._logger.debug("Reloaded listener profile: {!r}", listener_profile)
         return listener_profile
 
     async def load_framework_listener_profiles(
         self,
         ignore_enabled_listener_profile_flag: bool = False,
     ) -> None:
-        self.logger.info("Loading framework listener profiles...")
+        self._logger.info("Loading framework listener profiles...")
         retrieved, skipped, errored = (
             self.get_listener_profiles_from_listener_profile_project_folder_directories(
                 directory=CONSORTIUM_LISTENERS_DIRECTORY_PATH,
@@ -160,13 +164,14 @@ class ListenerProfilesService:
             )
         )
         for path in skipped:
-            self.logger.info(
-                "├─ Skipped loading listener profile from '{}' because it was disabled.",
+            self._logger.info(
+                "├─ Skipped loading listener profile from '{}' because it was "
+                "disabled.",
                 str(path),
             )
         if errored:
             for _, error in errored:
-                self.logger.error(
+                self._logger.error(
                     "├─ {}",
                     str(error),
                 )
@@ -177,18 +182,18 @@ class ListenerProfilesService:
         for listener_profile in retrieved:
             try:
                 await self.load_listener_profile(listener_profile=listener_profile)
-                self.logger.success("├─ Loaded listener profile: {}", listener_profile)
-                self.logger.debug("├─ Loaded listener profile: {!r}", listener_profile)
+                self._logger.success("├─ Loaded listener profile: {}", listener_profile)
+                self._logger.debug("├─ Loaded listener profile: {!r}", listener_profile)
             except (
                 ListenerTemplatesFrameworkError,
                 ListenerProfilesServiceError,
             ) as exc:
                 failed_to_load += 1
-                self.logger.error("├─ {}", exc)
+                self._logger.error("├─ {}", exc)
 
-        self.logger.info(
-            "└─ Loaded listener profiles from '{}' ({} listener profile(s) loaded, {} listener profile(s) "
-            "skipped, {} listener profile(s) failed to load).",
+        self._logger.info(
+            "└─ Loaded listener profiles from '{}' ({} listener profile(s) loaded, "
+            "{} listener profile(s) skipped, {} listener profile(s) failed to load).",
             str(CONSORTIUM_LISTENERS_DIRECTORY_PATH),
             len(retrieved) - failed_to_load,
             len(skipped),
@@ -196,7 +201,7 @@ class ListenerProfilesService:
         )
 
     async def unload_framework_listener_profiles(self) -> None:
-        self.logger.info("Unloading framework listener profiles...")
+        self._logger.info("Unloading framework listener profiles...")
         unloaded_listener_profiles = 0
         for listener_profile in self.get_all_listener_profiles():
             if (
@@ -207,20 +212,20 @@ class ListenerProfilesService:
                     listener_profile_id=str(listener_profile.listener_profile_id),
                 )
                 unloaded_listener_profiles += 1
-        self.logger.info(
+        self._logger.info(
             "Unloaded framework listener profiles ({} listener profile(s) unloaded).",
             unloaded_listener_profiles,
         )
 
     async def reload_framework_listener_profiles(self) -> None:
-        self.logger.info("Reloading framework listener profiles...")
+        self._logger.info("Reloading framework listener profiles...")
         await self.unload_framework_listener_profiles()
         await self.load_framework_listener_profiles()
-        self.logger.info("Reloaded framework listener profiles.")
+        self._logger.info("Reloaded framework listener profiles.")
 
     def get_all_listener_profiles(self) -> list[ListenerProfile]:
         listener_profiles = self._listener_profile_registry_service.get_all_components()
-        self.logger.debug(
+        self._logger.debug(
             "Retrieved all listener profiles ({} retrieved).",
             len(listener_profiles),
         )
@@ -235,5 +240,5 @@ class ListenerProfilesService:
                 component_id=listener_profile_id,
             )
         )
-        self.logger.debug("Retrieved listener profile: {!r}", listener_profile)
+        self._logger.debug("Retrieved listener profile: {!r}", listener_profile)
         return listener_profile

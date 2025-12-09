@@ -29,8 +29,8 @@ class AgentProfilesService:
             component_loader_service=self._agent_profile_loader_service,
             component_framework_directory=CONSORTIUM_AGENTS_DIRECTORY_PATH,
         )
-        self.logger = logger.bind(logger_name=str(self))
-        self.logger.debug("Started {}", self)
+        self._logger = logger.bind(logger_name=str(self))
+        self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "Agent Profiles Service"
@@ -48,12 +48,12 @@ class AgentProfilesService:
             ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
         )
         if agent_profile is None:
-            self.logger.debug(
+            self._logger.debug(
                 "Skipped loading agent profile from '{}' because it was disabled.",
                 str(agent_profile_project_folder),
             )
         else:
-            self.logger.debug(
+            self._logger.debug(
                 "Retrieved agent profile {} from agent profile project folder: {}",
                 repr(agent_profile),
                 str(agent_profile_project_folder),
@@ -75,9 +75,9 @@ class AgentProfilesService:
                 ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
             )
         )
-        self.logger.debug(
-            "Retrieved agent profiles from '{}' ({} agent profile(s) retrieved, {} agent profile(s) "
-            "skipped, {} agent profile(s) failed to load)",
+        self._logger.debug(
+            "Retrieved agent profiles from '{}' ({} agent profile(s) retrieved, "
+            "{} agent profile(s) skipped, {} agent profile(s) failed to load)",
             directory,
             len(retrieved),
             len(skipped),
@@ -93,7 +93,7 @@ class AgentProfilesService:
         agent_profile = await self._agent_profile_registry_service.load_component(
             component=agent_profile,
         )
-        self.logger.debug("Loaded agent profile: {}", agent_profile)
+        self._logger.debug("Loaded agent profile: {}", agent_profile)
 
     async def load_agent_profile_from_agent_profile_project_folder(
         self,
@@ -105,13 +105,14 @@ class AgentProfilesService:
             ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
         )
         if agent_profile is None:
-            self.logger.warning(
-                "Agent profile could not be loaded from {} because it is currently "
-                "disabled. Either enable it in its manifest or force load it by "
-                "setting the `ignore_enabled_agent_profile_flag` to `True`.",
+            self._logger.warning(
+                "Agent profile could not be loaded from {} because it is "
+                "currently disabled. Either enable it in its manifest or force "
+                "load it by setting the `ignore_enabled_agent_profile_flag` to "
+                "`True`.",
                 str(agent_profile_project_folder),
             )
-        self.logger.debug("Loaded agent profile: {}", agent_profile)
+        self._logger.debug("Loaded agent profile: {}", agent_profile)
         return agent_profile
 
     async def unload_agent_profile_by_agent_profile_id(
@@ -123,8 +124,8 @@ class AgentProfilesService:
                 component_id=agent_profile_id,
             )
         )
-        self.logger.info("Unloaded agent profile: {}", agent_profile)
-        self.logger.debug("Unloaded agent profile: {!r}", agent_profile)
+        self._logger.info("Unloaded agent profile: {}", agent_profile)
+        self._logger.debug("Unloaded agent profile: {!r}", agent_profile)
 
     async def reload_agent_profile_by_agent_profile_id(
         self,
@@ -138,21 +139,22 @@ class AgentProfilesService:
             )
         )
         if agent_profile is None:
-            self.logger.warning(
+            self._logger.warning(
                 "Agent profile with ID '{}' could not be reloaded because it is "
-                "currently disabled. Either enable it in its manifest or force reload "
-                "it by setting the `ignore_enabled_agent_profile_flag` to `True`.",
+                "currently disabled. Either enable it in its manifest or force "
+                "reload it by setting the `ignore_enabled_agent_profile_flag` to "
+                "`True`.",
                 agent_profile_id,
             )
-        self.logger.info("Reloaded agent profile: {}", agent_profile)
-        self.logger.debug("Reloaded agent profile: {!r}", agent_profile)
+        self._logger.info("Reloaded agent profile: {}", agent_profile)
+        self._logger.debug("Reloaded agent profile: {!r}", agent_profile)
         return agent_profile
 
     async def load_framework_agent_profiles(
         self,
         ignore_enabled_agent_profile_flag: bool = False,
     ) -> None:
-        self.logger.info("Loading framework agent profiles...")
+        self._logger.info("Loading framework agent profiles...")
         retrieved, skipped, errored = (
             self.get_agent_profiles_from_agent_profile_project_folder_directories(
                 directory=CONSORTIUM_AGENTS_DIRECTORY_PATH,
@@ -160,13 +162,13 @@ class AgentProfilesService:
             )
         )
         for path in skipped:
-            self.logger.info(
+            self._logger.info(
                 "├─ Skipped loading agent profile from '{}' because it was disabled.",
                 str(path),
             )
         if errored:
             for _, error in errored:
-                self.logger.error(
+                self._logger.error(
                     "├─ {}",
                     str(error),
                 )
@@ -177,18 +179,18 @@ class AgentProfilesService:
         for agent_profile in retrieved:
             try:
                 await self.load_agent_profile(agent_profile=agent_profile)
-                self.logger.success("├─ Loaded agent profile: {}", agent_profile)
-                self.logger.debug("├─ Loaded agent profile: {!r}", agent_profile)
+                self._logger.success("├─ Loaded agent profile: {}", agent_profile)
+                self._logger.debug("├─ Loaded agent profile: {!r}", agent_profile)
             except (
                 AgentTemplatesFrameworkError,
                 AgentProfilesServiceError,
             ) as exc:
                 failed_to_load += 1
-                self.logger.error("├─ {}", exc)
+                self._logger.error("├─ {}", exc)
 
-        self.logger.info(
-            "└─ Loaded agent profiles from '{}' ({} agent profile(s) loaded, {} agent profile(s) "
-            "skipped, {} agent profile(s) failed to load).",
+        self._logger.info(
+            "└─ Loaded agent profiles from '{}' ({} agent profile(s) loaded, "
+            "{} agent profile(s) skipped, {} agent profile(s) failed to load).",
             str(CONSORTIUM_AGENTS_DIRECTORY_PATH),
             len(retrieved) - failed_to_load,
             len(skipped),
@@ -196,7 +198,7 @@ class AgentProfilesService:
         )
 
     async def unload_framework_agent_profiles(self) -> None:
-        self.logger.info("Unloading framework agent profiles...")
+        self._logger.info("Unloading framework agent profiles...")
         unloaded_agent_profiles = 0
         for agent_profile in self.get_all_agent_profiles():
             if (
@@ -207,20 +209,20 @@ class AgentProfilesService:
                     agent_profile_id=str(agent_profile.agent_profile_id),
                 )
                 unloaded_agent_profiles += 1
-        self.logger.info(
+        self._logger.info(
             "Unloaded framework agent profiles ({} agent profile(s) unloaded).",
             unloaded_agent_profiles,
         )
 
     async def reload_framework_agent_profiles(self) -> None:
-        self.logger.info("Reloading framework agent profiles...")
+        self._logger.info("Reloading framework agent profiles...")
         await self.unload_framework_agent_profiles()
         await self.load_framework_agent_profiles()
-        self.logger.info("Reloaded framework agent profiles.")
+        self._logger.info("Reloaded framework agent profiles.")
 
     def get_all_agent_profiles(self) -> list[AgentProfile]:
         agent_profiles = self._agent_profile_registry_service.get_all_components()
-        self.logger.debug(
+        self._logger.debug(
             "Retrieved all agent profiles ({} retrieved).",
             len(agent_profiles),
         )
@@ -232,5 +234,5 @@ class AgentProfilesService:
                 component_id=agent_profile_id,
             )
         )
-        self.logger.debug("Retrieved agent profile: {!r}", agent_profile)
+        self._logger.debug("Retrieved agent profile: {!r}", agent_profile)
         return agent_profile

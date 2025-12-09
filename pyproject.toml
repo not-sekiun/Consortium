@@ -40,7 +40,7 @@ select = [
     "UP",     # pyupgrade
     "COM",    # flake8-commas (replaces add-trailing-comma)
 ]
-ignore = ["E501"]
+ignore = ["E501", "COM812"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

@@ -1,4 +1,5 @@
-from typing import Any, Callable, Coroutine
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from loguru import logger
 
@@ -14,10 +15,10 @@ from consortium.server.exceptions.service_exceptions.events_service_exceptions i
 class EventsService:
     def __init__(self):
         self._event_handlers = {}
-        self.logger = logger.bind(
+        self._logger = logger.bind(
             logger_name=str(self),
         )
-        self.logger.debug(f"Started {self}")
+        self._logger.debug("Started {}", self)
         self._custom_event_types = set()
 
     def __str__(self):
@@ -46,13 +47,13 @@ class EventsService:
         try:
             event_handlers = self._event_handlers[str(event_type)]
         except KeyError:
-            raise EventHandlerNotRegisteredError
+            raise EventHandlerNotRegisteredError from None
 
         try:
             # `event_handlers` is passed by reference here.
             event_handlers.remove(event_handler)
         except ValueError:
-            raise EventHandlerNotRegisteredError
+            raise EventHandlerNotRegisteredError from None
 
     def get_registered_event_handlers_from_event_type(
         self,
@@ -87,7 +88,7 @@ class EventsService:
             try:
                 await event_handler(event)
             except Exception as exc:
-                self.logger.error(
+                self._logger.error(
                     "Fatal error occurred while triggering event handler: {}",
                     exc,
                 )

@@ -28,7 +28,7 @@ class AgentsService:
     def __init__(self, events_service: EventsService):
         self._events_service = events_service
         self._agents = {}
-        self.logger = logger.bind(
+        self._logger = logger.bind(
             logger_name=str(self),
         )
 
@@ -47,8 +47,8 @@ class AgentsService:
                 data={"agent_id": str(agent.agent_id)},
             ),
         )
-        self.logger.info(f"Created and added agent: {agent}")
-        self.logger.debug(f"Created and added agent: {agent!r}")
+        self._logger.info("Created and added agent: {}", agent)
+        self._logger.debug("Created and added agent: {!r}", agent)
         return agent
 
     async def remove_agent_by_agent_id(self, agent_id: str) -> None:
@@ -60,49 +60,53 @@ class AgentsService:
                 data={"agent_id": str(agent.agent_id)},
             ),
         )
-        self.logger.info(f"Removed agent: {agent}")
-        self.logger.debug(f"Removed agent: {agent!r}")
+        self._logger.info("Removed agent: {}", agent)
+        self._logger.debug("Removed agent: {!r}", agent)
 
     def get_agent_by_agent_id(self, agent_id: str) -> Agent:
         try:
             agent = self._agents[agent_id]
         except KeyError:
-            raise AgentNotFoundError(agent_id=agent_id)
+            raise AgentNotFoundError(agent_id=agent_id) from None
 
-        self.logger.debug(f"Retrieved agent: {agent!r}")
+        self._logger.debug("Retrieved agent: {!r}", agent)
         return agent
 
     def get_all_agents(self) -> list[Agent]:
         all_agents = list(self._agents.values())
-        self.logger.debug(
-            f"Retrieved all agents ({len(all_agents)} retrieved)",
+        self._logger.debug(
+            "Retrieved all agents ({} retrieved)",
+            len(all_agents),
         )
         return all_agents
 
     def get_all_agent_tasks_by_agent_id(self, agent_id: str) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         all_tasks = agent.get_all_tasks()
-        self.logger.debug(
-            f"Retrieved all agent tasks from agent {agent} ({len(all_tasks)} "
-            f"retrieved)",
+        self._logger.debug(
+            "Retrieved all agent tasks from agent {} ({} retrieved)",
+            agent,
+            len(all_tasks),
         )
         return all_tasks
 
     def get_all_queued_tasks_by_agent_id(self, agent_id: str) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         queued_tasks = agent.get_all_queued_tasks()
-        self.logger.debug(
-            f"Retrieved queued tasks from agent {agent_id} ({len(queued_tasks)} "
-            f"retrieved)",
+        self._logger.debug(
+            "Retrieved queued tasks from agent {} ({} retrieved)",
+            agent_id,
+            len(queued_tasks),
         )
         return queued_tasks
 
     def get_all_running_tasks_by_agent_id(self, agent_id: str) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         running_tasks = agent.get_all_running_tasks()
-        self.logger.debug(
-            f"Retrieved running tasks from agent {agent_id} ({len(running_tasks)} "
-            f"retrieved)",
+        self._logger.debug(
+            "Retrieved running tasks from agent {} ({} retrieved)",
+            agent_id,
+            len(running_tasks),
         )
         return running_tasks
 
@@ -112,9 +116,10 @@ class AgentsService:
     ) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         completed_tasks = agent.get_all_completed_tasks()
-        self.logger.debug(
-            f"Retrieved completed tasks from agent {agent_id} ({len(completed_tasks)} "
-            f"retrieved)",
+        self._logger.debug(
+            "Retrieved completed tasks from agent {} ({} retrieved)",
+            agent_id,
+            len(completed_tasks),
         )
         return completed_tasks
 
@@ -127,10 +132,12 @@ class AgentsService:
         try:
             task = agent.get_task_by_task_id(task_id=task_id)
         except AgentTaskNotFoundFrameworkError:
-            raise AgentTaskNotFoundError(task_id=task_id)
+            raise AgentTaskNotFoundError(task_id=task_id) from None
 
-        self.logger.debug(
-            f"Retrieved task {task_id} from agent {agent}",
+        self._logger.debug(
+            "Retrieved task {} from agent {}",
+            task_id,
+            agent,
         )
 
         return task
@@ -141,9 +148,10 @@ class AgentsService:
     ) -> list[AgentResultModel]:
         agent = self.get_agent_by_agent_id(agent_id)
         all_results = agent.get_all_results()
-        self.logger.debug(
-            f"Retrieved all agent results from agent {agent} ({len(all_results)} "
-            f"retrieved)",
+        self._logger.debug(
+            "Retrieved all agent results from agent {} ({} retrieved)",
+            agent,
+            len(all_results),
         )
         return all_results
 
@@ -153,9 +161,10 @@ class AgentsService:
     ) -> list[AgentResultModel]:
         agent = self.get_agent_by_agent_id(agent_id)
         successful_results = agent.get_all_successful_results()
-        self.logger.debug(
-            f"Retrieved successful results from agent {agent_id} "
-            f"({len(successful_results)} retrieved)",
+        self._logger.debug(
+            "Retrieved successful results from agent {} ({} retrieved)",
+            agent_id,
+            len(successful_results),
         )
         return successful_results
 
@@ -165,9 +174,10 @@ class AgentsService:
     ) -> list[AgentResultModel]:
         agent = self.get_agent_by_agent_id(agent_id)
         failed_results = agent.get_all_failed_results()
-        self.logger.debug(
-            f"Retrieved failed results from agent {agent_id} ({len(failed_results)} "
-            f"retrieved)",
+        self._logger.debug(
+            "Retrieved failed results from agent {} ({} retrieved)",
+            agent_id,
+            len(failed_results),
         )
         return failed_results
 
@@ -179,9 +189,10 @@ class AgentsService:
         all_results = self.get_all_agent_results_by_agent_id(agent_id)
         for result in all_results:
             if str(result.result_id) == result_id:
-                self.logger.debug(
-                    f"Retrieved result {result!r} from agent with agent ID "
-                    f"'{agent_id}'",
+                self._logger.debug(
+                    "Retrieved result {!r} from agent with agent ID '{}'",
+                    result,
+                    agent_id,
                 )
                 return result
         raise AgentResultNotFoundError(result_id=result_id)
@@ -200,20 +211,20 @@ class AgentsService:
             raise AgentTaskingOptionValidationError(
                 agent_str=str(agent),
                 error_message=exc.message,
-            )
+            ) from None
         except RequiredOptionValueNotSetError as exc:
             raise AgentTaskingRequiredOptionValueNotSetError(
                 agent_str=str(agent),
                 error_message=exc.message,
-            )
+            ) from None
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_TASKED,
                 data={"agent_id": str(agent.agent_id)},
             ),
         )
-        self.logger.info(f"Tasked agent {agent} with task {task}")
-        self.logger.debug(f"Tasked agent {agent!r} with task {task!r}")
+        self._logger.info("Tasked agent {} with task {}", agent, task)
+        self._logger.debug("Tasked agent {!r} with task {!r}", agent, task)
         return task
 
     async def check_in_agent_by_agent_id(self, agent_id: str) -> None:
@@ -225,7 +236,7 @@ class AgentsService:
             ),
         )
         agent.datetime_last_checked_in = datetime.now()
-        self.logger.debug(f"Checked in agent {agent!r}")
+        self._logger.debug("Checked in agent {!r}", agent)
 
     async def update_agent_name_by_agent_id(
         self,
@@ -241,11 +252,17 @@ class AgentsService:
                 data={"agent_id": str(agent.agent_id)},
             ),
         )
-        self.logger.info(
-            f"Updated agent name for agent {agent} from '{old_name}' to '{name}'",
+        self._logger.info(
+            "Updated agent name for agent {} from '{}' to '{}'",
+            agent,
+            old_name,
+            name,
         )
-        self.logger.debug(
-            f"Updated agent name for agent {agent!r} from '{old_name}' to '{name}'",
+        self._logger.debug(
+            "Updated agent name for agent {!r} from '{}' to '{}'",
+            agent,
+            old_name,
+            name,
         )
 
     async def update_agent_description_by_agent_id(
@@ -262,13 +279,17 @@ class AgentsService:
                 data={"agent_id": str(agent.agent_id)},
             ),
         )
-        self.logger.info(
-            f"Updated agent description for agent {agent} from '{old_description}' to "
-            f"'{description}'.",
+        self._logger.info(
+            "Updated agent description for agent {} from '{}' to '{}'.",
+            agent,
+            old_description,
+            description,
         )
-        self.logger.debug(
-            f"Updated agent description for agent {agent!r} from '{old_description}' "
-            f"to {description}.",
+        self._logger.debug(
+            "Updated agent description for agent {!r} from '{}' to {}.",
+            agent,
+            old_description,
+            description,
         )
 
     def delete_queued_agent_task_by_agent_id_and_task_id(
@@ -280,4 +301,4 @@ class AgentsService:
         try:
             agent.delete_queued_task_by_task_id(task_id=task_id)
         except AgentTaskNotFoundFrameworkError:
-            raise AgentTaskNotFoundError(task_id=task_id)
+            raise AgentTaskNotFoundError(task_id=task_id) from None

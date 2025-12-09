@@ -30,10 +30,10 @@ class EventHooksService:
             component_framework_directory=CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
             events_service=events_service,
         )
-        self.logger = logger.bind(
+        self._logger = logger.bind(
             logger_name=str(self),
         )
-        self.logger.debug(f"Started {self}")
+        self._logger.debug(f"Started {self}")
 
     def __str__(self) -> str:
         return "Event Hooks Service"
@@ -51,14 +51,14 @@ class EventHooksService:
             ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
         )
         if event_hook is None:
-            self.logger.debug(
+            self._logger.debug(
                 "Skipped retrieving event hook from '{}' because it was disabled."
                 "Either enable it in its manifest or force retrieve it by setting the "
                 "`ignore_enabled_event_hook_flag` to `True`.",
                 str(event_hook_project_folder),
             )
         else:
-            self.logger.debug(
+            self._logger.debug(
                 "Retrieved event hook {} from event hook project folder: {}",
                 repr(event_hook),
                 str(event_hook_project_folder),
@@ -102,7 +102,7 @@ class EventHooksService:
                 ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
             )
         )
-        self.logger.debug(
+        self._logger.debug(
             "Retrieved event hooks from '{}' ({} event hook(s) retrieved, {} event hook(s) "
             "skipped, {} event hook(s) failed to load)",
             directory,
@@ -120,7 +120,7 @@ class EventHooksService:
         self._event_hook_registry_service.register_component(
             component=event_hook,
         )
-        self.logger.debug("Registered event hook: {!r}", event_hook)
+        self._logger.debug("Registered event hook: {!r}", event_hook)
         return event_hook
 
     def register_event_hook_from_event_hook_project_folder(
@@ -133,22 +133,22 @@ class EventHooksService:
             ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
         )
         if event_hook is None:
-            self.logger.warning(
+            self._logger.warning(
                 "Skipped registering event hook from '{}' because it was disabled. Either "
                 "enable it in its manifest or force register it by setting the "
                 "`ignore_enabled_event_hook_flag` to `True`.",
                 str(event_hook_project_folder),
             )
         else:
-            self.logger.info("Registered event hook: {}", event_hook)
-            self.logger.debug("Registered event hook: {!r}", event_hook)
+            self._logger.info("Registered event hook: {}", event_hook)
+            self._logger.debug("Registered event hook: {!r}", event_hook)
         return event_hook
 
     async def load_event_hook(self, event_hook: BaseEventHook) -> BaseEventHook:
         event_hook = await self._event_hook_registry_service.load_component(
             component=event_hook,
         )
-        self.logger.debug("Loaded event hook: {!r}", event_hook)
+        self._logger.debug("Loaded event hook: {!r}", event_hook)
         return event_hook
 
     async def load_event_hook_from_event_hook_project_folder(
@@ -161,15 +161,15 @@ class EventHooksService:
             ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
         )
         if event_hook is None:
-            self.logger.warning(
+            self._logger.warning(
                 "Skipped loading event hook from '{}' because it was disabled. Either "
                 "enable it in its manifest or force load it by setting the "
                 "`ignore_enabled_event_hook_flag` to `True`.",
                 str(event_hook_project_folder),
             )
         else:
-            self.logger.info("Loaded event hook: {}", event_hook)
-            self.logger.debug("Loaded event hook: {!r}", event_hook)
+            self._logger.info("Loaded event hook: {}", event_hook)
+            self._logger.debug("Loaded event hook: {!r}", event_hook)
         return event_hook
 
     async def unload_event_hook_by_event_hook_id(
@@ -181,8 +181,8 @@ class EventHooksService:
                 component_id=event_hook_id,
             )
         )
-        self.logger.info("Unloaded event hook: {}", event_hook)
-        self.logger.debug("Unloaded event hook: {!r}", event_hook)
+        self._logger.info("Unloaded event hook: {}", event_hook)
+        self._logger.debug("Unloaded event hook: {!r}", event_hook)
 
     async def reload_event_hook_by_event_hook_id(
         self,
@@ -196,7 +196,7 @@ class EventHooksService:
             )
         )
         if event_hook is None:
-            self.logger.warning(
+            self._logger.warning(
                 "Previously loaded event hook with ID '{}' could not be reloaded "
                 "because it is currently disabled. As a result, the event hook has "
                 "only been unloaded but not loaded back. Either enable it in its "
@@ -205,15 +205,15 @@ class EventHooksService:
                 event_hook_id,
             )
         else:
-            self.logger.info("Reloaded event hook: {}", event_hook)
-            self.logger.debug("Reloaded event hook: {!r}", event_hook)
+            self._logger.info("Reloaded event hook: {}", event_hook)
+            self._logger.debug("Reloaded event hook: {!r}", event_hook)
         return event_hook
 
     async def load_framework_event_hooks(
         self,
         ignore_enabled_event_hook_flag: bool = False,
     ) -> None:
-        self.logger.info("Loading framework event hooks...")
+        self._logger.info("Loading framework event hooks...")
         retrieved, skipped, errored = (
             self.get_event_hooks_from_event_hook_project_folder_directories(
                 directory=CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
@@ -221,13 +221,13 @@ class EventHooksService:
             )
         )
         for path in skipped:
-            self.logger.info(
+            self._logger.info(
                 "├─ Skipped loading plugin from '{}' because it was disabled.",
                 str(path),
             )
         if errored:
             for _, error in errored:
-                self.logger.error(
+                self._logger.error(
                     "├─ {}",
                     str(error),
                 )
@@ -238,15 +238,15 @@ class EventHooksService:
         for event_hook in retrieved:
             try:
                 await self.load_event_hook(event_hook=event_hook)
-                self.logger.success("├─ Loaded event hook: {}", event_hook)
-                self.logger.debug("├─ Loaded event hook: {!r}", event_hook)
+                self._logger.success("├─ Loaded event hook: {}", event_hook)
+                self._logger.debug("├─ Loaded event hook: {!r}", event_hook)
             except (EventHooksFrameworkError, EventHooksServiceError) as exc:
                 failed_to_load += 1
-                self.logger.error("├─ {}", exc)
+                self._logger.error("├─ {}", exc)
 
-        self.logger.info(
-            "└─ Loaded event hooks from '{}' ({} event hook(s) loaded, {} event hook(s) "
-            "skipped, {} event hook(s) failed to load).",
+        self._logger.info(
+            "└─ Loaded event hooks from '{}' ({} event hook(s) loaded, {} event "
+            "hook(s) skipped, {} event hook(s) failed to load).",
             str(CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH),
             len(retrieved) - failed_to_load,
             len(skipped),
@@ -254,7 +254,7 @@ class EventHooksService:
         )
 
     def unload_framework_event_hooks(self) -> None:
-        self.logger.info("Unloading framework event hooks...")
+        self._logger.info("Unloading framework event hooks...")
         unloaded_event_hooks = 0
         for event_hook in self.get_all_event_hooks():
             if (
@@ -266,7 +266,7 @@ class EventHooksService:
                 )
                 unloaded_event_hooks += 1
 
-        self.logger.info(
+        self._logger.info(
             "Unloaded framework event hooks ({} event hook(s) unloaded).",
             unloaded_event_hooks,
         )
@@ -274,36 +274,36 @@ class EventHooksService:
     async def reload_framework_event_hooks(
         self,
     ) -> None:
-        self.logger.info(f"Reloading framework event hooks...")
+        self._logger.info("Reloading framework event hooks...")
         self.unload_framework_event_hooks()
         await self.load_framework_event_hooks()
-        self.logger.info(f"Reloaded framework event hooks.")
+        self._logger.info("Reloaded framework event hooks.")
 
     def get_event_hook_by_event_hook_id(self, event_hook_id: str) -> BaseEventHook:
         event_hook = self._event_hook_registry_service.get_component_by_component_id(
             component_id=event_hook_id,
         )
-        self.logger.debug(f"Retrieved event hook: {event_hook!r}")
+        self._logger.debug(f"Retrieved event hook: {event_hook!r}")
         return event_hook
 
     def get_all_event_hooks(self) -> list[BaseEventHook]:
         event_hooks = self._event_hook_registry_service.get_all_components()
-        self.logger.debug(
+        self._logger.debug(
             "Retrieved all event hooks ({} event hook(s) retrieved).",
             len(event_hooks),
         )
         return event_hooks
 
     def get_all_event_types(self) -> list[EventType]:
-        event_types = [event_type for event_type in EventType]
-        self.logger.debug(
+        event_types = list(EventType)
+        self._logger.debug(
             "Retrieved all event types ({} event type(s) retrieved).",
             event_types,
         )
         return event_types
 
     def trigger_event(self, event: Event):
-        self.logger.debug("Triggered event: {}", event)
+        self._logger.debug("Triggered event: {}", event)
         for event_hook in self._event_hook_registry_service.get_all_components():
             if event.event_type in event_hook.event_types:
                 event_hook.on_event_hook_triggered(event)

@@ -43,8 +43,8 @@ class AgentGeneratorsService:
         self._agent_templates_service = agent_templates_service
         self._events_service = events_service
         self._agent_generators = {}
-        self.logger = logger.bind(logger_name=str(self))
-        self.logger.debug(f"Started {self}")
+        self._logger = logger.bind(logger_name=str(self))
+        self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "Agent Generators Service"
@@ -63,17 +63,21 @@ class AgentGeneratorsService:
         try:
             agent_generator = self._agent_generators[agent_generator_id]
         except KeyError:
-            raise AgentGeneratorNotFoundError(agent_generator_id=agent_generator_id)
+            raise AgentGeneratorNotFoundError(
+                agent_generator_id=agent_generator_id
+            ) from None
 
-        self.logger.debug(
-            f"Retrieved agent generator: {agent_generator!r}",
+        self._logger.debug(
+            "Retrieved agent generator: {!r}",
+            agent_generator,
         )
         return agent_generator
 
     def get_all_agent_generators(self) -> list[BaseAgentGenerator]:
         all_agent_generators = list(self._agent_generators.values())
-        self.logger.debug(
-            f"Retrieved all agent_generators ({len(all_agent_generators)} retrieved)",
+        self._logger.debug(
+            "Retrieved all agent_generators ({} retrieved)",
+            len(all_agent_generators),
         )
         return all_agent_generators
 
@@ -90,23 +94,6 @@ class AgentGeneratorsService:
             )
         )
 
-        # for option_name, option_value in parameters.items():
-        #     try:
-        #         agent_template.set_option_value_by_option_name(
-        #             option_name=option_name,
-        #             option_value=option_value,
-        #         )
-        #     except AgentTemplateOptionNotFoundFrameworkError as exc:
-        #         raise AgentTemplateOptionNotFoundServiceError(
-        #             message=exc.message,
-        #             detail=exc.detail,
-        #         )
-        #     except AgentTemplateOptionValueFrameworkError as exc:
-        #         raise AgentTemplateOptionValueServiceError(
-        #             message=exc.message,
-        #             detail=exc.detail,
-        #         )
-
         try:
             agent_generator = agent_template.create_agent_generator(
                 name=name,
@@ -117,12 +104,12 @@ class AgentGeneratorsService:
             raise AgentTemplateOptionNotFoundServiceError(
                 message=exc.message,
                 detail=exc.detail,
-            )
+            ) from None
         except AgentTemplateOptionValueFrameworkError as exc:
             raise AgentTemplateOptionValueServiceError(
                 message=exc.message,
                 detail=exc.detail,
-            )
+            ) from None
 
         # agent_template.clear_all_option_values()
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
@@ -134,11 +121,11 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.logger.info(
+        self._logger.info(
             "Created agent generator: {}",
             agent_generator,
         )
-        self.logger.debug(
+        self._logger.debug(
             "Created agent generator: {!r}",
             agent_generator,
         )
@@ -159,11 +146,13 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.logger.info(
-            f"Added agent generator: {agent_generator}",
+        self._logger.info(
+            "Added agent generator: {}",
+            agent_generator,
         )
-        self.logger.debug(
-            f"Added agent generator: {agent_generator!r}",
+        self._logger.debug(
+            "Added agent generator: {!r}",
+            agent_generator,
         )
 
     async def remove_agent_generator_by_agent_generator_id(
@@ -187,11 +176,13 @@ class AgentGeneratorsService:
                 },
             ),
         )
-        self.logger.info(
-            f"Removed agent generator: {removed_agent_generator}",
+        self._logger.info(
+            "Removed agent generator: {}",
+            removed_agent_generator,
         )
-        self.logger.debug(
-            f"Removed agent generator: {removed_agent_generator!r}",
+        self._logger.debug(
+            "Removed agent generator: {!r}",
+            removed_agent_generator,
         )
 
     async def update_agent_generator_name_by_agent_generator_id(
@@ -210,8 +201,11 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.logger.info(
-            f"Updated name for agent generator {agent_generator}: '{old_name}' -> '{name}'",
+        self._logger.info(
+            "Updated name for agent generator {}: '{}' -> '{}'",
+            agent_generator,
+            old_name,
+            name,
         )
         return agent_generator
 
@@ -231,8 +225,11 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.logger.info(
-            f"Updated description for agent generator {agent_generator}: '{old_description}' -> '{description}'",
+        self._logger.info(
+            "Updated description for agent generator {}: '{}' -> '{}'",
+            agent_generator,
+            old_description,
+            description,
         )
         return agent_generator
 
@@ -270,7 +267,7 @@ class AgentGeneratorsService:
                     parameter_name=parameter_name,
                     parameter_value=str(parameter_value),
                     validation_error_message=str(exc),
-                )
+                ) from None
             parameters[parameter_name] = parameter_value
 
         # Create a temporary agent generator whose attributes we copy over to the
@@ -292,11 +289,15 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
-        self.logger.info(
-            f"Updated parameters for agent generators {agent_generator} to {parameters}",
+        self._logger.info(
+            "Updated parameters for agent generators {} to {}",
+            agent_generator,
+            parameters,
         )
-        self.logger.debug(
-            f"Updated parameters for agent generators {agent_generator!r} to {parameters}",
+        self._logger.debug(
+            "Updated parameters for agent generators {!r} to {}",
+            agent_generator,
+            parameters,
         )
         return agent_generator
 

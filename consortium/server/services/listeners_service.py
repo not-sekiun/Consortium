@@ -46,8 +46,8 @@ class ListenersService:
         self._listener_templates_service = listener_templates_service
         self._events_service = events_service
         self._listeners = {}
-        self.logger = logger.bind(logger_name=str(self))
-        self.logger.debug("Started {}", self)
+        self._logger = logger.bind(logger_name=str(self))
+        self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "Listeners Service"
@@ -63,14 +63,14 @@ class ListenersService:
         try:
             listener = self._listeners[listener_id]
         except KeyError:
-            raise ListenerNotFoundError(listener_id=listener_id)
+            raise ListenerNotFoundError(listener_id=listener_id) from None
 
-        self.logger.debug("Retrieved listener: {!r}", listener)
+        self._logger.debug("Retrieved listener: {!r}", listener)
         return listener
 
     def get_all_listeners(self) -> list[BaseListener]:
         all_listeners = list(self._listeners.values())
-        self.logger.debug(
+        self._logger.debug(
             "Retrieved all listeners ({} retrieved)",
             len(all_listeners),
         )
@@ -96,12 +96,12 @@ class ListenersService:
             raise ListenerTemplateOptionNotFoundServiceError(
                 message=exc.message,
                 detail=exc.detail,
-            )
+            ) from None
         except ListenerTemplateOptionValueFrameworkError as exc:
             raise ListenerTemplateOptionValueServiceError(
                 message=exc.message,
                 detail=exc.detail,
-            )
+            ) from None
 
         self._listeners[str(listener.listener_id)] = listener
         await self._events_service.trigger_event(
@@ -110,8 +110,8 @@ class ListenersService:
                 data={"listener_id": str(listener.listener_id)},
             ),
         )
-        self.logger.info("Created listener: {}", listener)
-        self.logger.debug("Created listener: {!r}", listener)
+        self._logger.info("Created listener: {}", listener)
+        self._logger.debug("Created listener: {!r}", listener)
         return listener
 
     async def add_listener(self, listener: BaseListener) -> None:
@@ -137,8 +137,8 @@ class ListenersService:
                 data={"listener_id": str(removed_listener.listener_id)},
             ),
         )
-        self.logger.info("Removed listener: {}", removed_listener)
-        self.logger.debug("Removed listener: {!r}", removed_listener)
+        self._logger.info("Removed listener: {}", removed_listener)
+        self._logger.debug("Removed listener: {!r}", removed_listener)
 
     async def update_listener_name_by_listener_id(
         self,
@@ -154,13 +154,13 @@ class ListenersService:
                 data={"listener_id": str(listener.listener_id)},
             ),
         )
-        self.logger.info(
+        self._logger.info(
             "Updated name for listener {} from '{}' to '{}'.",
             listener,
             old_name,
             name,
         )
-        self.logger.debug(
+        self._logger.debug(
             "Updated name for listener {!r} from '{}' to '{}'.",
             listener,
             old_name,
@@ -182,13 +182,13 @@ class ListenersService:
                 data={"listener_id": str(listener.listener_id)},
             ),
         )
-        self.logger.info(
+        self._logger.info(
             "Updated description for listener {} from '{}' to '{}'.",
             listener,
             old_description,
             description,
         )
-        self.logger.debug(
+        self._logger.debug(
             "Updated description for listener {!r} from '{}' to '{}'.",
             listener,
             old_description,
@@ -228,7 +228,7 @@ class ListenersService:
                     parameter_name=parameter_name,
                     parameter_value=str(parameter_value),
                     validation_error_message=str(exc),
-                )
+                ) from None
             parameters[parameter_name] = parameter_value
 
         # Create a temporary listener whose attributes we copy over to the
@@ -249,12 +249,12 @@ class ListenersService:
                 data={"listener_id": str(listener.listener_id)},
             ),
         )
-        self.logger.info(
+        self._logger.info(
             "Updated parameters for listeners {} to {}",
             listener,
             parameters,
         )
-        self.logger.debug(
+        self._logger.debug(
             "Updated parameters for listeners {!r} to {}",
             listener,
             parameters,
