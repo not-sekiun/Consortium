@@ -1,9 +1,10 @@
 import asyncio
 import uuid
 from datetime import datetime
-from typing import Any, Type
+from typing import Any
 
 from loguru import logger
+from pydantic import BaseModel, ValidationError
 
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 from consortium.framework.agents.base_agent_type import BaseAgentType
@@ -28,6 +29,22 @@ from consortium.server.models.agent_models import (
 from consortium.server.server_logging import LoggerType
 
 
+class _AgentParametersModel(BaseModel):
+    name: str
+    description: str
+    endpoint: str
+    is_admin: bool | None
+    os: str | None
+    version: str | None
+    arch: str | None
+    pid: int | None
+    locale: str | None
+    remote_host_address: str | None
+    local_host_address: str | None
+    hostname: str | None
+    agent_data: dict[str, Any] | None
+
+
 class Agent:
     def __init__(
         self,
@@ -50,6 +67,25 @@ class Agent:
             agent_data = {}
 
         # TODO: Add data validation
+        try:
+            _AgentParametersModel(
+                name=name,
+                description=description,
+                endpoint=endpoint,
+                is_admin=is_admin,
+                os=os,
+                version=version,
+                arch=arch,
+                pid=pid,
+                locale=locale,
+                remote_host_address=remote_host_address,
+                local_host_address=local_host_address,
+                hostname=hostname,
+                agent_data=agent_data,
+            )
+        except ValidationError:
+            raise
+
         self.agent_id = uuid.uuid4()
         self.agent_type = agent_type
         self.name = name
@@ -92,13 +128,21 @@ class Agent:
 
     def __repr__(self) -> str:
         return (
-            f"Agent(agent_type={self.agent_type!r}, name={self.name!r}, "
-            f"description={self.description!r}, endpoint={self.endpoint!r}, "
-            f"is_admin={self.is_admin!r}, os={self.os!r}, version={self.version!r}, "
-            f"arch={self.arch!r}, pid={self.pid!r}, locale={self.locale!r}, "
+            f"Agent("
+            f"agent_type={self.agent_type!r}, "
+            f"name={self.name!r}, "
+            f"description={self.description!r}, "
+            f"endpoint={self.endpoint!r}, "
+            f"is_admin={self.is_admin!r}, "
+            f"os={self.os!r}, "
+            f"version={self.version!r}, "
+            f"arch={self.arch!r}, "
+            f"pid={self.pid!r}, "
+            f"locale={self.locale!r}, "
             f"remote_host_address={self.remote_host_address!r}, "
             f"local_host_address={self.local_host_address!r}, "
-            f"agent_data={self.agent_data!r})"
+            f"agent_data={self.agent_data!r}"
+            f")"
         )
 
     def __str__(self) -> str:
@@ -116,7 +160,7 @@ class Agent:
 
     async def _manage_running_agent_capability(
         self,
-        agent_capability: Type[BaseAgentCapability],
+        agent_capability: type[BaseAgentCapability],
         agent_task_message: AgentTaskMessageModel,
     ) -> None:
         async def agent_capability_task_handler(
@@ -191,13 +235,11 @@ class Agent:
                         )
                     # This specific statement allows two methods of passing in value
                     # for an option that is not required. The REST API JSON data can
-                    # either contain the key with a value of None or not contain the
-                    # key at all. Either way, we avoid setting any value for the option.
+                    # either contain the key with a value of `None` or not contain the
+                    # key at all.
                     if argument_value is None:
                         continue
-                    # `OptionValueValidationError` is raised here on failure to validate
-                    # the value when we attempt to set it.
-                    agent_capability.options[argument_name].set_option_value(
+                    agent_capability.options[argument_name].validate_value(
                         value=argument_value,
                     )
 
@@ -214,10 +256,6 @@ class Agent:
                     argument_option,
                 ) in agent_capability.options.items():
                     arguments[argument_name] = argument_option.get_option_value()
-                    # After getting the value from setting the option we have to clear
-                    # the option to prevent the value from persisting across different
-                    # taskings.
-                    argument_option.clear_option_value()
                 # Strip redundant information from the task to create a task message.
                 initial_agent_message = AgentTaskMessageModel(
                     task_id=task.task_id,
@@ -261,7 +299,7 @@ class Agent:
         try:
             return self._queued_tasks[task_id]
         except KeyError:
-            raise AgentTaskNotFoundError(task_id=task_id)
+            raise AgentTaskNotFoundError(task_id=task_id) from None
 
     def get_all_running_tasks(self) -> list[AgentTaskModel]:
         return list(self._running_tasks)
@@ -270,7 +308,7 @@ class Agent:
         try:
             return self._running_tasks[task_id]
         except KeyError:
-            raise AgentTaskNotFoundError(task_id=task_id)
+            raise AgentTaskNotFoundError(task_id=task_id) from None
 
     def get_all_completed_tasks(self) -> list[AgentTaskModel]:
         return list(self._completed_tasks)
@@ -279,7 +317,7 @@ class Agent:
         try:
             return self._completed_tasks[task_id]
         except KeyError:
-            raise AgentTaskNotFoundError(task_id=task_id)
+            raise AgentTaskNotFoundError(task_id=task_id) from None
 
     def get_all_tasks(self) -> list[AgentTaskModel]:
         return [
@@ -298,7 +336,7 @@ class Agent:
         try:
             self._queued_tasks.pop(task_id)
         except KeyError:
-            raise AgentTaskNotFoundError(task_id=task_id)
+            raise AgentTaskNotFoundError(task_id=task_id) from None
 
     async def add_result_message(self, result_message: AgentResultMessageModel) -> None:
         if str(result_message.task_id) not in self._running_tasks:
@@ -330,7 +368,7 @@ class Agent:
         try:
             return self._results[result_id]
         except KeyError:
-            raise AgentResultIDNotFoundError(result_id=result_id)
+            raise AgentResultIDNotFoundError(result_id=result_id) from None
 
     def to_json(self) -> dict:
         return {

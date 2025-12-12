@@ -86,9 +86,9 @@ class PingCapability(BaseAgentCapability):
         ping_latencies = []
         for _ in range(iterations):
             try:
-                datetime_ping_started = datetime.now()
+                ping_started_at = datetime.now()
                 if timeout is None:
-                    _ = await self.send_agent_task_message_and_recv_agent_result_message(
+                    await self.send_agent_task_message_and_recv_agent_result_message(
                         agent_task_message,
                     )
                 else:
@@ -99,12 +99,12 @@ class PingCapability(BaseAgentCapability):
                         timeout=timeout,
                     )
                 ping_ended_at = datetime.now()
-                ping_latencies.append(ping_ended_at - datetime_ping_started)
-            except asyncio.TimeoutError:
+                ping_latencies.append(ping_ended_at - ping_started_at)
+            except TimeoutError:
                 ping_latencies.append(None)
 
-        # Construct message after aggregating all the ping latencies.
-        message = f"Agent pings:\n"
+        # Construct result message after aggregating all the ping latencies.
+        message = "Agent pings:\n"
         for ping_index, ping_latency in enumerate(ping_latencies):
             if ping_latency is None:
                 message += f"    Ping {ping_index + 1}: Timed out\n"
@@ -120,14 +120,14 @@ class PingCapability(BaseAgentCapability):
             average_latency = sum(ping_latencies[1:], ping_latencies[0]) / len(
                 ping_latencies,
             )
-            message += f"\nPing statistics:\n"
+            message += "\nPing statistics:\n"
             message += (
                 f"    Messages sent: {iterations} | Messages received: "
                 f"{len(ping_latencies)} | Messages timed out: "
                 f"{iterations - len(ping_latencies)} "
                 f"({(iterations - len(ping_latencies)) / iterations * 100:.2f}% loss)\n"
             )
-            message += f"Latency statistics:\n"
+            message += "Latency statistics:\n"
             message += (
                 f"    Maximum latency: {max(ping_latencies)} | Average latency: "
                 f"{average_latency} | Minimum latency: {min(ping_latencies)}\n"

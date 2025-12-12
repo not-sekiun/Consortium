@@ -8,7 +8,7 @@ from consortium.server.exceptions.api_exceptions.base_api_exception import (
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
-    InternalServerErrorError,
+    InternalServerError,
     MethodNotAllowedError,
     NotFoundError,
     UnprocessableEntityError,
@@ -32,7 +32,7 @@ def register_server_exception_handlers(app: FastAPI) -> None:
             403: ForbiddenError(),
             404: NotFoundError(),
             405: MethodNotAllowedError(),
-            500: InternalServerErrorError(),
+            500: InternalServerError(),
         }
         # Handle the special case of errors that arise on the /api/login endpoint. Any
         # error that arises on the /api/login endpoint is disguised as a 401

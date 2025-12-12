@@ -10,9 +10,13 @@ from tests.api_tests.utils import get_all_listener_template_ids, validate_respon
 LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "listener_template_id": {"type": "string"},
+        "label": {"type": "string"},
         "name": {"type": "string"},
         "description": {"type": "string"},
+        "version": {"type": "string"},
+        "compatible_framework_version": {"type": "string"},
+        "authors": {"type": "array", "items": {"type": "string"}},
+        "listener_template_id": {"type": "string"},
         "listener_type": {
             "type": "object",
             "properties": {
@@ -33,16 +37,18 @@ LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA = {
             "required": ["listener_type_id", "name", "compatible_agent_types"],
             "additionalProperties": False,
         },
-        "authors": {"type": "array", "items": {"type": "string"}},
         "options": {"type": "object"},
         "validating_function": {"type": ["string", "null"]},
     },
     "required": [
-        "listener_template_id",
+        "label",
         "name",
         "description",
-        "listener_type",
+        "version",
+        "compatible_framework_version",
         "authors",
+        "listener_template_id",
+        "listener_type",
         "options",
         "validating_function",
     ],

@@ -127,13 +127,17 @@ class Plugin(BasePlugin):
             "things with caution. You have been warned.",
         )
 
-        # TODO: Implement a logging service to make this more configurable and
-        #  accessible.
+        # TODO: Consider providing a dedicated logger service to interact with logging,
+        #  might be useful to send logs remotely or do custom things with them.
+        # Remove the current stdout logger and patch it with `StdoutProxy` to prevent
+        # loguru from messing with prompt_toolkit's stdout handling. Retain the current
+        # log configuration.
         logger.remove(2)
         logger.add(
             StdoutProxy(raw=True),
             format=log_formatter,
-            level=server_singletons.server.server_config.log_level,
+            level=server_singletons.server.logging_config.log_level,
+            colorize=server_singletons.server.logging_config.colorize,
         )
 
     async def on_running(self) -> None:
@@ -324,15 +328,6 @@ class Plugin(BasePlugin):
                         exc=exc,
                         temporary_function_identifier=random_identifier,
                     )
-
-    async def on_stopped(self) -> None:
-        pass
-
-    async def on_completed(self) -> None:
-        pass
-
-    async def on_cancelled(self) -> None:
-        pass
 
     async def on_errored(self, _exc: Exception) -> None:
         self.logger.error(

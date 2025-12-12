@@ -62,7 +62,7 @@ def validate_server_config_json_file_before_tests():
         "local_port": 9999,
         "remote_host_whitelist": [],
         "remote_host_blacklist": [],
-        "server_banner": "Apache",
+        "server_header": None,
     }
 
     with open("data/server/server_config.json") as file:
@@ -87,7 +87,7 @@ def admin_session():
         expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
     )
     session.headers.update(
-        {"Authorization": f"Bearer {response.json()["access_token"]}"},
+        {"Authorization": f"Bearer {response.json()['access_token']}"},
     )
     return session
 
@@ -106,7 +106,7 @@ def operator_session():
         expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
     )
     session.headers.update(
-        {"Authorization": f"Bearer {response.json()["access_token"]}"},
+        {"Authorization": f"Bearer {response.json()['access_token']}"},
     )
     return session
 
@@ -125,7 +125,7 @@ def spectator_session():
         expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
     )
     session.headers.update(
-        {"Authorization": f"Bearer {response.json()["access_token"]}"},
+        {"Authorization": f"Bearer {response.json()['access_token']}"},
     )
     return session
 
@@ -242,3 +242,19 @@ def logout_all_sessions(admin_session, operator_session, spectator_session):
     admin_session.post("http://localhost:9999/api/logout")
     operator_session.post("http://localhost:9999/api/logout")
     spectator_session.post("http://localhost:9999/api/logout")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def restore_user_accounts_file_after_tests():
+    # yielding None allows the fixture to run after all tests have completed
+    yield None
+    # For end-to-end testing we assume a set of default user account credentials so that
+    # the pytest framework can log in and perform tests on the REST API.
+    default_user_accounts = [
+        {"username": "admin", "password": "admin", "role": "ADMIN"},
+        {"username": "operator", "password": "operator", "role": "OPERATOR"},
+        {"username": "spectator", "password": "spectator", "role": "SPECTATOR"},
+    ]
+    # The order of the user accounts in the JSON file does not matter
+    with open("data/server/user_accounts.json", "w") as file:
+        json.dump(default_user_accounts, file, indent=4)

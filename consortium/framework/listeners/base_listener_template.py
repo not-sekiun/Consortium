@@ -34,8 +34,9 @@ from consortium.server.exceptions.framework_exceptions.listener_templates_framew
     InvalidListenerTemplateDependencyVersionSpecifierError,
     InvalidListenerTemplateVersionError,
     ListenerTemplateOptionNotFoundError,
-    ListenerTemplateOptionValueError,
+    ListenerTemplateOptionValueValidationError,
     MissingListenerTemplateConfigurationParameterError,
+    MissingRequiredListenerTemplateOptionError,
 )
 from consortium.server.utils.formatter_utils import format_docstring_to_single_line
 
@@ -206,7 +207,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             try:
                 self.options[option_name].validate_value(value)
             except OptionValueValidationError as exc:
-                raise ListenerTemplateOptionValueError(
+                raise ListenerTemplateOptionValueValidationError(
                     option_name=option_name,
                     option_value=value,
                     listener_template_str=str(self),
@@ -216,10 +217,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         # Check for missing required options.
         for option_name, option in self.options.items():
             if option.required and option_name not in parameters:
-                raise MissingListenerTemplateConfigurationParameterError(
-                    listener_template_str=str(self),
-                    parameter_name=option_name,
-                )
+                raise MissingRequiredListenerTemplateOptionError()
 
         # Run validation function on the entire set of parameters if one was provided.
         if self.validating_function:

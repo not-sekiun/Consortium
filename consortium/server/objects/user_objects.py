@@ -36,15 +36,19 @@ class JSONWebToken:
 class User:
     def __init__(self, user_account: UserAccountModel):
         self.user_account = user_account
-
         self.user_id = uuid.uuid4()
-        self.username = user_account.username
         self.display_name = user_account.username
-        self.role = user_account.role
         self.datetime_connected = datetime.now()
         self.datetime_last_active = self.datetime_connected
-
         self.json_web_token = JSONWebToken()
+
+    @property
+    def username(self) -> str:
+        return self.user_account.username
+
+    @property
+    def role(self) -> str:
+        return self.user_account.role
 
     def to_json(self):
         return {

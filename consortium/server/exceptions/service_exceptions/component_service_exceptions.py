@@ -71,11 +71,11 @@ class InvalidComponentProjectManifestFileSchemaError(
 
 
 class InvalidComponentProjectPyProjectFileError(ComponentLoadingError):
-    code = "INVALID_COMPONENT_PROJECT_PY_PROJECT_FILE_ERROR"
+    code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_ERROR"
 
 
 class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
-    code = "INVALID_COMPONENT_PROJECT_PY_PROJECT_FILE_TOML_ERROR"
+    code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
@@ -87,7 +87,7 @@ class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
 
 
 class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError):
-    code = "INVALID_COMPONENT_PROJECT_PY_PROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
@@ -123,22 +123,22 @@ class ComponentProjectManifestFileNotFoundError(
         super().__init__(component_project_folder=component_project_folder)
 
 
-class ComponentProjectComponentFileNotFoundError(
+class ComponentProjectEntryPointModuleNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
-    code = "COMPONENT_PROJECT_COMPONENT_FILE_NOT_FOUND_ERROR"
+    code = "COMPONENT_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The $C_LOWER$ file '{component_file}' specified in the $C_LOWER$ project's "
-        "manifest file was not found. Check that the module specified in the "
-        "`entry_points` parameter exists."
+        "The $C_LOWER$ entry point module '{entry_point_module}' specified in the "
+        "$C_LOWER$ project's manifest file was not found. Check that the module "
+        "specified in the entry point parameter exists."
     )
 
-    def __init__(self, component_project_folder: str, component_file: str):
+    def __init__(self, component_project_folder: str, entry_point_module: str):
         super().__init__(
             component_project_folder=component_project_folder,
-            component_file=component_file,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -151,22 +151,22 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
 
     _MESSAGE_TEMPLATE = (
         "Failed to load $C_LOWER$ project at '{component_project_folder}'. The "
-        "symbol name '{symbol_name}' specified in the $C_LOWER$ project's "
-        "manifest file was not found in the $C_LOWER$ file '{component_file}'. "
-        "Check that the class specified in the `entry_points` parameter exists"
-        "for the module specified."
+        "entry point symbol '{symbol_name}' specified in the $C_LOWER$ project's "
+        "manifest file was not found in the $C_LOWER$ entry point module "
+        "'{entry_point_module}'. Check that the class specified in the `entry_points` "
+        "parameter exists for the module specified."
     )
 
     def __init__(
         self,
         component_project_folder: str,
-        symbol_name: str,
-        component_file: str,
+        entry_point_symbol: str,
+        entry_point_module: str,
     ):
         super().__init__(
             component_project_folder=component_project_folder,
-            symbol_name=symbol_name,
-            component_file=component_file,
+            symbol_name=entry_point_symbol,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -175,19 +175,19 @@ class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError)
 
     _MESSAGE_TEMPLATE = (
         "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The $C_LOWER$ in the $C_LOWER$ project does not implement the required "
-        "interface for its defined symbol '{component_symbol}'. Check that the "
-        "$C_LOWER$ class inherits from `Base$C_CAPITAL$`."
+        "The entry point symbol '{entry_point_symbol}' in the $C_LOWER$ project does "
+        "not implement the required interface. Check that the symbol specified "
+        "inherits from the appropriate base class."
     )
 
     def __init__(
         self,
         component_project_folder: str,
-        component_symbol: str,
+        entry_point_symbol: str,
     ):
         super().__init__(
             component_project_folder=component_project_folder,
-            component_symbol=component_symbol,
+            entry_point_symbol=entry_point_symbol,
         )
 
 

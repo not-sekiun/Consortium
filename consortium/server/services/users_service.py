@@ -46,17 +46,17 @@ class UsersService:
 
     def update_user_display_name_by_user_id(
         self,
-        new_display_name: str,
+        display_name: str,
         user_id: str,
     ) -> User:
         user = self.get_user_by_user_id(user_id=user_id)
         old_display_name = user.display_name
-        user.display_name = new_display_name
+        user.display_name = display_name
         self._logger.info(
             "Updated user display name for {}: '{}' -> '{}'",
             user,
             old_display_name,
-            new_display_name,
+            display_name,
         )
         return user
 
@@ -69,7 +69,7 @@ class UsersService:
         self._users[str(user.user_id)] = user
 
         self._logger.info("User logged in: {}", user)
-        self._logger.debug("Added user: {!r}", user)
+        self._logger.debug("- {!r}", user)
         return user
 
     def logout_user_by_user_id(self, user_id: str) -> None:
@@ -79,4 +79,4 @@ class UsersService:
             raise UserIDNotFoundError(user_id=user_id) from None
 
         self._logger.info("User logged out: {}", deleted_user)
-        self._logger.debug("Removed user: {!r}", deleted_user)
+        self._logger.debug("- {!r}", deleted_user)

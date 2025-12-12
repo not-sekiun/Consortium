@@ -110,11 +110,13 @@ def construct_agent_capability_command(
         )
 
         def configure_parser(self, parser: ArgumentParser) -> None:
+            options = agent_capability_json_data["options"]
+
             # The parser checks to see if there is only one required option for an
             # agent capability. If there is, that one required option is registered to
             # the parser as a positional argument for convenience.
             number_of_required_options = 0
-            for _, option in agent_capability_json_data["arguments"].items():
+            for _, option in options.items():
                 if option["required"]:
                     number_of_required_options += 1
 
@@ -122,18 +124,14 @@ def construct_agent_capability_command(
             # required options as optional options.
             if number_of_required_options == 1:
                 abbreviated_flags = _generate_abbreviated_flags_from_option_name_list(
-                    [
-                        name
-                        for name in agent_capability_json_data["arguments"].keys()
-                        if not agent_capability_json_data["arguments"][name]["required"]
-                    ],
+                    [name for name in options.keys() if not options[name]["required"]],
                 )
             else:
                 abbreviated_flags = _generate_abbreviated_flags_from_option_name_list(
-                    list(agent_capability_json_data["arguments"].keys()),
+                    list(options),
                 )
 
-            for name, option in agent_capability_json_data["arguments"].items():
+            for name, option in options.items():
                 # Configure the number of arguments that the parser expects for a
                 # particular agent capability based on the option type in the
                 # options json data.

@@ -52,11 +52,11 @@ and more!
 
 ### Prerequisites
 
-Consortium requires Python 3.12+ and uses the Poetry package manager to handle its
-Python dependencies. Git is recommended for installing and updating the framework, no
+Consortium requires Python 3.14+ and uses the uv package manager to handle its
+dependencies. Git is recommended for installing and updating the framework, no
 binary releases will be provided.
-1. [Install Python 3.12+](https://www.python.org/downloads)
-2. [Install Poetry](https://python-poetry.org/docs/#installation).
+1. [Install Python 3.14+](https://www.python.org/downloads)
+2. [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
 3. [Install Git](https://www.git-scm.com)
 
 > [!IMPORTANT]
@@ -70,9 +70,9 @@ git clone https://github.com/not-sekiun/Consortium.git
 cd Consortium
 ```
 
-2. Install dependencies through `poetry`.
+2. Install dependencies through `uv`.
 ```bash
-poetry install
+uv sync
 ```
 
 ### Starting the Framework
@@ -83,12 +83,12 @@ to connect to the server.
 
 1. Start the Consortium server. By default, it binds at `0.0.0.0:1337`.
 ```bash
-poetry run python consortium.py server
+uv run consortium.py server
 ```
 
 2. Start the Consortium client. By default, it connects to `127.0.0.1:1337`
 ```bash
-poetry run python consortium.py client
+uv run consortium.py client
 ```
 
 ### Updating
@@ -100,7 +100,7 @@ git pull
 
 2. Update any dependencies that are present using `poetry`.
 ```shell
-poetry install
+uv sync
 ```
 
 ## 📚 Documentation
@@ -117,7 +117,7 @@ navigating to `/doc` or `/redoc` at the server's root URL in a web browser.
 Start the server first.
 
 ```shell
-poetry run python consortium.py server
+uv run consortium.py server
 ```
 
 Then open a web browser to the API endpoints.
@@ -140,9 +140,9 @@ Consortium wiki's Events WebSocket API page.
 ![WebSocket API documentation for mkdocs](docs/assets/websockets_api_mkdocs.png)
 
 This documentation is hosted locally and included with the repository. To view it
-locally, install `mkdocs` through poetry (it should already be included when installing
-all dependencies) and run it by changing directory into the `docs` folder and serving
-the documentation locally.
+locally, install the documenation dependencies through uv,
+`uv sync --group docs` and run it by changing directory into the `docs` folder and
+serving the documentation locally.
 
 > [!NOTE]
 > The mkdocs page is still heavily a WIP and is largely incomplete. It is included here
@@ -150,7 +150,7 @@ the documentation locally.
 
 ```shell
 cd docs
-poetry run mkdocs serve
+uv run mkdocs serve
 ```
 
 ### Client Documentation

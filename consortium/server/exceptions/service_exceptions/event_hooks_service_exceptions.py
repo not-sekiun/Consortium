@@ -122,7 +122,7 @@ class InvalidEventHookProjectPyProjectFileError(
     file.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_PY_PROJECT_FILE_ERROR"
+    code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_ERROR"
 
 
 class InvalidEventHookProjectPyProjectFileTOMLError(
@@ -133,7 +133,7 @@ class InvalidEventHookProjectPyProjectFileTOMLError(
     An error that is raised when the `pyproject.toml` file is not a valid TOML file
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_PY_PROJECT_FILE_TOML_ERROR"
+    code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     def __init__(self, event_hook_project_folder: str):
         super().__init__(component_project_folder=event_hook_project_folder)
@@ -148,7 +148,7 @@ class InvalidEventHookProjectPyProjectFileDependencyError(
     entries.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_PY_PROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     def __init__(self, event_hook_project_folder: str, invalid_dependency_entry: str):
         super().__init__(
@@ -184,20 +184,20 @@ class EventHookProjectManifestFileNotFoundError(
         super().__init__(component_project_folder=event_hook_project_folder)
 
 
-class EventHookProjectEventHookFileNotFoundError(
+class EventHookProjectEntryPointModuleNotFoundError(
     InvalidEventHookProjectFolderStructureError,
-    comp_svc_excs.ComponentProjectComponentFileNotFoundError,
+    comp_svc_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """
     An error that is raised when the event hook file specified in the manifest is not
     found in the event hook project folder.
     """
 
-    code = "EVENT_HOOK_PROJECT_EVENT_HOOK_FILE_NOT_FOUND_ERROR"
+    code = "EVENT_HOOK_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
     def __init__(self, event_hook_project_folder: str, event_hook_file: str):
         super().__init__(
-            component_file=event_hook_file,
+            entry_point_module=event_hook_file,
             component_project_folder=event_hook_project_folder,
         )
 
@@ -228,13 +228,13 @@ class EventHookProjectSymbolNotFoundError(
     def __init__(
         self,
         event_hook_project_folder: str,
-        symbol_name: str,
-        event_hook_file: str,
+        entry_point_symbol: str,
+        entry_point_module: str,
     ):
         super().__init__(
             component_project_folder=event_hook_project_folder,
-            symbol_name=symbol_name,
-            component_file=event_hook_file,
+            entry_point_symbol=entry_point_symbol,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -252,11 +252,11 @@ class EventHookProjectInterfaceError(
     def __init__(
         self,
         event_hook_project_folder: str,
-        event_hook_symbol: str,
+        entry_point_symbol: str,
     ):
         super().__init__(
             component_project_folder=event_hook_project_folder,
-            component_symbol=event_hook_symbol,
+            entry_point_symbol=entry_point_symbol,
         )
 
 
@@ -526,7 +526,7 @@ class EventHookSetupError(EventHookOperationError):
         )
 
 
-class EventHookTeardownError(EventHooksServiceError):
+class EventHookTeardownError(EventHookOperationError):
     code = "EVENT_HOOK_TEARDOWN_ERROR"
 
     def __init__(self, event_hook_str: str, error_message: str):

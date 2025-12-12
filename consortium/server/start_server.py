@@ -5,8 +5,12 @@ import json
 from pydantic import ValidationError
 
 import consortium.server.server_reloader as server_reloader
-from consortium.server.models.server_models import ServerConfigModel
-from consortium.server.server_config import CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH
+from consortium.server.models.config_models import LoggingConfigModel, ServerConfigModel
+from consortium.server.server_config import (
+    CONSORTIUM_LOGGING_CONFIG_JSON_FILE_PATH,
+    CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH,
+    CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH,
+)
 from consortium.server.server_logging import configure_logger
 
 
@@ -20,30 +24,36 @@ async def _start_server(arguments: argparse.Namespace) -> None:
     if arguments.reload:
         server_reloader.main()
         return
-    # Load server configuration file
-    if arguments.config is None:
+
+    # Configure server from configuration file.
+    if arguments.server_config is None:
         # Use relative pathing from the module to allow directory independent
         # invocation.
-        server_config_filepath = str(CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH)
+        server_config_filepath = CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH
     else:
-        server_config_filepath = arguments.config
+        server_config_filepath = arguments.server_config
     try:
         with open(server_config_filepath) as file:
-            json_data = json.load(fp=file)
+            json_data = json.load(file)
+        server_config = ServerConfigModel(
+            local_host=json_data.get("local_host", "0.0.0.0"),
+            local_port=json_data.get("local_port", 9999),
+            remote_host_whitelist=json_data.get("remote_host_whitelist", []),
+            remote_host_blacklist=json_data.get("remote_host_blacklist", []),
+            server_header=json_data.get("server_header", None),
+        )
     except FileNotFoundError:
         print(
-            f"Failed to start server. Could not find server configuration file at "
+            f"Failed to start server. Could not find the server configuration file at "
             f"the provided file path '{server_config_filepath}'.",
         )
         return
     except PermissionError:
         print(
-            "Failed to start client. Permission denied when attempting to read server "
-            f"configuration file at '{server_config_filepath}'.",
+            "Failed to start client. Permission denied when attempting to read the "
+            f"server configuration file at '{server_config_filepath}'.",
         )
         return
-    try:
-        server_config = ServerConfigModel(**json_data)
     except ValidationError as exc:
         print(
             f"Failed to start server. The provided server configuration file "
@@ -52,11 +62,57 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         )
         return
 
-    # Configure logging.
-    if arguments.debug:
-        configure_logger(log_level="DEBUG")
+    # Configure logging from configuration file.
+    if arguments.logging_config is None:
+        logging_config_filepath = CONSORTIUM_LOGGING_CONFIG_JSON_FILE_PATH
     else:
-        configure_logger(log_level=server_config.log_level)
+        logging_config_filepath = arguments.logging_config
+    try:
+        with open(logging_config_filepath) as file:
+            json_data = json.load(file)
+        logging_config = LoggingConfigModel(
+            log_level="DEBUG"
+            if arguments.debug
+            else json_data.get("log_level", "INFO"),
+            log_file_path=json_data.get(
+                "log_file_path",
+                str(
+                    CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH
+                    / "{time:YYYY-MM-DDTHH-mm-ss}.log"
+                ),
+            ),
+            log_file_rotation=json_data.get("log_file_rotation", "daily"),
+            log_file_retention=json_data.get("log_file_retention", "1 week"),
+            colorize=json_data.get("colorize", True),
+        )
+    except FileNotFoundError:
+        print(
+            f"Failed to start server. Could not find the logging configuration file at "
+            f"the provided file path '{logging_config_filepath}'.",
+        )
+        return
+    except PermissionError:
+        print(
+            "Failed to start client. Permission denied when attempting to read the "
+            f"logging configuration file at '{logging_config_filepath}'.",
+        )
+        return
+    except ValidationError as exc:
+        print(
+            f"Failed to start server. The provided logging configuration file "
+            f"'{logging_config_filepath}' does not adhere to the expected logging "
+            f"configuration file JSON schema: {exc}",
+        )
+        return
+    try:
+        configure_logger(logging_config=logging_config)
+    # Loguru raises `ValueError` for invalid rotation and retention values.
+    except ValueError as exc:
+        print(
+            f"Failed to start server. The provided logging configuration file "
+            f"'{logging_config_filepath}' contains invalid values: {exc}",
+        )
+        return
 
     # We are importing both Server and server_singletons within the function here
     # because we need to configure the logger first. server_singletons contains services
@@ -66,7 +122,9 @@ async def _start_server(arguments: argparse.Namespace) -> None:
     from consortium.server.server import Server
 
     # Configure server and create a reference to it in the server singletons module.
-    server_singletons.server = Server(server_config=server_config)
+    server_singletons.server = Server(
+        server_config=server_config, logging_config=logging_config
+    )
     await server_singletons.server.start_server()
 
 

@@ -1,24 +1,6 @@
 from datetime import datetime
-from typing import Literal
 
 from pydantic import BaseModel
-
-
-class ServerConfigModel(BaseModel):
-    local_host: str
-    local_port: int
-    remote_host_whitelist: list[str]
-    remote_host_blacklist: list[str]
-    server_banner: str
-    log_level: Literal[
-        "TRACE",
-        "DEBUG",
-        "INFO",
-        "SUCCESS",
-        "WARNING",
-        "ERROR",
-        "CRITICAL",
-    ]
 
 
 # `datetime_released` is None in the case whereby the projected datetime of a

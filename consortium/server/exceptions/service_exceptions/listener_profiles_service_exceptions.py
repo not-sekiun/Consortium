@@ -131,7 +131,7 @@ class InvalidListenerProfileProjectPyProjectFileError(
     file.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_PY_PROJECT_FILE_ERROR"
+    code = "INVALID_LISTENER_PROFILE_PROJECT_PYPROJECT_FILE_ERROR"
 
 
 class InvalidListenerProfileProjectPyProjectFileTOMLError(
@@ -142,7 +142,7 @@ class InvalidListenerProfileProjectPyProjectFileTOMLError(
     An error that is raised when the `pyproject.toml` file is not a valid TOML file
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_PY_PROJECT_FILE_TOML_ERROR"
+    code = "INVALID_LISTENER_PROFILE_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     def __init__(self, listener_profile_project_folder: str):
         super().__init__(component_project_folder=listener_profile_project_folder)
@@ -157,7 +157,7 @@ class InvalidListenerProfileProjectPyProjectFileDependencyError(
     entries.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_PY_PROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_LISTENER_PROFILE_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     def __init__(
         self,
@@ -197,25 +197,25 @@ class ListenerProfileProjectManifestFileNotFoundError(
         super().__init__(component_project_folder=listener_profile_project_folder)
 
 
-class ListenerProfileProjectListenerProfileFileNotFoundError(
+class ListenerProfileProjectEntryPointModuleNotFoundError(
     InvalidListenerProfileProjectFolderStructureError,
-    comp_svc_excs.ComponentProjectComponentFileNotFoundError,
+    comp_svc_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """
     An error that is raised when the listener profile file specified in the manifest is not
     found in the listener profile project folder.
     """
 
-    code = "LISTENER_PROFILE_PROJECT_LISTENER_PROFILE_FILE_NOT_FOUND_ERROR"
+    code = "LISTENER_PROFILE_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
     def __init__(
         self,
         listener_profile_project_folder: str,
-        listener_profile_file: str,
+        entry_point_module: str,
     ):
         super().__init__(
-            component_file=listener_profile_file,
             component_project_folder=listener_profile_project_folder,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -245,13 +245,13 @@ class ListenerProfileProjectSymbolNotFoundError(
     def __init__(
         self,
         listener_profile_project_folder: str,
-        symbol_name: str,
-        listener_profile_file: str,
+        entry_point_symbol: str,
+        entry_point_module: str,
     ):
         super().__init__(
             component_project_folder=listener_profile_project_folder,
-            symbol_name=symbol_name,
-            component_file=listener_profile_file,
+            entry_point_symbol=entry_point_symbol,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -269,11 +269,11 @@ class ListenerProfileProjectInterfaceError(
     def __init__(
         self,
         listener_profile_project_folder: str,
-        listener_profile_symbol: str,
+        entry_point_symbol: str,
     ):
         super().__init__(
             component_project_folder=listener_profile_project_folder,
-            component_symbol=listener_profile_symbol,
+            entry_point_symbol=entry_point_symbol,
         )
 
 

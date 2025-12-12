@@ -16,7 +16,7 @@ from consortium.server.exceptions.api_exceptions.assets_api_exceptions import (
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
-    InternalServerErrorError,
+    InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
 )
@@ -37,7 +37,7 @@ router = APIRouter(
         401: {"model": UnauthorizedError().to_pydantic_model()},
         403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerErrorError().to_pydantic_model()},
+        500: {"model": InternalServerError().to_pydantic_model()},
     },
     tags=["Assets API"],
 )

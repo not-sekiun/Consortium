@@ -27,7 +27,7 @@ Exception hierarchy for the REST API endpoint at /api/listeners.
 from consortium.framework.listeners.base_listener_type import BaseListenerType
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ConflictError,
-    InternalServerErrorError,
+    InternalServerError,
     NotFoundError,
     UnprocessableEntityError,
 )
@@ -48,7 +48,7 @@ class ListenerAlreadyRunningError(ConflictError): ...
 class ListenerNotRunningError(ConflictError): ...
 
 
-class ListenerTemplateResolutionError(InternalServerErrorError):
+class ListenerTemplateResolutionError(InternalServerError):
     code = "LISTENER_TEMPLATE_RESOLUTION_ERROR"
 
     def __init__(

@@ -5,11 +5,12 @@ from fastapi import APIRouter, Depends
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
-    InternalServerErrorError,
+    InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
 )
-from consortium.server.models.server_models import ServerConfigModel, ServerReleaseModel
+from consortium.server.models.config_models import ServerConfigModel
+from consortium.server.models.server_models import ServerReleaseModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_config import SERVER_RELEASE
 from consortium.server.server_dependencies import AuthorizeUserRequest
@@ -20,7 +21,7 @@ router = APIRouter(
         401: {"model": UnauthorizedError().to_pydantic_model()},
         403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerErrorError().to_pydantic_model()},
+        500: {"model": InternalServerError().to_pydantic_model()},
     },
     tags=["Server API"],
 )

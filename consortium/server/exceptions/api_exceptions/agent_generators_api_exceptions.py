@@ -28,12 +28,9 @@ Errors for the endpoint /api/agent-generators.
 """
 
 from consortium.framework.agents.base_agent_type import BaseAgentType
-from consortium.server.exceptions.api_exceptions.base_api_exception import (
-    BaseAPIException,
-)
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ConflictError,
-    InternalServerErrorError,
+    InternalServerError,
     NotFoundError,
     UnprocessableEntityError,
 )
@@ -42,7 +39,7 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 class AgentGeneratorNotFoundError(NotFoundError): ...
 
 
-class AgentTemplateResolutionError(InternalServerErrorError):
+class AgentTemplateResolutionError(InternalServerError):
     code = "AGENT_TEMPLATE_RESOLUTION_ERROR"
 
     def __init__(

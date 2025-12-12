@@ -6,6 +6,9 @@ from fastapi.security import OAuth2PasswordBearer
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import ForbiddenError
+from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
+    UserAccessTokenNotFoundError,
+)
 from consortium.server.objects.user_account_objects import UserPermissions, UserRole
 from consortium.server.objects.user_objects import User
 from consortium.server.server_config import (
@@ -52,7 +55,15 @@ def is_user_logged_in(
     # ValueError: User does not exist in the users service
     # jwt.exceptions.InvalidTokenError: JSON Web Token is invalid, base exception
     # for any failure on the decode call for a token
-    except (KeyError, IndexError, ValueError, jwt.exceptions.InvalidTokenError):
+    # UserAccessTokenNotFoundError: Valid JSON Web Token but does not exist in the
+    # current set of users
+    except (
+        KeyError,
+        IndexError,
+        ValueError,
+        jwt.exceptions.InvalidTokenError,
+        UserAccessTokenNotFoundError,
+    ):
         return False
 
 
@@ -74,18 +85,29 @@ def get_current_user(
 
 class AuthorizeUserRequest:
     ROLE_PERMISSIONS = {
+        # All defined permissions now and in the future are granted to the admin
         UserRole.ADMIN: set(
             UserPermissions,
-        ),  # All defined permissions now and in the future are granted to the admin
+        ),
+        # Operators have generally every permission except those that deal with user
+        # accounts and user management
         UserRole.OPERATOR: {
-            UserPermissions.UPDATE_OWN_USER_ACCOUNT_USERNAME,
-            UserPermissions.UPDATE_OWN_USER_ACCOUNT_PASSWORD,
+            # Permissions for the /api/user-accounts endpoint
+            UserPermissions.UPDATE_OWN_USER_ACCOUNT,
+            UserPermissions.READ_OWN_USER_ACCOUNT,  # TODO: Probably should remove
+            # Permissions for the /api/users endpoint
             UserPermissions.READ_OWN_USER,
+            UserPermissions.READ_ALL_USERS,
+            UserPermissions.READ_USER_BY_USER_ID,
+            UserPermissions.UPDATE_OWN_USER,
+            # Permissions for the /api/server endpoint
             UserPermissions.READ_SERVER_RELEASE,
             UserPermissions.READ_SERVER_CONFIG,
+            # Permissions for the /api/listener-templates endpoint
+            UserPermissions.CREATE_LISTENER,
             UserPermissions.READ_ALL_LISTENER_TEMPLATES,
             UserPermissions.READ_LISTENER_TEMPLATE_BY_LISTENER_TEMPLATE_ID,
-            UserPermissions.CREATE_LISTENER,
+            # Permissions for the /api/listeners endpoint
             UserPermissions.READ_ALL_LISTENERS,
             UserPermissions.READ_LISTENER_BY_LISTENER_ID,
             UserPermissions.START_LISTENER_BY_LISTENER_ID,
@@ -93,9 +115,11 @@ class AuthorizeUserRequest:
             UserPermissions.CANCEL_LISTENER_BY_LISTENER_ID,
             UserPermissions.UPDATE_LISTENER_BY_LISTENER_ID,
             UserPermissions.DELETE_LISTENER_BY_LISTENER_ID,
+            # Permissions for the /api/agent-templates endpoint
+            UserPermissions.CREATE_AGENT_GENERATOR,
             UserPermissions.READ_ALL_AGENT_TEMPLATES,
             UserPermissions.READ_AGENT_TEMPLATE_BY_AGENT_TEMPLATE_ID,
-            UserPermissions.CREATE_AGENT_GENERATOR,
+            # Permissions for the /api/agent-generators endpoint
             UserPermissions.READ_ALL_AGENT_GENERATORS,
             UserPermissions.READ_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
             UserPermissions.START_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
@@ -103,6 +127,7 @@ class AuthorizeUserRequest:
             UserPermissions.CANCEL_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
             UserPermissions.UPDATE_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
             UserPermissions.DELETE_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
+            # Permissions for the /api/agents endpoint
             UserPermissions.READ_ALL_AGENTS,
             UserPermissions.READ_AGENT_BY_AGENT_ID,
             UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID,
@@ -110,37 +135,66 @@ class AuthorizeUserRequest:
             UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
             UserPermissions.READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID,
             UserPermissions.TASK_AGENT_BY_AGENT_ID,
+            UserPermissions.UPDATE_AGENT_BY_AGENT_ID,
+            # Permissions for the /api/events endpoint
             UserPermissions.USE_EVENTS_WEBSOCKET,
+            # Permissions for the /api/assets endpoint
             UserPermissions.UPLOAD_ASSETS,
             UserPermissions.DOWNLOAD_ASSETS,
             UserPermissions.READ_ALL_ASSETS,
             UserPermissions.READ_ASSET_BY_ASSET_ID,
             UserPermissions.DELETE_ASSET_BY_ASSET_ID,
+            # Permissions for the /api/artifacts endpoint
+            UserPermissions.DOWNLOAD_ARTIFACTS,
+            UserPermissions.READ_ALL_ARTIFACTS,
+            UserPermissions.READ_ARTIFACT_BY_ARTIFACT_ID,
+            UserPermissions.DELETE_ARTIFACT_BY_ARTIFACT_ID,
+            # Permissions for the /api/payloads endpoint
+            UserPermissions.DOWNLOAD_PAYLOADS,
+            UserPermissions.READ_ALL_PAYLOADS,
+            UserPermissions.READ_PAYLOAD_BY_PAYLOAD_ID,
+            UserPermissions.DELETE_PAYLOAD_BY_PAYLOAD_ID,
         },
-        # Spectators can only read information and have even less read access than
-        # operators
+        # Spectators generally have only read-only permissions
         UserRole.SPECTATOR: {
+            # Permissions for the /api/user-accounts endpoint
+            UserPermissions.READ_OWN_USER_ACCOUNT,  # TODO: Probably should remove
+            # Permissions for the /api/users endpoint
             UserPermissions.READ_OWN_USER,
+            # The only non read permission, used to update display name
+            UserPermissions.UPDATE_OWN_USER,
+            # Permissions for the /api/server endpoint
             UserPermissions.READ_SERVER_RELEASE,
+            # Permissions for the /api/listener-templates endpoint
             UserPermissions.READ_ALL_LISTENER_TEMPLATES,
             UserPermissions.READ_LISTENER_TEMPLATE_BY_LISTENER_TEMPLATE_ID,
+            # Permissions for the /api/listeners endpoint
             UserPermissions.READ_ALL_LISTENERS,
             UserPermissions.READ_LISTENER_BY_LISTENER_ID,
+            # Permissions for the /api/agent-templates endpoint
             UserPermissions.READ_ALL_AGENT_TEMPLATES,
             UserPermissions.READ_AGENT_TEMPLATE_BY_AGENT_TEMPLATE_ID,
+            # Permissions for the /api/agent-generators endpoint
             UserPermissions.READ_ALL_AGENT_GENERATORS,
             UserPermissions.READ_AGENT_GENERATOR_BY_AGENT_GENERATOR_ID,
-            UserPermissions.READ_ALL_AGENTS,
-            UserPermissions.READ_AGENT_BY_AGENT_ID,
+            # Permissions for the /api/agents endpoint
             UserPermissions.READ_ALL_AGENTS,
             UserPermissions.READ_AGENT_BY_AGENT_ID,
             UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID,
             UserPermissions.READ_AGENT_TASK_BY_AGENT_ID_AND_TASK_ID,
             UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
             UserPermissions.READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID,
+            # Permissions for the /api/events endpoint
             UserPermissions.USE_EVENTS_WEBSOCKET,
+            # Permissions for the /api/assets endpoint
             UserPermissions.READ_ALL_ASSETS,
             UserPermissions.READ_ASSET_BY_ASSET_ID,
+            # Permissions for the /api/artifacts endpoint
+            UserPermissions.READ_ALL_ARTIFACTS,
+            UserPermissions.READ_ARTIFACT_BY_ARTIFACT_ID,
+            # Permissions for the /api/payloads endpoint
+            UserPermissions.READ_ALL_PAYLOADS,
+            UserPermissions.READ_PAYLOAD_BY_PAYLOAD_ID,
         },
     }
 

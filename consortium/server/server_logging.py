@@ -1,12 +1,10 @@
 import sys
 from collections import defaultdict
-from datetime import datetime
 from enum import StrEnum
-from typing import Literal
 
 from loguru import logger
 
-from consortium.server.server_config import CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH
+from consortium.server.models.config_models import LoggingConfigModel
 
 
 # Provide a custom logger type to color mapping. So that we can specially highlight log
@@ -48,32 +46,24 @@ def log_formatter(record):
     )
 
 
-def configure_logger(
-    log_level: Literal[
-        "TRACE",
-        "DEBUG",
-        "INFO",
-        "SUCCESS",
-        "WARNING",
-        "ERROR",
-        "CRITICAL",
-    ],
-):
+def configure_logger(logging_config: LoggingConfigModel):
     logger.remove()  # Remove all default loggers.
     logger.add(
-        # ":" is invalid in filenames, so we replace it with the URL safe character "-".
-        f"{CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH}/{datetime.now().isoformat().replace(":", "-")}.log",
+        logging_config.log_file_path,
         format="[{time:YYYY-MM-DDTHH:mm:ssZ}] {level:<8} {extra[logger_name]}: {message}",
-        level=log_level,
+        level=logging_config.log_level,
+        rotation=logging_config.log_file_rotation,
+        retention=logging_config.log_file_retention,
+        colorize=False,
     )
     logger.add(
         sys.stdout,
-        colorize=True,
+        colorize=logging_config.colorize,
         format=log_formatter,
-        level=log_level,
+        level=logging_config.log_level,
     )
-    logger.level("TRACE", color="<bold><cyan>")
-    logger.level("DEBUG", color="<bold><green>")
+    logger.level("TRACE", color="<bold><magenta>")
+    logger.level("DEBUG", color="<bold><cyan>")
     logger.level("INFO", color="<bold><blue>")
     logger.level("WARNING", color="<bold><yellow>")
     logger.level("ERROR", color="<bold><red>")

@@ -6,10 +6,6 @@ from consortium.server.exceptions.base_consortium_exception import (
     BaseConsortiumError,
 )
 
-# from consortium.server.exceptions.service_exceptions.base_service_exception import (
-#     BaseServiceException,
-# )
-
 T = TypeVar("T")
 
 
@@ -119,18 +115,3 @@ class BaseAPIException(Exception):
         )
         api_exception.code = consortium_exception.code
         return api_exception
-
-    # # TODO: Might have to add `code` support here as well depending on how we want to
-    # # map framework exceptions to API exceptions
-    # @classmethod
-    # def from_framework_exception(
-    #     cls,
-    #     framework_exception: BaseFrameworkException,
-    #     detail: dict[str, Any] | None = None,
-    # ) -> "BaseAPIException":
-    #     if detail is None:
-    #         detail = framework_exception.detail
-    #     return cls(
-    #         message=framework_exception.message,
-    #         detail=detail,
-    #     )

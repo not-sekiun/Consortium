@@ -112,7 +112,7 @@ class ListenersService:
                 detail=exc.detail,
             ) from None
         except (
-            listener_templates_framework_excs.ListenerTemplateOptionValueError
+            listener_templates_framework_excs.ListenerTemplateOptionValueValidationError
         ) as exc:
             raise listeners_service_excs.ListenerTemplateOptionValueError(
                 message=exc.message,

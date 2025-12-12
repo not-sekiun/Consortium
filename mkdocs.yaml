@@ -46,41 +46,42 @@ theme:
   favicon: assets/logo.png
 
 nav:
-  - Home: index.md
-  - About:
-    - about/features.md
-    - about/motivation.md
-    - about/history.md
-  - Getting Started:
-    - getting-started/installation.md
-    - getting-started/updating.md
-    - getting-started/quick-start.md
-  - Manual:
-    - manual/introduction.md
-  - Server API:
-    - Events Websockets API:
-      - events-websockets-api/introduction.md
-      - events-websockets-api/authentication.md
-      - events-websockets-api/sending-action-commands.md
-    - REST API:
-      - rest-api/introduction.md
-  - Framework Reference:
-    - Framework:
-      - framework-reference/framework/listeners-reference.md
-      - framework-reference/framework/agent-generators-reference.md
-      - framework-reference/framework/plugins-reference.md
-      - framework-reference/framework/event-hooks-reference.md
-      - framework-reference/framework/options-reference.md
-    - Exceptions:
-      - framework-reference/exceptions/signalling-exceptions.md
-      - framework-reference/exceptions/plugins-framework-exceptions.md
-      - framework-reference/exceptions/options-framework-exceptions.md
-      - framework-reference/exceptions/listeners-framework-exceptions.md
-  - Services Reference:
-      - Services:
-        - services-reference/services/plugins-service-reference.md
-      - Exceptions:
-        - services-reference/exceptions/plugins-service-exceptions.md
+  - Exceptions: test.md
+#  - Home: index.md
+#  - About:
+#    - about/features.md
+#    - about/motivation.md
+#    - about/history.md
+#  - Getting Started:
+#    - getting-started/installation.md
+#    - getting-started/updating.md
+#    - getting-started/quick-start.md
+#  - Manual:
+#    - manual/introduction.md
+#  - Server API:
+#    - Events Websockets API:
+#      - events-websockets-api/introduction.md
+#      - events-websockets-api/authentication.md
+#      - events-websockets-api/sending-action-commands.md
+#    - REST API:
+#      - rest-api/introduction.md
+#  - Framework Reference:
+#    - Framework:
+#      - framework-reference/framework/listeners-reference.md
+#      - framework-reference/framework/agent-generators-reference.md
+#      - framework-reference/framework/plugins-reference.md
+#      - framework-reference/framework/event-hooks-reference.md
+#      - framework-reference/framework/options-reference.md
+#    - Exceptions:
+#      - framework-reference/exceptions/signalling-exceptions.md
+#      - framework-reference/exceptions/plugins-framework-exceptions.md
+#      - framework-reference/exceptions/options-framework-exceptions.md
+#      - framework-reference/exceptions/listeners-framework-exceptions.md
+#  - Services Reference:
+#      - Services:
+#        - services-reference/services/plugins-service-reference.md
+#      - Exceptions:
+#        - services-reference/exceptions/plugins-service-exceptions.md
 
 markdown_extensions:
   - pymdownx.highlight:

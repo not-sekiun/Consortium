@@ -9,7 +9,7 @@ from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
-    InternalServerErrorError,
+    InternalServerError,
     ServiceUnavailableError,
 )
 from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
@@ -118,15 +118,6 @@ async def check_if_remote_host_is_allowed(request: Request, call_next) -> Respon
     return await call_next(request)
 
 
-# this middleware spoofs the server header to make it appear as if the server is running
-# a different web server software (Apache) than it actually is to help prevent C2 server
-# fingerprinting. The server header is typically "Server: uvicorn" by default
-async def spoof_response_server_header(request: Request, call_next) -> Response:
-    response = await call_next(request)
-    response.headers["server"] = "Apache"
-    return response
-
-
 # this middleware logs the requests to and responses from the framework's REST API along
 # with any internal server errors to the console and to log files located at
 # data/server/logs. Because it logs errors, this middleware also acts as a catch-all
@@ -188,13 +179,13 @@ async def log_rest_api_requests_and_responses(
             request.method,
             request.url.path,
             # length of the response as a JSON string
-            len(json.dumps(InternalServerErrorError().to_json())),
+            len(json.dumps(InternalServerError().to_json())),
         )
         rest_api_logger.opt(ansi=True, raw=True).error(
             "<bold><red>{}</></>",
             traceback.format_exc(),
         )
         return JSONResponse(
-            status_code=InternalServerErrorError().status_code,
-            content=InternalServerErrorError().to_json(),
+            status_code=InternalServerError().status_code,
+            content=InternalServerError().to_json(),
         )

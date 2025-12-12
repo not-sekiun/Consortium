@@ -283,8 +283,8 @@ class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
         )
 
 
-class ListenerTemplateOptionValueError(ListenerTemplateOptionError):
-    code = "LISTENER_TEMPLATE_OPTION_VALUE_ERROR"
+class ListenerTemplateOptionValueValidationError(ListenerTemplateOptionError):
+    code = "LISTENER_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
 
     def __init__(
         self,
@@ -295,13 +295,29 @@ class ListenerTemplateOptionValueError(ListenerTemplateOptionError):
     ):
         super().__init__(
             message=(
-                f"Failed to set the option '{option_name}' to the value "
-                f"'{option_value}' for the listener template "
-                f"'{listener_template_str}'. {error_message}"
+                f"Failed to validate the value '{option_value}' against the option "
+                f"'{option_name}' for the listener template '{listener_template_str}'. "
+                f"{error_message}"
             ),
             detail={
                 "option_name": option_name,
                 "option_value": option_value,
                 "message": error_message,
             },
+        )
+
+
+class MissingRequiredListenerTemplateOptionError(
+    ListenerTemplateOptionError,
+):
+    code = "MISSING_REQUIRED_LISTENER_TEMPLATE_OPTION_ERROR"
+
+    def __init__(self, listener_template_str: str, option_name: str):
+        super().__init__(
+            message=(
+                f"Failed to create the listener from the listener template "
+                f"'{listener_template_str}'. The required option "
+                f"'{option_name}' was not provided."
+            ),
+            detail={"option_name": option_name},
         )

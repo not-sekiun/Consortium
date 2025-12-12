@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
-    InternalServerErrorError,
+    InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
@@ -17,7 +17,7 @@ from consortium.server.exceptions.api_exceptions.listener_templates_api_exceptio
 )
 from consortium.server.exceptions.framework_exceptions.listener_templates_framework_exceptions import (
     ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundFrameworkError,
-    ListenerTemplateOptionValueError as ListenerTemplateOptionValueFrameworkError,
+    ListenerTemplateOptionValueValidationError as ListenerTemplateOptionValueFrameworkError,
 )
 from consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions import (
     ListenerTemplateNotFoundError as ListenerTemplateNotFoundServiceError,
@@ -53,7 +53,7 @@ router = APIRouter(
         401: {"model": UnauthorizedError().to_pydantic_model()},
         403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerErrorError().to_pydantic_model()},
+        500: {"model": InternalServerError().to_pydantic_model()},
     },
     tags=["Listener Templates API"],
 )

@@ -32,66 +32,6 @@ class ListenersFrameworkError(BaseFrameworkException):
     code = "LISTENERS_FRAMEWORK_ERROR"
 
 
-# class ListenerConfigurationError(
-#     comp_excs.ComponentConfigurationError,
-#     ListenersFrameworkError,
-# ):
-#     """
-#     Base exception for all errors that occur during the configuration of a particular
-#     listener.
-#     """
-#
-#     code = "LISTENER_CONFIGURATION_ERROR"
-#
-#     _COMPONENT_TYPE = "listener"
-
-
-# class InvalidListenerConfigurationParameterTypeError(
-#     ListenerConfigurationError,
-#     comp_excs.InvalidComponentConfigurationParameterTypeError,
-# ):
-#     code = "INVALID_LISTENER_CONFIGURATION_PARAMETER_TYPE_ERROR"
-#
-#     def __init__(
-#         self,
-#         listener_str: str,
-#         parameter_name: str | None = None,
-#         parameter_type: str | None = None,
-#     ):
-#         super().__init__(
-#             component_str=listener_str,
-#             parameter_name=parameter_name,
-#             parameter_type=parameter_type,
-#         )
-#         # super().__init__(
-#         #     message=(
-#         #         f"Failed to configure the listener defined at "
-#         #         f"'{listener_str}'. The parameter '{parameter_name}' must be "
-#         #         f"of type '{parameter_type}' in the listener's definition."
-#         #     ),
-#         # )
-
-
-# class MissingListenerConfigurationParameterError(
-#     ListenerConfigurationError,
-#     comp_excs.MissingComponentConfigurationParameterError
-# ):
-#     code = "MISSING_LISTENER_CONFIGURATION_PARAMETER_ERROR"
-#
-#     def __init__(self, listener_str: str, parameter_name: str):
-#         super().__init__(
-#             component_str=listener_str,
-#             parameter_name=parameter_name,
-#         )
-#         # super().__init__(
-#         #     message=(
-#         #         f"Failed to configure the listener defined at '{listener_str}'. "
-#         #         f"The required parameter '{parameter_name}' was not declared in the "
-#         #         f"listener's definition."
-#         #     ),
-#         # )
-
-
 class ListenerOperationError(
     comp_excs.ComponentOperationError,
     ListenersFrameworkError,
@@ -308,3 +248,63 @@ class ListenerCreationParameterTypeError(ListenerCreationError):
 #             message=f"Failed to stop the listener '{listener_str}'. {error_message}",
 #             detail=detail,
 #         )
+
+
+# class ListenerConfigurationError(
+#     comp_excs.ComponentConfigurationError,
+#     ListenersFrameworkError,
+# ):
+#     """
+#     Base exception for all errors that occur during the configuration of a particular
+#     listener.
+#     """
+#
+#     code = "LISTENER_CONFIGURATION_ERROR"
+#
+#     _COMPONENT_TYPE = "listener"
+
+
+# class InvalidListenerConfigurationParameterTypeError(
+#     ListenerConfigurationError,
+#     comp_excs.InvalidComponentConfigurationParameterTypeError,
+# ):
+#     code = "INVALID_LISTENER_CONFIGURATION_PARAMETER_TYPE_ERROR"
+#
+#     def __init__(
+#         self,
+#         listener_str: str,
+#         parameter_name: str | None = None,
+#         parameter_type: str | None = None,
+#     ):
+#         super().__init__(
+#             component_str=listener_str,
+#             parameter_name=parameter_name,
+#             parameter_type=parameter_type,
+#         )
+#         # super().__init__(
+#         #     message=(
+#         #         f"Failed to configure the listener defined at "
+#         #         f"'{listener_str}'. The parameter '{parameter_name}' must be "
+#         #         f"of type '{parameter_type}' in the listener's definition."
+#         #     ),
+#         # )
+
+
+# class MissingListenerConfigurationParameterError(
+#     ListenerConfigurationError,
+#     comp_excs.MissingComponentConfigurationParameterError
+# ):
+#     code = "MISSING_LISTENER_CONFIGURATION_PARAMETER_ERROR"
+#
+#     def __init__(self, listener_str: str, parameter_name: str):
+#         super().__init__(
+#             component_str=listener_str,
+#             parameter_name=parameter_name,
+#         )
+#         # super().__init__(
+#         #     message=(
+#         #         f"Failed to configure the listener defined at '{listener_str}'. "
+#         #         f"The required parameter '{parameter_name}' was not declared in the "
+#         #         f"listener's definition."
+#         #     ),
+#         # )

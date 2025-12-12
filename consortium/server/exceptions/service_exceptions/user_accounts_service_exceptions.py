@@ -1,41 +1,8 @@
-"""
-Exception hierarchy for the user accounts service.
-- BaseServiceException: Base class for all service-related exceptions.
- - UserAccountsServiceError: Base for all user accounts service exceptions.
-   - UserAccountNotFoundError: User account not found.
-     - UserAccountIDNotFoundError: User account with provided ID not found.
-     - UserAccountUsernameNotFoundError: User account with provided username not found.
-   - UserAccountsFileError: Error processing user accounts file.
-     - UserAccountsFileNotFoundError: User accounts file not found.
-     - UserAccountsFileAccessError: Insufficient access permissions for user accounts
-     file.
-       - UserAccountsFileWriteAccessError: Insufficient write permissions for file.
-       - UserAccountsFileReadAccessError: Insufficient read permissions for file.
-     - UserAccountsFilepathIsDirectoryError: User accounts filepath points to a
-     directory.
-     - UserAccountsFileIsNotJSONError: User accounts file not valid JSON.
-     - UserAccountsFileSchemaError: User accounts file does not conform to expected
-     schema.
-     - UserAccountsFileContainsDuplicateUsernamesError: File contains duplicate
-     usernames.
-   - UserAccountAuthenticationError: Invalid credentials provided for authentication.
-   - UserAccountManagementError: Error creating or modifying user account.
-     - UserAccountUsernameAlreadyExistsError: Provided username already exists.
-     - EmptyUserAccountUsernameError: Provided username cannot be empty.
-     - EmptyUserAccountPasswordError: Provided password cannot be empty.
-     - InvalidUserAccountRoleError: Provided role is not valid.
-     - IdenticalUserAccountUsernameError: New username identical to previous.
-     - IdenticalUserAccountPasswordError: New password identical to previous.
-     - IdenticalUserAccountRoleError: New role identical to previous.
-"""
-
 from pathlib import Path
-from typing import Literal
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
 )
-from consortium.server.objects.user_account_objects import UserRole
 
 
 class UserAccountsServiceError(BaseServiceException):
@@ -207,7 +174,7 @@ class UserAccountAuthenticationError(UserAccountsServiceError):
     ):
         super().__init__(
             message=(
-                "Failed to authenticate user account. Invalid credentials were "
+                "Failed to authenticate the user account. Invalid credentials were "
                 "provided."
             ),
         )
@@ -224,7 +191,7 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
     def during_user_account_creation(
         cls,
         username: str,
-    ) -> "UserAccountUsernameAlreadyExistsError":
+    ) -> UserAccountUsernameAlreadyExistsError:
         return cls(
             message=(
                 f"Failed to create the user account. The username '{username}' is "
@@ -235,9 +202,9 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
     @classmethod
     def during_user_account_modification(
         cls,
-        username: str,
         user_account: str,
-    ) -> "UserAccountUsernameAlreadyExistsError":
+        username: str,
+    ) -> UserAccountUsernameAlreadyExistsError:
         return cls(
             message=(
                 f"Failed to modify the user account '{user_account}'. The new "
@@ -248,9 +215,9 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
     @classmethod
     def during_user_accounts_file_loading(
         cls,
-        username: str,
         user_accounts_filepath: str,
-    ) -> "UserAccountUsernameAlreadyExistsError":
+        username: str,
+    ) -> UserAccountUsernameAlreadyExistsError:
         return cls(
             message=(
                 f"Failed to load the user account from the user accounts file "
@@ -264,7 +231,7 @@ class EmptyUserAccountUsernameError(UserAccountManagementError):
     code = "EMPTY_USER_ACCOUNT_USERNAME_ERROR"
 
     @classmethod
-    def during_user_account_creation(cls) -> "EmptyUserAccountUsernameError":
+    def during_user_account_creation(cls) -> EmptyUserAccountUsernameError:
         return cls(
             message=(
                 "Failed to create the user account. The provided username "
@@ -276,7 +243,7 @@ class EmptyUserAccountUsernameError(UserAccountManagementError):
     def during_user_account_modification(
         cls,
         user_account: str,
-    ) -> "EmptyUserAccountUsernameError":
+    ) -> EmptyUserAccountUsernameError:
         return cls(
             message=(
                 f"Failed to modify the user account {user_account}. The provided "
@@ -289,7 +256,7 @@ class EmptyUserAccountPasswordError(UserAccountManagementError):
     code = "EMPTY_USER_ACCOUNT_PASSWORD_ERROR"
 
     @classmethod
-    def during_user_account_creation(cls) -> "EmptyUserAccountPasswordError":
+    def during_user_account_creation(cls) -> EmptyUserAccountPasswordError:
         return cls(
             message=(
                 "Failed to create the user account. The provided password "
@@ -301,7 +268,7 @@ class EmptyUserAccountPasswordError(UserAccountManagementError):
     def during_user_account_modification(
         cls,
         user_account: str,
-    ) -> "EmptyUserAccountPasswordError":
+    ) -> EmptyUserAccountPasswordError:
         return cls(
             message=(
                 f"Failed to modify the user account {user_account}. The provided "
@@ -314,62 +281,25 @@ class InvalidUserAccountRoleError(UserAccountManagementError):
     code = "INVALID_USER_ACCOUNT_ROLE_ERROR"
 
     @classmethod
-    def during_user_account_creation(cls, role: str) -> "InvalidUserAccountRoleError":
+    def during_user_account_creation(cls, role: str) -> InvalidUserAccountRoleError:
         return cls(
             message=(
                 f"Failed to create the user account. The provided role '{role}' "
-                "is not a valid role which must be one of 'ADMIN', 'OPERATOR', or "
-                "'SPECTATOR'."
+                "is not a valid role. Check that the provided role is one of 'ADMIN', "
+                "'OPERATOR', or 'SPECTATOR'."
             ),
         )
 
     @classmethod
     def during_user_account_modification(
         cls,
-        role: str,
         user_account: str,
-    ) -> "InvalidUserAccountRoleError":
+        role: str,
+    ) -> InvalidUserAccountRoleError:
         return cls(
             message=(
                 f"Failed to modify the user account '{user_account}'. The provided "
-                f"role '{role}' is not a valid role which must be one of 'ADMIN', "
-                f"'OPERATOR', or 'SPECTATOR'."
-            ),
-        )
-
-
-class IdenticalUserAccountUsernameError(UserAccountManagementError):
-    code = "IDENTICAL_USER_ACCOUNT_USERNAME_ERROR"
-
-    def __init__(self, user_account_str: str, username: str):
-        super().__init__(
-            message=(
-                f"Failed to modify user account '{user_account_str}'. The newly "
-                f"provided username '{username}' is identical to the previously used "
-                f"username."
-            ),
-        )
-
-
-class IdenticalUserAccountPasswordError(UserAccountManagementError):
-    code = "IDENTICAL_USER_ACCOUNT_PASSWORD_ERROR"
-
-    def __init__(self, user_account_str: str):
-        super().__init__(
-            message=(
-                f"Failed to modify user account '{user_account_str}'. The newly "
-                f"provided password is identical to the previously used password."
-            ),
-        )
-
-
-class IdenticalUserAccountRoleError(UserAccountManagementError):
-    code = "IDENTICAL_USER_ACCOUNT_ROLE_ERROR"
-
-    def __init__(self, user_account_str: str, role: str | UserRole):
-        super().__init__(
-            message=(
-                f"Failed to modify user account '{user_account_str}'. The newly "
-                f"provided role '{role}' is identical to the previously assigned role."
+                f"role '{role}' is not a valid role. Check that the provided role is "
+                f"one of 'ADMIN', 'OPERATOR', or 'SPECTATOR'."
             ),
         )

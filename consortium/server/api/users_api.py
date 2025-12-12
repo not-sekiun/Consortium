@@ -1,12 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions import users_api_exceptions as api_excs
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
-    InternalServerErrorError,
+    InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
@@ -25,7 +25,7 @@ router = APIRouter(
         401: {"model": UnauthorizedError().to_pydantic_model()},
         403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerErrorError().to_pydantic_model()},
+        500: {"model": InternalServerError().to_pydantic_model()},
     },
     tags=["Users API"],
 )
@@ -62,8 +62,8 @@ async def get_all_users(
     responses={
         200: {"model": UserModel},
         404: {
-            "model": api_excs.UserNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.UserIDNotFoundError(user_id="user_id"),
+            "model": api_excs.UserNotFoundError(
+                user_id="user_id",
             ).to_pydantic_model(),
         },
         422: {
@@ -82,51 +82,74 @@ async def get_user_by_user_id(
 ) -> UserModel:
     try:
         user = users_service.get_user_by_user_id(user_id)
-    except svc_excs.UserIDNotFoundError as exc:
-        raise api_excs.UserNotFoundError.from_consortium_exception(
-            consortium_exception=exc,
+    except svc_excs.UserIDNotFoundError:
+        raise api_excs.UserNotFoundError(
+            user_id=user_id,
         ) from None
 
     return UserModel(**user.to_json())
 
 
-# TODO: Check this
+@router.patch(
+    "/me",
+    responses={
+        200: {"model": UserModel},
+        404: {
+            "model": api_excs.UserNotFoundError(
+                user_id="user_id",
+            ).to_pydantic_model(),
+        },
+    },
+)
+async def update_own_display_name(
+    display_name: Annotated[str, Body(embed=True)],
+    user: Annotated[UserModel, Depends(get_current_user)],
+    _: Annotated[
+        None,
+        Depends(AuthorizeUserRequest(UserPermissions.UPDATE_OWN_USER)),
+    ],
+) -> UserModel:
+    try:
+        updated_user = users_service.update_user_display_name_by_user_id(
+            user_id=str(user.user_id),
+            display_name=display_name,
+        )
+    except svc_excs.UserIDNotFoundError:
+        # This should never happen since the user is updating their own display name
+        raise api_excs.UserNotFoundError(
+            user_id=str(user.user_id),
+        ) from None
+
+    return updated_user
+
+
 @router.patch(
     "/{user_id}",
     responses={
         200: {"model": UserModel},
         404: {
-            "model": api_excs.UserNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.UserIDNotFoundError(user_id="user_id"),
+            "model": api_excs.UserNotFoundError(
+                user_id="user_id",
             ).to_pydantic_model(),
         },
-        # 422: {
-        #     "model": api_excs.EmptyUserDisplayNameError.from_consortium_exception(
-        #         consortium_exception=svc_excs.EmptyUserDisplayNameError(
-        #             user_str="user",
-        #         ),
-        #     ).to_pydantic_model(),
-        # },
     },
 )
 async def update_user_display_name_by_user_id(
-    display_name: str,
+    user_id: str,
+    display_name: Annotated[str, Body(embed=True)],
     _: Annotated[
         None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_USER_BY_USER_ID)),
+        Depends(AuthorizeUserRequest(UserPermissions.UPDATE_USER_BY_USER_ID)),
     ],
 ) -> UserModel:
     try:
         user = users_service.update_user_display_name_by_user_id(
+            user_id=user_id,
             display_name=display_name,
         )
-    except svc_excs.UserIDNotFoundError as exc:
-        raise api_excs.UserNotFoundError.from_consortium_exception(
-            consortium_exception=exc,
+    except svc_excs.UserIDNotFoundError:
+        raise api_excs.UserNotFoundError(
+            user_id=user_id,
         ) from None
-    # except svc_excs.EmptyUserDisplayNameError as exc:
-    #     raise api_excs.EmptyUserDisplayNameError.from_consortium_exception(
-    #         consortium_exception=exc,
-    #     )
 
     return UserModel(**user.to_json())

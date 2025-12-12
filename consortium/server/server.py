@@ -33,7 +33,7 @@ from consortium.server.api.payloads_api import router as payloads_api_router
 from consortium.server.api.server_api import router as server_api_router
 from consortium.server.api.user_accounts_api import router as user_accounts_api_router
 from consortium.server.api.users_api import router as users_api_router
-from consortium.server.models.server_models import ServerConfigModel
+from consortium.server.models.config_models import LoggingConfigModel, ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import SERVER_RELEASE
 from consortium.server.server_exception_handlers import (
@@ -44,7 +44,6 @@ from consortium.server.server_middleware import (
     check_if_request_is_authenticated,
     check_if_server_is_shutting_down,
     log_rest_api_requests_and_responses,
-    spoof_response_server_header,
 )
 
 user_accounts_service = server_singletons.user_accounts_service
@@ -58,10 +57,10 @@ listeners_service = server_singletons.listeners_service
 
 class Server:
     def __init__(
-        self,
-        server_config: ServerConfigModel,
+        self, server_config: ServerConfigModel, logging_config: LoggingConfigModel
     ):
         self.server_config = server_config
+        self.logging_config = logging_config
 
         self.status = ServerStatus.STOPPED
 
@@ -104,10 +103,6 @@ class Server:
         )
         self._app.add_middleware(
             BaseHTTPMiddleware,
-            dispatch=spoof_response_server_header,
-        )
-        self._app.add_middleware(
-            BaseHTTPMiddleware,
             dispatch=log_rest_api_requests_and_responses,
         )
 
@@ -144,7 +139,7 @@ class Server:
             f"at {self.server_config.local_host}:{self.server_config.local_port}...",
         )
         self.status = ServerStatus.RUNNING
-        await self._server_start_up_procedure()
+        await self._server_startup_procedure()
         yield
         self._logger.info("Shutting down server...")
         self.status = ServerStatus.SHUTTING_DOWN
@@ -162,9 +157,12 @@ class Server:
                     plugin_id=str(plugin.plugin_id),
                     blocking=True,
                 )
+        await server_singletons.events_service.trigger_event(
+            event=Event(event_type=EventType.STOP_SERVER),
+        )
 
     @staticmethod
-    async def _server_start_up_procedure() -> None:
+    async def _server_startup_procedure() -> None:
         # Setup all services and emit startup event.
         server_singletons.user_accounts_service.load_framework_user_accounts()
         await server_singletons.listener_profiles_service.load_framework_listener_profiles()
@@ -187,8 +185,12 @@ class Server:
             test_sock.close()
         except OSError as exc:
             self._logger.error(
-                f"Network error occurred while attempting to bind server to target "
-                f"socket address: {exc}",
+                "Failed to start server. Network error occurred while attempting to "
+                "bind server to target socket address: {}. Check that no other "
+                "process is already using the socket address {}:{}",
+                exc,
+                self.server_config.local_host,
+                self.server_config.local_port,
             )
             return
 
@@ -204,8 +206,12 @@ class Server:
                 # exceptions happen in those tasks they bypass their supposed exception
                 # handler and are raised at the uvicorn level of logging.
                 log_level="error",
-                # Disables Uvicorn's server header to prevent C2 server fingerprinting.
+                # Disables Uvicorn's default server header to prevent C2 server
+                # fingerprinting, replacing it with a custom specified header.
                 server_header=False,
+                headers=[("Server", self.server_config.server_header)]
+                if self.server_config.server_header is not None
+                else None,
             )
             server = uvicorn.Server(config)
             await server.serve()

@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 import jsonschema
 import pytest
@@ -14,17 +14,26 @@ def validate_response(
     if expected_status_code is not None:
         assert test_response.status_code == expected_status_code, (
             f"Failed to assert response status code. Expected status code "
-            f"'{expected_status_code}' but got status code {test_response.status_code}."
+            f"'{expected_status_code}' but got status code {test_response.status_code}. "
+            f"Response data: {test_response.text}"
         )
     if expected_json_schema is not None:
         try:
             jsonschema.validate(test_response.json(), expected_json_schema)
         except jsonschema.exceptions.ValidationError as exc:
-            pytest.fail(exc.message)
+            pytest.fail(f"{exc.message} Response data: {test_response.text}")
+        except requests.exceptions.JSONDecodeError as exc:
+            pytest.fail(
+                f"Failed to decode response as JSON. Error: {exc}. "
+                f"Response data: {test_response.text}",
+            )
     if validator_function is not None:
         assert validator_function(
             test_response,
-        ), f"Failed to assert response with custom validator function."
+        ), (
+            f"Failed to assert response with custom validator function. Response data: "
+            f"{test_response.text}"
+        )
 
     return test_response
 

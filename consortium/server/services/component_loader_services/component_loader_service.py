@@ -3,7 +3,7 @@ import importlib.metadata
 import json
 import pathlib
 import tomllib
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 import jsonschema
 import packaging.requirements as requirements
@@ -17,7 +17,7 @@ from consortium.server.exceptions.service_exceptions.component_service_exception
     ComponentDependencyNotFoundError,
     ComponentDependsOnInvalidComponentDependencyError,
     ComponentLoadingError,
-    ComponentProjectComponentFileNotFoundError,
+    ComponentProjectEntryPointModuleNotFoundError,
     ComponentProjectInterfaceError,
     ComponentProjectManifestFileNotFoundError,
     ComponentProjectSymbolNotFoundError,
@@ -42,7 +42,7 @@ Component = TypeVar("Component")
 # Default base service that loads components from component project folders. Expects to
 # load a single component from each component project folder. Used by the plugins and
 # event hooks system.
-class ComponentLoaderService(Generic[Component]):
+class ComponentLoaderService[Component]:
     _component_type: type[Component]
     _component_framework_error: type[Exception]
     _manifest_json_schema: dict[str, Any]
@@ -73,16 +73,16 @@ class ComponentLoaderService(Generic[Component]):
         except FileNotFoundError:
             raise ComponentProjectManifestFileNotFoundError(
                 component_project_folder=str(component_project_folder),
-            )
+            ) from None
         except json.JSONDecodeError:
             raise InvalidComponentProjectManifestFileJSONError(
                 component_project_folder=str(component_project_folder),
-            )
+            ) from None
         except jsonschema.ValidationError as exc:
             raise InvalidComponentProjectManifestFileSchemaError(
                 component_project_folder=str(component_project_folder),
                 json_schema_error_message=exc.message,
-            )
+            ) from None
 
     @staticmethod
     def _get_enabled_status_from_manifest_json(
@@ -138,7 +138,7 @@ class ComponentLoaderService(Generic[Component]):
             except tomllib.TOMLDecodeError:
                 raise InvalidComponentProjectPyProjectFileTOMLError(
                     component_project_folder=str(component_project_folder),
-                )
+                ) from None
             dependency_entries = pyproject_toml.get("project", {}).get(
                 "dependencies",
                 [],
@@ -166,12 +166,12 @@ class ComponentLoaderService(Generic[Component]):
                 raise ThirdPartyDependencyNotFoundError(
                     component_project_folder=str(component_project_folder),
                     third_party_dependency_name=dependency.name,
-                )
+                ) from None
             except requirements.InvalidRequirement:
                 raise InvalidComponentProjectPyProjectFileDependencyError(
                     component_project_folder=str(component_project_folder),
                     invalid_dependency_entry=entry,
-                )
+                ) from None
         return dependencies
 
     @staticmethod
@@ -201,8 +201,8 @@ class ComponentLoaderService(Generic[Component]):
         # these can be raised by missing third party dependencies instead of a missing
         # component file.
         if not component_file.exists():
-            raise ComponentProjectComponentFileNotFoundError(
-                component_file=str(component_file),
+            raise ComponentProjectEntryPointModuleNotFoundError(
+                entry_point_module=str(component_file),
                 component_project_folder=str(component_project_folder),
             )
 
@@ -221,13 +221,15 @@ class ComponentLoaderService(Generic[Component]):
                 component_module,
                 component_symbol,
             )
+
             return component_class
         except AttributeError:
             raise ComponentProjectSymbolNotFoundError(
-                symbol_name=component_symbol,
+                entry_point_symbol=component_symbol,
                 component_project_folder=str(component_project_folder),
-                component_file=str(component_file),
-            )
+                entry_point_module=str(component_file),
+            ) from None
+
         except self._component_framework_error as exc:
             raise exc from None
         # This should only catch errors that are not related to the component project.
@@ -235,7 +237,7 @@ class ComponentLoaderService(Generic[Component]):
             raise InternalComponentProjectError(
                 component_project_folder=str(component_project_folder),
                 internal_error_message=str(exc),
-            )
+            ) from None
 
     @staticmethod
     def _get_component_framework_version_compatibility(
@@ -277,7 +279,7 @@ class ComponentLoaderService(Generic[Component]):
         if not issubclass(component_class, self._component_type):
             raise ComponentProjectInterfaceError(
                 component_project_folder=str(component_project_folder),
-                component_symbol=component_symbol,
+                entry_point_symbol=component_symbol,
             )
         try:
             component_object = component_class()
@@ -288,7 +290,7 @@ class ComponentLoaderService(Generic[Component]):
             raise InternalComponentProjectError(
                 component_project_folder=str(component_project_folder),
                 internal_error_message=str(exc),
-            )
+            ) from None
 
     @staticmethod
     def _post_validate_component_object(
@@ -401,7 +403,7 @@ class ComponentLoaderService(Generic[Component]):
                 raise ComponentDependencyNotFoundError(
                     component_str=str(component),
                     missing_dependency=dependency.name,
-                )
+                ) from None
             if (
                 label_registered_component_map[dependency.name].version
                 and label_registered_component_map[dependency.name].version
@@ -414,7 +416,7 @@ class ComponentLoaderService(Generic[Component]):
                     installed_version=str(
                         label_registered_component_map[dependency.name].version,
                     ),
-                )
+                ) from None
         return True
 
     def resolve_component_load_order(

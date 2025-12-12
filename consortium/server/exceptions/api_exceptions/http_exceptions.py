@@ -18,7 +18,7 @@ server exception handlers at server_exception_handlers.py.
    Unavailable).
 """
 
-from typing import Any, Type
+from typing import Any
 
 from pydantic import BaseModel, create_model
 
@@ -27,7 +27,9 @@ from consortium.server.exceptions.api_exceptions.base_api_exception import (
 )
 
 
-class HTTPError(BaseAPIException): ...
+class HTTPError(BaseAPIException):
+    status_code = 500
+    code = "HTTP_ERROR"
 
 
 # UnauthorizedError is a special error whose to_json() method returns None. This is
@@ -50,7 +52,7 @@ class UnauthorizedError(HTTPError):
     def to_json(self) -> None:
         return None
 
-    def to_pydantic_model(self) -> Type[BaseModel]:
+    def to_pydantic_model(self) -> type[BaseModel]:
         # Make the pydantic model show an empty example in the OpenAPI docs to
         # demonstrate that the server sends an empty response body for this error.
         model = create_model(
@@ -155,7 +157,7 @@ class UnprocessableEntityError(HTTPError):
         )
 
 
-class InternalServerErrorError(HTTPError):
+class InternalServerError(HTTPError):
     status_code = 500
     code = "INTERNAL_SERVER_ERROR"
 

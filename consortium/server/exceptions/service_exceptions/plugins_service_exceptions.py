@@ -208,21 +208,21 @@ class PluginProjectManifestFileNotFoundError(
         super().__init__(component_project_folder=plugin_project_folder)
 
 
-class PluginProjectPluginFileNotFoundError(
+class PluginProjectEntryPointModuleNotFoundError(
     InvalidPluginProjectFolderStructureError,
-    comp_ldr_svc_excs.ComponentProjectComponentFileNotFoundError,
+    comp_ldr_svc_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """
     An error that is raised when the plugin file specified in the manifest is not
     found in the plugin project folder.
     """
 
-    code = "PLUGIN_PROJECT_PLUGIN_FILE_NOT_FOUND_ERROR"
+    code = "PLUGIN_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
-    def __init__(self, plugin_project_folder: str, plugin_file: str):
+    def __init__(self, plugin_project_folder: str, entry_point_module: str):
         super().__init__(
-            component_file=plugin_file,
             component_project_folder=plugin_project_folder,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -252,13 +252,13 @@ class PluginProjectSymbolNotFoundError(
     def __init__(
         self,
         plugin_project_folder: str,
-        symbol_name: str,
-        plugin_file: str,
+        entry_point_symbol: str,
+        entry_point_module: str,
     ):
         super().__init__(
             component_project_folder=plugin_project_folder,
-            symbol_name=symbol_name,
-            component_file=plugin_file,
+            entry_point_symbol=entry_point_symbol,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -276,11 +276,11 @@ class PluginProjectInterfaceError(
     def __init__(
         self,
         plugin_project_folder: str,
-        plugin_symbol: str,
+        entry_point_symbol: str,
     ):
         super().__init__(
             component_project_folder=plugin_project_folder,
-            component_symbol=plugin_symbol,
+            entry_point_symbol=entry_point_symbol,
         )
 
 

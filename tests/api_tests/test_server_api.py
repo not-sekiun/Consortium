@@ -10,9 +10,10 @@ SERVER_VERSION_RESPONSE_JSON_SCHEMA = {
     "properties": {
         "version": {"type": "string"},
         "codename": {"type": "string"},
-        "datetime_released": {"oneOf": [{"type": "string"}, {"type": "null"}]},
+        "datetime_released": {"type": ["string", "null"]},
     },
     "required": ["version", "codename", "datetime_released"],
+    "additionalProperties": False,
 }
 SERVER_CONFIG_RESPONSE_JSON_SCHEMA = {
     "type": "object",
@@ -21,8 +22,16 @@ SERVER_CONFIG_RESPONSE_JSON_SCHEMA = {
         "local_port": {"type": "integer"},
         "remote_host_whitelist": {"type": "array", "items": {"type": "string"}},
         "remote_host_blacklist": {"type": "array", "items": {"type": "string"}},
-        "server_banner": {"type": "string"},
+        "server_header": {"type": ["string", "null"]},
     },
+    "required": [
+        "local_host",
+        "local_port",
+        "remote_host_whitelist",
+        "remote_host_blacklist",
+        "server_header",
+    ],
+    "additionalProperties": False,
 }
 
 

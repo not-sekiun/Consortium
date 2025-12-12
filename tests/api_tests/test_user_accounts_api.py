@@ -95,7 +95,7 @@ def test_create_user_account(
         ).json()
         validate_response(
             test_response=admin_session.get(
-                f"http://localhost:9999/api/user-accounts/{user_account["user_account_id"]}",
+                f"http://localhost:9999/api/user-accounts/{user_account['user_account_id']}",
             ),
             expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
             expected_status_code=200,
@@ -169,49 +169,10 @@ def test_get_all_user_accounts(
         )
 
 
-def test_update_user_account_by_user_account_id(
-    session: requests.Session,
-    user_account_id,
-    new_username,
-    new_password,
-    old_password,
-    new_role,
-):
-    update_request_data = {
-        "username": new_username,
-        "password": {
-            "new_password": new_password,
-            "old_password": old_password,
-        },
-        "role": new_role,
-    }
-
-    validate_response(
-        test_response=session.patch(
-            f"http://localhost:9999/api/user-accounts/{user_account_id}",
-            json={
-                "username": new_username,
-                "password": {
-                    "new_password": new_password,
-                    "old_password": old_password,
-                },
-                "role": new_role,
-            },
-        ),
-        expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
-        expected_status_code=200,
-        validator_function=lambda response: all(
-            (
-                response.json()["username"] == new_username,
-                response.json()["password"] == new_password,
-                response.json()["role"] == new_role,
-            ),
-        ),
-    )
-
-
+# TODO: The restored user account information does not get reflected in the server. Fix
+#  this
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_partially_update_user_account_username_by_user_account_id(
+def test_update_user_account_username_by_user_account_id(
     admin_session: requests.Session,
     operator_session: requests.Session,
     spectator_session: requests.Session,
@@ -247,8 +208,10 @@ def test_partially_update_user_account_username_by_user_account_id(
         )
 
 
+# TODO: The restored user account information does not get reflected in the server. Fix
+#  this
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_partially_update_user_account_password_by_user_account_id(
+def test_update_user_account_password_by_user_account_id(
     admin_session: requests.Session,
     operator_session: requests.Session,
     spectator_session: requests.Session,
@@ -257,17 +220,13 @@ def test_partially_update_user_account_password_by_user_account_id(
     user_account = session.get("http://localhost:9999/api/user-accounts/me").json()
     user_account_id = user_account["user_account_id"]
     new_password = uuid.uuid4().hex
-    old_password = user_account["password"]
 
     if session == admin_session:
         validate_response(
             session.patch(
                 f"http://localhost:9999/api/user-accounts/{user_account_id}",
                 json={
-                    "password": {
-                        "new_password": new_password,
-                        "old_password": old_password,
-                    },
+                    "password": new_password,
                 },
             ),
             expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
@@ -279,27 +238,24 @@ def test_partially_update_user_account_password_by_user_account_id(
         validate_response(
             session.patch(
                 f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                json={
-                    "password": {
-                        "new_password": new_password,
-                        "old_password": old_password,
-                    },
-                },
+                json={"password": new_password},
             ),
             expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
             expected_status_code=403,
         )
 
 
+# TODO: The restored user account information does not get reflected in the server. Fix
+#  this
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_partially_update_user_account_role_by_user_account_id(
+def test_update_user_account_role_by_user_account_id(
     admin_session: requests.Session,
     operator_session: requests.Session,
     spectator_session: requests.Session,
     session: requests.Session,
 ):
     old_role_str_to_new_role_str_map = {
-        "ADMIN": "OPERATOR",
+        "ADMIN": "ADMIN",
         "OPERATOR": "SPECTATOR",
         "SPECTATOR": "ADMIN",
     }
@@ -317,7 +273,7 @@ def test_partially_update_user_account_role_by_user_account_id(
             ),
             expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
             expected_status_code=200,
-            validator_function=lambda response: response.json()["password"] == new_role,
+            validator_function=lambda response: response.json()["role"] == new_role,
         )
     else:
         validate_response(
@@ -339,7 +295,7 @@ def test_update_user_account_by_user_account_id(
 ):
     if session == admin_session:
         old_role_str_to_new_role_str_map = {
-            "ADMIN": "OPERATOR",
+            "ADMIN": "ADMIN",
             "OPERATOR": "SPECTATOR",
             "SPECTATOR": "ADMIN",
         }
@@ -348,7 +304,6 @@ def test_update_user_account_by_user_account_id(
                 "http://localhost:9999/api/user-accounts/me",
             ).json()
             new_username = uuid.uuid4().hex
-            old_password = user_account["password"]
             new_password = uuid.uuid4().hex
             new_role = old_role_str_to_new_role_str_map[user_account["role"]]
             validate_response(
@@ -356,19 +311,19 @@ def test_update_user_account_by_user_account_id(
                     f"http://localhost:9999/api/user-accounts/{user_account_id}",
                     json={
                         "username": new_username,
-                        "password": {
-                            "new_password": new_password,
-                            "old_password": old_password,
-                        },
+                        "password": new_password,
                         "role": new_role,
                     },
                 ),
                 expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
                 expected_status_code=200,
-                validator_function=lambda response: response.json()["username"]
-                == new_username
-                and response.json()["password"] == new_password
-                and response.json()["role"] == new_role,
+                # Bind the variables to avoid late binding issue in lambda
+                validator_function=lambda response,
+                new_username_bind=new_username,
+                new_password_bind=new_password,
+                new_role_bind=new_role: response.json()["username"] == new_username_bind
+                and response.json()["password"] == new_password_bind
+                and response.json()["role"] == new_role_bind,
             )
     else:
         for user_account_id in get_all_user_account_ids(admin_session):

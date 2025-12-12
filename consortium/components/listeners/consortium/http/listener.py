@@ -6,8 +6,6 @@ from aiohttp import web
 from pydantic import ValidationError
 
 from consortium.components.agents.consortium.http.agent_type import AGENT_TYPE
-
-# from consortium.components.listeners.consortium.http.listener_type import LISTENER_TYPE
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerSpecificAgentNotFoundError,
     ListenerStartError,
@@ -22,8 +20,6 @@ from consortium.server.models.agent_models import AgentResultMessageModel
 
 
 class Listener(BaseListener):
-    # listener_type = LISTENER_TYPE
-
     async def on_started(self) -> None:
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
@@ -32,12 +28,12 @@ class Listener(BaseListener):
             test_socket = socket.socket()
             test_socket.bind((local_host, local_port))
             test_socket.close()
-        except socket.error as exc:
+        except OSError as exc:
             raise ListenerStartError(
                 f"An error occurred while attempting to start the listener. Listener "
                 f"was unable to bind to the provided host and port due to the "
                 f"following socket error: {exc}",
-            )
+            ) from None
 
     async def on_running(self) -> None:
         local_host = self.parameters["local_host"]

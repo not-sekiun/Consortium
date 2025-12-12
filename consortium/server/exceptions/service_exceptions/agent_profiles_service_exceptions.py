@@ -132,7 +132,7 @@ class InvalidAgentProfileProjectPyProjectFileError(
     file.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_PY_PROJECT_FILE_ERROR"
+    code = "INVALID_AGENT_PROFILE_PROJECT_PYPROJECT_FILE_ERROR"
 
 
 class InvalidAgentProfileProjectPyProjectFileTOMLError(
@@ -143,7 +143,7 @@ class InvalidAgentProfileProjectPyProjectFileTOMLError(
     An error that is raised when the `pyproject.toml` file is not a valid TOML file
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_PY_PROJECT_FILE_TOML_ERROR"
+    code = "INVALID_AGENT_PROFILE_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     def __init__(self, agent_profile_project_folder: str):
         super().__init__(component_project_folder=agent_profile_project_folder)
@@ -158,7 +158,7 @@ class InvalidAgentProfileProjectPyProjectFileDependencyError(
     entries.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_PY_PROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_AGENT_PROFILE_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     def __init__(
         self,
@@ -198,25 +198,25 @@ class AgentProfileProjectManifestFileNotFoundError(
         super().__init__(component_project_folder=agent_profile_project_folder)
 
 
-class AgentProfileProjectAgentProfileFileNotFoundError(
+class AgentProfileProjectEntryPointModuleNotFoundError(
     InvalidAgentProfileProjectFolderStructureError,
-    comp_svc_excs.ComponentProjectComponentFileNotFoundError,
+    comp_svc_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """
     An error that is raised when the agent profile file specified in the manifest is not
     found in the agent profile project folder.
     """
 
-    code = "AGENT_PROFILE_PROJECT_AGENT_PROFILE_FILE_NOT_FOUND_ERROR"
+    code = "AGENT_PROFILE_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
     def __init__(
         self,
         agent_profile_project_folder: str,
-        agent_profile_file: str,
+        entry_point_module: str,
     ):
         super().__init__(
-            component_file=agent_profile_file,
             component_project_folder=agent_profile_project_folder,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -246,13 +246,13 @@ class AgentProfileProjectSymbolNotFoundError(
     def __init__(
         self,
         agent_profile_project_folder: str,
-        symbol_name: str,
-        agent_profile_file: str,
+        entry_point_symbol: str,
+        entry_point_module: str,
     ):
         super().__init__(
             component_project_folder=agent_profile_project_folder,
-            symbol_name=symbol_name,
-            component_file=agent_profile_file,
+            entry_point_symbol=entry_point_symbol,
+            entry_point_module=entry_point_module,
         )
 
 
@@ -270,11 +270,11 @@ class AgentProfileProjectInterfaceError(
     def __init__(
         self,
         agent_profile_project_folder: str,
-        agent_profile_symbol: str,
+        entry_point_symbol: str,
     ):
         super().__init__(
             component_project_folder=agent_profile_project_folder,
-            component_symbol=agent_profile_symbol,
+            entry_point_symbol=entry_point_symbol,
         )
 
 

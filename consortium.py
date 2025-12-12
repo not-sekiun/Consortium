@@ -1,7 +1,5 @@
 import argparse
 
-import consortium.client.start_client as start_client
-import consortium.server.start_server as start_server
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
@@ -37,8 +35,8 @@ def main():
         ),
     )
     server_parser.add_argument(
-        "-c",
-        "--config",
+        "-s",
+        "--server-config",
         help=(
             "The filepath of the server configuration file to use when starting the "
             "server. By default the server configuration file from "
@@ -48,12 +46,23 @@ def main():
         default=None,
     )
     server_parser.add_argument(
+        "-l",
+        "--logging-config",
+        help=(
+            "The filepath of the logging configuration file to use when starting the "
+            "server. By default the logging configuration file from "
+            "`data/server/logging_config.json` is used."
+        ),
+        nargs="?",
+        default=None,
+    )
+    server_parser.add_argument(
         "-d",
         "--debug",
         help=(
             "Start the server in debug mode. This will log messages with severity "
-            "'DEBUG' and below. Note that this flag overrides whatever log level was "
-            "set in the supplied server configuration file."
+            "'DEBUG' and higher. Note that this flag overrides whatever log level was "
+            "set in the supplied logging configuration file."
         ),
         action="store_true",
     )
@@ -102,9 +111,16 @@ def main():
     )
 
     arguments = parser.parse_args()
+    # Conditional import because if you try to start a server "headless" without
+    # client dependencies installed or without access to a console, it will error out
+    # because of the client imports
     if arguments.command == "server":
+        import consortium.server.start_server as start_server
+
         start_server.main(arguments)
     elif arguments.command == "client":
+        import consortium.client.start_client as start_client
+
         start_client.main(arguments)
 
 

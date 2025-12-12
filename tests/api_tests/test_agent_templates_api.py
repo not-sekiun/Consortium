@@ -12,9 +12,13 @@ from tests.api_tests.utils import get_all_agent_template_ids, validate_response
 AGENT_TEMPLATE_RESPONSE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "agent_template_id": {"type": "string"},
+        "label": {"type": "string"},
         "name": {"type": "string"},
         "description": {"type": "string"},
+        "version": {"type": "string"},
+        "compatible_framework_version": {"type": "string"},
+        "authors": {"type": "array", "items": {"type": "string"}},
+        "agent_template_id": {"type": "string"},
         "agent_type": {
             "type": "object",
             "properties": {
@@ -40,9 +44,9 @@ AGENT_TEMPLATE_RESPONSE_JSON_SCHEMA = {
                             "properties": {
                                 "name": {"type": "string"},
                                 "description": {"type": "string"},
-                                # TODO: Include each argument type's JSON schema in the
+                                # TODO: Include each option type's JSON schema in the
                                 #  main JSON schema.
-                                "arguments": {"type": "object"},
+                                "options": {"type": "object"},
                                 "requires_admin": {"type": "boolean"},
                                 "supported_oses": {
                                     "type": "array",
@@ -56,7 +60,7 @@ AGENT_TEMPLATE_RESPONSE_JSON_SCHEMA = {
                             "required": [
                                 "name",
                                 "description",
-                                "arguments",
+                                "options",
                                 "requires_admin",
                                 "supported_oses",
                                 "authors",
@@ -74,17 +78,19 @@ AGENT_TEMPLATE_RESPONSE_JSON_SCHEMA = {
             ],
             "additionalProperties": False,
         },
-        "authors": {"type": "array", "items": {"type": "string"}},
         "options": {"type": "object"},
         "validating_function": {"type": ["string", "null"]},
     },
     "required": [
+        "label",
         "name",
         "description",
-        "agent_type",
+        "version",
+        "compatible_framework_version",
         "authors",
-        "options",
         "agent_template_id",
+        "agent_type",
+        "options",
         "validating_function",
     ],
     "additionalProperties": False,
