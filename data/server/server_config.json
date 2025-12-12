@@ -1,7 +1,7 @@
 {
-  "local_host": "0.0.0.0",
-  "local_port": 9999,
-  "remote_host_whitelist": [],
-  "remote_host_blacklist": [],
-  "server_header": null
+    "local_host": "0.0.0.0",
+    "local_port": 9999,
+    "remote_host_whitelist": [],
+    "remote_host_blacklist": [],
+    "server_header": null
 }

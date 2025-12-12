@@ -1,17 +1,17 @@
 [
-  {
-    "username": "admin",
-    "password": "admin",
-    "role": "ADMIN"
-  },
-  {
-    "username": "operator",
-    "password": "operator",
-    "role": "OPERATOR"
-  },
-  {
-    "username": "spectator",
-    "password": "spectator",
-    "role": "SPECTATOR"
-  }
+    {
+        "username": "admin",
+        "password": "admin",
+        "role": "ADMIN"
+    },
+    {
+        "username": "operator",
+        "password": "operator",
+        "role": "OPERATOR"
+    },
+    {
+        "username": "spectator",
+        "password": "spectator",
+        "role": "SPECTATOR"
+    }
 ]
