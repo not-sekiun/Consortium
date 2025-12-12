@@ -87,8 +87,7 @@ class ListenerAlreadyRunningError(ListenerStateError):
         self,
         message: str = (
             "Failed to perform the requested operation on the listener. The listener "
-            "has already been started which conflicts with the operation that was "
-            "requested."
+            "is already running which conflicts with the operation that was requested."
         ),
     ):
         super().__init__(message=message)
@@ -114,11 +113,11 @@ class ListenerParameterUpdateError(ListenersServiceError):
 class InvalidListenerParameterNameError(ListenerParameterUpdateError):
     code = "INVALID_LISTENER_PARAMETER_NAME_ERROR"
 
-    def __init__(self, listener_str: str, parameter_name: str):
+    def __init__(self, listener: str, parameter_name: str):
         super().__init__(
             message=(
-                f"Failed to update listener parameters for listener '{listener_str}'. The "
-                f"provided parameter name '{parameter_name}' was not found for the "
+                f"Failed to update the listener parameter for listener '{listener}'. "
+                f"The provided parameter name '{parameter_name}' was not found for the "
                 f"listener."
             ),
         )
@@ -132,13 +131,13 @@ class InvalidListenerParameterValueError(ListenerParameterUpdateError):
         listener_str: str,
         parameter_name: str,
         parameter_value: str,
-        validation_error_message: str,
+        error_message: str,
     ):
         super().__init__(
             message=(
-                f"Failed to update listener parameters for listener '{listener_str}'. The "
-                f"provided parameter value '{parameter_value}' failed validation for "
-                f"the parameter '{parameter_name}': {validation_error_message}"
+                f"Failed to update the listener parameter for listener "
+                f"'{listener_str}'. The value provided '{parameter_value}' for the "
+                f"parameter '{parameter_name}' is invalid. {error_message}"
             ),
         )
 
@@ -150,15 +149,13 @@ class ListenerCreationError(ListenersServiceError):
         super().__init__(message=message, detail=detail)
 
 
-# This is a wrapper exception for ListenerTemplateOptionNotFoundError from the listener
-# templates framework exceptions. It just needs to pass on the message and detail data
-# from that exception.
 class ListenerTemplateOptionNotFoundError(ListenerCreationError):
     code = "LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"
 
 
-# This is a wrapper exception for ListenerTemplateOptionValueError from the listener
-# templates framework exceptions. It just needs to pass on the message and detail data
-# from that exception.
-class ListenerTemplateOptionValueError(ListenerCreationError):
-    code = "LISTENER_TEMPLATE_OPTION_VALUE_ERROR"
+class ListenerTemplateOptionValueValidationError(ListenerCreationError):
+    code = "LISTENER_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
+
+
+class MissingRequiredListenerTemplateOptionError(ListenerCreationError):
+    code = "MISSING_REQUIRED_LISTENER_TEMPLATE_OPTION_ERROR"

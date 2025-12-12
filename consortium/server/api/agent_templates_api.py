@@ -3,10 +3,8 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.api_exceptions.agent_templates_api_exceptions import (
-    AgentTemplateNotFoundError as AgentTemplateNotFoundAPIError,
-    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundAPIError,
-    AgentTemplateOptionValueError as AgentTemplateOptionValueAPIError,
+from consortium.server.exceptions.api_exceptions import (
+    agent_templates_api_exceptions as api_excs,
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
@@ -15,38 +13,18 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
-from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
-    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundFrameworkError,
-    AgentTemplateOptionValueError as AgentTemplateOptionValueFrameworkError,
+from consortium.server.exceptions.framework_exceptions import (
+    agent_templates_framework_exceptions as framework_excs,
 )
-from consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions import (
-    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundServiceError,
-    AgentTemplateOptionValueError as AgentTemplateOptionValueServiceError,
-)
-from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
-    AgentTemplateNotFoundError as AgentTemplateNotFoundServiceError,
+from consortium.server.exceptions.service_exceptions import (
+    agent_generators_service_exceptions as agent_generators_svc_excs,
+    agent_templates_service_exceptions as agent_templates_svc_excs,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.models.agent_template_models import AgentTemplateModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
-_example_agent_template_option_value_framework_error = (
-    AgentTemplateOptionValueFrameworkError(
-        agent_template_str="string",
-        option_name="string",
-        option_value="string",
-        error_message="string",
-    )
-)
-_example_agent_template_option_not_found_framework_error = (
-    AgentTemplateOptionNotFoundFrameworkError(
-        agent_template_str="string",
-        option_name="string",
-    )
-)
-agent_templates_service = server_singletons.agent_templates_service
-agent_generators_service = server_singletons.agent_generators_service
 router = APIRouter(
     prefix="/api/agent-templates",
     responses={
@@ -58,34 +36,69 @@ router = APIRouter(
     tags=["Agent Templates API"],
 )
 
+agent_templates_service = server_singletons.agent_templates_service
+agent_generators_service = server_singletons.agent_generators_service
+
+_agent_template_option_value_framework_error = (
+    framework_excs.AgentTemplateOptionValueValidationError(
+        agent_template="<agent_template>",
+        option_name="<option_name>",
+        option_value="<option_value>",
+        error_message="<error_message>",
+    )
+)
+_agent_template_option_not_found_framework_error = (
+    framework_excs.AgentTemplateOptionNotFoundError(
+        agent_template="<agent_template>", option_name="<option_name>"
+    )
+)
+_missing_required_agent_template_option_framework_error = (
+    framework_excs.MissingRequiredAgentTemplateOptionError(
+        agent_template="<agent_template>", option_name="<option_name>"
+    )
+)
+_agent_template_not_found_error = (
+    api_excs.AgentTemplateNotFoundError.from_consortium_exception(
+        consortium_exception=agent_templates_svc_excs.AgentTemplateNotFoundError(
+            agent_template_id="<agent_template_id>"
+        )
+    )
+)
+_agent_template_option_value_error = api_excs.AgentTemplateOptionValueValidationError.from_consortium_exception(
+    consortium_exception=agent_generators_svc_excs.AgentTemplateOptionValueValidationError(
+        message=_agent_template_option_value_framework_error.message,
+        detail=_agent_template_option_value_framework_error.detail,
+    )
+)
+_agent_template_option_not_found_error = (
+    api_excs.AgentTemplateOptionNotFoundError.from_consortium_exception(
+        consortium_exception=agent_generators_svc_excs.AgentTemplateOptionNotFoundError(
+            message=_agent_template_option_not_found_framework_error.message,
+            detail=_agent_template_option_not_found_framework_error.detail,
+        )
+    )
+)
+_missing_required_agent_template_option_error = api_excs.MissingRequiredAgentTemplateOptionError.from_consortium_exception(
+    consortium_exception=agent_generators_svc_excs.MissingRequiredAgentTemplateOptionError(
+        message=_missing_required_agent_template_option_framework_error.message,
+        detail=_missing_required_agent_template_option_framework_error.detail,
+    )
+)
+_unprocessable_entity_error = UnprocessableEntityError(
+    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
+)
+
 
 @router.post(
     "/{agent_template_id}",
     responses={
         201: {"model": AgentGeneratorModel},
-        404: {
-            "model": AgentTemplateNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentTemplateNotFoundServiceError(
-                    agent_template_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
+        404: {"model": _agent_template_not_found_error.to_pydantic_model()},
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model()
-            | AgentTemplateOptionValueAPIError.from_consortium_exception(
-                consortium_exception=AgentTemplateOptionNotFoundServiceError(
-                    message=_example_agent_template_option_value_framework_error.message,
-                    detail=_example_agent_template_option_value_framework_error.detail,
-                ),
-            ).to_pydantic_model()
-            | AgentTemplateOptionNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentTemplateOptionNotFoundServiceError(
-                    message=_example_agent_template_option_not_found_framework_error.message,
-                    detail=_example_agent_template_option_not_found_framework_error.detail,
-                ),
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model()
+            | _agent_template_option_value_error.to_pydantic_model()
+            | _agent_template_option_not_found_error.to_pydantic_model()
+            | _missing_required_agent_template_option_error.to_pydantic_model()
         },
     },
     status_code=201,
@@ -103,16 +116,16 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
             agent_template_id=agent_template_id,
             parameters=options,
         )
-    except AgentTemplateNotFoundServiceError as exc:
-        raise AgentTemplateNotFoundAPIError.from_consortium_exception(
+    except agent_templates_svc_excs.AgentTemplateNotFoundError as exc:
+        raise api_excs.AgentTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except AgentTemplateOptionNotFoundServiceError as exc:
-        raise AgentTemplateOptionNotFoundAPIError.from_consortium_exception(
+    except agent_generators_svc_excs.AgentTemplateOptionNotFoundError as exc:
+        raise api_excs.AgentTemplateOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except AgentTemplateOptionValueServiceError as exc:
-        raise AgentTemplateOptionValueAPIError.from_consortium_exception(
+    except agent_generators_svc_excs.AgentTemplateOptionValueValidationError as exc:
+        raise api_excs.AgentTemplateOptionValueValidationError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
 
@@ -143,18 +156,8 @@ def get_all_agent_templates(
     "/{agent_template_id}",
     responses={
         200: {"model": AgentTemplateModel},
-        404: {
-            "model": AgentTemplateNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentTemplateNotFoundServiceError(
-                    agent_template_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
-        422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
-        },
+        404: {"model": _agent_template_not_found_error.to_pydantic_model()},
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
     },
 )
 def get_agent_template_by_agent_template_id(
@@ -174,8 +177,8 @@ def get_agent_template_by_agent_template_id(
                 agent_template_id,
             )
         )
-    except AgentTemplateNotFoundServiceError as exc:
-        raise AgentTemplateNotFoundAPIError.from_consortium_exception(
+    except agent_templates_svc_excs.AgentTemplateNotFoundError as exc:
+        raise api_excs.AgentTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
 

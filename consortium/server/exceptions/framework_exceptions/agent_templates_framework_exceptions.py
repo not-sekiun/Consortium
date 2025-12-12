@@ -20,6 +20,8 @@ BaseFrameworkException: Base class for all framework exceptions.
     option.
 """
 
+from typing import Any
+
 import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
@@ -28,76 +30,6 @@ from consortium.server.exceptions.framework_exceptions.base_framework_exception 
 
 class AgentTemplatesFrameworkError(BaseFrameworkException):
     code = "AGENT_TEMPLATES_FRAMEWORK_ERROR"
-
-
-# class AgentTemplateConfigurationError(AgentTemplatesFrameworkError):
-#     pass
-
-
-# class AgentTemplateConfigurationParameterError(AgentTemplateConfigurationError):
-#     pass
-#
-#
-# class AgentTemplateConfigurationParameterTypeError(
-#     AgentTemplateConfigurationParameterError,
-# ):
-#     def __init__(
-#         self,
-#         agent_template: str | None = None,
-#         parameter_name: str | None = None,
-#         parameter_type: str | None = None,
-#         error_message: str = "",
-#     ):
-#         if not error_message:
-#             super().__init__(
-#                 message=(
-#                     f"Failed to configure the agent template '{agent_template}'. "
-#                     f"The parameter '{parameter_name}' must be of type "
-#                     f"'{parameter_type}' in the agent template's definition."
-#                 ),
-#             )
-#         else:
-#             super().__init__(
-#                 message=(
-#                     f"Failed to configure the agent template '{agent_template}'. "
-#                     f"{error_message}"
-#                 ),
-#             )
-
-
-# class RequiredAgentTemplateConfigurationParameterNotDeclaredError(
-#     AgentTemplateConfigurationParameterError,
-# ):
-#     def __init__(self, agent_template_str: str, parameter_name: str):
-#         super().__init__(
-#             message=(
-#                 f"Failed to configure the agent template '{agent_template_str}'. "
-#                 f"The required parameter '{parameter_name}' was not declared in the "
-#                 f"agent template's definition."
-#             ),
-#         )
-#
-#
-# # class EmptyAgentTemplateNameError(AgentTemplateConfigurationError):
-# #     def __init__(self, agent_template_filepath: str):
-# #         super().__init__(
-# #             message=(
-# #                 f"Failed to configure the agent template defined at "
-# #                 f"'{agent_template_filepath}'. The name provided in the agent "
-# #                 f"template's definition during configuration cannot be empty."
-# #             ),
-# #         )
-#
-#
-# class DuplicateAgentTemplateOptionNameError(AgentTemplateConfigurationError):
-#     def __init__(self, agent_template_str: str, option_name: str):
-#         super().__init__(
-#             message=(
-#                 f"Failed to configure the agent template {agent_template_str}'. The "
-#                 f"options provided to the agent template must not have duplicate "
-#                 f"names but the name '{option_name}' was duplicated."
-#             ),
-#         )
 
 
 class AgentTemplateConfigurationError(
@@ -272,30 +204,52 @@ class AgentTemplateOptionError(AgentTemplatesFrameworkError):
 class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
     code = "AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"
 
-    def __init__(self, agent_template_str: str, option_name: str):
+    def __init__(self, agent_template: str, option_name: str):
         super().__init__(
             message=(
-                f"Failed to access the option '{option_name}' for the agent template "
-                f"{agent_template_str}. Could not find the requested option "
-                f"'{option_name}' in the agent template."
+                f"Failed to create the agent generator from the agent template "
+                f"'{agent_template}'. The provided option '{option_name}' was not "
+                f"found in the agent template."
             ),
+            detail={"option_name": option_name},
         )
 
 
-class AgentTemplateOptionValueError(AgentTemplateOptionError):
-    code = "AGENT_TEMPLATE_OPTION_VALUE_ERROR"
+class AgentTemplateOptionValueValidationError(AgentTemplateOptionError):
+    code = "AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
 
     def __init__(
         self,
-        agent_template_str: str,
+        agent_template: str,
         option_name: str,
-        option_value: str,
+        option_value: Any,
         error_message: str,
     ):
         super().__init__(
             message=(
-                f"Failed to set the option '{option_name}' to the value "
-                f"'{option_value}' for the agent template '{agent_template_str}'. "
-                f"{error_message}"
+                f"Failed to create the agent generator from the agent template "
+                f"'{agent_template}'. The value provided '{option_value}' for the "
+                f"option '{option_name}' is invalid. {error_message}"
             ),
+            detail={
+                "option_name": option_name,
+                "option_value": option_value,
+                "error_message": error_message,
+            },
+        )
+
+
+class MissingRequiredAgentTemplateOptionError(
+    AgentTemplateOptionError,
+):
+    code = "MISSING_REQUIRED_AGENT_TEMPLATE_OPTION_ERROR"
+
+    def __init__(self, agent_template: str, option_name: str):
+        super().__init__(
+            message=(
+                f"Failed to create the agent generator from the agent template "
+                f"'{agent_template}'. The required option '{option_name}' was not "
+                f"provided."
+            ),
+            detail={"option_name": option_name},
         )

@@ -37,6 +37,57 @@ from consortium.server.server_dependencies import AuthorizeUserRequest
 
 agent_generators_service = server_singletons.agent_generators_service
 agent_templates_service = server_singletons.agent_templates_service
+_agent_generator_not_found_error = (
+    AgentGeneratorNotFoundAPIError.from_consortium_exception(
+        consortium_exception=AgentGeneratorNotFoundServiceError(
+            agent_generator_id="<agent_generator_id>"
+        )
+    )
+)
+_agent_generator_already_running_error = (
+    AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
+        consortium_exception=AgentGeneratorAlreadyRunningServiceError()
+    )
+)
+_agent_generator_not_running_error = (
+    AgentGeneratorNotRunningAPIError.from_consortium_exception(
+        consortium_exception=AgentGeneratorNotRunningServiceError()
+    )
+)
+_agent_generator_start_error = AgentGeneratorStartAPIError.from_consortium_exception(
+    consortium_exception=AgentGeneratorStartServiceError(
+        message="<message>", detail={"<key>": "<value>"}
+    )
+)
+_agent_generator_stop_error = AgentGeneratorStopAPIError.from_consortium_exception(
+    consortium_exception=AgentGeneratorStopServiceError(
+        message="<message>", detail={"<key>": "<value>"}
+    )
+)
+_invalid_agent_generator_parameter_name_error = (
+    InvalidAgentGeneratorParameterNameAPIError.from_consortium_exception(
+        consortium_exception=InvalidAgentGeneratorParameterNameServiceError(
+            parameter_name="<parameter_name>", agent_generator="<agent_generator>"
+        )
+    )
+)
+_invalid_agent_generator_parameter_value_error = (
+    InvalidAgentGeneratorParameterValueAPIError.from_consortium_exception(
+        consortium_exception=InvalidAgentGeneratorParameterValueServiceError(
+            agent_generator_str="<agent_generator>",
+            parameter_name="<parameter_name>",
+            parameter_value="<parameter_value>",
+            error_message="<error_message>",
+        )
+    )
+)
+_agent_template_resolution_error = AgentTemplateResolutionError(
+    agent_type=example_agent_type
+)
+_unprocessable_entity_error = UnprocessableEntityError(
+    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
+)
+
 router = APIRouter(
     prefix="/api/agent-generators",
     responses={
@@ -72,18 +123,8 @@ def get_all_agent_generators(
     "/{agent_generator_id}",
     responses={
         200: {"model": AgentGeneratorModel},
-        422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
-        },
-        404: {
-            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorNotFoundServiceError(
-                    agent_generator_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
+        404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
     },
     status_code=201,
 )
@@ -114,29 +155,12 @@ def get_agent_generator_by_agent_generator_id(
     "/{agent_generator_id}/start",
     responses={
         200: {"model": SuccessResponseModel},
-        404: {
-            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorNotFoundServiceError(
-                    agent_generator_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
+        404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {
-            "model": AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorAlreadyRunningServiceError(),
-            ).to_pydantic_model()
-            | AgentGeneratorStartAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorStartServiceError(
-                    message="string",
-                    detail={"string": "string"},
-                ),
-            ).to_pydantic_model(),
+            "model": _agent_generator_already_running_error.to_pydantic_model()
+            | _agent_generator_start_error.to_pydantic_model()
         },
-        422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
-        },
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
     },
 )
 async def start_agent_generator_by_agent_generator_id(
@@ -181,29 +205,12 @@ async def start_agent_generator_by_agent_generator_id(
     "/{agent_generator_id}/stop",
     responses={
         200: {"model": SuccessResponseModel},
-        404: {
-            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorNotFoundServiceError(
-                    agent_generator_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
+        404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {
-            "model": AgentGeneratorNotRunningAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorNotRunningServiceError(),
-            ).to_pydantic_model()
-            | AgentGeneratorStopAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorStopServiceError(
-                    message="string",
-                    detail={"string": "string"},
-                ),
-            ).to_pydantic_model(),
+            "model": _agent_generator_not_running_error.to_pydantic_model()
+            | _agent_generator_stop_error.to_pydantic_model()
         },
-        422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
-        },
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
     },
 )
 async def stop_agent_generator_by_agent_generator_id(
@@ -248,23 +255,9 @@ async def stop_agent_generator_by_agent_generator_id(
     "/{agent_generator_id}/cancel",
     responses={
         200: {"model": SuccessResponseModel},
-        404: {
-            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorNotFoundServiceError(
-                    agent_generator_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
-        409: {
-            "model": AgentGeneratorNotRunningAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorNotRunningServiceError(),
-            ).to_pydantic_model(),
-        },
-        422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
-        },
+        404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
+        409: {"model": _agent_generator_not_running_error.to_pydantic_model()},
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
     },
 )
 async def cancel_agent_generator_by_agent_generator_id(
@@ -305,42 +298,14 @@ async def cancel_agent_generator_by_agent_generator_id(
     "/{agent_generator_id}",
     responses={
         200: {"model": AgentGeneratorModel},
-        404: {
-            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorNotFoundServiceError(
-                    agent_generator_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
-        409: {
-            "model": AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorAlreadyRunningServiceError(),
-            ).to_pydantic_model(),
-        },
+        404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
+        409: {"model": _agent_generator_already_running_error.to_pydantic_model()},
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model()
-            | InvalidAgentGeneratorParameterNameAPIError.from_consortium_exception(
-                consortium_exception=InvalidAgentGeneratorParameterNameServiceError(
-                    parameter_name="string",
-                    agent_generator_str="string",
-                ),
-            ).to_pydantic_model()
-            | InvalidAgentGeneratorParameterValueAPIError.from_consortium_exception(
-                consortium_exception=InvalidAgentGeneratorParameterValueServiceError(
-                    agent_generator_str="string",
-                    parameter_name="string",
-                    parameter_value="string",
-                    validation_error_message="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model()
+            | _invalid_agent_generator_parameter_name_error.to_pydantic_model()
+            | _invalid_agent_generator_parameter_value_error.to_pydantic_model()
         },
-        500: {
-            "model": AgentTemplateResolutionError(
-                agent_type=example_agent_type,
-            ).to_pydantic_model(),
-        },
+        500: {"model": _agent_template_resolution_error.to_pydantic_model()},
     },
 )
 async def update_agent_generator_by_agent_generator_id(
@@ -427,18 +392,8 @@ async def update_agent_generator_by_agent_generator_id(
     "/{agent_generator_id}",
     responses={
         200: {"model": SuccessResponseModel},
-        404: {
-            "model": AgentGeneratorNotFoundAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorNotFoundServiceError(
-                    agent_generator_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
-        409: {
-            "model": AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
-                consortium_exception=AgentGeneratorAlreadyRunningServiceError(),
-            ).to_pydantic_model(),
-        },
+        404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
+        409: {"model": _agent_generator_already_running_error.to_pydantic_model()},
     },
 )
 async def delete_agent_generator_by_agent_generator_id(

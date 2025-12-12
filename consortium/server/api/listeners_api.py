@@ -107,7 +107,6 @@ def get_listener_by_listener_id(
                     message="string",
                     detail={"string": "string"},
                 ),
-                # detail={"string": "string"},
             ).to_pydantic_model(),
         },
         422: {
@@ -170,7 +169,6 @@ async def start_listener_by_listener_id(
                     message="string",
                     detail={"string": "string"},
                 ),
-                # detail={"string": "string"},
             ).to_pydantic_model(),
         },
         422: {
@@ -282,7 +280,7 @@ async def cancel_listener_by_listener_id(
             | api_excs.InvalidListenerParameterNameError.from_consortium_exception(
                 consortium_exception=svc_excs.InvalidListenerParameterNameError(
                     parameter_name="string",
-                    listener_str="string",
+                    listener="string",
                 ),
             ).to_pydantic_model()
             | api_excs.InvalidListenerParameterValueError.from_consortium_exception(
@@ -290,7 +288,7 @@ async def cancel_listener_by_listener_id(
                     parameter_name="string",
                     parameter_value="string",
                     listener_str="string",
-                    validation_error_message="string",
+                    error_message="string",
                 ),
             ).to_pydantic_model(),
         },

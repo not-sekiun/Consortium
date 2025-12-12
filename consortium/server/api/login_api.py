@@ -16,8 +16,6 @@ from consortium.server.exceptions.service_exceptions.user_accounts_service_excep
 from consortium.server.models.user_models import JSONWebTokenModel
 from consortium.server.server_dependencies import is_user_logged_in
 
-user_accounts_service = server_singletons.user_accounts_service
-users_service = server_singletons.users_service
 router = APIRouter(
     prefix="/api/login",
     responses={
@@ -26,12 +24,17 @@ router = APIRouter(
     tags=["Login API"],
 )
 
+user_accounts_service = server_singletons.user_accounts_service
+users_service = server_singletons.users_service
+
+_already_logged_in_error = AlreadyLoggedInError()
+
 
 @router.post(
     "",
     responses={
         200: {"model": JSONWebTokenModel},
-        409: {"model": AlreadyLoggedInError().to_pydantic_model()},
+        409: {"model": _already_logged_in_error.to_pydantic_model()},
     },
     # This allows us to use the type annotations in the function signature because
     # Response is not a valid Pydantic model.

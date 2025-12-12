@@ -99,12 +99,12 @@ class AgentGeneratorParameterUpdateError(AgentGeneratorsServiceError):
 class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError):
     code = "INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"
 
-    def __init__(self, agent_generator_str: str, parameter_name: str):
+    def __init__(self, agent_generator: str, parameter_name: str):
         super().__init__(
             message=(
-                f"Failed to update agent generator parameter for agent generator "
-                f"'{agent_generator_str}'. The provided parameter name '{parameter_name}' "
-                f"is not a valid parameter name."
+                f"Failed to update the agent generator parameter for agent generator "
+                f"'{agent_generator}'. The provided parameter name '{parameter_name}' "
+                f"was not found for the agent generator."
             ),
         )
 
@@ -117,14 +117,13 @@ class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateErro
         agent_generator_str: str,
         parameter_name: str,
         parameter_value: str,
-        validation_error_message: str,
+        error_message: str,
     ):
         super().__init__(
             message=(
                 f"Failed to update the agent generator parameter for agent generator "
-                f"'{agent_generator_str}'. The provided parameter value "
-                f"'{parameter_value}' failed validation for the parameter "
-                f"'{parameter_name}': {validation_error_message}"
+                f"'{agent_generator_str}'. The value provided '{parameter_value}' for "
+                f"the parameter '{parameter_name}' is invalid. {error_message}"
             ),
         )
 
@@ -136,15 +135,13 @@ class AgentGeneratorCreationError(AgentGeneratorsServiceError):
         super().__init__(message=message, detail=detail)
 
 
-# This is a wrapper exception for AgentTemplateOptionNotFoundError from the
-# agent templates framework exceptions. It just needs to pass on the message and detail
-# data from that exception.
 class AgentTemplateOptionNotFoundError(AgentGeneratorCreationError):
     code = "AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"
 
 
-# This is a wrapper exception for AgentTemplateOptionValueError from the agent
-# templates framework exceptions. It just needs to pass on the message and detail data
-# from that exception.
-class AgentTemplateOptionValueError(AgentGeneratorCreationError):
-    code = "AGENT_TEMPLATE_OPTION_VALUE_ERROR"
+class AgentTemplateOptionValueValidationError(AgentGeneratorCreationError):
+    code = "AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
+
+
+class MissingRequiredAgentTemplateOptionError(AgentGeneratorCreationError):
+    code = "MISSING_REQUIRED_AGENT_TEMPLATE_OPTION_ERROR"

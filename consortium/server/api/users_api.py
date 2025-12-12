@@ -18,7 +18,6 @@ from consortium.server.models.user_models import UserModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
 
-users_service = server_singletons.users_service
 router = APIRouter(
     prefix="/api/users",
     responses={
@@ -28,6 +27,13 @@ router = APIRouter(
         500: {"model": InternalServerError().to_pydantic_model()},
     },
     tags=["Users API"],
+)
+
+_users_service = server_singletons.users_service
+
+_user_not_found_error = api_excs.UserNotFoundError(user_id="<user_id>")
+_unprocessable_entity_error = UnprocessableEntityError(
+    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
 )
 
 
@@ -54,23 +60,15 @@ async def get_all_users(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_USERS)),
     ],
 ) -> list[UserModel]:
-    return [UserModel(**user.to_json()) for user in users_service.get_all_users()]
+    return [UserModel(**user.to_json()) for user in _users_service.get_all_users()]
 
 
 @router.get(
     "/{user_id}",
     responses={
         200: {"model": UserModel},
-        404: {
-            "model": api_excs.UserNotFoundError(
-                user_id="user_id",
-            ).to_pydantic_model(),
-        },
-        422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
-        },
+        404: {"model": _user_not_found_error.to_pydantic_model()},
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
     },
 )
 async def get_user_by_user_id(
@@ -81,7 +79,7 @@ async def get_user_by_user_id(
     ],
 ) -> UserModel:
     try:
-        user = users_service.get_user_by_user_id(user_id)
+        user = _users_service.get_user_by_user_id(user_id)
     except svc_excs.UserIDNotFoundError:
         raise api_excs.UserNotFoundError(
             user_id=user_id,
@@ -94,11 +92,7 @@ async def get_user_by_user_id(
     "/me",
     responses={
         200: {"model": UserModel},
-        404: {
-            "model": api_excs.UserNotFoundError(
-                user_id="user_id",
-            ).to_pydantic_model(),
-        },
+        404: {"model": _user_not_found_error.to_pydantic_model()},
     },
 )
 async def update_own_display_name(
@@ -110,7 +104,7 @@ async def update_own_display_name(
     ],
 ) -> UserModel:
     try:
-        updated_user = users_service.update_user_display_name_by_user_id(
+        updated_user = _users_service.update_user_display_name_by_user_id(
             user_id=str(user.user_id),
             display_name=display_name,
         )
@@ -127,11 +121,7 @@ async def update_own_display_name(
     "/{user_id}",
     responses={
         200: {"model": UserModel},
-        404: {
-            "model": api_excs.UserNotFoundError(
-                user_id="user_id",
-            ).to_pydantic_model(),
-        },
+        404: {"model": _user_not_found_error.to_pydantic_model()},
     },
 )
 async def update_user_display_name_by_user_id(
@@ -143,7 +133,7 @@ async def update_user_display_name_by_user_id(
     ],
 ) -> UserModel:
     try:
-        user = users_service.update_user_display_name_by_user_id(
+        user = _users_service.update_user_display_name_by_user_id(
             user_id=user_id,
             display_name=display_name,
         )

@@ -7,27 +7,12 @@ from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.options.exceptions import OptionValueValidationError
-from consortium.server.exceptions.framework_exceptions.agent_generators_framework_exceptions import (
-    AgentGeneratorAlreadyRunningError as AgentGeneratorAlreadyRunningFrameworkError,
-    AgentGeneratorNotRunningError as AgentGeneratorNotRunningFrameworkError,
-    AgentGeneratorStartError as AgentGeneratorStartFrameworkError,
-    AgentGeneratorStopError as AgentGeneratorStopFrameworkError,
+from consortium.server.exceptions.framework_exceptions import (
+    agent_generators_framework_exceptions as agent_generators_framework_excs,
+    agent_templates_framework_exceptions as agent_templates_framework_excs,
 )
-from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
-    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundFrameworkError,
-    AgentTemplateOptionValueError as AgentTemplateOptionValueFrameworkError,
-)
-from consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions import (
-    AgentGeneratorAlreadyExistsError,
-    AgentGeneratorAlreadyRunningError as AgentGeneratorAlreadyRunningServiceError,
-    AgentGeneratorNotFoundError,
-    AgentGeneratorNotRunningError as AgentGeneratorNotRunningServiceError,
-    AgentGeneratorStartError as AgentGeneratorStartServiceError,
-    AgentGeneratorStopError as AgentGeneratorStopServiceError,
-    AgentTemplateOptionNotFoundError as AgentTemplateOptionNotFoundServiceError,
-    AgentTemplateOptionValueError as AgentTemplateOptionValueServiceError,
-    InvalidAgentGeneratorParameterNameError,
-    InvalidAgentGeneratorParameterValueError,
+from consortium.server.exceptions.service_exceptions import (
+    agent_generators_service_exceptions as agent_generators_svc_excs,
 )
 from consortium.server.objects.agent_generator_objects import AgentGeneratorState
 from consortium.server.services.agent_templates_service import AgentTemplatesService
@@ -63,7 +48,7 @@ class AgentGeneratorsService:
         try:
             agent_generator = self._agent_generators[agent_generator_id]
         except KeyError:
-            raise AgentGeneratorNotFoundError(
+            raise agent_generators_svc_excs.AgentGeneratorNotFoundError(
                 agent_generator_id=agent_generator_id
             ) from None
 
@@ -100,18 +85,26 @@ class AgentGeneratorsService:
                 description=description,
                 parameters=parameters,
             )
-        except AgentTemplateOptionNotFoundFrameworkError as exc:
-            raise AgentTemplateOptionNotFoundServiceError(
+        except agent_templates_framework_excs.AgentTemplateOptionNotFoundError as exc:
+            raise agent_generators_svc_excs.AgentTemplateOptionNotFoundError(
                 message=exc.message,
                 detail=exc.detail,
             ) from None
-        except AgentTemplateOptionValueFrameworkError as exc:
-            raise AgentTemplateOptionValueServiceError(
+        except (
+            agent_templates_framework_excs.AgentTemplateOptionValueValidationError
+        ) as exc:
+            raise agent_generators_svc_excs.AgentTemplateOptionValueValidationError(
+                message=exc.message,
+                detail=exc.detail,
+            ) from None
+        except (
+            agent_templates_framework_excs.MissingRequiredAgentTemplateOptionError
+        ) as exc:
+            raise agent_generators_svc_excs.MissingRequiredAgentTemplateOptionError(
                 message=exc.message,
                 detail=exc.detail,
             ) from None
 
-        # agent_template.clear_all_option_values()
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
@@ -133,7 +126,7 @@ class AgentGeneratorsService:
 
     async def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
         if str(agent_generator.agent_generator_id) in self._agent_generators:
-            raise AgentGeneratorAlreadyExistsError(
+            raise agent_generators_svc_excs.AgentGeneratorAlreadyExistsError(
                 agent_generator_id=str(agent_generator.agent_generator_id),
             )
 
@@ -163,7 +156,7 @@ class AgentGeneratorsService:
             agent_generator_id=agent_generator_id,
         )
         if agent_generator.status.state == AgentGeneratorState.RUNNING:
-            raise AgentGeneratorAlreadyRunningServiceError
+            raise agent_generators_svc_excs.AgentGeneratorAlreadyRunningError
 
         removed_agent_generator = self._agent_generators.pop(agent_generator_id)
         await self._events_service.trigger_event(
@@ -243,7 +236,7 @@ class AgentGeneratorsService:
         )
 
         if agent_generator.status.state == AgentGeneratorState.RUNNING:
-            raise AgentGeneratorAlreadyRunningServiceError
+            raise agent_generators_svc_excs.AgentGeneratorAlreadyRunningError
 
         for parameter_name, parameter_value in agent_generator.parameters.items():
             if parameter_name not in parameters:
@@ -253,8 +246,8 @@ class AgentGeneratorsService:
 
         for parameter_name, parameter_value in parameters.items():
             if parameter_name not in agent_generator.creating_agent_template.options:
-                raise InvalidAgentGeneratorParameterNameError(
-                    agent_generator_str=str(agent_generator),
+                raise agent_generators_svc_excs.InvalidAgentGeneratorParameterNameError(
+                    agent_generator=str(agent_generator),
                     parameter_name=parameter_name,
                 )
             try:
@@ -262,11 +255,11 @@ class AgentGeneratorsService:
                     parameter_name
                 ].validate_value(value=parameter_value)
             except OptionValueValidationError as exc:
-                raise InvalidAgentGeneratorParameterValueError(
+                raise agent_generators_svc_excs.InvalidAgentGeneratorParameterValueError(
                     agent_generator_str=str(agent_generator),
                     parameter_name=parameter_name,
                     parameter_value=str(parameter_value),
-                    validation_error_message=str(exc),
+                    error_message=str(exc),
                 ) from None
             parameters[parameter_name] = parameter_value
 
@@ -310,13 +303,13 @@ class AgentGeneratorsService:
         )
         try:
             await agent_generator.start()
-        except AgentGeneratorStartFrameworkError as exc:
-            raise AgentGeneratorStartServiceError(
+        except agent_generators_framework_excs.AgentGeneratorStartError as exc:
+            raise agent_generators_svc_excs.AgentGeneratorStartError(
                 message=exc.message,
                 detail=exc.detail,
             ) from None
-        except AgentGeneratorAlreadyRunningFrameworkError as exc:
-            raise AgentGeneratorAlreadyRunningServiceError(
+        except agent_generators_framework_excs.AgentGeneratorAlreadyRunningError as exc:
+            raise agent_generators_svc_excs.AgentGeneratorAlreadyRunningError(
                 message=exc.message,
             ) from None
 
@@ -336,13 +329,15 @@ class AgentGeneratorsService:
         )
         try:
             await agent_generator.stop()
-        except AgentGeneratorStopFrameworkError as exc:
-            raise AgentGeneratorStopServiceError(
+        except agent_generators_framework_excs.AgentGeneratorStopError as exc:
+            raise agent_generators_svc_excs.AgentGeneratorStopError(
                 message=exc.message,
                 detail=exc.detail,
             ) from None
-        except AgentGeneratorNotRunningFrameworkError as exc:
-            raise AgentGeneratorNotRunningServiceError(message=exc.message) from None
+        except agent_generators_framework_excs.AgentGeneratorNotRunningError as exc:
+            raise agent_generators_svc_excs.AgentGeneratorNotRunningError(
+                message=exc.message
+            ) from None
 
         await self._events_service.trigger_event(
             event=Event(
@@ -360,8 +355,10 @@ class AgentGeneratorsService:
         )
         try:
             await agent_generator.cancel()
-        except AgentGeneratorNotRunningFrameworkError as exc:
-            raise AgentGeneratorNotRunningServiceError(message=exc.message) from None
+        except agent_generators_framework_excs.AgentGeneratorNotRunningError as exc:
+            raise agent_generators_svc_excs.AgentGeneratorNotRunningError(
+                message=exc.message
+            ) from None
 
         await self._events_service.trigger_event(
             event=Event(

@@ -24,8 +24,6 @@ from consortium.server.server_dependencies import (
     get_current_user,
 )
 
-users_service = server_singletons.users_service
-user_accounts_service = server_singletons.user_accounts_service
 router = APIRouter(
     prefix="/api/logout",
     responses={
@@ -35,6 +33,14 @@ router = APIRouter(
     },
     tags=["Logout API"],
 )
+
+users_service = server_singletons.users_service
+user_accounts_service = server_singletons.user_accounts_service
+
+_user_account_not_found_error = user_accounts_api_excs.UserAccountNotFoundError(
+    user_account_id="<user_account_id>"
+)
+_user_not_found_error = users_api_excs.UserNotFoundError(user_id="<user_id>")
 
 
 @router.post("", responses={200: {"model": SuccessResponseModel}})
@@ -49,11 +55,7 @@ async def logout_from_server(
     "/user-account/{user_account_id}",
     responses={
         200: {"model": SuccessResponseModel},
-        404: {
-            "model": user_accounts_api_excs.UserAccountNotFoundError(
-                user_account_id="string"
-            ).to_pydantic_model()
-        },
+        404: {"model": _user_account_not_found_error.to_pydantic_model()},
     },
 )
 async def logout_user_account_by_user_account_id(
@@ -85,11 +87,7 @@ async def logout_user_account_by_user_account_id(
     "/user/{user_id}",
     responses={
         200: {"model": SuccessResponseModel},
-        404: {
-            "model": users_api_excs.UserNotFoundError(
-                user_id="string"
-            ).to_pydantic_model()
-        },
+        404: {"model": _user_not_found_error.to_pydantic_model()},
     },
 )
 async def logout_user_by_user_id(

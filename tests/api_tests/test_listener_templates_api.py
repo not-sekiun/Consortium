@@ -76,6 +76,61 @@ LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
+MISSING_REQUIRED_OPTION_ERROR_RESPONSE_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["MISSING_REQUIRED_LISTENER_TEMPLATE_OPTION_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {
+                    "type": "object",
+                    "properties": {
+                        "listener_template_str": {"type": "string"},
+                        "option_name": {"type": "string"},
+                    },
+                    "required": ["listener_template_str", "option_name"],
+                },
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+OPTION_VALUE_ERROR_RESPONSE_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["LISTENER_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {
+                    "type": "object",
+                    "properties": {
+                        "option_name": {"type": "string"},
+                        "option_value": {},
+                        "error_message": {"type": "string"},
+                    },
+                    "required": [
+                        "option_name",
+                        "option_value",
+                        "error_message",
+                    ],
+                },
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
 
 
 def test_get_all_listener_templates(
@@ -154,3 +209,81 @@ def test_create_listener_through_listener_template_by_listener_template_id(
                 expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
                 expected_status_code=403,
             )
+
+
+@pytest.mark.usefixtures("delete_listeners_after_test")
+def test_create_listener_with_missing_required_option(
+    admin_session: requests.Session,
+):
+    for listener_template_id in get_all_listener_template_ids(admin_session):
+        listener_template = admin_session.get(
+            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+        ).json()
+
+        # Find required options
+        required_options = [
+            option_name
+            for option_name, option in listener_template["options"].items()
+            if option["required"]
+        ]
+
+        if required_options:
+            # Build parameters dict with all defaults except one required option
+            parameters = {
+                option_name: option["default_value"]
+                for option_name, option in listener_template["options"].items()
+            }
+            # Remove one required option
+            del parameters[required_options[0]]
+
+            validate_response(
+                test_response=admin_session.post(
+                    f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+                    json=parameters,
+                ),
+                expected_json_schema=MISSING_REQUIRED_OPTION_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_status_code=422,
+            )
+
+
+@pytest.mark.usefixtures("delete_listeners_after_test")
+def test_create_listener_with_invalid_option_value_type(
+    admin_session: requests.Session,
+):
+    # Map of type names to invalid values
+    invalid_values_by_type = {
+        "str": 123,  # int instead of str
+        "int": "not_an_int",  # str instead of int
+        "float": "not_a_float",  # str instead of float
+        "bool": "not_a_bool",  # str instead of bool
+    }
+
+    for listener_template_id in get_all_listener_template_ids(admin_session):
+        listener_template = admin_session.get(
+            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+        ).json()
+
+        # Build base parameters with all defaults
+        parameters = {
+            option_name: option["default_value"]
+            for option_name, option in listener_template["options"].items()
+        }
+
+        # Find an option with a specific value_type to test invalid type
+        for option_name, option in listener_template["options"].items():
+            value_type = option.get("value_type")
+            if value_type and value_type in invalid_values_by_type:
+                # Create a copy with an invalid value for this option
+                invalid_parameters = parameters.copy()
+                invalid_parameters[option_name] = invalid_values_by_type[value_type]
+
+                validate_response(
+                    test_response=admin_session.post(
+                        f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+                        json=invalid_parameters,
+                    ),
+                    expected_json_schema=OPTION_VALUE_ERROR_RESPONSE_JSON_SCHEMA,
+                    expected_status_code=422,
+                )
+                # Only test one invalid option per template
+                break

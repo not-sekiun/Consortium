@@ -28,7 +28,7 @@ from consortium.framework.options.exceptions import OptionValueValidationError
 from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (  # AgentTemplateConfigurationParameterTypeError,; EmptyAgentTemplateNameError,; RequiredAgentTemplateConfigurationParameterNotDeclaredError,
     AgentTemplateOptionNotFoundError,
-    AgentTemplateOptionValueError,
+    AgentTemplateOptionValueValidationError,
     DuplicateAgentTemplateOptionNameError,
     EmptyAgentTemplateLabelError,
     InvalidAgentTemplateConfigurationParameterTypeError,
@@ -36,6 +36,7 @@ from consortium.server.exceptions.framework_exceptions.agent_templates_framework
     InvalidAgentTemplateVersionError,
     InvalidFrameworkVersionSpecifierError,
     MissingAgentTemplateConfigurationParameterError,
+    MissingRequiredAgentTemplateOptionError,
 )
 from consortium.server.utils.formatter_utils import format_docstring_to_single_line
 
@@ -70,7 +71,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidAgentTemplateConfigurationParameterTypeError,
     }
     _EXCEPTION_KWARGS_MAP = {
-        "component_str": "agent_template_str",
+        "component_str": "agent_template",
         "component_filepath": "agent_template_filepath",
     }
 
@@ -101,7 +102,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             if option.name in option_names:
                 raise DuplicateAgentTemplateOptionNameError(
                     option_name=option.name,
-                    agent_template_str=cls.name,
+                    agent_template=cls.name,
                 )
             option_names.append(option.name)
 
@@ -110,7 +111,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             function_signature = signature(cls.validating_function)
             if len(function_signature.parameters) != 1:
                 raise InvalidAgentTemplateConfigurationParameterTypeError(
-                    agent_template_str=cls.name,
+                    agent_template=cls.name,
                     parameter_name="validating_function",
                     parameter_type=get_type_hints(cls)["validating_function"],
                 )
@@ -185,25 +186,25 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         for option_name, value in parameters.items():
             if option_name not in self.options:
                 raise AgentTemplateOptionNotFoundError(
-                    agent_template_str=str(self),
+                    agent_template=str(self),
                     option_name=option_name,
                 )
             try:
                 self.options[option_name].validate_value(value)
             except OptionValueValidationError as exc:
-                raise AgentTemplateOptionValueError(
+                raise AgentTemplateOptionValueValidationError(
                     option_name=option_name,
                     option_value=value,
-                    agent_template_str=str(self),
+                    agent_template=str(self),
                     error_message=str(exc),
                 ) from None
 
         # Check for missing required options.
         for option_name, option in self.options.items():
             if option.required and option_name not in parameters:
-                raise MissingAgentTemplateConfigurationParameterError(
-                    agent_template_str=str(self),
-                    parameter_name=option_name,
+                raise MissingRequiredAgentTemplateOptionError(
+                    agent_template=str(self),
+                    option_name=option_name,
                 )
 
         # Run validation function on the entire set of parameters if one was provided.

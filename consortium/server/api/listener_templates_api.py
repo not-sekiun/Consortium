@@ -3,6 +3,9 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends
 
 import consortium.server.server_singletons as server_singletons
+from consortium.server.exceptions.api_exceptions import (
+    listener_templates_api_exceptions as api_excs,
+)
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
@@ -10,43 +13,18 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
-from consortium.server.exceptions.api_exceptions.listener_templates_api_exceptions import (
-    ListenerTemplateNotFoundError as ListenerTemplateNotFoundAPIError,
-    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundAPIError,
-    ListenerTemplateOptionValueError as ListenerTemplateOptionValueAPIError,
+from consortium.server.exceptions.framework_exceptions import (
+    listener_templates_framework_exceptions as framework_excs,
 )
-from consortium.server.exceptions.framework_exceptions.listener_templates_framework_exceptions import (
-    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundFrameworkError,
-    ListenerTemplateOptionValueValidationError as ListenerTemplateOptionValueFrameworkError,
-)
-from consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions import (
-    ListenerTemplateNotFoundError as ListenerTemplateNotFoundServiceError,
-)
-from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
-    ListenerTemplateOptionNotFoundError as ListenerTemplateOptionNotFoundServiceError,
-    ListenerTemplateOptionValueError as ListenerTemplateOptionValueServiceError,
+from consortium.server.exceptions.service_exceptions import (
+    listener_templates_service_exceptions as svc_excs,
+    listeners_service_exceptions as listeners_svc_excs,
 )
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.models.listener_template_models import ListenerTemplateModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
-_example_listener_template_option_value_framework_error = (
-    ListenerTemplateOptionValueFrameworkError(
-        listener_template_str="string",
-        option_name="string",
-        option_value="string",
-        error_message="string",
-    )
-)
-_example_listener_template_option_not_found_framework_error = (
-    ListenerTemplateOptionNotFoundFrameworkError(
-        option_name="string",
-        listener_template_str="string",
-    )
-)
-listener_templates_service = server_singletons.listener_templates_service
-listeners_service = server_singletons.listeners_service
 router = APIRouter(
     prefix="/api/listener-templates",
     responses={
@@ -58,37 +36,69 @@ router = APIRouter(
     tags=["Listener Templates API"],
 )
 
+listener_templates_service = server_singletons.listener_templates_service
+listeners_service = server_singletons.listeners_service
+
+_listener_template_option_value_validation_framework_error = (
+    framework_excs.ListenerTemplateOptionValueValidationError(
+        listener_template="<listener_template>",
+        option_name="<option_name>",
+        option_value="<option_value>",
+        error_message="<error_message>",
+    )
+)
+_listener_template_option_not_found_framework_error = (
+    framework_excs.ListenerTemplateOptionNotFoundError(
+        listener_template="<listener_template>", option_name="<option_name>"
+    )
+)
+_missing_required_listener_template_option_framework_error = (
+    framework_excs.MissingRequiredListenerTemplateOptionError(
+        listener_template="<listener_template>", option_name="<option_name>"
+    )
+)
+_listener_template_not_found_error = (
+    api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
+        consortium_exception=svc_excs.ListenerTemplateNotFoundError(
+            listener_template_id="<listener_template_id>"
+        )
+    )
+)
+_listener_template_option_value_validation_error = api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
+    consortium_exception=listeners_svc_excs.ListenerTemplateOptionValueValidationError(
+        message=_listener_template_option_value_validation_framework_error.message,
+        detail=_listener_template_option_value_validation_framework_error.detail,
+    )
+)
+_listener_template_option_not_found_error = (
+    api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
+        consortium_exception=listeners_svc_excs.ListenerTemplateOptionNotFoundError(
+            message=_listener_template_option_not_found_framework_error.message,
+            detail=_listener_template_option_not_found_framework_error.detail,
+        )
+    )
+)
+_missing_required_listener_template_option_error = api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
+    consortium_exception=listeners_svc_excs.MissingRequiredListenerTemplateOptionError(
+        message=_missing_required_listener_template_option_framework_error.message,
+        detail=_missing_required_listener_template_option_framework_error.detail,
+    )
+)
+_unprocessable_entity_error = UnprocessableEntityError(
+    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
+)
+
 
 @router.post(
     "/{listener_template_id}",
     responses={
         201: {"model": ListenerModel},
-        404: {
-            "model": ListenerTemplateNotFoundAPIError.from_consortium_exception(
-                consortium_exception=ListenerTemplateNotFoundServiceError(
-                    listener_template_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
+        404: {"model": _listener_template_not_found_error.to_pydantic_model()},
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model()
-            | ListenerTemplateOptionValueAPIError.from_consortium_exception(
-                consortium_exception=ListenerTemplateOptionValueServiceError(
-                    message=_example_listener_template_option_value_framework_error.message,
-                    detail=_example_listener_template_option_value_framework_error.detail,
-                ),
-            ).to_pydantic_model()
-            | ListenerTemplateOptionNotFoundAPIError.from_consortium_exception(
-                consortium_exception=ListenerTemplateOptionNotFoundServiceError(
-                    message=_example_listener_template_option_not_found_framework_error.message,
-                    detail=_example_listener_template_option_not_found_framework_error.detail,
-                ),
-            ).to_pydantic_model(),
-            # | EmptyListenerNameAPIError.from_service_exception(
-            #     service_exception=EmptyListenerNameServiceError(),
-            # ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model()
+            | _listener_template_option_value_validation_error.to_pydantic_model()
+            | _listener_template_option_not_found_error.to_pydantic_model()
+            | _missing_required_listener_template_option_error.to_pydantic_model()
         },
     },
     status_code=201,
@@ -103,22 +113,22 @@ async def create_listener_through_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
             parameters=options,
         )
-    except ListenerTemplateNotFoundServiceError as exc:
-        raise ListenerTemplateNotFoundAPIError.from_consortium_exception(
+    except svc_excs.ListenerTemplateNotFoundError as exc:
+        raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except ListenerTemplateOptionNotFoundServiceError as exc:
-        raise ListenerTemplateOptionNotFoundAPIError.from_consortium_exception(
+    except listeners_svc_excs.ListenerTemplateOptionNotFoundError as exc:
+        raise api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except ListenerTemplateOptionValueServiceError as exc:
-        raise ListenerTemplateOptionValueAPIError.from_consortium_exception(
+    except listeners_svc_excs.ListenerTemplateOptionValueValidationError as exc:
+        raise api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    # except EmptyListenerNameServiceError as exc:
-    #     raise EmptyListenerNameAPIError.from_service_exception(
-    #         service_exception=exc,
-    #     )
+    except listeners_svc_excs.MissingRequiredListenerTemplateOptionError as exc:
+        raise api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return ListenerModel(**listener.to_json())
 
@@ -143,18 +153,8 @@ def get_all_listener_templates_info(
     "/{listener_template_id}",
     responses={
         200: {"model": ListenerTemplateModel},
-        422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
-        },
-        404: {
-            "model": ListenerTemplateNotFoundAPIError.from_consortium_exception(
-                consortium_exception=ListenerTemplateNotFoundServiceError(
-                    listener_template_id="string",
-                ),
-            ).to_pydantic_model(),
-        },
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        404: {"model": _listener_template_not_found_error.to_pydantic_model()},
     },
 )
 def get_listener_template_info_by_listener_templates_id(
@@ -174,8 +174,8 @@ def get_listener_template_info_by_listener_templates_id(
                 listener_template_id=listener_template_id,
             )
         )
-    except ListenerTemplateNotFoundServiceError as exc:
-        raise ListenerTemplateNotFoundAPIError.from_consortium_exception(
+    except svc_excs.ListenerTemplateNotFoundError as exc:
+        raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
 

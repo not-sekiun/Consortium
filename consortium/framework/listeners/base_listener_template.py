@@ -71,7 +71,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidListenerTemplateConfigurationParameterTypeError,
     }
     _EXCEPTION_KWARGS_MAP = {
-        "component_str": "listener_template_str",
+        "component_str": "listener_template",
         "component_filepath": "listener_template_filepath",
     }
 
@@ -104,7 +104,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             if option.name in option_names:
                 raise DuplicateListenerTemplateOptionNameError(
                     option_name=option.name,
-                    listener_template_str=cls.name,
+                    listener_template=cls.name,
                 )
             option_names.append(option.name)
 
@@ -113,7 +113,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             function_signature = signature(cls.validating_function)
             if len(function_signature.parameters) != 1:
                 raise InvalidListenerTemplateConfigurationParameterTypeError(
-                    listener_template_str=cls.name,
+                    listener_template=cls.name,
                     parameter_name="validating_function",
                     parameter_type=get_type_hints(cls)["validating_function"],
                 )
@@ -201,7 +201,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         for option_name, value in parameters.items():
             if option_name not in self.options:
                 raise ListenerTemplateOptionNotFoundError(
-                    listener_template_str=str(self),
+                    listener_template=str(self),
                     option_name=option_name,
                 )
             try:
@@ -210,14 +210,17 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
                 raise ListenerTemplateOptionValueValidationError(
                     option_name=option_name,
                     option_value=value,
-                    listener_template_str=str(self),
+                    listener_template=str(self),
                     error_message=str(exc),
                 ) from None
 
         # Check for missing required options.
         for option_name, option in self.options.items():
             if option.required and option_name not in parameters:
-                raise MissingRequiredListenerTemplateOptionError()
+                raise MissingRequiredListenerTemplateOptionError(
+                    listener_template=str(self),
+                    option_name=option_name,
+                )
 
         # Run validation function on the entire set of parameters if one was provided.
         if self.validating_function:
