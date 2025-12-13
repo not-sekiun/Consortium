@@ -10,16 +10,19 @@ import jsonschema
 from loguru import logger
 
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    InvalidRepositoryMetadataFile,
+    InvalidRepositoryMetadataFileJSONError,
+    InvalidRepositoryMetadataFileSchemaError,
     RepositoryDirectoryNotFoundError,
     RepositoryFileNotFoundError,
     RepositoryResourceAlreadyExistsError,
     RepositoryResourceNotFoundError,
+    UnsyncedRepositoryMetadataFileError,
 )
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
 )
+from consortium.server.server_logging import LoggerType
 
 
 # TODO: Create an optimization that can detect duplicate file uploads and map several
@@ -29,7 +32,7 @@ class RepositoryService:
     def __init__(self, repository_directory_path: pathlib.Path):
         self._repository_directory_path = repository_directory_path
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._repository_resources = {}
         # The repository metadata file is a JSON file that contains the metadata of all
@@ -37,7 +40,7 @@ class RepositoryService:
         # file system metadata that is stored in memory. This allows us to persistently
         # store and reload this information when the server is restarted.
         self._repository_metadata_file_path = (
-            repository_directory_path / ".repository_metadata.json"
+            repository_directory_path / ".repository.json"
         )
         self.load_repository_metadata()
 
@@ -67,7 +70,8 @@ class RepositoryService:
                                 "is_directory": {"type": "boolean"},
                             },
                             "required": [
-                                "resource_idname",
+                                "resource_id",
+                                "name",
                                 "description",
                                 "size",
                                 "exists_on_disk",
@@ -117,20 +121,13 @@ class RepositoryService:
                         repository_metadata_json_schema,
                     )
                 except json.JSONDecodeError:
-                    raise InvalidRepositoryMetadataFile(
-                        error_message=(
-                            "The repository metadata file does not contain valid "
-                            "JSON data."
-                        ),
+                    raise InvalidRepositoryMetadataFileJSONError(
                         repository_directory=str(self._repository_directory_path),
                     ) from None
                 except jsonschema.ValidationError as exc:
-                    raise InvalidRepositoryMetadataFile(
-                        error_message=(
-                            "The repository metadata file does not contain valid "
-                            f"JSON that conforms to the expected JSON schema. {exc}"
-                        ),
+                    raise InvalidRepositoryMetadataFileSchemaError(
                         repository_directory=str(self._repository_directory_path),
+                        json_schema_error_message=str(exc),
                     ) from None
 
             # The repository service does some special preprocessing for files or
@@ -197,13 +194,7 @@ class RepositoryService:
                 # TODO: Handle conditions where the metadata corrupts and no longer
                 #  corresponds to the actual state of affairs in the repository directory
                 if not repository_resource_json["exists_on_disk"]:
-                    raise InvalidRepositoryMetadataFile(
-                        error_message=(
-                            "The repository metadata file contains repository entities "
-                            "that do not have any corresponding entities on disk."
-                        ),
-                        repository_directory=str(self._repository_directory_path),
-                    )
+                    raise UnsyncedRepositoryMetadataFileError()
 
     def save_repository_metadata(self) -> None:
         repository_metadata_json = {
@@ -211,7 +202,13 @@ class RepositoryService:
             for resource_id, repository_resource in self._repository_resources.items()
         }
         with self._repository_metadata_file_path.open(mode="w") as file:
-            json.dump(repository_metadata_json, file)
+            data = json.dumps(repository_metadata_json, indent=4)
+            file.write(data)
+        self._logger.debug(
+            "Saved repository metadata to {} ({} byte(s) written)",
+            str(self._repository_metadata_file_path),
+            len(data),
+        )
 
     def register_repository_resource(
         self,

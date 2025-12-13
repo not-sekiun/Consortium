@@ -39,6 +39,7 @@ from consortium.server.server_config import SERVER_RELEASE
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
+from consortium.server.server_logging import LoggerType
 from consortium.server.server_middleware import (
     check_if_remote_host_is_allowed,
     check_if_request_is_authenticated,
@@ -64,7 +65,9 @@ class Server:
 
         self.status = ServerStatus.STOPPED
 
-        self._logger = logger.bind(logger_name="Server")
+        self._logger = logger.bind(
+            logger_name="Server", logger_type=LoggerType.SERVER_LOGGER
+        )
         self._app = FastAPI(
             swagger_ui_parameters={"defaultModelsExpandDepth": -1},
             lifespan=self._lifespan,

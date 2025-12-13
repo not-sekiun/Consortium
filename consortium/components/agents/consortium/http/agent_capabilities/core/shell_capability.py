@@ -1,12 +1,12 @@
+from consortium.framework.agents.agent_message_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
     SupportedOS,
 )
 from consortium.framework.options import SingleValueOption
-from consortium.server.models.agent_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
-)
 
 
 class ShellCapability(BaseAgentCapability):

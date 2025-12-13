@@ -6,12 +6,15 @@ from consortium.server.exceptions.service_exceptions.users_service_exceptions im
     UserIDNotFoundError,
 )
 from consortium.server.objects.user_objects import User
+from consortium.server.server_logging import LoggerType
 
 
 class UsersService:
     def __init__(self) -> None:
         self._users = {}
-        self._logger = logger.bind(logger_name=str(self))
+        self._logger = logger.bind(
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
+        )
         self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:

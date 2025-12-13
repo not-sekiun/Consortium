@@ -1,5 +1,5 @@
 # Standard HTTP error JSON response schemas for all api endpoints.
-FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA = {
+FORBIDDEN_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -16,7 +16,7 @@ FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA = {
 }
 # TODO: Add tests for  401 Unauthorized, 404 Not Found, 405 Method Not Allowed, and 422
 #  Unprocessable Entity.
-NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
+NOT_FOUND_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -31,7 +31,7 @@ NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
-METHOD_NOT_ALLOWED_ERROR_RESPONSE_JSON_SCHEMA = {
+METHOD_NOT_ALLOWED_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -46,7 +46,7 @@ METHOD_NOT_ALLOWED_ERROR_RESPONSE_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
-UNPROCESSABLE_ENTITY_ERROR_RESPONSE_JSON_SCHEMA = {
+UNPROCESSABLE_ENTITY_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -75,12 +75,12 @@ UNPROCESSABLE_ENTITY_ERROR_RESPONSE_JSON_SCHEMA = {
 
 
 # Standard operation acknowledgement JSON response schemas for all api endpoints
-SUCCESS_RESPONSE_JSON_SCHEMA = {
+SUCCESS_JSON_SCHEMA = {
     "type": "object",
     "properties": {"success": {"type": "boolean", "enum": [True]}},
     "required": ["success"],
 }
-ERROR_RESPONSE_JSON_SCHEMA = {
+ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "success": {"type": "boolean", "enum": [False]},

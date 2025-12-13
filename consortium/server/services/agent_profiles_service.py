@@ -11,6 +11,7 @@ from consortium.server.exceptions.service_exceptions.agent_profiles_service_exce
 )
 from consortium.server.objects.c2_profile_objects import AgentProfile
 from consortium.server.server_config import CONSORTIUM_AGENTS_DIRECTORY_PATH
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.component_loader_services.agent_profile_loader_service import (
     AgentProfileLoaderService,
 )
@@ -29,7 +30,9 @@ class AgentProfilesService:
             component_loader_service=self._agent_profile_loader_service,
             component_framework_directory=CONSORTIUM_AGENTS_DIRECTORY_PATH,
         )
-        self._logger = logger.bind(logger_name=str(self))
+        self._logger = logger.bind(
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
+        )
         self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:

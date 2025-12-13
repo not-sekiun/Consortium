@@ -8,17 +8,17 @@ from consortium.server.api.respository_api import (
     create_get_all_repository_resources_endpoint,
     create_get_repository_resource_by_resource_id_endpoint,
 )
+from consortium.server.exceptions.api_exceptions import (
+    repository_api_exceptions as api_excs,
+)
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
 )
-from consortium.server.exceptions.api_exceptions.payloads_api_exceptions import (
-    PayloadNotFoundError,
-)
-from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    RepositoryResourceNotFoundError,
+from consortium.server.exceptions.service_exceptions import (
+    repository_service_exceptions as svc_excs,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.repository_models import (
@@ -27,7 +27,6 @@ from consortium.server.models.repository_models import (
 )
 from consortium.server.objects.user_account_objects import UserPermissions
 
-payloads_service = server_singletons.payloads_service
 router = APIRouter(
     prefix="/api/payloads",
     responses={
@@ -38,10 +37,21 @@ router = APIRouter(
     },
     tags=["Payloads API"],
 )
+
+_payloads_service = server_singletons.payloads_service
+
+_resource_not_found_error = (
+    api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
+        consortium_exception=svc_excs.RepositoryResourceNotFoundError(
+            resource_id="<resource_id>",
+        ),
+    )
+)
+
 router.add_api_route(
     path="/all",
     endpoint=create_get_all_repository_resources_endpoint(
-        repository_service=payloads_service,
+        repository_service=_payloads_service,
         get_all_repository_resources_permission=UserPermissions.READ_ALL_PAYLOADS,
     ),
     methods=["GET"],
@@ -53,60 +63,45 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_get_repository_resource_by_resource_id_endpoint(
-        repository_service=payloads_service,
+        repository_service=_payloads_service,
         get_repository_resource_by_resource_id_permission=UserPermissions.READ_PAYLOAD_BY_PAYLOAD_ID,
-        repository_resource_not_found_api_error=PayloadNotFoundError,
     ),
     methods=["GET"],
     responses={
         200: {"model": RepositoryDirectoryModel | RepositoryFileModel},
         404: {
-            "model": PayloadNotFoundError.from_consortium_exception(
-                consortium_exception=RepositoryResourceNotFoundError(
-                    resource_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _resource_not_found_error.to_pydantic_model(),
         },
     },
-    name="Get Payload By Payload ID",
+    name="Get Payload By Resource ID",
 )
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_delete_repository_resource_by_resource_id_endpoint(
-        repository_service=payloads_service,
+        repository_service=_payloads_service,
         delete_repository_resource_by_resource_id_permission=UserPermissions.DELETE_PAYLOAD_BY_PAYLOAD_ID,
-        repository_resource_not_found_api_error=PayloadNotFoundError,
     ),
     methods=["DELETE"],
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": PayloadNotFoundError.from_consortium_exception(
-                consortium_exception=RepositoryResourceNotFoundError(
-                    resource_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _resource_not_found_error.to_pydantic_model(),
         },
     },
-    name="Delete Payload By Payload ID",
+    name="Delete Payload By Resource ID",
 )
 router.add_api_route(
     path="/download/{resource_id}",
     endpoint=create_download_repository_resource_by_resource_id_endpoint(
-        repository_service=payloads_service,
+        repository_service=_payloads_service,
         download_repository_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_PAYLOADS,
-        repository_resource_not_found_api_error=PayloadNotFoundError,
     ),
     methods=["GET"],
     response_class=FileResponse,
     responses={
         404: {
-            "model": PayloadNotFoundError.from_consortium_exception(
-                consortium_exception=RepositoryResourceNotFoundError(
-                    resource_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _resource_not_found_error.to_pydantic_model(),
         },
     },
-    name="Download Payload By Payload ID",
+    name="Download Payload By Resource ID",
 )

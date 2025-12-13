@@ -2,121 +2,15 @@ import pytest
 import requests
 
 from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+    FORBIDDEN_ERROR_JSON_SCHEMA,
 )
-from tests.api_tests.test_agent_generators_api import (
-    AGENT_GENERATOR_RESPONSE_JSON_SCHEMA,
+from tests.api_tests.framework_components_json_response_schemas import (
+    AGENT_GENERATOR_JSON_SCHEMA,
+    AGENT_TEMPLATE_JSON_SCHEMA,
+    AGENT_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
+    ALL_AGENT_TEMPLATES_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_agent_template_ids, validate_response
-
-AGENT_TEMPLATE_RESPONSE_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "label": {"type": "string"},
-        "name": {"type": "string"},
-        "description": {"type": "string"},
-        "version": {"type": "string"},
-        "compatible_framework_version": {"type": "string"},
-        "authors": {"type": "array", "items": {"type": "string"}},
-        "agent_template_id": {"type": "string"},
-        "agent_type": {
-            "type": "object",
-            "properties": {
-                "agent_type_id": {"type": "string"},
-                "name": {"type": "string"},
-                "compatible_listener_types": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "listener_type_id": {"type": "string"},
-                            "name": {"type": "string"},
-                        },
-                        "required": ["listener_type_id", "name"],
-                        "additionalProperties": False,
-                    },
-                },
-                "agent_capabilities": {
-                    "type": "object",
-                    "patternProperties": {
-                        "(.*?)": {
-                            "type": "object",
-                            "properties": {
-                                "name": {"type": "string"},
-                                "description": {"type": "string"},
-                                # TODO: Include each option type's JSON schema in the
-                                #  main JSON schema.
-                                "options": {"type": "object"},
-                                "requires_admin": {"type": "boolean"},
-                                "supported_oses": {
-                                    "type": "array",
-                                    "items": {"type": "string"},
-                                },
-                                "authors": {
-                                    "type": "array",
-                                    "items": {"type": "string"},
-                                },
-                            },
-                            "required": [
-                                "name",
-                                "description",
-                                "options",
-                                "requires_admin",
-                                "supported_oses",
-                                "authors",
-                            ],
-                            "additionalProperties": False,
-                        },
-                    },
-                },
-            },
-            "required": [
-                "agent_type_id",
-                "name",
-                "compatible_listener_types",
-                "agent_capabilities",
-            ],
-            "additionalProperties": False,
-        },
-        "options": {"type": "object"},
-        "validating_function": {"type": ["string", "null"]},
-    },
-    "required": [
-        "label",
-        "name",
-        "description",
-        "version",
-        "compatible_framework_version",
-        "authors",
-        "agent_template_id",
-        "agent_type",
-        "options",
-        "validating_function",
-    ],
-    "additionalProperties": False,
-}
-ALL_AGENT_TEMPLATES_RESPONSE_JSON_SCHEMA = {
-    "type": "array",
-    "items": AGENT_TEMPLATE_RESPONSE_JSON_SCHEMA,
-}
-AGENT_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["AGENT_TEMPLATE_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 def test_get_all_agent_templates(
@@ -126,7 +20,7 @@ def test_get_all_agent_templates(
         test_response=session.get(
             "http://localhost:9999/api/agent-templates/all",
         ),
-        expected_json_schema=ALL_AGENT_TEMPLATES_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=ALL_AGENT_TEMPLATES_JSON_SCHEMA,
         expected_status_code=200,
     )
 
@@ -142,7 +36,7 @@ def test_get_agent_template_by_agent_template_id(
             test_response=session.get(
                 f"http://localhost:9999/api/agent-templates/{agent_template_id}",
             ),
-            expected_json_schema=AGENT_TEMPLATE_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=AGENT_TEMPLATE_JSON_SCHEMA,
             expected_status_code=200,
         )
 
@@ -150,7 +44,7 @@ def test_get_agent_template_by_agent_template_id(
         test_response=session.get(
             "http://localhost:9999/api/agent-templates/invalid-listener-template-id",
         ),
-        expected_json_schema=AGENT_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=AGENT_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
     )
 
@@ -176,7 +70,7 @@ def test_create_agent_generator_through_agent_template_by_agent_template_id(
                         .items()
                     },
                 ),
-                expected_json_schema=AGENT_GENERATOR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=AGENT_GENERATOR_JSON_SCHEMA,
                 expected_status_code=201,
             )
     else:
@@ -194,6 +88,6 @@ def test_create_agent_generator_through_agent_template_by_agent_template_id(
                         .items()
                     },
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )

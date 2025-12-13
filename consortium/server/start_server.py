@@ -81,8 +81,8 @@ async def _start_server(arguments: argparse.Namespace) -> None:
                     / "{time:YYYY-MM-DDTHH-mm-ss}.log"
                 ),
             ),
-            log_file_rotation=json_data.get("log_file_rotation", "daily"),
-            log_file_retention=json_data.get("log_file_retention", "1 week"),
+            log_file_rotation=json_data.get("log_file_rotation", None),
+            log_file_retention=json_data.get("log_file_retention", 1),
             colorize=json_data.get("colorize", True),
         )
     except FileNotFoundError:

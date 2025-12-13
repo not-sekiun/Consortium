@@ -31,7 +31,7 @@ Exception hierarchy for errors related to the event hooks service:
     - EventHookUnloadingError: Raised when an event hook fails to unload.
 """
 
-import consortium.server.exceptions.service_exceptions.component_service_exceptions as comp_svc_excs
+import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_svc_excs
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
 )
@@ -334,7 +334,7 @@ class DuplicateEventHookLabelError(
 
     def __init__(self, event_hook_str: str, label: str):
         super().__init__(
-            component_str=event_hook_str,
+            component=event_hook_str,
             label=label,
         )
 

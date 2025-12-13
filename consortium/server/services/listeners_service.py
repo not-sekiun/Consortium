@@ -16,6 +16,7 @@ from consortium.server.exceptions.framework_exceptions import (
 from consortium.server.exceptions.service_exceptions import (
     listeners_service_exceptions as listeners_service_excs,
 )
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.listener_templates_service import (
     ListenerTemplatesService,
@@ -31,7 +32,9 @@ class ListenersService:
         self._listener_templates_service = listener_templates_service
         self._events_service = events_service
         self._listeners = {}
-        self._logger = logger.bind(logger_name=str(self))
+        self._logger = logger.bind(
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
+        )
         self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:

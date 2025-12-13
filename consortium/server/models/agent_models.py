@@ -1,5 +1,4 @@
 import uuid
-from copy import deepcopy
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -30,31 +29,6 @@ class AgentResultModel(BaseModel):
     data: dict[str, Any] | list[Any] | None = None
     task_id: uuid.UUID
     datetime_finished: datetime = Field(default_factory=datetime.now)
-
-
-class AgentTaskMessageModel(BaseModel):
-    task_id: uuid.UUID
-    command: str
-    arguments: dict[str, Any]
-    data: dict[str, Any] = Field(default_factory=dict)
-
-    def create_new_related_task_message(self):
-        new_task_message_model = deepcopy(self)
-        new_task_message_model.data = {}
-        return new_task_message_model
-
-
-class AgentResultMessageModel(BaseModel):
-    result_id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    task_id: uuid.UUID
-    success: bool
-    message: str
-    data: dict[str, Any]
-
-    def create_new_related_result_message(self):
-        new_result_message_model = deepcopy(self)
-        new_result_message_model.data = {}
-        return new_result_message_model
 
 
 # TODO: Add ability to mark agents as disconnected instead of deregistered. For agents

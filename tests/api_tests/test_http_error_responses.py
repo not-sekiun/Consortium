@@ -4,8 +4,8 @@ import jsonschema
 import requests
 
 from tests.api_tests.common_json_response_schemas import (
-    METHOD_NOT_ALLOWED_ERROR_RESPONSE_JSON_SCHEMA,
-    NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+    METHOD_NOT_ALLOWED_ERROR_JSON_SCHEMA,
+    NOT_FOUND_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.utils import validate_response
 
@@ -76,7 +76,7 @@ def test_unauthorized_error_response():
 def test_not_found_error_response(admin_session: requests.Session):
     validate_response(
         test_response=admin_session.get("http://localhost:9999/does-not-exist"),
-        expected_json_schema=NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
     )
 
@@ -115,7 +115,9 @@ def test_method_not_allowed_error_response(
                 try:
                     jsonschema.validate(
                         response.json(),
-                        METHOD_NOT_ALLOWED_ERROR_RESPONSE_JSON_SCHEMA,
+                        METHOD_NOT_ALLOWED_ERROR_JSON_SCHEMA,
                     )
-                except jsonschema.ValidationError:
-                    assert False
+                except jsonschema.ValidationError as exc:
+                    raise AssertionError(
+                        f"Response JSON schema did not match expected schema. {exc}",
+                    ) from None

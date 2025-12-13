@@ -32,7 +32,7 @@
 #         handling a listener project.
 # """
 from consortium.server.exceptions.service_exceptions import (
-    component_service_exceptions as comp_svc_excs,
+    components_service_exceptions as comp_svc_excs,
 )
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -354,7 +354,7 @@ class DuplicateListenerProfileLabelError(
 
     def __init__(self, listener_profile_str: str, label: str):
         super().__init__(
-            component_str=listener_profile_str,
+            component=listener_profile_str,
             label=label,
         )
 

@@ -5,6 +5,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import BinaryIO
 
+from consortium.framework.agents.agent_message_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
     SupportedOS,
@@ -13,10 +17,6 @@ from consortium.framework.exceptions.agent_capabilties_framework_exception impor
     AgentCapabilityTaskingError,
 )
 from consortium.framework.options import SingleValueOption
-from consortium.server.models.agent_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
-)
 
 
 class _UploadAgentCapabilityMessageType(StrEnum):
@@ -152,8 +152,7 @@ class UploadCapability(BaseAgentCapability):
         SingleValueOption(
             name="chunk_size",
             description=(
-                "Size of the chunks to use in bytes when uploading files to the "
-                "agent."
+                "Size of the chunks to use in bytes when uploading files to the agent."
             ),
             required=False,
             value_type=int,
@@ -171,14 +170,14 @@ class UploadCapability(BaseAgentCapability):
         if not path.exists():
             raise AgentCapabilityTaskingError(
                 message=(
-                    f"Failed to upload file or directory {agent_message.arguments["source"]}. "
+                    f"Failed to upload file or directory {agent_message.arguments['source']}. "
                     "The source file or directory does not exist."
                 ),
             )
         if not path.is_file() and agent_message.arguments["recursive"]:
             raise AgentCapabilityTaskingError(
                 message=(
-                    f"Failed to upload file or directory {agent_message.arguments["source"]}. "
+                    f"Failed to upload file or directory {agent_message.arguments['source']}. "
                     "Recursive uploading is only supported for files."
                 ),
             )

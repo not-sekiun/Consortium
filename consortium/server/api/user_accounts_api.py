@@ -63,22 +63,22 @@ _invalid_user_account_role_error_during_creation = api_excs.InvalidUserAccountRo
 _user_account_username_already_exists_error_during_modification = api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
     consortium_exception=svc_excs.UserAccountUsernameAlreadyExistsError.during_user_account_modification(
         username="<username>",
-        user_account="<user_account>",
+        user_account_str="<user_account>",
     ),
 )
 _empty_user_account_username_error_during_modification = api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
     consortium_exception=svc_excs.EmptyUserAccountUsernameError().during_user_account_modification(
-        user_account="<user_account>"
+        user_account_str="<user_account>"
     ),
 )
 _empty_user_account_password_error_during_modification = api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
     consortium_exception=svc_excs.EmptyUserAccountPasswordError().during_user_account_modification(
-        user_account="<user_account>"
+        user_account_str="<user_account>"
     ),
 )
 _invalid_user_account_role_error_during_modification = api_excs.InvalidUserAccountRoleError.from_consortium_exception(
     consortium_exception=svc_excs.InvalidUserAccountRoleError.during_user_account_modification(
-        user_account="<user_account>", role="<role>"
+        user_account_str="<user_account>", role="<role>"
     ),
 )
 _unprocessable_entity_error = UnprocessableEntityError(

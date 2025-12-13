@@ -1,13 +1,13 @@
 import requests
 
 from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-    SUCCESS_RESPONSE_JSON_SCHEMA,
+    FORBIDDEN_ERROR_JSON_SCHEMA,
+    SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.test_user_accounts_api import (
-    USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+    USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
 )
-from tests.api_tests.test_users_api import USER_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA
+from tests.api_tests.test_users_api import USER_NOT_FOUND_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
 
 
@@ -27,7 +27,7 @@ def test_logout_from_server(
         # Logout
         validate_response(
             test_response=session.post("http://localhost:9999/api/logout"),
-            expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=SUCCESS_JSON_SCHEMA,
             expected_status_code=200,
         )
 
@@ -78,7 +78,7 @@ def test_logout_user_by_user_id(
         test_response=admin_session.post(
             f"http://localhost:9999/api/logout/user/{target_user_id}"
         ),
-        expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=SUCCESS_JSON_SCHEMA,
         expected_status_code=200,
     )
 
@@ -93,7 +93,7 @@ def test_logout_user_by_user_id(
         test_response=admin_session.post(
             "http://localhost:9999/api/logout/user/invalid-user-id"
         ),
-        expected_json_schema=USER_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
     )
 
@@ -103,7 +103,7 @@ def test_logout_user_by_user_id(
             test_response=session.post(
                 f"http://localhost:9999/api/logout/user/{target_user_id}"
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -112,7 +112,7 @@ def test_logout_user_by_user_id(
             test_response=session.post(
                 "http://localhost:9999/api/logout/user/invalid-user-id"
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -154,7 +154,7 @@ def test_logout_user_account_by_user_account_id(
         test_response=admin_session.post(
             f"http://localhost:9999/api/logout/user-account/{target_user_account_id}"
         ),
-        expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=SUCCESS_JSON_SCHEMA,
         expected_status_code=200,
     )
 
@@ -171,7 +171,7 @@ def test_logout_user_account_by_user_account_id(
         test_response=admin_session.post(
             "http://localhost:9999/api/logout/user-account/invalid-user-account-id"
         ),
-        expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
     )
 
@@ -192,7 +192,7 @@ def test_logout_user_account_by_user_account_id(
             test_response=session.post(
                 f"http://localhost:9999/api/logout/user-account/{target_user_account_id}"
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -201,6 +201,6 @@ def test_logout_user_account_by_user_account_id(
             test_response=session.post(
                 "http://localhost:9999/api/logout/user-account/invalid-user-account-id"
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )

@@ -2,12 +2,12 @@ import pytest
 import requests
 
 from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+    FORBIDDEN_ERROR_JSON_SCHEMA,
 )
-from tests.api_tests.test_listeners_api import LISTENER_RESPONSE_JSON_SCHEMA
+from tests.api_tests.test_listeners_api import LISTENER_JSON_SCHEMA
 from tests.api_tests.utils import get_all_listener_template_ids, validate_response
 
-LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA = {
+LISTENER_TEMPLATE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "label": {"type": "string"},
@@ -54,11 +54,11 @@ LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA = {
     ],
     "additionalProperties": False,
 }
-ALL_LISTENER_TEMPLATES_RESPONSE_JSON_SCHEMA = {
+ALL_LISTENER_TEMPLATES_JSON_SCHEMA = {
     "type": "array",
-    "items": LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA,
+    "items": LISTENER_TEMPLATE_JSON_SCHEMA,
 }
-LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
+LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -76,7 +76,7 @@ LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
-MISSING_REQUIRED_OPTION_ERROR_RESPONSE_JSON_SCHEMA = {
+MISSING_REQUIRED_OPTION_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -101,7 +101,7 @@ MISSING_REQUIRED_OPTION_ERROR_RESPONSE_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
-OPTION_VALUE_ERROR_RESPONSE_JSON_SCHEMA = {
+OPTION_VALUE_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -140,7 +140,7 @@ def test_get_all_listener_templates(
         test_response=session.get(
             "http://localhost:9999/api/listener-templates/all",
         ),
-        expected_json_schema=ALL_LISTENER_TEMPLATES_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=ALL_LISTENER_TEMPLATES_JSON_SCHEMA,
         expected_status_code=200,
     )
 
@@ -154,7 +154,7 @@ def test_get_listener_template_by_listener_template_id(
             test_response=session.get(
                 f"http://localhost:9999/api/listener-templates/{listener_template_id}",
             ),
-            expected_json_schema=LISTENER_TEMPLATE_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=LISTENER_TEMPLATE_JSON_SCHEMA,
             expected_status_code=200,
         )
 
@@ -162,7 +162,7 @@ def test_get_listener_template_by_listener_template_id(
         test_response=session.get(
             "http://localhost:9999/api/listener-templates/invalid-listener-template-id",
         ),
-        expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
     )
 
@@ -188,7 +188,7 @@ def test_create_listener_through_listener_template_by_listener_template_id(
                         .items()
                     },
                 ),
-                expected_json_schema=LISTENER_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=LISTENER_JSON_SCHEMA,
                 expected_status_code=201,
             )
     else:
@@ -206,7 +206,7 @@ def test_create_listener_through_listener_template_by_listener_template_id(
                         .items()
                     },
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
 
@@ -241,7 +241,7 @@ def test_create_listener_with_missing_required_option(
                     f"http://localhost:9999/api/listener-templates/{listener_template_id}",
                     json=parameters,
                 ),
-                expected_json_schema=MISSING_REQUIRED_OPTION_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=MISSING_REQUIRED_OPTION_ERROR_JSON_SCHEMA,
                 expected_status_code=422,
             )
 
@@ -282,7 +282,7 @@ def test_create_listener_with_invalid_option_value_type(
                         f"http://localhost:9999/api/listener-templates/{listener_template_id}",
                         json=invalid_parameters,
                     ),
-                    expected_json_schema=OPTION_VALUE_ERROR_RESPONSE_JSON_SCHEMA,
+                    expected_json_schema=OPTION_VALUE_ERROR_JSON_SCHEMA,
                     expected_status_code=422,
                 )
                 # Only test one invalid option per template

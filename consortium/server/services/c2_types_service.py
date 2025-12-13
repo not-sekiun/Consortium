@@ -6,6 +6,7 @@ from consortium.server.exceptions.service_exceptions.c2_types_service_exceptions
     AgentTypeNotFoundError,
     ListenerTypeNotFoundError,
 )
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
 
@@ -19,7 +20,7 @@ class C2TypesService:
         self._listener_profiles_service = listener_profiles_service
         self._agent_profiles_service = agent_profiles_service
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._logger.debug(
             "Started {}",

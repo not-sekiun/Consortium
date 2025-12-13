@@ -12,7 +12,7 @@ import packaging.version as version
 from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
     ComponentConfigurationError,
 )
-from consortium.server.exceptions.service_exceptions.component_service_exceptions import (
+from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentDependencyError,
     ComponentDependencyNotFoundError,
     ComponentDependsOnInvalidComponentDependencyError,

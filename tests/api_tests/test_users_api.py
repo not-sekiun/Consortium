@@ -1,11 +1,9 @@
 import requests
 
-from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-)
+from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
 
-USER_RESPONSE_JSON_SCHEMA = {
+USER_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "user_id": {"type": "string"},
@@ -35,11 +33,11 @@ USER_RESPONSE_JSON_SCHEMA = {
     ],
     "additionalProperties": False,
 }
-ALL_USERS_RESPONSE_JSON_SCHEMA = {
+ALL_USERS_JSON_SCHEMA = {
     "type": "array",
-    "items": USER_RESPONSE_JSON_SCHEMA,
+    "items": USER_JSON_SCHEMA,
 }
-USER_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
+USER_NOT_FOUND_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -59,7 +57,7 @@ USER_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
 def test_get_own_user(session: requests.Session):
     validate_response(
         test_response=session.get("http://localhost:9999/api/users/me"),
-        expected_json_schema=USER_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=USER_JSON_SCHEMA,
         expected_status_code=200,
     )
 
@@ -73,14 +71,14 @@ def test_get_all_users(
         # Test for admin and operator sessions.
         validate_response(
             test_response=session.get("http://localhost:9999/api/users/all"),
-            expected_json_schema=ALL_USERS_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=ALL_USERS_JSON_SCHEMA,
             expected_status_code=200,
         )
     else:
         # Test for spectator sessions.
         validate_response(
             test_response=session.get("http://localhost:9999/api/users/all"),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -101,14 +99,14 @@ def test_get_user_by_user_id(
                 test_response=session.get(
                     f"http://localhost:9999/api/users/{user_id}",
                 ),
-                expected_json_schema=USER_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=USER_JSON_SCHEMA,
                 expected_status_code=200,
             )
         validate_response(
             test_response=admin_session.get(
                 "http://localhost:9999/api/users/invalid-user-id",
             ),
-            expected_json_schema=USER_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
             expected_status_code=404,
         )
     else:
@@ -117,7 +115,7 @@ def test_get_user_by_user_id(
                 test_response=session.get(
                     f"http://localhost:9999/api/users/{user_id}",
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
         # 404 should not be returned despite the user ID being an invalid user ID to
@@ -126,7 +124,7 @@ def test_get_user_by_user_id(
             test_response=session.get(
                 "http://localhost:9999/api/users/invalid-user-id",
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -135,7 +133,7 @@ def test_update_own_display_name(session: requests.Session):
     # Get the current user's information
     current_user_response = validate_response(
         test_response=session.get("http://localhost:9999/api/users/me"),
-        expected_json_schema=USER_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=USER_JSON_SCHEMA,
         expected_status_code=200,
     )
     original_display_name = current_user_response.json()["display_name"]
@@ -146,7 +144,7 @@ def test_update_own_display_name(session: requests.Session):
             "http://localhost:9999/api/users/me",
             json={"display_name": "Updated Display Name"},
         ),
-        expected_json_schema=USER_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=USER_JSON_SCHEMA,
         expected_status_code=200,
     )
     assert updated_user_response.json()["display_name"] == "Updated Display Name"
@@ -157,7 +155,7 @@ def test_update_own_display_name(session: requests.Session):
             "http://localhost:9999/api/users/me",
             json={"display_name": original_display_name},
         ),
-        expected_json_schema=USER_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=USER_JSON_SCHEMA,
         expected_status_code=200,
     )
 
@@ -186,7 +184,7 @@ def test_update_user_display_name_by_user_id(
                 f"http://localhost:9999/api/users/{target_user_id}",
                 json={"display_name": "Admin Updated Name"},
             ),
-            expected_json_schema=USER_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_JSON_SCHEMA,
             expected_status_code=200,
         )
         assert updated_user_response.json()["display_name"] == "Admin Updated Name"
@@ -197,7 +195,7 @@ def test_update_user_display_name_by_user_id(
                 f"http://localhost:9999/api/users/{target_user_id}",
                 json={"display_name": original_display_name},
             ),
-            expected_json_schema=USER_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_JSON_SCHEMA,
             expected_status_code=200,
         )
 
@@ -207,7 +205,7 @@ def test_update_user_display_name_by_user_id(
                 "http://localhost:9999/api/users/invalid-user-id",
                 json={"display_name": "Should Fail"},
             ),
-            expected_json_schema=USER_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
             expected_status_code=404,
         )
     else:
@@ -217,7 +215,7 @@ def test_update_user_display_name_by_user_id(
                 f"http://localhost:9999/api/users/{target_user_id}",
                 json={"display_name": "Should Fail"},
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -227,6 +225,6 @@ def test_update_user_display_name_by_user_id(
                 "http://localhost:9999/api/users/invalid-user-id",
                 json={"display_name": "Should Fail"},
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )

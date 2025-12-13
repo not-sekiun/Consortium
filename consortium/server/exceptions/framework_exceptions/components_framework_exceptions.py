@@ -48,7 +48,7 @@ class ComponentsFrameworkError(BaseFrameworkException):
     _MESSAGE = ""
 
     def __init__(self, message: str | None = None, detail: Any = None, **kwargs):
-        self.kwargs = kwargs
+        self._kwargs = kwargs
         if message:
             super().__init__(message=message, detail=detail)
         else:

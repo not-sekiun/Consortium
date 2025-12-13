@@ -35,8 +35,20 @@ from consortium.server.objects.example_objects import example_agent_type
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
+router = APIRouter(
+    prefix="/api/agent-generators",
+    responses={
+        401: {"model": UnauthorizedError().to_pydantic_model()},
+        403: {"model": ForbiddenError().to_pydantic_model()},
+        405: {"model": MethodNotAllowedError().to_pydantic_model()},
+        500: {"model": InternalServerError().to_pydantic_model()},
+    },
+    tags=["Agent Generators API"],
+)
+
 agent_generators_service = server_singletons.agent_generators_service
 agent_templates_service = server_singletons.agent_templates_service
+
 _agent_generator_not_found_error = (
     AgentGeneratorNotFoundAPIError.from_consortium_exception(
         consortium_exception=AgentGeneratorNotFoundServiceError(
@@ -86,17 +98,6 @@ _agent_template_resolution_error = AgentTemplateResolutionError(
 )
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
-)
-
-router = APIRouter(
-    prefix="/api/agent-generators",
-    responses={
-        401: {"model": UnauthorizedError().to_pydantic_model()},
-        403: {"model": ForbiddenError().to_pydantic_model()},
-        405: {"model": MethodNotAllowedError().to_pydantic_model()},
-        500: {"model": InternalServerError().to_pydantic_model()},
-    },
-    tags=["Agent Generators API"],
 )
 
 

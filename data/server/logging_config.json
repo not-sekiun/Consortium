@@ -1,7 +1,7 @@
 {
     "log_level": "INFO",
-    "log_file_path": "data/server/logs/{time:YYYY-MM-DDTHH-mm-ss}.log",
-    "log_file_rotation": "daily",
-    "log_file_retention": "1 week",
+    "log_file_path": "data/server/logs/{time}.log",
+    "log_file_rotation": null,
+    "log_file_retention": 1,
     "colorize": true
 }

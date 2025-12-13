@@ -7,6 +7,10 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 import consortium.server.server_singletons as server_singletons
+from consortium.framework.agents.agent_message_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
@@ -20,10 +24,6 @@ from consortium.server.exceptions.framework_exceptions.agent_capabilities_framew
     DuplicateAgentCapabilityOptionNameError,
     EmptyAgentCapabilityNameError,
     MissingAgentCapabilityConfigurationParameterError,
-)
-from consortium.server.models.agent_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
 )
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,

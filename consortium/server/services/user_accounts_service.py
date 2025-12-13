@@ -24,13 +24,14 @@ from consortium.server.exceptions.service_exceptions.user_accounts_service_excep
 from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
 from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
+from consortium.server.server_logging import LoggerType
 
 
 class UserAccountsService:
     def __init__(self):
         self._user_accounts = {}
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._logger.debug("Started {}", self)
 
@@ -112,13 +113,13 @@ class UserAccountsService:
         if username is not None:
             if not username:
                 raise EmptyUserAccountUsernameError.during_user_account_modification(
-                    user_account=str(user_account),
+                    user_account_str=str(user_account),
                 )
             for existing_user_account in self.get_all_user_accounts():
                 if existing_user_account.username == username:
                     raise UserAccountUsernameAlreadyExistsError.during_user_account_modification(
                         username=username,
-                        user_account=str(user_account),
+                        user_account_str=str(user_account),
                     )
             old_username = user_account.username
             user_account.username = username
@@ -131,7 +132,7 @@ class UserAccountsService:
         if password is not None:
             if not password:
                 raise EmptyUserAccountPasswordError.during_user_account_modification(
-                    user_account=str(user_account),
+                    user_account_str=str(user_account),
                 )
             old_password = user_account.password
             user_account.password = password
@@ -145,7 +146,7 @@ class UserAccountsService:
             if role not in UserRole:
                 raise InvalidUserAccountRoleError.during_user_account_modification(
                     role=role,
-                    user_account=str(user_account),
+                    user_account_str=str(user_account),
                 )
             old_role = user_account.role
             user_account.role = role
@@ -157,88 +158,6 @@ class UserAccountsService:
             )
 
         return user_account
-
-    # def update_user_account_username_by_user_account_id(
-    #     self,
-    #     user_account_id: str,
-    #     username: str,
-    # ) -> UserAccountModel:
-    #     # Calling the `get_user_account_by_user_account_id()` method will implicitly
-    #     # check to see if the user account ID is valid.
-    #     user_account = self.get_user_account_by_user_account_id(
-    #         user_account_id=user_account_id,
-    #     )
-    #
-    #     if not username:
-    #         raise EmptyUserAccountUsernameError.during_user_account_modification(
-    #             user_account=str(user_account),
-    #         )
-    #
-    #     for existing_user_account in self.get_all_user_accounts():
-    #         if existing_user_account.username == username:
-    #             raise UserAccountUsernameAlreadyExistsError.during_user_account_modification(
-    #                 username=username,
-    #                 user_account=str(user_account),
-    #             )
-    #
-    #     old_username = user_account.username
-    #     user_account.username = username
-    #     self._logger.info(
-    #         "Updated username for user account {}: '{}' -> '{}'",
-    #         user_account,
-    #         old_username,
-    #         username,
-    #     )
-    #
-    #     return user_account
-
-    # def update_user_account_password_by_user_account_id(
-    #     self,
-    #     user_account_id: str,
-    #     password: str,
-    # ) -> UserAccountModel:
-    #     user_account = self.get_user_account_by_user_account_id(
-    #         user_account_id=user_account_id,
-    #     )
-    #
-    #     if not password:
-    #         raise EmptyUserAccountPasswordError.during_user_account_modification(
-    #             user_account=str(user_account),
-    #         )
-    #
-    #     old_password = user_account.password
-    #     user_account.password = password
-    #     self._logger.info(
-    #         "Updated password for user account {}: '{}' -> '{}'",
-    #         user_account,
-    #         old_password,
-    #         password,
-    #     )
-    #     return user_account
-
-    # def update_user_account_role_by_user_account_id(
-    #     self,
-    #     user_account_id: str,
-    #     role: UserRole,
-    # ) -> UserAccountModel:
-    #     user_account = self.get_user_account_by_user_account_id(user_account_id)
-    #
-    #     if role not in UserRole:
-    #         raise InvalidUserAccountRoleError.during_user_account_modification(
-    #             role=role,
-    #             user_account=str(user_account),
-    #         )
-    #
-    #     old_role = user_account.role
-    #     user_account.role = role
-    #     self._logger.info(
-    #         "Updated role for {}: '{}' -> '{}'",
-    #         user_account,
-    #         old_role,
-    #         role,
-    #     )
-    #
-    #     return user_account
 
     def delete_user_account_by_user_account_id(
         self,

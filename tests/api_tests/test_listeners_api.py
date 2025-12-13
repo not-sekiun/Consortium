@@ -5,12 +5,12 @@ import pytest
 import requests
 
 from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-    SUCCESS_RESPONSE_JSON_SCHEMA,
+    FORBIDDEN_ERROR_JSON_SCHEMA,
+    SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_listener_ids, validate_response
 
-LISTENER_RESPONSE_JSON_SCHEMA = {
+LISTENER_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "name": {"type": "string"},
@@ -59,9 +59,9 @@ LISTENER_RESPONSE_JSON_SCHEMA = {
         "status",
     ],
 }
-ALL_LISTENERS_RESPONSE_JSON_SCHEMA = {
+ALL_LISTENERS_JSON_SCHEMA = {
     "type": "array",
-    "items": LISTENER_RESPONSE_JSON_SCHEMA,
+    "items": LISTENER_JSON_SCHEMA,
 }
 
 
@@ -74,7 +74,7 @@ def test_get_all_listeners(
         test_response=session.get(
             "http://localhost:9999/api/listeners/all",
         ),
-        expected_json_schema=ALL_LISTENERS_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=ALL_LISTENERS_JSON_SCHEMA,
         expected_status_code=200,
     )
 
@@ -90,7 +90,7 @@ def test_get_listener_by_listener_id(
             test_response=session.get(
                 f"http://localhost:9999/api/listeners/{listener_id}",
             ),
-            expected_json_schema=LISTENER_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=LISTENER_JSON_SCHEMA,
             expected_status_code=200,
         )
 
@@ -109,7 +109,7 @@ def test_start_listener_by_listener_id(
                 test_response=session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/start",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
             # Listeners cannot be deleted if they are running, so we stop them first to
@@ -118,7 +118,7 @@ def test_start_listener_by_listener_id(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/stop",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
     else:
@@ -128,7 +128,7 @@ def test_start_listener_by_listener_id(
                 test_response=spectator_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/start",
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
 
@@ -147,14 +147,14 @@ def test_stop_listener_by_listener_id(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/start",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
                 test_response=session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/stop",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
     else:
@@ -164,14 +164,14 @@ def test_stop_listener_by_listener_id(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/start",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
                 test_response=spectator_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/stop",
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
             # Get the admin session to stop the listener before the fixture deletes it
@@ -180,7 +180,7 @@ def test_stop_listener_by_listener_id(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/stop",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
 
@@ -199,14 +199,14 @@ def test_cancel_listener_by_listener_id(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/start",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
                 test_response=session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/cancel",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
     else:
@@ -216,14 +216,14 @@ def test_cancel_listener_by_listener_id(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/start",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
                 test_response=spectator_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/cancel",
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
             # Get the admin session to stop the listener before the fixture deletes it
@@ -232,7 +232,7 @@ def test_cancel_listener_by_listener_id(
                 test_response=admin_session.post(
                     f"http://localhost:9999/api/listeners/{listener_id}/cancel",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
 
@@ -255,14 +255,14 @@ def test_update_listener_by_listener_id(
                     f"http://localhost:9999/api/listeners/{listener_id}",
                     json={"name": new_name, "description": new_description},
                 ),
-                expected_json_schema=LISTENER_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=LISTENER_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
                 test_response=session.get(
                     f"http://localhost:9999/api/listeners/{listener_id}",
                 ),
-                expected_json_schema=LISTENER_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=LISTENER_JSON_SCHEMA,
                 expected_status_code=200,
                 validator_function=lambda response: response.json()["name"] == new_name
                 and response.json()["description"] == new_description,
@@ -274,7 +274,7 @@ def test_update_listener_by_listener_id(
                 test_response=spectator_session.put(
                     f"http://localhost:9999/api/listeners/{listener_id}",
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
 
@@ -292,7 +292,7 @@ def test_delete_listener_by_listener_id(
                 test_response=session.delete(
                     f"http://localhost:9999/api/listeners/{listener_id}",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
     else:
@@ -302,13 +302,13 @@ def test_delete_listener_by_listener_id(
                 test_response=spectator_session.delete(
                     f"http://localhost:9999/api/listeners/{listener_id}",
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
             validate_response(
                 test_response=admin_session.delete(
                     f"http://localhost:9999/api/listeners/{listener_id}",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )

@@ -8,24 +8,19 @@ class ComponentsServiceError(BaseServiceException):
 
     _COMPONENT_TYPE = "component"
     _MESSAGE_TEMPLATE = ""  # Holds the pure template string
-    # Holds the template string that has the $C_LOWER$ and $C_CAPITAL$ replaced by the
-    # particular component type.
+    # Holds the template string that has the $COMPONENT_TYPE$ placeholder string
+    # replaced by the particular component type.
     _MESSAGE = ""
 
     def __init__(self, **kwargs):
-        self.kwargs = kwargs
+        self._kwargs = kwargs
         super().__init__(message=self._MESSAGE.format(**kwargs))
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        component_lower = cls._COMPONENT_TYPE.lower()
-        component_capital = cls._COMPONENT_TYPE.capitalize()
         cls._MESSAGE = cls._MESSAGE_TEMPLATE.replace(
-            "$C_LOWER$",
-            component_lower,
-        ).replace(
-            "$C_CAPITAL$",
-            component_capital,
+            "$COMPONENT_TYPE$",
+            cls._COMPONENT_TYPE.lower(),
         )
 
 
@@ -43,8 +38,8 @@ class InvalidComponentProjectManifestFileJSONError(
     code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The $C_LOWER$ project manifest file 'manifest.json' is not a valid JSON "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "The $COMPONENT_TYPE$ project manifest file `manifest.json` is not a valid JSON "
         "file."
     )
 
@@ -58,9 +53,9 @@ class InvalidComponentProjectManifestFileSchemaError(
     code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The $C_LOWER$ project manifest file 'manifest.json' failed JSON schema "
-        "validation: {json_schema_error_message}"
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "The $COMPONENT_TYPE$ project manifest file `manifest.json` does not conform to the "
+        "expected JSON schema. {json_schema_error_message}"
     )
 
     def __init__(self, component_project_folder: str, json_schema_error_message: str):
@@ -78,8 +73,8 @@ class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
     code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The 'pyproject.toml' file specified is not a valid TOML file."
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "The `pyproject.toml` file specified is not a valid TOML file."
     )
 
     def __init__(self, component_project_folder: str):
@@ -90,8 +85,8 @@ class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError)
     code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The 'pyproject.toml' file specified contains the invalid dependency "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "The `pyproject.toml` file specified contains the invalid dependency "
         "entry '{invalid_dependency_entry}'. Check that the dependency "
         "parameter contains entries conforming to PEP 508."
     )
@@ -113,10 +108,10 @@ class ComponentProjectManifestFileNotFoundError(
     code = "COMPONENT_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The $C_LOWER$ project manifest file 'manifest.json' was not found in the "
-        "$C_LOWER$ project folder. Create a 'manifest.json' file in the root "
-        "directory of the folder containing your $C_LOWER$."
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "The $COMPONENT_TYPE$ project manifest file `manifest.json` was not found in the "
+        "$COMPONENT_TYPE$ project folder. Create a `manifest.json` file in the root "
+        "directory of the folder containing your $COMPONENT_TYPE$."
     )
 
     def __init__(self, component_project_folder: str):
@@ -129,9 +124,9 @@ class ComponentProjectEntryPointModuleNotFoundError(
     code = "COMPONENT_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The $C_LOWER$ entry point module '{entry_point_module}' specified in the "
-        "$C_LOWER$ project's manifest file was not found. Check that the module "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "The $COMPONENT_TYPE$ entry point module '{entry_point_module}' specified in the "
+        "$COMPONENT_TYPE$ project's manifest file was not found. Check that the module "
         "specified in the entry point parameter exists."
     )
 
@@ -150,9 +145,9 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
     code = "COMPONENT_PROJECT_SYMBOL_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load $C_LOWER$ project at '{component_project_folder}'. The "
-        "entry point symbol '{symbol_name}' specified in the $C_LOWER$ project's "
-        "manifest file was not found in the $C_LOWER$ entry point module "
+        "Failed to load $COMPONENT_TYPE$ project at '{component_project_folder}'. The "
+        "entry point symbol '{entry_point_symbol}' specified in the $COMPONENT_TYPE$ project's "
+        "manifest file was not found in the $COMPONENT_TYPE$ entry point module "
         "'{entry_point_module}'. Check that the class specified in the `entry_points` "
         "parameter exists for the module specified."
     )
@@ -165,7 +160,7 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
     ):
         super().__init__(
             component_project_folder=component_project_folder,
-            symbol_name=entry_point_symbol,
+            entry_point_symbol=entry_point_symbol,
             entry_point_module=entry_point_module,
         )
 
@@ -174,8 +169,8 @@ class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError)
     code = "COMPONENT_PROJECT_INTERFACE_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ project at '{component_project_folder}'. "
-        "The entry point symbol '{entry_point_symbol}' in the $C_LOWER$ project does "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "The entry point symbol '{entry_point_symbol}' in the $COMPONENT_TYPE$ project does "
         "not implement the required interface. Check that the symbol specified "
         "inherits from the appropriate base class."
     )
@@ -195,8 +190,8 @@ class InternalComponentProjectError(InvalidComponentProjectImplementationError):
     code = "INTERNAL_COMPONENT_PROJECT_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load $C_LOWER$ project at '{component_project_folder}'. An "
-        "exception occurred while loading the $C_LOWER$: {internal_error_message}"
+        "Failed to load $COMPONENT_TYPE$ project at '{component_project_folder}'. An "
+        "exception occurred while loading the $COMPONENT_TYPE$: {internal_error_message}"
     )
 
     def __init__(
@@ -214,7 +209,7 @@ class IncompatibleComponentFrameworkVersionError(ComponentLoadingError):
     code = "INCOMPATIBLE_COMPONENT_FRAMEWORK_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ {component_str}. The $C_LOWER$ requires a "
+        "Failed to load the $COMPONENT_TYPE$ {component_str}. The $COMPONENT_TYPE$ requires a "
         "framework version of '{required_version}' which is incompatible "
         "with the current framework version '{current_version}'."
     )
@@ -236,8 +231,8 @@ class ComponentAlreadyRegisteredError(ComponentLoadingError):
     code = "COMPONENT_ALREADY_REGISTERED_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to register the $C_LOWER$ '{component_str}'. A $C_LOWER$ with the same "
-        "ID '{component_id}' has already been registered in the $C_LOWER$s service."
+        "Failed to register the $COMPONENT_TYPE$ '{component_str}'. A $COMPONENT_TYPE$ with the same "
+        "ID '{component_id}' has already been registered in the $COMPONENT_TYPE$s service."
     )
 
     def __init__(self, component_str: str, component_id: str):
@@ -251,15 +246,15 @@ class DuplicateComponentLabelError(ComponentLoadingError):
     code = "DUPLICATE_COMPONENT_LABEL_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to register the $C_LOWER$ '{component_str}'. A $C_LOWER$ with the same "
-        "label '{label}' has already been registered in the $C_LOWER$s "
+        "Failed to register the $COMPONENT_TYPE$ '{component_str}'. A $COMPONENT_TYPE$ with the same "
+        "label '{label}' has already been registered in the $COMPONENT_TYPE$s "
         "service. Check that you are not registering an already registered "
-        "$C_LOWER$ or that the $C_LOWER$ you are registering has a unique label."
+        "$COMPONENT_TYPE$ or that the $COMPONENT_TYPE$ you are registering has a unique label."
     )
 
-    def __init__(self, component_str: str, label: str):
+    def __init__(self, component: str, label: str):
         super().__init__(
-            component_str=component_str,
+            component=component,
             label=label,
         )
 
@@ -272,10 +267,10 @@ class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
     code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ '{component_project_folder}' due to a dependency "
+        "Failed to load the $COMPONENT_TYPE$ '{component_project_folder}' due to a dependency "
         "error. The third-party dependency '{third_party_dependency_name}' is required "
         "but not installed. Either install that dependency or remove it from the "
-        "$C_LOWER$'s definition."
+        "$COMPONENT_TYPE$'s definition."
     )
 
     def __init__(
@@ -293,11 +288,11 @@ class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
     code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ '{component_project_folder}' due to a "
-        "dependency error. The $C_LOWER$ requires the third-party dependency "
+        "Failed to load the $COMPONENT_TYPE$ '{component_project_folder}' due to a "
+        "dependency error. The $COMPONENT_TYPE$ requires the third-party dependency "
         "'{third_party_dependency_name}' of version '{required_version}' but version "
         "'{installed_version}' was found. Either install the dependency of the correct "
-        "version or change the dependency version in the $C_LOWER$'s definition."
+        "version or change the dependency version in the $COMPONENT_TYPE$'s definition."
     )
 
     def __init__(
@@ -319,9 +314,9 @@ class ComponentDependencyNotFoundError(ComponentDependencyError):
     code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ {component_str} due to a dependency error. "
+        "Failed to load the $COMPONENT_TYPE$ {component_str} due to a dependency error. "
         "The component dependency '{missing_dependency}' is required but not "
-        "installed. Either install that dependency or remove it from the $C_LOWER$'s "
+        "installed. Either install that dependency or remove it from the $COMPONENT_TYPE$'s "
         "definition."
     )
 
@@ -340,11 +335,11 @@ class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
     code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ {component_str} due to a dependency error. "
-        "The $C_LOWER$ requires the component dependency '{incompatible_dependency}' of "
+        "Failed to load the $COMPONENT_TYPE$ {component_str} due to a dependency error. "
+        "The $COMPONENT_TYPE$ requires the component dependency '{incompatible_dependency}' of "
         "version '{required_version}' but version '{installed_version}' is installed. "
         "Either install the dependency of the correct version or change the dependency "
-        "version in the $C_LOWER$'s definition."
+        "version in the $COMPONENT_TYPE$'s definition."
     )
 
     def __init__(
@@ -366,8 +361,8 @@ class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError
     code = "COMPONENT_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ {component_str} due to a dependency error. The "
-        "component dependency '{invalid_dependency}' that the $C_LOWER$ depends on is "
+        "Failed to load the $COMPONENT_TYPE$ {component_str} due to a dependency error. The "
+        "component dependency '{invalid_dependency}' that the $COMPONENT_TYPE$ depends on is "
         "invalid."
     )
 
@@ -386,8 +381,8 @@ class ComponentDependencyNotRunningError(ComponentDependencyError):
     code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $C_LOWER$ {component_str} due to a dependency error. The "
-        "component dependency '{not_running_dependency}' that the $C_LOWER$ depends on "
+        "Failed to load the $COMPONENT_TYPE$ {component_str} due to a dependency error. The "
+        "component dependency '{not_running_dependency}' that the $COMPONENT_TYPE$ depends on "
         "is installed but not currently running."
     )
 
@@ -406,8 +401,8 @@ class ComponentNotFoundError(ComponentsServiceError):
     code = "COMPONENT_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Faield to find the requested $C_LOWER$. No $C_LOWER$ was found with the "
-        "provided $C_LOWER$ ID '{component_id}'."
+        "Faield to find the requested $COMPONENT_TYPE$. No $COMPONENT_TYPE$ was found with the "
+        "provided $COMPONENT_TYPE$ ID '{component_id}'."
     )
 
     def __init__(self, component_id: str):

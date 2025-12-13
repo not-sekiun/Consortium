@@ -8,8 +8,8 @@ from consortium.server.api.respository_api import (
     create_get_all_repository_resources_endpoint,
     create_get_repository_resource_by_resource_id_endpoint,
 )
-from consortium.server.exceptions.api_exceptions.artifacts_api_exceptions import (
-    ArtifactNotFoundError,
+from consortium.server.exceptions.api_exceptions import (
+    repository_api_exceptions as api_excs,
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
@@ -17,8 +17,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
 )
-from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    RepositoryResourceNotFoundError,
+from consortium.server.exceptions.service_exceptions import (
+    repository_service_exceptions as svc_excs,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.repository_models import (
@@ -27,7 +27,6 @@ from consortium.server.models.repository_models import (
 )
 from consortium.server.objects.user_account_objects import UserPermissions
 
-artifacts_service = server_singletons.artifacts_service
 router = APIRouter(
     prefix="/api/artifacts",
     responses={
@@ -38,10 +37,21 @@ router = APIRouter(
     },
     tags=["Artifacts API"],
 )
+
+_artifacts_service = server_singletons.artifacts_service
+
+_resource_not_found_error = (
+    api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
+        consortium_exception=svc_excs.RepositoryResourceNotFoundError(
+            resource_id="<resource_id>",
+        ),
+    )
+)
+
 router.add_api_route(
     path="/all",
     endpoint=create_get_all_repository_resources_endpoint(
-        repository_service=artifacts_service,
+        repository_service=_artifacts_service,
         get_all_repository_resources_permission=UserPermissions.READ_ALL_ARTIFACTS,
     ),
     methods=["GET"],
@@ -53,60 +63,45 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_get_repository_resource_by_resource_id_endpoint(
-        repository_service=artifacts_service,
+        repository_service=_artifacts_service,
         get_repository_resource_by_resource_id_permission=UserPermissions.READ_ARTIFACT_BY_ARTIFACT_ID,
-        repository_resource_not_found_api_error=ArtifactNotFoundError,
     ),
     methods=["GET"],
     responses={
         200: {"model": RepositoryDirectoryModel | RepositoryFileModel},
         404: {
-            "model": ArtifactNotFoundError.from_consortium_exception(
-                consortium_exception=RepositoryResourceNotFoundError(
-                    resource_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _resource_not_found_error.to_pydantic_model(),
         },
     },
-    name="Get Artifact By Artifact ID",
+    name="Get Artifact By Resource ID",
 )
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_delete_repository_resource_by_resource_id_endpoint(
-        repository_service=artifacts_service,
+        repository_service=_artifacts_service,
         delete_repository_resource_by_resource_id_permission=UserPermissions.DELETE_ARTIFACT_BY_ARTIFACT_ID,
-        repository_resource_not_found_api_error=ArtifactNotFoundError,
     ),
     methods=["DELETE"],
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": ArtifactNotFoundError.from_consortium_exception(
-                consortium_exception=RepositoryResourceNotFoundError(
-                    resource_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _resource_not_found_error.to_pydantic_model(),
         },
     },
-    name="Delete Artifact By Artifact ID",
+    name="Delete Artifact By Resource ID",
 )
 router.add_api_route(
     path="/download/{resource_id}",
     endpoint=create_download_repository_resource_by_resource_id_endpoint(
-        repository_service=artifacts_service,
+        repository_service=_artifacts_service,
         download_repository_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_ARTIFACTS,
-        repository_resource_not_found_api_error=ArtifactNotFoundError,
     ),
     methods=["GET"],
     response_class=FileResponse,
     responses={
         404: {
-            "model": ArtifactNotFoundError.from_consortium_exception(
-                consortium_exception=RepositoryResourceNotFoundError(
-                    resource_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _resource_not_found_error.to_pydantic_model(),
         },
     },
-    name="Download Artifact By Artifact ID",
+    name="Download Artifact By Resource ID",
 )

@@ -4,12 +4,12 @@ import pytest
 import requests
 
 from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
-    SUCCESS_RESPONSE_JSON_SCHEMA,
+    FORBIDDEN_ERROR_JSON_SCHEMA,
+    SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_user_account_ids, validate_response
 
-USER_ACCOUNT_RESPONSE_JSON_SCHEMA = {
+USER_ACCOUNT_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "user_account_id": {"type": "string"},
@@ -25,11 +25,11 @@ USER_ACCOUNT_RESPONSE_JSON_SCHEMA = {
     ],
     "additionalProperties": False,
 }
-ALL_USER_ACCOUNTS_RESPONSE_JSON_SCHEMA = {
+ALL_USER_ACCOUNTS_JSON_SCHEMA = {
     "type": "array",
-    "items": USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+    "items": USER_ACCOUNT_JSON_SCHEMA,
 }
-USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
+USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -44,7 +44,7 @@ USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
-DUPLICATE_USER_ACCOUNT_CREATION_ERROR_RESPONSE_JSON_SCHEMA = {
+DUPLICATE_USER_ACCOUNT_CREATION_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -90,14 +90,14 @@ def test_create_user_account(
                     "role": test_user_account[2],
                 },
             ),
-            expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=201,
         ).json()
         validate_response(
             test_response=admin_session.get(
                 f"http://localhost:9999/api/user-accounts/{user_account['user_account_id']}",
             ),
-            expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
             # Don't call the lambda variable response because it will shadow the
             # response variable from the outer scope
@@ -120,7 +120,7 @@ def test_create_user_account(
                     "role": test_user_account[2],
                 },
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -135,7 +135,7 @@ def test_get_user_account_by_user_account_id(
                 test_response=session.get(
                     f"http://localhost:9999/api/user-accounts/{user_account_id}",
                 ),
-                expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
                 expected_status_code=200,
             )
     else:
@@ -144,7 +144,7 @@ def test_get_user_account_by_user_account_id(
                 test_response=session.get(
                     f"http://localhost:9999/api/user-accounts/{user_account_id}",
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
 
@@ -157,14 +157,14 @@ def test_get_all_user_accounts(
         # Test for admin sessions.
         validate_response(
             test_response=session.get("http://localhost:9999/api/user-accounts/all"),
-            expected_json_schema=ALL_USER_ACCOUNTS_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=ALL_USER_ACCOUNTS_JSON_SCHEMA,
             expected_status_code=200,
         )
     else:
         # Test for operator and spectator sessions.
         validate_response(
             test_response=session.get("http://localhost:9999/api/user-accounts/all"),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -190,7 +190,7 @@ def test_update_user_account_username_by_user_account_id(
                     "username": new_username,
                 },
             ),
-            expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
             validator_function=lambda response: response.json()["username"]
             == new_username,
@@ -203,7 +203,7 @@ def test_update_user_account_username_by_user_account_id(
                     "username": new_username,
                 },
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -229,7 +229,7 @@ def test_update_user_account_password_by_user_account_id(
                     "password": new_password,
                 },
             ),
-            expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
             validator_function=lambda response: response.json()["password"]
             == new_password,
@@ -240,7 +240,7 @@ def test_update_user_account_password_by_user_account_id(
                 f"http://localhost:9999/api/user-accounts/{user_account_id}",
                 json={"password": new_password},
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -271,7 +271,7 @@ def test_update_user_account_role_by_user_account_id(
                     "role": new_role,
                 },
             ),
-            expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
             validator_function=lambda response: response.json()["role"] == new_role,
         )
@@ -283,7 +283,7 @@ def test_update_user_account_role_by_user_account_id(
                     "role": new_role,
                 },
             ),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
@@ -315,7 +315,7 @@ def test_update_user_account_by_user_account_id(
                         "role": new_role,
                     },
                 ),
-                expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
                 expected_status_code=200,
                 # Bind the variables to avoid late binding issue in lambda
                 validator_function=lambda response,
@@ -346,7 +346,7 @@ def test_update_user_account_by_user_account_id(
                         "role": new_role,
                     },
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
 
@@ -372,7 +372,7 @@ def test_update_user_account_by_user_account_id(
 #                     "role": new_role,
 #                 },
 #             ),
-#             expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+#             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
 #             expected_status_code=200,
 #             validator_function=lambda response: response.json()["username"]
 #             == new_username
@@ -390,7 +390,7 @@ def test_update_user_account_by_user_account_id(
 #                     "role": new_role,
 #                 },
 #             ),
-#             expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+#             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
 #             expected_status_code=403,
 #         )
 #         validate_response(
@@ -401,7 +401,7 @@ def test_update_user_account_by_user_account_id(
 #                     "password": new_password,
 #                 },
 #             ),
-#             expected_json_schema=USER_ACCOUNT_RESPONSE_JSON_SCHEMA,
+#             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
 #             expected_status_code=200,
 #             validator_function=lambda response: response.json()["username"]
 #             == new_username
@@ -420,7 +420,7 @@ def test_update_user_account_by_user_account_id(
 #                     "role": new_role,
 #                 },
 #             ),
-#             expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+#             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
 #             expected_status_code=403,
 #         )
 #
@@ -440,14 +440,14 @@ def test_delete_user_account_by_user_account_id(
                 test_response=session.delete(
                     f"http://localhost:9999/api/user-accounts/{user_account_id}",
                 ),
-                expected_json_schema=SUCCESS_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
                 test_response=session.get(
                     f"http://localhost:9999/api/user-accounts/{user_account_id}",
                 ),
-                expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
                 expected_status_code=404,
             )
     else:
@@ -457,6 +457,6 @@ def test_delete_user_account_by_user_account_id(
                 test_response=session.delete(
                     f"http://localhost:9999/api/user-accounts/{user_account_id}",
                 ),
-                expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )

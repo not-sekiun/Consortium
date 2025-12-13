@@ -6,6 +6,10 @@ from typing import Any
 from loguru import logger
 from pydantic import BaseModel, ValidationError
 
+from consortium.framework.agents.agent_message_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.event_hooks._event import Event
@@ -20,9 +24,7 @@ from consortium.server.exceptions.framework_exceptions.agents_framework_exceptio
     AgentTaskNotFoundError,
 )
 from consortium.server.models.agent_models import (
-    AgentResultMessageModel,
     AgentResultModel,
-    AgentTaskMessageModel,
     AgentTaskModel,
     AgentTaskState,
 )

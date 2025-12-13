@@ -4,6 +4,7 @@ from consortium.framework.listeners.base_listener_template import BaseListenerTe
 from consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions import (
     ListenerTemplateNotFoundError,
 )
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
 
 
@@ -16,7 +17,7 @@ class ListenerTemplatesService:
     ):
         self._listener_profiles_service = listener_profiles_service
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._logger.debug("Started {}", self)
 

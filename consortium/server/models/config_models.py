@@ -22,6 +22,6 @@ class LoggingConfigModel(BaseModel):
         "CRITICAL",
     ]
     log_file_path: str
-    log_file_rotation: str
-    log_file_retention: str
+    log_file_rotation: str | int | None
+    log_file_retention: str | int | None
     colorize: bool

@@ -11,7 +11,7 @@ from tests.api_tests.utils import (
     validate_response,
 )
 
-_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA = {
+_JSON_WEB_TOKEN_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "access_token": {"type": "string"},
@@ -84,7 +84,7 @@ def admin_session():
             data={"username": "admin", "password": "admin"},
         ),
         expected_status_code=200,
-        expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=_JSON_WEB_TOKEN_JSON_SCHEMA,
     )
     session.headers.update(
         {"Authorization": f"Bearer {response.json()['access_token']}"},
@@ -103,7 +103,7 @@ def operator_session():
             data={"username": "operator", "password": "operator"},
         ),
         expected_status_code=200,
-        expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=_JSON_WEB_TOKEN_JSON_SCHEMA,
     )
     session.headers.update(
         {"Authorization": f"Bearer {response.json()['access_token']}"},
@@ -122,7 +122,7 @@ def spectator_session():
             data={"username": "spectator", "password": "spectator"},
         ),
         expected_status_code=200,
-        expected_json_schema=_JSON_WEB_TOKEN_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=_JSON_WEB_TOKEN_JSON_SCHEMA,
     )
     session.headers.update(
         {"Authorization": f"Bearer {response.json()['access_token']}"},

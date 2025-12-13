@@ -1,7 +1,7 @@
 import pathlib
 import uuid
 
-import consortium.server.exceptions.service_exceptions.component_service_exceptions as comp_ldr_svc_excs
+import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
 from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
     ComponentDependencyNotFoundError,

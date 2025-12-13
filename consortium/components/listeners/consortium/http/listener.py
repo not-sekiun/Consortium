@@ -6,6 +6,7 @@ from aiohttp import web
 from pydantic import ValidationError
 
 from consortium.components.agents.consortium.http.agent_type import AGENT_TYPE
+from consortium.framework.agents.agent_message_models import AgentResultMessageModel
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerSpecificAgentNotFoundError,
     ListenerStartError,
@@ -14,9 +15,6 @@ from consortium.framework.listeners.base_listener import BaseListener
 from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
     AgentTaskNotFoundError,
 )
-
-# TODO: Import Error triggering wrong log message.
-from consortium.server.models.agent_models import AgentResultMessageModel
 
 
 class Listener(BaseListener):
@@ -102,15 +100,7 @@ class Listener(BaseListener):
                 if agent_message is None:
                     break
 
-                # TODO: Provide convenience functions to convert to and from json
-                #  strings, bytes and dictionaries.
-                agent_message_json_data = {
-                    "task_id": str(agent_message.task_id),
-                    "command": agent_message.command,
-                    "arguments": agent_message.options,
-                    "data": agent_message.data,
-                }
-                agent_messages.append(agent_message_json_data)
+                agent_messages.append(agent_message.to_json())
             return web.json_response(agent_messages, status=200)
 
         async def handle_agent_posting_results(request):

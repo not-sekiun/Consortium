@@ -35,7 +35,7 @@ Exception hierarchy for the plugins service:
 """
 
 from consortium.server.exceptions.service_exceptions import (
-    component_service_exceptions as comp_ldr_svc_excs,
+    components_service_exceptions as comp_ldr_svc_excs,
 )
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -358,7 +358,7 @@ class DuplicatePluginLabelError(
 
     def __init__(self, plugin_str: str, label: str):
         super().__init__(
-            component_str=plugin_str,
+            component=plugin_str,
             label=label,
         )
 

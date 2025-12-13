@@ -4,6 +4,7 @@ from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
     AgentTemplateNotFoundError,
 )
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 
 
@@ -14,7 +15,7 @@ class AgentTemplatesService:
     ):
         self._agent_profiles_service = agent_profiles_service
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
 
     def __str__(self) -> str:

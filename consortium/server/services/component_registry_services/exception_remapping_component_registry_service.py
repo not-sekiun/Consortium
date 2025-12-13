@@ -1,6 +1,6 @@
 import pathlib
 
-import consortium.server.exceptions.service_exceptions.component_service_exceptions as comp_ldr_svc_excs
+import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
 from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.services.component_registry_services.component_registry_service import (
     ComponentRegistryService,
@@ -33,7 +33,7 @@ class ExceptionRemappingComponentRegistryService(
             ) as exc:
                 raise remap_exception(
                     original_exception=exc,
-                    original_kwargs=exc.kwargs,
+                    original_kwargs=exc._kwargs,
                     exception_map=self._EXCEPTION_MAP,
                     exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
                 ) from None
@@ -83,7 +83,7 @@ class ExceptionRemappingComponentRegistryService(
                         error_tuple[0],
                         remap_exception(
                             original_exception=error,
-                            original_kwargs=error.kwargs,
+                            original_kwargs=error._kwargs,
                             exception_map=self._EXCEPTION_MAP,
                             exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
                         ),

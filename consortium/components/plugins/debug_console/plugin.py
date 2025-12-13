@@ -119,12 +119,8 @@ class Plugin(BasePlugin):
     async def on_started(self) -> None:
         self.logger.info(
             "Debug interpreter is now running. All framework services are available in "
-            "the environment. You can tab complete services along with their API "
-            "methods.",
-        )
-        self.logger.warning(
-            "Whatever you do here WILL affect the state of the framework. Modify "
-            "things with caution. You have been warned.",
+            "the current environment. You can tab complete services along with their "
+            "API methods.",
         )
 
         # TODO: Consider providing a dedicated logger service to interact with logging,

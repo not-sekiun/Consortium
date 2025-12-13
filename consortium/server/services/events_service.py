@@ -9,6 +9,7 @@ from consortium.server.exceptions.service_exceptions.events_service_exceptions i
     EventHandlerAlreadyRegisteredError,
     EventHandlerNotRegisteredError,
 )
+from consortium.server.server_logging import LoggerType
 
 
 # TODO: Support creating custom events.
@@ -16,7 +17,7 @@ class EventsService:
     def __init__(self):
         self._event_handlers = {}
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._logger.debug("Started {}", self)
         self._custom_event_types = set()

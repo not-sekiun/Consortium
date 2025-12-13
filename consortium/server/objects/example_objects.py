@@ -5,12 +5,13 @@ from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.listeners.base_listener_type import BaseListenerType
 
 
+# TODO: Trash this entirely once we move off from the old agent/listener type system.
 class _ExampleListenerType(BaseListenerType):
-    name = "string"
+    name = "<listener_type_name>"
 
 
 class _ExampleAgentType(BaseAgentType):
-    name = "string"
+    name = "<agent_type_name>"
 
 
 example_listener_type = _ExampleListenerType()

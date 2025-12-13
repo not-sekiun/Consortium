@@ -20,6 +20,7 @@ from consortium.server.exceptions.service_exceptions.plugins_service_exceptions 
     PluginUnloadingError,
 )
 from consortium.server.server_config import CONSORTIUM_PLUGINS_DIRECTORY_PATH
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.component_loader_services.plugin_loader_service import (
     PluginLoaderService,
 )
@@ -38,7 +39,7 @@ class PluginsService:
         )
         self._restart_plugin_tasks = set()
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._logger.debug("Started Plugins Service")
 
@@ -465,7 +466,7 @@ class PluginsService:
                 str(
                     remap_exception(
                         original_exception=plugin[1],
-                        original_kwargs=plugin[1].kwargs,
+                        original_kwargs=plugin[1]._kwargs,
                         exception_map=self._EXCEPTION_MAP,
                         exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
                     ),

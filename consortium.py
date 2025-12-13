@@ -71,11 +71,12 @@ def main():
         "--reload",
         help=(
             "Start the server with framework reloading enabled. This will reload the "
-            "server on file changes made to the listener (`framework/listeners`), "
-            "agents (`framework/agents`), plugins (`framework/plugins`), and event "
-            "hooks (`framework/event_hooks`) framework directories where custom user "
-            "extended code is loaded from. This is helpful for developing custom "
-            "components."
+            "server on file changes made to the listener "
+            "(consortium/components/listeners), agents (consortium/components/agents), "
+            "plugins (consortium/components/plugins), and event hooks "
+            "(consortium/components/event_hooks) framework component directories where "
+            "custom framework components are loaded from. This is helpful for "
+            "developing custom components."
         ),
         action="store_true",
     )

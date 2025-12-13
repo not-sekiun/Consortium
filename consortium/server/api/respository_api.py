@@ -15,14 +15,16 @@ from typing import Annotated, Literal
 
 from fastapi import Depends, Form, UploadFile
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 
-from consortium.server.exceptions.api_exceptions.http_exceptions import NotFoundError
-from consortium.server.exceptions.api_exceptions.repository_api_exceptions import (
-    InvalidRepositoryDirectoryArchiveFileFormatError,
-    RepositoryDirectoryArchiveFileFormatNotSpecifiedError,
+from consortium.server.exceptions.api_exceptions import (
+    repository_api_exceptions as repository_api_excs,
 )
-from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    RepositoryResourceNotFoundError,
+from consortium.server.exceptions.framework_exceptions import (
+    repository_framework_exceptions as repository_framework_excs,
+)
+from consortium.server.exceptions.service_exceptions import (
+    repository_service_exceptions as repository_svc_excs,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.repository_models import (
@@ -82,7 +84,6 @@ def create_get_all_repository_resources_endpoint(
 def create_get_repository_resource_by_resource_id_endpoint(
     repository_service: RepositoryService,
     get_repository_resource_by_resource_id_permission: UserPermissions,
-    repository_resource_not_found_api_error: type[NotFoundError],
 ) -> Callable:
     async def get_repository_resource_by_resource_id(
         resource_id: str,
@@ -99,8 +100,8 @@ def create_get_repository_resource_by_resource_id_endpoint(
                     resource_id=resource_id,
                 )
             )
-        except RepositoryResourceNotFoundError as exc:
-            raise repository_resource_not_found_api_error.from_consortium_exception(
+        except repository_svc_excs.RepositoryResourceNotFoundError as exc:
+            raise repository_api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
 
@@ -123,7 +124,6 @@ def create_get_repository_resource_by_resource_id_endpoint(
 def create_delete_repository_resource_by_resource_id_endpoint(
     repository_service: RepositoryService,
     delete_repository_resource_by_resource_id_permission: UserPermissions,
-    repository_resource_not_found_api_error: type[NotFoundError],
 ) -> Callable:
     async def delete_repository_resource_by_resource_id(
         resource_id: str,
@@ -140,8 +140,8 @@ def create_delete_repository_resource_by_resource_id_endpoint(
             repository_service.delete_repository_resource_by_resource_id(
                 resource_id=resource_id,
             )
-        except RepositoryResourceNotFoundError as exc:
-            raise repository_resource_not_found_api_error.from_consortium_exception(
+        except repository_svc_excs.RepositoryResourceNotFoundError as exc:
+            raise repository_api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
 
@@ -153,9 +153,11 @@ def create_delete_repository_resource_by_resource_id_endpoint(
 def create_download_repository_resource_by_resource_id_endpoint(
     repository_service: RepositoryService,
     download_repository_resource_by_resource_id_permission: UserPermissions,
-    repository_resource_not_found_api_error: type[NotFoundError],
 ) -> Callable:
-    async def download_repository_resource_by_resource_id(
+    # Define this function synchronously because calling `shutil.make_archive()` in an
+    # async function causes event loop issues. This will signal to FastAPI that this
+    # endpoint should be run in a threadpool.
+    def download_repository_resource_by_resource_id(
         resource_id: str,
         _: Annotated[
             None,
@@ -170,23 +172,28 @@ def create_download_repository_resource_by_resource_id_endpoint(
             asset = repository_service.get_repository_resource_by_resource_id(
                 resource_id=resource_id,
             )
-        except RepositoryResourceNotFoundError as exc:
-            raise repository_resource_not_found_api_error.from_consortium_exception(
+        except repository_svc_excs.RepositoryResourceNotFoundError as exc:
+            raise repository_api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
 
         if asset.is_directory:
-            with tempfile.TemporaryDirectory() as temp_dir_path:
-                temp_archive_file = pathlib.Path(temp_dir_path, asset.name)
-                shutil.make_archive(
-                    base_name=str(temp_archive_file.resolve()),
-                    format="zip",
-                    root_dir=asset.path,
-                )
-                return FileResponse(
-                    path=str(temp_archive_file.with_suffix(".zip").resolve()),
-                    filename=asset.name if asset.name else str(asset.resource_id),
-                )
+            temp_dir = tempfile.TemporaryDirectory()
+            temp_archive_file = pathlib.Path(temp_dir.name, asset.name)
+            shutil.make_archive(
+                base_name=str(temp_archive_file.resolve()),
+                format="zip",
+                root_dir=asset.path,
+            )
+            return FileResponse(
+                path=str(temp_archive_file.with_suffix(".zip").resolve()),
+                filename=f"{asset.name}.zip"
+                if asset.name
+                else f"{str(asset.resource_id)}.zip",
+                # Only delete the temporary directory AFTER the file has been
+                # completely sent.
+                background=BackgroundTask(temp_dir.cleanup),
+            )
         else:
             return FileResponse(
                 path=str(asset.path),
@@ -199,14 +206,11 @@ def create_download_repository_resource_by_resource_id_endpoint(
 def create_upload_repository_resource_endpoint(
     repository_service: RepositoryService,
     upload_repository_resource_permission: UserPermissions,
-    repository_directory_archive_file_format_not_specified_api_error: type[
-        RepositoryDirectoryArchiveFileFormatNotSpecifiedError
-    ],
-    invalid_repository_directory_archive_file_format_api_error: type[
-        InvalidRepositoryDirectoryArchiveFileFormatError
-    ],
 ) -> Callable:
-    async def upload_repository_resource(
+    # Define this function synchronously because writing large files to disk in an
+    # async function causes event loop issues. This will signal to FastAPI that this
+    # endpoint should be run in a threadpool.
+    def upload_repository_resource(
         _: Annotated[
             None,
             Depends(
@@ -238,36 +242,43 @@ def create_upload_repository_resource_endpoint(
                 # of the tuple is the file extension WITH the leading period.
                 file_name, file_extension = os.path.splitext(file.filename)
             if not file_extension:
-                raise repository_directory_archive_file_format_not_specified_api_error
+                raise repository_api_excs.RepositoryDirectoryArchiveFileFormatNotSpecifiedError
             # This checks primarily for zip and tar files but also does not falsely flag
             # valid archive files with multiple extensions like compressed tar archive
             # files.
             if file_extension not in (".zip", ".tar", ".gz", ".bz2", ".xz"):
-                raise invalid_repository_directory_archive_file_format_api_error(
-                    file_format=file_extension,
+                raise repository_api_excs.RepositoryDirectoryFileNotArchiveFileError(
+                    file_extension=file_extension
                 )
             # Check for 'tar.bz2', 'tar.gz', and 'tar.xz' files.
             if file_extension in (".gz", ".bz2", ".xz"):
                 file_name, second_file_extension = os.path.splitext(file_name)
                 if second_file_extension != "tar":
-                    raise invalid_repository_directory_archive_file_format_api_error(
-                        file_format=file_extension,
+                    raise repository_api_excs.RepositoryDirectoryFileNotArchiveFileError(
+                        file_extension=file_extension
                     )
                 file_extension = f"{second_file_extension}.{file_extension}"
 
-            file_format_to_format_string = {
+            # Type hint here to shut the IDE type checker up about the dictionary
+            # values not being the expected `Literal` types.
+            file_format_to_format_string: dict[
+                str, Literal["zip", "tar", "gztar", "bztar", "xztar"]
+            ] = {
                 ".zip": "zip",
                 ".tar": "tar",
                 ".tar.gz": "gztar",
                 ".tar.bz2": "bztar",
                 ".tar.xz": "xztar",
             }
-            asset = repository_service.create_repository_directory(
-                archive_file=file_chunk_generator(file),
-                name=name if name else file.filename,
-                description=description if description else "",
-                format=file_format_to_format_string[file_extension],
-            )
+            try:
+                asset = repository_service.create_repository_directory(
+                    archive_file=file_chunk_generator(file),
+                    name=name if name else file.filename,
+                    description=description if description else "",
+                    format=file_format_to_format_string[file_extension],
+                )
+            except repository_framework_excs.InvalidRepositoryDirectoryArchiveFileFormatError:
+                raise repository_api_excs.InvalidRepositoryDirectoryArchiveFileFormatError() from None
             return RepositoryDirectoryModel(
                 **asset.to_json(),
             )

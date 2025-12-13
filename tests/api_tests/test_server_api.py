@@ -1,11 +1,11 @@
 import requests
 
 from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+    FORBIDDEN_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.utils import validate_response
 
-SERVER_VERSION_RESPONSE_JSON_SCHEMA = {
+SERVER_VERSION_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "version": {"type": "string"},
@@ -15,7 +15,7 @@ SERVER_VERSION_RESPONSE_JSON_SCHEMA = {
     "required": ["version", "codename", "datetime_released"],
     "additionalProperties": False,
 }
-SERVER_CONFIG_RESPONSE_JSON_SCHEMA = {
+SERVER_CONFIG_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "local_host": {"type": "string"},
@@ -38,7 +38,7 @@ SERVER_CONFIG_RESPONSE_JSON_SCHEMA = {
 def test_get_server_release(session: requests.Session):
     validate_response(
         test_response=session.get("http://localhost:9999/api/server/release"),
-        expected_json_schema=SERVER_VERSION_RESPONSE_JSON_SCHEMA,
+        expected_json_schema=SERVER_VERSION_JSON_SCHEMA,
         expected_status_code=200,
     )
 
@@ -51,13 +51,13 @@ def test_get_server_config(
         # Test for admin sessions and operator sessions.
         validate_response(
             test_response=session.get("http://localhost:9999/api/server/config"),
-            expected_json_schema=SERVER_CONFIG_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=SERVER_CONFIG_JSON_SCHEMA,
             expected_status_code=200,
         )
     else:
         # Test for spectator sessions.
         validate_response(
             test_response=session.get("http://localhost:9999/api/server/config"),
-            expected_json_schema=FORBIDDEN_ERROR_RESPONSE_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )

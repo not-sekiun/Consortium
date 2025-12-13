@@ -33,7 +33,7 @@ Exception hierarchy for errors related to agent projects:
 """
 
 from consortium.server.exceptions.service_exceptions import (
-    component_service_exceptions as comp_svc_excs,
+    components_service_exceptions as comp_svc_excs,
 )
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -355,7 +355,7 @@ class DuplicateAgentProfileLabelError(
 
     def __init__(self, agent_profile_str: str, label: str):
         super().__init__(
-            component_str=agent_profile_str,
+            component=agent_profile_str,
             label=label,
         )
 

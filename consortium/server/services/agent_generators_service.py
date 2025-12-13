@@ -15,6 +15,7 @@ from consortium.server.exceptions.service_exceptions import (
     agent_generators_service_exceptions as agent_generators_svc_excs,
 )
 from consortium.server.objects.agent_generator_objects import AgentGeneratorState
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.events_service import EventsService
 
@@ -28,7 +29,9 @@ class AgentGeneratorsService:
         self._agent_templates_service = agent_templates_service
         self._events_service = events_service
         self._agent_generators = {}
-        self._logger = logger.bind(logger_name=str(self))
+        self._logger = logger.bind(
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
+        )
         self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:

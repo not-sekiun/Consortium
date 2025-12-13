@@ -2,7 +2,7 @@ import asyncio
 import pathlib
 import uuid
 
-import consortium.server.exceptions.service_exceptions.component_service_exceptions as comp_ldr_svc_excs
+import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
 from consortium.framework._components._component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (

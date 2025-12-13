@@ -20,9 +20,12 @@ from consortium.server.server_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
 )
+from consortium.server.server_logging import LoggerType
 
-rest_api_logger = logger.bind(logger_name="REST API")
-users_service = server_singletons.users_service
+_rest_api_logger = logger.bind(
+    logger_name="REST API", logger_type=LoggerType.API_LOGGER
+)
+_users_service = server_singletons.users_service
 
 
 # this middleware checks if the server is in the process of shutting down and if so
@@ -83,7 +86,7 @@ async def check_if_request_is_authenticated(request: Request, call_next) -> Resp
             access_token = decoded_json_web_token["sub"]
             # check if the user exists in the users service, ie if they are logged in or
             # not. If they are not logged in, this call raises a ValueError
-            _ = users_service.get_user_by_access_token(access_token)
+            _ = _users_service.get_user_by_access_token(access_token)
         # KeyError: Authorization header is not present
         # IndexError: Authorization header is empty
         # ValueError: User does not exist in the users service
@@ -148,11 +151,11 @@ async def log_rest_api_requests_and_responses(
         )
 
         if 100 <= response.status_code < 400:
-            rest_api_log_function = rest_api_logger.opt(ansi=True).info
+            rest_api_log_function = _rest_api_logger.opt(ansi=True).info
         elif 400 <= response.status_code < 500:
-            rest_api_log_function = rest_api_logger.opt(ansi=True).warning
+            rest_api_log_function = _rest_api_logger.opt(ansi=True).warning
         elif 500 <= response.status_code < 600:
-            rest_api_log_function = rest_api_logger.opt(ansi=True).error
+            rest_api_log_function = _rest_api_logger.opt(ansi=True).error
         else:
             raise ValueError("Invalid HTTP status code")
 
@@ -169,7 +172,7 @@ async def log_rest_api_requests_and_responses(
 
         return response
     except Exception:
-        rest_api_logger.opt(ansi=True).error(
+        _rest_api_logger.opt(ansi=True).error(
             (
                 "{}:{} <bold><blue>{}</></> {} - <bold><red>500 Internal Server Error"
                 "</></> {}"
@@ -181,7 +184,7 @@ async def log_rest_api_requests_and_responses(
             # length of the response as a JSON string
             len(json.dumps(InternalServerError().to_json())),
         )
-        rest_api_logger.opt(ansi=True, raw=True).error(
+        _rest_api_logger.opt(ansi=True, raw=True).error(
             "<bold><red>{}</></>",
             traceback.format_exc(),
         )

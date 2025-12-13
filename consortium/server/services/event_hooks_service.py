@@ -13,6 +13,7 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
     EventHooksServiceError,
 )
 from consortium.server.server_config import CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.component_loader_services.event_hook_loader_service import (
     EventHookLoaderService,
 )
@@ -31,7 +32,7 @@ class EventHooksService:
             events_service=events_service,
         )
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._logger.debug(f"Started {self}")
 

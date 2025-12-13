@@ -2,7 +2,7 @@ import pathlib
 import uuid
 from abc import ABC, abstractmethod
 
-from consortium.server.exceptions.service_exceptions.component_service_exceptions import (
+from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentAlreadyRegisteredError,
     ComponentNotFoundError,
     DuplicateComponentLabelError,
@@ -91,7 +91,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
             if component.label
         ]:
             raise DuplicateComponentLabelError(
-                component_str=str(component),
+                component=str(component),
                 label=component.label,
             )
         self._component_loader_service.validate_component_component_dependencies(

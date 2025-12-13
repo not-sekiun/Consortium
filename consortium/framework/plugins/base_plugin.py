@@ -86,7 +86,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         except comp_excs.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
-                original_kwargs=exc.kwargs,
+                original_kwargs=exc._kwargs,
                 exception_map=cls._EXCEPTION_MAP,
                 exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
             ) from None

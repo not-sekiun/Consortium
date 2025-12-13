@@ -202,12 +202,12 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
     @classmethod
     def during_user_account_modification(
         cls,
-        user_account: str,
+        user_account_str: str,
         username: str,
     ) -> UserAccountUsernameAlreadyExistsError:
         return cls(
             message=(
-                f"Failed to modify the user account '{user_account}'. The new "
+                f"Failed to modify the user account '{user_account_str}'. The new "
                 f"username '{username}' is already in use by another user account."
             ),
         )
@@ -242,11 +242,11 @@ class EmptyUserAccountUsernameError(UserAccountManagementError):
     @classmethod
     def during_user_account_modification(
         cls,
-        user_account: str,
+        user_account_str: str,
     ) -> EmptyUserAccountUsernameError:
         return cls(
             message=(
-                f"Failed to modify the user account {user_account}. The provided "
+                f"Failed to modify the user account {user_account_str}. The provided "
                 f"username cannot be empty."
             ),
         )
@@ -267,11 +267,11 @@ class EmptyUserAccountPasswordError(UserAccountManagementError):
     @classmethod
     def during_user_account_modification(
         cls,
-        user_account: str,
+        user_account_str: str,
     ) -> EmptyUserAccountPasswordError:
         return cls(
             message=(
-                f"Failed to modify the user account {user_account}. The provided "
+                f"Failed to modify the user account {user_account_str}. The provided "
                 "password cannot be empty."
             ),
         )
@@ -293,12 +293,12 @@ class InvalidUserAccountRoleError(UserAccountManagementError):
     @classmethod
     def during_user_account_modification(
         cls,
-        user_account: str,
+        user_account_str: str,
         role: str,
     ) -> InvalidUserAccountRoleError:
         return cls(
             message=(
-                f"Failed to modify the user account '{user_account}'. The provided "
+                f"Failed to modify the user account '{user_account_str}'. The provided "
                 f"role '{role}' is not a valid role. Check that the provided role is "
                 f"one of 'ADMIN', 'OPERATOR', or 'SPECTATOR'."
             ),

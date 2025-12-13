@@ -1,6 +1,10 @@
 import base64
 import pathlib
 
+from consortium.framework.agents.agent_message_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
     SupportedOS,
@@ -9,10 +13,6 @@ from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
 from consortium.framework.options import SingleValueOption
-from consortium.server.models.agent_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
-)
 
 
 def _validate_chunk_size_argument(chunk_size: int):
@@ -150,7 +150,7 @@ class DownloadCapability(BaseAgentCapability):
                 result = await self.recv_agent_result_message()
                 if result.data["response_type"] == "end_of_file":
                     break
-                print(f"    Got chunk of data with length {result.data["file_chunk"]}")
+                print(f"    Got chunk of data with length {result.data['file_chunk']}")
             print(f"Downloaded {filename}")
         else:
             directory_path = pathlib.Path(

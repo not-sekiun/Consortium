@@ -21,6 +21,7 @@ from consortium.server.exceptions.service_exceptions.agents_service_exceptions i
     AgentTaskNotFoundError,
 )
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
+from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService
 
 
@@ -29,7 +30,7 @@ class AgentsService:
         self._events_service = events_service
         self._agents = {}
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
 
     def __str__(self) -> str:
