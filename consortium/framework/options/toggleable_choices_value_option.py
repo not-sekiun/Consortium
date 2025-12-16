@@ -4,7 +4,7 @@ from consortium.framework.options._option_argument_validators import (
     ArgumentDataTypeCheckParameters,
     validate_arguments_data_types,
 )
-from consortium.framework.options.exceptions import (
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     EmptyAvailableValuesError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
@@ -96,16 +96,16 @@ class ToggleableChoicesValueOption(BaseOption):
                 f"Value '{value}' for option '{self.name}' must be a dictionary.",
             )
 
-        for key, value in value.items():
+        for key, dict_value in value.items():
             if key not in self.available_values:
                 raise OptionValueValidationFrameworkError(
                     f"Key '{key}' in dictionary value for option '{self.name}' is not "
                     f"one of its available choice values {self.available_values}.",
                 )
-            if not isinstance(value, bool):
+            if not isinstance(dict_value, bool):
                 raise OptionValueValidationFrameworkError(
-                    f"Value '{value}' for key '{key}' in dictionary value for option "
-                    f"'{self.name}' is not a boolean.",
+                    f"Value '{dict_value}' for key '{key}' in dictionary value for "
+                    f"option '{self.name}' is not a boolean.",
                 )
 
     def to_json(self) -> dict[str, str | bool | dict[str, bool] | list[str] | None]:

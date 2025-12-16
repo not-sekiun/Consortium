@@ -32,6 +32,8 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
         # agent generator refers to the class of the agent generator that the
         # template creates
         component_object.agent_generator.creating_agent_template = component_object
+        # Framework user passes in the agent type class, instantiate the agent type
+        component_object.agent_type = component_object.agent_type()
         component_object.agent_generator.agent_type = component_object.agent_type
         return AgentProfile(
             agent_generator=component_object.agent_generator,

@@ -213,23 +213,9 @@ class ComponentLoaderService[Component]:
             ).parts,
         )[: -len(".py")]
 
+        # Check for exceptions that occur during import
         try:
-            # Any import errors that arise should not be from third-party dependencies
-            # because we checked for that earlier
             component_module = importlib.import_module(component_module_path)
-            component_class = getattr(
-                component_module,
-                component_symbol,
-            )
-
-            return component_class
-        except AttributeError:
-            raise ComponentProjectSymbolNotFoundError(
-                entry_point_symbol=component_symbol,
-                component_project_folder=str(component_project_folder),
-                entry_point_module=str(component_file),
-            ) from None
-
         except self._component_framework_error as exc:
             raise exc from None
         # This should only catch errors that are not related to the component project.
@@ -237,6 +223,20 @@ class ComponentLoaderService[Component]:
             raise InternalComponentProjectError(
                 component_project_folder=str(component_project_folder),
                 internal_error_message=str(exc),
+            ) from None
+
+        # Check to see if the symbol exists in the module
+        try:
+            component_class = getattr(
+                component_module,
+                component_symbol,
+            )
+            return component_class
+        except AttributeError:
+            raise ComponentProjectSymbolNotFoundError(
+                entry_point_symbol=component_symbol,
+                component_project_folder=str(component_project_folder),
+                entry_point_module=str(component_file),
             ) from None
 
     @staticmethod

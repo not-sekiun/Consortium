@@ -88,8 +88,8 @@ class DownloadAssetCommand(BaseCommand):
                 return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
 
             print_info(
-                f"Downloading asset {"directory" if asset["is_directory"] else "file"} "
-                f"'{asset["name"]}' ({asset["resource_id"]}) to "
+                f"Downloading asset {'directory' if asset['is_directory'] else 'file'} "
+                f"'{asset['name']}' ({asset['resource_id']}) to "
                 f"'{output_file_path}'...",
             )
             with Progress() as progress:

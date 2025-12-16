@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
@@ -12,11 +14,14 @@ from consortium.client.utils.data_structure_utils import (
 )
 from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
+
 client_sessions_service = client_singletons.client_sessions_service
 
 
 class HomeInterpreter(ClientInterpreter):
-    def __init__(self, client_session: "ClientSession"):
+    def __init__(self, client_session: ClientSession):
         super().__init__(
             prompt=ANSI(format_rich_text_as_ansi("[bold white]Consortium (Home) > ")),
             commands=[
@@ -50,7 +55,7 @@ class HomeInterpreter(ClientInterpreter):
             ]
         }.items():
             nested_completer_dict[key] = value
-        nested_completer_dict["help"] = {command: None for command in self.commands}
+        nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,

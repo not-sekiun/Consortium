@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
@@ -11,7 +12,6 @@ from consortium.client.repl_framework.base_command import (
     ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import (
-    format_agent_result_state_string_with_color,
     format_argparse_epilog,
 )
 from consortium.client.utils.printer_utils import CONSOLE
@@ -48,7 +48,7 @@ class InfoResultCommand(BaseCommand):
 
     @staticmethod
     async def _display_result_info_from_agent_id(
-        client_rest_api_connection: "ClientRESTAPIConnection",
+        client_rest_api_connection: ClientRESTAPIConnection,
         agent_id: str,
         result_id: str,
     ) -> None:

@@ -50,12 +50,12 @@ def is_user_logged_in(
         # not. If they are not logged in, this call raises a ValueError
         _ = users_service.get_user_by_access_token(access_token)
         return True
-    # KeyError: Authorization header is not present
-    # IndexError: Authorization header is empty
-    # ValueError: User does not exist in the users service
-    # jwt.exceptions.InvalidTokenError: JSON Web Token is invalid, base exception
+    # `KeyError`: Authorization header is not present
+    # `IndexError`: Authorization header is empty
+    # `ValueError`: User does not exist in the users service
+    # `jwt.exceptions.InvalidTokenError`: JSON Web Token is invalid, base exception
     # for any failure on the decode call for a token
-    # UserAccessTokenNotFoundError: Valid JSON Web Token but does not exist in the
+    # `UserAccessTokenNotFoundError`: Valid JSON Web Token but does not exist in the
     # current set of users
     except (
         KeyError,

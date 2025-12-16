@@ -60,12 +60,12 @@ class InvalidListenerTemplateConfigurationParameterTypeError(
 
     def __init__(
         self,
-        listener_template: str,
+        listener_template_str: str,
         parameter_name: str,
         parameter_type: str,
     ):
         super().__init__(
-            component_str=listener_template,
+            component_str=listener_template_str,
             parameter_name=parameter_name,
             parameter_type=parameter_type,
         )
@@ -81,9 +81,9 @@ class MissingListenerTemplateConfigurationParameterError(
 
     code = "MISSING_LISTENER_TEMPLATE_CONFIGURATION_PARAMETER_ERROR"
 
-    def __init__(self, listener_template: str, parameter_name: str):
+    def __init__(self, listener_template_str: str, parameter_name: str):
         super().__init__(
-            component_str=listener_template,
+            component_str=listener_template_str,
             parameter_name=parameter_name,
         )
 
@@ -99,8 +99,8 @@ class EmptyListenerTemplateLabelError(
 
     code = "EMPTY_LISTENER_TEMPLATE_LABEL_ERROR"
 
-    def __init__(self, listener_template_filepath: str):
-        super().__init__(component_filepath=listener_template_filepath)
+    def __init__(self, listener_template_str_filepath: str):
+        super().__init__(component_filepath=listener_template_str_filepath)
 
 
 class DuplicateListenerTemplateLabelError(
@@ -114,9 +114,9 @@ class DuplicateListenerTemplateLabelError(
 
     code = "DUPLICATE_LISTENER_TEMPLATE_LABEL_ERROR"
 
-    def __init__(self, listener_template: str, label: str):
+    def __init__(self, listener_template_str: str, label: str):
         super().__init__(
-            component_str=listener_template,
+            component_str=listener_template_str,
             label=label,
         )
 
@@ -132,9 +132,9 @@ class InvalidListenerTemplateVersionError(
 
     code = "INVALID_LISTENER_TEMPLATE_VERSION_ERROR"
 
-    def __init__(self, listener_template: str, version: str):
+    def __init__(self, listener_template_str: str, version: str):
         super().__init__(
-            component_str=listener_template,
+            component_str=listener_template_str,
             version=version,
         )
 
@@ -153,12 +153,12 @@ class InvalidFrameworkVersionSpecifierError(
 
     def __init__(
         self,
-        listener_template: str,
-        framework_version_specifier_str: str,
+        listener_template_str: str,
+        framework_version_specifier: str,
     ):
         super().__init__(
-            component_str=listener_template,
-            framework_version_specifier_str=framework_version_specifier_str,
+            component_str=listener_template_str,
+            framework_version_specifier=framework_version_specifier,
         )
 
 
@@ -176,11 +176,11 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
 
     def __init__(
         self,
-        listener_template: str,
+        listener_template_str: str,
         invalid_dependency_entry: str,
     ):
         super().__init__(
-            component_str=listener_template,
+            component_str=listener_template_str,
             invalid_dependency_entry=invalid_dependency_entry,
         )
 
@@ -188,10 +188,10 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
 class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationError):
     code = "DUPLICATE_LISTENER_TEMPLATE_OPTION_NAME_ERROR"
 
-    def __init__(self, listener_template: str, option_name: str):
+    def __init__(self, listener_template_str: str, option_name: str):
         super().__init__(
             message=(
-                f"Failed to configure the listener template {listener_template}'. "
+                f"Failed to configure the listener template {listener_template_str}'. "
                 f"The options provided to the listener template must not have "
                 f"duplicate names but the name '{option_name}' was duplicated."
             ),
@@ -205,14 +205,13 @@ class ListenerTemplateOptionError(ListenerTemplatesFrameworkError):
 class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
     code = "LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"
 
-    def __init__(self, listener_template: str, option_name: str):
+    def __init__(self, listener_template_str: str, option_name: str):
         super().__init__(
             message=(
                 f"Failed to create the listener from the listener template "
-                f"'{listener_template}'. The provided option '{option_name}' was not "
+                f"'{listener_template_str}'. The provided option '{option_name}' was not "
                 f"found in the listener template."
             ),
-            detail={"option_name": option_name},
         )
 
 
@@ -221,7 +220,7 @@ class ListenerTemplateOptionValueValidationError(ListenerTemplateOptionError):
 
     def __init__(
         self,
-        listener_template: str,
+        listener_template_str: str,
         option_name: str,
         option_value: Any,
         error_message: str,
@@ -229,14 +228,9 @@ class ListenerTemplateOptionValueValidationError(ListenerTemplateOptionError):
         super().__init__(
             message=(
                 f"Failed to create the listener from the listener template "
-                f"'{listener_template}'. The value provided '{option_value}' for the "
-                f"option '{option_name}' is invalid. {error_message}"
+                f"'{listener_template_str}'. The provided value '{option_value}' for "
+                f"the option '{option_name}' is invalid. {error_message}"
             ),
-            detail={
-                "option_name": option_name,
-                "option_value": option_value,
-                "error_message": error_message,
-            },
         )
 
 
@@ -245,12 +239,11 @@ class MissingRequiredListenerTemplateOptionError(
 ):
     code = "MISSING_REQUIRED_LISTENER_TEMPLATE_OPTION_ERROR"
 
-    def __init__(self, listener_template: str, option_name: str):
+    def __init__(self, listener_template_str: str, option_name: str):
         super().__init__(
             message=(
                 f"Failed to create the listener from the listener template "
-                f"'{listener_template}'. The required option '{option_name}' was not "
+                f"'{listener_template_str}'. The required option '{option_name}' was not "
                 f"provided."
             ),
-            detail={"option_name": option_name},
         )

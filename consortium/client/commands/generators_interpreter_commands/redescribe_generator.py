@@ -58,7 +58,7 @@ class RedescribeGeneratorCommand(BaseCommand):
 
             print_success(
                 f'Agent generator "{agent_generator["name"]}" '
-                f"({agent_generator["agent_generator_id"]}) description "
+                f"({agent_generator['agent_generator_id']}) description "
                 f'updated to: "{parsed_commands.new_description[0]}"',
             )
         except SystemExit:

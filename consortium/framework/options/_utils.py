@@ -1,6 +1,7 @@
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from consortium.server.utils.formatter_utils import format_docstring_to_single_line
+from consortium.framework.utils.formatter_utils import format_docstring_to_single_line
 
 
 def resolve_validating_function_string(

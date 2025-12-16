@@ -47,7 +47,7 @@ class DeleteGeneratorCommand(BaseCommand):
 
             print_success(
                 f'Deleted agent generator: "{agent_generator["name"]}" '
-                f'({agent_generator["agent_generator_id"]})',
+                f"({agent_generator['agent_generator_id']})",
             )
         except SystemExit:
             pass

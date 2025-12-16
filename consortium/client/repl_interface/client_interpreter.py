@@ -1,4 +1,5 @@
 import traceback
+from typing import TYPE_CHECKING
 
 from prompt_toolkit import ANSI, HTML, PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -23,13 +24,16 @@ from consortium.client.repl_interface.client_interpreter_lexer import (
 )
 from consortium.client.utils.printer_utils import CONSOLE, print_error, print_info
 
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
+
 
 class ClientInterpreter(BaseInterpreter):
     def __init__(
         self,
         prompt: str | ANSI | HTML | list[tuple[str, str]],
         commands: list[BaseCommand],
-        client_session: "ClientSession",
+        client_session: ClientSession,
         additional_environment_variables: dict[str, any] = None,
     ):
         # TODO: Add resource commands and aliases to the environment variables at some

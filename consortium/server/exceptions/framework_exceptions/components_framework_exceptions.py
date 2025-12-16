@@ -191,15 +191,15 @@ class InvalidFrameworkVersionSpecifierError(ComponentConfigurationError):
 
     _MESSAGE_TEMPLATE = (
         "Failed to configure the $C_LOWER$ '{component_str}'. The framework version "
-        "specifier string provided '{framework_version_specifier_str}' is not a "
+        "specifier string provided '{framework_version_specifier}' is not a "
         "valid version specifier string. See PEP 440 for details on version "
         "specifier strings."
     )
 
-    def __init__(self, component_str: str, framework_version_specifier_str: str):
+    def __init__(self, component_str: str, framework_version_specifier: str):
         super().__init__(
             component_str=component_str,
-            framework_version_specifier_str=framework_version_specifier_str,
+            framework_version_specifier=framework_version_specifier,
         )
 
 

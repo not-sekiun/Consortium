@@ -63,8 +63,7 @@ class ClientWebsocketsAPIConnection:
 
     def __str__(self) -> str:
         return (
-            f"Client websockets API connection to "
-            f"{self.remote_host}:{self.remote_port}"
+            f"Client websockets API connection to {self.remote_host}:{self.remote_port}"
         )
 
     def __repr__(self) -> str:
@@ -215,7 +214,7 @@ class ClientWebsocketsAPIConnection:
         try:
             message_json = json.loads(message)
         except json.JSONDecodeError:
-            raise InvalidServerWebsocketAPIConnectionResponseError
+            raise InvalidServerWebsocketAPIConnectionResponseError from None
 
         self._client_websockets_api_connection_logger.debug(
             "Received message: {}",
@@ -225,8 +224,8 @@ class ClientWebsocketsAPIConnection:
         if not message_json["success"]:
             raise SeverWebsocketsAPIErrorResponseError(
                 error_message=(
-                    f"{message_json["error"]["code"]}: "
-                    f"{message_json["error"]["message"]}"
+                    f"{message_json['error']['code']}: "
+                    f"{message_json['error']['message']}"
                 ),
             )
 
@@ -252,7 +251,7 @@ class ClientWebsocketsAPIConnection:
                         _websockets_api_generic_response_json_schema,
                     )
                 except (json.JSONDecodeError, jsonschema.ValidationError):
-                    raise InvalidServerWebsocketAPIConnectionResponseError
+                    raise InvalidServerWebsocketAPIConnectionResponseError from None
 
                 # If the message is a response message, we place it in a queue so that
                 # it can be consumed by any calls to the `_recv_message` method in the

@@ -125,7 +125,7 @@ class DisconnectedInterpreter(BaseInterpreter):
             ]
         }.items():
             nested_completer_dict[key] = value
-        nested_completer_dict["help"] = {command: None for command in self.commands}
+        nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,

@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
@@ -33,7 +34,7 @@ class InfoAgentCommand(BaseCommand):
 
     @staticmethod
     async def display_agent_info_from_agent_id(
-        client_rest_api_connection: "ClientRESTAPIConnection",
+        client_rest_api_connection: ClientRESTAPIConnection,
         agent_id: str,
     ) -> None:
         agent = await client_rest_api_connection.get_agent_by_agent_id(
@@ -65,7 +66,7 @@ class InfoAgentCommand(BaseCommand):
             "Compatible Listener Types",
             "\n".join(
                 [
-                    f"'{listener_type["name"]}' ({listener_type["listener_type_id"]})"
+                    f"'{listener_type['name']}' ({listener_type['listener_type_id']})"
                     for listener_type in agent["agent_type"][
                         "compatible_listener_types"
                     ]

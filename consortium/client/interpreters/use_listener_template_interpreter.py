@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import HTML
 from prompt_toolkit.completion import NestedCompleter
@@ -16,11 +16,14 @@ from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
 
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
+
 
 class UseListenerTemplateInterpreter(ListenersInterpreter):
     def __init__(
         self,
-        client_session: "ClientSession",
+        client_session: ClientSession,
         listener_template: dict[str, Any],
     ):
         # Add a "value" key to the options to store the current value of the
@@ -33,8 +36,8 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         super().__init__(
             prompt=HTML(
                 f"<b>Consortium (<ansiblue>Listeners</ansiblue>: "
-                f"<ansiblue>{listener_template["name"]}' "
-                f"({listener_template["listener_template_id"]})</ansiblue>) > </b>",
+                f"<ansiblue>{listener_template['name']}' "
+                f"({listener_template['listener_template_id']})</ansiblue>) > </b>",
             ),
             commands=(
                 [
@@ -61,7 +64,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         )
         listener_template = self.environment["listener_template"]
         for key, value in {
-            command: {option_name: None for option_name in listener_template["options"]}
+            command: dict.fromkeys(listener_template["options"])
             for command in [
                 "info_listener_template_option",
                 "set_listener_template_option",

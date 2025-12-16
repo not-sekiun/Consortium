@@ -1,5 +1,5 @@
 import re
-from typing import Callable, Type
+from collections.abc import Callable
 
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
@@ -12,10 +12,10 @@ from consortium.framework.options._option_argument_validators import (
     validate_value_type_argument,
 )
 from consortium.framework.options._utils import resolve_validating_function_string
-from consortium.framework.options.exceptions import (
+from consortium.framework.options.option_types import OptionType
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
-from consortium.framework.options.option_types import OptionType
 
 
 class DictionaryValueOption(BaseOption):
@@ -127,38 +127,12 @@ class DictionaryValueOption(BaseOption):
         validating_function: Callable[[dict[str, Primitive]], None] | None = None,
     ):
         self.key_validating_regex = key_validating_regex
-        """
-        This parameter specifies a regex pattern that each of the keys in the
-        dictionary, which can only be of type `str`, must match.
-        """
         self.key_validating_function = key_validating_function
-        """
-        This parameter specifies a regex pattern that each of the keys in the
-        dictionary, which can only be of type `str`, must match.
-        """
         self.value_type = value_type
-        """
-        The type of the value in the dictionary that the option can accept. If
-        `None`, the dictionary can have values of type `str`, `int`, `float`, or
-        `bool`.
-        """
         self.value_validating_regex = value_validating_regex
-        """
-        This parameter specifies a regex pattern that each of the values in the
-        dictionary must match.
-        """
         self.value_validating_function = value_validating_function
-        """
-        A function that accepts a single argument, the values of the dictionary, and
-        raises an exception, `OptionValueValidationError`, if the value is invalid.
-        If `None`, no additional validation is performed.
-        """
         self.validating_function = validating_function
-        """
-        A function that accepts a single argument, the entire dictionary value of
-        the option, and raises an exception, `OptionValueValidationError`, if the
-        value is invalid. If `None`, no additional validation is performed.
-        """
+
         super().__init__(
             name=name,
             description=description,
@@ -219,7 +193,7 @@ class DictionaryValueOption(BaseOption):
                             f"function: {exc}"
                         ),
                         detail=exc.detail,
-                    )
+                    ) from None
             if self.value_type:
                 if not isinstance(dict_value, self.value_type):
                     raise OptionValueValidationFrameworkError(
@@ -245,7 +219,7 @@ class DictionaryValueOption(BaseOption):
                             f"function: {exc}"
                         ),
                         detail=exc.detail,
-                    )
+                    ) from None
         if self.validating_function:
             try:
                 self.validating_function(value)
@@ -256,7 +230,7 @@ class DictionaryValueOption(BaseOption):
                         f"failed against its validating function: {exc}"
                     ),
                     detail=exc.detail,
-                )
+                ) from None
 
     def to_json(
         self,

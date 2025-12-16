@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from consortium.components.agents.consortium.http.agent_generator import AgentGenerator
-from consortium.components.agents.consortium.http.agent_type import AGENT_TYPE
+from consortium.components.agents.consortium.http.agent_type import AgentType
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
@@ -12,16 +12,6 @@ from consortium.framework.options import (
     ListValueOption,
     SingleValueOption,
 )
-
-
-def _check_jitter_percent_is_non_negative(jitter_percent: float):
-    """
-    Checks that the jitter percent is non-negative.
-    """
-    if jitter_percent < 0:
-        raise OptionValueValidationError(
-            "Jitter percent cannot be less than zero.",
-        )
 
 
 def _check_filename_does_not_traverse_directories(filename: str):
@@ -56,17 +46,6 @@ def _check_all_url_endpoints_unique(
         unique_elements.add(element)
 
 
-def _check_integer_is_a_valid_port_number(port: int) -> None:
-    """
-    Check that the integer provided is a valid port number between 0 and 65535.
-    """
-    if port not in range(0, 65536):
-        raise OptionValueValidationError(
-            f"The port number provided {port} is not a valid port number between 0 and "
-            f"65535",
-        )
-
-
 class AgentTemplate(BaseAgentTemplate):
     label = "consortium.agents.http_agent"
     name = "HTTP Agent"
@@ -75,7 +54,7 @@ class AgentTemplate(BaseAgentTemplate):
     compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
     agent_generator = AgentGenerator
-    agent_type = AGENT_TYPE
+    agent_type = AgentType
     options = {
         SingleValueOption(
             name="name",
@@ -100,7 +79,8 @@ class AgentTemplate(BaseAgentTemplate):
             ),
             default_value=1337,
             value_type=int,
-            validating_function=_check_integer_is_a_valid_port_number,
+            greater_than_or_equal_to=0,
+            less_than_or_equal_to=65535,
         ),
         ListValueOption(
             name="tasks_url_paths",
@@ -153,7 +133,7 @@ class AgentTemplate(BaseAgentTemplate):
             ),
             default_value=0.5,
             value_type=float,
-            validating_function=_check_jitter_percent_is_non_negative,
+            greater_than_or_equal_to=0.0,
         ),
         ChoiceValueOption(
             name="format",

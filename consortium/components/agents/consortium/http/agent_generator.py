@@ -63,7 +63,6 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
     ):
         with open(
             self.working_directory / "agent_source" / "_agent.py",
-            "r",
         ) as file:
             template_source_code = file.read()
             source_code = (
@@ -148,8 +147,7 @@ class ExportAgentArtifact(BaseAgentGeneratorBuildStep):
                 if command_result.return_code != 0:
                     raise AgentGeneratorBuildError(
                         message=(
-                            f"Failed to build agent executable: "
-                            f"{command_result.stderr}"
+                            f"Failed to build agent executable: {command_result.stderr}"
                         ),
                     )
 

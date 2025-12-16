@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from consortium.framework.framework_types import Primitive
-from consortium.framework.options.exceptions import (
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     InvalidOptionConfigurationParameterTypeError,
     InvalidOptionIterableLengthBoundError,
     InvalidOptionIterableLengthRangeError,
@@ -125,74 +125,77 @@ def validate_string_length_arguments(
 def validate_numeric_range_arguments(
     option_name: str,
     option_value_type: type,
-    greater_than: int,
-    lesser_than: int,
-    greater_than_or_equal_to: int,
-    lesser_than_or_equal_to: int,
+    greater_than: int | float,
+    less_than: int | float,
+    greater_than_or_equal_to: int | float,
+    less_than_or_equal_to: int | float,
 ) -> None:
     validate_arguments_data_types(
         option_name,
         ArgumentDataTypeCheckParameters(
             value=greater_than,
-            expected_data_type=int,
+            expected_data_type={int, float},
         ),
         ArgumentDataTypeCheckParameters(
-            value=lesser_than,
-            expected_data_type=int,
+            value=less_than,
+            expected_data_type={int, float},
         ),
         ArgumentDataTypeCheckParameters(
             value=greater_than_or_equal_to,
-            expected_data_type=int,
+            expected_data_type={int, float},
         ),
         ArgumentDataTypeCheckParameters(
-            value=lesser_than_or_equal_to,
-            expected_data_type=int,
+            value=less_than_or_equal_to,
+            expected_data_type={int, float},
         ),
     )
     if any(
         (
-            greater_than,
-            lesser_than,
-            greater_than_or_equal_to,
-            lesser_than_or_equal_to,
+            i is not None
+            for i in (
+                greater_than,
+                less_than,
+                greater_than_or_equal_to,
+                less_than_or_equal_to,
+            )
         ),
     ):
         if not issubclass(option_value_type, (int, float)):
             raise InvalidOptionConfigurationParameterTypeError(
                 error_message=(
                     f"Failed to configure option '{option_name}'. The parameters "
-                    f"`greater_than`, `lesser_than`, `greater_than_or_equal_to`, and "
-                    f"`lesser_than_or_equal_to` are only applicable to options with a "
+                    f"`greater_than`, `less_than`, `greater_than_or_equal_to`, and "
+                    f"`less_than_or_equal_to` are only applicable to options with a "
                     f"value type of `int` or `float`."
                 ),
             )
         if greater_than is not None:
-            if lesser_than is not None and greater_than > lesser_than:
+            if less_than is not None and greater_than > less_than:
                 raise InvalidOptionValueRangeError(
                     option_name=option_name,
-                    minimum_range_parameter_name="lesser_than",
+                    minimum_range_parameter_name="less_than",
                     maximum_range_parameter_name="greater_than",
-                    minimum_range=lesser_than,
+                    minimum_range=less_than,
                     maximum_range=greater_than,
                 )
             if (
-                lesser_than_or_equal_to is not None
-                and greater_than > lesser_than_or_equal_to
+                less_than_or_equal_to is not None
+                and greater_than > less_than_or_equal_to
             ):
                 raise InvalidOptionValueRangeError(
                     option_name=option_name,
-                    minimum_range_parameter_name="lesser_than_or_equal_to",
+                    minimum_range_parameter_name="less_than_or_equal_to",
                     maximum_range_parameter_name="greater_than",
-                    minimum_range=lesser_than_or_equal_to,
+                    minimum_range=less_than_or_equal_to,
                     maximum_range=greater_than,
                 )
-        if greater_than_or_equal_to:
-            if lesser_than is not None and greater_than_or_equal_to > lesser_than:
+        if greater_than_or_equal_to is not None:
+            if less_than is not None and greater_than_or_equal_to > less_than:
                 raise InvalidOptionValueRangeError(
                     option_name=option_name,
-                    minimum_range_parameter_name="lesser_than_or_equal_to",
+                    minimum_range_parameter_name="less_than_or_equal_to",
                     maximum_range_parameter_name="greater_than_or_equal_to",
-                    minimum_range=lesser_than_or_equal_to,
+                    minimum_range=less_than_or_equal_to,
                     maximum_range=greater_than_or_equal_to,
                 )
 
@@ -206,7 +209,7 @@ def validate_validating_regex_argument(
         "value_validating_regex",
     ] = "validating_regex",
 ) -> None:
-    if validating_regex:
+    if validating_regex is not None:
         if not isinstance(validating_regex, str):
             raise InvalidOptionConfigurationParameterTypeError(
                 parameter_name=validating_regex_parameter_name,
@@ -232,7 +235,7 @@ def validate_validating_function_argument(
         "value_validating_function",
     ] = "validating_function",
 ) -> None:
-    if validating_function:
+    if validating_function is not None:
         if not isinstance(validating_function, Callable):
             raise InvalidOptionConfigurationParameterTypeError(
                 option_name=option_name,

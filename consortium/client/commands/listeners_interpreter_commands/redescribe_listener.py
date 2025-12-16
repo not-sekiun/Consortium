@@ -52,7 +52,7 @@ class RedescribeListenerCommand(BaseCommand):
             )
 
             print_success(
-                f"Listener '{listener["name"]}' ({listener["listener_id"]}) description "
+                f"Listener '{listener['name']}' ({listener['listener_id']}) description "
                 f"updated to: '{parsed_commands.new_description[0]}'",
             )
         except SystemExit:

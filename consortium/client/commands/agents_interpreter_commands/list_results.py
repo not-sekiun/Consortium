@@ -55,7 +55,7 @@ class ListResultsCommand(BaseCommand):
 
     @staticmethod
     async def _list_results_from_agent_id(
-        client_rest_api_connection: "ClientRESTAPIConnection",
+        client_rest_api_connection: ClientRESTAPIConnection,
         display_result_status_success: bool,
         display_result_status_fail: bool,
         agent_id: str,

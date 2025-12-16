@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI, HTML
 from prompt_toolkit.completion import NestedCompleter
@@ -13,6 +13,9 @@ from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
 
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
+
 COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS = [
     command for command in CORE_COMMANDS if command.name != "generators"
 ] + GENERATORS_INTERPRETER_COMMANDS
@@ -21,13 +24,15 @@ COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS = [
 class GeneratorsInterpreter(ClientInterpreter):
     def __init__(
         self,
-        client_session: "ClientSession",
-        prompt: str | ANSI | HTML | list[tuple[str, str]] = HTML(
-            "<b>Consortium (<ansigreen>Generators</ansigreen>) > </b>",
-        ),
+        client_session: ClientSession,
+        prompt: str | ANSI | HTML | list[tuple[str, str]] | None = None,
         commands: list[BaseCommand] | None = None,
         additional_environment_variables: dict[str, Any] | None = None,
     ):
+        if prompt is None:
+            prompt = HTML(
+                "<b>Consortium (<ansigreen>Generators</ansigreen>) > </b>",
+            )
         if commands is None:
             commands = COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS
         if additional_environment_variables is None:
@@ -80,10 +85,9 @@ class GeneratorsInterpreter(ClientInterpreter):
             nested_completer_dict[key] = value
         for key, value in {
             command: {
-                agent_generator["agent_generator_id"]: {
-                    parameter_name: None
-                    for parameter_name in agent_generator["parameters"]
-                }
+                agent_generator["agent_generator_id"]: dict.fromkeys(
+                    agent_generator["parameters"]
+                )
                 for agent_generator in all_agent_generators
             }
             for command in [
@@ -92,7 +96,7 @@ class GeneratorsInterpreter(ClientInterpreter):
             ]
         }.items():
             nested_completer_dict[key] = value
-        nested_completer_dict["help"] = {command: None for command in self.commands}
+        nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,

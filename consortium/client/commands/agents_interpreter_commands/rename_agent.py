@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
@@ -36,7 +37,7 @@ class RenameAgentCommand(BaseCommand):
 
     @staticmethod
     async def _rename_agent_by_agent_id(
-        client_rest_api_connection: "ClientRESTAPIConnection",
+        client_rest_api_connection: ClientRESTAPIConnection,
         agent_id: str,
         new_name: str,
     ) -> None:
@@ -48,8 +49,7 @@ class RenameAgentCommand(BaseCommand):
             new_agent_attributes={"name": new_name},
         )
         print_success(
-            f"Agent '{agent["name"]}' ({agent["agent_id"]}) renamed "
-            f"to '{new_name}'",
+            f"Agent '{agent['name']}' ({agent['agent_id']}) renamed to '{new_name}'",
         )
 
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:

@@ -2,7 +2,8 @@ from loguru import logger
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
-    AgentTemplateNotFoundError,
+    AgentTemplateIDNotFoundError,
+    AgentTemplateLabelNotFoundError,
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_profiles_service import AgentProfilesService
@@ -22,7 +23,11 @@ class AgentTemplatesService:
         return "Agent Templates Service"
 
     def __repr__(self) -> str:
-        return "AgentTemplatesService()"
+        return (
+            f"AgentTemplatesService("
+            f"agent_profiles_service={self._agent_profiles_service!r}"
+            f")"
+        )
 
     def get_agent_template_by_agent_template_id(
         self,
@@ -34,12 +39,29 @@ class AgentTemplatesService:
         ]:
             if str(agent_template.agent_template_id) == agent_template_id:
                 self._logger.debug(
-                    "Retrieved listener template: {!r}",
+                    "Retrieved agent template by agent template ID '{}': {!r}",
+                    agent_template_id,
                     agent_template,
                 )
                 return agent_template
-        raise AgentTemplateNotFoundError(
+        raise AgentTemplateIDNotFoundError(
             agent_template_id=agent_template_id,
+        )
+
+    def get_agent_template_by_label(self, label: str) -> BaseAgentTemplate:
+        for agent_template in [
+            agent_profile.agent_template
+            for agent_profile in self._agent_profiles_service.get_all_agent_profiles()
+        ]:
+            if agent_template.label == label:
+                self._logger.debug(
+                    "Retrieved agent template by label '{}': {!r}",
+                    label,
+                    agent_template,
+                )
+                return agent_template
+        raise AgentTemplateLabelNotFoundError(
+            label=label,
         )
 
     def get_all_agent_templates(self) -> list[BaseAgentTemplate]:
@@ -48,7 +70,7 @@ class AgentTemplatesService:
             for agent_profile in self._agent_profiles_service.get_all_agent_profiles()
         ]
         self._logger.debug(
-            "Retrieved all listener templates ({} listener template(s) retrieved).",
+            "Retrieved all agent templates ({} agent template(s) retrieved).",
             len(all_agent_templates),
         )
         return all_agent_templates

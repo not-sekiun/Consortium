@@ -15,6 +15,7 @@ from consortium.server.services.listener_templates_service import (
     ListenerTemplatesService,
 )
 from consortium.server.services.listeners_service import ListenersService
+from consortium.server.services.payloads_service import PayloadsService
 from consortium.server.services.plugins_service import PluginsService
 from consortium.server.services.repository_service import RepositoryService
 from consortium.server.services.user_accounts_service import UserAccountsService
@@ -62,6 +63,15 @@ agents_service = AgentsService(
     events_service=events_service,
 )
 
+# The payloads service relies on the agent_templates_service to check that the metadata
+# of loaded payloads is correct
+payloads_service = PayloadsService(
+    repository_service=RepositoryService(
+        repository_directory_path=CONSORTIUM_PAYLOADS_DIRECTORY_PATH
+    ),
+    agent_templates_service=agent_templates_service,
+)
+
 # These services are instantiated independent of other services.
 assets_service = RepositoryService(
     repository_directory_path=CONSORTIUM_ASSETS_DIRECTORY_PATH,
@@ -69,14 +79,13 @@ assets_service = RepositoryService(
 artifacts_service = RepositoryService(
     repository_directory_path=CONSORTIUM_ARTIFACTS_DIRECTORY_PATH,
 )
-payloads_service = RepositoryService(
-    repository_directory_path=CONSORTIUM_PAYLOADS_DIRECTORY_PATH,
-)
 user_accounts_service = UserAccountsService()
 users_service = UsersService()
+
 # The plugins service needs to be instantiated last so that the loaded plugins have
 # access to all the other services.
 plugins_service = PluginsService()
-# The server instance is instantiated dynamically at start_server.py. The configuration
+
+# The server instance is instantiated dynamically at `start_server.py`. The configuration
 # values need to be passed into it over there before the instance can be assigned here.
 server = None

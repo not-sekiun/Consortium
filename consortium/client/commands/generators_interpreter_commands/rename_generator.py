@@ -58,7 +58,7 @@ class RenameGeneratorCommand(BaseCommand):
 
             print_success(
                 f'Agent generator "{agent_generator["name"]}" '
-                f'({agent_generator["agent_generator_id"]}) renamed to '
+                f"({agent_generator['agent_generator_id']}) renamed to "
                 f'"{parsed_commands.new_name[0]}"',
             )
         except SystemExit:

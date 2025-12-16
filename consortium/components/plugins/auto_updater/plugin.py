@@ -57,8 +57,8 @@ class Plugin(BasePlugin):
             f"({SERVER_RELEASE.version}) released at {SERVER_RELEASE.datetime_released}",
         )
         self.logger.info(
-            f"Latest release: '{json_data["codename"]}' ({json_data["version"]}) "
-            f"released at {json_data["datetime_released"]}",
+            f"Latest release: '{json_data['codename']}' ({json_data['version']}) "
+            f"released at {json_data['datetime_released']}",
         )
 
         if latest_release_datetime > current_release_datetime:

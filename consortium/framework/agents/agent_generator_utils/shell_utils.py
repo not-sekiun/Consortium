@@ -2,7 +2,7 @@ import asyncio
 from collections import namedtuple
 
 
-async def run_command(*args, **kwargs) -> namedtuple:
+async def run_command(*args, **kwargs) -> tuple:
     """
     Asynchronously run a command in a subprocess shell and return the stdout, stderr
     and return code.

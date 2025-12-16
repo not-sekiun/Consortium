@@ -10,7 +10,7 @@ from consortium.client.repl_framework.base_command import (
     ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_error, print_success
+from consortium.client.utils.printer_utils import print_success
 
 
 class InteractAgentCommand(BaseCommand):
@@ -45,7 +45,7 @@ class InteractAgentCommand(BaseCommand):
             )
 
             print_success(
-                f"Interacting with agent '{agent["name"]}' ({agent["agent_id"]}).",
+                f"Interacting with agent '{agent['name']}' ({agent['agent_id']}).",
             )
 
             return ReturnStatus(

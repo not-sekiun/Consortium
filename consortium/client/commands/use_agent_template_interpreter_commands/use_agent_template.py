@@ -50,7 +50,7 @@ class UseAgentTemplateCommand(BaseCommand):
                 print_error(
                     f"Already using agent template: "
                     f'"{currently_used_agent_template["name"]}" '
-                    f'({currently_used_agent_template["agent_template_id"]})',
+                    f"({currently_used_agent_template['agent_template_id']})",
                 )
                 return ReturnStatus(
                     type=ClientReturnStatusType.CONTINUE,
@@ -60,9 +60,9 @@ class UseAgentTemplateCommand(BaseCommand):
                 parsed_args.agent_template_id[0],
             )
             print_info(
-                f'Using agent template: '
+                f"Using agent template: "
                 f'"{agent_template["name"]}" '
-                f'({agent_template["agent_template_id"]})',
+                f"({agent_template['agent_template_id']})",
             )
 
             return ReturnStatus(

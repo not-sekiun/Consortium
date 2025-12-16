@@ -132,7 +132,7 @@ class ConnectCommand(BaseCommand):
                 }
 
                 try:
-                    with open(parsed_args.config, "r") as file:
+                    with open(parsed_args.config) as file:
                         config_data = json.load(fp=file)
                     jsonschema.validate(config_data, client_config_file_json_schema)
                 except FileNotFoundError as exc:

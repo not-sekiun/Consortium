@@ -86,21 +86,15 @@ def _print_custom_formatted_exception_message(
 ) -> None:
     stack_summary = traceback.extract_tb(exc.__traceback__)
     innermost_frame = stack_summary[-1]
-    innermost_frame.lineno = innermost_frame.lineno - 1
-    innermost_frame.filename = "<stdin>"
     # This indicates the error occurred at the top most module level. But since the
     # code runs in a temporary function implicitly, we need to change the name.
     if innermost_frame.name == temporary_function_identifier:
         innermost_frame.name = "<module>"
-    new_stack_summary = [innermost_frame]
-    # Print exception header.
     print("Traceback (most recent call last):")
-    # Print exception location.
-    print("".join(traceback.format_list(new_stack_summary)), end="")
-    # Print exception type and message.
     print(
-        f"{exc.__class__.__name__}: {exc}",
+        f'  File "{innermost_frame.filename}", line {innermost_frame.lineno}, in {innermost_frame.name}'
     )
+    print(f"{exc.__class__.__name__}: {exc}")
 
 
 class Plugin(BasePlugin):

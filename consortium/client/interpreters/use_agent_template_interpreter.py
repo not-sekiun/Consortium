@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import HTML
 from prompt_toolkit.completion import NestedCompleter
@@ -16,11 +16,14 @@ from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
 
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
+
 
 class UseAgentTemplateInterpreter(GeneratorsInterpreter):
     def __init__(
         self,
-        client_session: "ClientSession",
+        client_session: ClientSession,
         agent_template: dict[str, Any],
     ):
         # Add a "value" key to the options to store the current value of the
@@ -33,8 +36,8 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         super().__init__(
             prompt=HTML(
                 f"<b>Consortium (<ansigreen>Generators</ansigreen>: "
-                f"<ansigreen>'{agent_template["name"]}' "
-                f"({agent_template["agent_template_id"]})</ansigreen>) > </b>",
+                f"<ansigreen>'{agent_template['name']}' "
+                f"({agent_template['agent_template_id']})</ansigreen>) > </b>",
             ),
             commands=(
                 [
@@ -60,7 +63,7 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         )
         agent_template = self.environment["agent_template"]
         for key, value in {
-            command: {option_name: None for option_name in agent_template["options"]}
+            command: dict.fromkeys(agent_template["options"])
             for command in [
                 "info_agent_template_option",
                 "set_agent_template_option",

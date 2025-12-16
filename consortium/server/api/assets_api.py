@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import FileResponse
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.api.respository_api import (
+from consortium.server.api.repository_api import (
     create_delete_repository_resource_by_resource_id_endpoint,
     create_download_repository_resource_by_resource_id_endpoint,
     create_get_all_repository_resources_endpoint,
@@ -22,10 +22,7 @@ from consortium.server.exceptions.service_exceptions import (
     repository_service_exceptions as svc_excs,
 )
 from consortium.server.models.common_models import SuccessResponseModel
-from consortium.server.models.repository_models import (
-    RepositoryDirectoryModel,
-    RepositoryFileModel,
-)
+from consortium.server.models.repository_models import RepositoryResourceModel
 from consortium.server.objects.user_account_objects import UserPermissions
 
 router = APIRouter(
@@ -66,7 +63,7 @@ router.add_api_route(
     ),
     methods=["GET"],
     responses={
-        200: {"model": list[RepositoryFileModel | RepositoryDirectoryModel]},
+        200: {"model": list[RepositoryResourceModel]},
     },
     name="Get All Assets",
 )
@@ -78,7 +75,7 @@ router.add_api_route(
     ),
     methods=["GET"],
     responses={
-        200: {"model": RepositoryDirectoryModel | RepositoryFileModel},
+        200: {"model": RepositoryResourceModel},
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
@@ -123,7 +120,7 @@ router.add_api_route(
     ),
     methods=["POST"],
     responses={
-        200: {"model": RepositoryFileModel | RepositoryDirectoryModel},
+        200: {"model": RepositoryResourceModel},
         415: {
             "model": _resource_directory_archive_file_format_not_specified_error.to_pydantic_model()
             | _invalid_resource_directory_archive_file_format_error.to_pydantic_model()

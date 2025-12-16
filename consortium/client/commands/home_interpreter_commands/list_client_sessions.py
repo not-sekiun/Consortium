@@ -1,5 +1,3 @@
-import argparse
-
 from rich.table import Table
 
 import consortium.client.client_singletons as client_singletons
@@ -20,8 +18,7 @@ client_sessions_service = client_singletons.client_sessions_service
 class ListClientSessionsCommand(BaseCommand):
     name = "list_client_sessions"
     description = (
-        "List basic information for all current client sessions to a Consortium "
-        "server."
+        "List basic information for all current client sessions to a Consortium server."
     )
     epilog = format_argparse_epilog(
         """

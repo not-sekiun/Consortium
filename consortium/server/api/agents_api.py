@@ -13,17 +13,12 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
+from consortium.server.exceptions.framework_exceptions import (
+    agents_framework_exceptions as agent_framework_excs,
+)
 from consortium.server.exceptions.service_exceptions import (
     agents_service_exceptions as svc_excs,
 )
-
-# import (
-#     AgentNotFoundError as svc_excs.AgentNotFoundError,
-#     AgentResultNotFoundError as svc_excs.AgentResultNotFoundError,
-#     AgentTaskingOptionValidationError as svc_excs.AgentTaskingOptionValidationError,
-#     AgentTaskingRequiredOptionValueNotSetError as svc_excs.AgentTaskingRequiredOptionValueNotSetError,
-#     AgentTaskNotFoundError as svc_excs.AgentTaskNotFoundError,
-# )
 from consortium.server.models.agent_models import (
     AgentModel,
     AgentResultModel,
@@ -33,7 +28,6 @@ from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
-agents_service = server_singletons.agents_service
 router = APIRouter(
     prefix="/api/agents",
     responses={
@@ -43,6 +37,70 @@ router = APIRouter(
         500: {"model": InternalServerError().to_pydantic_model()},
     },
     tags=["Agents API"],
+)
+
+_agents_service = server_singletons.agents_service
+
+_agent_capability_option_value_validation_framework_error = (
+    agent_framework_excs.AgentCapabilityOptionValueValidationError(
+        agent_str="<agent_str>",
+        option_name="<option_name>",
+        option_value="<option_value>",
+        error_message="<error_message>",
+    )
+)
+_missing_required_agent_capability_option_framework_error = (
+    agent_framework_excs.MissingRequiredAgentCapabilityOptionError(
+        agent_str="<agent_str>",
+        option_name="<option_name>",
+        agent_capability_name="<agent_capability_name>",
+    )
+)
+_agent_capability_option_not_found_framework_error = (
+    agent_framework_excs.AgentCapabilityOptionNotFoundError(
+        agent_str="<agent_str>",
+        option_name="<option_name>",
+        command="<command>",
+        agent_type_str="<agent_type_str>",
+    )
+)
+_agent_not_found_error = api_excs.AgentNotFoundError.from_consortium_exception(
+    consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
+)
+_agent_task_not_found_error = api_excs.AgentTaskNotFoundError.from_consortium_exception(
+    consortium_exception=svc_excs.AgentTaskNotFoundError(task_id="string"),
+)
+_agent_result_not_found_error = (
+    api_excs.AgentResultNotFoundError.from_consortium_exception(
+        consortium_exception=svc_excs.AgentResultNotFoundError(result_id="string"),
+    )
+)
+_agent_capability_option_value_validation_framework_error = (
+    api_excs.AgentCapabilityOptionValueValidationError.from_consortium_exception(
+        consortium_exception=svc_excs.AgentCapabilityOptionValueValidationError(
+            message=_agent_capability_option_value_validation_framework_error.message,
+            detail=_agent_capability_option_value_validation_framework_error.detail,
+        ),
+    )
+)
+_agent_capability_option_not_found_error = (
+    api_excs.AgentCapabilityOptionNotFoundError.from_consortium_exception(
+        consortium_exception=svc_excs.AgentCapabilityOptionNotFoundError(
+            message=_agent_capability_option_not_found_framework_error.message,
+            detail=_agent_capability_option_not_found_framework_error.detail,
+        ),
+    )
+)
+_missing_required_agent_capability_option_framework_error = (
+    api_excs.MissingRequiredAgentCapabilityOptionError.from_consortium_exception(
+        consortium_exception=svc_excs.MissingRequiredAgentCapabilityOptionError(
+            message=_missing_required_agent_capability_option_framework_error.message,
+            detail=_missing_required_agent_capability_option_framework_error.detail,
+        ),
+    )
+)
+_unprocessable_entity_error = UnprocessableEntityError(
+    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
 )
 
 
@@ -58,7 +116,7 @@ def get_all_agents(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENTS)),
     ],
 ):
-    return [AgentModel(**agent.to_json()) for agent in agents_service.get_all_agents()]
+    return [AgentModel(**agent.to_json()) for agent in _agents_service.get_all_agents()]
 
 
 @router.get(
@@ -66,14 +124,10 @@ def get_all_agents(
     responses={
         200: {"model": AgentModel},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -88,7 +142,7 @@ def get_agent_by_agent_id(
 ):
     try:
         return AgentModel(
-            **agents_service.get_agent_by_agent_id(agent_id).to_json(),
+            **_agents_service.get_agent_by_agent_id(agent_id).to_json(),
         )
     except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
@@ -101,14 +155,10 @@ def get_agent_by_agent_id(
     responses={
         200: {"model": list[AgentTaskModel]},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -122,7 +172,7 @@ def get_all_agent_tasks_by_agent_id(
     ],
 ) -> list[AgentTaskModel]:
     try:
-        return agents_service.get_all_agent_tasks_by_agent_id(agent_id=agent_id)
+        return _agents_service.get_all_agent_tasks_by_agent_id(agent_id=agent_id)
     except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
@@ -134,18 +184,14 @@ def get_all_agent_tasks_by_agent_id(
     responses={
         200: {"model": list[AgentTaskModel]},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
-def get_all_queued_agent_tasks_by_agent_id(
+def get_all_queued_tasks_by_agent_id(
     agent_id: str,
     _: Annotated[
         None,
@@ -155,7 +201,7 @@ def get_all_queued_agent_tasks_by_agent_id(
     ],
 ) -> list[AgentTaskModel]:
     try:
-        return agents_service.get_all_queued_agent_tasks_by_agent_id(agent_id=agent_id)
+        return _agents_service.get_all_queued_tasks_by_agent_id(agent_id=agent_id)
     except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
@@ -167,14 +213,10 @@ def get_all_queued_agent_tasks_by_agent_id(
     responses={
         200: {"model": list[AgentTaskModel]},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -188,7 +230,9 @@ def get_all_running_agent_tasks_by_agent_id(
     ],
 ) -> list[AgentTaskModel]:
     try:
-        return agents_service.get_all_running_agent_tasks_by_agent_id(agent_id=agent_id)
+        return _agents_service.get_all_running_agent_tasks_by_agent_id(
+            agent_id=agent_id
+        )
     except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
@@ -200,18 +244,14 @@ def get_all_running_agent_tasks_by_agent_id(
     responses={
         200: {"model": list[AgentTaskModel]},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
-def get_all_completed_agent_tasks_by_agent_id(
+def get_all_completed_tasks_by_agent_id(
     agent_id: str,
     _: Annotated[
         None,
@@ -221,7 +261,7 @@ def get_all_completed_agent_tasks_by_agent_id(
     ],
 ) -> list[AgentTaskModel]:
     try:
-        return agents_service.get_all_completed_agent_tasks_by_agent_id(
+        return _agents_service.get_all_completed_tasks_by_agent_id(
             agent_id=agent_id,
         )
     except svc_excs.AgentNotFoundError as exc:
@@ -235,14 +275,10 @@ def get_all_completed_agent_tasks_by_agent_id(
     responses={
         200: {"model": list[AgentResultModel]},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -256,7 +292,7 @@ def get_all_agent_results_by_agent_id(
     ],
 ) -> list[AgentResultModel]:
     try:
-        return agents_service.get_all_agent_results_by_agent_id(agent_id=agent_id)
+        return _agents_service.get_all_agent_results_by_agent_id(agent_id=agent_id)
     except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
@@ -268,14 +304,10 @@ def get_all_agent_results_by_agent_id(
     responses={
         200: {"model": list[AgentResultModel]},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -289,7 +321,7 @@ def get_all_successful_agent_results_by_agent_id(
     ],
 ) -> list[AgentResultModel]:
     try:
-        return agents_service.get_all_successful_agent_results_by_agent_id(
+        return _agents_service.get_all_successful_agent_results_by_agent_id(
             agent_id=agent_id,
         )
     except svc_excs.AgentNotFoundError as exc:
@@ -303,14 +335,10 @@ def get_all_successful_agent_results_by_agent_id(
     responses={
         200: {"model": list[AgentResultModel]},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -324,7 +352,7 @@ def get_all_failed_agent_results_by_agent_id(
     ],
 ) -> list[AgentResultModel]:
     try:
-        return agents_service.get_all_failed_agent_results_by_agent_id(
+        return _agents_service.get_all_failed_agent_results_by_agent_id(
             agent_id=agent_id,
         )
     except svc_excs.AgentNotFoundError as exc:
@@ -338,19 +366,11 @@ def get_all_failed_agent_results_by_agent_id(
     responses={
         200: {"model": AgentTaskModel},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model()
-            | api_excs.AgentTaskNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentTaskNotFoundError(
-                    task_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model()
+            | _agent_task_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -365,7 +385,7 @@ def get_agent_tasks_by_agent_id_and_task_id(
     ],
 ) -> AgentTaskModel:
     try:
-        return agents_service.get_agent_task_by_agent_id_and_task_id(
+        return _agents_service.get_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id,
             task_id=task_id,
         )
@@ -384,19 +404,11 @@ def get_agent_tasks_by_agent_id_and_task_id(
     responses={
         200: {"model": AgentTaskModel},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model()
-            | api_excs.AgentResultNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentResultNotFoundError(
-                    result_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model()
+            | _agent_result_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -411,7 +423,7 @@ def get_agent_result_by_agent_id_and_result_id(
     ],
 ) -> AgentResultModel:
     try:
-        return agents_service.get_agent_result_by_agent_id_and_result_id(
+        return _agents_service.get_agent_result_by_agent_id_and_result_id(
             agent_id=agent_id,
             result_id=result_id,
         )
@@ -430,23 +442,12 @@ def get_agent_result_by_agent_id_and_result_id(
     responses={
         200: {"model": AgentTaskModel},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model()
+            | _agent_capability_option_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": api_excs.AgentTaskingOptionValueValidationError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentTaskingOptionValidationError(
-                    agent_str="string",
-                    error_message="string",
-                ),
-            ).to_pydantic_model()
-            | api_excs.AgentTaskingRequiredOptionValueNotSetError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentTaskingRequiredOptionValueNotSetError(
-                    agent_str="string",
-                    error_message="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _agent_capability_option_value_validation_framework_error.to_pydantic_model()
+            | _missing_required_agent_capability_option_framework_error.to_pydantic_model(),
         },
     },
 )
@@ -462,7 +463,7 @@ async def task_agent_by_agent_id(
     ],
 ) -> AgentTaskModel:
     try:
-        task = await agents_service.task_agent_by_agent_id(
+        task = await _agents_service.task_agent_by_agent_id(
             agent_id=agent_id,
             command=command,
             arguments=arguments,
@@ -471,12 +472,16 @@ async def task_agent_by_agent_id(
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except svc_excs.AgentTaskingOptionValidationError as exc:
-        raise api_excs.AgentTaskingOptionValueValidationError.from_consortium_exception(
+    except svc_excs.AgentCapabilityOptionNotFoundError as exc:
+        raise api_excs.AgentCapabilityOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except svc_excs.AgentTaskingRequiredOptionValueNotSetError as exc:
-        raise api_excs.AgentTaskingRequiredOptionValueNotSetError.from_consortium_exception(
+    except svc_excs.AgentCapabilityOptionValueValidationError as exc:
+        raise api_excs.AgentCapabilityOptionValueValidationError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
+    except svc_excs.MissingRequiredAgentCapabilityOptionError as exc:
+        raise api_excs.MissingRequiredAgentCapabilityOptionError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
 
@@ -488,14 +493,10 @@ async def task_agent_by_agent_id(
     responses={
         200: {"model": AgentModel},
         404: {
-            "model": api_excs.AgentNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -516,12 +517,12 @@ async def update_agent_by_agent_id(
 ) -> AgentModel:
     try:
         if name is not None:
-            await agents_service.update_agent_name_by_agent_id(
+            await _agents_service.update_agent_name_by_agent_id(
                 agent_id=agent_id,
                 name=name,
             )
         if description is not None:
-            await agents_service.update_agent_description_by_agent_id(
+            await _agents_service.update_agent_description_by_agent_id(
                 agent_id=agent_id,
                 description=description,
             )
@@ -534,7 +535,7 @@ async def update_agent_by_agent_id(
     # patched it is possible for the above block to execute and not raise an exception.
     # So we still need to check for that here.
     try:
-        agent = agents_service.get_agent_by_agent_id(
+        agent = _agents_service.get_agent_by_agent_id(
             agent_id=agent_id,
         )
     except svc_excs.AgentNotFoundError as exc:
@@ -550,14 +551,10 @@ async def update_agent_by_agent_id(
     responses={
         200: {"model": AgentTaskModel},
         404: {
-            "model": api_excs.AgentTaskNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.AgentTaskNotFoundError(task_id="string"),
-            ).to_pydantic_model(),
+            "model": _agent_task_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -572,7 +569,7 @@ async def delete_queued_agent_task_by_agent_id_and_task_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        await agents_service.delete_queued_agent_task_by_agent_id_and_task_id(
+        await _agents_service.delete_queued_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id,
             task_id=task_id,
         )

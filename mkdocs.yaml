@@ -46,7 +46,7 @@ theme:
   favicon: assets/logo.png
 
 nav:
-  - Exceptions: test.md
+#  - Exceptions: test.md
 #  - Home: index.md
 #  - About:
 #    - about/features.md
@@ -77,11 +77,13 @@ nav:
 #      - framework-reference/exceptions/plugins-framework-exceptions.md
 #      - framework-reference/exceptions/options-framework-exceptions.md
 #      - framework-reference/exceptions/listeners-framework-exceptions.md
-#  - Services Reference:
+  - Services Reference:
 #      - Services:
 #        - services-reference/services/plugins-service-reference.md
-#      - Exceptions:
-#        - services-reference/exceptions/plugins-service-exceptions.md
+      - Exceptions:
+        - services-reference/exceptions/listener-templates-service-exceptions.md
+        - services-reference/exceptions/agent-templates-service-exceptions.md
+        - services-reference/exceptions/plugins-service-exceptions.md
 
 markdown_extensions:
   - pymdownx.highlight:

@@ -1,2 +1,0 @@
-class PeerConnectionErroredOutError(Exception):
-    pass

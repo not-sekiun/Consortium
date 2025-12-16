@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI, HTML
 from prompt_toolkit.completion import NestedCompleter
@@ -13,6 +13,10 @@ from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
 
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
+
+
 COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS = [
     command for command in CORE_COMMANDS if command.name != "listeners"
 ] + LISTENERS_INTERPRETER_COMMANDS
@@ -21,13 +25,15 @@ COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS = [
 class ListenersInterpreter(ClientInterpreter):
     def __init__(
         self,
-        client_session: "ClientSession",
-        prompt: str | ANSI | HTML | list[tuple[str, str]] = HTML(
-            "<b>Consortium (<ansiblue>Listeners</ansiblue>) > </b>",
-        ),
+        client_session: ClientSession,
+        prompt: str | ANSI | HTML | list[tuple[str, str]] | None = None,
         commands: list[BaseCommand] | None = None,
         additional_environment_variables: dict[str, Any] | None = None,
     ):
+        if prompt is None:
+            prompt = HTML(
+                "<b>Consortium (<ansiblue>Listeners</ansiblue>) > </b>",
+            )
         if commands is None:
             commands = COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS
         if additional_environment_variables is None:
@@ -77,9 +83,7 @@ class ListenersInterpreter(ClientInterpreter):
             nested_completer_dict[key] = value
         for key, value in {
             command: {
-                listener["listener_id"]: {
-                    parameter_name: None for parameter_name in listener["parameters"]
-                }
+                listener["listener_id"]: dict.fromkeys(listener["parameters"])
                 for listener in all_listeners
             }
             for command in [
@@ -88,7 +92,7 @@ class ListenersInterpreter(ClientInterpreter):
             ]
         }.items():
             nested_completer_dict[key] = value
-        nested_completer_dict["help"] = {command: None for command in self.commands}
+        nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,

@@ -1,7 +1,5 @@
 from argparse import ArgumentParser
 
-from rich.table import Table
-
 from consortium.client.commands.generators_interpreter_commands.info_agent_template import (
     InfoAgentTemplateCommand as GeneratorsInterpreterInfoAgentTemplateCommand,
 )
@@ -10,7 +8,6 @@ from consortium.client.objects.client_return_status_objects import (
 )
 from consortium.client.repl_framework.base_command import CommandContext, ReturnStatus
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import CONSOLE
 
 
 class InfoAgentTemplateCommand(GeneratorsInterpreterInfoAgentTemplateCommand):

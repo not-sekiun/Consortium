@@ -360,7 +360,7 @@ class ClientRESTAPIConnection:
         )
 
     @_requires_authentication
-    async def get_all_queued_agent_tasks_by_agent_id(
+    async def get_all_queued_tasks_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
@@ -380,7 +380,7 @@ class ClientRESTAPIConnection:
         )
 
     @_requires_authentication
-    async def get_all_completed_agent_tasks_by_agent_id(
+    async def get_all_completed_tasks_by_agent_id(
         self,
         agent_id: str,
     ) -> list[dict[str, Any]]:
@@ -556,14 +556,14 @@ class ClientRESTAPIConnection:
     ) -> None:
         if "error" in response_json and response_json["error"]["detail"]:
             raise ClientRESTAPIOperationError(
-                f"{response_json["error"]["code"]}: "
-                f"{response_json["error"]["message"]} "
-                f"(Detail: {response_json["error"]["detail"]})",
+                f"{response_json['error']['code']}: "
+                f"{response_json['error']['message']} "
+                f"(Detail: {response_json['error']['detail']})",
             )
         elif "error" in response_json and not response_json["error"]["detail"]:
             raise ClientRESTAPIOperationError(
-                f"{response_json["error"]["code"]}: "
-                f"{response_json["error"]["message"]}",
+                f"{response_json['error']['code']}: "
+                f"{response_json['error']['message']}",
             )
 
     def _log_request_and_response(

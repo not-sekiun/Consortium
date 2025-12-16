@@ -1,3 +1,5 @@
+from typing import Any
+
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
 )
@@ -69,13 +71,17 @@ class AgentCapabilityNotFoundError(AgentsFrameworkError):
         )
 
 
-class AgentCapabilityArgumentNotFoundError(AgentsFrameworkError):
-    code = "AGENT_CAPABILITY_ARGUMENT_NOT_FOUND_ERROR"
+class AgentCapabilityOptionError(AgentsFrameworkError):
+    code = "AGENT_CAPABILITY_OPTION_ERROR"
+
+
+class AgentCapabilityOptionNotFoundError(AgentCapabilityOptionError):
+    code = "AGENT_CAPABILITY_OPTION_NOT_FOUND_ERROR"
 
     def __init__(
         self,
         command: str,
-        argument: str,
+        option_name: str,
         agent_str: str,
         agent_type_str: str,
     ):
@@ -83,7 +89,60 @@ class AgentCapabilityArgumentNotFoundError(AgentsFrameworkError):
             message=(
                 f"Failed to task the agent {agent_str} with the capability "
                 f"'{command}'. The agent tasking provided contained an argument "
-                f"'{argument}' that did not correspond with any arguments in that "
+                f"'{option_name}' that did not correspond with any options in that "
                 f"agent capability for that agent's type '{agent_type_str}'."
+            ),
+        )
+
+
+class MissingRequiredAgentCapabilityOptionError(AgentCapabilityOptionError):
+    code = "MISSING_REQUIRED_AGENT_CAPABILITY_OPTION_ERROR"
+
+    def __init__(self, agent_str: str, agent_capability_name: str, option_name: str):
+        super().__init__(
+            message=(
+                f"Failed to task the agent '{agent_str}' with the agent capability "
+                f"'{agent_capability_name}'. The required option '{option_name}' was "
+                f"not provided."
+            ),
+        )
+
+
+class AgentCapabilityOptionValueValidationError(AgentCapabilityOptionError):
+    code = "AGENT_CAPABILITY_OPTION_VALUE_VALIDATION_ERROR"
+
+    def __init__(
+        self,
+        agent_str: str,
+        option_name: str,
+        option_value: Any,
+        error_message: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to task the agent '{agent_str}'. The provided value "
+                f"'{option_value}' for the option '{option_name}' is invalid. "
+                f"{error_message}"
+            ),
+        )
+
+
+class AgentCreationError(AgentsFrameworkError):
+    code = "AGENT_CREATION_ERROR"
+
+
+class AgentCreationParameterTypeError(AgentCreationError):
+    code = "AGENT_CREATION_PARAMETER_TYPE_ERROR"
+
+    def __init__(
+        self,
+        parameter_name: str | None = None,
+        parameter_type: str | None = None,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to create the agent. The parameter "
+                f"'{parameter_name}' must be of type '{parameter_type}' in the "
+                f"agent's provided parameters."
             ),
         )

@@ -56,17 +56,16 @@ class InfoListenerTemplateCommand(BaseCommand):
         table.add_row("Authors", "\n".join(listener_template["authors"]))
         table.add_row(
             "Listener Type",
-            f"{listener_template["listener_type"]["name"]} ({listener_template["listener_type"]["listener_type_id"]})",
+            listener_template["listener_type"]["name"],
         )
         table.add_row(
-            "Compatible Agent Types",
+            "Registered Compatible Agent Types",
             "\n".join(
-                [
-                    f"{agent_type["name"]} ({agent_type["agent_type_id"]})"
-                    for agent_type in listener_template["listener_type"][
-                        "compatible_agent_types"
+                list(
+                    listener_template["listener_type"][
+                        "registered_compatible_agent_types"
                     ]
-                ],
+                ),
             ),
         )
         CONSOLE.print(table)

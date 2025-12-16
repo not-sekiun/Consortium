@@ -1,2 +1,0 @@
-class InvalidPeerResponseError(Exception):
-    pass

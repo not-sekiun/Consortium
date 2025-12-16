@@ -1,7 +1,5 @@
 import uuid
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Type
 
 from packaging import specifiers, version
 
@@ -13,15 +11,7 @@ from consortium.framework.listeners.base_listener_template import BaseListenerTe
 from consortium.framework.listeners.base_listener_type import BaseListenerType
 
 
-# @dataclass
 class ListenerProfile:
-    # name: str
-    # listener: Type[BaseListener]
-    # listener_template: BaseListenerTemplate
-    # listener_type: BaseListenerType
-    # # listener_project_folder_path: Path
-    # listener_profile_id: uuid.UUID = field(default_factory=uuid.uuid4)
-
     def __init__(
         self,
         listener: type[BaseListener],

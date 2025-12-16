@@ -153,11 +153,11 @@ class InvalidFrameworkVersionSpecifierError(
     def __init__(
         self,
         agent_template_str: str,
-        framework_version_specifier_str: str,
+        framework_version_specifier: str,
     ):
         super().__init__(
             component_str=agent_template_str,
-            framework_version_specifier_str=framework_version_specifier_str,
+            framework_version_specifier=framework_version_specifier,
         )
 
 
@@ -204,11 +204,11 @@ class AgentTemplateOptionError(AgentTemplatesFrameworkError):
 class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
     code = "AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"
 
-    def __init__(self, agent_template: str, option_name: str):
+    def __init__(self, agent_template_str: str, option_name: str):
         super().__init__(
             message=(
                 f"Failed to create the agent generator from the agent template "
-                f"'{agent_template}'. The provided option '{option_name}' was not "
+                f"'{agent_template_str}'. The provided option '{option_name}' was not "
                 f"found in the agent template."
             ),
             detail={"option_name": option_name},
@@ -220,7 +220,7 @@ class AgentTemplateOptionValueValidationError(AgentTemplateOptionError):
 
     def __init__(
         self,
-        agent_template: str,
+        agent_template_str: str,
         option_name: str,
         option_value: Any,
         error_message: str,
@@ -228,7 +228,7 @@ class AgentTemplateOptionValueValidationError(AgentTemplateOptionError):
         super().__init__(
             message=(
                 f"Failed to create the agent generator from the agent template "
-                f"'{agent_template}'. The value provided '{option_value}' for the "
+                f"'{agent_template_str}'. The provided value '{option_value}' for the "
                 f"option '{option_name}' is invalid. {error_message}"
             ),
             detail={
@@ -244,11 +244,11 @@ class MissingRequiredAgentTemplateOptionError(
 ):
     code = "MISSING_REQUIRED_AGENT_TEMPLATE_OPTION_ERROR"
 
-    def __init__(self, agent_template: str, option_name: str):
+    def __init__(self, agent_template_str: str, option_name: str):
         super().__init__(
             message=(
                 f"Failed to create the agent generator from the agent template "
-                f"'{agent_template}'. The required option '{option_name}' was not "
+                f"'{agent_template_str}'. The required option '{option_name}' was not "
                 f"provided."
             ),
             detail={"option_name": option_name},

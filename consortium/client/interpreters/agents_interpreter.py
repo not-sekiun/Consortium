@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
@@ -14,13 +14,17 @@ from consortium.client.utils.data_structure_utils import (
 from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 from consortium.client.utils.printer_utils import print_success
 
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
+
+
 COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS = [
     command for command in CORE_COMMANDS if command.name != "agents"
 ] + AGENTS_INTERPRETER_COMMANDS
 
 
 class AgentsInterpreter(ClientInterpreter):
-    def __init__(self, client_session: "ClientSession"):
+    def __init__(self, client_session: ClientSession):
         super().__init__(
             prompt=ANSI(
                 format_rich_text_as_ansi(
@@ -67,7 +71,7 @@ class AgentsInterpreter(ClientInterpreter):
         # Register the help command to autocomplete with all available commands. This
         # includes all the newly added agent capability commands that are dynamically
         # added before this method is called.
-        nested_completer_dict["help"] = {command: None for command in self.commands}
+        nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,
@@ -84,7 +88,7 @@ class AgentsInterpreter(ClientInterpreter):
         ].get_agent_by_agent_id(
             agent_id=event["data"]["agent_id"],
         )
-        print_success(f"New agent '{agent["name"]}' ({agent["agent_id"]}) checked in.")
+        print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in.")
         await self._update_autocomplete()
 
     async def _setup_event_handlers(self) -> None:

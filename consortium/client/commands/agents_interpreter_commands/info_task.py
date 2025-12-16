@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
@@ -20,8 +21,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 class InfoTaskCommand(BaseCommand):
     name = "info_task"
     description = (
-        "Display detailed information about a specific agent task for a specific "
-        "agent."
+        "Display detailed information about a specific agent task for a specific agent."
     )
     epilog = format_argparse_epilog(
         """
@@ -48,7 +48,7 @@ class InfoTaskCommand(BaseCommand):
 
     @staticmethod
     async def _display_task_info_from_agent_id_and_task_id(
-        client_rest_api_connection: "ClientRESTAPIConnection",
+        client_rest_api_connection: ClientRESTAPIConnection,
         agent_id: str,
         task_id: str,
     ) -> None:

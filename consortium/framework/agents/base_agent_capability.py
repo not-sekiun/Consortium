@@ -1,8 +1,9 @@
 import asyncio
 import sys
-from abc import ABC, abstractmethod
+from collections.abc import Callable
 from enum import Enum, StrEnum
-from typing import Any
+from inspect import signature
+from typing import Any, get_type_hints
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -11,6 +12,7 @@ from consortium.framework.agents.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
 )
+from consortium.framework.framework_types import Primitive, PrimitiveCollection
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
@@ -18,11 +20,12 @@ from consortium.framework.options import (
     SingleValueOption,
     ToggleableChoicesValueOption,
 )
+from consortium.framework.utils.formatter_utils import format_docstring_to_single_line
 from consortium.server.exceptions.framework_exceptions.agent_capabilities_framework_exceptions import (
-    AgentCapabilityConfigurationParameterTypeError,
     CustomOSStringAlreadyRegisteredError,
     DuplicateAgentCapabilityOptionNameError,
     EmptyAgentCapabilityNameError,
+    InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
 from consortium.server.objects.repository_objects import (
@@ -94,6 +97,10 @@ class _BaseAgentCapabilityModel(BaseModel):
 
     name: str
     description: str
+    authors: set[str]
+    requires_admin: bool
+    supported_oses: set[SupportedOS]
+    is_atomic: bool = False
     options: set[
         SingleValueOption
         | ListValueOption
@@ -101,14 +108,18 @@ class _BaseAgentCapabilityModel(BaseModel):
         | ChoiceValueOption
         | ToggleableChoicesValueOption
     ]
-    authors: set[str]
-    requires_admin: bool
-    supported_oses: set[SupportedOS]
+    validating_function: (
+        Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
+    ) = None
 
 
-class BaseAgentCapability(ABC):
+class BaseAgentCapability:
     name: str
     description: str = ""
+    authors: set[str] = None
+    requires_admin: bool = False
+    supported_oses: set[SupportedOS] = None
+    is_atomic: bool = False
     options: set[
         SingleValueOption
         | ListValueOption
@@ -116,18 +127,19 @@ class BaseAgentCapability(ABC):
         | ChoiceValueOption
         | ToggleableChoicesValueOption
     ] = None
-    authors: set[str] = None
-    requires_admin: bool = False
-    supported_oses: set[SupportedOS] = None
+    validating_function: (
+        Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
+    ) = None
 
-    def __init__(self, agent_task_messages_queue: asyncio.Queue):
+    def __init__(self, task_messages_queue: asyncio.Queue):
         # The task messages queue is the overall agent task messages aggregating queue
-        # that comes from the agent. All agent capabilities share this queue.
-        self._agent_task_messages_queue = agent_task_messages_queue
+        # that comes from the framework to be pulled by listeners and sent out to the
+        # wire. All agent capabilities share this queue.
+        self._task_messages_queue = task_messages_queue
         # The agent result messages queue is per agent capability and serves
         # essentially to allow us to demultiplex messages coming in over the wire from
         # the listener.
-        self.agent_result_messages_queue = asyncio.Queue()
+        self.result_messages_queue = asyncio.Queue()
         self.file_manager = AgentFileManager
 
     def __init_subclass__(cls, **kwargs):
@@ -154,8 +166,8 @@ class BaseAgentCapability(ABC):
             )
         except ValidationError as exc:
             for err in exc.errors():
-                raise AgentCapabilityConfigurationParameterTypeError(
-                    agent_capability_filepath=sys.modules[cls.__module__].__file__,
+                raise InvalidAgentCapabilityConfigurationParameterTypeError(
+                    agent_capability_str=sys.modules[cls.__module__].__file__,
                     parameter_name=err["loc"][0],
                     parameter_type="list[BaseAgentGeneratorBuildStep]",
                 ) from None
@@ -164,20 +176,33 @@ class BaseAgentCapability(ABC):
             raise EmptyAgentCapabilityNameError(
                 agent_capability_filepath=sys.modules[cls.__module__].__file__,
             )
-        argument_names = []
-        for argument in cls.options:
-            if argument.name in argument_names:
+        option_names = []
+        for option in cls.options:
+            if option.name in option_names:
                 raise DuplicateAgentCapabilityOptionNameError(
-                    argument_name=argument.name,
-                    agent_capability_filepath=cls.name,
+                    option_name=option.name,
+                    agent_capability_name=cls.name,
                 )
-            argument_names.append(argument.name)
+            option_names.append(option.name)
+        # Check that signature of function is minimally valid.
+        if cls.validating_function:
+            function_signature = signature(cls.validating_function)
+            if len(function_signature.parameters) != 1:
+                raise InvalidAgentCapabilityConfigurationParameterTypeError(
+                    agent_capability_str=cls.name,
+                    parameter_name="validating_function",
+                    parameter_type=get_type_hints(cls)["validating_function"],
+                )
+            # We need to convert the validating function to a static method so that the
+            # validating function class attribute is considered as just an ordinary
+            # function rather than an actual method of the listener template.
+            cls.validating_function = staticmethod(cls.validating_function)
 
         # For convenience purposes when providing the arguments of a particular
         # capability they are declared at the class level in a set (which also
         # implicitly helps prevent duplicate arguments). But when we want to interact
         # programmatically with the capability it is better to provide a dict like
-        # interface hence the redeclaration of the class argument here.
+        # interface hence the redeclaration of the class option here.
         # TODO: Find some way to redeclare the typing of this to allow it to play nice
         #  with IDE type suggestions.
         options = {}
@@ -187,46 +212,83 @@ class BaseAgentCapability(ABC):
 
         super().__init_subclass__(**kwargs)
 
-    async def send_agent_task_message(
-        self,
-        agent_task_message: AgentTaskMessageModel,
-    ) -> None:
-        await self._agent_task_messages_queue.put(agent_task_message)
+    def __str__(self) -> str:
+        return f"{self.name}"
 
-    async def recv_agent_result_message(
+    def __repr__(self) -> str:
+        return (
+            f"AgentCapability("
+            f"name={self.name!r}, "
+            f"description={self.description!r}, "
+            f"authors={self.authors!r}, "
+            f"requires_admin={self.requires_admin!r}, "
+            f"supported_oses={self.supported_oses!r}, "
+            f"is_atomic={self.is_atomic!r}, "
+            f"options={self.options!r}, "
+            f"validating_function={self.validating_function!r}"
+            f")"
+        )
+
+    async def send_to_agent(
+        self,
+        task_message: AgentTaskMessageModel,
+        timeout: int | float | None = None,
+    ) -> None:
+        if timeout is None:
+            await self._task_messages_queue.put(task_message)
+        else:
+            await asyncio.wait_for(
+                self._task_messages_queue.put(task_message),
+                timeout=timeout,
+            )
+
+    async def recv_from_agent(
         self,
         timeout: int | float | None = None,
     ) -> AgentResultMessageModel:
         if timeout is None:
-            return await self.agent_result_messages_queue.get()
+            return await self.result_messages_queue.get()
         return await asyncio.wait_for(
-            self.agent_result_messages_queue.get(),
+            self.result_messages_queue.get(),
             timeout=timeout,
         )
 
-    async def send_agent_task_message_and_recv_agent_result_message(
+    async def send_and_recv_from_agent(
         self,
-        agent_task_message: AgentTaskMessageModel,
+        task_message: AgentTaskMessageModel,
         timeout: int | float | None = None,
     ) -> AgentResultMessageModel:
-        await self.send_agent_task_message(agent_task_message)
-        return await self.recv_agent_result_message(timeout=timeout)
+        if timeout is None:
+            await self.send_to_agent(task_message)
+            return await self.recv_from_agent()
+        else:
+            async with asyncio.timeout(timeout):
+                await self.send_to_agent(task_message)
+                return await self.recv_from_agent()
 
-    @abstractmethod
-    async def run_agent_capability(
+    async def execute(
         self,
-        agent_task_message: AgentTaskMessageModel,
-    ) -> AgentResultMessageModel: ...
+        task_message: AgentTaskMessageModel,
+    ) -> AgentResultMessageModel:
+        return await self.send_and_recv_from_agent(
+            task_message=task_message,
+        )
 
     @classmethod
     def to_json(cls) -> dict[str, Any]:
         return {
             "name": cls.name,
             "description": cls.description,
-            "options": {
-                option.name: option.to_json() for option in cls.options.values()
-            },
             "authors": list(cls.authors),
             "requires_admin": cls.requires_admin,
             "supported_oses": [str(os) for os in cls.supported_oses],
+            "is_atomic": cls.is_atomic,
+            "options": {
+                option.name: option.to_json() for option in cls.options.values()
+            },
+            "validating_function": format_docstring_to_single_line(
+                cls.validating_function.__doc__,
+            )
+            if cls.validating_function and cls.validating_function.__doc__
+            else None,
         }

@@ -1,14 +1,16 @@
 import re
-from typing import Callable, Type
+from collections.abc import Callable
 
 from consortium.framework.framework_types import Primitive
-from consortium.framework.options.exceptions import OptionValueValidationError
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 
 
 def validate_value_data_type(
     option_name: str,
     option_value: Primitive,
-    *value_types: Type,
+    *value_types: type,
 ) -> None:
     if not isinstance(option_value, value_types):
         if len(value_types) == 1:
@@ -47,9 +49,9 @@ def validate_value_numeric_range(
     option_name: str,
     option_value: Primitive,
     greater_than: int | float | None,
-    lesser_than: int | float | None,
+    less_than: int | float | None,
     greater_than_or_equal_to: int | float | None,
-    lesser_than_or_equal_to: int | float | None,
+    less_than_or_equal_to: int | float | None,
 ) -> None:
     if isinstance(option_value, (int, float)):
         if greater_than is not None and option_value <= greater_than:
@@ -57,10 +59,10 @@ def validate_value_numeric_range(
                 f"Value '{option_value}' for option '{option_name}' must be greater "
                 f"than {greater_than}.",
             )
-        if lesser_than is not None and option_value >= lesser_than:
+        if less_than is not None and option_value >= less_than:
             raise OptionValueValidationError(
                 f"Value '{option_value}' for option '{option_name}' must be lesser "
-                f"than {lesser_than}.",
+                f"than {less_than}.",
             )
         if (
             greater_than_or_equal_to is not None
@@ -70,13 +72,10 @@ def validate_value_numeric_range(
                 f"Value '{option_value}' for option '{option_name}' must be greater "
                 f"than or equal to {greater_than_or_equal_to}.",
             )
-        if (
-            lesser_than_or_equal_to is not None
-            and option_value > lesser_than_or_equal_to
-        ):
+        if less_than_or_equal_to is not None and option_value > less_than_or_equal_to:
             raise OptionValueValidationError(
                 f"Value '{option_value}' for option '{option_name}' must be lesser "
-                f"than or equal to {lesser_than_or_equal_to}.",
+                f"than or equal to {less_than_or_equal_to}.",
             )
 
 

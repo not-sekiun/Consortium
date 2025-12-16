@@ -99,9 +99,9 @@ def main():
 
     print(f"Created plugin project directory at '{plugin_project_directory}'.")
     print(
-        f"Note: Add third-party dependencies within the project's `pyproject.toml` file.",
+        "Note: Add third-party dependencies within the project's `pyproject.toml` file.",
     )
-    print(f"Next steps:")
+    print("Next steps:")
     print(f"    cd {plugin_project_directory}")
     print("    poetry install .  # (optional, for development)")
     print("    # Start your Consortium server, the plugin will be auto-discovered\n")

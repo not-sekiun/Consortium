@@ -102,18 +102,17 @@ class ComponentMetadata:
             )
         except specifiers.InvalidSpecifier:
             raise InvalidFrameworkVersionSpecifierError(
-                framework_version_specifier_str=cls.compatible_framework_version,
+                framework_version_specifier=cls.compatible_framework_version,
                 component_str=cls.label,
             ) from None
         new_dependencies = set()
         for entry in cls.component_dependencies:
             try:
-                dependency = requirements.Requirement(entry)
+                new_dependencies.add(requirements.Requirement(entry))
             except requirements.InvalidRequirement:
                 raise InvalidComponentDependencyVersionSpecifierError(
                     component_str=cls.label,
                     invalid_dependency_entry=entry,
                 ) from None
-            new_dependencies.add(dependency)
 
         cls.component_dependencies = new_dependencies

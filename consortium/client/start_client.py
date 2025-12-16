@@ -26,7 +26,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
     # TODO: Support starting the client with a disconnected interpreter when the client
     #  config file is not specified.
     try:
-        with open(client_config_filepath, "r") as file:
+        with open(client_config_filepath) as file:
             json_data = json.load(fp=file)
     except FileNotFoundError:
         print(
@@ -59,7 +59,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
     logger.add(
         # We are using ISO8601 formatted datetime strings but ":" is invalid in
         # filenames, so we replace it with the character "-".
-        f"{CONSORTIUM_CLIENT_LOGS_DIRECTORY_PATH}/{datetime.now().isoformat().replace(":", "-")}.log",
+        f"{CONSORTIUM_CLIENT_LOGS_DIRECTORY_PATH}/{datetime.now().isoformat().replace(':', '-')}.log",
         format="[{time:YYYY-MM-DDTHH:mm:ssZ}] {level:<8} {extra[logger_name]}: {message}",
         level=log_level,
     )

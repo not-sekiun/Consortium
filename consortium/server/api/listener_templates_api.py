@@ -41,7 +41,7 @@ listeners_service = server_singletons.listeners_service
 
 _listener_template_option_value_validation_framework_error = (
     framework_excs.ListenerTemplateOptionValueValidationError(
-        listener_template="<listener_template>",
+        listener_template_str="<listener_template>",
         option_name="<option_name>",
         option_value="<option_value>",
         error_message="<error_message>",
@@ -49,17 +49,17 @@ _listener_template_option_value_validation_framework_error = (
 )
 _listener_template_option_not_found_framework_error = (
     framework_excs.ListenerTemplateOptionNotFoundError(
-        listener_template="<listener_template>", option_name="<option_name>"
+        listener_template_str="<listener_template>", option_name="<option_name>"
     )
 )
 _missing_required_listener_template_option_framework_error = (
     framework_excs.MissingRequiredListenerTemplateOptionError(
-        listener_template="<listener_template>", option_name="<option_name>"
+        listener_template_str="<listener_template>", option_name="<option_name>"
     )
 )
 _listener_template_not_found_error = (
     api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
-        consortium_exception=svc_excs.ListenerTemplateNotFoundError(
+        consortium_exception=svc_excs.ListenerTemplateIDNotFoundError(
             listener_template_id="<listener_template_id>"
         )
     )
@@ -137,7 +137,7 @@ async def create_listener_through_listener_template_by_listener_template_id(
     "/all",
     responses={200: {"model": list[ListenerTemplateModel]}},
 )
-def get_all_listener_templates_info(
+def get_all_listener_templates(
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENER_TEMPLATES)),
@@ -157,7 +157,7 @@ def get_all_listener_templates_info(
         404: {"model": _listener_template_not_found_error.to_pydantic_model()},
     },
 )
-def get_listener_template_info_by_listener_templates_id(
+def get_listener_template_by_listener_template_id(
     listener_template_id: str,
     _: Annotated[
         None,

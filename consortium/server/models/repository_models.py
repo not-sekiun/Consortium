@@ -11,14 +11,6 @@ class RepositoryResourceModel(BaseModel):
     size: int | None
     exists_on_disk: bool
     datetime_created: datetime
-    datetime_updated: datetime
-    is_directory: bool
-
-
-class RepositoryFileModel(RepositoryResourceModel):
+    datetime_modified: datetime
     md5_checksum: str | None
-    is_directory: bool = False
-
-
-class RepositoryDirectoryModel(RepositoryResourceModel):
-    is_directory: bool = True
+    is_directory: bool

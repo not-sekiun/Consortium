@@ -2,7 +2,8 @@ from loguru import logger
 
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
 from consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions import (
-    ListenerTemplateNotFoundError,
+    ListenerTemplateIDNotFoundError,
+    ListenerTemplateLabelNotFoundError,
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
@@ -25,7 +26,11 @@ class ListenerTemplatesService:
         return "Listener Templates Service"
 
     def __repr__(self) -> str:
-        return "ListenerTemplatesService()"
+        return (
+            f"ListenerTemplatesService("
+            f"listener_profiles_service={self._listener_profiles_service!r}"
+            f")"
+        )
 
     def get_listener_template_by_listener_template_id(
         self,
@@ -37,12 +42,32 @@ class ListenerTemplatesService:
         ]:
             if str(listener_template.listener_template_id) == listener_template_id:
                 self._logger.debug(
-                    "Retrieved listener template: {!r}",
+                    "Retrieved listener template by listener template ID '{}': {!r}",
+                    listener_template_id,
                     listener_template,
                 )
                 return listener_template
-        raise ListenerTemplateNotFoundError(
+        raise ListenerTemplateIDNotFoundError(
             listener_template_id=listener_template_id,
+        )
+
+    def get_listener_template_by_label(
+        self,
+        label: str,
+    ) -> BaseListenerTemplate:
+        for listener_template in [
+            listener_profile.listener_template
+            for listener_profile in self._listener_profiles_service.get_all_listener_profiles()
+        ]:
+            if listener_template.label == label:
+                self._logger.debug(
+                    "Retrieved listener template by label '{}': {!r}",
+                    label,
+                    listener_template,
+                )
+                return listener_template
+        raise ListenerTemplateLabelNotFoundError(
+            label=label,
         )
 
     def get_all_listener_templates(self) -> list[BaseListenerTemplate]:

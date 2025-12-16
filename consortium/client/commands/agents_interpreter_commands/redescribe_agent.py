@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
@@ -36,7 +37,7 @@ class RedescribeAgentCommand(BaseCommand):
 
     @staticmethod
     async def _redescribe_agent_by_agent_id(
-        client_rest_api_connection: "ClientRESTAPIConnection",
+        client_rest_api_connection: ClientRESTAPIConnection,
         agent_id: str,
         description: str,
     ) -> None:
@@ -48,7 +49,7 @@ class RedescribeAgentCommand(BaseCommand):
             new_agent_attributes={"description": description},
         )
         print_success(
-            f"Agent '{agent["name"]}' ({agent["agent_id"]}) description "
+            f"Agent '{agent['name']}' ({agent['agent_id']}) description "
             f"updated to '{description}'",
         )
 

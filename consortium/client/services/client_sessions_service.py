@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from aiohttp.client_exceptions import ClientConnectorError
 from loguru import logger
 from websockets.exceptions import ConnectionClosed, InvalidHandshake
@@ -7,6 +9,9 @@ from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionConnectionError,
     ClientSessionNotFoundError,
 )
+
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
 
 
 class ClientSessionsService:
@@ -22,7 +27,7 @@ class ClientSessionsService:
     def __repr__(self) -> str:
         return "ClientSessionsService()"
 
-    def get_all_client_sessions(self) -> list["ClientSession"]:
+    def get_all_client_sessions(self) -> list[ClientSession]:
         all_client_sessions = list(self._client_sessions.values())
         self._client_sessions_service_logger.debug(
             f"Retrieved all client sessions ({len(all_client_sessions)} retrieved).",
@@ -32,11 +37,13 @@ class ClientSessionsService:
     def get_client_session_by_client_session_id(
         self,
         client_session_id: str,
-    ) -> "ClientSession":
+    ) -> ClientSession:
         try:
             client_session = self._client_sessions[client_session_id]
         except KeyError:
-            raise ClientSessionNotFoundError(client_session_id=client_session_id)
+            raise ClientSessionNotFoundError(
+                client_session_id=client_session_id
+            ) from None
 
         self._client_sessions_service_logger.debug(
             f"Retrieved client session: {repr(client_session)}",
@@ -49,7 +56,7 @@ class ClientSessionsService:
         password: str,
         remote_host: str,
         remote_port: int,
-    ) -> "ClientSession":
+    ) -> ClientSession:
         # Importing here to avoid circular imports.
         from consortium.client.client_session import ClientSession
 
@@ -82,7 +89,7 @@ class ClientSessionsService:
                 remote_host=client_session.remote_host,
                 remote_port=client_session.remote_port,
                 error_message=str(exc),
-            )
+            ) from None
         self._client_sessions_service_logger.debug(
             f"Connected client session: {client_session!r}",
         )
@@ -96,9 +103,9 @@ class ClientSessionsService:
             f"Disconnected client session: {client_session!r}",
         )
 
-    def add_client_session(self, client_session: "ClientSession") -> None:
+    def add_client_session(self, client_session: ClientSession) -> None:
         if client_session.client_session_id in self._client_sessions:
-            raise ClientSessionAlreadyExistsError
+            raise ClientSessionAlreadyExistsError from None
 
         self._client_sessions[str(client_session.client_session_id)] = client_session
         self._client_sessions_service_logger.debug(
@@ -111,7 +118,7 @@ class ClientSessionsService:
         password: str,
         remote_host: str,
         remote_port: int,
-    ) -> "ClientSession":
+    ) -> ClientSession:
         client_session = self.create_client_session(
             username=username,
             password=password,
@@ -126,7 +133,9 @@ class ClientSessionsService:
         client_session_id: str,
     ) -> None:
         if client_session_id not in self._client_sessions:
-            raise ClientSessionNotFoundError(client_session_id=client_session_id)
+            raise ClientSessionNotFoundError(
+                client_session_id=client_session_id
+            ) from None
 
         removed_client_session = self._client_sessions.pop(client_session_id)
 

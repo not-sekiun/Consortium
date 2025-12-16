@@ -4,11 +4,11 @@ from consortium.framework.options._option_argument_validators import (
     ArgumentDataTypeCheckParameters,
     validate_arguments_data_types,
 )
-from consortium.framework.options.exceptions import (
+from consortium.framework.options.option_types import OptionType
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     EmptyAvailableValuesError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
-from consortium.framework.options.option_types import OptionType
 
 
 class ChoiceValueOption(BaseOption):

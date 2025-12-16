@@ -5,13 +5,12 @@ import jsonschema
 from aiohttp import web
 from pydantic import ValidationError
 
-from consortium.components.agents.consortium.http.agent_type import AGENT_TYPE
-from consortium.framework.agents.agent_message_models import AgentResultMessageModel
+from consortium.framework.agents import AgentResultMessageModel
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerSpecificAgentNotFoundError,
     ListenerStartError,
 )
-from consortium.framework.listeners.base_listener import BaseListener
+from consortium.framework.listeners import BaseListener
 from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
     AgentTaskNotFoundError,
 )
@@ -69,12 +68,17 @@ class Listener(BaseListener):
             except (json.JSONDecodeError, jsonschema.ValidationError):
                 return web.Response(status=401)
 
-            # Only one agent type is supported for this listener type.
+            # TODO: Only one agent type is supported for this listener type.
             agent = await self.agents_manager.register_new_connected_agent(
-                agent_type=AGENT_TYPE,
+                agent_type="consortium/agents/http",
                 endpoint=request.remote,
                 remote_host_address=request.remote,
                 **json_request_body,
+            )
+            self._logger.info(
+                "Agent '{}' checked in from endpoint: {}",
+                str(agent),
+                request.remote,
             )
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
@@ -123,10 +127,15 @@ class Listener(BaseListener):
                 "required": ["agent_id", "task_id", "result"],
             }
 
+            json_request_body = await request.json()
             try:
-                json_request_body = await request.json()
                 jsonschema.validate(json_request_body, agent_result_schema)
             except (json.JSONDecodeError, jsonschema.ValidationError):
+                self.logger.warning(
+                    "Received invalid agent result JSON data from agent: {}. Responded "
+                    "with 401 Unauthorized",
+                    json_request_body,
+                )
                 return web.Response(status=401)
 
             agent_id = json_request_body["agent_id"]
@@ -141,12 +150,23 @@ class Listener(BaseListener):
                     agent_id=agent_id,
                 )
             except ListenerSpecificAgentNotFoundError:
+                self.logger.warning(
+                    "Agent checked in with an invalid agent ID: {}. Responded with 401 "
+                    "Unauthorized",
+                    agent_id,
+                )
                 return web.Response(status=401)
 
             # Check if the task ID is valid.
             try:
                 _ = agent.get_running_task_by_task_id(task_id)
             except AgentTaskNotFoundError:
+                self.logger.warning(
+                    "Agent {} checked in and posted a result with an invalid task ID: "
+                    "{}. Responded with 401 Unauthorized.",
+                    str(agent),
+                    task_id,
+                )
                 return web.Response(status=401)
 
             # Only if the task ID is valid do we consider it a valid agent that has

@@ -29,13 +29,15 @@ class UsersService:
         except KeyError:
             raise UserIDNotFoundError(user_id=user_id) from None
 
-        self._logger.debug("Retrieved user: {!r}", user)
+        self._logger.debug("Retrieved user by user ID '{}': {!r}", user_id, user)
         return user
 
     def get_user_by_access_token(self, access_token: str) -> User:
         for user in self.get_all_users():
             if str(user.json_web_token.subject) == access_token:
-                self._logger.debug("Retrieved user: {!r}", user)
+                self._logger.debug(
+                    "Retrieved user by access token '{}': {!r}", access_token, user
+                )
                 return user
         raise UserAccessTokenNotFoundError(access_token=access_token)
 

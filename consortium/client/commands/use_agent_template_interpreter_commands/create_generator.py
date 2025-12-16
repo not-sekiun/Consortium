@@ -1,5 +1,3 @@
-from argparse import ArgumentParser
-
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )

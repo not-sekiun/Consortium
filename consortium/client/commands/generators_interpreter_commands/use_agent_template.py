@@ -10,7 +10,7 @@ from consortium.client.repl_framework.base_command import (
     ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_error, print_info
+from consortium.client.utils.printer_utils import print_info
 
 
 class UseAgentTemplateCommand(BaseCommand):
@@ -44,9 +44,9 @@ class UseAgentTemplateCommand(BaseCommand):
             )
 
             print_info(
-                f'Using agent template: '
+                f"Using agent template: "
                 f'"{agent_template["name"]}" '
-                f'({agent_template["agent_template_id"]})',
+                f"({agent_template['agent_template_id']})",
             )
 
             return ReturnStatus(

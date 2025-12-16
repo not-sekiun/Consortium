@@ -56,7 +56,7 @@ class InfoAssetCommand(BaseCommand):
                 table.add_row("Exists on disk", str(asset["exists_on_disk"]))
                 table.add_row("MD5 Checksum", asset["md5_checksum"])
                 table.add_row("Datetime Created", asset["datetime_created"])
-                table.add_row("Datetime Updated", asset["datetime_updated"])
+                table.add_row("Datetime Updated", asset["datetime_modified"])
                 table.add_row("Is Directory", str(asset["is_directory"]))
             else:
                 table = Table(title="Asset Information")
@@ -68,7 +68,7 @@ class InfoAssetCommand(BaseCommand):
                 table.add_row("Size", str(asset["size"]))
                 table.add_row("Exists on disk", str(asset["exists_on_disk"]))
                 table.add_row("Datetime Created", asset["datetime_created"])
-                table.add_row("Datetime Updated", asset["datetime_updated"])
+                table.add_row("Datetime Updated", asset["datetime_modified"])
                 table.add_row("Is Directory", str(asset["is_directory"]))
             CONSOLE.print(table)
         except SystemExit:

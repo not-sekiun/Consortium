@@ -5,20 +5,20 @@ CONSOLE = Console()
 
 
 def print_success(*args, highlight: bool | None = False, **kwargs):
-    CONSOLE.print(f"[bold green][+][/bold green]", end=" ")
+    CONSOLE.print("[bold green][+][/bold green]", end=" ")
     CONSOLE.print(*args, highlight=highlight, **kwargs)
 
 
 def print_error(*args, highlight: bool | None = False, **kwargs):
-    CONSOLE.print(f"[bold red][-][/bold red]", end=" ")
+    CONSOLE.print("[bold red][-][/bold red]", end=" ")
     CONSOLE.print(*args, highlight=highlight, **kwargs)
 
 
 def print_info(*args, highlight: bool | None = False, **kwargs):
-    CONSOLE.print(f"[bold blue][*][/bold blue]", end=" ")
+    CONSOLE.print("[bold blue][*][/bold blue]", end=" ")
     CONSOLE.print(*args, highlight=highlight, **kwargs)
 
 
 def print_warning(*args, highlight: bool | None = False, **kwargs):
-    CONSOLE.print(f"[bold yellow][!][/bold yellow]", end=" ")
+    CONSOLE.print("[bold yellow][!][/bold yellow]", end=" ")
     CONSOLE.print(*args, highlight=highlight, **kwargs)

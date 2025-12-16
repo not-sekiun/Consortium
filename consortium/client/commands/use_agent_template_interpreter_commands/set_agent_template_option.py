@@ -135,7 +135,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
         except ValueError:
             raise ValueError(
                 f"Failed to convert value '{value}' to type '{value_type}'",
-            )
+            ) from None
 
     @staticmethod
     def _resolve_value_type_from_overriding_factors(
@@ -239,7 +239,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
             print_error(
                 f'Value "{option_value}" is not a valid choice for option '
                 f'"{option_name}". Valid choices are: '
-                f'{", ".join(agent_template_option["available_values"])}',
+                f"{', '.join(agent_template_option['available_values'])}",
             )
             return
 
@@ -250,7 +250,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
             print_error(
                 f'Value "{option_value}" is not a valid choice for option '
                 f'"{option_name}". Valid choices are: '
-                f'{", ".join(agent_template_option["available_values"])}',
+                f"{', '.join(agent_template_option['available_values'])}",
             )
             return
         agent_template_option["value"] = option_value
@@ -299,7 +299,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
         agent_template_option["value"] = new_option_values
         print_success(
             f'Set agent template option "{option_name}" to '
-            f'{agent_template_option["value"]!r}',
+            f"{agent_template_option['value']!r}",
         )
 
     def _handle_dictionary_value_option(
@@ -358,7 +358,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
             ):
                 print_warning(
                     f'Value "{value}" of type "{value_value_type}" for key "{key}" is '
-                    f'not of the expected type '
+                    f"not of the expected type "
                     f'"{agent_template_option["value_type"]}" for option '
                     f'"{option_name}". However, the value was still set as the user '
                     f'supplied type "{value_value_type}"',
@@ -428,7 +428,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                 print_error(
                     f'Value "{option_value}" is not a valid choice for option '
                     f'"{option_name}". Valid choices are: '
-                    f'{", ".join(agent_template_option["available_values"])}',
+                    f"{', '.join(agent_template_option['available_values'])}",
                 )
                 # Changes to the agent template options should be atomic.
                 agent_template_option["value"] = copy.deepcopy(previous_value)
@@ -468,7 +468,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                         print_error(
                             f"Expected 1 value for agent template option "
                             f'"{option_name}" of option type "{option["option_type"]}" '
-                            f'but got {len(option_values)} values instead.',
+                            f"but got {len(option_values)} values instead.",
                         )
                         return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
                     self._handle_single_value_option(
@@ -482,7 +482,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                         print_error(
                             f"Expected 1 value for agent template option "
                             f'"{option_name}" of option type "{option["option_type"]}" '
-                            f'but got {len(option_values)} values instead.',
+                            f"but got {len(option_values)} values instead.",
                         )
                         return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
                     self._handle_choice_value_option(
@@ -504,7 +504,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                             f"Expected an even number of values for agent template "
                             f'option "{option_name}" of option type '
                             f'"{option["option_type"]}" but got {len(option_values)} '
-                            f'values instead.',
+                            f"values instead.",
                         )
                         return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
                     self._handle_dictionary_value_option(
@@ -518,7 +518,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                         print_error(
                             f"Expected 1 value for agent template option "
                             f'"{option_name}" of option type "{option["option_type"]}" '
-                            f'but got {len(option_values)} values instead.',
+                            f"but got {len(option_values)} values instead.",
                         )
                         return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
                     self._handle_toggleable_choice_value_option(

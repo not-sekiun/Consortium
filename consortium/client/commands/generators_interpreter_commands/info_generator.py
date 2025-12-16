@@ -120,17 +120,12 @@ class InfoGeneratorCommand(BaseCommand):
             )
             table.add_row(
                 "Agent Type",
-                f"{agent_generator["agent_type"]["name"]} ({agent_generator["agent_type"]["agent_type_id"]})",
+                agent_generator["agent_type"]["name"],
             )
             table.add_row(
                 "Compatible Listener Types",
                 "\n".join(
-                    [
-                        f"{listener_type["name"]} ({listener_type["listener_type_id"]})"
-                        for listener_type in agent_generator["agent_type"][
-                            "compatible_listener_types"
-                        ]
-                    ],
+                    list(agent_generator["agent_type"]["compatible_listener_types"]),
                 ),
             )
             parameter_table = Table()

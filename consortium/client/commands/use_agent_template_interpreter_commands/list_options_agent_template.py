@@ -1,5 +1,3 @@
-from argparse import ArgumentParser
-
 from rich.table import Table
 
 from consortium.client.objects.client_return_status_objects import (

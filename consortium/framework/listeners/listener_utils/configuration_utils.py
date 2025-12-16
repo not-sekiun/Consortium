@@ -112,7 +112,7 @@ def get_network_interfaces() -> list[tuple[str, str]]:
         elif system in ["Linux", "Darwin"]:
             result = subprocess.run(["ip", "addr"], capture_output=True, text=True)
             for line in result.stdout.split("\n"):
-                if "inet " in line and not "127.0.0.1" in line:
+                if "inet " in line and "127.0.0.1" not in line:
                     ip_address = line.split()[1].split("/")[0]
                     interface = line.split()[6] if len(line.split()) > 6 else "Unknown"
                     interfaces.append((interface, ip_address))

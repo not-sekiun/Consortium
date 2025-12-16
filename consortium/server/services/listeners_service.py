@@ -8,10 +8,12 @@ from consortium.framework._components._component_status import State
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
-from consortium.framework.options.exceptions import OptionValueValidationError
 from consortium.server.exceptions.framework_exceptions import (
     listener_templates_framework_exceptions as listener_templates_framework_excs,
     listeners_framework_exceptions as listeners_framework_excs,
+)
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
 )
 from consortium.server.exceptions.service_exceptions import (
     listeners_service_exceptions as listeners_service_excs,

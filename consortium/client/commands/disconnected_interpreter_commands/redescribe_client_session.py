@@ -32,8 +32,7 @@ class RedescribeClientSessionCommand(BaseCommand):
         parser.add_argument(
             "client_session_id",
             help=(
-                "Client session ID of the client session to change the "
-                "description of."
+                "Client session ID of the client session to change the description of."
             ),
             nargs=1,
             default=None,

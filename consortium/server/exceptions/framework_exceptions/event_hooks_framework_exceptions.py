@@ -196,10 +196,10 @@ class InvalidFrameworkVersionSpecifierError(
 
     code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
 
-    def __init__(self, event_hook_str: str, framework_version_specifier_str: str):
+    def __init__(self, event_hook_str: str, framework_version_specifier: str):
         super().__init__(
             component_str=event_hook_str,
-            framework_version_specifier_str=framework_version_specifier_str,
+            framework_version_specifier=framework_version_specifier,
         )
 
 

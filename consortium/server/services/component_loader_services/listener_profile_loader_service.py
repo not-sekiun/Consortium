@@ -31,6 +31,8 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
     ) -> ListenerProfile:
         # listener refers to the class of the listener that the template creates
         component_object.listener.creating_listener_template = component_object
+        # Framework user passes in the listener type class, instantiate the listener type
+        component_object.listener_type = component_object.listener_type()
         component_object.listener.listener_type = component_object.listener_type
         return ListenerProfile(
             listener=component_object.listener,

@@ -24,8 +24,8 @@ from consortium.framework.options import (
     SingleValueOption,
     ToggleableChoicesValueOption,
 )
-from consortium.framework.options.exceptions import OptionValueValidationError
 from consortium.framework.utils.exception_utils import remap_exception
+from consortium.framework.utils.formatter_utils import format_docstring_to_single_line
 from consortium.server.exceptions.framework_exceptions.listener_templates_framework_exceptions import (
     DuplicateListenerTemplateOptionNameError,
     EmptyListenerTemplateLabelError,
@@ -38,7 +38,9 @@ from consortium.server.exceptions.framework_exceptions.listener_templates_framew
     MissingListenerTemplateConfigurationParameterError,
     MissingRequiredListenerTemplateOptionError,
 )
-from consortium.server.utils.formatter_utils import format_docstring_to_single_line
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 
 Options = (
     SingleValueOption
@@ -53,7 +55,7 @@ class _ListenerTemplateModel(ComponentMetadataModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     listener: type[BaseListener]
-    listener_type: BaseListenerType  # TODO: Make users pass in the type class instead of needing to instantiate this
+    listener_type: type[BaseListenerType]
     options: set[Options] | None = None
     validating_function: (
         Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
@@ -71,12 +73,12 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidListenerTemplateConfigurationParameterTypeError,
     }
     _EXCEPTION_KWARGS_MAP = {
-        "component_str": "listener_template",
+        "component_str": "listener_template_str",
         "component_filepath": "listener_template_filepath",
     }
 
     listener: type[BaseListener]
-    listener_type: BaseListenerType  # TODO: ??? make users pass in the type class instead of needing to instantiate this
+    listener_type: type[BaseListenerType]
     options: set[Options] | None = None
     validating_function: (
         Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
@@ -87,6 +89,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         cls.listener_project_folder = pathlib.Path(
             sys.modules[cls.__module__].__file__,
         ).parents[0]
+        cls.registered_compatible_agent_types = set()
 
         try:
             cls._validate_metadata()
@@ -104,7 +107,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             if option.name in option_names:
                 raise DuplicateListenerTemplateOptionNameError(
                     option_name=option.name,
-                    listener_template=cls.name,
+                    listener_template_str=cls.name,
                 )
             option_names.append(option.name)
 
@@ -113,7 +116,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             function_signature = signature(cls.validating_function)
             if len(function_signature.parameters) != 1:
                 raise InvalidListenerTemplateConfigurationParameterTypeError(
-                    listener_template=cls.name,
+                    listener_template_str=cls.name,
                     parameter_name="validating_function",
                     parameter_type=get_type_hints(cls)["validating_function"],
                 )
@@ -144,6 +147,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             f"component_dependencies={self.component_dependencies!r}, "
             f"listener={self.listener!r}, "
             f"listener_type={self.listener_type!r}, "
+            f"registered_compatible_agent_types={self.registered_compatible_agent_types!r}, "
             f"options={options_string}, "
             f"validating_function={self.validating_function!r}"
             f")"
@@ -192,7 +196,8 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             parameters = {}
 
         # Fill in default option values for options that were not provided in the
-        # parameters dictionary.
+        # parameters dictionary. For options that do not have a default value
+        # they fill in as `None`
         for option_name, option in self.options.items():
             if option_name not in parameters:
                 parameters[option_name] = option.default_value
@@ -201,16 +206,20 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         for option_name, value in parameters.items():
             if option_name not in self.options:
                 raise ListenerTemplateOptionNotFoundError(
-                    listener_template=str(self),
+                    listener_template_str=str(self),
                     option_name=option_name,
                 )
             try:
-                self.options[option_name].validate_value(value)
+                option = self.options[option_name]
+                # Allow `None` for non-required options
+                if value is None and not option.required:
+                    continue
+                option.validate_value(value)
             except OptionValueValidationError as exc:
                 raise ListenerTemplateOptionValueValidationError(
                     option_name=option_name,
                     option_value=value,
-                    listener_template=str(self),
+                    listener_template_str=str(self),
                     error_message=str(exc),
                 ) from None
 
@@ -218,7 +227,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         for option_name, option in self.options.items():
             if option.required and option_name not in parameters:
                 raise MissingRequiredListenerTemplateOptionError(
-                    listener_template=str(self),
+                    listener_template_str=str(self),
                     option_name=option_name,
                 )
 
@@ -252,6 +261,9 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             "component_dependencies": list(map(str, self.component_dependencies)),
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
             "listener_type": self.listener_type.to_json(),
+            "registered_compatible_agent_types": list(
+                self.registered_compatible_agent_types
+            ),
             "options": {
                 name: option.to_json() for name, option in self.options.items()
             },

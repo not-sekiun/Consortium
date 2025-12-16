@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
+from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
@@ -60,7 +61,7 @@ class ListTasksCommand(BaseCommand):
 
     @staticmethod
     async def _list_tasks_from_agent_id(
-        client_rest_api_connection: "ClientRESTAPIConnection",
+        client_rest_api_connection: ClientRESTAPIConnection,
         display_task_status_queued: bool,
         display_task_status_running: bool,
         display_task_status_completed: bool,
@@ -79,7 +80,7 @@ class ListTasksCommand(BaseCommand):
             )
         if display_task_status_queued:
             agent_tasks += (
-                await client_rest_api_connection.get_all_queued_agent_tasks_by_agent_id(
+                await client_rest_api_connection.get_all_queued_tasks_by_agent_id(
                     agent_id=agent_id,
                 )
             )
@@ -88,8 +89,10 @@ class ListTasksCommand(BaseCommand):
                 agent_id=agent_id,
             )
         if display_task_status_completed:
-            agent_tasks += await client_rest_api_connection.get_all_completed_agent_tasks_by_agent_id(
-                agent_id=agent_id,
+            agent_tasks += (
+                await client_rest_api_connection.get_all_completed_tasks_by_agent_id(
+                    agent_id=agent_id,
+                )
             )
 
         table = Table(title="Agent Tasks")

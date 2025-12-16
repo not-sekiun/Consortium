@@ -56,17 +56,12 @@ class InfoAgentTemplateCommand(BaseCommand):
         table.add_row("Authors", "\n".join(agent_template["authors"]))
         table.add_row(
             "Agent Type",
-            f"{agent_template["agent_type"]["name"]} ({agent_template["agent_type"]["agent_type_id"]})",
+            agent_template["agent_type"]["name"],
         )
         table.add_row(
             "Compatible Listener Types",
             "\n".join(
-                [
-                    f"{listener_type["name"]} ({listener_type["listener_type_id"]})"
-                    for listener_type in agent_template["agent_type"][
-                        "compatible_listener_types"
-                    ]
-                ],
+                list(agent_template["agent_type"]["compatible_listener_types"]),
             ),
         )
         CONSOLE.print(table)

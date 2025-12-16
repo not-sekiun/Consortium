@@ -58,10 +58,10 @@ class ListGeneratorsCommand(BaseCommand):
                         completed_agent_generator_build_steps += 1
 
                     agent_generator_build_steps_summary.append(
-                        f"{agent_generator_build_step["name"]} "
+                        f"{agent_generator_build_step['name']} "
                         f"({
                             format_agent_generator_build_step_state_string_with_color(
-                                state_str=agent_generator_build_step["status"]["state"]
+                                state_str=agent_generator_build_step['status']['state']
                             )
                         })",
                     )

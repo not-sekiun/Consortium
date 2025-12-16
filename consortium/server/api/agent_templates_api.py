@@ -41,7 +41,7 @@ agent_generators_service = server_singletons.agent_generators_service
 
 _agent_template_option_value_framework_error = (
     framework_excs.AgentTemplateOptionValueValidationError(
-        agent_template="<agent_template>",
+        agent_template_str="<agent_template>",
         option_name="<option_name>",
         option_value="<option_value>",
         error_message="<error_message>",
@@ -49,17 +49,17 @@ _agent_template_option_value_framework_error = (
 )
 _agent_template_option_not_found_framework_error = (
     framework_excs.AgentTemplateOptionNotFoundError(
-        agent_template="<agent_template>", option_name="<option_name>"
+        agent_template_str="<agent_template>", option_name="<option_name>"
     )
 )
 _missing_required_agent_template_option_framework_error = (
     framework_excs.MissingRequiredAgentTemplateOptionError(
-        agent_template="<agent_template>", option_name="<option_name>"
+        agent_template_str="<agent_template>", option_name="<option_name>"
     )
 )
 _agent_template_not_found_error = (
     api_excs.AgentTemplateNotFoundError.from_consortium_exception(
-        consortium_exception=agent_templates_svc_excs.AgentTemplateNotFoundError(
+        consortium_exception=agent_templates_svc_excs.AgentTemplateIDNotFoundError(
             agent_template_id="<agent_template_id>"
         )
     )

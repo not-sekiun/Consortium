@@ -15,7 +15,8 @@ class RepositoryResourceNotFoundError(RepositoryServiceError):
             message=(
                 "Failed to find the requested repository resource. No resource "
                 f"was found with the provided resource ID '{resource_id}'."
-            )
+            ),
+            detail={"resource_id": resource_id},
         )
 
 
@@ -27,7 +28,8 @@ class RepositoryFileNotFoundError(RepositoryServiceError):
             message=(
                 "Failed to find the requested repository file. No file was found with the "
                 f"provided resource ID '{resource_id}'."
-            )
+            ),
+            detail={"resource_id": resource_id},
         )
 
 
@@ -39,7 +41,8 @@ class RepositoryDirectoryNotFoundError(RepositoryServiceError):
             message=(
                 "Failed to find the requested repository directory. No directory was "
                 f"found with the provided resource ID '{resource_id}'."
-            )
+            ),
+            detail={"resource_id": resource_id},
         )
 
 
@@ -52,7 +55,8 @@ class RepositoryResourceAlreadyExistsError(RepositoryServiceError):
                 "Failed to perform the requested operation on the repository resource. "
                 f"The repository resource with the provided resource ID '{resource_id}' "
                 "already exists."
-            )
+            ),
+            detail={"resource_id": resource_id},
         )
 
 
@@ -69,10 +73,11 @@ class InvalidRepositoryMetadataFileJSONError(
         super().__init__(
             message=(
                 "Failed to load the repository metadata file "
-                "`.repository_metadata.json` from the repository directory "
+                "`.repository.json` from the repository directory "
                 f"'{repository_directory}'. The repository metadata file is not"
                 f"a valid JSON file. "
             ),
+            detail={"repository_directory": repository_directory},
         )
 
 
@@ -85,21 +90,26 @@ class InvalidRepositoryMetadataFileSchemaError(
         super().__init__(
             message=(
                 "Failed to load the repository metadata file "
-                "`.repository_metadata.json` from the repository directory "
+                "`.repository.json` from the repository directory "
                 f"'{repository_directory}'. The repository metadata file does not "
                 f"conform to the expected JSON schema. {json_schema_error_message}"
             ),
+            detail={
+                "repository_directory": repository_directory,
+                "json_schema_error_message": json_schema_error_message,
+            },
         )
 
 
 class UnsyncedRepositoryMetadataFileError(InvalidRepositoryMetadataFileError):
     code = "UNSYNCED_REPOSITORY_METADATA_FILE_ERROR"
 
-    def __init__(self, repository_directory: str):
+    def __init__(self, repository_directory_path: str):
         super().__init__(
             message=(
-                "The repository metadata file `.repository_metadata.json` in the "
-                f"repository directory '{repository_directory}' is out of sync with "
-                "the actual contents of the repository."
+                "The repository metadata file `.repository.json` in the "
+                f"repository directory '{repository_directory_path}' is out of sync "
+                f"with the actual contents of the repository."
             ),
+            detail={"repository_directory_path": repository_directory_path},
         )

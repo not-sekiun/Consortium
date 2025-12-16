@@ -10,7 +10,7 @@ from consortium.client.repl_framework.base_command import (
     ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_error, print_info
+from consortium.client.utils.printer_utils import print_info
 
 
 class UseListenerTemplateCommand(BaseCommand):
@@ -45,7 +45,7 @@ class UseListenerTemplateCommand(BaseCommand):
 
             print_info(
                 f'Using listener template: "{listener_template["name"]}" '
-                f"({listener_template["listener_template_id"]})",
+                f"({listener_template['listener_template_id']})",
             )
 
             return ReturnStatus(

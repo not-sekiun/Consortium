@@ -7,25 +7,25 @@ class AgentCapabilitiesFrameworkError(BaseFrameworkException):
     code = "AGENT_CAPABILITIES_FRAMEWORK_ERROR"
 
 
-class AgentCapabilityConfigurationParameterError(AgentCapabilitiesFrameworkError):
-    code = "AGENT_CAPABILITY_CONFIGURATION_PARAMETER_ERROR"
+class AgentCapabilityConfigurationError(AgentCapabilitiesFrameworkError):
+    code = "AGENT_CAPABILITY_CONFIGURATION_ERROR"
 
 
-class AgentCapabilityConfigurationParameterTypeError(
-    AgentCapabilityConfigurationParameterError,
+class InvalidAgentCapabilityConfigurationParameterTypeError(
+    AgentCapabilityConfigurationError,
 ):
-    code = "AGENT_CAPABILITY_CONFIGURATION_PARAMETER_TYPE_ERROR"
+    code = "INVALID_AGENT_CAPABILITY_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
         self,
-        agent_capability_filepath: str | None = None,
+        agent_capability_str: str | None = None,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
     ):
         super().__init__(
             message=(
                 f"Failed to configure the agent capability "
-                f"'{agent_capability_filepath}'. The parameter '{parameter_name}' "
+                f"'{agent_capability_str}'. The parameter '{parameter_name}' "
                 f"must be of type '{parameter_type}' in the agent capability's "
                 f"definition."
             ),
@@ -33,7 +33,7 @@ class AgentCapabilityConfigurationParameterTypeError(
 
 
 class MissingAgentCapabilityConfigurationParameterError(
-    AgentCapabilityConfigurationParameterError,
+    AgentCapabilityConfigurationError,
 ):
     code = "MISSING_AGENT_CAPABILITY_CONFIGURATION_PARAMETER_ERROR"
 
@@ -64,13 +64,12 @@ class EmptyAgentCapabilityNameError(AgentCapabilitiesFrameworkError):
 class DuplicateAgentCapabilityOptionNameError(AgentCapabilitiesFrameworkError):
     code = "DUPLICATE_AGENT_CAPABILITY_OPTION_NAME_ERROR"
 
-    def __init__(self, agent_capability_filepath: str, argument_name: str):
+    def __init__(self, agent_capability_name: str, option_name: str):
         super().__init__(
             message=(
-                f"Failed to configure the agent capability "
-                f"{agent_capability_filepath}'. The options provided to the agent "
-                f"capability must not have duplicate names but the name "
-                f"'{argument_name}' was duplicated."
+                f"Failed to configure the agent capability '{agent_capability_name}'. "
+                f"The options provided to the agent capability must not have duplicate "
+                f"names but the name '{option_name}' was duplicated."
             ),
         )
 

@@ -57,29 +57,18 @@ class InfoListenerCommand(BaseCommand):
             table.add_row("Name", listener["name"])
             table.add_row("Description", listener["description"])
             table.add_row("Endpoint", listener["endpoint"])
-            listener_type_table = Table()
-            listener_type_table.add_column("Information")
-            listener_type_table.add_column("Data")
-            listener_type_table.add_row(
-                "Listener Type ID",
-                listener["listener_type"]["listener_type_id"],
-            )
-            listener_type_table.add_row(
-                "Name",
+            table.add_row(
+                "Listener Type",
                 listener["listener_type"]["name"],
             )
-            listener_type_table.add_row(
-                "Compatible Agent Types",
+            table.add_row(
+                "Registered Compatible Agent Types",
                 "\n".join(
-                    [
-                        agent_type["name"] + " (" + agent_type["agent_type_id"] + ")"
-                        for agent_type in listener["listener_type"][
-                            "compatible_agent_types"
-                        ]
-                    ],
+                    list(
+                        listener["listener_type"]["registered_compatible_agent_types"]
+                    ),
                 ),
             )
-            table.add_row("Listener Type", listener_type_table)
             parameter_table = Table()
             parameter_table.add_column("Parameter")
             parameter_table.add_column("Value")
@@ -100,15 +89,15 @@ class InfoListenerCommand(BaseCommand):
                 "Connected Agents",
                 "\n".join(
                     [
-                        f"'{agent["name"]}' ({agent["agent_id"]})"
+                        f"'{agent['name']}' ({agent['agent_id']})"
                         for agent in listener["connected_agents"]
                     ],
                 ),
             )
             table.add_row(
                 "Creating Listener Template",
-                f"{listener["creating_listener_template"]["name"]} "
-                f"({listener["creating_listener_template"]["listener_template_id"]})",
+                f"{listener['creating_listener_template']['name']} "
+                f"({listener['creating_listener_template']['listener_template_id']})",
             )
 
             CONSOLE.print(table)

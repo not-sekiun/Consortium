@@ -1,4 +1,4 @@
-from typing import Callable, Type
+from collections.abc import Callable
 
 from consortium.framework.framework_types import Primitive, PrimitiveType
 from consortium.framework.options._base_option import BaseOption
@@ -52,63 +52,21 @@ class SingleValueOption(BaseOption):
         greater_than (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of the
             option must be greater than this value.
-        lesser_than (int | None):
+        less_than (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of the
-            option must be lesser than this value.
+            option must be less than this value.
         greater_than_or_equal_to (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of the
             option must be greater than or equal to this value.
-        lesser_than_or_equal_to (int | None):
+        less_than_or_equal_to (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of the
-            option must be lesser than or equal to this value.
+            option must be less than or equal to this value.
         validating_regex (str | None):
             If `value_type` is of type `str`, this parameter specifies a regex pattern
             that the string value must match.
         validating_function (Callable[[str | int | float | bool], None] | None):
             A function that accepts a single argument, the value of the option, and
             raises an exception, `OptionValueValidationError`, if the value is invalid.
-            If `None`, no additional validation is performed.
-
-    Parameters:
-        name (str):
-            The human-readable name of the option. The name cannot be an empty string.
-        description (str):
-            A description of the option.
-        required (bool):
-            Whether the option is required or not. If True, the option must have a
-            value set before it can be retrieved. If False, the option can be retrieved
-            without a value being set.
-        default_value (str | int | float | bool | None):
-            The default value of the option. If `None`, the option has no default value.
-        value_type (Type[str] | Type[int] | Type[float] | Type[bool] | None):
-            The type of the value that the option can accept. If `None`, the option can
-            accept values of type `str`, `int`, `float`, or `bool`.
-        minimum_length (int | None):
-            If `value_type` is of type `str`, this parameter specifies the minimum
-            length of the string value that the option can accept.  If `None`, there is
-            no minimum length.
-        maximum_length (int | None):
-            If `value_type` is of type `str`, this parameter specifies the maximum
-            length of the string value that the option can accept. If `None`, there is
-            no maximum length.
-        greater_than (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of the
-            option must be greater than this value.
-        lesser_than (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of the
-            option must be lesser than this value.
-        greater_than_or_equal_to (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of the
-            option must be greater than or equal to this value.
-        lesser_than_or_equal_to (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of the
-            option must be lesser than or equal to this value.
-        validating_regex (str | None):
-            If `value_type` is of type `str`, this parameter specifies a regex pattern
-            that the string value must match.
-        validating_function (Callable[[str | int | float | bool], None] | None):
-            A function that accepts a single argument, the value of the option, and
-            raises an exception, `OptionValueValidationError` if the value is invalid.
             If `None`, no additional validation is performed.
 
     Example: Setting up a `SingleValueOption` with numeric value constraints
@@ -120,7 +78,7 @@ class SingleValueOption(BaseOption):
             default_value=8080,
             value_type=int,
             greater_than=1024,
-            lesser_than=65536,
+            less_than=65536,
         )
         local_port.set_option_value(80)  # Will raise `OptionValueValidationError`
         local_port.set_option_value(65535)
@@ -142,7 +100,6 @@ class SingleValueOption(BaseOption):
     """
 
     option_type: OptionType = OptionType.SINGLE_VALUE_OPTION
-    """The type of the option."""
 
     def __init__(
         self,
@@ -153,61 +110,22 @@ class SingleValueOption(BaseOption):
         value_type: PrimitiveType | None = None,
         minimum_length: int | None = None,
         maximum_length: int | None = None,
-        greater_than: int | None = None,
-        lesser_than: int | None = None,
-        greater_than_or_equal_to: int | None = None,
-        lesser_than_or_equal_to: int | None = None,
+        greater_than: int | float | None = None,
+        less_than: int | float | None = None,
+        greater_than_or_equal_to: int | float | None = None,
+        less_than_or_equal_to: int | float | None = None,
         validating_regex: str | None = None,
         validating_function: Callable[[Primitive], None] | None = None,
     ):
         self.value_type = value_type
-        """
-        he type of the value that the option can accept. If `None`, the option can
-        accept values of type `str`, `int`, `float`, or `bool`.
-        """
         self.minimum_length = minimum_length
-        """
-        If `value_type` is of type `str`, this parameter specifies the minimum
-        length of the string value that the option can accept.  If `None`, there is
-        no minimum length.
-        """
         self.maximum_length = maximum_length
-        """
-        If `value_type` is of type `str`, this parameter specifies the maximum
-        length of the string value that the option can accept. If `None`, there is
-        no maximum length.
-        """
         self.greater_than = greater_than
-        """
-        If `value_type` is of type `int` or `float`, the numeric value of the
-        option must be greater than this value.
-        """
-        self.lesser_than = lesser_than
-        """
-        If `value_type` is of type `int` or `float`, the numeric value of the
-        option must be lesser than this value.
-        """
+        self.less_than = less_than
         self.greater_than_or_equal_to = greater_than_or_equal_to
-        """
-        If `value_type` is of type `int` or `float`, the numeric value of the
-        option must be greater than or equal to this value.
-        """
-        self.lesser_than_or_equal_to = lesser_than_or_equal_to
-        """
-        If `value_type` is of type `int` or `float`, the numeric value of the
-        option must be lesser than or equal to this value.
-        """
+        self.less_than_or_equal_to = less_than_or_equal_to
         self.validating_regex = validating_regex
-        """
-        If `value_type` is of type `str`, this parameter specifies a regex pattern
-        that the string value must match.
-        """
         self.validating_function = validating_function
-        """
-        A function that accepts a single argument, the value of the option, and
-        raises an exception, `OptionValueValidationError` if the value is invalid.
-        If `None`, no additional validation is performed.
-        """
 
         super().__init__(
             name=name,
@@ -218,13 +136,18 @@ class SingleValueOption(BaseOption):
 
     def __repr__(self) -> str:
         return (
-            f"SingleValueOption(name={self.name!r}, description={self.description!r}, "
-            f"required={self.required!r}, default_value={self.default_value!r}, "
-            f"value_type={self.value_type!r}, minimum_length={self.minimum_length!r}, "
+            f"SingleValueOption("
+            f"name={self.name!r}, "
+            f"description={self.description!r}, "
+            f"required={self.required!r}, "
+            f"default_value={self.default_value!r}, "
+            f"value_type={self.value_type!r}, "
+            f"minimum_length={self.minimum_length!r}, "
             f"maximum_length={self.maximum_length!r}, "
-            f"greater_than={self.greater_than!r}, lesser_than={self.lesser_than!r}, "
+            f"greater_than={self.greater_than!r}, "
+            f"less_than={self.less_than!r}, "
             f"greater_than_or_equal_to={self.greater_than_or_equal_to!r}, "
-            f"lesser_than_or_equal_to={self.lesser_than_or_equal_to!r}, "
+            f"less_than_or_equal_to={self.less_than_or_equal_to!r}, "
             f"validating_regex={self.validating_regex!r}, "
             f"validating_function={self.validating_function!r})"
         )
@@ -248,9 +171,9 @@ class SingleValueOption(BaseOption):
             option_name=self.name,
             option_value=value,
             greater_than=self.greater_than,
-            lesser_than=self.lesser_than,
+            less_than=self.less_than,
             greater_than_or_equal_to=self.greater_than_or_equal_to,
-            lesser_than_or_equal_to=self.lesser_than_or_equal_to,
+            less_than_or_equal_to=self.less_than_or_equal_to,
         )
         validate_value_string_length(
             option_name=self.name,
@@ -285,9 +208,9 @@ class SingleValueOption(BaseOption):
             "minimum_length": self.minimum_length,
             "maximum_length": self.maximum_length,
             "greater_than": self.greater_than,
-            "lesser_than": self.lesser_than,
+            "less_than": self.less_than,
             "greater_than_or_equal_to": self.greater_than_or_equal_to,
-            "lesser_than_or_equal_to": self.lesser_than_or_equal_to,
+            "less_than_or_equal_to": self.less_than_or_equal_to,
             "validating_regex": self.validating_regex,
             "validating_function": resolve_validating_function_string(
                 validating_function=self.validating_function,
@@ -311,9 +234,9 @@ class SingleValueOption(BaseOption):
             option_name=self.name,
             option_value_type=self.value_type,
             greater_than=self.greater_than,
-            lesser_than=self.lesser_than,
+            less_than=self.less_than,
             greater_than_or_equal_to=self.greater_than_or_equal_to,
-            lesser_than_or_equal_to=self.lesser_than_or_equal_to,
+            less_than_or_equal_to=self.less_than_or_equal_to,
         )
         validate_validating_regex_argument(
             option_name=self.name,

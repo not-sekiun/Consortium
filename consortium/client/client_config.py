@@ -22,6 +22,5 @@ CONSORTIUM_COMMAND_ALIASES_JSON_FILE_PATH = (
 # Client release information
 with open(
     str(CONSORTIUM_RELEASE_JSON_FILE_PATH),
-    "r",
 ) as file:
     CLIENT_RELEASE = ClientRelease(**json.load(fp=file))

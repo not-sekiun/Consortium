@@ -22,7 +22,7 @@ from consortium.server.exceptions.framework_exceptions.components_framework_exce
     ComponentStartError,
     ComponentStopError,
 )
-from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (  # ListenerRuntimeError as ListenerRuntimeFrameworkError,
+from consortium.server.exceptions.framework_exceptions.listeners_framework_exceptions import (
     ListenerAlreadyRunningError,
     ListenerCreationParameterTypeError,
     ListenerNotRunningError,
@@ -116,14 +116,13 @@ class BaseListener(ComponentLifeCycle):  # ABC):
                 parameters=parameters,
             )
         except ValidationError as exc:
-            for err in exc.errors():
-                raise ListenerCreationParameterTypeError(
-                    listener_str=sys.modules[self.__module__].__file__,
-                    parameter_name=err["loc"][0],
-                    parameter_type=get_type_hints(_BaseListenerParametersModel)[
-                        err["loc"]
-                    ],
-                ) from None
+            raise ListenerCreationParameterTypeError(
+                listener_str=sys.modules[self.__module__].__file__,
+                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_type=get_type_hints(_BaseListenerParametersModel)[
+                    exc.errors()[0]["loc"]
+                ],
+            ) from None
 
         self.name = name
         self.description = description

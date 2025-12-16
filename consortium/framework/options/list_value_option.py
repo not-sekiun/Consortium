@@ -1,4 +1,4 @@
-from typing import Callable, Type
+from collections.abc import Callable
 
 from consortium.framework.framework_types import Primitive, PrimitiveType
 from consortium.framework.options._base_option import BaseOption
@@ -62,15 +62,15 @@ class ListValueOption(BaseOption):
         greater_than (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of each
             element of the option must be greater than this value.
-        lesser_than (int | None):
+        less_than (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be lesser than this value.
+            element of the option must be less than this value.
         greater_than_or_equal_to (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of each
             element of the option must be greater than or equal to this value.
-        lesser_than_or_equal_to (int | None):
+        less_than_or_equal_to (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be lesser than or equal to this value.
+            element of the option must be less than or equal to this value.
         minimum_elements (int | None):
             The minimum number of elements that the option can hold. If `None`,
             there is no minimum number of elements.
@@ -114,15 +114,15 @@ class ListValueOption(BaseOption):
         greater_than (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of each
             element of the option must be greater than this value.
-        lesser_than (int | None):
+        less_than (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be lesser than this value.
+            element of the option must be less than this value.
         greater_than_or_equal_to (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of each
             element of the option must be greater than or equal to this value.
-        lesser_than_or_equal_to (int | None):
+        less_than_or_equal_to (int | None):
             If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be lesser than or equal to this value.
+            element of the option must be less than or equal to this value.
         minimum_elements (int | None):
             The minimum number of elements that the option can hold. If `None`,
             there is no minimum number of elements.
@@ -169,10 +169,10 @@ class ListValueOption(BaseOption):
         value_type: PrimitiveType | None = None,
         minimum_length: int | None = None,
         maximum_length: int | None = None,
-        greater_than: int | None = None,
-        lesser_than: int | None = None,
-        greater_than_or_equal_to: int | None = None,
-        lesser_than_or_equal_to: int | None = None,
+        greater_than: int | float | None = None,
+        less_than: int | float | None = None,
+        greater_than_or_equal_to: int | float | None = None,
+        less_than_or_equal_to: int | float | None = None,
         minimum_elements: int | None = None,
         maximum_elements: int | None = None,
         validating_regex: str | None = None,
@@ -204,20 +204,20 @@ class ListValueOption(BaseOption):
         If `value_type` is of type `int` or `float`, the numeric value of each
         element of the option must be greater than this value.
         """
-        self.lesser_than = lesser_than
+        self.less_than = less_than
         """
         If `value_type` is of type `int` or `float`, the numeric value of each
-        element of the option must be lesser than this value.
+        element of the option must be less than this value.
         """
         self.greater_than_or_equal_to = greater_than_or_equal_to
         """
         If `value_type` is of type `int` or `float`, the numeric value of each
         element of the option must be greater than or equal to this value.
         """
-        self.lesser_than_or_equal_to = lesser_than_or_equal_to
+        self.less_than_or_equal_to = less_than_or_equal_to
         """
         If `value_type` is of type `int` or `float`, the numeric value of each
-        element of the option must be lesser than or equal to this value.
+        element of the option must be less than or equal to this value.
         """
         self.minimum_elements = minimum_elements
         """
@@ -253,9 +253,9 @@ class ListValueOption(BaseOption):
             f"required={self.required!r}, default_value={self.default_value!r}, "
             f"value_type={self.value_type!r}, minimum_length={self.minimum_length!r}, "
             f"maximum_length={self.maximum_length!r}, "
-            f"greater_than={self.greater_than!r}, lesser_than={self.lesser_than!r}, "
+            f"greater_than={self.greater_than!r}, less_than={self.less_than!r}, "
             f"greater_than_or_equal_to={self.greater_than_or_equal_to!r}, "
-            f"lesser_than_or_equal_to={self.lesser_than_or_equal_to!r}, "
+            f"less_than_or_equal_to={self.less_than_or_equal_to!r}, "
             f"minimum_elements={self.minimum_elements!r}, "
             f"maximum_elements={self.maximum_elements!r}, "
             f"validating_regex={self.validating_regex!r}, "
@@ -299,9 +299,9 @@ class ListValueOption(BaseOption):
                 option_name=self.name,
                 option_value=element,
                 greater_than=self.greater_than,
-                lesser_than=self.lesser_than,
+                less_than=self.less_than,
                 greater_than_or_equal_to=self.greater_than_or_equal_to,
-                lesser_than_or_equal_to=self.lesser_than_or_equal_to,
+                less_than_or_equal_to=self.less_than_or_equal_to,
             )
             validate_value_string_length(
                 option_name=self.name,
@@ -339,9 +339,9 @@ class ListValueOption(BaseOption):
             "minimum_length": self.minimum_length,
             "maximum_length": self.maximum_length,
             "greater_than": self.greater_than,
-            "lesser_than": self.lesser_than,
+            "less_than": self.less_than,
             "greater_than_or_equal_to": self.greater_than_or_equal_to,
-            "lesser_than_or_equal_to": self.lesser_than_or_equal_to,
+            "less_than_or_equal_to": self.less_than_or_equal_to,
             "minimum_elements": self.minimum_elements,
             "maximum_elements": self.maximum_elements,
             "validating_regex": self.validating_regex,
@@ -374,9 +374,9 @@ class ListValueOption(BaseOption):
             option_name=self.name,
             option_value_type=self.value_type,
             greater_than=self.greater_than,
-            lesser_than=self.lesser_than,
+            less_than=self.less_than,
             greater_than_or_equal_to=self.greater_than_or_equal_to,
-            lesser_than_or_equal_to=self.lesser_than_or_equal_to,
+            less_than_or_equal_to=self.less_than_or_equal_to,
         )
         validate_validating_regex_argument(
             option_name=self.name,

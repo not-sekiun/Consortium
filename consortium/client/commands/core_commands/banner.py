@@ -53,7 +53,7 @@ class BannerCommand(BaseCommand):
             number_of_running_agents = "N/A"
             server_release_formatted_string = "N/A"
             connection_status_banner = (
-                "[bold white]    Connection Status  - " "[bold red]Disconnected"
+                "[bold white]    Connection Status  - [bold red]Disconnected"
             )
         else:
             server_release = await client_rest_api_connection.get_server_release()
@@ -68,7 +68,7 @@ class BannerCommand(BaseCommand):
             number_of_running_listeners = str(len(listeners))
             number_of_running_agents = str(len(agents))
             server_release_formatted_string = (
-                f"v{server_release["version"]} '{server_release["codename"]}'"
+                f"v{server_release['version']} '{server_release['codename']}'"
             )
 
             role = own_user["role"]
@@ -92,8 +92,7 @@ class BannerCommand(BaseCommand):
             f"v{CLIENT_RELEASE.version} '{CLIENT_RELEASE.codename}'"
         )
         server_version_banner = (
-            f"[bold white]    Server Release     - "
-            f"{server_release_formatted_string}"
+            f"[bold white]    Server Release     - {server_release_formatted_string}"
         )
         info_banner = (
             "[bold white]    Server Information - "

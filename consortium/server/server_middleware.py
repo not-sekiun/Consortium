@@ -85,12 +85,13 @@ async def check_if_request_is_authenticated(request: Request, call_next) -> Resp
             )
             access_token = decoded_json_web_token["sub"]
             # check if the user exists in the users service, ie if they are logged in or
-            # not. If they are not logged in, this call raises a ValueError
+            # not. If they are not logged in, this call raises a
+            # `UserAccessTokenNotFoundError`
             _ = _users_service.get_user_by_access_token(access_token)
-        # KeyError: Authorization header is not present
-        # IndexError: Authorization header is empty
-        # ValueError: User does not exist in the users service
-        # jwt.exceptions.InvalidTokenError: JSON Web Token is invalid, base exception
+        # `KeyError`: Authorization header is not present
+        # `IndexError`: Authorization header is empty
+        # `UserAccessTokenNotFoundError`: User does not exist in the users service
+        # `jwt.exceptions.InvalidTokenError`: JSON Web Token is invalid, base exception
         # for any failure on the decode call for a token
         except (
             KeyError,

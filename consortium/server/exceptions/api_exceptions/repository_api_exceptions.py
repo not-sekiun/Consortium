@@ -3,8 +3,12 @@
 # defined here are used for the uploading endpoint if it is used.
 
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
+    NotFoundError,
     UnsupportedMediaTypeError,
 )
+
+
+class RepositoryResourceNotFoundError(NotFoundError): ...
 
 
 class RepositoryDirectoryArchiveFileFormatNotSpecifiedError(UnsupportedMediaTypeError):
@@ -60,6 +64,3 @@ class RepositoryDirectoryFileNotArchiveFileError(UnsupportedMediaTypeError):
                     "`.tar.bz2` files."
                 ),
             )
-
-
-class RepositoryResourceNotFoundError(UnsupportedMediaTypeError): ...

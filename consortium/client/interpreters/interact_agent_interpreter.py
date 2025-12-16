@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import HTML
 from prompt_toolkit.completion import NestedCompleter
@@ -23,18 +23,21 @@ from consortium.client.utils.data_structure_utils import (
 )
 from consortium.client.utils.printer_utils import print_info, print_warning
 
+if TYPE_CHECKING:
+    from consortium.client.client_session import ClientSession
+
 
 class InteractAgentInterpreter(ClientInterpreter):
     def __init__(
         self,
-        client_session: "ClientSession",
+        client_session: ClientSession,
         agent: dict[str, Any],
     ):
         super().__init__(
             prompt=HTML(
                 f"<b>Consortium (<ansired>Agents</ansired>: "
-                f"<ansired>'{agent["name"]}' "
-                f"({agent["agent_id"]})</ansired>) > </b>",
+                f"<ansired>'{agent['name']}' "
+                f"({agent['agent_id']})</ansired>) > </b>",
             ),
             commands=(
                 [
@@ -138,7 +141,7 @@ class InteractAgentInterpreter(ClientInterpreter):
         # Register the help command to autocomplete with all available commands. This
         # includes all the newly added agent capability commands that are dynamically
         # added before this method is called.
-        nested_completer_dict["help"] = {command: None for command in self.commands}
+        nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         # Register each agent capability command to the autocompleter without any
         # argument completions.
@@ -146,9 +149,7 @@ class InteractAgentInterpreter(ClientInterpreter):
             "agent_capabilities"
         ]
         for agent_capability_name in agent_capabilities:
-            nested_completer_dict[agent_capability_name] = {
-                command: None for command in self.commands
-            }
+            nested_completer_dict[agent_capability_name] = dict.fromkeys(self.commands)
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,
@@ -168,8 +169,8 @@ class InteractAgentInterpreter(ClientInterpreter):
                 result_id=event["data"]["result_id"],
             )
             print_info(
-                f"Received result with result ID '{result["result_id"]}' for "
-                f"task with task ID '{result["task_id"]}':\n{result["message"]}",
+                f"Received result with result ID '{result['result_id']}' for "
+                f"task with task ID '{result['task_id']}':\n{result['message']}",
             )
 
     async def _setup_event_handlers(self) -> None:
