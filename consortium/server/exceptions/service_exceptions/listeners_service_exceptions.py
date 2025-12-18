@@ -142,20 +142,20 @@ class InvalidListenerParameterValueError(ListenerParameterUpdateError):
         )
 
 
-class ListenerCreationError(ListenersServiceError):
-    code = "LISTENER_CREATION_ERROR"
-
-    def __init__(self, message: str = "", detail: Any = None):
-        super().__init__(message=message, detail=detail)
-
-
-class ListenerTemplateOptionNotFoundError(ListenerCreationError):
-    code = "LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"
-
-
-class ListenerTemplateOptionValueValidationError(ListenerCreationError):
-    code = "LISTENER_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
-
-
-class MissingRequiredListenerTemplateOptionError(ListenerCreationError):
-    code = "MISSING_REQUIRED_LISTENER_TEMPLATE_OPTION_ERROR"
+# class ListenerCreationError(ListenersServiceError):
+#     code = "LISTENER_CREATION_ERROR"
+#
+#     def __init__(self, message: str = "", detail: Any = None):
+#         super().__init__(message=message, detail=detail)
+#
+#
+# class ListenerTemplateOptionNotFoundError(ListenerCreationError):
+#     code = "LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"
+#
+#
+# class ListenerTemplateOptionValueValidationError(ListenerCreationError):
+#     code = "LISTENER_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
+#
+#
+# class MissingRequiredListenerTemplateOptionError(ListenerCreationError):
+#     code = "MISSING_REQUIRED_LISTENER_TEMPLATE_OPTION_ERROR"

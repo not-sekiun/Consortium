@@ -203,98 +203,6 @@ class Agent:
     def __str__(self) -> str:
         return f"'{self.name}' ({self.agent_id})"
 
-    def _move_queued_task_to_running(self, task_id: str) -> None:
-        task = self._queued_tasks.pop(task_id)
-        task.state = AgentTaskState.RUNNING
-        self._running_tasks[str(task.task_id)] = task
-
-    def _move_running_task_to_completed(self, task_id: str) -> None:
-        task = self._running_tasks.pop(task_id)
-        task.state = AgentTaskState.COMPLETED
-        self._completed_tasks[str(task.task_id)] = task
-
-    async def _start_agent_capability(
-        self,
-        agent_capability: type[BaseAgentCapability],
-        task_message: AgentTaskMessageModel,
-    ) -> None:
-        async def _agent_capability_task_handler(
-            agent_capability: BaseAgentCapability,
-            task_message: AgentTaskMessageModel,
-        ):
-            if agent_capability.is_atomic:
-                async with self._task_messages_queue_lock:
-                    result_message = await agent_capability.execute(
-                        task_message=task_message,
-                    )
-            else:
-                # "Wait" for the lock to be released but dont actually hold it while
-                # executing the agent capability. This allows non-atomic agent
-                # capabilities to interleave their task messages with other agent
-                # capabilities.
-                async with self._task_messages_queue_lock:
-                    pass
-                result_message = await agent_capability.execute(
-                    task_message=task_message,
-                )
-
-            if not isinstance(result_message, AgentResultMessageModel):
-                # TODO: Tidy this up to use a custom exception type.
-                raise TypeError(
-                    f"Agent capability '{agent_capability.name}' returned an "
-                    f"invalid result message type '{type(result_message)}'. Expected "
-                    f"'{AgentResultMessageModel.__name__}'.",
-                )
-
-            # Upon receiving the final aggregated result message we can remove the
-            # agent capability as it is now no longer considered to be running.
-            self._running_agent_capabilities.pop(str(task_message.task_id))
-
-            result = AgentResultModel(
-                result_id=result_message.result_id,
-                success=result_message.success,
-                message=result_message.message,
-                data=result_message.data,
-                task_id=result_message.task_id,
-            )
-            self._results[str(result.result_id)] = result
-
-            # Adding the result implies that the task is completed so we can now move
-            # the task from the running tasks to the completed tasks.
-            self._move_running_task_to_completed(
-                task_id=str(result_message.task_id),
-            )
-
-            # Finally we fire the event to notify all event handlers that a result has
-            # been received.
-            await self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_RESULT_RECEIVED,
-                    data={
-                        "agent_id": str(self.agent_id),
-                        "result_id": str(result.result_id),
-                    },
-                ),
-            )
-
-        running_agent_capability = agent_capability(
-            task_messages_queue=self._task_messages_queue,
-        )
-        self._running_agent_capabilities[str(task_message.task_id)] = (
-            running_agent_capability
-        )
-
-        agent_capability_task = asyncio.create_task(
-            _agent_capability_task_handler(
-                agent_capability=running_agent_capability,
-                task_message=task_message,
-            ),
-        )
-        self._agent_capability_tasks.add(agent_capability_task)
-        # Once the task is finished we have it automatically remove its own reference
-        # within the set to avoid holding references to finished tasks indefinitely.
-        agent_capability_task.add_done_callback(self._agent_capability_tasks.discard)
-
     async def add_task(self, task: AgentTaskModel) -> None:
         # TODO: Convert this to use a lookup dictionary instead of iterating through
         #  all agent capabilities.
@@ -480,3 +388,95 @@ class Agent:
             "datetime_last_checked_in": self.datetime_last_checked_in.isoformat(),
             "agent_data": self.agent_data,
         }
+
+    def _move_queued_task_to_running(self, task_id: str) -> None:
+        task = self._queued_tasks.pop(task_id)
+        task.state = AgentTaskState.RUNNING
+        self._running_tasks[str(task.task_id)] = task
+
+    def _move_running_task_to_completed(self, task_id: str) -> None:
+        task = self._running_tasks.pop(task_id)
+        task.state = AgentTaskState.COMPLETED
+        self._completed_tasks[str(task.task_id)] = task
+
+    async def _start_agent_capability(
+        self,
+        agent_capability: type[BaseAgentCapability],
+        task_message: AgentTaskMessageModel,
+    ) -> None:
+        async def _agent_capability_task_handler(
+            agent_capability: BaseAgentCapability,
+            task_message: AgentTaskMessageModel,
+        ):
+            if agent_capability.is_atomic:
+                async with self._task_messages_queue_lock:
+                    result_message = await agent_capability.execute(
+                        task_message=task_message,
+                    )
+            else:
+                # "Wait" for the lock to be released but dont actually hold it while
+                # executing the agent capability. This allows non-atomic agent
+                # capabilities to interleave their task messages with other agent
+                # capabilities.
+                async with self._task_messages_queue_lock:
+                    pass
+                result_message = await agent_capability.execute(
+                    task_message=task_message,
+                )
+
+            if not isinstance(result_message, AgentResultMessageModel):
+                # TODO: Tidy this up to use a custom exception type.
+                raise TypeError(
+                    f"Agent capability '{agent_capability.name}' returned an "
+                    f"invalid result message type '{type(result_message)}'. Expected "
+                    f"'{AgentResultMessageModel.__name__}'.",
+                )
+
+            # Upon receiving the final aggregated result message we can remove the
+            # agent capability as it is now no longer considered to be running.
+            self._running_agent_capabilities.pop(str(task_message.task_id))
+
+            result = AgentResultModel(
+                result_id=result_message.result_id,
+                success=result_message.success,
+                message=result_message.message,
+                data=result_message.data,
+                task_id=result_message.task_id,
+            )
+            self._results[str(result.result_id)] = result
+
+            # Adding the result implies that the task is completed so we can now move
+            # the task from the running tasks to the completed tasks.
+            self._move_running_task_to_completed(
+                task_id=str(result_message.task_id),
+            )
+
+            # Finally we fire the event to notify all event handlers that a result has
+            # been received.
+            await self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_RESULT_RECEIVED,
+                    data={
+                        "agent_id": str(self.agent_id),
+                        "result_id": str(result.result_id),
+                    },
+                ),
+            )
+
+        running_agent_capability = agent_capability(
+            task_messages_queue=self._task_messages_queue,
+        )
+        self._running_agent_capabilities[str(task_message.task_id)] = (
+            running_agent_capability
+        )
+
+        agent_capability_task = asyncio.create_task(
+            _agent_capability_task_handler(
+                agent_capability=running_agent_capability,
+                task_message=task_message,
+            ),
+        )
+        self._agent_capability_tasks.add(agent_capability_task)
+        # Once the task is finished we have it automatically remove its own reference
+        # within the set to avoid holding references to finished tasks indefinitely.
+        agent_capability_task.add_done_callback(self._agent_capability_tasks.discard)

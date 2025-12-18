@@ -248,8 +248,9 @@ class ComponentNotRunningError(ComponentOperationError):
     code = "COMPONENT_NOT_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to perform the requested operation on the $C_LOWER$ "
-        "'{component_str}'. The $C_LOWER$ is not running."
+        "Failed to perform the requested operation on the $C_LOWER$ '{component_str}'. "
+        "The $C_LOWER$ is not running which conflicts with the operation that was "
+        "requested."
     )
 
     def __init__(
@@ -269,8 +270,9 @@ class ComponentAlreadyRunningError(ComponentOperationError):
     code = "COMPONENT_ALREADY_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to perform the requested operation on the $C_LOWER$ "
-        "'{component_str}'. The $C_LOWER$ is already started or running."
+        "Failed to perform the requested operation on the $C_LOWER$ '{component_str}'. "
+        "The $C_LOWER$ is already running which conflicts with the operation that was "
+        "requested."
     )
 
     def __init__(

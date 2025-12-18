@@ -17,7 +17,7 @@ def remove_task_message_arguments(
 
     Returns:
         AgentTaskMessageModel: A new agent task message with the specified arguments
-            removed.
+            removed from `AgentTaskMessageModel.arguments`.
     """
     updated_arguments = {
         key: value

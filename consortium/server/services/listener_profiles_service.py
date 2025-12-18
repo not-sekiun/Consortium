@@ -168,14 +168,13 @@ class ListenerProfilesService:
         )
         for path in skipped:
             self._logger.info(
-                "├─ Skipped loading listener profile from '{}' because it was "
-                "disabled.",
+                "- Skipped loading listener profile from '{}' because it was disabled.",
                 str(path),
             )
         if errored:
             for _, error in errored:
                 self._logger.error(
-                    "├─ {}",
+                    "- {}",
                     str(error),
                 )
 
@@ -185,17 +184,17 @@ class ListenerProfilesService:
         for listener_profile in retrieved:
             try:
                 await self.load_listener_profile(listener_profile=listener_profile)
-                self._logger.success("├─ Loaded listener profile: {}", listener_profile)
-                self._logger.debug("├─ Loaded listener profile: {!r}", listener_profile)
+                self._logger.success("- Loaded listener profile: {}", listener_profile)
+                self._logger.debug("- Loaded listener profile: {!r}", listener_profile)
             except (
                 ListenerTemplatesFrameworkError,
                 ListenerProfilesServiceError,
             ) as exc:
                 failed_to_load += 1
-                self._logger.error("├─ {}", exc)
+                self._logger.error("- {}", exc)
 
         self._logger.info(
-            "└─ Loaded listener profiles from '{}' ({} listener profile(s) loaded, "
+            "Loaded listener profiles from '{}' ({} listener profile(s) loaded, "
             "{} listener profile(s) skipped, {} listener profile(s) failed to load).",
             str(CONSORTIUM_LISTENERS_DIRECTORY_PATH),
             len(retrieved) - failed_to_load,

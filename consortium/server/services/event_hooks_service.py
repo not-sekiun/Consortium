@@ -223,13 +223,13 @@ class EventHooksService:
         )
         for path in skipped:
             self._logger.info(
-                "├─ Skipped loading plugin from '{}' because it was disabled.",
+                "- Skipped loading plugin from '{}' because it was disabled.",
                 str(path),
             )
         if errored:
             for _, error in errored:
                 self._logger.error(
-                    "├─ {}",
+                    "- {}",
                     str(error),
                 )
 
@@ -239,14 +239,14 @@ class EventHooksService:
         for event_hook in retrieved:
             try:
                 await self.load_event_hook(event_hook=event_hook)
-                self._logger.success("├─ Loaded event hook: {}", event_hook)
-                self._logger.debug("├─ Loaded event hook: {!r}", event_hook)
+                self._logger.success("- Loaded event hook: {}", event_hook)
+                self._logger.debug("- Loaded event hook: {!r}", event_hook)
             except (EventHooksFrameworkError, EventHooksServiceError) as exc:
                 failed_to_load += 1
-                self._logger.error("├─ {}", exc)
+                self._logger.error("- {}", exc)
 
         self._logger.info(
-            "└─ Loaded event hooks from '{}' ({} event hook(s) loaded, {} event "
+            "Loaded event hooks from '{}' ({} event hook(s) loaded, {} event "
             "hook(s) skipped, {} event hook(s) failed to load).",
             str(CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH),
             len(retrieved) - failed_to_load,

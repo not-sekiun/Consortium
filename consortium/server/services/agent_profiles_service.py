@@ -166,13 +166,13 @@ class AgentProfilesService:
         )
         for path in skipped:
             self._logger.info(
-                "├─ Skipped loading agent profile from '{}' because it was disabled.",
+                "- Skipped loading agent profile from '{}' because it was disabled.",
                 str(path),
             )
         if errored:
             for _, error in errored:
                 self._logger.error(
-                    "├─ {}",
+                    "- {}",
                     str(error),
                 )
 
@@ -182,17 +182,17 @@ class AgentProfilesService:
         for agent_profile in retrieved:
             try:
                 await self.load_agent_profile(agent_profile=agent_profile)
-                self._logger.success("├─ Loaded agent profile: {}", agent_profile)
-                self._logger.debug("├─ Loaded agent profile: {!r}", agent_profile)
+                self._logger.success("- Loaded agent profile: {}", agent_profile)
+                self._logger.debug("- Loaded agent profile: {!r}", agent_profile)
             except (
                 AgentTemplatesFrameworkError,
                 AgentProfilesServiceError,
             ) as exc:
                 failed_to_load += 1
-                self._logger.error("├─ {}", exc)
+                self._logger.error("- {}", exc)
 
         self._logger.info(
-            "└─ Loaded agent profiles from '{}' ({} agent profile(s) loaded, "
+            "Loaded agent profiles from '{}' ({} agent profile(s) loaded, "
             "{} agent profile(s) skipped, {} agent profile(s) failed to load).",
             str(CONSORTIUM_AGENTS_DIRECTORY_PATH),
             len(retrieved) - failed_to_load,

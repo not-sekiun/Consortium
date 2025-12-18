@@ -9,7 +9,7 @@ from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.server.exceptions.framework_exceptions import (
-    listener_templates_framework_exceptions as listener_templates_framework_excs,
+    # listener_templates_framework_exceptions as listener_templates_framework_excs,
     listeners_framework_exceptions as listeners_framework_excs,
 )
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
@@ -78,33 +78,38 @@ class ListenersService:
         listener_template = self._listener_templates_service.get_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
         )
-        try:
-            listener = listener_template.create_listener(
-                name=name,
-                description=description,
-                parameters=parameters,
-            )
-        except (
-            listener_templates_framework_excs.ListenerTemplateOptionNotFoundError
-        ) as exc:
-            raise listeners_service_excs.ListenerTemplateOptionNotFoundError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except (
-            listener_templates_framework_excs.ListenerTemplateOptionValueValidationError
-        ) as exc:
-            raise listeners_service_excs.ListenerTemplateOptionValueValidationError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except (
-            listener_templates_framework_excs.MissingRequiredListenerTemplateOptionError
-        ) as exc:
-            raise listeners_service_excs.MissingRequiredListenerTemplateOptionError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
+        listener = listener_template.create_listener(
+            name=name,
+            description=description,
+            parameters=parameters,
+        )
+        # try:
+        #     listener = listener_template.create_listener(
+        #         name=name,
+        #         description=description,
+        #         parameters=parameters,
+        #     )
+        # except (
+        #     listener_templates_framework_excs.ListenerTemplateOptionNotFoundError
+        # ) as exc:
+        #     raise listeners_service_excs.ListenerTemplateOptionNotFoundError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except (
+        #     listener_templates_framework_excs.ListenerTemplateOptionValueValidationError
+        # ) as exc:
+        #     raise listeners_service_excs.ListenerTemplateOptionValueValidationError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except (
+        #     listener_templates_framework_excs.MissingRequiredListenerTemplateOptionError
+        # ) as exc:
+        #     raise listeners_service_excs.MissingRequiredListenerTemplateOptionError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
 
         self._listeners[str(listener.listener_id)] = listener
         await self._events_service.trigger_event(

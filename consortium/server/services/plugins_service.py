@@ -433,13 +433,13 @@ class PluginsService:
         )
         for path in skipped:
             self._logger.info(
-                "├─ Skipped loading plugin from '{}' because it was disabled.",
+                "- Skipped loading plugin from '{}' because it was disabled.",
                 str(path),
             )
         if errored:
             for _, error in errored:
                 self._logger.error(
-                    "├─ {}",
+                    "- {}",
                     str(error),
                 )
 
@@ -453,7 +453,7 @@ class PluginsService:
         except graphlib.CycleError as exc:
             circular_dependency_path = " -> ".join(exc.args[1])
             self._logger.error(
-                "└─ Unable to load framework plugins. Detected circular "
+                "Unable to load framework plugins. Detected circular "
                 "dependencies in the plugin dependency graph: {}. Either remove "
                 "the circularly dependent plugin(s) or fix their dependencies to "
                 "resolve the issue.",
@@ -462,7 +462,7 @@ class PluginsService:
             return
         for plugin in unresolved_plugins:
             self._logger.error(
-                "├─ {}",
+                "- {}",
                 str(
                     remap_exception(
                         original_exception=plugin[1],
@@ -484,22 +484,22 @@ class PluginsService:
                         await plugin.start()
                     except BaseFrameworkException:
                         raise
-                self._logger.success("├─ Loaded plugin: {}", plugin)
-                self._logger.debug("├─ Loaded plugin: {!r}", plugin)
+                self._logger.success("- Loaded plugin: {}", plugin)
+                self._logger.debug("- Loaded plugin: {!r}", plugin)
             except (PluginsFrameworkError, PluginsServiceError) as exc:
                 failed_to_load += 1
-                self._logger.error("├─ {}", str(exc))
+                self._logger.error("- {}", str(exc))
             except Exception as exc:
                 failed_to_load += 1
                 self._logger.error(
-                    "├─ Failed to load the plugin {}. An unhandled exception "
+                    "- Failed to load the plugin {}. An unhandled exception "
                     "occurred while starting the plugin: {}",
                     plugin,
                     str(exc),
                 )
 
         self._logger.info(
-            "└─ Loaded plugins from '{}' ({} plugin(s) loaded, {} plugin(s) "
+            "Loaded plugins from '{}' ({} plugin(s) loaded, {} plugin(s) "
             "skipped, {} plugin(s) failed to load).",
             str(CONSORTIUM_PLUGINS_DIRECTORY_PATH),
             len(resolved_ordered_plugins) - failed_to_load,
