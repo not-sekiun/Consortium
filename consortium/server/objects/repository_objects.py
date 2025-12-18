@@ -204,7 +204,7 @@ class RepositoryDirectory:
     def create(
         cls,
         path: pathlib.Path | str,
-        content: bytes | BinaryIO | None = None,
+        content: bytes | BinaryIO | str | pathlib.Path = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"]
         | None = None,
         name: str | None = None,
@@ -213,6 +213,8 @@ class RepositoryDirectory:
     ):
         if isinstance(path, str):
             path = pathlib.Path(path)
+        if isinstance(content, str):
+            content = pathlib.Path(content)
 
         if not path.exists():
             path.mkdir()
@@ -222,7 +224,13 @@ class RepositoryDirectory:
                     repository_directory_str=str(path),
                 )
 
-        if hasattr(content, "read"):
+        if isinstance(content, pathlib.Path):
+            shutil.copytree(
+                src=content,
+                dst=path,
+                dirs_exist_ok=exist_ok,
+            )
+        elif hasattr(content, "read"):
             try:
                 with tempfile.TemporaryDirectory() as temp_dir_path:
                     temp_file = pathlib.Path(temp_dir_path) / "archive"
@@ -235,7 +243,9 @@ class RepositoryDirectory:
                         format=archive_file_format,
                     )
             except (shutil.ReadError, ValueError):
-                raise InvalidRepositoryDirectoryArchiveFileFormatError from None
+                raise InvalidRepositoryDirectoryArchiveFileFormatError(
+                    archive_file_format=archive_file_format
+                ) from None
         elif isinstance(content, (str, bytes)):
             try:
                 with tempfile.TemporaryDirectory() as temp_dir_path:
@@ -247,7 +257,9 @@ class RepositoryDirectory:
                         format=archive_file_format,
                     )
             except (shutil.ReadError, ValueError):
-                raise InvalidRepositoryDirectoryArchiveFileFormatError from None
+                raise InvalidRepositoryDirectoryArchiveFileFormatError(
+                    archive_file_format=archive_file_format
+                ) from None
 
         return cls(path=path, name=name, description=description)
 

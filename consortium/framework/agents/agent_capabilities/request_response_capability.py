@@ -65,7 +65,7 @@ def request_response_capability(
     result_handler: _ResultMessageHandlerProtocol | None = None,
     timeout_handler: _TimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
-    async def _run_agent_capability(
+    async def _execute(
         self, task_message: AgentTaskMessageModel
     ) -> AgentResultMessageModel:
         context = SimpleNamespace()
@@ -120,6 +120,6 @@ def request_response_capability(
             "authors": authors,
             "requires_admin": requires_admin,
             "supported_oses": supported_oses,
-            "run_agent_capability": _run_agent_capability,
+            "execute": _execute,
         },
     )

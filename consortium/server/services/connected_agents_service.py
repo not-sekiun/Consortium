@@ -1,27 +1,31 @@
+import uuid
 from typing import Any
 
 from consortium.framework.agents._agent import Agent
 from consortium.framework.agents.base_agent_type import BaseAgentType
-from consortium.framework.exceptions.listeners_framework_exceptions import (
-    ListenerSpecificAgentNotFoundError,
+from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
+    AgentNotFoundError,
 )
-from consortium.server import server_singletons as server_singletons
 
 
-class AgentsManager:
-    """
-    A class that allows listeners to manage the lifetime of an agent from registration
-    to checking in to deregistration, as well as to manage access to agents registered
-    locally to the specific listener.
-    """
-
+class ConnectedAgentsService:
     def __init__(self):
+        # Importing here to avoid circular imports.
+        from consortium.server import server_singletons as server_singletons
+
         self._agents_service = server_singletons.agents_service
         self._agents = {}
 
-    async def register_new_connected_agent(
+    def __str__(self) -> str:
+        return "Connected Agents Service"
+
+    def __repr__(self) -> str:
+        return "ConnectedAgentsService()"
+
+    async def register_agent(
         self,
-        agent_type: BaseAgentType,
+        payload_id: str | None = None,
+        agent_type: BaseAgentType | None = None,
         name: str = "",
         description: str = "",
         endpoint: str = "",
@@ -40,6 +44,8 @@ class AgentsManager:
         Register a new connected agent with the listener.
 
         Args:
+            payload_id (str | None): The payload ID of the payload that the agent is
+                using to connect to the listener.
             agent_type (BaseAgentType): The agent type of the agent to be registered.
             name (str): The human-readable name of the agent.
             description (str): A description of the agent.
@@ -66,7 +72,8 @@ class AgentsManager:
             Agent: An object representing the agent that was registered.
         """
 
-        agent = await self._agents_service.create_and_add_agent(
+        agent = await self._agents_service.register_agent(
+            payload_id=payload_id,
             agent_type=agent_type,
             name=name,
             description=description,
@@ -85,7 +92,7 @@ class AgentsManager:
         self._agents[str(agent.agent_id)] = agent
         return agent
 
-    async def check_in_connected_agent_by_agent_id(self, agent_id: str) -> None:
+    async def check_in_agent_by_agent_id(self, agent_id: str) -> None:
         """
         Check in a connected agent by its agent ID. This method simply updates the last
         check-in time of the agent to indicate that the agent is still connected and
@@ -104,10 +111,10 @@ class AgentsManager:
         """
 
         if agent_id not in self._agents:
-            raise ListenerSpecificAgentNotFoundError(agent_id=agent_id)
+            raise AgentNotFoundError(agent_id=agent_id)
         await self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
 
-    async def deregister_connected_agent_by_agent_id(self, agent_id: str) -> None:
+    async def deregister_agent_by_agent_id(self, agent_id: str) -> None:
         """
         Deregister a connected agent by its agent ID. This method removes the agent from
         the listener's list of connected agents and also removes the agent from the
@@ -126,11 +133,11 @@ class AgentsManager:
         """
 
         if agent_id not in self._agents:
-            raise ListenerSpecificAgentNotFoundError(agent_id=agent_id)
+            raise AgentNotFoundError(agent_id=agent_id)
         await self._agents_service.remove_agent_by_agent_id(agent_id=agent_id)
         self._agents.pop(str(agent_id))
 
-    def get_all_connected_agents(self) -> list[Agent]:
+    def get_all_agents(self) -> list[Agent]:
         """
         Get all connected agents that are registered with the specific listener that is
         using this agent manager.
@@ -142,7 +149,7 @@ class AgentsManager:
 
         return list(self._agents.values())
 
-    def get_connected_agent_by_agent_id(self, agent_id: str) -> Agent:
+    def get_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> Agent:
         """
         Get a connected agent by its agent ID for the specific listener that is using
         this agent manager.
@@ -157,8 +164,9 @@ class AgentsManager:
         Returns:
             Agent: The agent with the specified agent ID.
         """
+        agent_id = str(agent_id)
 
         try:
             return self._agents[agent_id]
         except KeyError:
-            raise ListenerSpecificAgentNotFoundError(agent_id=agent_id)
+            raise AgentNotFoundError(agent_id=agent_id) from None

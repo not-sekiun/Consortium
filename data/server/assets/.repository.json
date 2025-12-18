@@ -1,15 +1,4 @@
 {
-    "7dfeac1f-576f-4fcc-ba08-969be3f9778c": {
-        "resource_id": "7dfeac1f-576f-4fcc-ba08-969be3f9778c",
-        "name": "string",
-        "description": "string",
-        "size": 2051235,
-        "exists_on_disk": true,
-        "md5_checksum": "d83e22dcb66b79747c25f046fc4b37e4",
-        "datetime_created": "2025-12-17T06:49:35.423936",
-        "datetime_modified": "2025-12-17T06:49:35.422900",
-        "is_directory": false
-    },
     "91f6b863-0b09-4e4e-b8af-2546247e2b19": {
         "resource_id": "91f6b863-0b09-4e4e-b8af-2546247e2b19",
         "name": "raidens_cute_butthole.png",

@@ -234,7 +234,7 @@ class RepositoryService:
 
     def create_repository_directory(
         self,
-        content: bytes | BinaryIO,
+        content: bytes | BinaryIO | str | pathlib.Path,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"],
         name: str | None = None,
         description: str = "",

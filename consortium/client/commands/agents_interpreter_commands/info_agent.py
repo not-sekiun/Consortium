@@ -51,29 +51,33 @@ class InfoAgentCommand(BaseCommand):
         table.add_row("Name", agent["name"])
         table.add_row("Description", agent["description"])
         table.add_row("Endpoint", agent["endpoint"])
-        agent_type_table = Table()
-        agent_type_table.add_column("Information")
-        agent_type_table.add_column("Data")
-        agent_type_table.add_row(
-            "Agent Type ID",
-            agent["agent_type"]["agent_type_id"],
+        # agent_type_table = Table()
+        # agent_type_table.add_column("Information")
+        # agent_type_table.add_column("Data")
+        # agent_type_table.add_row(
+        #     "Agent Type ID",
+        #     agent["agent_type"]["agent_type_id"],
+        # )
+        # agent_type_table.add_row(
+        #     "Name",
+        #     agent["agent_type"]["name"],
+        # )
+        # agent_type_table.add_row(
+        #     "Compatible Listener Types",
+        #     "\n".join(
+        #         [
+        #             f"'{listener_type['name']}' ({listener_type['listener_type_id']})"
+        #             for listener_type in agent["agent_type"][
+        #                 "compatible_listener_types"
+        #             ]
+        #         ],
+        #     ),
+        # )
+        table.add_row("Agent Type", agent["agent_type"]["name"])
+        table.add_row(
+            "Agent Capabilities",
+            "\n".join(list(agent["agent_type"]["agent_capabilities"])),
         )
-        agent_type_table.add_row(
-            "Name",
-            agent["agent_type"]["name"],
-        )
-        agent_type_table.add_row(
-            "Compatible Listener Types",
-            "\n".join(
-                [
-                    f"'{listener_type['name']}' ({listener_type['listener_type_id']})"
-                    for listener_type in agent["agent_type"][
-                        "compatible_listener_types"
-                    ]
-                ],
-            ),
-        )
-        table.add_row("Agent Type", agent_type_table)
         table.add_row("Running As Admin", str(agent["is_admin"]))
         table.add_row("Operating System", agent["os"])
         table.add_row("System Version", agent["version"])

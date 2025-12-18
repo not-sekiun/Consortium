@@ -83,7 +83,7 @@ sleep_capability = request_response_capability(
 def ping_task_handler(task_message, context):
     context.task_id = task_message.task_id
     context.start = datetime.now()
-    remove_task_message_arguments(task_message, ["timeout"])
+    task_message = remove_task_message_arguments(task_message, ["timeout"])
     return task_message
 
 
@@ -123,7 +123,7 @@ ping_capability = request_response_capability(
             greater_than=0,
         )
     },
-    resolve_timeout=lambda task_message, context: task_message["timeout"],
+    resolve_timeout=lambda task_message, context: task_message.arguments["timeout"],
     task_handler=ping_task_handler,
     result_handler=ping_result_handler,
     timeout_handler=ping_timeout_handler,

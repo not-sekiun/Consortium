@@ -25,6 +25,9 @@ class UserAccountIDNotFoundError(UserAccountNotFoundError):
                 "Failed to find the requested user account. No user account could "
                 f"be found with the provided user account ID '{user_account_id}'."
             ),
+            detail={
+                "user_account_id": user_account_id,
+            },
         )
 
 
@@ -169,9 +172,7 @@ class UserAccountsFileContainsDuplicateUsernamesError(
 class UserAccountAuthenticationError(UserAccountsServiceError):
     code = "USER_ACCOUNT_AUTHENTICATION_ERROR"
 
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         super().__init__(
             message=(
                 "Failed to authenticate the user account. Invalid credentials were "
@@ -224,6 +225,10 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
                 f"'{user_accounts_filepath}'. The username '{username}' is already in "
                 f"use by another user account."
             ),
+            detail={
+                "user_accounts_filepath": str(user_accounts_filepath),
+                "username": str(username),
+            },
         )
 
 

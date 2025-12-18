@@ -68,7 +68,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             **{
                 attr: getattr(server_singletons, attr)
                 for attr in dir(server_singletons)
-                if attr.endswith("_service")
+                if attr.endswith("_service") and not attr.startswith("_")
             },
         )
         self.logger = loguru.logger.bind(

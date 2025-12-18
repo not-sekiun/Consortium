@@ -1,4 +1,5 @@
 import json
+import uuid
 from pathlib import Path
 
 import jsonschema
@@ -43,14 +44,17 @@ class UserAccountsService:
 
     def get_user_account_by_user_account_id(
         self,
-        user_account_id: str,
+        user_account_id: str | uuid.UUID,
     ) -> UserAccountModel:
+        user_account_id = str(user_account_id)
+
         try:
             user_account = self._user_accounts[user_account_id]
         except KeyError:
             raise UserAccountIDNotFoundError(
                 user_account_id=user_account_id,
             ) from None
+
         self._logger.debug("Retrieved user account: {!r}", user_account)
         return user_account
 
@@ -168,6 +172,7 @@ class UserAccountsService:
         except KeyError:
             raise UserAccountIDNotFoundError(user_account_id=user_account_id) from None
         self._logger.info("Deleted user account: {}", deleted_user_account)
+        self._logger.debug("- {!r}", deleted_user_account)
 
     def authenticate_user_account_credentials(
         self,

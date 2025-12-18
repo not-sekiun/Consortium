@@ -20,6 +20,7 @@ SLEEP_TIME_JITTER = 0.5
 TASKS_URL_PATHS = ["/tasks"]
 RESULTS_URL_PATHS = ["/results"]
 REGISTRATION_URL_PATHS = ["/register"]
+AGENT_TYPE = "agents/consortium/http"
 
 
 def shell_capability(arguments):
@@ -523,6 +524,7 @@ class Agent:
             return local_host_address
 
         agent_data_querying_functions = {
+            "agent_type": lambda: AGENT_TYPE,
             "is_admin": get_is_admin,
             "os": lambda: platform.system() + " " + platform.release(),
             "version": platform.version,
@@ -537,7 +539,7 @@ class Agent:
             try:
                 agent_data[data_name] = data_function()
             except Exception as exc:
-                logging.error(exc)
+                logging.error(exc, exc_info=exc)  # TODO: Remove after testing
 
         while True:
             try:
@@ -626,7 +628,7 @@ class Agent:
                         #     )
                     self._sleep()
             except Exception as exc:
-                logging.error(exc)
+                logging.error(exc, exc_info=exc)  # TODO: Remove after testing
                 self._sleep()
 
 

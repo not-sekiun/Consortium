@@ -23,6 +23,7 @@ from consortium.server.exceptions.framework_exceptions.agents_framework_exceptio
     AgentResultIDNotFoundError,
     AgentResultTaskIDNotFoundError,
     AgentTaskNotFoundError,
+    AgentTypeResolutionError,
     MissingRequiredAgentCapabilityOptionError,
 )
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
@@ -110,6 +111,12 @@ class Agent:
 
         self.agent_id = uuid.uuid4()
 
+        # An agent must have an agent type to be able to be tasked and receive results.
+        # if no agent type identifier is provided via either the payload ID or the agent
+        # type name then we cannot resolve the agent type and must not allow the agent
+        # to exist.
+        if payload_id is None and agent_type is None:
+            raise AgentTypeResolutionError.due_to_no_identifier_provided()
         # Attempt to resolve the agent type via the payload ID if one was provided.
         if payload_id is not None:
             try:
@@ -118,7 +125,9 @@ class Agent:
                 )
                 self.agent_type = payload.agent_type
             except PayloadNotFoundError:
-                self.agent_type = None
+                raise AgentTypeResolutionError.due_to_payload_not_found_error(
+                    payload_id=payload_id,
+                ) from None
         # Attempt to resolve the agent type via the agent type if one was provided.
         if agent_type is not None:
             try:
@@ -128,8 +137,11 @@ class Agent:
                     )
                 )
             except AgentTypeNotFoundError:
-                self.agent_type = None
-        self.agent_type = agent_type
+                raise AgentTypeResolutionError.due_to_agent_type_not_found_error(
+                    agent_type_name=agent_type,
+                ) from None
+
+        self.payload_id = payload_id
         self.name = name
         self.description = description
         self.endpoint = endpoint
@@ -454,7 +466,7 @@ class Agent:
             "name": self.name,
             "description": self.description,
             "endpoint": self.endpoint,
-            "agent_type": self.agent_type.to_json(),
+            "agent_type": self.agent_type.to_json() if self.agent_type else None,
             "is_admin": self.is_admin,
             "os": self.os,
             "version": self.version,

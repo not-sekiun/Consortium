@@ -7,12 +7,15 @@ from pydantic import ValidationError
 
 from consortium.framework.agents import AgentResultMessageModel
 from consortium.framework.exceptions.listeners_framework_exceptions import (
-    ListenerSpecificAgentNotFoundError,
     ListenerStartError,
 )
 from consortium.framework.listeners import BaseListener
 from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
     AgentTaskNotFoundError,
+    AgentTypeResolutionError,
+)
+from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
+    AgentNotFoundError,
 )
 
 
@@ -51,6 +54,8 @@ class Listener(BaseListener):
             agent_registration_schema = {
                 "type": "object",
                 "properties": {
+                    "payload_id": {"type": "string"},
+                    "agent_type": {"type": "string"},
                     "is_admin": {"type": "boolean"},
                     "os": {"type": "string"},
                     "version": {"type": "string"},
@@ -60,6 +65,7 @@ class Listener(BaseListener):
                     "local_host_address": {"type": "string"},
                     "hostname": {"type": "string"},
                 },
+                "oneOf": [{"required": ["payload_id"]}, {"required": ["agent_type"]}],
             }
 
             try:
@@ -68,14 +74,32 @@ class Listener(BaseListener):
             except (json.JSONDecodeError, jsonschema.ValidationError):
                 return web.Response(status=401)
 
-            # TODO: Only one agent type is supported for this listener type.
-            agent = await self.agents_manager.register_new_connected_agent(
-                agent_type="consortium/agents/http",
-                endpoint=request.remote,
-                remote_host_address=request.remote,
-                **json_request_body,
-            )
-            self._logger.info(
+            payload_id = json_request_body.pop("payload_id", None)
+            agent_type = json_request_body.pop("agent_type", None)
+            try:
+                agent = await self.connected_agents_service.register_agent(
+                    payload_id=payload_id,
+                    agent_type=agent_type,
+                    endpoint=request.remote,
+                    remote_host_address=request.remote,
+                    **json_request_body,
+                )
+            except AgentTypeResolutionError:
+                if agent_type:
+                    self.logger.warning(
+                        "Agent attempted to register with an invalid agent type: {}. "
+                        "Responded with 401 Unauthorized",
+                        agent_type,
+                    )
+                    return web.Response(status=401)
+                else:
+                    self.logger.warning(
+                        "Agent attempted to register with an invalid payload ID: {}. "
+                        "Responded with 401 Unauthorized",
+                        payload_id,
+                    )
+                    return web.Response(status=401)
+            self.logger.info(
                 "Agent '{}' checked in from endpoint: {}",
                 str(agent),
                 request.remote,
@@ -85,15 +109,15 @@ class Listener(BaseListener):
         async def handle_agent_getting_tasks(request):
             try:
                 agent_id = request.headers["Cookie"]
-                agent = self.agents_manager.get_connected_agent_by_agent_id(
+                agent = self.connected_agents_service.get_agent_by_agent_id(
                     agent_id=agent_id,
                 )
-            except ListenerSpecificAgentNotFoundError:
+            except AgentNotFoundError:
                 return web.Response(status=401)
             except KeyError:  # No Cookie header provided
                 return web.Response(status=401)
 
-            await self.agents_manager.check_in_connected_agent_by_agent_id(
+            await self.connected_agents_service.check_in_agent_by_agent_id(
                 agent_id=agent_id,
             )
 
@@ -146,10 +170,10 @@ class Listener(BaseListener):
 
             # Check if the agent ID is valid.
             try:
-                agent = self.agents_manager.get_connected_agent_by_agent_id(
+                agent = self.connected_agents_service.get_agent_by_agent_id(
                     agent_id=agent_id,
                 )
-            except ListenerSpecificAgentNotFoundError:
+            except AgentNotFoundError:
                 self.logger.warning(
                     "Agent checked in with an invalid agent ID: {}. Responded with 401 "
                     "Unauthorized",
@@ -171,7 +195,7 @@ class Listener(BaseListener):
 
             # Only if the task ID is valid do we consider it a valid agent that has
             # checked in.
-            await self.agents_manager.check_in_connected_agent_by_agent_id(
+            await self.connected_agents_service.check_in_agent_by_agent_id(
                 agent_id=agent_id,
             )
 

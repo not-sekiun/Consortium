@@ -6,11 +6,12 @@ from loguru import logger
 from consortium.framework.agents._agent import Agent
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.framework_exceptions import (
-    agents_framework_exceptions as framework_excs,
-)
-from consortium.server.exceptions.service_exceptions import (
-    agents_service_exceptions as svc_excs,
+
+# from consortium.server.exceptions.framework_exceptions import (
+#     agents_framework_exceptions as framework_excs,
+# )
+from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
+    AgentNotFoundError,
 )
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
 from consortium.server.server_logging import LoggerType
@@ -31,7 +32,7 @@ class AgentsService:
     def __repr__(self) -> str:
         return "AgentsService()"
 
-    async def create_and_add_agent(self, *args, **kwargs) -> Agent:
+    async def register_agent(self, *args, **kwargs) -> Agent:
         agent = Agent(*args, **kwargs)
         self._agents[str(agent.agent_id)] = agent
         await self._events_service.trigger_event(
@@ -60,7 +61,7 @@ class AgentsService:
         try:
             agent = self._agents[agent_id]
         except KeyError:
-            raise svc_excs.AgentNotFoundError(agent_id=agent_id) from None
+            raise AgentNotFoundError(agent_id=agent_id) from None
 
         self._logger.debug("Retrieved agent: {!r}", agent)
         return agent
@@ -122,17 +123,16 @@ class AgentsService:
         task_id: str,
     ) -> AgentTaskModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        try:
-            task = agent.get_task_by_task_id(task_id=task_id)
-        except framework_excs.AgentTaskNotFoundError:
-            raise svc_excs.AgentTaskNotFoundError(task_id=task_id) from None
-
+        task = agent.get_task_by_task_id(task_id=task_id)
+        # try:
+        #     task = agent.get_task_by_task_id(task_id=task_id)
+        # except framework_excs.AgentTaskNotFoundError:
+        #     raise svc_excs.AgentTaskNotFoundError(task_id=task_id) from None
         self._logger.debug(
             "Retrieved task {} from agent {}",
             task_id,
             agent,
         )
-
         return task
 
     def get_all_agent_results_by_agent_id(
@@ -179,16 +179,24 @@ class AgentsService:
         agent_id: str,
         result_id: str,
     ) -> AgentResultModel:
-        all_results = self.get_all_agent_results_by_agent_id(agent_id)
-        for result in all_results:
-            if str(result.result_id) == result_id:
-                self._logger.debug(
-                    "Retrieved result {!r} from agent with agent ID '{}'",
-                    result,
-                    agent_id,
-                )
-                return result
-        raise svc_excs.AgentResultNotFoundError(result_id=result_id)
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        result = agent.get_result_by_result_id(result_id=result_id)
+        self._logger.debug(
+            "Retrieved result {!r} from agent {!r}",
+            result_id,
+            agent,
+        )
+        return result
+        # all_results = self.get_all_agent_results_by_agent_id(agent_id)
+        # for result in all_results:
+        #     if str(result.result_id) == result_id:
+        #         self._logger.debug(
+        #             "Retrieved result {!r} from agent with agent ID '{}'",
+        #             result,
+        #             agent_id,
+        #         )
+        #         return result
+        # raise svc_excs.AgentResultNotFoundError(result_id=result_id)
 
     async def task_agent_by_agent_id(
         self,
@@ -198,28 +206,29 @@ class AgentsService:
     ) -> AgentTaskModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = AgentTaskModel(command=command, arguments=arguments)
-        try:
-            await agent.add_task(task=task)
-        except framework_excs.AgentCapabilityOptionValueValidationError as exc:
-            raise svc_excs.AgentCapabilityOptionValueValidationError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except framework_excs.MissingRequiredAgentCapabilityOptionError as exc:
-            raise svc_excs.MissingRequiredAgentCapabilityOptionError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except framework_excs.AgentCapabilityOptionNotFoundError as exc:
-            raise svc_excs.AgentCapabilityOptionNotFoundError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except framework_excs.AgentCapabilityNotFoundError as exc:
-            raise svc_excs.AgentCapabilityNotFoundError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
+        await agent.add_task(task=task)
+        # try:
+        #     await agent.add_task(task=task)
+        # except framework_excs.AgentCapabilityOptionValueValidationError as exc:
+        #     raise svc_excs.AgentCapabilityOptionValueValidationError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except framework_excs.MissingRequiredAgentCapabilityOptionError as exc:
+        #     raise svc_excs.MissingRequiredAgentCapabilityOptionError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except framework_excs.AgentCapabilityOptionNotFoundError as exc:
+        #     raise svc_excs.AgentCapabilityOptionNotFoundError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except framework_excs.AgentCapabilityNotFoundError as exc:
+        #     raise svc_excs.AgentCapabilityNotFoundError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_TASKED,
@@ -301,7 +310,9 @@ class AgentsService:
         task_id: str,
     ):
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        try:
-            agent.delete_queued_task_by_task_id(task_id=task_id)
-        except framework_excs.AgentTaskNotFoundError:
-            raise svc_excs.AgentTaskNotFoundError(task_id=task_id) from None
+        agent.delete_queued_task_by_task_id(task_id=task_id)
+
+    #     try:
+    #         agent.delete_queued_task_by_task_id(task_id=task_id)
+    #     except framework_excs.AgentTaskNotFoundError:
+    #         raise svc_excs.AgentTaskNotFoundError(task_id=task_id) from None

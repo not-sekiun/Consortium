@@ -174,13 +174,12 @@ class AgentGeneratorNotRunningError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
         agent_generator_str: str,
-        error_message: str,
     ):
         super().__init__(
             message=(
-                f"An error occurred with the agent generator "
-                f"'{agent_generator_str}' because it is not running. "
-                f"{error_message}"
+                f"Failed to perform the requested operation on the agent generator "
+                f"'{agent_generator_str}'. The agent generator is not running which "
+                f"conflicts with the operation that was requested."
             ),
         )
 
@@ -191,13 +190,12 @@ class AgentGeneratorAlreadyRunningError(AgentGeneratorsFrameworkError):
     def __init__(
         self,
         agent_generator_str: str,
-        error_message: str,
     ):
         super().__init__(
             message=(
-                f"An error occurred with the agent generator "
-                f"'{agent_generator_str}' because it is already running. "
-                f"{error_message}"
+                f"Failed to perform the requested operation on the agent generator "
+                f"'{agent_generator_str}'. The agent generator is already running "
+                f"which conflicts with the operation that was requested."
             ),
         )
 

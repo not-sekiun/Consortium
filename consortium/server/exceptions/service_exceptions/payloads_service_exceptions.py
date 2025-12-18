@@ -80,3 +80,18 @@ class PayloadMetadataMissingError(PayloadsServiceError):
                 f"'{payload_id}'. The metadata for the payload is missing."
             ),
         )
+
+
+class PayloadIDReservationNotFoundError(PayloadsServiceError):
+    code = "PAYLOAD_ID_RESERVATION_NOT_FOUND_ERROR"
+
+    def __init__(self, payload_id: str):
+        super().__init__(
+            message=(
+                f"Failed to create the payload file and assign it the provided payload "
+                f"ID reservation. No reservation was found for the provided payload "
+                f"ID '{payload_id}'. Check that you reserved a payload ID first using "
+                f"`PayloadsService.reserve_payload_id` before creating a payload with "
+                f"that ID."
+            ),
+        )

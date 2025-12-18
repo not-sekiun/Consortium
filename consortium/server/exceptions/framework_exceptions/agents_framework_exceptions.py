@@ -57,7 +57,11 @@ class AgentResultHasNoCorrespondingTaskError(AgentsFrameworkError):
         )
 
 
-class AgentCapabilityNotFoundError(AgentsFrameworkError):
+class AgentTaskingError(AgentsFrameworkError):
+    code = "AGENT_CAPABILITY_OPTION_ERROR"
+
+
+class AgentCapabilityNotFoundError(AgentTaskingError):
     code = "AGENT_CAPABILITY_NOT_FOUND_ERROR"
 
     def __init__(self, command: str, agent_str: str, agent_type_str: str):
@@ -71,11 +75,7 @@ class AgentCapabilityNotFoundError(AgentsFrameworkError):
         )
 
 
-class AgentCapabilityOptionError(AgentsFrameworkError):
-    code = "AGENT_CAPABILITY_OPTION_ERROR"
-
-
-class AgentCapabilityOptionNotFoundError(AgentCapabilityOptionError):
+class AgentCapabilityOptionNotFoundError(AgentTaskingError):
     code = "AGENT_CAPABILITY_OPTION_NOT_FOUND_ERROR"
 
     def __init__(
@@ -95,7 +95,7 @@ class AgentCapabilityOptionNotFoundError(AgentCapabilityOptionError):
         )
 
 
-class MissingRequiredAgentCapabilityOptionError(AgentCapabilityOptionError):
+class MissingRequiredAgentCapabilityOptionError(AgentTaskingError):
     code = "MISSING_REQUIRED_AGENT_CAPABILITY_OPTION_ERROR"
 
     def __init__(self, agent_str: str, agent_capability_name: str, option_name: str):
@@ -108,7 +108,7 @@ class MissingRequiredAgentCapabilityOptionError(AgentCapabilityOptionError):
         )
 
 
-class AgentCapabilityOptionValueValidationError(AgentCapabilityOptionError):
+class AgentCapabilityOptionValueValidationError(AgentTaskingError):
     code = "AGENT_CAPABILITY_OPTION_VALUE_VALIDATION_ERROR"
 
     def __init__(
@@ -144,5 +144,43 @@ class AgentCreationParameterTypeError(AgentCreationError):
                 f"Failed to create the agent. The parameter "
                 f"'{parameter_name}' must be of type '{parameter_type}' in the "
                 f"agent's provided parameters."
+            ),
+        )
+
+
+class AgentTypeResolutionError(AgentCreationError):
+    code = "AGENT_TYPE_RESOLUTION_ERROR"
+
+    @classmethod
+    def due_to_payload_not_found_error(cls, payload_id):
+        return cls(
+            message=(
+                f"Failed to create the agent. Could not resolve the agent type "
+                f"from a known framework payload because no payload with the provided "
+                f"payload ID '{payload_id}' was found."
+            ),
+            detail={
+                "payload_id": payload_id,
+            },
+        )
+
+    @classmethod
+    def due_to_agent_type_not_found_error(cls, agent_type_name: str):
+        return cls(
+            message=(
+                f"Failed to create the agent. Could not resolve the agent type "
+                f"because no agent type with the name '{agent_type_name}' was found."
+            ),
+            detail={
+                "agent_type_name": agent_type_name,
+            },
+        )
+
+    @classmethod
+    def due_to_no_identifier_provided(cls):
+        return cls(
+            message=(
+                "Failed to create the agent. Could not resolve the agent type "
+                "because no identifier (payload ID or agent type name) was provided."
             ),
         )

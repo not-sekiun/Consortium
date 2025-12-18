@@ -15,7 +15,6 @@ from consortium.framework._components import (
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerRuntimeError,
 )
-from consortium.framework.listeners._agents_manager import AgentsManager
 from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
     ComponentNotRunningError,
@@ -30,6 +29,7 @@ from consortium.server.exceptions.framework_exceptions.listeners_framework_excep
     ListenerStopError,
 )
 from consortium.server.server_logging import LoggerType
+from consortium.server.services.connected_agents_service import ConnectedAgentsService
 
 
 class _BaseListenerParametersModel(BaseModel):
@@ -69,7 +69,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             was created.
         environment (SimpleNamespace): Namespace for storing listener-specific variables
             that can be shared between user-defined methods without naming conflicts.
-        agents_manager (AgentsManager): Internal manager for handling connected agents'
+        connected_agents_service (ConnectedAgentsService): Internal manager for handling connected agents'
             lifecycles and operations.
         logger (loguru.Logger): Listener-specific logger instance, automatically tagged
             with the listener's name and ID for easy identification in logs.
@@ -132,7 +132,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         self.datetime_created = datetime.now()
         self.listener_id = uuid.uuid4()
         self.environment = SimpleNamespace()
-        self.agents_manager = AgentsManager()
+        self.connected_agents_service = ConnectedAgentsService()
         self.logger = logger.bind(
             logger_name=f"Listener - {self}",
             logger_type=LoggerType.LISTENER_LOGGER,
@@ -141,7 +141,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         super().__init__()
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.listener_id})"
+        return f"'{self.name}' ({self.listener_id})"
 
     def __repr__(self) -> str:
         return (
@@ -232,7 +232,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             "datetime_created": self.datetime_created.isoformat(),
             "connected_agents": [
                 {"agent_id": str(agent.agent_id), "name": str(agent.name)}
-                for agent in self.agents_manager.get_all_connected_agents()
+                for agent in self.connected_agents_service.get_all_agents()
             ],
             # `creating_listener_template` is assigned to the listener class by the
             # listener profile loader at load time.

@@ -1,3 +1,5 @@
+import uuid
+
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
@@ -23,7 +25,9 @@ class UsersService:
     def __repr__(self) -> str:
         return "UsersService()"
 
-    def get_user_by_user_id(self, user_id: str) -> User:
+    def get_user_by_user_id(self, user_id: str | uuid.UUID) -> User:
+        user_id = str(user_id)
+
         try:
             user = self._users[user_id]
         except KeyError:
@@ -52,8 +56,10 @@ class UsersService:
     def update_user_display_name_by_user_id(
         self,
         display_name: str,
-        user_id: str,
+        user_id: str | uuid.UUID,
     ) -> User:
+        user_id = str(user_id)
+
         user = self.get_user_by_user_id(user_id=user_id)
         old_display_name = user.display_name
         user.display_name = display_name
@@ -77,7 +83,9 @@ class UsersService:
         self._logger.debug("- {!r}", user)
         return user
 
-    def logout_user_by_user_id(self, user_id: str) -> None:
+    def logout_user_by_user_id(self, user_id: str | uuid.UUID) -> None:
+        user_id = str(user_id)
+
         try:
             deleted_user = self._users.pop(str(user_id))
         except KeyError:

@@ -101,7 +101,7 @@ class Listener(BaseListener):
             writer: asyncio.StreamWriter,
         ) -> None:
             agent_handler = _AgentHandler(
-                agents_manager=self.agents_manager,
+                agents_manager=self.connected_agents_service,
                 reader=reader,
                 writer=writer,
             )

@@ -12,6 +12,7 @@ from consortium.server.exceptions.service_exceptions.agent_templates_service_exc
 from consortium.server.exceptions.service_exceptions.payloads_service_exceptions import (
     InvalidPayloadsMetadataFileJSONError,
     InvalidPayloadsMetadataFileSchemaError,
+    PayloadIDReservationNotFoundError,
     PayloadMetadataMissingError,
     PayloadNotFoundError,
     PayloadRepositoryResourceMissingError,
@@ -40,6 +41,7 @@ class PayloadsService:
         self._payloads_metadata_file_path = (
             self._repository_service.repository_directory_path / ".payloads.json"
         )
+        self._reserved_paylod_ids = set()
         self._payloads = {}
         self._logger.debug("Started {}", self)
 
@@ -138,15 +140,25 @@ class PayloadsService:
             len(data),
         )
 
+    def reserve_payload_id(self) -> uuid.UUID:
+        payload_id = uuid.uuid4()
+        self._reserved_paylod_ids.add(str(payload_id))
+        self._logger.debug("Reserved payload ID '{}'", str(payload_id))
+        return payload_id
+
     def create_payload_file(
         self,
         agent_template_id: str | uuid.UUID,
         build_parameters: dict,
         data: str | bytes | IO | Generator[bytes] | Generator[str],
+        payload_id: str | uuid.UUID | None = None,
         is_binary: bool = True,
         name: str | None = None,
         description: str = "",
     ) -> Payload:
+        agent_template_id = str(agent_template_id)
+        payload_id = str(payload_id)
+
         agent_template = (
             self._agent_templates_service.get_agent_template_by_agent_template_id(
                 agent_template_id=agent_template_id,
@@ -162,11 +174,31 @@ class PayloadsService:
             name=name,
             description=description,
         )
+
+        # If a reserved payload ID was provided, use it and rename the generated
+        # resource to that payload ID
+        if payload_id is not None:
+            # `_reserved_paylod_ids` contains the string representation of the reserved
+            # payload IDs
+            if str(payload_id) not in self._reserved_paylod_ids:
+                raise PayloadIDReservationNotFoundError(
+                    payload_id=payload_id,
+                )
+            self._reserved_paylod_ids.remove(payload_id)
+            # `resource_id` expects a uuid.UUID object so if a UUID string was passed
+            # instead we convert it back to a uuid.UUID object. At this point we should
+            # have already confirmed that the payload ID string is a valid UUID string
+            # when checking the reservation above.
+            if isinstance(payload_id, str):
+                payload_id = uuid.UUID(payload_id)
+            resource.resource_id = payload_id
+            resource.path.rename(str(payload_id))
         payload = Payload(
             resource=resource,
             agent_template=agent_template,
             build_parameters=build_parameters,
         )
+
         self._payloads[str(payload.payload_id)] = payload
         self.save_payloads_metadata()
         self._logger.debug(
@@ -215,8 +247,7 @@ class PayloadsService:
     def delete_payload_by_payload_id(
         self, payload_id: str | uuid.UUID, force: bool = False
     ) -> None:
-        if isinstance(payload_id, uuid.UUID):
-            payload_id = str(payload_id)
+        payload_id = str(payload_id)
 
         payload_exists = payload_id in self._payloads
         try:
@@ -262,8 +293,8 @@ class PayloadsService:
             )
 
     def get_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> Payload:
-        if isinstance(payload_id, uuid.UUID):
-            payload_id = str(payload_id)
+        payload_id = str(payload_id)
+
         try:
             payload = self._payloads[payload_id]
             self._logger.debug(
