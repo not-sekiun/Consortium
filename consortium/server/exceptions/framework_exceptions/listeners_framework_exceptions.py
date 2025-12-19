@@ -60,7 +60,7 @@ class ListenerStartError(comp_excs.ComponentStartError, ListenerOperationError):
         detail: Any,
     ):
         super().__init__(
-            listener_str=listener_str,
+            component_str=listener_str,
             error_message=error_message,
             detail=detail,
         )
@@ -156,10 +156,19 @@ class ListenerAlreadyRunningError(
 
 
 class ListenerCreationError(ListenersFrameworkError):
+    """
+    Base exception for all errors that occur when a listener fails to be created.
+    """
+
     code = "LISTENER_CREATION_ERROR"
 
 
 class ListenerCreationParameterTypeError(ListenerCreationError):
+    """
+    An error that is raised when a listener parameter is not of the expected type
+    during listener creation.
+    """
+
     code = "LISTENER_CREATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
@@ -167,7 +176,6 @@ class ListenerCreationParameterTypeError(ListenerCreationError):
         listener_str: str,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
-        # error_message: str = "",
     ):
         super().__init__(
             message=(
@@ -176,147 +184,3 @@ class ListenerCreationParameterTypeError(ListenerCreationError):
                 f"listener's provided parameters."
             ),
         )
-        # if not error_message:
-        #     super().__init__(
-        #         message=(
-        #             f"Failed to create the listener '{listener_str}'. The parameter "
-        #             f"'{parameter_name}' must be of type '{parameter_type}' in the "
-        #             f"listener's provided parameters."
-        #         ),
-        #     )
-        # else:
-        #     super().__init__(
-        #         message=(
-        #             f"Failed to create the listener '{listener_str}'. {error_message}"
-        #         ),
-        #     )
-
-
-# class ListenerNotRunningError(ListenersFrameworkError):
-#     def __init__(
-#         self,
-#         listener_str: str,
-#         error_message: str,
-#     ):
-#         super().__init__(
-#             message=(
-#                 f"An error occurred with the listener '{listener_str}' because "
-#                 f"it is not running. {error_message}"
-#             ),
-#         )
-#
-#
-# class ListenerAlreadyRunningError(ListenersFrameworkError):
-#     def __init__(
-#         self,
-#         listener_str: str,
-#         error_message: str,
-#     ):
-#         super().__init__(
-#             message=(
-#                 f"An error occurred with the listener '{listener_str}' because "
-#                 f"it is already running. {error_message}"
-#             ),
-#         )
-#
-#
-# class ListenerStartError(ListenersFrameworkError):
-#     def __init__(
-#         self,
-#         listener_str: str,
-#         error_message: str,
-#         detail: Any,
-#     ):
-#         super().__init__(
-#             message=f"Failed to start the listener '{listener_str}'. {error_message}",
-#             detail=detail,
-#         )
-#
-#
-# class ListenerRuntimeError(ListenersFrameworkError):
-#     def __init__(
-#         self,
-#         listener_str: str,
-#         error_message: str,
-#         detail: Any,
-#     ):
-#         super().__init__(
-#             message=(
-#                 f"The listener '{listener_str}' encountered an error while "
-#                 f"running. {error_message}"
-#             ),
-#             detail=detail,
-#         )
-#
-#
-# class ListenerStopError(ListenersFrameworkError):
-#     def __init__(
-#         self,
-#         listener_str: str,
-#         error_message: str,
-#         detail: Any,
-#     ):
-#         super().__init__(
-#             message=f"Failed to stop the listener '{listener_str}'. {error_message}",
-#             detail=detail,
-#         )
-
-
-# class ListenerConfigurationError(
-#     comp_excs.ComponentConfigurationError,
-#     ListenersFrameworkError,
-# ):
-#     """
-#     Base exception for all errors that occur during the configuration of a particular
-#     listener.
-#     """
-#
-#     code = "LISTENER_CONFIGURATION_ERROR"
-#
-#     _COMPONENT_TYPE = "listener"
-
-
-# class InvalidListenerConfigurationParameterTypeError(
-#     ListenerConfigurationError,
-#     comp_excs.InvalidComponentConfigurationParameterTypeError,
-# ):
-#     code = "INVALID_LISTENER_CONFIGURATION_PARAMETER_TYPE_ERROR"
-#
-#     def __init__(
-#         self,
-#         listener_str: str,
-#         parameter_name: str | None = None,
-#         parameter_type: str | None = None,
-#     ):
-#         super().__init__(
-#             component_str=listener_str,
-#             parameter_name=parameter_name,
-#             parameter_type=parameter_type,
-#         )
-#         # super().__init__(
-#         #     message=(
-#         #         f"Failed to configure the listener defined at "
-#         #         f"'{listener_str}'. The parameter '{parameter_name}' must be "
-#         #         f"of type '{parameter_type}' in the listener's definition."
-#         #     ),
-#         # )
-
-
-# class MissingListenerConfigurationParameterError(
-#     ListenerConfigurationError,
-#     comp_excs.MissingComponentConfigurationParameterError
-# ):
-#     code = "MISSING_LISTENER_CONFIGURATION_PARAMETER_ERROR"
-#
-#     def __init__(self, listener_str: str, parameter_name: str):
-#         super().__init__(
-#             component_str=listener_str,
-#             parameter_name=parameter_name,
-#         )
-#         # super().__init__(
-#         #     message=(
-#         #         f"Failed to configure the listener defined at '{listener_str}'. "
-#         #         f"The required parameter '{parameter_name}' was not declared in the "
-#         #         f"listener's definition."
-#         #     ),
-#         # )

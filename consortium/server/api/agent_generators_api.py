@@ -344,40 +344,6 @@ async def update_agent_generator_by_agent_generator_id(
                 parameters=parameters,
             )
         )
-        # if name is not None:
-        #     await agent_generators_service.update_agent_generator_name_by_agent_generator_id(
-        #         agent_generator_id=agent_generator_id,
-        #         name=name,
-        #     )
-        # if description is not None:
-        #     await agent_generators_service.update_agent_generator_description_by_agent_generator_id(
-        #         agent_generator_id=agent_generator_id,
-        #         description=description,
-        #     )
-        # if parameters is not None:
-        #     try:
-        #         await agent_generators_service.update_agent_generator_parameters_by_agent_generator_id(
-        #             agent_generator_id=agent_generator_id,
-        #             parameters=parameters,
-        #         )
-        #     # AgentTemplateResolutionError is only ever raised when a programmer
-        #     # error is made. The service will raise an AssertionError to demonstrate
-        #     # this, which will be caught and reraised as a
-        #     # AgentGeneratorTemplateResolutionError on the REST API side.
-        #     except AssertionError:
-        #         raise AgentTemplateResolutionError from None
-        #     except AgentGeneratorAlreadyRunningServiceError as exc:
-        #         raise AgentGeneratorAlreadyRunningAPIError.from_consortium_exception(
-        #             consortium_exception=exc,
-        #         ) from None
-        #     except InvalidAgentGeneratorParameterNameServiceError as exc:
-        #         raise InvalidAgentGeneratorParameterNameAPIError.from_consortium_exception(
-        #             consortium_exception=exc,
-        #         ) from None
-        #     except InvalidAgentGeneratorParameterValueServiceError as exc:
-        #         raise InvalidAgentGeneratorParameterValueAPIError.from_consortium_exception(
-        #             consortium_exception=exc,
-        #         ) from None
     except svc_excs.AgentGeneratorNotFoundError as exc:
         raise api_excs.AgentGeneratorNotFoundError.from_consortium_exception(
             consortium_exception=exc,

@@ -266,7 +266,7 @@ class BaseAgentCapability:
                 await self.send_to_agent(task_message)
                 return await self.recv_from_agent()
 
-    async def execute(
+    async def run(
         self,
         task_message: AgentTaskMessageModel,
     ) -> AgentResultMessageModel:

@@ -28,6 +28,7 @@ class BaseCommand(ABC):
     name: str
     description: str = ""
     epilog: str = ""
+    group: str = ""
 
     def __init__(self, environment: dict | None = None) -> None:
         if environment is None:
@@ -50,7 +51,7 @@ class BaseCommand(ABC):
         cls.summary = f"description: {cls.description}\n{cls().parser.format_usage()}"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
-        pass
+        return None
 
     @abstractmethod
     async def run_command(self, command_context: CommandContext) -> ReturnStatus: ...

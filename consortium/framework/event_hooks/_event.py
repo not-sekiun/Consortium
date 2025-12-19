@@ -1,11 +1,12 @@
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.framework.framework_types import JSONObject
 
 
 class Event:
     def __init__(
         self,
         event_type: EventType,
-        data: dict = None,
+        data: JSONObject = None,
     ):
         if data is None:
             data = {}

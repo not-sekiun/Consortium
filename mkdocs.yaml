@@ -47,15 +47,15 @@ theme:
 
 nav:
 #  - Exceptions: test.md
-#  - Home: index.md
+  - Home: index.md
 #  - About:
 #    - about/features.md
 #    - about/motivation.md
 #    - about/history.md
-#  - Getting Started:
-#    - getting-started/installation.md
-#    - getting-started/updating.md
-#    - getting-started/quick-start.md
+  - Getting Started:
+    - getting-started/installation.md
+    - getting-started/updating.md
+    - getting-started/quick-start.md
 #  - Manual:
 #    - manual/introduction.md
 #  - Server API:
@@ -132,7 +132,8 @@ plugins:
             show_docstring_methods: false
 
 watch:
-- ../consortium
+- consortium
+- docs
 
 extra_javascript:
   - javascripts/asciinema-player.min.js

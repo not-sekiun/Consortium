@@ -10,7 +10,6 @@ from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.server.exceptions.framework_exceptions import (
-    # listener_templates_framework_exceptions as listener_templates_framework_excs,
     listeners_framework_exceptions as framework_excs,
 )
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
@@ -26,6 +25,7 @@ from consortium.server.services.listener_templates_service import (
 )
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
+    normalize_uuid,
 )
 
 
@@ -54,15 +54,17 @@ class ListenersService:
         )
 
     @log_and_propagate_error_on_service_method
-    def get_listener_by_listener_id(self, listener_id: str) -> BaseListener:
+    def get_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> BaseListener:
+        listener_id = normalize_uuid(listener_id)
+
         try:
             listener = self._listeners[listener_id]
         except KeyError:
             raise svc_excs.ListenerNotFoundError(listener_id=listener_id) from None
-
         self._logger.debug("Retrieved listener: {!r}", listener)
         return listener
 
+    @log_and_propagate_error_on_service_method
     def get_all_listeners(self) -> list[BaseListener]:
         all_listeners = list(self._listeners.values())
         self._logger.debug(
@@ -82,39 +84,12 @@ class ListenersService:
         listener_template = self._listener_templates_service.get_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
         )
+
         listener = listener_template.create_listener(
             name=name,
             description=description,
             parameters=parameters,
         )
-        # try:
-        #     listener = listener_template.create_listener(
-        #         name=name,
-        #         description=description,
-        #         parameters=parameters,
-        #     )
-        # except (
-        #     listener_templates_framework_excs.ListenerTemplateOptionNotFoundError
-        # ) as exc:
-        #     raise svc_excs.ListenerTemplateOptionNotFoundError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except (
-        #     listener_templates_framework_excs.ListenerTemplateOptionValueValidationError
-        # ) as exc:
-        #     raise svc_excs.ListenerTemplateOptionValueValidationError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except (
-        #     listener_templates_framework_excs.MissingRequiredListenerTemplateOptionError
-        # ) as exc:
-        #     raise svc_excs.MissingRequiredListenerTemplateOptionError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-
         self._listeners[str(listener.listener_id)] = listener
         await self._events_service.trigger_event(
             event=Event(
@@ -124,12 +99,14 @@ class ListenersService:
         )
         self._logger.info("Created listener: {}", listener)
         self._logger.debug("- {!r}", listener)
+
         return listener
 
     @log_and_propagate_error_on_service_method
     async def add_listener(self, listener: BaseListener) -> None:
         if str(listener.listener_id) in self._listeners:
             raise svc_excs.ListenerAlreadyExistsError
+
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_ADDED,
@@ -168,7 +145,6 @@ class ListenersService:
         # Changed dictionary is used to track what attributes were updated. This data
         # is sent as part of the `LISTENER_UPDATED` event.
         updated = {}
-
         # Update parameters first before updating name and description. This is because
         # updating parameters may also update the name (if the name is derived from
         # parameters). But if the name is provided explicitly, it will overwrite any
@@ -301,18 +277,6 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.start()
-        # try:
-        #     await listener.start()
-        # except framework_excs.ListenerStartError as exc:
-        #     raise svc_excs.ListenerStartError(
-        #         message=str(exc),
-        #         detail=exc.detail,
-        #     ) from None
-        # except framework_excs.ListenerAlreadyRunningError as exc:
-        #     raise framework_excs.ListenerAlreadyRunningError(
-        #         message=exc.message
-        #     ) from None
-
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_STARTED,
@@ -327,18 +291,6 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.stop()
-        # try:
-        #     await listener.stop()
-        # except framework_excs.ListenerStopError as exc:
-        #     raise svc_excs.ListenerStopError(
-        #         message=str(exc),
-        #         detail=exc.detail,
-        #     ) from None
-        # except framework_excs.ListenerNotRunningError as exc:
-        #     raise framework_excs.ListenerNotRunningError(
-        #         message=exc.message
-        #     ) from None
-
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_STOPPED,
@@ -353,13 +305,6 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.cancel()
-        # try:
-        #     await listener.cancel()
-        # except framework_excs.ListenerNotRunningError as exc:
-        #     raise svc_excs.ListenerNotRunningError(
-        #         message=exc.message
-        #     ) from None
-
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_CANCELLED,

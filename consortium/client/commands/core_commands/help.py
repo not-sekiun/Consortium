@@ -37,18 +37,38 @@ class HelpCommand(BaseCommand):
 
     @staticmethod
     def _print_summarized_help_menu(commands: dict[str, BaseCommand]) -> None:
-        table = Table(title="Help Menu")
-        table.add_column("Command")
-        table.add_column("Description")
+        command_groups = {}
+        command_col_width = max(len(command.name) for command in commands.values())
+        max_description_length = max(
+            len(command.description) for command in commands.values()
+        )
+        # Command column has 4 characters of padding, table borders and space.
+        # Description column has 3 characters of padding, space on left and space and
+        # border on right.
+        padding_width = 7
+        description_col_width = min(
+            max_description_length, CONSOLE.width - command_col_width - padding_width
+        )
 
-        help_menu_entries = []
-        for _, command in sorted(commands.items()):
-            help_menu_entries.append([command.name, command.description])
+        # Group commands by their specified group or default to "General Commands"
+        for _, command in commands.items():
+            # "General Commands" is the default group if no group is specified
+            group = command.group or "General Commands"
+            if group not in command_groups:
+                command_groups[group] = [command]
+            else:
+                command_groups[group].append(command)
 
-        for command, description in help_menu_entries:
-            table.add_row(command, description)
-
-        CONSOLE.print(table)
+        # Sort the command groups and iterate over them to print each group table
+        for group_name, group_commands in dict(sorted(command_groups.items())).items():
+            table = Table(title=group_name)
+            table.add_column("Command", width=command_col_width)
+            table.add_column("Description", width=description_col_width)
+            # Sort each group's commands by name before adding to the table
+            for command in sorted(group_commands, key=lambda command: command.name):
+                table.add_row(command.name, command.description)
+            CONSOLE.print(table)
+            print()
 
     async def run_command(
         self,

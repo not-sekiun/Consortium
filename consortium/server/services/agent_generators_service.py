@@ -9,7 +9,6 @@ from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.framework_exceptions import (
     agent_generators_framework_exceptions as framework_excs,
-    # agent_templates_framework_exceptions as agent_templates_framework_excs,
 )
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
@@ -70,6 +69,7 @@ class AgentGeneratorsService:
         )
         return agent_generator
 
+    @log_and_propagate_error_on_service_method
     def get_all_agent_generators(self) -> list[BaseAgentGenerator]:
         all_agent_generators = list(self._agent_generators.values())
         self._logger.debug(
@@ -97,32 +97,6 @@ class AgentGeneratorsService:
             description=description,
             parameters=parameters,
         )
-        # try:
-        #     agent_generator = agent_template.create_agent_generator(
-        #         name=name,
-        #         description=description,
-        #         parameters=parameters,
-        #     )
-        # except agent_templates_framework_excs.AgentTemplateOptionNotFoundError as exc:
-        #     raise svc_excs.AgentTemplateOptionNotFoundError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except (
-        #     agent_templates_framework_excs.AgentTemplateOptionValueValidationError
-        # ) as exc:
-        #     raise svc_excs.AgentTemplateOptionValueValidationError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except (
-        #     agent_templates_framework_excs.MissingRequiredAgentTemplateOptionError
-        # ) as exc:
-        #     raise svc_excs.MissingRequiredAgentTemplateOptionError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
@@ -353,18 +327,6 @@ class AgentGeneratorsService:
         )
 
         await agent_generator.start()
-        # try:
-        #     await agent_generator.start()
-        # except framework_excs.AgentGeneratorStartError as exc:
-        #     raise svc_excs.AgentGeneratorStartError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except framework_excs.AgentGeneratorAlreadyRunningError as exc:
-        #     raise svc_excs.AgentGeneratorAlreadyRunningError(
-        #         message=exc.message,
-        #     ) from None
-
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_STARTED,
@@ -384,18 +346,6 @@ class AgentGeneratorsService:
         )
 
         await agent_generator.stop()
-        # try:
-        #     await agent_generator.stop()
-        # except framework_excs.AgentGeneratorStopError as exc:
-        #     raise svc_excs.AgentGeneratorStopError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except framework_excs.AgentGeneratorNotRunningError as exc:
-        #     raise svc_excs.AgentGeneratorNotRunningError(
-        #         message=exc.message
-        #     ) from None
-
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_STOPPED,
@@ -415,13 +365,6 @@ class AgentGeneratorsService:
         )
 
         await agent_generator.cancel()
-        # try:
-        #     await agent_generator.cancel()
-        # except framework_excs.AgentGeneratorNotRunningError as exc:
-        #     raise svc_excs.AgentGeneratorNotRunningError(
-        #         message=exc.message
-        #     ) from None
-
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_CANCELLED,

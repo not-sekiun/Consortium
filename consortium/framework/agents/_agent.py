@@ -427,7 +427,7 @@ class Agent:
         ):
             if agent_capability.is_atomic:
                 async with self._task_messages_queue_lock:
-                    result_message = await agent_capability.execute(
+                    result_message = await agent_capability.run(
                         task_message=task_message,
                     )
             else:
@@ -437,7 +437,7 @@ class Agent:
                 # capabilities.
                 async with self._task_messages_queue_lock:
                     pass
-                result_message = await agent_capability.execute(
+                result_message = await agent_capability.run(
                     task_message=task_message,
                 )
 

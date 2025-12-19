@@ -104,14 +104,10 @@ class BaseAPIException(Exception):
     def from_consortium_exception(
         cls,
         consortium_exception: BaseConsortiumError,
-        # detail: dict[str, Any] | None = None,
     ) -> BaseAPIException:
-        # if detail is None:
-        #     detail = consortium_exception.detail
         api_exception = cls(
             message=consortium_exception.message,
             detail=consortium_exception.detail,
-            # detail=detail,
         )
         api_exception.code = consortium_exception.code
         return api_exception

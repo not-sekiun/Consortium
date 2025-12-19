@@ -38,24 +38,6 @@ router = APIRouter(
 agent_templates_service = server_singletons.agent_templates_service
 agent_generators_service = server_singletons.agent_generators_service
 
-# _agent_template_option_value_framework_error = (
-#     framework_excs.AgentTemplateOptionValueValidationError(
-#         agent_template_str="<agent_template>",
-#         option_str="<option_str>",
-#         option_value="<option_value>",
-#         error_message="<error_message>",
-#     )
-# )
-# _agent_template_option_not_found_framework_error = (
-#     framework_excs.AgentTemplateOptionNotFoundError(
-#         agent_template_str="<agent_template>", option_str="<option_str>"
-#     )
-# )
-# _missing_required_agent_template_option_framework_error = (
-#     framework_excs.MissingRequiredAgentTemplateOptionError(
-#         agent_template_str="<agent_template>", option_str="<option_str>"
-#     )
-# )
 _agent_template_not_found_error = (
     api_excs.AgentTemplateNotFoundError.from_consortium_exception(
         consortium_exception=svc_excs.AgentTemplateIDNotFoundError(

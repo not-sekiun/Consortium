@@ -1,34 +1,41 @@
 """
-Exception hierarchy for errors related to the event hooks service:
+This module describes all the exceptions that can be raised by the event hooks service.
+These exceptions are raised when errors occur during event hook loading, dependency
+resolution, setup, teardown, and other event hook operations. They are meant to be used
+by the REST API layer and the service layer.
 
-- BaseServiceException: Base class for all service-related exceptions.
-  - EventHooksServiceException: Base class for all errors related to the event hooks
-  service.
-    - EventHookNotFoundError: Raised when an event hook is not found.
-    - EventHookLoadingError: Raised when an event hook fails to load.
-      - InvalidEventHookProjectManifestFileError: Raised when the event hook project
-      manifest file is invalid.
-        - InvalidEventHookProjectManifestFileJSONError: Raised when the event hook
-        project manifest file is not a valid JSON file.
-        - InvalidEventHookProjectManifestFileSchemaError: Raised when the event hook
-        project manifest file does not conform to the expected schema.
-      - InvalidEventHookProjectFolderStructureError: Raised when the event hook project
-      folder structure is invalid.
-        - EventHookProjectManifestFileNotFoundError: Raised when the event hook project
-        manifest file is not found.
-        - EventHookProjectEventHookFileNotFoundError: Raised when the event hook file
-        specified in the manifest is not found.
-      - InvalidEventHookProjectImplementationError: Raised when an event hook project's
-      implementation is invalid.
-        - EventHookProjectSymbolNotFoundError: Raised when the symbol name specified in
-        the manifest is not found in the event hook file.
-        - EventHookProjectInterfaceError: Raised when the event hook class does not
-        implement the BaseEventHook interface.
-        - InternalEventHookProjectError: Raised when an internal error occurs while
-        handling an event hook project.
-      - IncompatibleEventHookFrameworkVersionError: Raised when an event hook is
-      incompatible with the version of the currently running framework.
-    - EventHookUnloadingError: Raised when an event hook fails to unload.
+The exception hierarchy for the event hooks service is as follows:
+
+- [`BaseServiceException`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceException]
+    - [`EventHooksServiceError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHooksServiceError]
+        - [`EventHookNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookNotFoundError]
+        - [`EventHookLoadingError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookLoadingError]
+            - [`InvalidEventHookProjectManifestFileError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectManifestFileError]
+                - [`InvalidEventHookProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectManifestFileJSONError]
+                - [`InvalidEventHookProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectManifestFileSchemaError]
+            - [`InvalidEventHookProjectPyProjectFileError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectPyProjectFileError]
+                - [`InvalidEventHookProjectPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectPyProjectFileTOMLError]
+                - [`InvalidEventHookProjectPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectPyProjectFileDependencyError]
+            - [`InvalidEventHookProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectFolderStructureError]
+                - [`EventHookProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookProjectManifestFileNotFoundError]
+                - [`EventHookProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookProjectEntryPointModuleNotFoundError]
+            - [`InvalidEventHookProjectImplementationError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectImplementationError]
+                - [`EventHookProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookProjectSymbolNotFoundError]
+                - [`EventHookProjectInterfaceError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookProjectInterfaceError]
+                - [`InternalEventHookProjectError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InternalEventHookProjectError]
+            - [`IncompatibleEventHookFrameworkVersionError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.IncompatibleEventHookFrameworkVersionError]
+            - [`EventHookAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookAlreadyRegisteredError]
+            - [`DuplicateEventHookLabelError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.DuplicateEventHookLabelError]
+        - [`EventHookDependencyError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookDependencyError]
+            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.ThirdPartyDependencyNotFoundError]
+            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.IncompatibleThirdPartyDependencyVersionError]
+            - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.ComponentDependencyNotFoundError]
+            - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.IncompatibleComponentDependencyVersionError]
+            - [`EventHookDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookDependsOnInvalidComponentDependencyError]
+            - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.ComponentDependencyNotRunningError]
+        - [`EventHookOperationError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookOperationError]
+            - [`EventHookSetupError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookSetupError]
+            - [`EventHookTeardownError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookTeardownError]
 """
 
 import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_svc_excs
