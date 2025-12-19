@@ -14,11 +14,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
-from consortium.server.exceptions.framework_exceptions import (
-    listeners_framework_exceptions as framework_excs,
-)
-from consortium.server.exceptions.service_exceptions import (
-    listeners_service_exceptions as svc_excs,
+from consortium.server.exceptions.consortium_exceptions import (
+    listeners_consortium_exceptions as consortium_exceptions,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.listener_models import ListenerModel
@@ -41,17 +38,17 @@ _listeners_service = server_singletons.listeners_service
 _listener_templates_service = server_singletons.listener_templates_service
 
 _listener_not_found_error = api_excs.ListenerNotFoundError.from_consortium_exception(
-    svc_excs.ListenerNotFoundError(listener_id="string"),
+    consortium_exceptions.ListenerNotFoundError(listener_id="string"),
 )
 _listener_already_running_error = (
     api_excs.ListenerAlreadyRunningError.from_consortium_exception(
-        consortium_exception=framework_excs.ListenerAlreadyRunningError(
+        consortium_exception=consortium_exceptions.ListenerAlreadyRunningError(
             listener_str="<listener_string>",
         ),
     )
 )
 _listener_start_error = api_excs.ListenerStartError.from_consortium_exception(
-    consortium_exception=framework_excs.ListenerStartError(
+    consortium_exception=consortium_exceptions.ListenerStartError(
         listener_str="<listener_string>",
         error_message="<error_message>",
         detail={"<key>": "<value>"},
@@ -59,13 +56,13 @@ _listener_start_error = api_excs.ListenerStartError.from_consortium_exception(
 )
 _listener_not_running_error = (
     api_excs.ListenerNotRunningError.from_consortium_exception(
-        consortium_exception=framework_excs.ListenerNotRunningError(
+        consortium_exception=consortium_exceptions.ListenerNotRunningError(
             listener_str="<listener_string>",
         ),
     )
 )
 _listener_stop_error = api_excs.ListenerStopError.from_consortium_exception(
-    consortium_exception=framework_excs.ListenerStopError(
+    consortium_exception=consortium_exceptions.ListenerStopError(
         listener_str="<listener_string>",
         error_message="<error_message>",
         detail={"<key>": "<value>"},
@@ -73,7 +70,7 @@ _listener_stop_error = api_excs.ListenerStopError.from_consortium_exception(
 )
 _invalid_listener_parameter_name_error = (
     api_excs.InvalidListenerParameterNameError.from_consortium_exception(
-        consortium_exception=svc_excs.InvalidListenerParameterNameError(
+        consortium_exception=consortium_exceptions.InvalidListenerParameterNameError(
             parameter_name="string",
             listener="string",
         ),
@@ -81,7 +78,7 @@ _invalid_listener_parameter_name_error = (
 )
 _invalid_listener_parameter_value_error = (
     api_excs.InvalidListenerParameterValueError.from_consortium_exception(
-        consortium_exception=svc_excs.InvalidListenerParameterValueError(
+        consortium_exception=consortium_exceptions.InvalidListenerParameterValueError(
             parameter_name="string",
             parameter_value="string",
             listener_str="string",
@@ -140,7 +137,7 @@ def get_listener_by_listener_id(
         return ListenerModel(
             **_listeners_service.get_listener_by_listener_id(listener_id).to_json(),
         )
-    except svc_excs.ListenerNotFoundError as exc:
+    except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -171,15 +168,15 @@ async def start_listener_by_listener_id(
 ) -> SuccessResponseModel:
     try:
         await _listeners_service.start_listener_by_listener_id(listener_id=listener_id)
-    except framework_excs.ListenerStartError as exc:
+    except consortium_exceptions.ListenerStartError as exc:
         raise api_excs.ListenerStartError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.ListenerAlreadyRunningError as exc:
+    except consortium_exceptions.ListenerAlreadyRunningError as exc:
         raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except svc_excs.ListenerNotFoundError as exc:
+    except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -219,15 +216,15 @@ async def stop_listener_by_listener_id(
 ) -> SuccessResponseModel:
     try:
         await _listeners_service.stop_listener_by_listener_id(listener_id=listener_id)
-    except framework_excs.ListenerStopError as exc:
+    except consortium_exceptions.ListenerStopError as exc:
         raise api_excs.ListenerStopError(
             message=exc.message, detail=exc.detail
         ) from None
-    except svc_excs.ListenerNotFoundError as exc:
+    except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.ListenerNotRunningError as exc:
+    except consortium_exceptions.ListenerNotRunningError as exc:
         raise api_excs.ListenerNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -266,11 +263,11 @@ async def cancel_listener_by_listener_id(
 ) -> SuccessResponseModel:
     try:
         await _listeners_service.cancel_listener_by_listener_id(listener_id=listener_id)
-    except svc_excs.ListenerNotFoundError as exc:
+    except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.ListenerNotRunningError as exc:
+    except consortium_exceptions.ListenerNotRunningError as exc:
         raise api_excs.ListenerNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -334,19 +331,19 @@ async def update_listener_by_listener_id(
             description=description,
             parameters=parameters,
         )
-    except svc_excs.ListenerNotFoundError as exc:
+    except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.ListenerAlreadyRunningError as exc:
+    except consortium_exceptions.ListenerAlreadyRunningError as exc:
         raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except svc_excs.InvalidListenerParameterNameError as exc:
+    except consortium_exceptions.InvalidListenerParameterNameError as exc:
         raise api_excs.InvalidListenerParameterNameError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except svc_excs.InvalidListenerParameterValueError as exc:
+    except consortium_exceptions.InvalidListenerParameterValueError as exc:
         raise api_excs.InvalidListenerParameterValueError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -376,13 +373,13 @@ async def delete_listener_by_listener_id(
 ) -> SuccessResponseModel:
     try:
         await _listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
-    except svc_excs.ListenerNotFoundError:
+    except consortium_exceptions.ListenerNotFoundError:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
-            consortium_exception=svc_excs.ListenerNotFoundError(
+            consortium_exception=consortium_exceptions.ListenerNotFoundError(
                 listener_id="string",
             ),
         ) from None
-    except framework_excs.ListenerAlreadyRunningError as exc:
+    except consortium_exceptions.ListenerAlreadyRunningError as exc:
         raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None

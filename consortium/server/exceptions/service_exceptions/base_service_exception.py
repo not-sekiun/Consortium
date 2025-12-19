@@ -1,4 +1,6 @@
-from consortium.server.exceptions.base_consortium_exception import BaseConsortiumError
+from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
+    BaseConsortiumError,
+)
 
 
 class BaseServiceException(BaseConsortiumError):

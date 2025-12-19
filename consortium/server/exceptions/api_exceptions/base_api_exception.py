@@ -2,7 +2,7 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, create_model
 
-from consortium.server.exceptions.base_consortium_exception import (
+from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
 )
 

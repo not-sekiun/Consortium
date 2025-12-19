@@ -9,14 +9,15 @@ from consortium.framework._components._component_status import State
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
-from consortium.server.exceptions.framework_exceptions import (
-    listeners_framework_exceptions as framework_excs,
+from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
+    InvalidListenerParameterNameError,
+    InvalidListenerParameterValueError,
+    ListenerAlreadyExistsError,
+    ListenerAlreadyRunningError,
+    ListenerNotFoundError,
 )
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
-)
-from consortium.server.exceptions.service_exceptions import (
-    listeners_service_exceptions as svc_excs,
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService
@@ -60,7 +61,7 @@ class ListenersService:
         try:
             listener = self._listeners[listener_id]
         except KeyError:
-            raise svc_excs.ListenerNotFoundError(listener_id=listener_id) from None
+            raise ListenerNotFoundError(listener_id=listener_id) from None
         self._logger.debug("Retrieved listener: {!r}", listener)
         return listener
 
@@ -105,7 +106,7 @@ class ListenersService:
     @log_and_propagate_error_on_service_method
     async def add_listener(self, listener: BaseListener) -> None:
         if str(listener.listener_id) in self._listeners:
-            raise svc_excs.ListenerAlreadyExistsError
+            raise ListenerAlreadyExistsError
 
         await self._events_service.trigger_event(
             event=Event(
@@ -119,7 +120,7 @@ class ListenersService:
     async def remove_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == State.RUNNING:
-            raise framework_excs.ListenerAlreadyRunningError
+            raise ListenerAlreadyRunningError
 
         removed_listener = self._listeners.pop(listener_id)
         await self._events_service.trigger_event(
@@ -158,7 +159,7 @@ class ListenersService:
             # Cannot update running listeners because the parameters change wont be
             # reflected in the listener.
             if listener.status.state == State.RUNNING:
-                raise framework_excs.ListenerAlreadyRunningError
+                raise ListenerAlreadyRunningError
 
             # Fill in any missing parameters with values from the existing set of
             # parameters.
@@ -171,7 +172,7 @@ class ListenersService:
             # Perform validation of `parameters` if they are being updated.
             for parameter_name, parameter_value in parameters.items():
                 if parameter_name not in listener.creating_listener_template.options:
-                    raise svc_excs.InvalidListenerParameterNameError(
+                    raise InvalidListenerParameterNameError(
                         listener=str(listener),
                         parameter_name=parameter_name,
                     )
@@ -180,7 +181,7 @@ class ListenersService:
                         parameter_name
                     ].validate_value(value=parameter_value)
                 except OptionValueValidationError as exc:
-                    raise svc_excs.InvalidListenerParameterValueError(
+                    raise InvalidListenerParameterValueError(
                         listener_str=str(listener),
                         parameter_name=parameter_name,
                         parameter_value=str(parameter_value),
