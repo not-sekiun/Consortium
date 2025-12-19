@@ -5,7 +5,7 @@ from pathlib import Path
 import jsonschema
 from loguru import logger
 
-from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions import (
     EmptyUserAccountPasswordError,
     EmptyUserAccountUsernameError,
     InvalidUserAccountRoleError,

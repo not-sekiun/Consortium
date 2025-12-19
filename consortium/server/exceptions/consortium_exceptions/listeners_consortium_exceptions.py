@@ -1,5 +1,5 @@
 """
-The exception hierarchy for listeners is as follows:
+Exception hierarchy for listeners errors:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`ListenersError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersError]
@@ -209,8 +209,7 @@ class ListenersServiceError(ListenersError):
 
 class ListenerNotFoundError(ListenersServiceError):
     """
-    Raised when attempting to get a listener that does not exist in the listeners
-    service.
+    Raised when the requested listener was not found in the listeners service.
     """
 
     code = "LISTENER_NOT_FOUND_ERROR"

@@ -3,7 +3,7 @@ import uuid
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions import (
     UserAccessTokenNotFoundError,
     UserIDNotFoundError,
 )

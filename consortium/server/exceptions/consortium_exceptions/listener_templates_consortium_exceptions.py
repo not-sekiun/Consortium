@@ -1,35 +1,51 @@
 """
-Exception hierarchy for listener template framework:
+Exception hierarchy for listener templates errors:
 
-- BaseFrameworkException: Base class for all framework exceptions.
-  - ListenerTemplatesFrameworkException: General error occurred in the listener
-  templates framework.
-    - ListenerTemplateConfigurationError: Error during listener template configuration.
-      - ListenerTemplateConfigurationParameterError: Error with a listener template
-      parameter.
-        - ListenerTemplateConfigurationParameterTypeError: Invalid type for a listener
-        template parameter.
-        - RequiredListenerTemplateConfigurationParameterNotDeclaredError: Required
-        parameter not declared in listener template.
-      - EmptyListenerTemplateNameError: Listener template name is an empty string.
-      - DuplicateListenerTemplateOptionNameError: Duplicate option name in listener
-      template configuration.
-    - ListenerTemplateOptionError: Error related to a listener template option.
-      - ListenerTemplateOptionNotFoundError: Specified option not found in listener
-      template.
-      - ListenerTemplateOptionValueError: Invalid value provided for a listener
-      template option.
+- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
+    - [`ListenerTemplatesError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplatesError]
+        - [`ListenerTemplatesFrameworkError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplatesFrameworkError]
+            - [`ListenerTemplateConfigurationError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateConfigurationError]
+                - [`InvalidListenerTemplateConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidListenerTemplateConfigurationParameterTypeError]
+                - [`MissingListenerTemplateConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.MissingListenerTemplateConfigurationParameterError]
+                - [`EmptyListenerTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.EmptyListenerTemplateLabelError]
+                - [`DuplicateListenerTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.DuplicateListenerTemplateLabelError]
+                - [`InvalidListenerTemplateVersionError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidListenerTemplateVersionError]
+                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
+                - [`InvalidListenerTemplateDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidListenerTemplateDependencyVersionSpecifierError]
+                - [`DuplicateListenerTemplateOptionNameError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.DuplicateListenerTemplateOptionNameError]
+            - [`ListenerTemplateOptionError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateOptionError]
+                - [`ListenerTemplateOptionNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateOptionNotFoundError]
+                - [`ListenerTemplateOptionValueValidationError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateOptionValueValidationError]
+                - [`MissingRequiredListenerTemplateOptionError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.MissingRequiredListenerTemplateOptionError]
+        - [`ListenerTemplatesServiceError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplatesServiceError]
+            - [`ListenerTemplateNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateNotFoundError]
+                - [`ListenerTemplateIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateIDNotFoundError]
+                - [`ListenerTemplateLabelNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateLabelNotFoundError]
 """
 
 from typing import Any
 
-import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
+from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
+    BaseConsortiumError,
+)
+from consortium.server.exceptions.framework_exceptions import (
+    components_framework_exceptions as comp_excs,
 )
 
 
-class ListenerTemplatesFrameworkError(BaseFrameworkException):
+class ListenerTemplatesError(BaseConsortiumError):
+    """
+    Base exception for all listener templates related errors.
+    """
+
+    code = "LISTENER_TEMPLATES_ERROR"
+
+
+class ListenerTemplatesFrameworkError(ListenerTemplatesError):
+    """
+    Base exception for all listener templates framework errors.
+    """
+
     code = "LISTENER_TEMPLATES_FRAMEWORK_ERROR"
 
 
@@ -246,4 +262,58 @@ class MissingRequiredListenerTemplateOptionError(
                 f"'{listener_template_str}'. The required option '{option_name}' was not "
                 f"provided."
             ),
+        )
+
+
+class ListenerTemplatesServiceError(ListenerTemplatesError):
+    """
+    Base exception for all listener templates service errors.
+    """
+
+    code = "LISTENER_TEMPLATES_SERVICE_ERROR"
+
+
+class ListenerTemplateNotFoundError(ListenerTemplatesServiceError):
+    """
+    Raised when the requested listener template was not found in the listener templates
+    service.
+    """
+
+    code = "LISTENER_TEMPLATE_NOT_FOUND_ERROR"
+
+
+class ListenerTemplateIDNotFoundError(ListenerTemplateNotFoundError):
+    """
+    Raised when the requested listener template with the provided listener template ID
+    was not found in the listener templates service.
+    """
+
+    code = "LISTENER_TEMPLATE_ID_NOT_FOUND_ERROR"
+
+    def __init__(self, listener_template_id: str):
+        super().__init__(
+            message=(
+                f"Failed to find the requested listener template. No listener template "
+                f"was found with the provided listener template ID "
+                f"'{listener_template_id}'."
+            ),
+            detail={"listener_template_id": listener_template_id},
+        )
+
+
+class ListenerTemplateLabelNotFoundError(ListenerTemplateNotFoundError):
+    """
+    Raised when the requested listener template with the provided label was not found
+    in the listener templates service.
+    """
+
+    code = "LISTENER_TEMPLATE_LABEL_NOT_FOUND_ERROR"
+
+    def __init__(self, label: str):
+        super().__init__(
+            message=(
+                f"Failed to find the requested listener template. No listener template "
+                f"was found with the provided label '{label}'."
+            ),
+            detail={"label": label},
         )

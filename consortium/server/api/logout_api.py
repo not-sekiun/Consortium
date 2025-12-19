@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+import consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions import (
     user_accounts_api_exceptions as user_accounts_api_excs,
@@ -12,9 +13,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
 )
-from consortium.server.exceptions.service_exceptions import (
-    user_accounts_service_exceptions as user_accounts_svc_excs,
-    users_service_exceptions as users_svc_excs,
+from consortium.server.exceptions.consortium_exceptions import (
+    users_consortium_exceptions as users_consortium_excs,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.objects.user_objects import User
@@ -34,8 +34,8 @@ router = APIRouter(
     tags=["Logout API"],
 )
 
-users_service = server_singletons.users_service
-user_accounts_service = server_singletons.user_accounts_service
+_users_service = server_singletons.users_service
+_user_accounts_service = server_singletons.user_accounts_service
 
 _user_account_not_found_error = user_accounts_api_excs.UserAccountNotFoundError(
     user_account_id="<user_account_id>"
@@ -47,7 +47,7 @@ _user_not_found_error = users_api_excs.UserNotFoundError(user_id="<user_id>")
 async def logout_from_server(
     user: Annotated[User, Depends(get_current_user)],
 ) -> SuccessResponseModel:
-    users_service.logout_user_by_user_id(user_id=user.user_id)
+    _users_service.logout_user_by_user_id(user_id=user.user_id)
     return SuccessResponseModel()
 
 
@@ -68,17 +68,17 @@ async def logout_user_account_by_user_account_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        user_accounts_service.get_user_account_by_user_account_id(
+        _user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=user_account_id
         )
-    except user_accounts_svc_excs.UserAccountIDNotFoundError:
+    except consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountIDNotFoundError:
         raise user_accounts_api_excs.UserAccountNotFoundError(
             user_account_id=user_account_id
         ) from None
 
-    for user in users_service.get_all_users():
+    for user in _users_service.get_all_users():
         if str(user.user_account.user_account_id) == user_account_id:
-            users_service.logout_user_by_user_id(user_id=user.user_id)
+            _users_service.logout_user_by_user_id(user_id=user.user_id)
 
     return SuccessResponseModel()
 
@@ -98,8 +98,8 @@ async def logout_user_by_user_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        users_service.logout_user_by_user_id(user_id=user_id)
-    except users_svc_excs.UserIDNotFoundError:
+        _users_service.logout_user_by_user_id(user_id=user_id)
+    except users_consortium_excs.UserIDNotFoundError:
         raise users_api_excs.UserNotFoundError(user_id=user_id) from None
 
     return SuccessResponseModel()

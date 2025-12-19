@@ -1,7 +1,7 @@
 import pathlib
 
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
-from consortium.server.exceptions.framework_exceptions.listener_templates_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions import (
     ListenerTemplatesFrameworkError,
 )
 from consortium.server.objects.c2_profile_objects import ListenerProfile

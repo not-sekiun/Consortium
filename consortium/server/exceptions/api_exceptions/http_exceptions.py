@@ -3,7 +3,7 @@ HTTP related errors that are not specific to any api endpoint. These errors are 
 internally by the FastAPI framework and are not raised by the application code. They
 are included here to provide additional data for preprocessing in the custom defined
 server exception handlers at server_exception_handlers.py.
-- BaseAPIException: Base class for all API exceptions.
+- BaseAPIError: Base class for all API exceptions.
  - HTTPError: Generic HTTP error.
    - UnauthorizedError: User not authorized to access resource (401 Unauthorized).
    - ForbiddenError: User does not have permission to access resource (403 Forbidden).
@@ -23,11 +23,11 @@ from typing import Any
 from pydantic import BaseModel, create_model
 
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
-    BaseAPIException,
+    BaseAPIError,
 )
 
 
-class HTTPError(BaseAPIException):
+class HTTPError(BaseAPIError):
     status_code = 500
     code = "HTTP_ERROR"
 

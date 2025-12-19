@@ -9,7 +9,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 T = TypeVar("T")
 
 
-class BaseAPIException(Exception):
+class BaseAPIError(Exception):
     status_code: int
     code: str
 
@@ -104,7 +104,7 @@ class BaseAPIException(Exception):
     def from_consortium_exception(
         cls,
         consortium_exception: BaseConsortiumError,
-    ) -> BaseAPIException:
+    ) -> BaseAPIError:
         api_exception = cls(
             message=consortium_exception.message,
             detail=consortium_exception.detail,

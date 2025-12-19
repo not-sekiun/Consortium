@@ -1,7 +1,7 @@
 from loguru import logger
 
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
-from consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions import (
     ListenerTemplateIDNotFoundError,
     ListenerTemplateLabelNotFoundError,
 )

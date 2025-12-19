@@ -10,7 +10,7 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.api_exceptions.login_api_exceptions import (
     AlreadyLoggedInError,
 )
-from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions import (
     UserAccountAuthenticationError,
 )
 from consortium.server.models.user_models import JSONWebTokenModel

@@ -1,7 +1,7 @@
 """
 Exception hierarchy for the REST API endpoint at /api/listeners.
 
-- BaseAPIException: Base class for all API-related exceptions.
+- BaseAPIError: Base class for all API-related exceptions.
  - HTTPError: Base class for all HTTP-related exceptions.
    - NotFoundError: Raised when a requested resource is not found.
      - ListenerNotFoundError: Raised when a requested listener is not found.

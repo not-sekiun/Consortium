@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
-    BaseAPIException,
+    BaseAPIError,
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
@@ -71,12 +71,12 @@ def register_server_exception_handlers(app: FastAPI) -> None:
         )
 
     # All the custom exceptions that contain the error data to return to the client
-    # inherit from BaseAPIException, so we can use this exception handler to handle all
+    # inherit from BaseAPIError, so we can use this exception handler to handle all
     # of them at once
-    @app.exception_handler(BaseAPIException)
+    @app.exception_handler(BaseAPIError)
     async def generic_error_exception_handler(
         request: Request,
-        exc: BaseAPIException,
+        exc: BaseAPIError,
     ) -> JSONResponse | Response:
         # Handle the special case of errors that arise on the /api/login endpoint. Any
         # error that arises on the /api/login endpoint is disguised as a 401

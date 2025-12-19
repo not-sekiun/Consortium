@@ -13,11 +13,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
-from consortium.server.exceptions.framework_exceptions import (
-    listener_templates_framework_exceptions as framework_excs,
-)
-from consortium.server.exceptions.service_exceptions import (
-    listener_templates_service_exceptions as svc_excs,
+from consortium.server.exceptions.consortium_exceptions import (
+    listener_templates_consortium_exceptions as consortium_excs,
 )
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.models.listener_template_models import ListenerTemplateModel
@@ -41,14 +38,14 @@ _listeners_service = server_singletons.listeners_service
 
 _listener_template_not_found_error = (
     api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
-        consortium_exception=svc_excs.ListenerTemplateIDNotFoundError(
+        consortium_exception=consortium_excs.ListenerTemplateIDNotFoundError(
             listener_template_id="<listener_template_id>"
         )
     )
 )
 _listener_template_option_value_validation_error = (
     api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
-        consortium_exception=framework_excs.ListenerTemplateOptionValueValidationError(
+        consortium_exception=consortium_excs.ListenerTemplateOptionValueValidationError(
             listener_template_str="<listener_template_str>",
             option_name="<option_str>",
             option_value="<option_value>",
@@ -58,14 +55,14 @@ _listener_template_option_value_validation_error = (
 )
 _listener_template_option_not_found_error = (
     api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
-        consortium_exception=framework_excs.ListenerTemplateOptionNotFoundError(
+        consortium_exception=consortium_excs.ListenerTemplateOptionNotFoundError(
             listener_template_str="<listener_template>", option_name="<option_str>"
         )
     )
 )
 _missing_required_listener_template_option_error = (
     api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
-        consortium_exception=framework_excs.MissingRequiredListenerTemplateOptionError(
+        consortium_exception=consortium_excs.MissingRequiredListenerTemplateOptionError(
             listener_template_str="<listener_template>", option_name="<option_str>"
         )
     )
@@ -99,19 +96,19 @@ async def create_listener_through_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
             parameters=options,
         )
-    except svc_excs.ListenerTemplateNotFoundError as exc:
+    except consortium_excs.ListenerTemplateNotFoundError as exc:
         raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.ListenerTemplateOptionNotFoundError as exc:
+    except consortium_excs.ListenerTemplateOptionNotFoundError as exc:
         raise api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.ListenerTemplateOptionValueValidationError as exc:
+    except consortium_excs.ListenerTemplateOptionValueValidationError as exc:
         raise api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.MissingRequiredListenerTemplateOptionError as exc:
+    except consortium_excs.MissingRequiredListenerTemplateOptionError as exc:
         raise api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -160,7 +157,7 @@ def get_listener_template_by_listener_template_id(
                 listener_template_id=listener_template_id,
             )
         )
-    except svc_excs.ListenerTemplateNotFoundError as exc:
+    except consortium_excs.ListenerTemplateNotFoundError as exc:
         raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None

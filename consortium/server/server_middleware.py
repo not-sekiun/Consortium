@@ -12,7 +12,7 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerError,
     ServiceUnavailableError,
 )
-from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions import (
     UserAccessTokenNotFoundError,
 )
 from consortium.server.objects.server_objects import ServerStatus
