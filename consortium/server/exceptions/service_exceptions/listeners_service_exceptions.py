@@ -28,8 +28,6 @@ Exception hierarchy for the listeners service:
         a listener template option.
 """
 
-from typing import Any
-
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
 )
@@ -61,49 +59,49 @@ class ListenerAlreadyExistsError(ListenersServiceError):
         )
 
 
-class ListenerOperationError(ListenersServiceError):
-    code = "LISTENER_OPERATION_ERROR"
-
-    def __init__(self, message: str = "", detail: Any = None):
-        super().__init__(message=message, detail=detail)
-
-
-class ListenerStartError(ListenerOperationError):
-    code = "LISTENER_START_ERROR"
-
-
-class ListenerStopError(ListenerOperationError):
-    code = "LISTENER_STOP_ERROR"
-
-
-class ListenerStateError(ListenersServiceError):
-    code = "LISTENER_STATE_ERROR"
-
-
-class ListenerAlreadyRunningError(ListenerStateError):
-    code = "LISTENER_ALREADY_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        message: str = (
-            "Failed to perform the requested operation on the listener. The listener "
-            "is already running which conflicts with the operation that was requested."
-        ),
-    ):
-        super().__init__(message=message)
-
-
-class ListenerNotRunningError(ListenerStateError):
-    code = "LISTENER_NOT_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        message: str = (
-            "Failed to perform the requested operation on the listener. The listener "
-            "is not running which conflicts with the operation that was requested."
-        ),
-    ):
-        super().__init__(message=message)
+# class ListenerOperationError(ListenersServiceError):
+#     code = "LISTENER_OPERATION_ERROR"
+#
+#     def __init__(self, message: str = "", detail: Any = None):
+#         super().__init__(message=message, detail=detail)
+#
+#
+# class ListenerStartError(ListenerOperationError):
+#     code = "LISTENER_START_ERROR"
+#
+#
+# class ListenerStopError(ListenerOperationError):
+#     code = "LISTENER_STOP_ERROR"
+#
+#
+# class ListenerStateError(ListenersServiceError):
+#     code = "LISTENER_STATE_ERROR"
+#
+#
+# class ListenerAlreadyRunningError(ListenerStateError):
+#     code = "LISTENER_ALREADY_RUNNING_ERROR"
+#
+#     def __init__(
+#         self,
+#         message: str = (
+#             "Failed to perform the requested operation on the listener. The listener "
+#             "is already running which conflicts with the operation that was requested."
+#         ),
+#     ):
+#         super().__init__(message=message)
+#
+#
+# class ListenerNotRunningError(ListenerStateError):
+#     code = "LISTENER_NOT_RUNNING_ERROR"
+#
+#     def __init__(
+#         self,
+#         message: str = (
+#             "Failed to perform the requested operation on the listener. The listener "
+#             "is not running which conflicts with the operation that was requested."
+#         ),
+#     ):
+#         super().__init__(message=message)
 
 
 class ListenerParameterUpdateError(ListenersServiceError):

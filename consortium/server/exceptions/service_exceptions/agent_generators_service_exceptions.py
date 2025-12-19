@@ -10,8 +10,6 @@ service.
       - InvalidAgentGeneratorParameterValueError:
 """
 
-from typing import Any
-
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
 )
@@ -45,51 +43,52 @@ class AgentGeneratorAlreadyExistsError(AgentGeneratorsServiceError):
         )
 
 
-class AgentGeneratorOperationError(AgentGeneratorsServiceError):
-    code = "AGENT_GENERATOR_OPERATION_ERROR"
-
-    def __init__(self, message: str = "", detail: Any = None):
-        super().__init__(message=message, detail=detail)
-
-
-class AgentGeneratorStartError(AgentGeneratorOperationError):
-    code = "AGENT_GENERATOR_START_ERROR"
-
-
-class AgentGeneratorStopError(AgentGeneratorOperationError):
-    code = "AGENT_GENERATOR_STOP_ERROR"
-
-
-class AgentGeneratorStateError(AgentGeneratorsServiceError):
-    code = "AGENT_GENERATOR_STATE_ERROR"
-
-
-class AgentGeneratorAlreadyRunningError(AgentGeneratorStateError):
-    code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        message: str = (
-            "Failed to perform the requested operation on the agent generator. The "
-            "agent generator is already running which conflicts with the operation "
-            "that was requested."
-        ),
-    ):
-        super().__init__(message=message)
-
-
-class AgentGeneratorNotRunningError(AgentGeneratorStateError):
-    code = "AGENT_GENERATOR_NOT_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        message: str = (
-            "Failed to perform the requested operation on the agent generator. The "
-            "agent generator is not running which conflicts with the operation that "
-            "was requested."
-        ),
-    ):
-        super().__init__(message=message)
+#
+# class AgentGeneratorOperationError(AgentGeneratorsServiceError):
+#     code = "AGENT_GENERATOR_OPERATION_ERROR"
+#
+#     def __init__(self, message: str = "", detail: Any = None):
+#         super().__init__(message=message, detail=detail)
+#
+#
+# class AgentGeneratorStartError(AgentGeneratorOperationError):
+#     code = "AGENT_GENERATOR_START_ERROR"
+#
+#
+# class AgentGeneratorStopError(AgentGeneratorOperationError):
+#     code = "AGENT_GENERATOR_STOP_ERROR"
+#
+#
+# class AgentGeneratorStateError(AgentGeneratorsServiceError):
+#     code = "AGENT_GENERATOR_STATE_ERROR"
+#
+#
+# class AgentGeneratorAlreadyRunningError(AgentGeneratorStateError):
+#     code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
+#
+#     def __init__(
+#         self,
+#         message: str = (
+#             "Failed to perform the requested operation on the agent generator. The "
+#             "agent generator is already running which conflicts with the operation "
+#             "that was requested."
+#         ),
+#     ):
+#         super().__init__(message=message)
+#
+#
+# class AgentGeneratorNotRunningError(AgentGeneratorStateError):
+#     code = "AGENT_GENERATOR_NOT_RUNNING_ERROR"
+#
+#     def __init__(
+#         self,
+#         message: str = (
+#             "Failed to perform the requested operation on the agent generator. The "
+#             "agent generator is not running which conflicts with the operation that "
+#             "was requested."
+#         ),
+#     ):
+#         super().__init__(message=message)
 
 
 class AgentGeneratorParameterUpdateError(AgentGeneratorsServiceError):
@@ -128,20 +127,22 @@ class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateErro
         )
 
 
-class AgentGeneratorCreationError(AgentGeneratorsServiceError):
-    code = "AGENT_GENERATOR_CREATION_ERROR"
-
-    def __init__(self, message: str = "", detail: Any = None):
-        super().__init__(message=message, detail=detail)
-
-
-class AgentTemplateOptionNotFoundError(AgentGeneratorCreationError):
-    code = "AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"
-
-
-class AgentTemplateOptionValueValidationError(AgentGeneratorCreationError):
-    code = "AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
-
-
-class MissingRequiredAgentTemplateOptionError(AgentGeneratorCreationError):
-    code = "MISSING_REQUIRED_AGENT_TEMPLATE_OPTION_ERROR"
+#
+#
+# class AgentGeneratorCreationError(AgentGeneratorsServiceError):
+#     code = "AGENT_GENERATOR_CREATION_ERROR"
+#
+#     def __init__(self, message: str = "", detail: Any = None):
+#         super().__init__(message=message, detail=detail)
+#
+#
+# class AgentTemplateOptionNotFoundError(AgentGeneratorCreationError):
+#     code = "AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"
+#
+#
+# class AgentTemplateOptionValueValidationError(AgentGeneratorCreationError):
+#     code = "AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
+#
+#
+# class MissingRequiredAgentTemplateOptionError(AgentGeneratorCreationError):
+#     code = "MISSING_REQUIRED_AGENT_TEMPLATE_OPTION_ERROR"

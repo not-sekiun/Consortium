@@ -1,21 +1,28 @@
-# import copy
 import sys
-from typing import Any
+from typing import Any, TypeVar, get_type_hints
 
-from consortium.framework.options._option_argument_validators import (
-    ArgumentDataTypeCheckParameters,
-    validate_arguments_data_types,
-)
+from pydantic import BaseModel, ValidationError
+
 from consortium.framework.options.option_types import OptionType
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (  # RequiredOptionValueNotSetError,
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     EmptyOptionNameError,
     InvalidDefaultValueError,
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError,
 )
 
+ValueType = TypeVar("ValueType")
 
-class BaseOption:
+
+# Ignore validating the default value type here because each option type will
+# have its own specific validation logic for the default value.
+class _BaseOptionParametersModel(BaseModel):
+    name: str
+    description: str
+    required: bool
+
+
+class BaseOption[ValueType]:
     option_type: OptionType
 
     def __init__(
@@ -23,49 +30,48 @@ class BaseOption:
         name: str,
         description: str = "",
         required: bool = True,
-        default_value: Any | None = None,
+        default_value: ValueType | None = None,
     ):
         # Assign all values to self before performing validation because the validation
         # function might make reference to the provided parameters by accessing them
         # through self.
         self.name = name
-        """The human-readable name of the option. The name cannot be an empty string."""
         self.description = description
-        """A description of the option."""
         self.required = required
-        """
-        Whether the option is required or not. If True, the option must have a value set
-        before it can be retrieved. If False, the option can be retrieved without a
-        value being set.
-        """
         self.default_value = default_value
-        """
-        The default value of the option. If `None`, the option has no default value.
-        """
 
         self._value = None
 
         self._validate_option_configuration()
 
+    def __init_subclass__(cls, *args, **kwargs):
+        # if `option_type` is not set, then it is a programmer fault.
+        assert hasattr(
+            cls,
+            "option_type",
+        ), "The option type must be set for the option to be valid."
+        assert isinstance(cls.option_type, OptionType), (
+            f"The option type must be set to a valid option type for option "
+            f"'{cls.__name__}'."
+        )
+
+        super().__init_subclass__(*args, **kwargs)
+
     def __str__(self) -> str:
-        # try:
-        #     value_display_string = repr(self.get_option_value())
-        # except RequiredOptionValueNotSetError:
-        #     value_display_string = "UNDEFINED"
-        # return f"Option - {self.option_type}: {self.name}"
         return f"{self.name} ({self.option_type})"
 
-    def validate_value(self, value: Any) -> None:
+    def __repr__(self) -> str: ...
+
+    def validate_value(self, value: ValueType) -> None:
         """
         Validate the value of the option.
 
         Args:
-            value (Any): The value to validate.
+            value: The value to validate.
 
         Raises:
             OptionValueValidationError: If the value is invalid.
         """
-        pass
 
     def to_json(self) -> dict[str, Any]:
         """
@@ -83,40 +89,35 @@ class BaseOption:
         }
 
     def _validate_option_arguments(self) -> None:
-        # if `option_type` is not set, then it is a programmer fault.
-        assert hasattr(
-            self,
-            "option_type",
-        ), "The option type must be set for the option to be valid."
-        assert isinstance(self.option_type, OptionType), (
-            f"The option type must be set to a valid option type for option "
-            f"'{self.name}'."
-        )
-
         # We manually check the `self.name` parameter first because every other error
         # message that arises from the validation of the other parameters will reference
         # the option name.
         if not isinstance(self.name, str):
             raise InvalidOptionConfigurationParameterTypeError(
-                option_name=self.name,
+                option_str=self.__class__.__name__,
                 parameter_name="name",
-                expected_parameter_type_string="str",
+                parameter_type="str",
             )
         if not self.name:
             raise EmptyOptionNameError(
                 option_filepath=sys.modules[self.__module__].__file__,
             )
-        validate_arguments_data_types(
-            self.name,
-            ArgumentDataTypeCheckParameters(
-                value=self.description,
-                expected_data_type=str,
-            ),
-            ArgumentDataTypeCheckParameters(
-                value=self.required,
-                expected_data_type=bool,
-            ),
-        )
+
+        try:
+            _BaseOptionParametersModel(
+                name=self.name,
+                description=self.description,
+                required=self.required,
+            )
+        except ValidationError as exc:
+            parameter_name = exc.errors()[0]["loc"][0]
+            raise InvalidOptionConfigurationParameterTypeError(
+                option_str=self.name,
+                parameter_name=parameter_name,
+                parameter_type=str(
+                    get_type_hints(_BaseOptionParametersModel)[parameter_name]
+                ),
+            ) from None
 
     def _validate_option_configuration(self):
         # Validate that all the arguments provided to the option are valid first.

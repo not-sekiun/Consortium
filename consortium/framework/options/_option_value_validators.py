@@ -1,5 +1,6 @@
 import re
 from collections.abc import Callable
+from typing import Any
 
 from consortium.framework.framework_types import Primitive
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
@@ -9,7 +10,7 @@ from consortium.server.exceptions.framework_exceptions.options_framework_excepti
 
 def validate_value_data_type(
     option_name: str,
-    option_value: Primitive,
+    option_value: Any,
     *value_types: type,
 ) -> None:
     if not isinstance(option_value, value_types):

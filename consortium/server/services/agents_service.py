@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -16,6 +17,10 @@ from consortium.server.exceptions.service_exceptions.agents_service_exceptions i
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 class AgentsService:
@@ -32,6 +37,7 @@ class AgentsService:
     def __repr__(self) -> str:
         return "AgentsService()"
 
+    @log_and_propagate_error_on_service_method
     async def register_agent(self, *args, **kwargs) -> Agent:
         agent = Agent(*args, **kwargs)
         self._agents[str(agent.agent_id)] = agent
@@ -45,9 +51,10 @@ class AgentsService:
         self._logger.debug("Created and added agent: {!r}", agent)
         return agent
 
-    async def remove_agent_by_agent_id(self, agent_id: str) -> None:
+    @log_and_propagate_error_on_service_method
+    async def remove_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        del self._agents[agent_id]
+        del self._agents[str(agent.agent_id)]
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_DEREGISTERED,
@@ -57,7 +64,10 @@ class AgentsService:
         self._logger.info("Removed agent: {}", agent)
         self._logger.debug("Removed agent: {!r}", agent)
 
-    def get_agent_by_agent_id(self, agent_id: str) -> Agent:
+    @log_and_propagate_error_on_service_method
+    def get_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> Agent:
+        agent_id = normalize_uuid(value=agent_id)
+
         try:
             agent = self._agents[agent_id]
         except KeyError:
@@ -74,7 +84,10 @@ class AgentsService:
         )
         return all_agents
 
-    def get_all_agent_tasks_by_agent_id(self, agent_id: str) -> list[AgentTaskModel]:
+    @log_and_propagate_error_on_service_method
+    def get_all_agent_tasks_by_agent_id(
+        self, agent_id: str | uuid.UUID
+    ) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         all_tasks = agent.get_all_tasks()
         self._logger.debug(
@@ -84,7 +97,10 @@ class AgentsService:
         )
         return all_tasks
 
-    def get_all_queued_tasks_by_agent_id(self, agent_id: str) -> list[AgentTaskModel]:
+    @log_and_propagate_error_on_service_method
+    def get_all_queued_tasks_by_agent_id(
+        self, agent_id: str | uuid.UUID
+    ) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         queued_tasks = agent.get_all_queued_tasks()
         self._logger.debug(
@@ -94,7 +110,10 @@ class AgentsService:
         )
         return queued_tasks
 
-    def get_all_running_tasks_by_agent_id(self, agent_id: str) -> list[AgentTaskModel]:
+    @log_and_propagate_error_on_service_method
+    def get_all_running_tasks_by_agent_id(
+        self, agent_id: str | uuid.UUID
+    ) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         running_tasks = agent.get_all_running_tasks()
         self._logger.debug(
@@ -104,9 +123,10 @@ class AgentsService:
         )
         return running_tasks
 
+    @log_and_propagate_error_on_service_method
     def get_all_completed_tasks_by_agent_id(
         self,
-        agent_id: str,
+        agent_id: str | uuid.UUID,
     ) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         completed_tasks = agent.get_all_completed_tasks()
@@ -117,10 +137,11 @@ class AgentsService:
         )
         return completed_tasks
 
+    @log_and_propagate_error_on_service_method
     def get_agent_task_by_agent_id_and_task_id(
         self,
-        agent_id: str,
-        task_id: str,
+        agent_id: str | uuid.UUID,
+        task_id: str | uuid.UUID,
     ) -> AgentTaskModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = agent.get_task_by_task_id(task_id=task_id)
@@ -135,11 +156,12 @@ class AgentsService:
         )
         return task
 
+    @log_and_propagate_error_on_service_method
     def get_all_agent_results_by_agent_id(
         self,
-        agent_id: str,
+        agent_id: str | uuid.UUID,
     ) -> list[AgentResultModel]:
-        agent = self.get_agent_by_agent_id(agent_id)
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
         all_results = agent.get_all_results()
         self._logger.debug(
             "Retrieved all agent results from agent {} ({} retrieved)",
@@ -148,11 +170,12 @@ class AgentsService:
         )
         return all_results
 
+    @log_and_propagate_error_on_service_method
     def get_all_successful_agent_results_by_agent_id(
         self,
-        agent_id: str,
+        agent_id: str | uuid.UUID,
     ) -> list[AgentResultModel]:
-        agent = self.get_agent_by_agent_id(agent_id)
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
         successful_results = agent.get_all_successful_results()
         self._logger.debug(
             "Retrieved successful results from agent {} ({} retrieved)",
@@ -161,11 +184,12 @@ class AgentsService:
         )
         return successful_results
 
+    @log_and_propagate_error_on_service_method
     def get_all_failed_agent_results_by_agent_id(
         self,
-        agent_id: str,
+        agent_id: str | uuid.UUID,
     ) -> list[AgentResultModel]:
-        agent = self.get_agent_by_agent_id(agent_id)
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
         failed_results = agent.get_all_failed_results()
         self._logger.debug(
             "Retrieved failed results from agent {} ({} retrieved)",
@@ -174,10 +198,11 @@ class AgentsService:
         )
         return failed_results
 
+    @log_and_propagate_error_on_service_method
     def get_agent_result_by_agent_id_and_result_id(
         self,
-        agent_id: str,
-        result_id: str,
+        agent_id: str | uuid.UUID,
+        result_id: str | uuid.UUID,
     ) -> AgentResultModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         result = agent.get_result_by_result_id(result_id=result_id)
@@ -187,20 +212,11 @@ class AgentsService:
             agent,
         )
         return result
-        # all_results = self.get_all_agent_results_by_agent_id(agent_id)
-        # for result in all_results:
-        #     if str(result.result_id) == result_id:
-        #         self._logger.debug(
-        #             "Retrieved result {!r} from agent with agent ID '{}'",
-        #             result,
-        #             agent_id,
-        #         )
-        #         return result
-        # raise svc_excs.AgentResultNotFoundError(result_id=result_id)
 
+    @log_and_propagate_error_on_service_method
     async def task_agent_by_agent_id(
         self,
-        agent_id: str,
+        agent_id: str | uuid.UUID,
         command: str,
         arguments: dict[str, Any],
     ) -> AgentTaskModel:
@@ -239,7 +255,8 @@ class AgentsService:
         self._logger.debug("Tasked agent {!r} with task {!r}", agent, task)
         return task
 
-    async def check_in_agent_by_agent_id(self, agent_id: str) -> None:
+    @log_and_propagate_error_on_service_method
+    async def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         await self._events_service.trigger_event(
             event=Event(
@@ -250,60 +267,118 @@ class AgentsService:
         agent.datetime_last_checked_in = datetime.now()
         self._logger.debug("Checked in agent {!r}", agent)
 
-    async def update_agent_name_by_agent_id(
+    @log_and_propagate_error_on_service_method
+    async def update_agent_by_agent_id(
         self,
-        agent_id: str,
-        name: str,
-    ) -> None:
+        agent_id: str | uuid.UUID,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> Agent:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        old_name = agent.name
-        agent.name = name
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_UPDATED,
-                data={"agent_id": str(agent.agent_id)},
-            ),
-        )
-        self._logger.info(
-            "Updated agent name for agent {} from '{}' to '{}'",
-            agent,
-            old_name,
-            name,
-        )
-        self._logger.debug(
-            "Updated agent name for agent {!r} from '{}' to '{}'",
-            agent,
-            old_name,
-            name,
-        )
 
-    async def update_agent_description_by_agent_id(
-        self,
-        agent_id: str,
-        description: str,
-    ) -> None:
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        old_description = agent.description
-        agent.description = description
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_UPDATED,
-                data={"agent_id": str(agent.agent_id)},
-            ),
-        )
-        self._logger.info(
-            "Updated agent description for agent {} from '{}' to '{}'.",
-            agent,
-            old_description,
-            description,
-        )
-        self._logger.debug(
-            "Updated agent description for agent {!r} from '{}' to {}.",
-            agent,
-            old_description,
-            description,
-        )
+        updated = {}
 
+        if name is not None:
+            old_name = agent.name
+            agent.name = name
+            self._logger.info(
+                "Updated agent {} name from '{}' to '{}'",
+                agent,
+                old_name,
+                agent.name,
+            )
+            self._logger.debug("- {!r}", agent)
+            updated["name"] = {
+                "old": old_name,
+                "new": agent.name,
+            }
+
+        if description is not None:
+            old_description = agent.description
+            agent.description = description
+            self._logger.debug(
+                "Updated agent {} description from '{}' to '{}'",
+                agent,
+                old_description,
+                agent.description,
+            )
+            self._logger.debug("- {!r}", agent)
+            updated["description"] = {
+                "old": old_description,
+                "new": agent.description,
+            }
+
+        if updated:
+            await self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_UPDATED,
+                    data={"agent_id": str(agent.agent_id)},
+                ),
+            )
+        else:
+            self._logger.debug(
+                "No updates applied to agent {} as no changes were detected even "
+                "though the update method was called.",
+                agent,
+            )
+
+        return agent
+
+    # async def update_agent_name_by_agent_id(
+    #     self,
+    #     agent_id: str,
+    #     name: str,
+    # ) -> None:
+    #     agent = self.get_agent_by_agent_id(agent_id=agent_id)
+    #     old_name = agent.name
+    #     agent.name = name
+    #     await self._events_service.trigger_event(
+    #         event=Event(
+    #             event_type=EventType.AGENT_UPDATED,
+    #             data={"agent_id": str(agent.agent_id)},
+    #         ),
+    #     )
+    #     self._logger.info(
+    #         "Updated agent name for agent {} from '{}' to '{}'",
+    #         agent,
+    #         old_name,
+    #         name,
+    #     )
+    #     self._logger.debug(
+    #         "Updated agent name for agent {!r} from '{}' to '{}'",
+    #         agent,
+    #         old_name,
+    #         name,
+    #     )
+    #
+    # async def update_agent_description_by_agent_id(
+    #     self,
+    #     agent_id: str,
+    #     description: str,
+    # ) -> None:
+    #     agent = self.get_agent_by_agent_id(agent_id=agent_id)
+    #     old_description = agent.description
+    #     agent.description = description
+    #     await self._events_service.trigger_event(
+    #         event=Event(
+    #             event_type=EventType.AGENT_UPDATED,
+    #             data={"agent_id": str(agent.agent_id)},
+    #         ),
+    #     )
+    #     self._logger.info(
+    #         "Updated agent description for agent {} from '{}' to '{}'.",
+    #         agent,
+    #         old_description,
+    #         description,
+    #     )
+    #     self._logger.debug(
+    #         "Updated agent description for agent {!r} from '{}' to {}.",
+    #         agent,
+    #         old_description,
+    #         description,
+    #     )
+
+    @log_and_propagate_error_on_service_method
     def delete_queued_agent_task_by_agent_id_and_task_id(
         self,
         agent_id: str,

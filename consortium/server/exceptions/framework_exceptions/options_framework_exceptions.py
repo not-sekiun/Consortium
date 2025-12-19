@@ -84,24 +84,22 @@ class InvalidOptionConfigurationParameterTypeError(OptionConfigurationError):
 
     def __init__(
         self,
-        option_name: str,
+        option_str: str,
         parameter_name: str | None = None,
-        expected_parameter_type_string: str | None = None,
-        actual_parameter_type_string: str | None = None,
-        error_message: str = "",
+        parameter_type: str | None = None,
+        error_message: str | None = None,
     ):
-        if not error_message:
+        if error_message is None:
             super().__init__(
                 message=(
-                    f"Failed to configure the option '{option_name}'. The parameter "
+                    f"Failed to configure the option '{option_str}'. The parameter "
                     f"'{parameter_name}' passed to the option must be of type "
-                    f"'{expected_parameter_type_string}' but was of type "
-                    f"'{actual_parameter_type_string}'."
+                    f"'{parameter_type}'."
                 ),
             )
         else:
             super().__init__(
-                f"Failed to configure the option '{option_name}'. {error_message}",
+                f"Failed to configure the option '{option_str}'. {error_message}",
             )
 
 

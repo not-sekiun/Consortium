@@ -1,4 +1,5 @@
 import copy
+import uuid
 from typing import Any
 
 from loguru import logger
@@ -7,19 +8,23 @@ from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.framework_exceptions import (
-    agent_generators_framework_exceptions as agent_generators_framework_excs,
-    agent_templates_framework_exceptions as agent_templates_framework_excs,
+    agent_generators_framework_exceptions as framework_excs,
+    # agent_templates_framework_exceptions as agent_templates_framework_excs,
 )
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
 from consortium.server.exceptions.service_exceptions import (
-    agent_generators_service_exceptions as agent_generators_svc_excs,
+    agent_generators_service_exceptions as svc_excs,
 )
 from consortium.server.objects.agent_generator_objects import AgentGeneratorState
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.events_service import EventsService
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 class AgentGeneratorsService:
@@ -46,14 +51,16 @@ class AgentGeneratorsService:
             f")"
         )
 
+    @log_and_propagate_error_on_service_method
     def get_agent_generator_by_agent_generator_id(
         self,
-        agent_generator_id: str,
+        agent_generator_id: str | uuid.UUID,
     ) -> BaseAgentGenerator:
+        agent_generator_id = normalize_uuid(agent_generator_id)
         try:
             agent_generator = self._agent_generators[agent_generator_id]
         except KeyError:
-            raise agent_generators_svc_excs.AgentGeneratorNotFoundError(
+            raise svc_excs.AgentGeneratorNotFoundError(
                 agent_generator_id=agent_generator_id
             ) from None
 
@@ -71,6 +78,7 @@ class AgentGeneratorsService:
         )
         return all_agent_generators
 
+    @log_and_propagate_error_on_service_method
     async def create_agent_generator_from_agent_template_by_agent_template_id(
         self,
         agent_template_id: str,
@@ -84,31 +92,36 @@ class AgentGeneratorsService:
             )
         )
 
-        try:
-            agent_generator = agent_template.create_agent_generator(
-                name=name,
-                description=description,
-                parameters=parameters,
-            )
-        except agent_templates_framework_excs.AgentTemplateOptionNotFoundError as exc:
-            raise agent_generators_svc_excs.AgentTemplateOptionNotFoundError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except (
-            agent_templates_framework_excs.AgentTemplateOptionValueValidationError
-        ) as exc:
-            raise agent_generators_svc_excs.AgentTemplateOptionValueValidationError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except (
-            agent_templates_framework_excs.MissingRequiredAgentTemplateOptionError
-        ) as exc:
-            raise agent_generators_svc_excs.MissingRequiredAgentTemplateOptionError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
+        agent_generator = agent_template.create_agent_generator(
+            name=name,
+            description=description,
+            parameters=parameters,
+        )
+        # try:
+        #     agent_generator = agent_template.create_agent_generator(
+        #         name=name,
+        #         description=description,
+        #         parameters=parameters,
+        #     )
+        # except agent_templates_framework_excs.AgentTemplateOptionNotFoundError as exc:
+        #     raise svc_excs.AgentTemplateOptionNotFoundError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except (
+        #     agent_templates_framework_excs.AgentTemplateOptionValueValidationError
+        # ) as exc:
+        #     raise svc_excs.AgentTemplateOptionValueValidationError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except (
+        #     agent_templates_framework_excs.MissingRequiredAgentTemplateOptionError
+        # ) as exc:
+        #     raise svc_excs.MissingRequiredAgentTemplateOptionError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
 
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
@@ -124,14 +137,15 @@ class AgentGeneratorsService:
             agent_generator,
         )
         self._logger.debug(
-            "Created agent generator: {!r}",
+            "- {!r}",
             agent_generator,
         )
         return agent_generator
 
+    @log_and_propagate_error_on_service_method
     async def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
         if str(agent_generator.agent_generator_id) in self._agent_generators:
-            raise agent_generators_svc_excs.AgentGeneratorAlreadyExistsError(
+            raise svc_excs.AgentGeneratorAlreadyExistsError(
                 agent_generator_id=str(agent_generator.agent_generator_id),
             )
 
@@ -149,21 +163,24 @@ class AgentGeneratorsService:
             agent_generator,
         )
         self._logger.debug(
-            "Added agent generator: {!r}",
+            "- {!r}",
             agent_generator,
         )
 
+    @log_and_propagate_error_on_service_method
     async def remove_agent_generator_by_agent_generator_id(
         self,
-        agent_generator_id: str,
+        agent_generator_id: str | uuid.UUID,
     ) -> None:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
         if agent_generator.status.state == AgentGeneratorState.RUNNING:
-            raise agent_generators_svc_excs.AgentGeneratorAlreadyRunningError
+            raise framework_excs.AgentGeneratorAlreadyRunningError
 
-        removed_agent_generator = self._agent_generators.pop(agent_generator_id)
+        removed_agent_generator = self._agent_generators.pop(
+            agent_generator.agent_generator_id
+        )
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_REMOVED,
@@ -174,149 +191,179 @@ class AgentGeneratorsService:
                 },
             ),
         )
-        self._logger.info(
-            "Removed agent generator: {}",
-            removed_agent_generator,
-        )
-        self._logger.debug(
-            "Removed agent generator: {!r}",
-            removed_agent_generator,
-        )
+        self._logger.info("Removed agent generator: {}", removed_agent_generator)
+        self._logger.debug("- {!r}", removed_agent_generator)
 
-    async def update_agent_generator_name_by_agent_generator_id(
+    @log_and_propagate_error_on_service_method
+    async def update_agent_generator_by_agent_generator_id(
         self,
-        agent_generator_id: str,
-        name: str,
+        agent_generator_id: str | uuid.UUID,
+        name: str | None = None,
+        description: str | None = None,
+        parameters: dict[str, Any] | None = None,
     ) -> BaseAgentGenerator:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
-        )
-        old_name = agent_generator.name
-        agent_generator.name = name
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_GENERATOR_UPDATED,
-                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
-            ),
-        )
-        self._logger.info(
-            "Updated name for agent generator {}: '{}' -> '{}'",
-            agent_generator,
-            old_name,
-            name,
-        )
-        return agent_generator
-
-    async def update_agent_generator_description_by_agent_generator_id(
-        self,
-        agent_generator_id: str,
-        description: str,
-    ) -> BaseAgentGenerator:
-        agent_generator = self.get_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
-        )
-        old_description = agent_generator.description
-        agent_generator.description = description
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_GENERATOR_UPDATED,
-                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
-            ),
-        )
-        self._logger.info(
-            "Updated description for agent generator {}: '{}' -> '{}'",
-            agent_generator,
-            old_description,
-            description,
-        )
-        return agent_generator
-
-    async def update_agent_generator_parameters_by_agent_generator_id(
-        self,
-        agent_generator_id: str,
-        parameters: dict[str, Any],
-    ) -> BaseAgentGenerator:
-        agent_generator = self.get_agent_generator_by_agent_generator_id(
-            agent_generator_id=agent_generator_id,
+            agent_generator_id=agent_generator_id
         )
 
-        if agent_generator.status.state == AgentGeneratorState.RUNNING:
-            raise agent_generators_svc_excs.AgentGeneratorAlreadyRunningError
+        # Changed dictionary is used to track what attributes were updated. This data
+        # is sent as part of the `AGENT_GENERATOR_UPDATED` event.
+        updated = {}
 
-        for parameter_name, parameter_value in agent_generator.parameters.items():
-            if parameter_name not in parameters:
-                # `parameter_value` could be a list or a dict, so we need to perform
-                # a deep copy to prevent reference sharing.
-                parameters[parameter_name] = copy.deepcopy(parameter_value)
+        # Update parameters first before updating name and description. This is because
+        # updating parameters may also update the name (if the name is derived from
+        # parameters). But if the name is provided explicitly, it will overwrite any
+        # name derived from parameters. Also, if parameter validation raises an error
+        # it prevents any other updates from being applied maintaining atomicity.
+        if parameters is not None:
+            # Hold a list of fields that are being updated for logging purposes later
+            # on. This makes a copy of the parameter keys being updated.
+            updated_fields = list(parameters)
 
-        for parameter_name, parameter_value in parameters.items():
-            if parameter_name not in agent_generator.creating_agent_template.options:
-                raise agent_generators_svc_excs.InvalidAgentGeneratorParameterNameError(
-                    agent_generator=str(agent_generator),
-                    parameter_name=parameter_name,
-                )
-            try:
-                agent_generator.creating_agent_template.options[
+            # Cannot update running agent generators because the parameters change wont be
+            # reflected in the agent generator.
+            if agent_generator.status.state == AgentGeneratorState.RUNNING:
+                raise framework_excs.AgentGeneratorAlreadyRunningError
+
+            # Fill in any missing parameters with values from the existing set of
+            # parameters.
+            for parameter_name, parameter_value in agent_generator.parameters.items():
+                if parameter_name not in parameters:
+                    # `parameter_value` could be a list or a dict, so we need to perform
+                    # a deep copy to prevent reference sharing.
+                    parameters[parameter_name] = copy.deepcopy(parameter_value)
+
+            # Perform validation of `parameters` if they are being updated.
+            for parameter_name, parameter_value in parameters.items():
+                if (
                     parameter_name
-                ].validate_value(value=parameter_value)
-            except OptionValueValidationError as exc:
-                raise agent_generators_svc_excs.InvalidAgentGeneratorParameterValueError(
-                    agent_generator_str=str(agent_generator),
-                    parameter_name=parameter_name,
-                    parameter_value=str(parameter_value),
-                    error_message=str(exc),
-                ) from None
-            parameters[parameter_name] = parameter_value
+                    not in agent_generator.creating_agent_template.options
+                ):
+                    raise svc_excs.InvalidAgentGeneratorParameterNameError(
+                        agent_generator=str(agent_generator),
+                        parameter_name=parameter_name,
+                    )
+                try:
+                    agent_generator.creating_agent_template.options[
+                        parameter_name
+                    ].validate_value(value=parameter_value)
+                except OptionValueValidationError as exc:
+                    raise svc_excs.InvalidAgentGeneratorParameterValueError(
+                        agent_generator_str=str(agent_generator),
+                        parameter_name=parameter_name,
+                        parameter_value=str(parameter_value),
+                        error_message=str(exc),
+                    ) from None
+                parameters[parameter_name] = parameter_value
 
-        # Create a temporary agent generator whose attributes we copy over to the
-        # existing agent generator. This allows us to perform the name and
-        # endpoint resolution required to update the attribute without
-        # inadvertently overwriting any existing state within the existing
-        # agent generator.
-        temporary_agent_generator = (
-            agent_generator.creating_agent_template.create_agent_generator(
-                parameters=parameters,
+            if parameters == agent_generator.parameters:
+                # No parameter changes so skip updating.
+                pass
+            else:
+                # Create a temporary agent generator whose attributes we copy over to the
+                # existing agent generator. This allows us to perform the `name`
+                # resolution required to update the attribute without
+                # inadvertently overwriting any existing state within the existing
+                # agent generator.
+                temp_agent_generator = (
+                    agent_generator.creating_agent_template.create_agent_generator(
+                        parameters=parameters,
+                    )
+                )
+                agent_generator.name = temp_agent_generator.name
+                old_parameters = copy.deepcopy(agent_generator.parameters)
+                agent_generator.parameters = copy.deepcopy(
+                    temp_agent_generator.parameters
+                )
+                updated["parameters"] = {
+                    "old": old_parameters,  # `old_parameters` is already a deep copy
+                    "new": copy.deepcopy(agent_generator.parameters),
+                }
+                self._logger.info(
+                    "Updated parameters for agent generator {}.",
+                    agent_generator,
+                )
+                for parameter_name in updated_fields:
+                    self._logger.info(
+                        "- Updated parameter '{}' from {!r} to {!r}",
+                        parameter_name,
+                        old_parameters[parameter_name],
+                        agent_generator.parameters[parameter_name],
+                    )
+                self._logger.debug("- {!r}", agent_generator)
+
+        if name is not None and name != agent_generator.name:
+            old_name = agent_generator.name
+            agent_generator.name = name
+            self._logger.info(
+                "Updated name for agent generator {} from '{}' to '{}'.",
+                agent_generator,
+                old_name,
+                name,
             )
-        )
-        agent_generator.name = temporary_agent_generator.name
-        agent_generator.parameters = copy.deepcopy(temporary_agent_generator.parameters)
+            self._logger.debug("- {!r}", agent_generator)
+            updated["name"] = {
+                "old": old_name,
+                "new": name,
+            }
 
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.LISTENER_UPDATED,
-                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
-            ),
-        )
-        self._logger.info(
-            "Updated parameters for agent generators {} to {}",
-            agent_generator,
-            parameters,
-        )
-        self._logger.debug(
-            "Updated parameters for agent generators {!r} to {}",
-            agent_generator,
-            parameters,
-        )
+        if description is not None and description != agent_generator.description:
+            old_description = agent_generator.description
+            agent_generator.description = description
+            self._logger.info(
+                "Updated description for agent generator {} from '{}' to '{}'.",
+                agent_generator,
+                old_description,
+                description,
+            )
+            self._logger.debug("- {!r}", agent_generator)
+            updated["description"] = {
+                "old": old_description,
+                "new": description,
+            }
+
+        # Only fire events for meaningful changes, skip firing if a no-op update
+        # occurred.
+        if updated:
+            await self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_GENERATOR_UPDATED,
+                    data={
+                        "agent_generator_id": str(agent_generator.agent_generator_id),
+                        "updated": updated,
+                    },
+                ),
+            )
+        else:
+            self._logger.debug(
+                "No updates applied to agent generator {!r} as no changes were detected "
+                "even though the update method was called.",
+                agent_generator,
+            )
+
         return agent_generator
 
+    @log_and_propagate_error_on_service_method
     async def start_agent_generator_by_agent_generator_id(
         self,
-        agent_generator_id: str,
+        agent_generator_id: str | uuid.UUID,
     ) -> None:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
-        try:
-            await agent_generator.start()
-        except agent_generators_framework_excs.AgentGeneratorStartError as exc:
-            raise agent_generators_svc_excs.AgentGeneratorStartError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except agent_generators_framework_excs.AgentGeneratorAlreadyRunningError as exc:
-            raise agent_generators_svc_excs.AgentGeneratorAlreadyRunningError(
-                message=exc.message,
-            ) from None
+
+        await agent_generator.start()
+        # try:
+        #     await agent_generator.start()
+        # except framework_excs.AgentGeneratorStartError as exc:
+        #     raise svc_excs.AgentGeneratorStartError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except framework_excs.AgentGeneratorAlreadyRunningError as exc:
+        #     raise svc_excs.AgentGeneratorAlreadyRunningError(
+        #         message=exc.message,
+        #     ) from None
 
         await self._events_service.trigger_event(
             event=Event(
@@ -324,25 +371,30 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
+        self._logger.info("Started agent generator: {}", agent_generator)
+        self._logger.debug("- {!r}", agent_generator)
 
+    @log_and_propagate_error_on_service_method
     async def stop_agent_generator_by_agent_generator_id(
         self,
-        agent_generator_id: str,
+        agent_generator_id: str | uuid.UUID,
     ) -> None:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
-        try:
-            await agent_generator.stop()
-        except agent_generators_framework_excs.AgentGeneratorStopError as exc:
-            raise agent_generators_svc_excs.AgentGeneratorStopError(
-                message=exc.message,
-                detail=exc.detail,
-            ) from None
-        except agent_generators_framework_excs.AgentGeneratorNotRunningError as exc:
-            raise agent_generators_svc_excs.AgentGeneratorNotRunningError(
-                message=exc.message
-            ) from None
+
+        await agent_generator.stop()
+        # try:
+        #     await agent_generator.stop()
+        # except framework_excs.AgentGeneratorStopError as exc:
+        #     raise svc_excs.AgentGeneratorStopError(
+        #         message=exc.message,
+        #         detail=exc.detail,
+        #     ) from None
+        # except framework_excs.AgentGeneratorNotRunningError as exc:
+        #     raise svc_excs.AgentGeneratorNotRunningError(
+        #         message=exc.message
+        #     ) from None
 
         await self._events_service.trigger_event(
             event=Event(
@@ -350,20 +402,25 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
+        self._logger.info("Stopped agent generator: {}", agent_generator)
+        self._logger.debug("- {!r}", agent_generator)
 
+    @log_and_propagate_error_on_service_method
     async def cancel_agent_generator_by_agent_generator_id(
         self,
-        agent_generator_id: str,
+        agent_generator_id: str | uuid.UUID,
     ) -> None:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
-        try:
-            await agent_generator.cancel()
-        except agent_generators_framework_excs.AgentGeneratorNotRunningError as exc:
-            raise agent_generators_svc_excs.AgentGeneratorNotRunningError(
-                message=exc.message
-            ) from None
+
+        await agent_generator.cancel()
+        # try:
+        #     await agent_generator.cancel()
+        # except framework_excs.AgentGeneratorNotRunningError as exc:
+        #     raise svc_excs.AgentGeneratorNotRunningError(
+        #         message=exc.message
+        #     ) from None
 
         await self._events_service.trigger_event(
             event=Event(
@@ -371,3 +428,5 @@ class AgentGeneratorsService:
                 data={"agent_generator_id": str(agent_generator.agent_generator_id)},
             ),
         )
+        self._logger.info("Cancelled agent generator: {}", agent_generator)
+        self._logger.debug("- {!r}", agent_generator)

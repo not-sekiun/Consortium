@@ -41,10 +41,11 @@ from consortium.server.models.agent_models import (
     AgentTaskState,
 )
 from consortium.server.server_logging import LoggerType
+from consortium.server.utils import normalize_uuid
 
 
 class _AgentParametersModel(BaseModel):
-    payload_id: str | None = (None,)
+    payload_id: str | uuid.UUID | None
     agent_type: str | None
     name: str
     description: str
@@ -64,7 +65,7 @@ class _AgentParametersModel(BaseModel):
 class Agent:
     def __init__(
         self,
-        payload_id: str | None = None,
+        payload_id: str | uuid.UUID | None = None,
         agent_type: str | None = None,
         name: str = "",
         description: str = "",
@@ -119,6 +120,8 @@ class Agent:
             raise AgentTypeResolutionError.due_to_no_identifier_provided()
         # Attempt to resolve the agent type via the payload ID if one was provided.
         if payload_id is not None:
+            payload_id = normalize_uuid(value=payload_id)
+
             try:
                 payload = server_singletons.payloads_service.get_payload_by_payload_id(
                     payload_id=payload_id
@@ -293,7 +296,9 @@ class Agent:
     def get_all_queued_tasks(self) -> list[AgentTaskModel]:
         return list(self._queued_tasks)
 
-    def get_queued_task_by_task_id(self, task_id: str) -> AgentTaskModel:
+    def get_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+        task_id = normalize_uuid(value=task_id)
+
         try:
             return self._queued_tasks[task_id]
         except KeyError:
@@ -302,7 +307,9 @@ class Agent:
     def get_all_running_tasks(self) -> list[AgentTaskModel]:
         return list(self._running_tasks)
 
-    def get_running_task_by_task_id(self, task_id: str) -> AgentTaskModel:
+    def get_running_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+        task_id = normalize_uuid(value=task_id)
+
         try:
             return self._running_tasks[task_id]
         except KeyError:
@@ -311,7 +318,9 @@ class Agent:
     def get_all_completed_tasks(self) -> list[AgentTaskModel]:
         return list(self._completed_tasks)
 
-    def get_completed_task_by_task_id(self, task_id: str) -> AgentTaskModel:
+    def get_completed_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+        task_id = normalize_uuid(value=task_id)
+
         try:
             return self._completed_tasks[task_id]
         except KeyError:
@@ -324,13 +333,17 @@ class Agent:
             *self._completed_tasks.values(),
         ]
 
-    def get_task_by_task_id(self, task_id: str) -> AgentTaskModel:
+    def get_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+        task_id = normalize_uuid(value=task_id)
+
         for task in self.get_all_tasks():
             if task_id == str(task.task_id):
                 return task
         raise AgentTaskNotFoundError(task_id=task_id)
 
-    def delete_queued_task_by_task_id(self, task_id: str):
+    def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID):
+        task_id = normalize_uuid(value=task_id)
+
         try:
             self._queued_tasks.pop(task_id)
         except KeyError:
@@ -356,13 +369,17 @@ class Agent:
     def get_all_failed_results(self) -> list[AgentResultModel]:
         return [result for result in self._results.values() if not result.success]
 
-    def get_result_by_task_id(self, task_id: str) -> AgentResultModel:
+    def get_result_by_task_id(self, task_id: str | uuid.UUID) -> AgentResultModel:
+        task_id = normalize_uuid(value=task_id)
+
         for result in self._results.values():
             if result.task_id == task_id:
                 return result
         raise AgentResultTaskIDNotFoundError(task_id=task_id)
 
-    def get_result_by_result_id(self, result_id: str) -> AgentResultModel:
+    def get_result_by_result_id(self, result_id: str | uuid.UUID) -> AgentResultModel:
+        result_id = normalize_uuid(value=result_id)
+
         try:
             return self._results[result_id]
         except KeyError:

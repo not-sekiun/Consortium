@@ -66,7 +66,7 @@ class SetListenerTemplateOptionCommand(BaseCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "option_name",
+            "option_str",
             help="Name of the listener template option to set the value of.",
             nargs=1,
         )

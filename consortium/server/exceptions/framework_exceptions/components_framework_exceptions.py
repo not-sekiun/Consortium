@@ -20,11 +20,12 @@ Exception hierarchy for the components framework:
             - [`InvalidThirdPartyDependencyVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.InvalidThirdPartyDependencyVersionSpecifierError]
             - [`InvalidComponentDependencyVersionSpecifierError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError]
         - [`ComponentOperationError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentOperationError]
-            - [`ComponentNotRunningError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentNotRunningError]
-            - [`ComponentAlreadyRunningError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentAlreadyRunningError]
             - [`ComponentStartError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentStartError]
             - [`ComponentRuntimeError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentRuntimeError]
             - [`ComponentStopError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentStopError]
+        - [`ComponentStateError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentStateError]
+            - [`ComponentNotRunningError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentNotRunningError]
+            - [`ComponentAlreadyRunningError`][consortium.server.exceptions.framework_exceptions.components_framework_exceptions.ComponentAlreadyRunningError]
 """
 
 from typing import Any
@@ -239,49 +240,6 @@ class ComponentOperationError(ComponentsFrameworkError):
     code = "COMPONENT_OPERATION_ERROR"
 
 
-class ComponentNotRunningError(ComponentOperationError):
-    """
-    An error that is raised when an operation is attempted on a component that requires
-    that component to already be running but the component is not running.
-    """
-
-    code = "COMPONENT_NOT_RUNNING_ERROR"
-
-    _MESSAGE_TEMPLATE = (
-        "Failed to perform the requested operation on the $C_LOWER$ '{component_str}'. "
-        "The $C_LOWER$ is not running which conflicts with the operation that was "
-        "requested."
-    )
-
-    def __init__(
-        self,
-        component_str: str,
-    ):
-        super().__init__(component_str=component_str)
-
-
-class ComponentAlreadyRunningError(ComponentOperationError):
-    """
-    An error that is raised when an operation is attempted on a component that requires
-    that component to not already be started or running but the component is already started
-    or running.
-    """
-
-    code = "COMPONENT_ALREADY_RUNNING_ERROR"
-
-    _MESSAGE_TEMPLATE = (
-        "Failed to perform the requested operation on the $C_LOWER$ '{component_str}'. "
-        "The $C_LOWER$ is already running which conflicts with the operation that was "
-        "requested."
-    )
-
-    def __init__(
-        self,
-        component_str: str,
-    ):
-        super().__init__(component_str=component_str)
-
-
 class ComponentStartError(ComponentOperationError):
     """
     An error that is raised when a component fails to start.
@@ -357,3 +315,55 @@ class ComponentStopError(ComponentOperationError):
             component_str=component_str,
             error_message=error_message,
         )
+
+
+class ComponentStateError(ComponentsFrameworkError):
+    """
+    Base exception for all errors caused by attempting an operation on a component
+    while it is in an invalid state that conflicts with that operation
+    """
+
+    code = "COMPONENT_STATE_ERROR"
+
+
+class ComponentNotRunningError(ComponentStateError):
+    """
+    An error that is raised when an operation is attempted on a component that requires
+    that component to already be running but the component is not running.
+    """
+
+    code = "COMPONENT_NOT_RUNNING_ERROR"
+
+    _MESSAGE_TEMPLATE = (
+        "Failed to perform the requested operation on the $C_LOWER$ '{component_str}'. "
+        "The $C_LOWER$ is not running which conflicts with the operation that was "
+        "requested."
+    )
+
+    def __init__(
+        self,
+        component_str: str,
+    ):
+        super().__init__(component_str=component_str)
+
+
+class ComponentAlreadyRunningError(ComponentStateError):
+    """
+    An error that is raised when an operation is attempted on a component that requires
+    that component to not already be started or running but the component is already started
+    or running.
+    """
+
+    code = "COMPONENT_ALREADY_RUNNING_ERROR"
+
+    _MESSAGE_TEMPLATE = (
+        "Failed to perform the requested operation on the $C_LOWER$ '{component_str}'. "
+        "The $C_LOWER$ is already running which conflicts with the operation that was "
+        "requested."
+    )
+
+    def __init__(
+        self,
+        component_str: str,
+    ):
+        super().__init__(component_str=component_str)

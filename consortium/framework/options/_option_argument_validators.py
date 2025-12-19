@@ -1,10 +1,8 @@
 import inspect
 import re
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any, Literal
 
-from consortium.framework.framework_types import Primitive
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     InvalidOptionConfigurationParameterTypeError,
     InvalidOptionIterableLengthBoundError,
@@ -16,85 +14,16 @@ from consortium.server.exceptions.framework_exceptions.options_framework_excepti
 )
 
 
-@dataclass
-class ArgumentDataTypeCheckParameters:
-    value: Any
-    expected_data_type: type | set[type]
-    # If an error message is provided we will use that error message instead of
-    # attempting to construct a default error message.
-    error_message: str | None = None
-
-
-# The following function is used to validate the data types of the arguments provided
-# to the option configuration functions. This function also accounts for when those
-# arguments are implicitly not provided, whereby they will be of type `None`.
-def validate_arguments_data_types(
-    option_name: str,
-    *argument_data_type_check_parameters: ArgumentDataTypeCheckParameters,
-):
-    for parameter in argument_data_type_check_parameters:
-        if parameter.value is None:
-            continue
-        if isinstance(parameter.expected_data_type, set):
-            if parameter.error_message is None:
-                parameter.error_message = (
-                    f"The parameter '{parameter.value}' must be one of the types "
-                    f"{', '.join([f'`{data_type}`' for data_type in parameter.expected_data_type])} "
-                    f"for option '{option_name}'."
-                )
-            if not isinstance(parameter.value, tuple(parameter.expected_data_type)):
-                raise InvalidOptionConfigurationParameterTypeError(
-                    option_name=option_name,
-                    error_message=parameter.error_message,
-                )
-        elif isinstance(parameter.expected_data_type, type):
-            if not isinstance(parameter.value, parameter.expected_data_type):
-                raise InvalidOptionConfigurationParameterTypeError(
-                    option_name=option_name,
-                    error_message=parameter.error_message,
-                )
-        else:
-            raise AssertionError(
-                f"Invalid data type '{parameter.expected_data_type}' provided for "
-                "`expected_data_type`."
-            )
-
-
-def validate_value_type_argument(
-    option_name: str,
-    value_type: type[Primitive],
-) -> None:
-    if value_type is not None and value_type not in {str, int, float, bool}:
-        raise InvalidOptionConfigurationParameterTypeError(
-            option_name=option_name,
-            error_message=(
-                f"The `value_type` parameter '{value_type}' must be of type `str`, "
-                f"`int`, `float`, or `bool` for option '{option_name}'."
-            ),
-        )
-
-
 def validate_string_length_arguments(
     option_name: str,
     option_value_type: type,
     minimum_length: int | None,
     maximum_length: int | None,
 ) -> None:
-    validate_arguments_data_types(
-        option_name,
-        ArgumentDataTypeCheckParameters(
-            value=minimum_length,
-            expected_data_type=int,
-        ),
-        ArgumentDataTypeCheckParameters(
-            value=maximum_length,
-            expected_data_type=int,
-        ),
-    )
     if minimum_length is not None or maximum_length is not None:
         if not issubclass(option_value_type, str):
             raise InvalidOptionConfigurationParameterTypeError(
-                option_name=option_name,
+                option_str=option_name,
                 error_message=(
                     "The parameters `minimum_length` and `maximum_length` are only "
                     "applicable to options with a value type of `str`."
@@ -125,79 +54,56 @@ def validate_string_length_arguments(
 def validate_numeric_range_arguments(
     option_name: str,
     option_value_type: type,
-    greater_than: int | float,
-    less_than: int | float,
-    greater_than_or_equal_to: int | float,
-    less_than_or_equal_to: int | float,
+    greater_than: int | float | None,
+    less_than: int | float | None,
+    greater_than_or_equal_to: int | float | None,
+    less_than_or_equal_to: int | float | None,
 ) -> None:
-    validate_arguments_data_types(
-        option_name,
-        ArgumentDataTypeCheckParameters(
-            value=greater_than,
-            expected_data_type={int, float},
-        ),
-        ArgumentDataTypeCheckParameters(
-            value=less_than,
-            expected_data_type={int, float},
-        ),
-        ArgumentDataTypeCheckParameters(
-            value=greater_than_or_equal_to,
-            expected_data_type={int, float},
-        ),
-        ArgumentDataTypeCheckParameters(
-            value=less_than_or_equal_to,
-            expected_data_type={int, float},
-        ),
-    )
-    if any(
-        (
-            i is not None
-            for i in (
-                greater_than,
-                less_than,
-                greater_than_or_equal_to,
-                less_than_or_equal_to,
-            )
-        ),
-    ):
-        if not issubclass(option_value_type, (int, float)):
+    parameters = {
+        "greater_than": greater_than,
+        "less_than": less_than,
+        "greater_than_or_equal_to": greater_than_or_equal_to,
+        "less_than_or_equal_to": less_than_or_equal_to,
+    }
+
+    for parameter_name, parameter_value in parameters.items():
+        if parameter_value is not None and not issubclass(
+            option_value_type, (int, float)
+        ):
             raise InvalidOptionConfigurationParameterTypeError(
+                option_str=option_name,
                 error_message=(
-                    f"Failed to configure option '{option_name}'. The parameters "
-                    f"`greater_than`, `less_than`, `greater_than_or_equal_to`, and "
-                    f"`less_than_or_equal_to` are only applicable to options with a "
-                    f"value type of `int` or `float`."
+                    f"The parameter `{parameter_name}` is only applicable to options "
+                    f"with a value type of `int` or `float`."
                 ),
             )
-        if greater_than is not None:
-            if less_than is not None and greater_than > less_than:
-                raise InvalidOptionValueRangeError(
-                    option_name=option_name,
-                    minimum_range_parameter_name="less_than",
-                    maximum_range_parameter_name="greater_than",
-                    minimum_range=less_than,
-                    maximum_range=greater_than,
-                )
-            if (
-                less_than_or_equal_to is not None
-                and greater_than > less_than_or_equal_to
-            ):
-                raise InvalidOptionValueRangeError(
-                    option_name=option_name,
-                    minimum_range_parameter_name="less_than_or_equal_to",
-                    maximum_range_parameter_name="greater_than",
-                    minimum_range=less_than_or_equal_to,
-                    maximum_range=greater_than,
-                )
-        if greater_than_or_equal_to is not None:
-            if less_than is not None and greater_than_or_equal_to > less_than:
-                raise InvalidOptionValueRangeError(
-                    option_name=option_name,
-                    minimum_range_parameter_name="less_than_or_equal_to",
-                    maximum_range_parameter_name="greater_than_or_equal_to",
-                    minimum_range=less_than_or_equal_to,
-                    maximum_range=greater_than_or_equal_to,
-                )
+
+    if greater_than is not None:
+        if less_than is not None and greater_than > less_than:
+            raise InvalidOptionValueRangeError(
+                option_name=option_name,
+                minimum_range_parameter_name="less_than",
+                maximum_range_parameter_name="greater_than",
+                minimum_range=less_than,
+                maximum_range=greater_than,
+            )
+        if less_than_or_equal_to is not None and greater_than > less_than_or_equal_to:
+            raise InvalidOptionValueRangeError(
+                option_name=option_name,
+                minimum_range_parameter_name="less_than_or_equal_to",
+                maximum_range_parameter_name="greater_than",
+                minimum_range=less_than_or_equal_to,
+                maximum_range=greater_than,
+            )
+    if greater_than_or_equal_to is not None:
+        if less_than is not None and greater_than_or_equal_to > less_than:
+            raise InvalidOptionValueRangeError(
+                option_name=option_name,
+                minimum_range_parameter_name="less_than_or_equal_to",
+                maximum_range_parameter_name="greater_than_or_equal_to",
+                minimum_range=less_than_or_equal_to,
+                maximum_range=greater_than_or_equal_to,
+            )
 
 
 def validate_validating_regex_argument(
@@ -213,8 +119,8 @@ def validate_validating_regex_argument(
         if not isinstance(validating_regex, str):
             raise InvalidOptionConfigurationParameterTypeError(
                 parameter_name=validating_regex_parameter_name,
-                expected_parameter_type_string="str",
-                option_name=option_name,
+                parameter_type="str",
+                option_str=option_name,
             )
         try:
             re.compile(validating_regex)
@@ -238,14 +144,14 @@ def validate_validating_function_argument(
     if validating_function is not None:
         if not isinstance(validating_function, Callable):
             raise InvalidOptionConfigurationParameterTypeError(
-                option_name=option_name,
+                option_str=option_name,
                 parameter_name=validating_function_parameter_name,
-                expected_parameter_type_string="callable",
+                parameter_type="callable",
             )
         function_signature = inspect.signature(validating_function)
         if len(function_signature.parameters) != 1:
             raise InvalidOptionConfigurationParameterTypeError(
-                option_name=option_name,
+                option_str=option_name,
                 error_message=(
                     f"The validating function parameter `{validating_function_parameter_name}` "
                     "must be a callable that accepts exactly one argument."
@@ -258,17 +164,6 @@ def validate_iterable_length_arguments(
     minimum_elements: int | None,
     maximum_elements: int | None,
 ) -> None:
-    validate_arguments_data_types(
-        option_name,
-        ArgumentDataTypeCheckParameters(
-            value=minimum_elements,
-            expected_data_type=int,
-        ),
-        ArgumentDataTypeCheckParameters(
-            value=maximum_elements,
-            expected_data_type=int,
-        ),
-    )
     if minimum_elements is not None and minimum_elements < 0:
         raise InvalidOptionIterableLengthBoundError(
             option_name=option_name,

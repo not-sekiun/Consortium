@@ -205,43 +205,6 @@ class PluginOperationError(
     code = "PLUGIN_OPERATION_ERROR"
 
 
-class PluginNotRunningError(
-    comp_framework_excs.ComponentNotRunningError,
-    PluginOperationError,
-):
-    """
-    An error that is raised when an operation is attempted on a plugin that requires
-    that plugin to already be running but the plugin is not running.
-    """
-
-    code = "PLUGIN_NOT_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        plugin_str: str,
-    ):
-        super().__init__(component_str=plugin_str)
-
-
-class PluginAlreadyRunningError(
-    comp_framework_excs.ComponentAlreadyRunningError,
-    PluginOperationError,
-):
-    """
-    An error that is raised when an operation is attempted on a plugin that requires
-    that plugin to not already be started or running but the plugin is already started
-    or running.
-    """
-
-    code = "PLUGIN_ALREADY_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        plugin_str: str,
-    ):
-        super().__init__(component_str=plugin_str)
-
-
 class PluginStartError(comp_framework_excs.ComponentStartError, PluginOperationError):
     """
     An error that is raised when a plugin fails to start.
@@ -303,3 +266,52 @@ class PluginStopError(comp_framework_excs.ComponentStopError, PluginOperationErr
             plugin_str=plugin_str,
             error_message=error_message,
         )
+
+
+class PluginStateError(
+    comp_framework_excs.ComponentStateError,
+    PluginOperationError,
+):
+    """
+    Base exception for all errors that occur due to invalid plugin state during
+    operation.
+    """
+
+    code = "PLUGIN_STATE_ERROR"
+
+
+class PluginNotRunningError(
+    comp_framework_excs.ComponentNotRunningError,
+    PluginStateError,
+):
+    """
+    An error that is raised when an operation is attempted on a plugin that requires
+    that plugin to already be running but the plugin is not running.
+    """
+
+    code = "PLUGIN_NOT_RUNNING_ERROR"
+
+    def __init__(
+        self,
+        plugin_str: str,
+    ):
+        super().__init__(component_str=plugin_str)
+
+
+class PluginAlreadyRunningError(
+    comp_framework_excs.ComponentAlreadyRunningError,
+    PluginStateError,
+):
+    """
+    An error that is raised when an operation is attempted on a plugin that requires
+    that plugin to not already be started or running but the plugin is already started
+    or running.
+    """
+
+    code = "PLUGIN_ALREADY_RUNNING_ERROR"
+
+    def __init__(
+        self,
+        plugin_str: str,
+    ):
+        super().__init__(component_str=plugin_str)

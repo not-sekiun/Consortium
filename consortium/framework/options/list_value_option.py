@@ -1,16 +1,16 @@
 from collections.abc import Callable
+from typing import get_type_hints
+
+from pydantic import BaseModel, ValidationError
 
 from consortium.framework.framework_types import Primitive, PrimitiveType
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options._option_argument_validators import (
-    ArgumentDataTypeCheckParameters,
-    validate_arguments_data_types,
     validate_iterable_length_arguments,
     validate_numeric_range_arguments,
     validate_string_length_arguments,
     validate_validating_function_argument,
     validate_validating_regex_argument,
-    validate_value_type_argument,
 )
 from consortium.framework.options._option_value_validators import (
     validate_iterable_element_duplication,
@@ -23,119 +23,113 @@ from consortium.framework.options._option_value_validators import (
 )
 from consortium.framework.options._utils import resolve_validating_function_string
 from consortium.framework.options.option_types import OptionType
+from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+    InvalidOptionConfigurationParameterTypeError,
+)
 
 
-class ListValueOption(BaseOption):
+class _ListValueParametersModel(BaseModel):
+    default_value: list[Primitive] | None
+    allow_duplicates: bool
+    value_type: PrimitiveType | None
+    minimum_length: int | None
+    maximum_length: int | None
+    greater_than: int | float | None
+    less_than: int | float | None
+    greater_than_or_equal_to: int | float | None
+    less_than_or_equal_to: int | float | None
+    minimum_elements: int | None
+    maximum_elements: int | None
+    validating_regex: str | None
+    validating_function: Callable[[Primitive], None] | None
+
+
+class ListValueOption(BaseOption[list[Primitive]]):
     """
     An option that can hold multiple values. Each element of the option can only be
     of type `str`, `int`, `float`, or `bool`. This type of the elements may be
     either homogeneous or heterogeneous.
 
     Attributes:
-        option_type (OptionType):
-            The type of the option.
-        name (str):
-            The human-readable name of the option. The name cannot be an empty
+        option_type: The type of the option.
+        name: The human-readable name of the option. The name cannot be an empty
             string.
-        description (str): A description of the option.
-        required (bool):
-            Whether the option is required or not. If True, the option must
-            have a value set before it can be retrieved. If False, the option can be
+        description: A description of the option.
+        required: Whether the option is required or not. If True, the option must have
+            a value set before it can be retrieved. If False, the option can be
             retrieved without a value being set.
-        default_value (str | int | float | bool | None):
-            The default value of the option. If `None`, the option has no default
-            value.
-        value_type (Type[str] | Type[int] | Type[float] | Type[bool] | None):
-            The type of the elements that the option can accept for the list value.
-            If `None`, the list's data type is heterogeneous and each element can
-            be any of `str`, `int`, `float`, or `bool` otherwise its data type is
+        default_value: The default value of the option. If `None`, the option has no
+            default value.
+        value_type: The type of the elements that the option can accept for the list
+            value. If `None`, the list's data type is heterogeneous and each element
+            can be any of `str`, `int`, `float`, or `bool` otherwise its data type is
             homogeneous and the data type of its elements can only be one of `str`,
             `int`, `float`, or `bool`.
-        minimum_length (int | None):
-            If `value_type` is of type `str`, this parameter specifies the minimum
-            length of each string element that the option can accept.  If `None`,
-            there is no minimum length.
-        maximum_length (int | None):
-            If `value_type` is of type `str`, this parameter specifies the maximum
-            length of each string element that the option can accept. If `None`,
-            there is no maximum length.
-        greater_than (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be greater than this value.
-        less_than (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be less than this value.
-        greater_than_or_equal_to (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be greater than or equal to this value.
-        less_than_or_equal_to (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be less than or equal to this value.
-        minimum_elements (int | None):
-            The minimum number of elements that the option can hold. If `None`,
-            there is no minimum number of elements.
-        maximum_elements (int | None):
-            The maximum number of elements that the option can hold. If `None`,
-            there is no maximum number of elements.
-        validating_regex (str | None):
-            If `value_type` is of type `str`, this parameter specifies a regex
-            pattern that each element of the option must match.
-        validating_function (Callable[[str | int | float | bool], None] | None):
-            A function that accepts a single argument, the value of the option,
-            and raises an exception, `OptionValueValidationError` if the value is
-            invalid. If `None`, no additional validation is performed.
+        minimum_length: If `value_type` is of type `str`, this parameter specifies the
+            minimum length of each string element that the option can accept.  If
+            `None`, there is no minimum length.
+        maximum_length: If `value_type` is of type `str`, this parameter specifies the
+            maximum length of each string element that the option can accept. If
+            `None`, there is no maximum length.
+        greater_than: If `value_type` is of type `int` or `float`, the numeric value of
+            each element of the option must be greater than this value.
+        less_than: If `value_type` is of type `int` or `float`, the numeric value of
+            each element of the option must be less than this value.
+        greater_than_or_equal_to: If `value_type` is of type `int` or `float`, the
+            numeric value of each element of the option must be greater than or equal
+            to this value.
+        less_than_or_equal_to: If `value_type` is of type `int` or `float`, the numeric
+            value of each element of the option must be less than or equal to this
+            value.
+        minimum_elements: The minimum number of elements that the option can hold. If
+            `None`, there is no minimum number of elements.
+        maximum_elements: The maximum number of elements that the option can hold. If
+            `None`, there is no maximum number of elements.
+        validating_regex: If `value_type` is of type `str`, this parameter specifies a
+            regex pattern that each element of the option must match.
+        validating_function: A function that accepts a single argument, the value of the
+            option, and raises an exception, `OptionValueValidationError` if the value
+            is invalid. If `None`, no additional validation is performed.
 
     Parameters:
-        name (str):
-            The human-readable name of the option. The name cannot be an empty
+        name: The human-readable name of the option. The name cannot be an empty
             string.
-        description (str): A description of the option.
-        required (bool):
-            Whether the option is required or not. If True, the option must
-            have a value set before it can be retrieved. If False, the option can be
+        description: A description of the option.
+        required: Whether the option is required or not. If True, the option must have
+            a value set before it can be retrieved. If False, the option can be
             retrieved without a value being set.
-        default_value (str | int | float | bool | None):
-            The default value of the option. If `None`, the option has no default
-            value.
-        value_type (Type[str] | Type[int] | Type[float] | Type[bool] | None):
-            The type of the elements that the option can accept for the list value.
-            If `None`, the list's data type is heterogeneous and each element can
-            be any of `str`, `int`, `float`, or `bool` otherwise its data type is
+        default_value: The default value of the option. If `None`, the option has no
+            default value.
+        value_type: The type of the elements that the option can accept for the list
+            value. If `None`, the list's data type is heterogeneous and each element
+            can be any of `str`, `int`, `float`, or `bool` otherwise its data type is
             homogeneous and the data type of its elements can only be one of `str`,
             `int`, `float`, or `bool`.
-        minimum_length (int | None):
-            If `value_type` is of type `str`, this parameter specifies the minimum
-            length of each string element that the option can accept.  If `None`,
-            there is no minimum length.
-        maximum_length (int | None):
-            If `value_type` is of type `str`, this parameter specifies the maximum
-            length of each string element that the option can accept. If `None`,
-            there is no maximum length.
-        greater_than (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be greater than this value.
-        less_than (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be less than this value.
-        greater_than_or_equal_to (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be greater than or equal to this value.
-        less_than_or_equal_to (int | None):
-            If `value_type` is of type `int` or `float`, the numeric value of each
-            element of the option must be less than or equal to this value.
-        minimum_elements (int | None):
-            The minimum number of elements that the option can hold. If `None`,
-            there is no minimum number of elements.
-        maximum_elements (int | None):
-            The maximum number of elements that the option can hold. If `None`,
-            there is no maximum number of elements.
-        validating_regex (str | None):
-            If `value_type` is of type `str`, this parameter specifies a regex
-            pattern that each element of the option must match.
-        validating_function (Callable[[str | int | float | bool], None] | None):
-            A function that accepts a single argument, the value of the option,
-            and raises an exception, `OptionValueValidationError` if the value is
-            invalid. If `None`, no additional validation is performed.
+        minimum_length: If `value_type` is of type `str`, this parameter specifies the
+            minimum length of each string element that the option can accept.  If
+            `None`, there is no minimum length.
+        maximum_length: If `value_type` is of type `str`, this parameter specifies the
+            maximum length of each string element that the option can accept. If
+            `None`, there is no maximum length.
+        greater_than: If `value_type` is of type `int` or `float`, the numeric value of
+            each element of the option must be greater than this value.
+        less_than: If `value_type` is of type `int` or `float`, the numeric value of
+            each element of the option must be less than this value.
+        greater_than_or_equal_to: If `value_type` is of type `int` or `float`, the
+            numeric value of each element of the option must be greater than or equal
+            to this value.
+        less_than_or_equal_to: If `value_type` is of type `int` or `float`, the numeric
+            value of each element of the option must be less than or equal to this
+            value.
+        minimum_elements: The minimum number of elements that the option can hold. If
+            `None`, there is no minimum number of elements.
+        maximum_elements: The maximum number of elements that the option can hold. If
+            `None`, there is no maximum number of elements.
+        validating_regex: If `value_type` is of type `str`, this parameter specifies a
+            regex pattern that each element of the option must match.
+        validating_function: A function that accepts a single argument, the value of the
+            option, and raises an exception, `OptionValueValidationError` if the value
+            is invalid. If `None`, no additional validation is performed.
 
     Example: Setting up a `ListValueOption` with a homogeneous data type.
         ```python
@@ -157,7 +151,6 @@ class ListValueOption(BaseOption):
     """
 
     option_type: OptionType = OptionType.LIST_VALUE_OPTION
-    """The type of the option."""
 
     def __init__(
         self,
@@ -180,66 +173,43 @@ class ListValueOption(BaseOption):
     ):
         self.allow_duplicates = allow_duplicates
         self.value_type = value_type
-        """
-        The type of the elements that the option can accept for the list value.
-        If `None`, the list's data type is heterogeneous and each element can
-        be any of `str`, `int`, `float`, or `bool` otherwise its data type is
-        homogeneous and the data type of its elements can only be one of `str`,
-        `int`, `float`, or `bool`.
-        """
         self.minimum_length = minimum_length
-        """
-        If `value_type` is of type `str`, this parameter specifies the minimum
-        length of each string element that the option can accept.  If `None`,
-        there is no minimum length.
-        """
         self.maximum_length = maximum_length
-        """
-        If `value_type` is of type `str`, this parameter specifies the maximum
-        length of each string element that the option can accept. If `None`,
-        there is no maximum length.
-        """
         self.greater_than = greater_than
-        """
-        If `value_type` is of type `int` or `float`, the numeric value of each
-        element of the option must be greater than this value.
-        """
         self.less_than = less_than
-        """
-        If `value_type` is of type `int` or `float`, the numeric value of each
-        element of the option must be less than this value.
-        """
         self.greater_than_or_equal_to = greater_than_or_equal_to
-        """
-        If `value_type` is of type `int` or `float`, the numeric value of each
-        element of the option must be greater than or equal to this value.
-        """
         self.less_than_or_equal_to = less_than_or_equal_to
-        """
-        If `value_type` is of type `int` or `float`, the numeric value of each
-        element of the option must be less than or equal to this value.
-        """
         self.minimum_elements = minimum_elements
-        """
-        The minimum number of elements that the option can hold. If `None`,
-        there is no minimum number of elements.
-        """
         self.maximum_elements = maximum_elements
-        """
-        The maximum number of elements that the option can hold. If `None`,
-        there is no maximum number of elements.
-        """
         self.validating_regex = validating_regex
-        """
-        If `value_type` is of type `str`, this parameter specifies a regex
-        pattern that each element of the option must match.
-        """
         self.validating_function = validating_function
-        """
-        A function that accepts a single argument, the value of the option,
-        and raises an exception, `OptionValueValidationError` if the value is
-        invalid. If `None`, no additional validation is performed.
-        """
+
+        try:
+            _ListValueParametersModel(
+                default_value=default_value,
+                allow_duplicates=allow_duplicates,
+                value_type=value_type,
+                minimum_length=minimum_length,
+                maximum_length=maximum_length,
+                greater_than=greater_than,
+                less_than=less_than,
+                greater_than_or_equal_to=greater_than_or_equal_to,
+                less_than_or_equal_to=less_than_or_equal_to,
+                minimum_elements=minimum_elements,
+                maximum_elements=maximum_elements,
+                validating_regex=validating_regex,
+                validating_function=validating_function,
+            )
+        except ValidationError as exc:
+            parameter_name = exc.errors()[0]["loc"][0]
+            raise InvalidOptionConfigurationParameterTypeError(
+                option_str=name,
+                parameter_name=parameter_name,
+                parameter_type=str(
+                    get_type_hints(_ListValueParametersModel)[parameter_name]
+                ),
+            ) from None
+
         super().__init__(
             name=name,
             description=description,
@@ -263,15 +233,6 @@ class ListValueOption(BaseOption):
         )
 
     def validate_value(self, value: list[Primitive]) -> None:
-        """
-        Validate the value of the option.
-
-        Args:
-            value (Any): The value to validate.
-
-        Raises:
-            OptionValueValidationFrameworkError: If the value is invalid.
-        """
         validate_value_data_type(
             self.name,
             value,
@@ -323,12 +284,6 @@ class ListValueOption(BaseOption):
     def to_json(
         self,
     ) -> dict[str, str | bool | list[Primitive] | None]:
-        """
-        Convert the option to a JSON serializable dictionary.
-
-        Returns:
-            The JSON serializable dictionary representation of the option.
-        """
         return {
             "name": self.name,
             "description": self.description,
@@ -353,17 +308,6 @@ class ListValueOption(BaseOption):
 
     def _validate_option_arguments(self):
         super()._validate_option_arguments()
-        validate_arguments_data_types(
-            self.name,
-            ArgumentDataTypeCheckParameters(
-                value=self.allow_duplicates,
-                expected_data_type=bool,
-            ),
-        )
-        validate_value_type_argument(
-            option_name=self.name,
-            value_type=self.value_type,
-        )
         validate_string_length_arguments(
             option_name=self.name,
             option_value_type=self.value_type,

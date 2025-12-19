@@ -1,12 +1,12 @@
 import asyncio
 import inspect
+import pathlib
 import sys
 import traceback
+import types
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
-from pathlib import Path
-from types import SimpleNamespace
 from typing import Any, final, get_type_hints
 
 from loguru import logger
@@ -47,7 +47,7 @@ from consortium.server.objects.agent_generator_objects import (
 from consortium.server.server_logging import LoggerType
 
 
-class _BaseAgentGeneratorBuildStepParametersModel(BaseModel):
+class _BaseAgentGeneratorBuildStepModel(BaseModel):
     name: str
     description: str
     ignore_failure: bool
@@ -68,7 +68,9 @@ class BaseAgentGeneratorBuildStep(ABC):
             logger_type=LoggerType.GENERATOR_LOGGER,
         )
 
-        self.working_directory = Path(inspect.getsourcefile(self.__class__)).parent
+        self.working_directory = pathlib.Path(
+            inspect.getsourcefile(self.__class__)
+        ).parent
 
     def __init_subclass__(cls, **kwargs):
         expected_attrs_and_types_map = get_type_hints(cls)
@@ -83,7 +85,7 @@ class BaseAgentGeneratorBuildStep(ABC):
 
         # Check all class attributes are of the expected type
         try:
-            _BaseAgentGeneratorBuildStepParametersModel(
+            _BaseAgentGeneratorBuildStepModel(
                 name=cls.name,
                 description=cls.description,
                 ignore_failure=cls.ignore_failure,
@@ -113,14 +115,14 @@ class BaseAgentGeneratorBuildStep(ABC):
         self,
         stop_event: asyncio.Event,
         parameters: dict,
-        environment: SimpleNamespace,
+        environment: types.SimpleNamespace,
     ): ...
 
     async def start(
         self,
         stop_event: asyncio.Event,
         parameters: dict,
-        environment: SimpleNamespace,
+        environment: types.SimpleNamespace,
     ):
         self.datetime_started = datetime.now()
         self.status.transition_to_running()
@@ -187,6 +189,14 @@ class BaseAgentGenerator(ComponentLifeCycle):
     ) -> None:
         if parameters is None:
             parameters = {}
+        # Manually validate name first so we can reference the name in subsequent
+        # validation errors
+        if not isinstance(name, str):
+            raise AgentGeneratorCreationParameterTypeError(
+                agent_generator_str=self.__class__.__name__,
+                parameter_name="name",
+                parameter_type=str(str),
+            ) from None
 
         try:
             _BaseAgentGeneratorParametersModel(
@@ -197,11 +207,11 @@ class BaseAgentGenerator(ComponentLifeCycle):
         except ValidationError as exc:
             for err in exc.errors():
                 raise AgentGeneratorCreationParameterTypeError(
-                    agent_generator_str=sys.modules[self.__module__].__file__,
+                    agent_generator_str=name,
                     parameter_name=err["loc"][0],
-                    parameter_type=get_type_hints(_BaseAgentGeneratorParametersModel)[
-                        err["loc"]
-                    ],
+                    parameter_type=str(
+                        get_type_hints(_BaseAgentGeneratorParametersModel)[err["loc"]]
+                    ),
                 ) from None
 
         self.name = name
@@ -210,7 +220,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
         self.agent_generator_id = uuid.uuid4()
         self.datetime_created = datetime.now()
-        self.environment = SimpleNamespace()
+        self.environment = types.SimpleNamespace()
         self.logger = logger.bind(
             logger_name=f"Agent Generator {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
@@ -231,12 +241,13 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 agent_generator_build_steps=cls.agent_generator_build_steps,
             )
         except ValidationError as exc:
-            for err in exc.errors():
-                raise AgentGeneratorConfigurationParameterTypeError(
-                    agent_generator_filepath=sys.modules[cls.__module__].__file__,
-                    parameter_name=err["loc"][0],
-                    parameter_type="list[BaseAgentGeneratorBuildStep]",
-                ) from None
+            raise AgentGeneratorConfigurationParameterTypeError(
+                agent_generator_filepath=sys.modules[cls.__module__].__file__,
+                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_type=get_type_hints(_BaseAgentGeneratorModel)[
+                    exc.errors()[0]["loc"][0]
+                ],
+            ) from None
 
         super().__init_subclass__(**kwargs)
 

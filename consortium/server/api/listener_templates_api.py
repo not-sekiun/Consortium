@@ -18,7 +18,6 @@ from consortium.server.exceptions.framework_exceptions import (
 )
 from consortium.server.exceptions.service_exceptions import (
     listener_templates_service_exceptions as svc_excs,
-    listeners_service_exceptions as listeners_svc_excs,
 )
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.models.listener_template_models import ListenerTemplateModel
@@ -36,27 +35,10 @@ router = APIRouter(
     tags=["Listener Templates API"],
 )
 
-listener_templates_service = server_singletons.listener_templates_service
-listeners_service = server_singletons.listeners_service
+_listener_templates_service = server_singletons.listener_templates_service
+_listeners_service = server_singletons.listeners_service
 
-_listener_template_option_value_validation_framework_error = (
-    framework_excs.ListenerTemplateOptionValueValidationError(
-        listener_template_str="<listener_template>",
-        option_name="<option_name>",
-        option_value="<option_value>",
-        error_message="<error_message>",
-    )
-)
-_listener_template_option_not_found_framework_error = (
-    framework_excs.ListenerTemplateOptionNotFoundError(
-        listener_template_str="<listener_template>", option_name="<option_name>"
-    )
-)
-_missing_required_listener_template_option_framework_error = (
-    framework_excs.MissingRequiredListenerTemplateOptionError(
-        listener_template_str="<listener_template>", option_name="<option_name>"
-    )
-)
+
 _listener_template_not_found_error = (
     api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
         consortium_exception=svc_excs.ListenerTemplateIDNotFoundError(
@@ -64,24 +46,28 @@ _listener_template_not_found_error = (
         )
     )
 )
-_listener_template_option_value_validation_error = api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
-    consortium_exception=listeners_svc_excs.ListenerTemplateOptionValueValidationError(
-        message=_listener_template_option_value_validation_framework_error.message,
-        detail=_listener_template_option_value_validation_framework_error.detail,
+_listener_template_option_value_validation_error = (
+    api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
+        consortium_exception=framework_excs.ListenerTemplateOptionValueValidationError(
+            listener_template_str="<listener_template_str>",
+            option_name="<option_str>",
+            option_value="<option_value>",
+            error_message="<error_message>",
+        )
     )
 )
 _listener_template_option_not_found_error = (
     api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
-        consortium_exception=listeners_svc_excs.ListenerTemplateOptionNotFoundError(
-            message=_listener_template_option_not_found_framework_error.message,
-            detail=_listener_template_option_not_found_framework_error.detail,
+        consortium_exception=framework_excs.ListenerTemplateOptionNotFoundError(
+            listener_template_str="<listener_template>", option_name="<option_str>"
         )
     )
 )
-_missing_required_listener_template_option_error = api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
-    consortium_exception=listeners_svc_excs.MissingRequiredListenerTemplateOptionError(
-        message=_missing_required_listener_template_option_framework_error.message,
-        detail=_missing_required_listener_template_option_framework_error.detail,
+_missing_required_listener_template_option_error = (
+    api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
+        consortium_exception=framework_excs.MissingRequiredListenerTemplateOptionError(
+            listener_template_str="<listener_template>", option_name="<option_str>"
+        )
     )
 )
 _unprocessable_entity_error = UnprocessableEntityError(
@@ -109,7 +95,7 @@ async def create_listener_through_listener_template_by_listener_template_id(
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.CREATE_LISTENER))],
 ) -> ListenerModel:
     try:
-        listener = await listeners_service.create_listener_from_listener_template_by_listener_template_id(
+        listener = await _listeners_service.create_listener_from_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
             parameters=options,
         )
@@ -117,15 +103,15 @@ async def create_listener_through_listener_template_by_listener_template_id(
         raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except listeners_svc_excs.ListenerTemplateOptionNotFoundError as exc:
+    except framework_excs.ListenerTemplateOptionNotFoundError as exc:
         raise api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except listeners_svc_excs.ListenerTemplateOptionValueValidationError as exc:
+    except framework_excs.ListenerTemplateOptionValueValidationError as exc:
         raise api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except listeners_svc_excs.MissingRequiredListenerTemplateOptionError as exc:
+    except framework_excs.MissingRequiredListenerTemplateOptionError as exc:
         raise api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -145,7 +131,7 @@ def get_all_listener_templates(
 ):
     return [
         ListenerTemplateModel(**listener_template.to_json())
-        for listener_template in listener_templates_service.get_all_listener_templates()
+        for listener_template in _listener_templates_service.get_all_listener_templates()
     ]
 
 
@@ -170,7 +156,7 @@ def get_listener_template_by_listener_template_id(
 ):
     try:
         listener_template = (
-            listener_templates_service.get_listener_template_by_listener_template_id(
+            _listener_templates_service.get_listener_template_by_listener_template_id(
                 listener_template_id=listener_template_id,
             )
         )

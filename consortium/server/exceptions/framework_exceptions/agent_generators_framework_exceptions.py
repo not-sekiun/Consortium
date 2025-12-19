@@ -55,15 +55,23 @@ class AgentGeneratorConfigurationParameterTypeError(AgentGeneratorConfigurationE
         agent_generator_filepath: str | None = None,
         parameter_name: str | None = None,
         parameter_type: str | None = None,
-        error_message: str = "",
+        # error_message: str = "",
     ):
-        if not error_message:
-            error_message = (
+        super().__init__(
+            message=(
                 f"Failed to configure the agent generator defined at "
                 f"'{agent_generator_filepath}'. The parameter '{parameter_name}' must "
                 f"be of type '{parameter_type}' in the agent generator's definition."
             )
-        super().__init__(message=error_message)
+        )
+
+        # if not error_message:
+        #     error_message = (
+        #         f"Failed to configure the agent generator defined at "
+        #         f"'{agent_generator_filepath}'. The parameter '{parameter_name}' must "
+        #         f"be of type '{parameter_type}' in the agent generator's definition."
+        #     )
+        # super().__init__(message=error_message)
 
 
 class MissingAgentGeneratorConfigurationParameterError(

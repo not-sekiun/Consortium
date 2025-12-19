@@ -1,53 +1,54 @@
+from typing import get_type_hints
+
+from pydantic import BaseModel, ValidationError
+
 from consortium.framework.framework_types import Primitive
 from consortium.framework.options._base_option import BaseOption
-from consortium.framework.options._option_argument_validators import (
-    ArgumentDataTypeCheckParameters,
-    validate_arguments_data_types,
-)
 from consortium.framework.options.option_types import OptionType
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
     EmptyAvailableValuesError,
+    InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
 
 
-class ChoiceValueOption(BaseOption):
+class _ChoiceValueParametersModel(BaseModel):
+    default_value: Primitive | None
+    available_values: set[Primitive]
+
+
+class ChoiceValueOption(BaseOption[Primitive]):
     """
     An option that allows the user to choose from a set of available values. The type of
     each choice is restricted to being a `str`, `int`, `float`, or `bool`. Only one
     choice can be selected at a time.
 
     Attributes:
-        option_type (OptionType):
-            The type of the option.
-        name (str):
-            The human-readable name of the option. The name cannot be an empty string.
-        description (str):
-            A description of the option.
-        required (bool):
-            Whether the option is required or not. If True, the option must have a
-            value set before it can be retrieved. If False, the option can be retrieved
-            without a value being set.
-        default_value (Primitive | None):
-            The default value of the option. If `None`, the option has no default value.
-        available_values (set[Primitive]):
-            The set of available values that the user can choose from. The type of each
-            choice is restricted to being a `str`, `int`, `float`, or `bool`.
+        option_type: The type of the option.
+        name: The human-readable name of the option. The name cannot be an empty
+            string.
+        description: A description of the option.
+        required: Whether the option is required or not. If True, the option must have
+            a value set before it can be retrieved. If False, the option can be
+            retrieved without a value being set.
+        default_value: The default value of the option. If `None`, the option has no
+            default value.
+        available_values: The set of available values that the user can choose from. The
+            type of each choice is restricted to being a `str`, `int`, `float`, or
+            `bool`.
 
     Parameters:
-        name (str):
-            The human-readable name of the option. The name cannot be an empty string.
-        description (str):
-            A description of the option.
-        required (bool):
-            Whether the option is required or not. If True, the option must have a
-            value set before it can be retrieved. If False, the option can be retrieved
-            without a value being set.
-        default_value (Primitive | None):
-            The default value of the option. If `None`, the option has no default value.
-        available_values (set[Primitive]):
-            The set of available values that the user can choose from. The type of each
-            choice is restricted to being a `str`, `int`, `float`, or `bool`.
+        name: The human-readable name of the option. The name cannot be an empty
+            string.
+        description: A description of the option.
+        required: Whether the option is required or not. If True, the option must have
+            a value set before it can be retrieved. If False, the option can be
+            retrieved without a value being set.
+        default_value: The default value of the option. If `None`, the option has no
+            default value.
+        available_values: The set of available values that the user can choose from. The
+            type of each choice is restricted to being a `str`, `int`, `float`, or
+            `bool`.
 
     Example: Setting up a `ChoiceValueOption` with string values.
         ```python
@@ -75,10 +76,22 @@ class ChoiceValueOption(BaseOption):
         default_value: Primitive | None = None,
     ):
         self.available_values = available_values
-        """
-        The set of available values that the user can choose from. The type of each
-        choice is restricted to being a `str`, `int`, `float`, or `bool`.
-        """
+
+        try:
+            _ChoiceValueParametersModel(
+                default_value=default_value,
+                available_values=available_values,
+            )
+        except ValidationError as exc:
+            parameter_name = exc.errors()[0]["loc"][0]
+            raise InvalidOptionConfigurationParameterTypeError(
+                option_str=name,
+                parameter_name=parameter_name,
+                parameter_type=str(
+                    get_type_hints(_ChoiceValueParametersModel)[parameter_name]
+                ),
+            ) from None
+
         super().__init__(
             name=name,
             description=description,
@@ -94,15 +107,6 @@ class ChoiceValueOption(BaseOption):
         )
 
     def validate_value(self, value: Primitive) -> None:
-        """
-        Validate the value of the option.
-
-        Args:
-            value (Any): The value to validate.
-
-        Raises:
-            OptionValueValidationFrameworkError: If the value is invalid.
-        """
         if value not in self.available_values:
             raise OptionValueValidationFrameworkError(
                 f"Value `{value}` for option `{self.name}` is not one of its available "
@@ -110,12 +114,6 @@ class ChoiceValueOption(BaseOption):
             )
 
     def to_json(self) -> dict[str, Primitive | list[Primitive] | None]:
-        """
-        Convert the option to a JSON serializable dictionary.
-
-        Returns:
-            The JSON serializable dictionary representation of the option.
-        """
         return {
             "name": self.name,
             "description": self.description,
@@ -127,22 +125,7 @@ class ChoiceValueOption(BaseOption):
 
     def _validate_option_arguments(self):
         super()._validate_option_arguments()
-        validate_arguments_data_types(
-            self.name,
-            ArgumentDataTypeCheckParameters(
-                value=self.available_values,
-                expected_data_type=set,
-            ),
-        )
         if not self.available_values:
             raise EmptyAvailableValuesError(
                 option_name=self.name,
-            )
-        for element in self.available_values:
-            validate_arguments_data_types(
-                self.name,
-                ArgumentDataTypeCheckParameters(
-                    value=element,
-                    expected_data_type={str, int, float, bool},
-                ),
             )

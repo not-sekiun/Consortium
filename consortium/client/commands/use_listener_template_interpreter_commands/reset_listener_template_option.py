@@ -22,13 +22,13 @@ class ResetListenerTemplateOptionCommand(BaseCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-          reset_listener_template_option option_name
+          reset_listener_template_option option_str
         """,
     )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "option_name",
+            "option_str",
             help="Name of the agent template option to reset the value of.",
             nargs=1,
         )

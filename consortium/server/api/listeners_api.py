@@ -1,6 +1,7 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
+from pydantic import UUID4, JsonValue
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions import (
@@ -13,6 +14,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
+from consortium.server.exceptions.framework_exceptions import (
+    listeners_framework_exceptions as framework_excs,
+)
 from consortium.server.exceptions.service_exceptions import (
     listeners_service_exceptions as svc_excs,
 )
@@ -22,8 +26,6 @@ from consortium.server.objects.example_objects import example_listener_type
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
-listeners_service = server_singletons.listeners_service
-listener_templates_service = server_singletons.listener_templates_service
 router = APIRouter(
     prefix="/api/listeners",
     responses={
@@ -33,6 +35,65 @@ router = APIRouter(
         500: {"model": InternalServerError().to_pydantic_model()},
     },
     tags=["Listeners API"],
+)
+
+_listeners_service = server_singletons.listeners_service
+_listener_templates_service = server_singletons.listener_templates_service
+
+_listener_not_found_error = api_excs.ListenerNotFoundError.from_consortium_exception(
+    svc_excs.ListenerNotFoundError(listener_id="string"),
+)
+_listener_already_running_error = (
+    api_excs.ListenerAlreadyRunningError.from_consortium_exception(
+        consortium_exception=framework_excs.ListenerAlreadyRunningError(
+            listener_str="<listener_string>",
+        ),
+    )
+)
+_listener_start_error = api_excs.ListenerStartError.from_consortium_exception(
+    consortium_exception=framework_excs.ListenerStartError(
+        listener_str="<listener_string>",
+        error_message="<error_message>",
+        detail={"<key>": "<value>"},
+    ),
+)
+_listener_not_running_error = (
+    api_excs.ListenerNotRunningError.from_consortium_exception(
+        consortium_exception=framework_excs.ListenerNotRunningError(
+            listener_str="<listener_string>",
+        ),
+    )
+)
+_listener_stop_error = api_excs.ListenerStopError.from_consortium_exception(
+    consortium_exception=framework_excs.ListenerStopError(
+        listener_str="<listener_string>",
+        error_message="<error_message>",
+        detail={"<key>": "<value>"},
+    ),
+)
+_invalid_listener_parameter_name_error = (
+    api_excs.InvalidListenerParameterNameError.from_consortium_exception(
+        consortium_exception=svc_excs.InvalidListenerParameterNameError(
+            parameter_name="string",
+            listener="string",
+        ),
+    )
+)
+_invalid_listener_parameter_value_error = (
+    api_excs.InvalidListenerParameterValueError.from_consortium_exception(
+        consortium_exception=svc_excs.InvalidListenerParameterValueError(
+            parameter_name="string",
+            parameter_value="string",
+            listener_str="string",
+            error_message="string",
+        ),
+    )
+)
+_listener_template_resolution_error = api_excs.ListenerTemplateResolutionError(
+    listener_type=example_listener_type,
+)
+_unprocessable_entity_error = UnprocessableEntityError(
+    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
 )
 
 
@@ -50,7 +111,7 @@ def get_all_listeners(
 ) -> list[ListenerModel]:
     return [
         ListenerModel(**listener.to_json())
-        for listener in listeners_service.get_all_listeners()
+        for listener in _listeners_service.get_all_listeners()
     ]
 
 
@@ -59,19 +120,15 @@ def get_all_listeners(
     responses={
         200: {"model": ListenerModel},
         404: {
-            "model": api_excs.ListenerNotFoundError.from_consortium_exception(
-                svc_excs.ListenerNotFoundError(listener_id="string"),
-            ).to_pydantic_model(),
+            "model": _listener_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
 def get_listener_by_listener_id(
-    listener_id: str,
+    listener_id: UUID4,
     _: Annotated[
         None,
         Depends(
@@ -81,7 +138,7 @@ def get_listener_by_listener_id(
 ) -> ListenerModel:
     try:
         return ListenerModel(
-            **listeners_service.get_listener_by_listener_id(listener_id).to_json(),
+            **_listeners_service.get_listener_by_listener_id(listener_id).to_json(),
         )
     except svc_excs.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
@@ -94,43 +151,31 @@ def get_listener_by_listener_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": api_excs.ListenerNotFoundError.from_consortium_exception(
-                svc_excs.ListenerNotFoundError(listener_id="string"),
-            ).to_pydantic_model(),
+            "model": _listener_not_found_error.to_pydantic_model(),
         },
         409: {
-            "model": api_excs.ListenerAlreadyRunningError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerAlreadyRunningError(),
-            ).to_pydantic_model()
-            | api_excs.ListenerStartError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerStartError(
-                    message="string",
-                    detail={"string": "string"},
-                ),
-            ).to_pydantic_model(),
+            "model": _listener_already_running_error.to_pydantic_model()
+            | _listener_start_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
 async def start_listener_by_listener_id(
-    listener_id: str,
+    listener_id: UUID4,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.START_LISTENER_BY_LISTENER_ID)),
     ],
 ) -> SuccessResponseModel:
     try:
-        await listeners_service.start_listener_by_listener_id(listener_id=listener_id)
-    except svc_excs.ListenerStartError as exc:
+        await _listeners_service.start_listener_by_listener_id(listener_id=listener_id)
+    except framework_excs.ListenerStartError as exc:
         raise api_excs.ListenerStartError.from_consortium_exception(
             consortium_exception=exc,
-            # detail=exc.detail,
         ) from None
-    except svc_excs.ListenerAlreadyRunningError as exc:
+    except framework_excs.ListenerAlreadyRunningError as exc:
         raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -154,40 +199,27 @@ async def start_listener_by_listener_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": api_excs.ListenerNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerNotFoundError(
-                    listener_id="string"
-                ),
-            ).to_pydantic_model(),
+            "model": _listener_not_found_error.to_pydantic_model(),
         },
         409: {
-            "model": api_excs.ListenerNotRunningError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerNotRunningError(),
-            ).to_pydantic_model()
-            | api_excs.ListenerStopError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerStopError(
-                    message="string",
-                    detail={"string": "string"},
-                ),
-            ).to_pydantic_model(),
+            "model": _listener_not_running_error.to_pydantic_model()
+            | _listener_stop_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
 async def stop_listener_by_listener_id(
-    listener_id: str,
+    listener_id: UUID4,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.STOP_LISTENER_BY_LISTENER_ID)),
     ],
 ) -> SuccessResponseModel:
     try:
-        await listeners_service.stop_listener_by_listener_id(listener_id=listener_id)
-    except svc_excs.ListenerStopError as exc:
+        await _listeners_service.stop_listener_by_listener_id(listener_id=listener_id)
+    except framework_excs.ListenerStopError as exc:
         raise api_excs.ListenerStopError(
             message=exc.message, detail=exc.detail
         ) from None
@@ -195,7 +227,7 @@ async def stop_listener_by_listener_id(
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except svc_excs.ListenerNotRunningError as exc:
+    except framework_excs.ListenerNotRunningError as exc:
         raise api_excs.ListenerNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -215,38 +247,30 @@ async def stop_listener_by_listener_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": api_excs.ListenerNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerNotFoundError(
-                    listener_id="string"
-                ),
-            ).to_pydantic_model(),
+            "model": _listener_not_found_error.to_pydantic_model(),
         },
         409: {
-            "model": api_excs.ListenerNotRunningError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerNotRunningError(),
-            ).to_pydantic_model(),
+            "model": _listener_not_running_error.to_pydantic_model(),
         },
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
 async def cancel_listener_by_listener_id(
-    listener_id: str,
+    listener_id: UUID4,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.CANCEL_LISTENER_BY_LISTENER_ID)),
     ],
 ) -> SuccessResponseModel:
     try:
-        await listeners_service.cancel_listener_by_listener_id(listener_id=listener_id)
+        await _listeners_service.cancel_listener_by_listener_id(listener_id=listener_id)
     except svc_excs.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except svc_excs.ListenerNotRunningError as exc:
+    except framework_excs.ListenerNotRunningError as exc:
         raise api_excs.ListenerNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -266,41 +290,21 @@ async def cancel_listener_by_listener_id(
     responses={
         200: {"model": ListenerModel},
         404: {
-            "model": api_excs.ListenerNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerNotFoundError(
-                    listener_id="string"
-                ),
-            ).to_pydantic_model(),
+            "model": _listener_not_found_error.to_pydantic_model(),
         },
-        409: {"model": api_excs.ListenerAlreadyRunningError().to_pydantic_model()},
+        409: {"model": _listener_already_running_error.to_pydantic_model()},
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model()
-            | api_excs.InvalidListenerParameterNameError.from_consortium_exception(
-                consortium_exception=svc_excs.InvalidListenerParameterNameError(
-                    parameter_name="string",
-                    listener="string",
-                ),
-            ).to_pydantic_model()
-            | api_excs.InvalidListenerParameterValueError.from_consortium_exception(
-                consortium_exception=svc_excs.InvalidListenerParameterValueError(
-                    parameter_name="string",
-                    parameter_value="string",
-                    listener_str="string",
-                    error_message="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model()
+            | _invalid_listener_parameter_name_error.to_pydantic_model()
+            | _invalid_listener_parameter_value_error.to_pydantic_model(),
         },
         500: {
-            "model": api_excs.ListenerTemplateResolutionError(
-                listener_type=example_listener_type,
-            ).to_pydantic_model(),
+            "model": _listener_template_resolution_error.to_pydantic_model(),
         },
     },
 )
 async def update_listener_by_listener_id(
-    listener_id: str,
+    listener_id: UUID4,
     _: Annotated[
         None,
         Depends(
@@ -321,53 +325,29 @@ async def update_listener_by_listener_id(
     # request.
     name: Annotated[str, Body(embed=True)] = None,
     description: Annotated[str, Body(embed=True)] = None,
-    parameters: Annotated[dict[str, Any], Body(embed=True)] = None,
+    parameters: Annotated[dict[str, JsonValue], Body(embed=True)] = None,
 ) -> ListenerModel:
     try:
-        if name is not None:
-            await listeners_service.update_listener_name_by_listener_id(
-                listener_id=listener_id,
-                name=name,
-            )
-        if description is not None:
-            await listeners_service.update_listener_description_by_listener_id(
-                listener_id=listener_id,
-                description=description,
-            )
-        if parameters is not None:
-            try:
-                await listeners_service.update_listener_parameters_by_listener_id(
-                    listener_id=listener_id,
-                    parameters=parameters,
-                )
-            except AssertionError:
-                raise api_excs.ListenerTemplateResolutionError from None
-            except svc_excs.ListenerAlreadyRunningError as exc:
-                raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(
-                    consortium_exception=exc,
-                ) from None
-            except svc_excs.InvalidListenerParameterNameError as exc:
-                raise api_excs.InvalidListenerParameterNameError.from_consortium_exception(
-                    consortium_exception=exc,
-                ) from None
-            except svc_excs.InvalidListenerParameterValueError as exc:
-                raise api_excs.InvalidListenerParameterValueError.from_consortium_exception(
-                    consortium_exception=exc,
-                ) from None
+        listener = await _listeners_service.update_listener_by_listener_id(
+            listener_id=listener_id,
+            name=name,
+            description=description,
+            parameters=parameters,
+        )
     except svc_excs.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-
-    # If the listener ID provided is invalid AND no parameters were passed to be
-    # patched it is possible for the above block to execute and not raise an exception.
-    # So we still need to check for that here.
-    try:
-        listener = listeners_service.get_listener_by_listener_id(
-            listener_id=listener_id,
-        )
-    except svc_excs.ListenerNotFoundError as exc:
-        raise api_excs.ListenerNotFoundError.from_consortium_exception(
+    except framework_excs.ListenerAlreadyRunningError as exc:
+        raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
+    except svc_excs.InvalidListenerParameterNameError as exc:
+        raise api_excs.InvalidListenerParameterNameError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
+    except svc_excs.InvalidListenerParameterValueError as exc:
+        raise api_excs.InvalidListenerParameterValueError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
 
@@ -379,36 +359,30 @@ async def update_listener_by_listener_id(
     responses={
         200: {"model": SuccessResponseModel},
         404: {
-            "model": api_excs.ListenerNotFoundError.from_consortium_exception(
-                consortium_exception=svc_excs.ListenerNotFoundError(
-                    listener_id="string",
-                ),
-            ).to_pydantic_model(),
+            "model": _listener_not_found_error.to_pydantic_model(),
         },
-        409: {"model": api_excs.ListenerAlreadyRunningError().to_pydantic_model()},
+        409: {"model": _listener_already_running_error.to_pydantic_model()},
         422: {
-            "model": UnprocessableEntityError(
-                detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-            ).to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
 async def delete_listener_by_listener_id(
-    listener_id: str,
+    listener_id: UUID4,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.DELETE_LISTENER_BY_LISTENER_ID)),
     ],
 ) -> SuccessResponseModel:
     try:
-        await listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
+        await _listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
     except svc_excs.ListenerNotFoundError:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=svc_excs.ListenerNotFoundError(
                 listener_id="string",
             ),
         ) from None
-    except svc_excs.ListenerAlreadyRunningError as exc:
+    except framework_excs.ListenerAlreadyRunningError as exc:
         raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None

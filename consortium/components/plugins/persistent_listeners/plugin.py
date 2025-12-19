@@ -41,9 +41,7 @@ class Plugin(BasePlugin):
         # We refer to each listener template by its name (assume names are unique)
         # TODO: Provide a persistent way of referring to different listener templates
         #  across reboot.
-        listener_templates = (
-            self.server_services.listener_templates_service.get_all_listener_templates()
-        )
+        listener_templates = self.server_services._listener_templates_service.get_all_listener_templates()
         name_to_listener_template_map = {
             listener_template.name: listener_template
             for listener_template in listener_templates
@@ -66,7 +64,7 @@ class Plugin(BasePlugin):
                     self.logger.success(
                         f"Creating and starting listener '{listener_name}'...",
                     )
-                    listener = await self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
+                    listener = await self.server_services._listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
                         ),
@@ -74,14 +72,14 @@ class Plugin(BasePlugin):
                         name=listener_data["name"],
                         description=listener_data["description"],
                     )
-                    await self.server_services.listeners_service.start_listener_by_listener_id(
+                    await self.server_services._listeners_service.start_listener_by_listener_id(
                         listener_id=str(listener.listener_id),
                     )
                 else:
                     self.logger.success(
                         f"Creating listener '{listener_name}'...",
                     )
-                    await self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
+                    await self.server_services._listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
                         ),
@@ -96,7 +94,7 @@ class Plugin(BasePlugin):
     async def on_plugin_stopped(self) -> None:
         persistent_listeners_json_file = self.environment.persistent_listeners_json_file
         persistent_listeners_json_data = {}
-        for listener in self.server_services.listeners_service.get_all_listeners():
+        for listener in self.server_services._listeners_service.get_all_listeners():
             if (
                 str(listener.creating_listener_template.name)
                 not in persistent_listeners_json_data

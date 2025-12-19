@@ -114,6 +114,7 @@ class UserAccountsService:
             user_account_id=user_account_id,
         )
 
+        # TODO: Check for no ops and also add event firing
         if username is not None:
             if not username:
                 raise EmptyUserAccountUsernameError.during_user_account_modification(
@@ -128,7 +129,7 @@ class UserAccountsService:
             old_username = user_account.username
             user_account.username = username
             self._logger.info(
-                "Updated username for user account {}: '{}' -> '{}'",
+                "Updated username for user account {} from '{}' to '{}'",
                 user_account,
                 old_username,
                 username,
@@ -141,7 +142,7 @@ class UserAccountsService:
             old_password = user_account.password
             user_account.password = password
             self._logger.info(
-                "Updated password for user account {}: '{}' -> '{}'",
+                "Updated password for user account {} from '{}' to '{}'",
                 user_account,
                 old_password,
                 password,
@@ -155,7 +156,7 @@ class UserAccountsService:
             old_role = user_account.role
             user_account.role = role
             self._logger.info(
-                "Updated role for {}: '{}' -> '{}'",
+                "Updated role for {} from '{}' to '{}'",
                 user_account,
                 old_role,
                 role,

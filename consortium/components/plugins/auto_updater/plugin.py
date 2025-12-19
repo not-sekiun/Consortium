@@ -32,7 +32,7 @@ class Plugin(BasePlugin):
     @staticmethod
     def _run_cmd_with_spinner(cmd: str, message: str) -> tuple[int, bytes, bytes]:
         console = Console()
-        spinner = Spinner("dots", message)
+        spinner = Spinner("line", message)
 
         with Live(
             spinner,
@@ -72,7 +72,14 @@ class Plugin(BasePlugin):
                 return None
 
     async def on_running(self) -> None:
-        json_data = await self._get_latest_release_json_data()
+        # json_data = await self._get_latest_release_json_data()
+
+        json_data = {
+            "codename": "Mock Release",
+            "version": "9.9.9",
+            "datetime_released": "2099-12-31T23:59:59",
+        }
+
         if json_data is None:
             return
         latest_release_datetime = datetime.fromisoformat(json_data["datetime_released"])

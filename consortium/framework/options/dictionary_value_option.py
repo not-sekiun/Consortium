@@ -1,5 +1,8 @@
 import re
 from collections.abc import Callable
+from typing import get_type_hints
+
+from pydantic import BaseModel, ValidationError
 
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
@@ -9,89 +12,84 @@ from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options._option_argument_validators import (
     validate_validating_function_argument,
     validate_validating_regex_argument,
-    validate_value_type_argument,
 )
 from consortium.framework.options._utils import resolve_validating_function_string
 from consortium.framework.options.option_types import OptionType
 from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+    InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
 
 
-class DictionaryValueOption(BaseOption):
+class _DictionaryValueParametersModel(BaseModel):
+    default_value: dict[str, Primitive] | None
+    key_validating_regex: str | None
+    key_validating_function: Callable[[str], None] | None
+    value_type: PrimitiveType | None
+    value_validating_regex: str | None
+    value_validating_function: Callable[[Primitive], None] | None
+    validating_function: Callable[[dict[str, Primitive]], None] | None
+
+
+class DictionaryValueOption(BaseOption[dict[str, Primitive]]):
     """
     An option that contains a mapping of keys of type `str` to values of type
     `str`, `int`, `float`, or `bool`.
 
     Attributes:
-        option_type (OptionType):
-            The type of the option.
-        name (str):
-            The human-readable name of the option. The name cannot be an empty string.
-        description (str):
-            A description of the option.
-        required (bool):
-            Whether the option is required or not. If True, the option must have a
-            value set before it can be retrieved. If False, the option can be retrieved
-            without a value being set.
-        default_value (str | int | float | bool | None):
-            The default value of the option. If `None`, the option has no default value.
-        key_validating_regex (str | None):
-            This parameter specifies a regex pattern that each of the keys in the
-            dictionary, which can only be of type `str`, must match.
-        key_validating_function (Callable[[SimpleType], None] | None):
-            A function that accepts a single argument, the keys of the dictionary, and
-            raises an exception, `OptionValueValidationError`, if the value is invalid.
-            If `None`, no additional validation is performed.
-        value_type (Type[str] | Type[int] | Type[float] | Type[bool] | None):
-            The type of the value in the dictionary that the option can accept. If
-            `None`, the dictionary can have values of type `str`, `int`, `float`, or
+        option_type: The type of the option.
+        name: The human-readable name of the option. The name cannot be an empty
+            string.
+        description: A description of the option.
+        required: Whether the option is required or not. If True, the option must have
+            a value set before it can be retrieved. If False, the option can be
+            retrieved without a value being set.
+        default_value: The default value of the option. If `None`, the option has no
+            default value.
+        key_validating_regex: This parameter specifies a regex pattern that each of the
+            keys in the dictionary, which can only be of type `str`, must match.
+        key_validating_function: A function that accepts a single argument, the keys of
+            the dictionary, and raises an exception, `OptionValueValidationError`, if
+            the value is invalid. If `None`, no additional validation is performed.
+        value_type: The type of the value in the dictionary that the option can accept.
+            If `None`, the dictionary can have values of type `str`, `int`, `float`, or
             `bool`.
-        value_validating_regex (str | None):
-            This parameter specifies a regex pattern that each of the values in the
-            dictionary must match.
-        value_validating_function (Callable[[SimpleType], None] | None):
-            A function that accepts a single argument, the values of the dictionary, and
-            raises an exception, `OptionValueValidationError`, if the value is invalid.
-            If `None`, no additional validation is performed.
-        validating_function (Callable[[SimpleType], None] | None):
-            A function that accepts a single argument, the entire dictionary value of
-            the option, and raises an exception, `OptionValueValidationError`, if the
-            value is invalid. If `None`, no additional validation is performed.
+        value_validating_regex: This parameter specifies a regex pattern that each of
+            the values in the dictionary must match.
+        value_validating_function: A function that accepts a single argument, the values
+            of the dictionary, and raises an exception, `OptionValueValidationError`, if
+            the value is invalid. If `None`, no additional validation is performed.
+        validating_function: A function that accepts a single argument, the entire
+            dictionary value of the option, and raises an exception,
+            `OptionValueValidationError`, if the value is invalid. If `None`, no
+            additional validation is performed.
 
     Parameters:
-        name (str):
-            The human-readable name of the option. The name cannot be an empty string.
-        description (str):
-            A description of the option.
-        required (bool):
-            Whether the option is required or not. If True, the option must have a
-            value set before it can be retrieved. If False, the option can be retrieved
-            without a value being set.
-        default_value (str | int | float | bool | None):
-            The default value of the option. If `None`, the option has no default value.
-        key_validating_regex (str | None):
-            This parameter specifies a regex pattern that each of the keys in the
-            dictionary, which can only be of type `str`, must match.
-        key_validating_function (Callable[[str], None] | None):
-            A function that accepts a single argument, the keys of the dictionary, and
-            raises an exception, `OptionValueValidationError`, if the value is invalid.
-            If `None`, no additional validation is performed.
-        value_type (Type[str] | Type[int] | Type[float] | Type[bool] | None):
-            The type of the value in the dictionary that the option can accept. If
-            `None`, the dictionary can have values of type `str`, `int`, `float`, or
+        name: The human-readable name of the option. The name cannot be an empty
+            string.
+        description: A description of the option.
+        required: Whether the option is required or not. If True, the option must have
+            a value set before it can be retrieved. If False, the option can be
+            retrieved without a value being set.
+        default_value: The default value of the option. If `None`, the option has no
+            default value.
+        key_validating_regex: This parameter specifies a regex pattern that each of the
+            keys in the dictionary, which can only be of type `str`, must match.
+        key_validating_function: A function that accepts a single argument, the keys of
+            the dictionary, and raises an exception, `OptionValueValidationError`, if
+            the value is invalid. If `None`, no additional validation is performed.
+        value_type: The type of the value in the dictionary that the option can accept.
+            If `None`, the dictionary can have values of type `str`, `int`, `float`, or
             `bool`.
-        value_validating_regex (str | None):
-            This parameter specifies a regex pattern that each of the values in the
-            dictionary must match.
-        value_validating_function (Callable[[str | int | float | bool], None] | None):
-            A function that accepts a single argument, the values of the dictionary, and
-            raises an exception, `OptionValueValidationError`, if the value is invalid.
-            If `None`, no additional validation is performed.
-        validating_function (Callable[[dict[str, str | int | float | bool], None] | None):
-            A function that accepts a single argument, the entire dictionary value of
-            the option, and raises an exception, `OptionValueValidationError`, if the
-            value is invalid. If `None`, no additional validation is performed.
+        value_validating_regex: This parameter specifies a regex pattern that each of
+            the values in the dictionary must match.
+        value_validating_function: A function that accepts a single argument, the values
+            of the dictionary, and raises an exception, `OptionValueValidationError`, if
+            the value is invalid. If `None`, no additional validation is performed.
+        validating_function: A function that accepts a single argument, the entire
+            dictionary value of the option, and raises an exception,
+            `OptionValueValidationError`, if the value is invalid. If `None`, no
+            additional validation is performed.
 
     Example:
         ```python
@@ -133,6 +131,26 @@ class DictionaryValueOption(BaseOption):
         self.value_validating_function = value_validating_function
         self.validating_function = validating_function
 
+        try:
+            _DictionaryValueParametersModel(
+                default_value=default_value,
+                key_validating_regex=key_validating_regex,
+                key_validating_function=key_validating_function,
+                value_type=value_type,
+                value_validating_regex=value_validating_regex,
+                value_validating_function=value_validating_function,
+                validating_function=validating_function,
+            )
+        except ValidationError as exc:
+            parameter_name = exc.errors()[0]["loc"][0]
+            raise InvalidOptionConfigurationParameterTypeError(
+                option_str=name,
+                parameter_name=parameter_name,
+                parameter_type=str(
+                    get_type_hints(_DictionaryValueParametersModel)[parameter_name]
+                ),
+            ) from None
+
         super().__init__(
             name=name,
             description=description,
@@ -149,20 +167,12 @@ class DictionaryValueOption(BaseOption):
             f"key_validating_function={self.key_validating_function!r}, "
             f"value_type={self.value_type!r}, "
             f"value_validating_regex={self.value_validating_regex!r}, "
-            f"value_validating_function={self.value_validating_function!r})"
-            f"validating_function={self.validating_function!r})"
+            f"value_validating_function={self.value_validating_function!r}, "
+            f"validating_function={self.validating_function!r}"
+            f")"
         )
 
     def validate_value(self, value: dict[str, Primitive]) -> None:
-        """
-        Validate the value of the option.
-
-        Args:
-            value (Any): The value to validate.
-
-        Raises:
-            OptionValueValidationFrameworkError: If the value is invalid.
-        """
         if not isinstance(value, dict):
             raise OptionValueValidationFrameworkError(
                 f"Value '{value}' for option '{self.name}' must be a dictionary.",
@@ -235,12 +245,6 @@ class DictionaryValueOption(BaseOption):
     def to_json(
         self,
     ) -> dict[str, str | bool | dict[str, Primitive] | None]:
-        """
-        Convert the option to a JSON serializable dictionary.
-
-        Returns:
-            The JSON serializable dictionary representation of the option.
-        """
         return {
             "name": self.name,
             "description": self.description,
@@ -263,10 +267,6 @@ class DictionaryValueOption(BaseOption):
 
     def _validate_option_arguments(self):
         super()._validate_option_arguments()
-        validate_value_type_argument(
-            option_name=self.name,
-            value_type=self.value_type,
-        )
         validate_validating_regex_argument(
             option_name=self.name,
             validating_regex=self.key_validating_regex,

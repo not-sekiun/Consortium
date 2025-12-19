@@ -1,4 +1,3 @@
-import sys
 import traceback
 import uuid
 from datetime import datetime
@@ -107,6 +106,14 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         """
         if parameters is None:
             parameters = {}
+        # Manually validate name first so we can reference the name in subsequent
+        # validation errors
+        if not isinstance(name, str):
+            raise ListenerCreationParameterTypeError(
+                listener_str=self.__class__.__name__,
+                parameter_name="name",
+                parameter_type=str(str),
+            ) from None
 
         try:
             _BaseListenerParametersModel(
@@ -117,11 +124,13 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             )
         except ValidationError as exc:
             raise ListenerCreationParameterTypeError(
-                listener_str=sys.modules[self.__module__].__file__,
+                listener_str=name,
                 parameter_name=exc.errors()[0]["loc"][0],
-                parameter_type=get_type_hints(_BaseListenerParametersModel)[
-                    exc.errors()[0]["loc"]
-                ],
+                parameter_type=str(
+                    get_type_hints(_BaseListenerParametersModel)[
+                        exc.errors()[0]["loc"][0]
+                    ]
+                ),
             ) from None
 
         self.name = name

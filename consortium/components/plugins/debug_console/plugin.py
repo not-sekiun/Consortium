@@ -247,7 +247,11 @@ class Plugin(BasePlugin):
                     # indentation errors. We only want to catch the one that indicates
                     # the user started a statement that requires an indent.
                     if "expected an indented block" not in str(exc):
-                        raise exc
+                        _print_custom_formatted_exception_message(
+                            exc=exc,
+                            temporary_function_identifier=random_identifier,
+                        )
+                        continue
 
                     def prompt_continuation(
                         width: int,

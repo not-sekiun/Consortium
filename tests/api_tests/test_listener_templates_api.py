@@ -91,9 +91,9 @@ MISSING_REQUIRED_OPTION_ERROR_JSON_SCHEMA = {
                     "type": "object",
                     "properties": {
                         "listener_template_str": {"type": "string"},
-                        "option_name": {"type": "string"},
+                        "option_str": {"type": "string"},
                     },
-                    "required": ["listener_template_str", "option_name"],
+                    "required": ["listener_template_str", "option_str"],
                 },
             },
             "required": ["code", "message", "detail"],
@@ -115,12 +115,12 @@ OPTION_VALUE_ERROR_JSON_SCHEMA = {
                 "detail": {
                     "type": "object",
                     "properties": {
-                        "option_name": {"type": "string"},
+                        "option_str": {"type": "string"},
                         "option_value": {},
                         "error_message": {"type": "string"},
                     },
                     "required": [
-                        "option_name",
+                        "option_str",
                         "option_value",
                         "error_message",
                     ],

@@ -46,43 +46,6 @@ class ListenerOperationError(
     _COMPONENT_TYPE = "listener"
 
 
-class ListenerNotRunningError(
-    comp_excs.ComponentNotRunningError,
-    ListenerOperationError,
-):
-    """
-    An error that is raised when an operation is attempted on a listener that requires
-    that listener to already be running but the listener is not running.
-    """
-
-    code = "LISTENER_NOT_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        listener_str: str,
-    ):
-        super().__init__(component_str=listener_str)
-
-
-class ListenerAlreadyRunningError(
-    comp_excs.ComponentAlreadyRunningError,
-    ListenerOperationError,
-):
-    """
-    An error that is raised when an operation is attempted on a listener that requires
-    that listener to not already be started or running but the listener is already started
-    or running.
-    """
-
-    code = "LISTENER_ALREADY_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        listener_str: str,
-    ):
-        super().__init__(component_str=listener_str)
-
-
 class ListenerStartError(comp_excs.ComponentStartError, ListenerOperationError):
     """
     An error that is raised when a listener fails to start.
@@ -141,6 +104,55 @@ class ListenerStopError(comp_excs.ComponentStopError, ListenerOperationError):
             error_message=error_message,
             detail=detail,
         )
+
+
+class ListenerStateError(
+    ListenersFrameworkError,
+    comp_excs.ComponentStateError,
+):
+    """
+    Base exception for all errors caused by attempting an operation on a listener
+    while it is in an invalid state that conflicts with that operation
+    """
+
+    code = "LISTENER_STATE_ERROR"
+
+
+class ListenerNotRunningError(
+    comp_excs.ComponentNotRunningError,
+    ListenerStateError,
+):
+    """
+    An error that is raised when an operation is attempted on a listener that requires
+    that listener to already be running but the listener is not running.
+    """
+
+    code = "LISTENER_NOT_RUNNING_ERROR"
+
+    def __init__(
+        self,
+        listener_str: str,
+    ):
+        super().__init__(component_str=listener_str)
+
+
+class ListenerAlreadyRunningError(
+    comp_excs.ComponentAlreadyRunningError,
+    ListenerStateError,
+):
+    """
+    An error that is raised when an operation is attempted on a listener that requires
+    that listener to not already be started or running but the listener is already
+    started or running.
+    """
+
+    code = "LISTENER_ALREADY_RUNNING_ERROR"
+
+    def __init__(
+        self,
+        listener_str: str,
+    ):
+        super().__init__(component_str=listener_str)
 
 
 class ListenerCreationError(ListenersFrameworkError):

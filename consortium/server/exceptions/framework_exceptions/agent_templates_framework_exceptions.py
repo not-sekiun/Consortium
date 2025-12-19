@@ -211,7 +211,7 @@ class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
                 f"'{agent_template_str}'. The provided option '{option_name}' was not "
                 f"found in the agent template."
             ),
-            detail={"option_name": option_name},
+            detail={"option_str": option_name},
         )
 
 
@@ -232,7 +232,7 @@ class AgentTemplateOptionValueValidationError(AgentTemplateOptionError):
                 f"option '{option_name}' is invalid. {error_message}"
             ),
             detail={
-                "option_name": option_name,
+                "option_str": option_name,
                 "option_value": option_value,
                 "error_message": error_message,
             },
@@ -251,5 +251,5 @@ class MissingRequiredAgentTemplateOptionError(
                 f"'{agent_template_str}'. The required option '{option_name}' was not "
                 f"provided."
             ),
-            detail={"option_name": option_name},
+            detail={"option_str": option_name},
         )

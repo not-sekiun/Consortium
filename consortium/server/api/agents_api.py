@@ -44,7 +44,7 @@ _agents_service = server_singletons.agents_service
 # _agent_capability_option_value_validation_error = (
 #     framework_excs.AgentCapabilityOptionValueValidationError(
 #         agent_str="<agent_str>",
-#         option_name="<option_name>",
+#         option_str="<option_str>",
 #         option_value="<option_value>",
 #         error_message="<error_message>",
 #     )
@@ -52,14 +52,14 @@ _agents_service = server_singletons.agents_service
 # _missing_required_agent_capability_option_error = (
 #     framework_excs.MissingRequiredAgentCapabilityOptionError(
 #         agent_str="<agent_str>",
-#         option_name="<option_name>",
+#         option_str="<option_str>",
 #         agent_capability_name="<agent_capability_name>",
 #     )
 # )
 # _agent_capability_option_not_found_framework_error = (
 #     framework_excs.AgentCapabilityOptionNotFoundError(
 #         agent_str="<agent_str>",
-#         option_name="<option_name>",
+#         option_str="<option_str>",
 #         command="<command>",
 #         agent_type_str="<agent_type_str>",
 #     )
@@ -81,7 +81,7 @@ _agent_capability_option_value_validation_error = (
     api_excs.AgentCapabilityOptionValueValidationError.from_consortium_exception(
         consortium_exception=framework_excs.AgentCapabilityOptionValueValidationError(
             agent_str="<agent_str>",
-            option_name="<option_name>",
+            option_name="<option_str>",
             option_value="<option_value>",
             error_message="<error_message>",
         ),
@@ -91,7 +91,7 @@ _agent_capability_option_not_found_error = (
     api_excs.AgentCapabilityOptionNotFoundError.from_consortium_exception(
         consortium_exception=framework_excs.AgentCapabilityOptionNotFoundError(
             agent_str="<agent_str>",
-            option_name="<option_name>",
+            option_name="<option_str>",
             command="<command>",
             agent_type_str="<agent_type_str>",
         ),
@@ -101,7 +101,7 @@ _missing_required_agent_capability_option_error = (
     api_excs.MissingRequiredAgentCapabilityOptionError.from_consortium_exception(
         consortium_exception=framework_excs.MissingRequiredAgentCapabilityOptionError(
             agent_str="<agent_str>",
-            option_name="<option_name>",
+            option_name="<option_str>",
             agent_capability_name="<agent_capability_name>",
         )
     )
@@ -535,16 +535,21 @@ async def update_agent_by_agent_id(
     description: Annotated[str, Body(embed=True)] = None,
 ) -> AgentModel:
     try:
-        if name is not None:
-            await _agents_service.update_agent_name_by_agent_id(
-                agent_id=agent_id,
-                name=name,
-            )
-        if description is not None:
-            await _agents_service.update_agent_description_by_agent_id(
-                agent_id=agent_id,
-                description=description,
-            )
+        await _agents_service.update_agent_by_agent_id(
+            agent_id=agent_id,
+            name=name,
+            description=description,
+        )
+        # if name is not None:
+        #     await _agents_service.update_agent_name_by_agent_id(
+        #         agent_id=agent_id,
+        #         name=name,
+        #     )
+        # if description is not None:
+        #     await _agents_service.update_agent_description_by_agent_id(
+        #         agent_id=agent_id,
+        #         description=description,
+        #     )
     except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc,
