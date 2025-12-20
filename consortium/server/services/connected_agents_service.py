@@ -6,6 +6,7 @@ from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class ConnectedAgentsService:
@@ -22,6 +23,7 @@ class ConnectedAgentsService:
     def __repr__(self) -> str:
         return "ConnectedAgentsService()"
 
+    @log_and_propagate_error_on_service_method
     async def register_agent(
         self,
         payload_id: str | None = None,
@@ -92,6 +94,7 @@ class ConnectedAgentsService:
         self._agents[str(agent.agent_id)] = agent
         return agent
 
+    @log_and_propagate_error_on_service_method
     async def check_in_agent_by_agent_id(self, agent_id: str) -> None:
         """
         Check in a connected agent by its agent ID. This method simply updates the last
@@ -114,6 +117,7 @@ class ConnectedAgentsService:
             raise AgentNotFoundError(agent_id=agent_id)
         await self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
 
+    @log_and_propagate_error_on_service_method
     async def deregister_agent_by_agent_id(self, agent_id: str) -> None:
         """
         Deregister a connected agent by its agent ID. This method removes the agent from
@@ -137,6 +141,7 @@ class ConnectedAgentsService:
         await self._agents_service.remove_agent_by_agent_id(agent_id=agent_id)
         self._agents.pop(str(agent_id))
 
+    @log_and_propagate_error_on_service_method
     def get_all_agents(self) -> list[Agent]:
         """
         Get all connected agents that are registered with the specific listener that is
@@ -149,6 +154,7 @@ class ConnectedAgentsService:
 
         return list(self._agents.values())
 
+    @log_and_propagate_error_on_service_method
     def get_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> Agent:
         """
         Get a connected agent by its agent ID for the specific listener that is using

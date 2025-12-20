@@ -35,7 +35,7 @@ from consortium.server.exceptions.framework_exceptions import (
 
 class ListenerTemplatesError(BaseConsortiumError):
     """
-    Base exception for all listener templates related errors.
+    Base exception for all listener templates-related errors.
     """
 
     code = "LISTENER_TEMPLATES_ERROR"
@@ -43,7 +43,7 @@ class ListenerTemplatesError(BaseConsortiumError):
 
 class ListenerTemplatesFrameworkError(ListenerTemplatesError):
     """
-    Base exception for all listener templates framework errors.
+    Base exception for all errors that occur within the listener templates framework.
     """
 
     code = "LISTENER_TEMPLATES_FRAMEWORK_ERROR"
@@ -68,8 +68,8 @@ class InvalidListenerTemplateConfigurationParameterTypeError(
     ListenerTemplateConfigurationError,
 ):
     """
-    An error that is raised when a listener template's configuration parameter is of an invalid
-    type.
+    Raised when a listener template's configuration parameter is not of the expected
+    type during listener template configuration.
     """
 
     code = "INVALID_LISTENER_TEMPLATE_CONFIGURATION_PARAMETER_TYPE_ERROR"
@@ -92,7 +92,8 @@ class MissingListenerTemplateConfigurationParameterError(
     ListenerTemplateConfigurationError,
 ):
     """
-    An error that is raised when a parameter is not declared in a listener template's definition.
+    Raised when a required parameter is not declared in a listener template's definition
+    during listener template configuration.
     """
 
     code = "MISSING_LISTENER_TEMPLATE_CONFIGURATION_PARAMETER_ERROR"
@@ -109,8 +110,8 @@ class EmptyListenerTemplateLabelError(
     ListenerTemplateConfigurationError,
 ):
     """
-    An error that is raised when the label provided in a listener template's definition during
-    configuration is an empty string.
+    Raised when an empty label is provided in a listener template's definition during
+    listener template configuration.
     """
 
     code = "EMPTY_LISTENER_TEMPLATE_LABEL_ERROR"
@@ -124,8 +125,8 @@ class DuplicateListenerTemplateLabelError(
     ListenerTemplateConfigurationError,
 ):
     """
-    An error that is raised when the label provided in the listener template's definition during
-    configuration is already in use by another listener template.
+    Raised when the label provided in a listener template's definition is already in use
+    by another listener template during listener template configuration.
     """
 
     code = "DUPLICATE_LISTENER_TEMPLATE_LABEL_ERROR"
@@ -142,8 +143,9 @@ class InvalidListenerTemplateVersionError(
     ListenerTemplateConfigurationError,
 ):
     """
-    An error that is raised when the listener template version string provided in the listener template's
-    definition during configuration is not a valid version string according to PEP 440.
+    Raised when the listener template version string provided in a listener template's
+    definition is not a valid version string according to PEP 440 during listener template
+    configuration.
     """
 
     code = "INVALID_LISTENER_TEMPLATE_VERSION_ERROR"
@@ -160,9 +162,9 @@ class InvalidFrameworkVersionSpecifierError(
     ListenerTemplateConfigurationError,
 ):
     """
-    An error that is raised when the framework version specifier string provided in the
-    listener template's definition during configuration is not a valid version specifier string as
-    defined in PEP440.
+    Raised when the framework version specifier string provided in a listener template's
+    definition is not a valid version specifier string as defined in PEP 440 during
+    listener template configuration.
     """
 
     code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
@@ -183,9 +185,9 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
     ListenerTemplateConfigurationError,
 ):
     """
-    An error that is raised when the listener template dependency version specifier string
-    provided in the listener template's definition during configuration is not a valid version
-    specifier string as defined in PEP440.
+    Raised when a listener template dependency version specifier string provided in a
+    listener template's definition is not a valid version specifier string as defined in
+    PEP 440 during listener template configuration.
     """
 
     code = "INVALID_LISTENER_TEMPLATE_DEPENDENCY_VERSION_SPECIFIER_ERROR"
@@ -202,6 +204,11 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
 
 
 class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationError):
+    """
+    Raised when duplicate option names are provided in a listener template's definition
+    during listener template configuration.
+    """
+
     code = "DUPLICATE_LISTENER_TEMPLATE_OPTION_NAME_ERROR"
 
     def __init__(self, listener_template_str: str, option_name: str):
@@ -215,10 +222,19 @@ class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationErro
 
 
 class ListenerTemplateOptionError(ListenerTemplatesFrameworkError):
+    """
+    Base exception for all errors related to listener template options.
+    """
+
     code = "LISTENER_TEMPLATE_OPTION_ERROR"
 
 
 class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
+    """
+    Raised when a provided option name is not found in the listener template when
+    attempting to create a listener from the listener template.
+    """
+
     code = "LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"
 
     def __init__(self, listener_template_str: str, option_name: str):
@@ -232,6 +248,11 @@ class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
 
 
 class ListenerTemplateOptionValueValidationError(ListenerTemplateOptionError):
+    """
+    Raised when an invalid value is provided for a listener template option when
+    attempting to create a listener from the listener template.
+    """
+
     code = "LISTENER_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"
 
     def __init__(
@@ -253,6 +274,11 @@ class ListenerTemplateOptionValueValidationError(ListenerTemplateOptionError):
 class MissingRequiredListenerTemplateOptionError(
     ListenerTemplateOptionError,
 ):
+    """
+    Raised when a required option is not provided when attempting to create a listener
+    from the listener template.
+    """
+
     code = "MISSING_REQUIRED_LISTENER_TEMPLATE_OPTION_ERROR"
 
     def __init__(self, listener_template_str: str, option_name: str):
@@ -267,7 +293,7 @@ class MissingRequiredListenerTemplateOptionError(
 
 class ListenerTemplatesServiceError(ListenerTemplatesError):
     """
-    Base exception for all listener templates service errors.
+    Base exception for all errors that occur within the listener templates service.
     """
 
     code = "LISTENER_TEMPLATES_SERVICE_ERROR"

@@ -16,16 +16,7 @@ from consortium.framework._components import (
     ComponentMetadataModel,
 )
 from consortium.framework.utils.exception_utils import remap_exception
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
-)
-from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
-    ComponentAlreadyRunningError,
-    ComponentNotRunningError,
-    ComponentStartError,
-    ComponentStopError,
-)
-from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     EmptyPluginLabelError,
     InvalidFrameworkVersionSpecifierError,
     InvalidPluginConfigurationParameterTypeError,
@@ -36,6 +27,15 @@ from consortium.server.exceptions.framework_exceptions.plugins_framework_excepti
     PluginNotRunningError,
     PluginStartError,
     PluginStopError,
+)
+from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
+    BaseFrameworkException,
+)
+from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
+    ComponentAlreadyRunningError,
+    ComponentNotRunningError,
+    ComponentStartError,
+    ComponentStopError,
 )
 from consortium.server.server_logging import LoggerType
 

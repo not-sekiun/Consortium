@@ -2,7 +2,7 @@ import pathlib
 
 from loguru import logger
 
-from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplatesFrameworkError,
 )
 from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
@@ -18,6 +18,7 @@ from consortium.server.services.component_loader_services.agent_profile_loader_s
 from consortium.server.services.component_registry_services.agent_profile_registry_service import (
     AgentProfileRegistryService,
 )
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 # The agent profiles service is an internal service that is meant to only be
@@ -41,6 +42,7 @@ class AgentProfilesService:
     def __repr__(self) -> str:
         return "AgentProfilesService()"
 
+    @log_and_propagate_error_on_service_method
     def get_agent_profile_from_agent_profile_project_folder(
         self,
         agent_profile_project_folder: pathlib.Path,
@@ -63,6 +65,7 @@ class AgentProfilesService:
             )
         return agent_profile
 
+    @log_and_propagate_error_on_service_method
     def get_agent_profiles_from_agent_profile_project_folder_directories(
         self,
         directory: pathlib.Path,
@@ -92,12 +95,14 @@ class AgentProfilesService:
             errored,
         )
 
+    @log_and_propagate_error_on_service_method
     async def load_agent_profile(self, agent_profile: AgentProfile) -> None:
         agent_profile = await self._agent_profile_registry_service.load_component(
             component=agent_profile,
         )
         self._logger.debug("Loaded agent profile: {}", agent_profile)
 
+    @log_and_propagate_error_on_service_method
     async def load_agent_profile_from_agent_profile_project_folder(
         self,
         agent_profile_project_folder: pathlib.Path,
@@ -118,6 +123,7 @@ class AgentProfilesService:
         self._logger.debug("Loaded agent profile: {}", agent_profile)
         return agent_profile
 
+    @log_and_propagate_error_on_service_method
     async def unload_agent_profile_by_agent_profile_id(
         self,
         agent_profile_id: str,
@@ -130,6 +136,7 @@ class AgentProfilesService:
         self._logger.info("Unloaded agent profile: {}", agent_profile)
         self._logger.debug("Unloaded agent profile: {!r}", agent_profile)
 
+    @log_and_propagate_error_on_service_method
     async def reload_agent_profile_by_agent_profile_id(
         self,
         agent_profile_id: str,
@@ -153,6 +160,7 @@ class AgentProfilesService:
         self._logger.debug("Reloaded agent profile: {!r}", agent_profile)
         return agent_profile
 
+    @log_and_propagate_error_on_service_method
     async def load_framework_agent_profiles(
         self,
         ignore_enabled_agent_profile_flag: bool = False,
@@ -200,6 +208,7 @@ class AgentProfilesService:
             len(errored) + failed_to_load,
         )
 
+    @log_and_propagate_error_on_service_method
     async def unload_framework_agent_profiles(self) -> None:
         self._logger.info("Unloading framework agent profiles...")
         unloaded_agent_profiles = 0
@@ -217,12 +226,14 @@ class AgentProfilesService:
             unloaded_agent_profiles,
         )
 
+    @log_and_propagate_error_on_service_method
     async def reload_framework_agent_profiles(self) -> None:
         self._logger.info("Reloading framework agent profiles...")
         await self.unload_framework_agent_profiles()
         await self.load_framework_agent_profiles()
         self._logger.info("Reloaded framework agent profiles.")
 
+    @log_and_propagate_error_on_service_method
     def get_all_agent_profiles(self) -> list[AgentProfile]:
         agent_profiles = self._agent_profile_registry_service.get_all_components()
         self._logger.debug(
@@ -231,6 +242,7 @@ class AgentProfilesService:
         )
         return agent_profiles
 
+    @log_and_propagate_error_on_service_method
     def get_agent_profile_by_agent_profile_id(self, agent_profile_id) -> AgentProfile:
         agent_profile = (
             self._agent_profile_registry_service.get_component_by_component_id(

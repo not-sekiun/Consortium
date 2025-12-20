@@ -21,6 +21,7 @@ from consortium.server.services.component_registry_services.event_hook_registry_
     EventHookRegistryService,
 )
 from consortium.server.services.events_service import EventsService
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class EventHooksService:
@@ -42,6 +43,7 @@ class EventHooksService:
     def __repr__(self) -> str:
         return "EventHooksService()"
 
+    @log_and_propagate_error_on_service_method
     def get_event_hook_from_event_hook_project_folder(
         self,
         event_hook_project_folder: pathlib.Path,
@@ -66,6 +68,7 @@ class EventHooksService:
             )
         return event_hook
 
+    @log_and_propagate_error_on_service_method
     def get_event_hooks_from_event_hook_project_folder_directories(
         self,
         directory: pathlib.Path,
@@ -117,6 +120,7 @@ class EventHooksService:
             errored,
         )
 
+    @log_and_propagate_error_on_service_method
     def register_event_hook(self, event_hook: BaseEventHook) -> BaseEventHook:
         self._event_hook_registry_service.register_component(
             component=event_hook,
@@ -124,6 +128,7 @@ class EventHooksService:
         self._logger.debug("Registered event hook: {!r}", event_hook)
         return event_hook
 
+    @log_and_propagate_error_on_service_method
     def register_event_hook_from_event_hook_project_folder(
         self,
         event_hook_project_folder: pathlib.Path,
@@ -145,6 +150,7 @@ class EventHooksService:
             self._logger.debug("Registered event hook: {!r}", event_hook)
         return event_hook
 
+    @log_and_propagate_error_on_service_method
     async def load_event_hook(self, event_hook: BaseEventHook) -> BaseEventHook:
         event_hook = await self._event_hook_registry_service.load_component(
             component=event_hook,
@@ -152,6 +158,7 @@ class EventHooksService:
         self._logger.debug("Loaded event hook: {!r}", event_hook)
         return event_hook
 
+    @log_and_propagate_error_on_service_method
     async def load_event_hook_from_event_hook_project_folder(
         self,
         event_hook_project_folder: pathlib.Path,
@@ -173,6 +180,7 @@ class EventHooksService:
             self._logger.debug("Loaded event hook: {!r}", event_hook)
         return event_hook
 
+    @log_and_propagate_error_on_service_method
     async def unload_event_hook_by_event_hook_id(
         self,
         event_hook_id: str,
@@ -185,6 +193,7 @@ class EventHooksService:
         self._logger.info("Unloaded event hook: {}", event_hook)
         self._logger.debug("Unloaded event hook: {!r}", event_hook)
 
+    @log_and_propagate_error_on_service_method
     async def reload_event_hook_by_event_hook_id(
         self,
         event_hook_id: str,
@@ -210,6 +219,7 @@ class EventHooksService:
             self._logger.debug("Reloaded event hook: {!r}", event_hook)
         return event_hook
 
+    @log_and_propagate_error_on_service_method
     async def load_framework_event_hooks(
         self,
         ignore_enabled_event_hook_flag: bool = False,
@@ -254,6 +264,7 @@ class EventHooksService:
             len(errored) + failed_to_load,
         )
 
+    @log_and_propagate_error_on_service_method
     def unload_framework_event_hooks(self) -> None:
         self._logger.info("Unloading framework event hooks...")
         unloaded_event_hooks = 0
@@ -272,6 +283,7 @@ class EventHooksService:
             unloaded_event_hooks,
         )
 
+    @log_and_propagate_error_on_service_method
     async def reload_framework_event_hooks(
         self,
     ) -> None:
@@ -280,6 +292,7 @@ class EventHooksService:
         await self.load_framework_event_hooks()
         self._logger.info("Reloaded framework event hooks.")
 
+    @log_and_propagate_error_on_service_method
     def get_event_hook_by_event_hook_id(self, event_hook_id: str) -> BaseEventHook:
         event_hook = self._event_hook_registry_service.get_component_by_component_id(
             component_id=event_hook_id,
@@ -287,6 +300,7 @@ class EventHooksService:
         self._logger.debug(f"Retrieved event hook: {event_hook!r}")
         return event_hook
 
+    @log_and_propagate_error_on_service_method
     def get_all_event_hooks(self) -> list[BaseEventHook]:
         event_hooks = self._event_hook_registry_service.get_all_components()
         self._logger.debug(
@@ -295,6 +309,7 @@ class EventHooksService:
         )
         return event_hooks
 
+    @log_and_propagate_error_on_service_method
     def get_all_event_types(self) -> list[EventType]:
         event_types = list(EventType)
         self._logger.debug(
@@ -303,6 +318,7 @@ class EventHooksService:
         )
         return event_types
 
+    @log_and_propagate_error_on_service_method
     def trigger_event(self, event: Event):
         self._logger.debug("Triggered event: {}", event)
         for event_hook in self._event_hook_registry_service.get_all_components():

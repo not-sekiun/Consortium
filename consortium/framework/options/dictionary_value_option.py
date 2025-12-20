@@ -15,7 +15,7 @@ from consortium.framework.options._option_argument_validators import (
 )
 from consortium.framework.options._utils import resolve_validating_function_string
 from consortium.framework.options.option_types import OptionType
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )

@@ -8,16 +8,14 @@ from loguru import logger
 from consortium.framework._components._component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.framework.utils.exception_utils import remap_exception
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
-)
-from consortium.server.exceptions.framework_exceptions.plugins_framework_exceptions import (
-    PluginsFrameworkError,
-)
-from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     PluginLoadingError,
+    PluginsFrameworkError,
     PluginsServiceError,
     PluginUnloadingError,
+)
+from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
+    BaseFrameworkException,
 )
 from consortium.server.server_config import CONSORTIUM_PLUGINS_DIRECTORY_PATH
 from consortium.server.server_logging import LoggerType
@@ -27,6 +25,7 @@ from consortium.server.services.component_loader_services.plugin_loader_service 
 from consortium.server.services.component_registry_services.plugin_registry_service import (
     PluginRegistryService,
 )
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class PluginsService:
@@ -49,6 +48,7 @@ class PluginsService:
     def __repr__(self):
         return "PluginsService()"
 
+    @log_and_propagate_error_on_service_method
     def get_plugin_from_plugin_project_folder(
         self,
         plugin_project_folder: pathlib.Path,
@@ -111,6 +111,7 @@ class PluginsService:
             )
         return plugin
 
+    @log_and_propagate_error_on_service_method
     def get_plugins_from_plugin_project_folder_directories(
         self,
         directory: pathlib.Path,
@@ -167,6 +168,7 @@ class PluginsService:
             errored,
         )
 
+    @log_and_propagate_error_on_service_method
     def register_plugin(
         self,
         plugin: BasePlugin,
@@ -199,6 +201,7 @@ class PluginsService:
         self._plugin_registry_service.register_component(component=plugin)
         self._logger.debug("Registered plugin: {!r}", plugin)
 
+    @log_and_propagate_error_on_service_method
     def register_plugin_from_plugin_project_folder(
         self,
         plugin_project_folder: pathlib.Path,
@@ -235,6 +238,7 @@ class PluginsService:
         self._logger.debug("Registered plugin: {!r}", plugin)
         return plugin
 
+    @log_and_propagate_error_on_service_method
     async def load_plugin_from_plugin_project_folder(
         self,
         plugin_project_folder: pathlib.Path,
@@ -271,6 +275,7 @@ class PluginsService:
         self._logger.debug("Loaded plugin: {!r}", plugin)
         return plugin
 
+    @log_and_propagate_error_on_service_method
     async def unload_plugin_by_plugin_id(
         self,
         plugin_id: str,
@@ -356,6 +361,7 @@ class PluginsService:
         # self.logger.info("Unloaded plugin: {}", plugin)
         # self.logger.debug("Unloaded plugin: {!r}", plugin)
 
+    @log_and_propagate_error_on_service_method
     async def reload_plugin_by_plugin_id(
         self,
         plugin_id: str,
@@ -420,6 +426,7 @@ class PluginsService:
         # self.logger.debug("Reloaded plugin: {!r}", plugin)
         # return plugin
 
+    @log_and_propagate_error_on_service_method
     async def load_framework_plugins(
         self,
         ignore_enabled_plugin_flag: bool = False,
@@ -507,6 +514,7 @@ class PluginsService:
             len(errored) + len(unresolved_plugins) + failed_to_load,
         )
 
+    @log_and_propagate_error_on_service_method
     async def unload_framework_plugins(
         self,
         force_unload: bool = False,
@@ -544,6 +552,7 @@ class PluginsService:
             number_of_unloaded_plugins,
         )
 
+    @log_and_propagate_error_on_service_method
     async def reload_framework_plugins(
         self,
         force_reload: bool = False,
@@ -608,6 +617,7 @@ class PluginsService:
 
         self._logger.info("Reloaded framework plugins.")
 
+    @log_and_propagate_error_on_service_method
     async def start_plugin_by_plugin_id(
         self,
         plugin_id: str,
@@ -652,6 +662,7 @@ class PluginsService:
         while plugin.status.state in (State.INITIALIZED, State.STARTED):
             await asyncio.sleep(0.1)
 
+    @log_and_propagate_error_on_service_method
     async def stop_plugin_by_plugin_id(
         self,
         plugin_id: str,
@@ -683,6 +694,7 @@ class PluginsService:
         while plugin.status.state == State.RUNNING:
             await asyncio.sleep(0.1)
 
+    @log_and_propagate_error_on_service_method
     async def restart_plugin_by_plugin_id(
         self,
         plugin_id: str,
@@ -720,6 +732,7 @@ class PluginsService:
                 lambda finished_task: self._restart_plugin_tasks.remove(finished_task),
             )
 
+    @log_and_propagate_error_on_service_method
     def get_plugin_by_plugin_id(self, plugin_id: str) -> BasePlugin:
         """
         Returns a plugin object by its plugin id. The plugin must be registered to the
@@ -740,6 +753,7 @@ class PluginsService:
         self._logger.debug("Retrieved plugin: {!r}", plugin)
         return plugin
 
+    @log_and_propagate_error_on_service_method
     def get_plugins_by_label(self, label: str) -> list[BasePlugin]:
         """
         Returns all plugins loaded in the service that have the provided label.
@@ -755,6 +769,7 @@ class PluginsService:
         """
         return self._plugin_registry_service.get_components_by_label(label=label)
 
+    @log_and_propagate_error_on_service_method
     def get_all_plugins(self) -> list[BasePlugin]:
         """
         Returns a list of all plugins loaded in the service.

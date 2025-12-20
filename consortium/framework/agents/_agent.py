@@ -14,6 +14,12 @@ from consortium.framework.agents.agent_message_models import (
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
+    AgentTypeNotFoundError,
+)
+from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
     AgentCapabilityNotFoundError,
     AgentCapabilityOptionNotFoundError,
@@ -25,12 +31,6 @@ from consortium.server.exceptions.framework_exceptions.agents_framework_exceptio
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
     MissingRequiredAgentCapabilityOptionError,
-)
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
-    OptionValueValidationError,
-)
-from consortium.server.exceptions.service_exceptions.c2_types_service_exceptions import (
-    AgentTypeNotFoundError,
 )
 from consortium.server.exceptions.service_exceptions.payloads_service_exceptions import (
     PayloadNotFoundError,

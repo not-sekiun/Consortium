@@ -5,7 +5,7 @@ from pydantic import BaseModel, ValidationError
 from consortium.framework.framework_types import Primitive
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options.option_types import OptionType
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     EmptyAvailableValuesError,
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,

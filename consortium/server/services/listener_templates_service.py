@@ -7,10 +7,9 @@ from consortium.server.exceptions.consortium_exceptions.listener_templates_conso
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
-# The listener profiles service is not defined at the module level like how it is
-# usually because it would create a circular import here.
 class ListenerTemplatesService:
     def __init__(
         self,
@@ -32,6 +31,7 @@ class ListenerTemplatesService:
             f")"
         )
 
+    @log_and_propagate_error_on_service_method
     def get_listener_template_by_listener_template_id(
         self,
         listener_template_id: str,
@@ -51,6 +51,7 @@ class ListenerTemplatesService:
             listener_template_id=listener_template_id,
         )
 
+    @log_and_propagate_error_on_service_method
     def get_listener_template_by_label(
         self,
         label: str,
@@ -70,6 +71,7 @@ class ListenerTemplatesService:
             label=label,
         )
 
+    @log_and_propagate_error_on_service_method
     def get_all_listener_templates(self) -> list[BaseListenerTemplate]:
         all_listener_templates = [
             listener_profile.listener_template

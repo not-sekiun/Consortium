@@ -26,7 +26,7 @@ from consortium.framework.options import (
 )
 from consortium.framework.utils.exception_utils import remap_exception
 from consortium.framework.utils.formatter_utils import format_docstring_to_single_line
-from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (  # AgentTemplateConfigurationParameterTypeError,; EmptyAgentTemplateNameError,; RequiredAgentTemplateConfigurationParameterNotDeclaredError,
+from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplateOptionNotFoundError,
     AgentTemplateOptionValueValidationError,
     DuplicateAgentTemplateOptionNameError,
@@ -38,7 +38,7 @@ from consortium.server.exceptions.framework_exceptions.agent_templates_framework
     MissingAgentTemplateConfigurationParameterError,
     MissingRequiredAgentTemplateOptionError,
 )
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
 )
 

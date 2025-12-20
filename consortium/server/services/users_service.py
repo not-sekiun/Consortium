@@ -9,6 +9,7 @@ from consortium.server.exceptions.consortium_exceptions.users_consortium_excepti
 )
 from consortium.server.objects.user_objects import User
 from consortium.server.server_logging import LoggerType
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class UsersService:
@@ -25,6 +26,7 @@ class UsersService:
     def __repr__(self) -> str:
         return "UsersService()"
 
+    @log_and_propagate_error_on_service_method
     def get_user_by_user_id(self, user_id: str | uuid.UUID) -> User:
         user_id = str(user_id)
 
@@ -36,6 +38,7 @@ class UsersService:
         self._logger.debug("Retrieved user by user ID '{}': {!r}", user_id, user)
         return user
 
+    @log_and_propagate_error_on_service_method
     def get_user_by_access_token(self, access_token: str) -> User:
         for user in self.get_all_users():
             if str(user.json_web_token.subject) == access_token:
@@ -45,6 +48,7 @@ class UsersService:
                 return user
         raise UserAccessTokenNotFoundError(access_token=access_token)
 
+    @log_and_propagate_error_on_service_method
     def get_all_users(self) -> list[User]:
         all_users = list(self._users.values())
         self._logger.debug(
@@ -53,6 +57,7 @@ class UsersService:
         )
         return all_users
 
+    @log_and_propagate_error_on_service_method
     def update_user_display_name_by_user_id(
         self,
         display_name: str,
@@ -71,6 +76,7 @@ class UsersService:
         )
         return user
 
+    @log_and_propagate_error_on_service_method
     def login_user(self, username: str, password: str) -> User:
         user_account = server_singletons.user_accounts_service.authenticate_user_account_credentials(
             username=username,
@@ -83,6 +89,7 @@ class UsersService:
         self._logger.debug("- {!r}", user)
         return user
 
+    @log_and_propagate_error_on_service_method
     def logout_user_by_user_id(self, user_id: str | uuid.UUID) -> None:
         user_id = str(user_id)
 

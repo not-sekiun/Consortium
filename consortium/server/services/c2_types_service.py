@@ -2,13 +2,14 @@ from loguru import logger
 
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.listeners.base_listener_type import BaseListenerType
-from consortium.server.exceptions.service_exceptions.c2_types_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
     AgentTypeNotFoundError,
     ListenerTypeNotFoundError,
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class C2TypesService:
@@ -35,6 +36,7 @@ class C2TypesService:
             f")"
         )
 
+    @log_and_propagate_error_on_service_method
     def get_all_listener_types(self) -> list[BaseListenerType]:
         listener_types = []
         for (
@@ -48,6 +50,7 @@ class C2TypesService:
         )
         return listener_types
 
+    @log_and_propagate_error_on_service_method
     def get_listener_type_by_name(self, listener_type_name: str) -> BaseListenerType:
         for listener_type in self.get_all_listener_types():
             if str(listener_type.name) == listener_type_name:
@@ -58,6 +61,7 @@ class C2TypesService:
                 return listener_type
         raise ListenerTypeNotFoundError(listener_type_name=listener_type_name)
 
+    @log_and_propagate_error_on_service_method
     def get_all_agent_types(self) -> list[BaseAgentType]:
         agent_types = []
         for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
@@ -69,6 +73,7 @@ class C2TypesService:
         )
         return agent_types
 
+    @log_and_propagate_error_on_service_method
     def get_agent_type_by_name(self, agent_type_name: str) -> BaseAgentType:
         for agent_type in self.get_all_agent_types():
             if str(agent_type.name) == agent_type_name:
@@ -79,6 +84,7 @@ class C2TypesService:
                 return agent_type
         raise AgentTypeNotFoundError(agent_type_name=agent_type_name)
 
+    @log_and_propagate_error_on_service_method
     def get_compatible_listener_types_from_agent_type_name(
         self, agent_type_name: str
     ) -> list[str]:
@@ -96,6 +102,7 @@ class C2TypesService:
         )
         return compatible_listener_types
 
+    @log_and_propagate_error_on_service_method
     def get_registered_compatible_agent_types_from_listener_type_name(
         self, listener_type_name: str
     ) -> list[str]:
@@ -117,6 +124,7 @@ class C2TypesService:
         )
         return compatible_agent_types
 
+    @log_and_propagate_error_on_service_method
     def is_agent_type_registered(self, agent_type_name: str) -> bool:
         for agent_type in self.get_all_agent_types():
             if str(agent_type.name) == agent_type_name:
@@ -131,6 +139,7 @@ class C2TypesService:
         )
         return False
 
+    @log_and_propagate_error_on_service_method
     def is_listener_type_registered(self, listener_type_name: str) -> bool:
         for listener_type in self.get_all_listener_types():
             if str(listener_type.name) == listener_type_name:
@@ -145,6 +154,7 @@ class C2TypesService:
         )
         return False
 
+    @log_and_propagate_error_on_service_method
     def are_c2_types_compatible(
         self,
         agent_type_name: str,
@@ -168,26 +178,10 @@ class C2TypesService:
             )
             return False
 
+    @log_and_propagate_error_on_service_method
     def resolve_registered_compatible_agent_types_for_listener_types(self):
-        # for agent_type in self.get_all_agent_types():
-        #     for listener_type_name in agent_type.compatible_listener_types:
-        #         if self.is_listener_type_registered(listener_type_name):
-        #             self._logger.debug(
-        #                 "Resolved compatible listener type '{}' for agent type '{}'.",
-        #                 listener_type_name,
-        #                 agent_type.name,
-        #             )
-        #             listener_type = self.get_listener_type_by_name(listener_type_name)
-        #             listener_type.registered_compatible_agent_types.add(agent_type.name)
-        #             continue
-        #         else:
-        #             self._logger.debug(
-        #                 "Could not resolve compatible listener type '{}' for agent type '{}' "
-        #                 "because the listener type is not registered.",
-        #                 listener_type_name,
-        #                 agent_type.name,
-        #             )
-        # self._logger.debug(
-        #     "Resolved all registered compatible agent types for all listener types."
-        # )
-        pass
+        self._logger.warning(
+            "`resolve_registered_compatible_agent_types_for_listener_types()` is not"
+            " implemented yet. Consider maybe implementing it if necessary. Or moving "
+            "it to a profiles service consideration",
+        )

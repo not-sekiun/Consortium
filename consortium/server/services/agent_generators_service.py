@@ -7,11 +7,11 @@ from loguru import logger
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.server.exceptions.framework_exceptions import (
     agent_generators_framework_exceptions as framework_excs,
-)
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
-    OptionValueValidationError,
 )
 from consortium.server.exceptions.service_exceptions import (
     agent_generators_service_exceptions as svc_excs,

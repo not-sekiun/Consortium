@@ -16,7 +16,7 @@ from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exc
     ListenerAlreadyRunningError,
     ListenerNotFoundError,
 )
-from consortium.server.exceptions.framework_exceptions.options_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
 )
 from consortium.server.server_logging import LoggerType
@@ -106,7 +106,9 @@ class ListenersService:
     @log_and_propagate_error_on_service_method
     async def add_listener(self, listener: BaseListener) -> None:
         if str(listener.listener_id) in self._listeners:
-            raise ListenerAlreadyExistsError
+            raise ListenerAlreadyExistsError(
+                listener_id=str(listener.listener_id),
+            )
 
         await self._events_service.trigger_event(
             event=Event(
@@ -120,7 +122,9 @@ class ListenersService:
     async def remove_listener_by_listener_id(self, listener_id: str) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == State.RUNNING:
-            raise ListenerAlreadyRunningError
+            raise ListenerAlreadyRunningError(
+                listener_str=str(listener),
+            )
 
         removed_listener = self._listeners.pop(listener_id)
         await self._events_service.trigger_event(
@@ -159,7 +163,9 @@ class ListenersService:
             # Cannot update running listeners because the parameters change wont be
             # reflected in the listener.
             if listener.status.state == State.RUNNING:
-                raise ListenerAlreadyRunningError
+                raise ListenerAlreadyRunningError(
+                    listener_str=str(listener),
+                )
 
             # Fill in any missing parameters with values from the existing set of
             # parameters.

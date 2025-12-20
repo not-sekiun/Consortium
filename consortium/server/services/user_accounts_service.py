@@ -26,6 +26,7 @@ from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
 from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
 from consortium.server.server_logging import LoggerType
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class UserAccountsService:
@@ -42,6 +43,7 @@ class UserAccountsService:
     def __repr__(self) -> str:
         return "UserAccountsService()"
 
+    @log_and_propagate_error_on_service_method
     def get_user_account_by_user_account_id(
         self,
         user_account_id: str | uuid.UUID,
@@ -58,6 +60,7 @@ class UserAccountsService:
         self._logger.debug("Retrieved user account: {!r}", user_account)
         return user_account
 
+    @log_and_propagate_error_on_service_method
     def get_user_account_by_username(self, username: str) -> UserAccountModel:
         for user_account in self._user_accounts.values():
             if user_account.username == username:
@@ -65,6 +68,7 @@ class UserAccountsService:
                 return user_account
         raise UserAccountUsernameNotFoundError(username=username)
 
+    @log_and_propagate_error_on_service_method
     def get_all_user_accounts(self) -> list[UserAccountModel]:
         all_user_accounts = list(self._user_accounts.values())
         self._logger.debug(
@@ -73,6 +77,7 @@ class UserAccountsService:
         )
         return all_user_accounts
 
+    @log_and_propagate_error_on_service_method
     def create_user_account(
         self,
         username: str,
@@ -101,6 +106,7 @@ class UserAccountsService:
 
         return user_account
 
+    @log_and_propagate_error_on_service_method
     def update_user_account_by_user_account_id(
         self,
         user_account_id: str,
@@ -164,6 +170,7 @@ class UserAccountsService:
 
         return user_account
 
+    @log_and_propagate_error_on_service_method
     def delete_user_account_by_user_account_id(
         self,
         user_account_id: str,
@@ -175,6 +182,7 @@ class UserAccountsService:
         self._logger.info("Deleted user account: {}", deleted_user_account)
         self._logger.debug("- {!r}", deleted_user_account)
 
+    @log_and_propagate_error_on_service_method
     def authenticate_user_account_credentials(
         self,
         username: str,
@@ -194,6 +202,7 @@ class UserAccountsService:
 
         return user_account
 
+    @log_and_propagate_error_on_service_method
     def load_user_accounts_from_user_accounts_file(
         self,
         user_accounts_filepath: Path,
@@ -206,6 +215,7 @@ class UserAccountsService:
             self._logger.debug("Loaded user account: {!r}", user_account)
         return new_user_accounts
 
+    @log_and_propagate_error_on_service_method
     def read_user_accounts_from_user_accounts_file(
         self,
         user_accounts_filepath: Path,
@@ -284,6 +294,7 @@ class UserAccountsService:
         )
         return new_user_accounts
 
+    @log_and_propagate_error_on_service_method
     def write_user_accounts_to_user_accounts_file(
         self,
         user_accounts_filepath: Path,
@@ -322,6 +333,7 @@ class UserAccountsService:
         )
         return number_of_bytes_written
 
+    @log_and_propagate_error_on_service_method
     def load_framework_user_accounts(self) -> bool:
         self._logger.debug("Loading framework user accounts...")
 
@@ -341,6 +353,7 @@ class UserAccountsService:
         )
         return True
 
+    @log_and_propagate_error_on_service_method
     def reload_framework_user_accounts(self) -> bool:
         self._logger.debug("Reloading framework user accounts...")
 
@@ -364,6 +377,7 @@ class UserAccountsService:
         )
         return True
 
+    @log_and_propagate_error_on_service_method
     def write_framework_user_accounts(self) -> bool:
         self._logger.debug("Writing framework user accounts...")
 

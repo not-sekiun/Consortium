@@ -18,6 +18,7 @@ from consortium.server.services.component_loader_services.listener_profile_loade
 from consortium.server.services.component_registry_services.listener_profile_registry_service import (
     ListenerProfileRegistryService,
 )
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 # The listener profiles service is an internal service that is meant to only be
@@ -41,6 +42,7 @@ class ListenerProfilesService:
     def __repr__(self) -> str:
         return "ListenerProfilesService()"
 
+    @log_and_propagate_error_on_service_method
     def get_listener_profile_from_listener_profile_project_folder(
         self,
         listener_profile_project_folder: pathlib.Path,
@@ -64,6 +66,7 @@ class ListenerProfilesService:
             )
         return listener_profile
 
+    @log_and_propagate_error_on_service_method
     def get_listener_profiles_from_listener_profile_project_folder_directories(
         self,
         directory: pathlib.Path,
@@ -94,12 +97,14 @@ class ListenerProfilesService:
             errored,
         )
 
+    @log_and_propagate_error_on_service_method
     async def load_listener_profile(self, listener_profile: ListenerProfile) -> None:
         listener_profile = await self._listener_profile_registry_service.load_component(
             component=listener_profile,
         )
         self._logger.debug("Loaded listener profile: {}", listener_profile)
 
+    @log_and_propagate_error_on_service_method
     async def load_listener_profile_from_listener_profile_project_folder(
         self,
         listener_profile_project_folder: pathlib.Path,
@@ -120,6 +125,7 @@ class ListenerProfilesService:
         self._logger.debug("Loaded listener profile: {}", listener_profile)
         return listener_profile
 
+    @log_and_propagate_error_on_service_method
     async def unload_listener_profile_by_listener_profile_id(
         self,
         listener_profile_id: str,
@@ -132,6 +138,7 @@ class ListenerProfilesService:
         self._logger.info("Unloaded listener profile: {}", listener_profile)
         self._logger.debug("Unloaded listener profile: {!r}", listener_profile)
 
+    @log_and_propagate_error_on_service_method
     async def reload_listener_profile_by_listener_profile_id(
         self,
         listener_profile_id: str,
@@ -155,6 +162,7 @@ class ListenerProfilesService:
         self._logger.debug("Reloaded listener profile: {!r}", listener_profile)
         return listener_profile
 
+    @log_and_propagate_error_on_service_method
     async def load_framework_listener_profiles(
         self,
         ignore_enabled_listener_profile_flag: bool = False,
@@ -202,6 +210,7 @@ class ListenerProfilesService:
             len(errored) + failed_to_load,
         )
 
+    @log_and_propagate_error_on_service_method
     async def unload_framework_listener_profiles(self) -> None:
         self._logger.info("Unloading framework listener profiles...")
         unloaded_listener_profiles = 0
@@ -219,12 +228,14 @@ class ListenerProfilesService:
             unloaded_listener_profiles,
         )
 
+    @log_and_propagate_error_on_service_method
     async def reload_framework_listener_profiles(self) -> None:
         self._logger.info("Reloading framework listener profiles...")
         await self.unload_framework_listener_profiles()
         await self.load_framework_listener_profiles()
         self._logger.info("Reloaded framework listener profiles.")
 
+    @log_and_propagate_error_on_service_method
     def get_all_listener_profiles(self) -> list[ListenerProfile]:
         listener_profiles = self._listener_profile_registry_service.get_all_components()
         self._logger.debug(
@@ -233,6 +244,7 @@ class ListenerProfilesService:
         )
         return listener_profiles
 
+    @log_and_propagate_error_on_service_method
     def get_listener_profile_by_listener_profile_id(
         self,
         listener_profile_id,

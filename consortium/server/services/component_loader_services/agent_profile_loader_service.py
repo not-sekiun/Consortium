@@ -1,7 +1,7 @@
 import pathlib
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
-from consortium.server.exceptions.framework_exceptions.agent_templates_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplatesFrameworkError,
 )
 from consortium.server.objects.c2_profile_objects import AgentProfile

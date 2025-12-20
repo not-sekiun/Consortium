@@ -139,7 +139,7 @@ class Server:
         self._logger.info("Shutting down server...")
         self.status = ServerStatus.SHUTTING_DOWN
         await self._server_shutdown_procedure()
-        self._logger.info("Server shutdown complete. See you again ^_^")
+        self._logger.info("Server shutdown complete.")
         await self._logger.complete()
         self.status = ServerStatus.STOPPED
 

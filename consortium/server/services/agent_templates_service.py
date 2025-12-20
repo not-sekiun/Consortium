@@ -1,12 +1,13 @@
 from loguru import logger
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
-from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplateIDNotFoundError,
     AgentTemplateLabelNotFoundError,
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_profiles_service import AgentProfilesService
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class AgentTemplatesService:
@@ -29,6 +30,7 @@ class AgentTemplatesService:
             f")"
         )
 
+    @log_and_propagate_error_on_service_method
     def get_agent_template_by_agent_template_id(
         self,
         agent_template_id: str,
@@ -48,6 +50,7 @@ class AgentTemplatesService:
             agent_template_id=agent_template_id,
         )
 
+    @log_and_propagate_error_on_service_method
     def get_agent_template_by_label(self, label: str) -> BaseAgentTemplate:
         for agent_template in [
             agent_profile.agent_template
@@ -64,6 +67,7 @@ class AgentTemplatesService:
             label=label,
         )
 
+    @log_and_propagate_error_on_service_method
     def get_all_agent_templates(self) -> list[BaseAgentTemplate]:
         all_agent_templates = [
             agent_profile.agent_template

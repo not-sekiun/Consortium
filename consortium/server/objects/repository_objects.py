@@ -7,7 +7,7 @@ from collections.abc import Generator
 from datetime import datetime
 from typing import BinaryIO, Literal, TextIO
 
-from consortium.server.exceptions.framework_exceptions.repository_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
     InvalidRepositoryDirectoryArchiveFileFormatError,
     RepositoryDirectoryAlreadyExistsError,
     RepositoryDirectoryDoesNotExistError,

@@ -17,8 +17,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
 )
-from consortium.server.exceptions.service_exceptions import (
-    repository_service_exceptions as svc_excs,
+from consortium.server.exceptions.consortium_exceptions import (
+    repository_consortium_exceptions as consortium_excs,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.repository_models import RepositoryResourceModel
@@ -39,7 +39,7 @@ _payloads_service = server_singletons.payloads_service
 
 _resource_not_found_error = (
     api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
-        consortium_exception=svc_excs.RepositoryResourceNotFoundError(
+        consortium_exception=consortium_excs.RepositoryResourceNotFoundError(
             resource_id="<resource_id>",
         ),
     )

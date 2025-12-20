@@ -13,11 +13,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
-from consortium.server.exceptions.framework_exceptions import (
-    agent_templates_framework_exceptions as framework_excs,
-)
-from consortium.server.exceptions.service_exceptions import (
-    agent_templates_service_exceptions as svc_excs,
+from consortium.server.exceptions.consortium_exceptions import (
+    agent_templates_consortium_exceptions as consortium_excs,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.models.agent_template_models import AgentTemplateModel
@@ -40,14 +37,14 @@ agent_generators_service = server_singletons.agent_generators_service
 
 _agent_template_not_found_error = (
     api_excs.AgentTemplateNotFoundError.from_consortium_exception(
-        consortium_exception=svc_excs.AgentTemplateIDNotFoundError(
+        consortium_exception=consortium_excs.AgentTemplateIDNotFoundError(
             agent_template_id="<agent_template_id>"
         )
     )
 )
 _agent_template_option_value_error = (
     api_excs.AgentTemplateOptionValueValidationError.from_consortium_exception(
-        consortium_exception=framework_excs.AgentTemplateOptionValueValidationError(
+        consortium_exception=consortium_excs.AgentTemplateOptionValueValidationError(
             agent_template_str="<agent_template>",
             option_name="<option_str>",
             option_value="<option_value>",
@@ -57,14 +54,14 @@ _agent_template_option_value_error = (
 )
 _agent_template_option_not_found_error = (
     api_excs.AgentTemplateOptionNotFoundError.from_consortium_exception(
-        consortium_exception=framework_excs.AgentTemplateOptionNotFoundError(
+        consortium_exception=consortium_excs.AgentTemplateOptionNotFoundError(
             agent_template_str="<agent_template>", option_name="<option_str>"
         )
     )
 )
 _missing_required_agent_template_option_error = (
     api_excs.MissingRequiredAgentTemplateOptionError.from_consortium_exception(
-        consortium_exception=framework_excs.MissingRequiredAgentTemplateOptionError(
+        consortium_exception=consortium_excs.MissingRequiredAgentTemplateOptionError(
             agent_template_str="<agent_template>", option_name="<option_str>"
         )
     )
@@ -101,19 +98,19 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
             agent_template_id=agent_template_id,
             parameters=options,
         )
-    except svc_excs.AgentTemplateNotFoundError as exc:
+    except consortium_excs.AgentTemplateNotFoundError as exc:
         raise api_excs.AgentTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.AgentTemplateOptionNotFoundError as exc:
+    except consortium_excs.AgentTemplateOptionNotFoundError as exc:
         raise api_excs.AgentTemplateOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.AgentTemplateOptionValueValidationError as exc:
+    except consortium_excs.AgentTemplateOptionValueValidationError as exc:
         raise api_excs.AgentTemplateOptionValueValidationError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except framework_excs.MissingRequiredAgentTemplateOptionError as exc:
+    except consortium_excs.MissingRequiredAgentTemplateOptionError as exc:
         raise api_excs.MissingRequiredAgentTemplateOptionError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -166,7 +163,7 @@ def get_agent_template_by_agent_template_id(
                 agent_template_id,
             )
         )
-    except svc_excs.AgentTemplateNotFoundError as exc:
+    except consortium_excs.AgentTemplateNotFoundError as exc:
         raise api_excs.AgentTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None

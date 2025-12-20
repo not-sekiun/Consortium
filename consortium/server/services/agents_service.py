@@ -7,10 +7,6 @@ from loguru import logger
 from consortium.framework.agents._agent import Agent
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
-
-# from consortium.server.exceptions.framework_exceptions import (
-#     agents_framework_exceptions as framework_excs,
-# )
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )

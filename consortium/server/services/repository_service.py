@@ -8,7 +8,7 @@ from typing import BinaryIO, Literal, TextIO
 import jsonschema
 from loguru import logger
 
-from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,
     RepositoryResourceNotFoundError,
@@ -19,6 +19,7 @@ from consortium.server.objects.repository_objects import (
     RepositoryFile,
 )
 from consortium.server.server_logging import LoggerType
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class RepositoryService:
@@ -42,6 +43,7 @@ class RepositoryService:
     def __repr__(self) -> str:
         return f"RepositoryService(repository_directory_path={self.repository_directory_path!r})"
 
+    @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
         repository_metadata_json_schema = {
             "type": "object",
@@ -184,6 +186,7 @@ class RepositoryService:
                         repository_directory_path=str(self.repository_directory_path)
                     )
 
+    @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
         repository_metadata_json = {
             resource_id: repository_resource.to_json()
@@ -198,6 +201,7 @@ class RepositoryService:
             len(data),
         )
 
+    @log_and_propagate_error_on_service_method
     def create_repository_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
@@ -232,6 +236,7 @@ class RepositoryService:
 
         return repository_file
 
+    @log_and_propagate_error_on_service_method
     def create_repository_directory(
         self,
         content: bytes | BinaryIO | str | pathlib.Path,
@@ -260,6 +265,7 @@ class RepositoryService:
 
         return repository_directory
 
+    @log_and_propagate_error_on_service_method
     def delete_repository_resource_by_resource_id(
         self,
         resource_id: str,
@@ -277,6 +283,7 @@ class RepositoryService:
         )
         self.save_repository_metadata()
 
+    @log_and_propagate_error_on_service_method
     def get_all_repository_resources(
         self,
     ) -> list[RepositoryFile | RepositoryDirectory]:
@@ -287,6 +294,7 @@ class RepositoryService:
         )
         return repository_resources
 
+    @log_and_propagate_error_on_service_method
     def get_repository_resource_by_resource_id(
         self,
         resource_id: str,

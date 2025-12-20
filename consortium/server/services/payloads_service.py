@@ -6,8 +6,11 @@ from typing import IO, BinaryIO, Literal
 import jsonschema
 from loguru import logger
 
-from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplateNotFoundError,
+)
+from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+    RepositoryResourceNotFoundError,
 )
 from consortium.server.exceptions.service_exceptions.payloads_service_exceptions import (
     InvalidPayloadsMetadataFileJSONError,
@@ -17,13 +20,11 @@ from consortium.server.exceptions.service_exceptions.payloads_service_exceptions
     PayloadNotFoundError,
     PayloadRepositoryResourceMissingError,
 )
-from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    RepositoryResourceNotFoundError,
-)
 from consortium.server.objects.payload_objects import Payload
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.repository_service import RepositoryService
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class PayloadsService:
@@ -51,12 +52,15 @@ class PayloadsService:
     def __repr__(self) -> str:
         return f"PayloadsService(repository_service={self._repository_service!r})"
 
+    @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
         self._repository_service.load_repository_metadata()
 
+    @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
         self._repository_service.save_repository_metadata()
 
+    @log_and_propagate_error_on_service_method
     def load_payloads_metadata(self) -> None:
         payloads_metadata_json_schema = {
             "type": "object",
@@ -122,6 +126,7 @@ class PayloadsService:
                         )
                         continue
 
+    @log_and_propagate_error_on_service_method
     def save_payloads_metadata(self) -> None:
         payloads_metadata_json = {
             payload_id: {
@@ -140,12 +145,14 @@ class PayloadsService:
             len(data),
         )
 
+    @log_and_propagate_error_on_service_method
     def reserve_payload_id(self) -> uuid.UUID:
         payload_id = uuid.uuid4()
         self._reserved_paylod_ids.add(str(payload_id))
         self._logger.debug("Reserved payload ID '{}'", str(payload_id))
         return payload_id
 
+    @log_and_propagate_error_on_service_method
     def create_payload_file(
         self,
         agent_template_id: str | uuid.UUID,
@@ -207,6 +214,7 @@ class PayloadsService:
         )
         return payload
 
+    @log_and_propagate_error_on_service_method
     def create_payload_directory(
         self,
         agent_template_id: str | uuid.UUID,
@@ -244,6 +252,7 @@ class PayloadsService:
         )
         return payload
 
+    @log_and_propagate_error_on_service_method
     def delete_payload_by_payload_id(
         self, payload_id: str | uuid.UUID, force: bool = False
     ) -> None:
@@ -292,6 +301,7 @@ class PayloadsService:
                 "Deleted payload metadata for payload with ID '{}'", payload_id
             )
 
+    @log_and_propagate_error_on_service_method
     def get_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> Payload:
         payload_id = str(payload_id)
 
@@ -307,6 +317,7 @@ class PayloadsService:
                 payload_id=payload_id,
             ) from None
 
+    @log_and_propagate_error_on_service_method
     def get_all_payloads(self) -> list[Payload]:
         payloads = list(self._payloads.values())
         self._logger.debug(

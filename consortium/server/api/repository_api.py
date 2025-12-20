@@ -18,13 +18,10 @@ from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 
 from consortium.server.exceptions.api_exceptions import (
-    repository_api_exceptions as repository_api_excs,
+    repository_api_exceptions as api_excs,
 )
-from consortium.server.exceptions.framework_exceptions import (
-    repository_framework_exceptions as repository_framework_excs,
-)
-from consortium.server.exceptions.service_exceptions import (
-    repository_service_exceptions as repository_svc_excs,
+from consortium.server.exceptions.consortium_exceptions import (
+    repository_consortium_exceptions as consortium_excs,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.repository_models import (
@@ -78,8 +75,8 @@ def create_get_repository_resource_by_resource_id_endpoint(
                     resource_id=resource_id,
                 )
             )
-        except repository_svc_excs.RepositoryResourceNotFoundError as exc:
-            raise repository_api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
+        except consortium_excs.RepositoryResourceNotFoundError as exc:
+            raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
 
@@ -112,8 +109,8 @@ def create_download_repository_resource_by_resource_id_endpoint(
                     resource_id=resource_id,
                 )
             )
-        except repository_svc_excs.RepositoryResourceNotFoundError as exc:
-            raise repository_api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
+        except consortium_excs.RepositoryResourceNotFoundError as exc:
+            raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
 
@@ -180,19 +177,19 @@ def create_upload_repository_resource_endpoint(
                 # of the tuple is the file extension WITH the leading period.
                 file_name, file_extension = os.path.splitext(file.filename)
             if not file_extension:
-                raise repository_api_excs.RepositoryDirectoryArchiveFileFormatNotSpecifiedError
+                raise api_excs.RepositoryDirectoryArchiveFileFormatNotSpecifiedError
             # This checks primarily for zip and tar files but also does not falsely flag
             # valid archive files with multiple extensions like compressed tar archive
             # files.
             if file_extension not in (".zip", ".tar", ".gz", ".bz2", ".xz"):
-                raise repository_api_excs.RepositoryDirectoryFileNotArchiveFileError(
+                raise api_excs.RepositoryDirectoryFileNotArchiveFileError(
                     file_extension=file_extension
                 )
             # Check for 'tar.bz2', 'tar.gz', and 'tar.xz' files.
             if file_extension in (".gz", ".bz2", ".xz"):
                 file_name, second_file_extension = os.path.splitext(file_name)
                 if second_file_extension != "tar":
-                    raise repository_api_excs.RepositoryDirectoryFileNotArchiveFileError(
+                    raise api_excs.RepositoryDirectoryFileNotArchiveFileError(
                         file_extension=file_extension
                     )
                 file_extension = f"{second_file_extension}.{file_extension}"
@@ -215,8 +212,8 @@ def create_upload_repository_resource_endpoint(
                     name=name if name else file.filename,
                     description=description if description else "",
                 )
-            except repository_framework_excs.InvalidRepositoryDirectoryArchiveFileFormatError:
-                raise repository_api_excs.InvalidRepositoryDirectoryArchiveFileFormatError() from None
+            except consortium_excs.InvalidRepositoryDirectoryArchiveFileFormatError:
+                raise api_excs.InvalidRepositoryDirectoryArchiveFileFormatError() from None
         else:
             resource = repository_service.create_repository_file(
                 content=file.file,
@@ -250,8 +247,8 @@ def create_delete_repository_resource_by_resource_id_endpoint(
             repository_service.delete_repository_resource_by_resource_id(
                 resource_id=resource_id,
             )
-        except repository_svc_excs.RepositoryResourceNotFoundError as exc:
-            raise repository_api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
+        except consortium_excs.RepositoryResourceNotFoundError as exc:
+            raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
 

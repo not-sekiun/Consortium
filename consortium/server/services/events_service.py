@@ -5,11 +5,12 @@ from loguru import logger
 
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.service_exceptions.events_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions import (
     EventHandlerAlreadyRegisteredError,
     EventHandlerNotRegisteredError,
 )
 from consortium.server.server_logging import LoggerType
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 # TODO: Support creating custom events.
@@ -28,6 +29,7 @@ class EventsService:
     def __repr__(self):
         return "EventsService()"
 
+    @log_and_propagate_error_on_service_method
     def register_event_handler_to_event_type(
         self,
         event_type: EventType,
@@ -40,6 +42,7 @@ class EventsService:
         else:
             self._event_handlers[str(event_type)] = [event_handler]
 
+    @log_and_propagate_error_on_service_method
     def deregister_event_handler_from_event_type(
         self,
         event_type: EventType,
@@ -56,6 +59,7 @@ class EventsService:
         except ValueError:
             raise EventHandlerNotRegisteredError from None
 
+    @log_and_propagate_error_on_service_method
     def get_registered_event_handlers_from_event_type(
         self,
         event_type: EventType,
@@ -67,6 +71,7 @@ class EventsService:
             # we return an empty list.
             return []
 
+    @log_and_propagate_error_on_service_method
     def get_event_types_from_registered_event_handler(
         self,
         event_handler: Callable[[Event], Coroutine[Any, Any, None]],
@@ -77,10 +82,11 @@ class EventsService:
                 handled_events.append(EventType(event_type))
         return handled_events
 
-    @staticmethod
-    def get_all_event_types() -> list[str]:
+    @log_and_propagate_error_on_service_method
+    def get_all_event_types(self) -> list[str]:
         return list(EventType)
 
+    @log_and_propagate_error_on_service_method
     async def trigger_event(self, event: Event):
         if str(event.event_type) not in self._event_handlers:
             return

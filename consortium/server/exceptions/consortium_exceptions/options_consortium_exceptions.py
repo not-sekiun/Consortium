@@ -1,74 +1,54 @@
 """
-This module describes all the exceptions that can be raised by the options framework.
-These exceptions are distinctly different from the "signalling" exceptions that are
-present in the [`consortium.framework.exceptions`][consortium.framework.exceptions]
-module. The exceptions here do not serve any message passing or signalling purpose to or
-from the framework. Instead, they are raised when an error condition occurs and are also
-meant to be used by the REST API layer.
+Exception hierarchy for options errors:
 
-The exception hierarchy for the options framework is as follows:
-
-- [`BaseFrameworkException`][consortium.server.exceptions.framework_exceptions.base_framework_exception.BaseFrameworkException]
-    - [`OptionsFrameworkError`][consortium.framework.options.exceptions.OptionsFrameworkError]
-        - [`OptionValueValidationError`][consortium.framework.options.exceptions.OptionValueValidationError]
-        - [`RequiredOptionValueNotSetError`][consortium.framework.options.exceptions.RequiredOptionValueNotSetError]
-        - [`OptionConfigurationError`][consortium.framework.options.exceptions.OptionConfigurationError]
-            - [`InvalidOptionConfigurationParameterTypeError`][consortium.framework.options.exceptions.InvalidOptionConfigurationParameterTypeError]
-            - [`EmptyOptionNameError`][consortium.framework.options.exceptions.EmptyOptionNameError]
-            - [`InvalidDefaultValueError`][consortium.framework.options.exceptions.InvalidDefaultValueError]
-            - [`InvalidValidatingRegexError`][consortium.framework.options.exceptions.InvalidValidatingRegexError]
-            - [`InvalidOptionValueLengthRangeError`][consortium.framework.options.exceptions.InvalidOptionValueLengthRangeError]
-            - [`InvalidOptionValueLengthBoundError`][consortium.framework.options.exceptions.InvalidOptionValueLengthBoundError]
-            - [`InvalidOptionValueRangeError`][consortium.framework.options.exceptions.InvalidOptionValueRangeError]
-            - [`InvalidOptionIterableLengthRangeError`][consortium.framework.options.exceptions.InvalidOptionIterableLengthRangeError]
-            - [`InvalidOptionIterableLengthBoundError`][consortium.framework.options.exceptions.InvalidOptionIterableLengthBoundError]
-            - [`EmptyAvailableValuesError`][consortium.framework.options.exceptions.EmptyAvailableValuesError]
+- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
+    - [`OptionsError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionsError]
+        - [`OptionsFrameworkError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionsFrameworkError]
+            - [`OptionValueValidationError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionValueValidationError]
+            - [`OptionConfigurationError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionConfigurationError]
+                - [`InvalidOptionConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionConfigurationParameterTypeError]
+                - [`EmptyOptionNameError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.EmptyOptionNameError]
+                - [`InvalidDefaultValueError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidDefaultValueError]
+                - [`InvalidValidatingRegexError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidValidatingRegexError]
+                - [`InvalidOptionValueLengthRangeError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionValueLengthRangeError]
+                - [`InvalidOptionValueLengthBoundError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionValueLengthBoundError]
+                - [`InvalidOptionValueRangeError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionValueRangeError]
+                - [`InvalidOptionIterableLengthRangeError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionIterableLengthRangeError]
+                - [`InvalidOptionIterableLengthBoundError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionIterableLengthBoundError]
+                - [`EmptyAvailableValuesError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.EmptyAvailableValuesError]
 """
 
 from typing import Any, Literal
 
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
+from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
+    BaseConsortiumError,
 )
 
 
-class OptionsFrameworkError(BaseFrameworkException):
+class OptionsError(BaseConsortiumError):
+    """
+    Base exception for all options-related errors.
+    """
+
+
+class OptionsFrameworkError(OptionsError):
     """
     Base exception for all errors that occur within the options framework.
     """
 
 
-class OptionValueValidationError(BaseFrameworkException):
+class OptionValueValidationError(OptionsFrameworkError):
     """
-    An error that is raised when a provided value for an option fails any sort of
-    data validation test. This error will primarily be raised when setting the value of
-    an option through its `set_option_value()` method or when just explicitly validating
-    the value of an option through its `validate_option_value()` method.
+    Raised when a provided value for an option fails data validation when setting the
+    value through the option's `set_option_value()` method or when explicitly validating
+    the value through the option's `validate_option_value()` method.
     """
 
     def __init__(self, message: str, detail: Any = None):
         super().__init__(message=message, detail=detail)
 
 
-class RequiredOptionValueNotSetError(BaseFrameworkException):
-    """
-    An error that is raised when an option is marked as being required by setting its
-    `required` parameter to `True`, but no value has been set for the option through
-    its `set_option_value()` method and no default value has been provided for the
-    option through its `default_value` parameter.
-    """
-
-    def __init__(
-        self,
-        option_name: str,
-    ):
-        super().__init__(
-            f"Failed to retrieve the value of the required option '{option_name}'. "
-            "No value has been set and no default value is present.",
-        )
-
-
-class OptionConfigurationError(BaseFrameworkException):
+class OptionConfigurationError(OptionsFrameworkError):
     """
     Base exception for all errors that occur during the configuration of a particular
     option.
@@ -77,9 +57,8 @@ class OptionConfigurationError(BaseFrameworkException):
 
 class InvalidOptionConfigurationParameterTypeError(OptionConfigurationError):
     """
-    An error that is raised when the argument that is passed to configure an option is
-    not of the expected type for that particular parameter. All option types can raise
-    this error
+    Raised when a parameter provided to configure an option is not of the expected type
+    during option configuration.
     """
 
     def __init__(
@@ -105,8 +84,7 @@ class InvalidOptionConfigurationParameterTypeError(OptionConfigurationError):
 
 class EmptyOptionNameError(OptionConfigurationError):
     """
-    An error that is raised when the name provided for an option during its creation is
-    an empty string. All option types can raise this error.
+    Raised when an empty name is provided for an option during option configuration.
     """
 
     def __init__(self, option_filepath: str):
@@ -118,9 +96,9 @@ class EmptyOptionNameError(OptionConfigurationError):
 
 class InvalidDefaultValueError(OptionConfigurationError):
     """
-    An error that is raised when the invalid default value provided to an option through
-    its `default_value` parameter fails data validation through its `validate_value()`
-    method. All option types can raise this error.
+    Raised when the default value provided to an option through its `default_value`
+    parameter fails data validation through the option's `validate_value()` method
+    during option configuration.
     """
 
     def __init__(
@@ -138,10 +116,8 @@ class InvalidDefaultValueError(OptionConfigurationError):
 
 class InvalidValidatingRegexError(OptionConfigurationError):
     """
-    An error that is raised when the `validating_regex` regex string provided for
-    validating an option's value is not a valid regex that can be compiled. Only options
-    of type `SingleValueOption`, `ListValueOption`, and `DictionaryValueOption` can
-    raise this error.
+    Raised when the `validating_regex` regex string provided for validating an option's
+    value is not a valid regex pattern that can be compiled during option configuration.
     """
 
     def __init__(
@@ -159,11 +135,9 @@ class InvalidValidatingRegexError(OptionConfigurationError):
 
 class InvalidOptionValueLengthRangeError(OptionConfigurationError):
     """
-    An error that is raised when the `minimum_length` parameter provided for an option
-    is greater than the `maximum_length` parameter leading to an invalid range of
-    values for the string value. Only options of type `SingleValueOption`,
-    `ListValueOption`, or `DictionaryValueOption` can raise this error. Additionally,
-    the value type of the options must be of type `str`.
+    Raised when the `minimum_length` parameter provided for an option is greater than
+    the `maximum_length` parameter, resulting in an invalid range of string value
+    lengths during option configuration.
     """
 
     def __init__(
@@ -181,11 +155,9 @@ class InvalidOptionValueLengthRangeError(OptionConfigurationError):
 
 class InvalidOptionValueLengthBoundError(OptionConfigurationError):
     """
-    An error that is raised when the `minimum_length` or `maximum_length` parameter
-    provided for an option specifying the length of the string value is less than zero.
-    Only options of type `SingleValueOption`, `ListValueOption`, or
-    `DictionaryValueOption` can raise this error. Additionally, the value type of the
-    options must be of type `str`.
+    Raised when the `minimum_length` or `maximum_length` parameter provided for an
+    option specifying the length of the string value is less than zero during option
+    configuration.
     """
 
     def __init__(
@@ -203,12 +175,9 @@ class InvalidOptionValueLengthBoundError(OptionConfigurationError):
 
 class InvalidOptionValueRangeError(OptionConfigurationError):
     """
-    An error that is raised when the `less_than` or `less_than_or_equal_to`
-    parameter provided for an option is greater than the `greater_than` or
-    `greater_than_or_equal_to` parameter leading to an invalid range of numeric values
-    that the option can take. Only options of type `SingleValueOption`,
-    `ListValueOption`, or `DictionaryValueOption` can raise this error. Additionally,
-    the value type of the options must be of type `int` or `float`.
+    Raised when the `less_than` or `less_than_or_equal_to` parameter provided for an
+    option is greater than the `greater_than` or `greater_than_or_equal_to` parameter,
+    resulting in an invalid range of numeric values during option configuration.
     """
 
     def __init__(
@@ -266,10 +235,9 @@ class InvalidOptionValueRangeError(OptionConfigurationError):
 
 class InvalidOptionIterableLengthRangeError(OptionConfigurationError):
     """
-    An error that is raised when the `minimum_elements` parameter provided for an option
-    is greater than the `maximum_elements` parameter leading to an invalid range of
-    elements for the iterable value. Only options of type `ListValueOption`, or
-    `DictionaryValueOption` can raise this error.
+    Raised when the `minimum_elements` parameter provided for an option is greater than
+    the `maximum_elements` parameter, resulting in an invalid range of iterable element
+    counts during option configuration.
     """
 
     def __init__(
@@ -287,9 +255,9 @@ class InvalidOptionIterableLengthRangeError(OptionConfigurationError):
 
 class InvalidOptionIterableLengthBoundError(OptionConfigurationError):
     """
-    An error that is raised when the `minimum_elements` or `maximum_elements` parameter
-    provided for an option specifying the length of the string value is less than zero.
-    Only options of type `ListValueOption`, or `DictionaryValueOption` can raise this error.
+    Raised when the `minimum_elements` or `maximum_elements` parameter provided for an
+    option specifying the number of elements in the iterable value is less than zero
+    during option configuration.
     """
 
     def __init__(
@@ -307,13 +275,12 @@ class InvalidOptionIterableLengthBoundError(OptionConfigurationError):
 
 class EmptyAvailableValuesError(OptionConfigurationError):
     """
-    An error that is raised when the set of available values that an option can take
-    through its `available_values` parameter is empty. Only options of type
-    `ChoiceValueOption` can raise this error.
+    Raised when the set of available values provided through the `available_values`
+    parameter is empty during option configuration.
     """
 
     def __init__(self, option_name: str):
         super().__init__(
-            f"Failed to configure the option '{option_name}'. The 'available_values' "
+            f"Failed to configure the option '{option_name}'. The `available_values` "
             f"parameter for the option cannot be an empty set.",
         )
