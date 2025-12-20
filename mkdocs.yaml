@@ -65,18 +65,6 @@ nav:
 #      - events-websockets-api/sending-action-commands.md
 #    - REST API:
 #      - rest-api/introduction.md
-#  - Framework Reference:
-#    - Framework:
-#      - framework-reference/framework/listeners-reference.md
-#      - framework-reference/framework/agent-generators-reference.md
-#      - framework-reference/framework/plugins-reference.md
-#      - framework-reference/framework/event-hooks-reference.md
-#      - framework-reference/framework/options-reference.md
-#    - Exceptions:
-#      - framework-reference/exceptions/signalling-exceptions.md
-#      - framework-reference/exceptions/plugins-framework-exceptions.md
-#      - framework-reference/exceptions/options-framework-exceptions.md
-#      - framework-reference/exceptions/listeners-framework-exceptions.md
   - Reference:
 #      - Services:
 #        - services-reference/services/plugins-service-reference.md

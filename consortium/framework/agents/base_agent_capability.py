@@ -21,7 +21,7 @@ from consortium.framework.options import (
     ToggleableChoicesValueOption,
 )
 from consortium.framework.utils.formatter_utils import format_docstring_to_single_line
-from consortium.server.exceptions.framework_exceptions.agent_capabilities_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
     CustomOSStringAlreadyRegisteredError,
     DuplicateAgentCapabilityOptionNameError,
     EmptyAgentCapabilityNameError,

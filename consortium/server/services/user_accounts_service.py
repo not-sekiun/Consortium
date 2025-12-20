@@ -26,7 +26,10 @@ from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
 from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
 from consortium.server.server_logging import LoggerType
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 class UserAccountsService:
@@ -48,7 +51,7 @@ class UserAccountsService:
         self,
         user_account_id: str | uuid.UUID,
     ) -> UserAccountModel:
-        user_account_id = str(user_account_id)
+        user_account_id = normalize_uuid(user_account_id)
 
         try:
             user_account = self._user_accounts[user_account_id]
@@ -109,7 +112,7 @@ class UserAccountsService:
     @log_and_propagate_error_on_service_method
     def update_user_account_by_user_account_id(
         self,
-        user_account_id: str,
+        user_account_id: str | uuid.UUID,
         username: str | None = None,
         password: str | None = None,
         role: UserRole | None = None,
@@ -173,12 +176,14 @@ class UserAccountsService:
     @log_and_propagate_error_on_service_method
     def delete_user_account_by_user_account_id(
         self,
-        user_account_id: str,
+        user_account_id: str | uuid.UUID,
     ) -> None:
-        try:
-            deleted_user_account = self._user_accounts.pop(str(user_account_id))
-        except KeyError:
-            raise UserAccountIDNotFoundError(user_account_id=user_account_id) from None
+        user_account = self.get_user_account_by_user_account_id(
+            user_account_id=user_account_id,
+        )
+        deleted_user_account = self._user_accounts.pop(
+            str(user_account.user_account_id)
+        )
         self._logger.info("Deleted user account: {}", deleted_user_account)
         self._logger.debug("- {!r}", deleted_user_account)
 

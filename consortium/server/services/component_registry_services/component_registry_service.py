@@ -10,6 +10,7 @@ from consortium.server.exceptions.service_exceptions.components_service_exceptio
 from consortium.server.services.component_loader_services.component_loader_service import (
     ComponentLoaderService,
 )
+from consortium.server.utils import normalize_uuid
 
 
 class ComponentRegistryService[Component, ComponentLoadingError](ABC):
@@ -154,18 +155,18 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
 
     async def unload_component_by_component_id(
         self,
-        component_id: str,
+        component_id: str | uuid.UUID,
         context: dict | None = None,
     ) -> None:
         if context is None:
             context = {}
         component = self.get_component_by_component_id(component_id=component_id)
         await self._component_unload_procedure(component=component, context=context)
-        del self._components[component_id]
+        del self._components[str(self._get_component_id(component=component))]
 
     async def reload_component_by_component_id(
         self,
-        component_id: str,
+        component_id: str | uuid.UUID,
         ignore_enabled_component_flag: bool = False,
         load_context: dict | None = None,
         unload_context: dict | None = None,
@@ -188,7 +189,9 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
             context=load_context,
         )
 
-    def get_component_by_component_id(self, component_id: str) -> Component:
+    def get_component_by_component_id(self, component_id: str | uuid.UUID) -> Component:
+        component_id = normalize_uuid(component_id)
+
         try:
             return self._components[component_id]
         except KeyError:

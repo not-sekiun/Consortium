@@ -1,4 +1,5 @@
 import pathlib
+import uuid
 
 from loguru import logger
 
@@ -128,7 +129,7 @@ class ListenerProfilesService:
     @log_and_propagate_error_on_service_method
     async def unload_listener_profile_by_listener_profile_id(
         self,
-        listener_profile_id: str,
+        listener_profile_id: str | uuid.UUID,
     ) -> None:
         listener_profile = await (
             self._listener_profile_registry_service.unload_component_by_component_id(
@@ -141,7 +142,7 @@ class ListenerProfilesService:
     @log_and_propagate_error_on_service_method
     async def reload_listener_profile_by_listener_profile_id(
         self,
-        listener_profile_id: str,
+        listener_profile_id: str | uuid.UUID,
         ignore_enabled_listener_profile_flag: bool = False,
     ) -> ListenerProfile:
         listener_profile = await (
@@ -247,7 +248,7 @@ class ListenerProfilesService:
     @log_and_propagate_error_on_service_method
     def get_listener_profile_by_listener_profile_id(
         self,
-        listener_profile_id,
+        listener_profile_id: str | uuid.UUID,
     ) -> ListenerProfile:
         listener_profile = (
             self._listener_profile_registry_service.get_component_by_component_id(

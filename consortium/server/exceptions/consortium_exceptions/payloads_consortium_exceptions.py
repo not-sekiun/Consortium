@@ -1,9 +1,13 @@
-from consortium.server.exceptions.service_exceptions.base_service_exception import (
-    BaseServiceException,
+from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
+    BaseConsortiumError,
 )
 
 
-class PayloadsServiceError(BaseServiceException):
+class PayloadsError(BaseConsortiumError):
+    code = "PAYLOADS_ERROR"
+
+
+class PayloadsServiceError(PayloadsError):
     code = "PAYLOADS_SERVICE_ERROR"
 
 

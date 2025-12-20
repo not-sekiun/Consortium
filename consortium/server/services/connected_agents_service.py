@@ -26,7 +26,7 @@ class ConnectedAgentsService:
     @log_and_propagate_error_on_service_method
     async def register_agent(
         self,
-        payload_id: str | None = None,
+        payload_id: str | uuid.UUID | None = None,
         agent_type: BaseAgentType | None = None,
         name: str = "",
         description: str = "",
@@ -95,7 +95,7 @@ class ConnectedAgentsService:
         return agent
 
     @log_and_propagate_error_on_service_method
-    async def check_in_agent_by_agent_id(self, agent_id: str) -> None:
+    async def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         """
         Check in a connected agent by its agent ID. This method simply updates the last
         check-in time of the agent to indicate that the agent is still connected and
@@ -118,7 +118,7 @@ class ConnectedAgentsService:
         await self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
 
     @log_and_propagate_error_on_service_method
-    async def deregister_agent_by_agent_id(self, agent_id: str) -> None:
+    async def deregister_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         """
         Deregister a connected agent by its agent ID. This method removes the agent from
         the listener's list of connected agents and also removes the agent from the

@@ -1,6 +1,7 @@
 import asyncio
 import graphlib
 import pathlib
+import uuid
 
 from loguru import logger
 
@@ -278,7 +279,7 @@ class PluginsService:
     @log_and_propagate_error_on_service_method
     async def unload_plugin_by_plugin_id(
         self,
-        plugin_id: str,
+        plugin_id: str | uuid.UUID,
         timeout: int | None = 5,
         force_unload: bool = False,
     ) -> None:
@@ -364,7 +365,7 @@ class PluginsService:
     @log_and_propagate_error_on_service_method
     async def reload_plugin_by_plugin_id(
         self,
-        plugin_id: str,
+        plugin_id: str | uuid.UUID,
         ignore_enabled_plugin_flag: bool = False,
         load_timeout: int | None = 5,
         unload_timeout: int | None = 5,
@@ -620,7 +621,7 @@ class PluginsService:
     @log_and_propagate_error_on_service_method
     async def start_plugin_by_plugin_id(
         self,
-        plugin_id: str,
+        plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
         """
@@ -665,7 +666,7 @@ class PluginsService:
     @log_and_propagate_error_on_service_method
     async def stop_plugin_by_plugin_id(
         self,
-        plugin_id: str,
+        plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
         """
@@ -697,7 +698,7 @@ class PluginsService:
     @log_and_propagate_error_on_service_method
     async def restart_plugin_by_plugin_id(
         self,
-        plugin_id: str,
+        plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
         """

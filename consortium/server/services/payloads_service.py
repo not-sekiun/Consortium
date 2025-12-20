@@ -9,16 +9,16 @@ from loguru import logger
 from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplateNotFoundError,
 )
-from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
-    RepositoryResourceNotFoundError,
-)
-from consortium.server.exceptions.service_exceptions.payloads_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
     InvalidPayloadsMetadataFileJSONError,
     InvalidPayloadsMetadataFileSchemaError,
     PayloadIDReservationNotFoundError,
     PayloadMetadataMissingError,
     PayloadNotFoundError,
     PayloadRepositoryResourceMissingError,
+)
+from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+    RepositoryResourceNotFoundError,
 )
 from consortium.server.objects.payload_objects import Payload
 from consortium.server.server_logging import LoggerType

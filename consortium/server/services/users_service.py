@@ -9,7 +9,10 @@ from consortium.server.exceptions.consortium_exceptions.users_consortium_excepti
 )
 from consortium.server.objects.user_objects import User
 from consortium.server.server_logging import LoggerType
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 class UsersService:
@@ -28,7 +31,7 @@ class UsersService:
 
     @log_and_propagate_error_on_service_method
     def get_user_by_user_id(self, user_id: str | uuid.UUID) -> User:
-        user_id = str(user_id)
+        user_id = normalize_uuid(user_id)
 
         try:
             user = self._users[user_id]
@@ -63,9 +66,8 @@ class UsersService:
         display_name: str,
         user_id: str | uuid.UUID,
     ) -> User:
-        user_id = str(user_id)
-
         user = self.get_user_by_user_id(user_id=user_id)
+
         old_display_name = user.display_name
         user.display_name = display_name
         self._logger.info(
@@ -91,12 +93,8 @@ class UsersService:
 
     @log_and_propagate_error_on_service_method
     def logout_user_by_user_id(self, user_id: str | uuid.UUID) -> None:
-        user_id = str(user_id)
+        user = self.get_user_by_user_id(user_id=user_id)
 
-        try:
-            deleted_user = self._users.pop(str(user_id))
-        except KeyError:
-            raise UserIDNotFoundError(user_id=user_id) from None
-
+        deleted_user = self._users.pop(str(user.user_id))
         self._logger.info("User logged out: {}", deleted_user)
         self._logger.debug("- {!r}", deleted_user)

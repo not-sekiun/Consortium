@@ -56,6 +56,7 @@ class AgentGeneratorsService:
         agent_generator_id: str | uuid.UUID,
     ) -> BaseAgentGenerator:
         agent_generator_id = normalize_uuid(agent_generator_id)
+
         try:
             agent_generator = self._agent_generators[agent_generator_id]
         except KeyError:
@@ -81,7 +82,7 @@ class AgentGeneratorsService:
     @log_and_propagate_error_on_service_method
     async def create_agent_generator_from_agent_template_by_agent_template_id(
         self,
-        agent_template_id: str,
+        agent_template_id: str | uuid.UUID,
         parameters: dict[str, Any],
         name: str | None = None,
         description: str = "",

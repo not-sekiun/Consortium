@@ -1,4 +1,5 @@
 import pathlib
+import uuid
 
 from loguru import logger
 
@@ -183,7 +184,7 @@ class EventHooksService:
     @log_and_propagate_error_on_service_method
     async def unload_event_hook_by_event_hook_id(
         self,
-        event_hook_id: str,
+        event_hook_id: str | uuid.UUID,
     ) -> None:
         event_hook = (
             await self._event_hook_registry_service.unload_component_by_component_id(
@@ -196,7 +197,7 @@ class EventHooksService:
     @log_and_propagate_error_on_service_method
     async def reload_event_hook_by_event_hook_id(
         self,
-        event_hook_id: str,
+        event_hook_id: str | uuid.UUID,
         ignore_enabled_event_hook_flag: bool = False,
     ) -> BaseEventHook:
         event_hook = (
@@ -293,7 +294,9 @@ class EventHooksService:
         self._logger.info("Reloaded framework event hooks.")
 
     @log_and_propagate_error_on_service_method
-    def get_event_hook_by_event_hook_id(self, event_hook_id: str) -> BaseEventHook:
+    def get_event_hook_by_event_hook_id(
+        self, event_hook_id: str | uuid.UUID
+    ) -> BaseEventHook:
         event_hook = self._event_hook_registry_service.get_component_by_component_id(
             component_id=event_hook_id,
         )

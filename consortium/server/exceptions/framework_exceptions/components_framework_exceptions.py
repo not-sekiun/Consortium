@@ -285,13 +285,6 @@ class ComponentRuntimeError(ComponentOperationError):
             error_message=error_message,
         )
 
-    def to_json(self) -> dict[str, Any]:
-        return {
-            "code": self.code,
-            "message": self.message,
-            "detail": self.detail,
-        }
-
 
 class ComponentStopError(ComponentOperationError):
     """

@@ -1,4 +1,5 @@
 import pathlib
+import uuid
 
 import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
 from consortium.framework.utils.exception_utils import remap_exception
@@ -102,5 +103,5 @@ class ExceptionRemappingComponentRegistryService(
         return super().register_component(component=component)
 
     @_remap_exception_decorator
-    def get_component_by_component_id(self, component_id: str) -> Component:
+    def get_component_by_component_id(self, component_id: str | uuid.UUID) -> Component:
         return super().get_component_by_component_id(component_id=component_id)

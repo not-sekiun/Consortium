@@ -77,7 +77,7 @@ class ListenersService:
     @log_and_propagate_error_on_service_method
     async def create_listener_from_listener_template_by_listener_template_id(
         self,
-        listener_template_id: str,
+        listener_template_id: str | uuid.UUID,
         parameters: dict[str, Any],
         name: str | None = None,
         description: str = "",
@@ -119,7 +119,9 @@ class ListenersService:
         self._listeners[str(listener.listener_id)] = listener
 
     @log_and_propagate_error_on_service_method
-    async def remove_listener_by_listener_id(self, listener_id: str) -> None:
+    async def remove_listener_by_listener_id(
+        self, listener_id: str | uuid.UUID
+    ) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == State.RUNNING:
             raise ListenerAlreadyRunningError(
@@ -280,7 +282,7 @@ class ListenersService:
         return listener
 
     @log_and_propagate_error_on_service_method
-    async def start_listener_by_listener_id(self, listener_id: str) -> None:
+    async def start_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.start()
@@ -294,7 +296,7 @@ class ListenersService:
         self._logger.debug("- {!r}", listener)
 
     @log_and_propagate_error_on_service_method
-    async def stop_listener_by_listener_id(self, listener_id: str) -> None:
+    async def stop_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.stop()
@@ -308,7 +310,9 @@ class ListenersService:
         self._logger.debug("- {!r}", listener)
 
     @log_and_propagate_error_on_service_method
-    async def cancel_listener_by_listener_id(self, listener_id: str) -> None:
+    async def cancel_listener_by_listener_id(
+        self, listener_id: str | uuid.UUID
+    ) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.cancel()

@@ -1,3 +1,5 @@
+import uuid
+
 from loguru import logger
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
@@ -7,7 +9,10 @@ from consortium.server.exceptions.consortium_exceptions.agent_templates_consorti
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_profiles_service import AgentProfilesService
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 class AgentTemplatesService:
@@ -33,8 +38,10 @@ class AgentTemplatesService:
     @log_and_propagate_error_on_service_method
     def get_agent_template_by_agent_template_id(
         self,
-        agent_template_id: str,
+        agent_template_id: str | uuid.UUID,
     ) -> BaseAgentTemplate:
+        agent_template_id = normalize_uuid(agent_template_id)
+
         for agent_template in [
             agent_profile.agent_template
             for agent_profile in self._agent_profiles_service.get_all_agent_profiles()

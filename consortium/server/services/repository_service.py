@@ -19,7 +19,10 @@ from consortium.server.objects.repository_objects import (
     RepositoryFile,
 )
 from consortium.server.server_logging import LoggerType
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 class RepositoryService:
@@ -226,12 +229,12 @@ class RepositoryService:
             description=description,
         )
         repository_file.resource_id = unique_resource_id
-
         self._repository_resources[str(repository_file.resource_id)] = repository_file
         self._logger.debug(
             "Created repository file: {!r}",
             repository_file,
         )
+
         self.save_repository_metadata()
 
         return repository_file
@@ -256,11 +259,11 @@ class RepositoryService:
         self._repository_resources[str(repository_directory.resource_id)] = (
             repository_directory
         )
-
         self._logger.debug(
             "Created repository directory: {!r}",
             repository_directory,
         )
+
         self.save_repository_metadata()
 
         return repository_directory
@@ -268,11 +271,12 @@ class RepositoryService:
     @log_and_propagate_error_on_service_method
     def delete_repository_resource_by_resource_id(
         self,
-        resource_id: str,
+        resource_id: str | uuid.UUID,
     ) -> None:
         repository_resource = self.get_repository_resource_by_resource_id(
             resource_id=resource_id,
         )
+
         repository_resource.delete()
         del self._repository_resources[resource_id]
         resource_type = "directory" if repository_resource.is_directory else "file"
@@ -281,6 +285,7 @@ class RepositoryService:
             resource_type,
             str(repository_resource),
         )
+
         self.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
@@ -297,8 +302,10 @@ class RepositoryService:
     @log_and_propagate_error_on_service_method
     def get_repository_resource_by_resource_id(
         self,
-        resource_id: str,
+        resource_id: str | uuid.UUID,
     ) -> RepositoryFile | RepositoryDirectory:
+        resource_id = normalize_uuid(resource_id)
+
         try:
             repository_resource = self._repository_resources[resource_id]
         except KeyError:

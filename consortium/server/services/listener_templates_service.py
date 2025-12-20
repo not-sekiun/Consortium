@@ -1,3 +1,5 @@
+import uuid
+
 from loguru import logger
 
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
@@ -7,7 +9,10 @@ from consortium.server.exceptions.consortium_exceptions.listener_templates_conso
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 class ListenerTemplatesService:
@@ -34,8 +39,10 @@ class ListenerTemplatesService:
     @log_and_propagate_error_on_service_method
     def get_listener_template_by_listener_template_id(
         self,
-        listener_template_id: str,
+        listener_template_id: str | uuid.UUID,
     ) -> BaseListenerTemplate:
+        listener_template_id = normalize_uuid(listener_template_id)
+
         for listener_template in [
             listener_profile.listener_template
             for listener_profile in self._listener_profiles_service.get_all_listener_profiles()

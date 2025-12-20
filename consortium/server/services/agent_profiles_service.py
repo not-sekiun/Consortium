@@ -1,4 +1,5 @@
 import pathlib
+import uuid
 
 from loguru import logger
 
@@ -126,7 +127,7 @@ class AgentProfilesService:
     @log_and_propagate_error_on_service_method
     async def unload_agent_profile_by_agent_profile_id(
         self,
-        agent_profile_id: str,
+        agent_profile_id: str | uuid.UUID,
     ) -> None:
         agent_profile = await (
             self._agent_profile_registry_service.unload_component_by_component_id(
@@ -139,7 +140,7 @@ class AgentProfilesService:
     @log_and_propagate_error_on_service_method
     async def reload_agent_profile_by_agent_profile_id(
         self,
-        agent_profile_id: str,
+        agent_profile_id: str | uuid.UUID,
         ignore_enabled_agent_profile_flag: bool = False,
     ) -> AgentProfile:
         agent_profile = await (
@@ -243,7 +244,9 @@ class AgentProfilesService:
         return agent_profiles
 
     @log_and_propagate_error_on_service_method
-    def get_agent_profile_by_agent_profile_id(self, agent_profile_id) -> AgentProfile:
+    def get_agent_profile_by_agent_profile_id(
+        self, agent_profile_id: str | uuid.UUID
+    ) -> AgentProfile:
         agent_profile = (
             self._agent_profile_registry_service.get_component_by_component_id(
                 component_id=agent_profile_id,

@@ -55,7 +55,11 @@ class Status:
     def to_json(self):
         return {
             "state": self.state,
-            "error": self.error.to_json()
+            "error": {
+                "code": self.error.code,
+                "message": self.error.message,
+                "detail": self.error.detail,
+            }
             if isinstance(self.error, BaseFrameworkException)
             else None,
         }

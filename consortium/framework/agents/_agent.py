@@ -20,6 +20,9 @@ from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exce
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
 )
+from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
+    PayloadNotFoundError,
+)
 from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
     AgentCapabilityNotFoundError,
     AgentCapabilityOptionNotFoundError,
@@ -31,9 +34,6 @@ from consortium.server.exceptions.framework_exceptions.agents_framework_exceptio
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
     MissingRequiredAgentCapabilityOptionError,
-)
-from consortium.server.exceptions.service_exceptions.payloads_service_exceptions import (
-    PayloadNotFoundError,
 )
 from consortium.server.models.agent_models import (
     AgentResultModel,
