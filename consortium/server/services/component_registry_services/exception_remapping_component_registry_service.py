@@ -36,8 +36,8 @@ class ExceptionRemappingComponentRegistryService(
                 raise remap_exception(
                     original_exception=exc,
                     original_kwargs=exc._kwargs,
-                    exception_map=self._EXCEPTION_MAP,
-                    exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
+                    exception_map=self._METADATA_EXCEPTION_MAP,
+                    exception_kwargs_map=self._METADATA_EXCEPTION_KWARGS_MAP,
                 ) from None
 
         return wrapper

@@ -88,7 +88,9 @@ class ComponentLifeCycle(abc.ABC):
             ) from None
         except Exception as exc:
             self.status._transition_to_fatal(
-                error=self._construct_component_runtime_error_from_exception(exc=exc),
+                error=self._construct_component_runtime_error_from_unhandled_exception(
+                    exc=exc
+                ),
             )
             await self.on_fatal(exc, fatal_context=ComponentLifeCycleFatalContext.START)
             raise exc
@@ -113,7 +115,9 @@ class ComponentLifeCycle(abc.ABC):
             ) from None
         except Exception as exc:
             self.status._transition_to_fatal(
-                error=self._construct_component_runtime_error_from_exception(exc=exc),
+                error=self._construct_component_runtime_error_from_unhandled_exception(
+                    exc=exc
+                ),
             )
             raise exc
 
@@ -134,7 +138,9 @@ class ComponentLifeCycle(abc.ABC):
             self.status._transition_to_cancelled()
         except Exception as exc:
             self.status._transition_to_fatal(
-                error=self._construct_component_runtime_error_from_exception(exc=exc),
+                error=self._construct_component_runtime_error_from_unhandled_exception(
+                    exc=exc
+                ),
             )
             raise exc
         finally:
@@ -142,7 +148,7 @@ class ComponentLifeCycle(abc.ABC):
                 await self.on_cancelled()
             except Exception as exc:
                 self.status._transition_to_fatal(
-                    error=self._construct_component_runtime_error_from_exception(
+                    error=self._construct_component_runtime_error_from_unhandled_exception(
                         exc=exc,
                     ),
                 )
@@ -152,7 +158,24 @@ class ComponentLifeCycle(abc.ABC):
                 )
                 raise exc
 
-    def _construct_component_runtime_error_from_exception(
+    async def wait_until_completed(self) -> None:
+        if self._runtime_loop_task is not None:
+            try:
+                await self._runtime_loop_task
+            except asyncio.CancelledError:
+                pass
+
+    def _construct_component_runtime_error_from_framework_runtime_error(
+        self,
+        error: framework_excs.ComponentRuntimeError,
+    ) -> consortium_excs.ComponentRuntimeError:
+        return consortium_excs.ComponentRuntimeError(
+            component_str=str(self),
+            error_message=error.message,
+            detail=error.detail,
+        )
+
+    def _construct_component_runtime_error_from_unhandled_exception(
         self,
         exc: Exception,
     ) -> consortium_excs.ComponentRuntimeError:
@@ -176,24 +199,17 @@ class ComponentLifeCycle(abc.ABC):
         except asyncio.CancelledError:
             return
         except framework_excs.ComponentRuntimeError as exc:
-            self.status._transition_to_errored(
-                error=consortium_excs.ComponentRuntimeError(
-                    component_str=str(self),
-                    error_message=exc.message,
-                    detail=exc.detail,
-                ),
-            )
-            try:
-                await self.on_errored(
-                    error=consortium_excs.ComponentRuntimeError(
-                        component_str=str(self),
-                        error_message=exc.message,
-                        detail=exc.detail,
-                    ),
+            component_runtime_error = (
+                self._construct_component_runtime_error_from_framework_runtime_error(
+                    error=exc,
                 )
+            )
+            self.status._transition_to_errored(error=component_runtime_error)
+            try:
+                await self.on_errored(error=component_runtime_error)
             except Exception as exc:
                 self.status._transition_to_fatal(
-                    error=self._construct_component_runtime_error_from_exception(
+                    error=self._construct_component_runtime_error_from_unhandled_exception(
                         exc=exc,
                     ),
                 )
@@ -203,7 +219,9 @@ class ComponentLifeCycle(abc.ABC):
                 )
         except Exception as exc:
             self.status._transition_to_fatal(
-                error=self._construct_component_runtime_error_from_exception(exc=exc),
+                error=self._construct_component_runtime_error_from_unhandled_exception(
+                    exc=exc
+                ),
             )
             await self.on_fatal(
                 exc=exc,

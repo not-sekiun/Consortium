@@ -4,6 +4,8 @@ from typing import Any
 
 from loguru import logger
 
+# from consortium.framework.agents.agent_generator_objects import AgentGeneratorState
+from consortium.framework._components._component_status import State
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
@@ -17,7 +19,6 @@ from consortium.server.exceptions.consortium_exceptions.agent_generators_consort
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
 )
-from consortium.server.objects.agent_generator_objects import AgentGeneratorState
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.events_service import EventsService
@@ -151,7 +152,7 @@ class AgentGeneratorsService:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
-        if agent_generator.status.state == AgentGeneratorState.RUNNING:
+        if agent_generator.status.state == State.RUNNING:
             raise AgentGeneratorAlreadyRunningError(
                 agent_generator_str=str(agent_generator),
             )
@@ -200,7 +201,7 @@ class AgentGeneratorsService:
 
             # Cannot update running agent generators because the parameters change wont be
             # reflected in the agent generator.
-            if agent_generator.status.state == AgentGeneratorState.RUNNING:
+            if agent_generator.status.state == State.RUNNING:
                 raise AgentGeneratorAlreadyRunningError(
                     agent_generator_str=str(agent_generator),
                 )

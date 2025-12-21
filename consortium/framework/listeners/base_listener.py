@@ -11,12 +11,10 @@ from consortium.framework._components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
 )
-from consortium.framework.exceptions.listeners_framework_exceptions import (
-    ListenerRuntimeError,
-)
 from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
     ComponentAlreadyRunningError,
     ComponentNotRunningError,
+    ComponentRuntimeError,
     ComponentStartError,
     ComponentStopError,
 )
@@ -24,6 +22,7 @@ from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exc
     ListenerAlreadyRunningError,
     ListenerCreationParameterTypeError,
     ListenerNotRunningError,
+    ListenerRuntimeError,
     ListenerStartError,
     ListenerStopError,
 )
@@ -188,7 +187,8 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
         self.logger.opt(colors=True).error(
-            "<bold><red>Fatal error occurred within plugin while it was {}:</></>\n{}",
+            "<bold><red>Fatal error occurred within listener {} while it was {}:</></>\n{}",
+            str(self),
             ctx_to_str_map[fatal_context],
             traceback.format_exc(),
         )
@@ -252,3 +252,29 @@ class BaseListener(ComponentLifeCycle):  # ABC):
                 "name": self.creating_listener_template.name,
             },
         }
+
+    def _construct_component_runtime_error_from_framework_runtime_error(
+        self,
+        error: ComponentRuntimeError,
+    ) -> ListenerRuntimeError:
+        return ListenerRuntimeError(
+            listener_str=str(self),
+            error_message=error.message,
+            detail=error.detail,
+        )
+
+    def _construct_component_runtime_error_from_unhandled_exception(
+        self,
+        exc: Exception,
+    ) -> ListenerRuntimeError:
+        return ListenerRuntimeError(
+            listener_str=str(self),
+            error_message=(
+                f"An unhandled exception was raised while running. "
+                f"{type(exc).__name__}: {exc}"
+            ),
+            detail={
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        )

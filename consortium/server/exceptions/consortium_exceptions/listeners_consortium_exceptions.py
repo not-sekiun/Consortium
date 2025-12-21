@@ -144,6 +144,8 @@ class ListenerStateError(
 
     code = "LISTENER_STATE_ERROR"
 
+    _COMPONENT_TYPE = "listener"
+
 
 class ListenerNotRunningError(
     comp_excs.ComponentNotRunningError,

@@ -40,7 +40,7 @@ class _PluginModel(ComponentMetadataModel):
 
 class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     _METADATA_MODEL = _PluginModel
-    _EXCEPTION_MAP = {
+    _METADATA_EXCEPTION_MAP = {
         comp_excs.MissingComponentConfigurationParameterError: MissingPluginConfigurationParameterError,
         comp_excs.EmptyComponentLabelError: EmptyPluginLabelError,
         comp_excs.InvalidComponentVersionError: InvalidPluginVersionError,
@@ -48,7 +48,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidPluginDependencyVersionSpecifierError,
         comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidPluginConfigurationParameterTypeError,
     }
-    _EXCEPTION_KWARGS_MAP = {
+    _METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "plugin_str",
         "component_filepath": "plugin_filepath",
     }
@@ -81,8 +81,8 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,
-                exception_map=cls._EXCEPTION_MAP,
-                exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
+                exception_map=cls._METADATA_EXCEPTION_MAP,
+                exception_kwargs_map=cls._METADATA_EXCEPTION_KWARGS_MAP,
             ) from None
         super().__init_subclass__(**kwargs)
 
@@ -131,7 +131,8 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
         self.logger.opt(colors=True).error(
-            "<bold><red>Fatal error occurred within plugin while it was {}:</></>\n{}",
+            "<bold><red>Fatal error occurred within plugin {} while it was {}:</></>\n{}",
+            str(self),
             ctx_to_str_map[fatal_context],
             traceback.format_exc(),
         )
@@ -186,3 +187,29 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             "autostart": self.autostart,
             "status": self.status.to_json(),
         }
+
+    def _construct_component_runtime_error_from_framework_runtime_error(
+        self,
+        error: comp_excs.ComponentRuntimeError,
+    ) -> PluginRuntimeError:
+        return PluginRuntimeError(
+            plugin_str=str(self),
+            error_message=error.message,
+            detail=error.detail,
+        )
+
+    def _construct_component_runtime_error_from_unhandled_exception(
+        self,
+        exc: Exception,
+    ) -> PluginRuntimeError:
+        return PluginRuntimeError(
+            plugin_str=str(self),
+            error_message=(
+                f"An unhandled exception was raised while running. "
+                f"{type(exc).__name__}: {exc}"
+            ),
+            detail={
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        )

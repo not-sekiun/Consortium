@@ -1,5 +1,8 @@
 from typing import Any
 
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
 )
@@ -7,70 +10,6 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 class AgentGeneratorsError(BaseConsortiumError):
     code = "AGENT_GENERATORS_ERROR"
-
-
-class AgentGeneratorsServiceError(AgentGeneratorsError):
-    code = "AGENT_GENERATORS_SERVICE_ERROR"
-
-
-class AgentGeneratorNotFoundError(AgentGeneratorsServiceError):
-    code = "AGENT_GENERATOR_NOT_FOUND_ERROR"
-
-    def __init__(self, agent_generator_id: str):
-        super().__init__(
-            message=(
-                f"Failed to find the requested agent generator. No agent generator was "
-                f"found with the provided agent generator ID '{agent_generator_id}'."
-            ),
-        )
-
-
-class AgentGeneratorAlreadyExistsError(AgentGeneratorsServiceError):
-    code = "AGENT_GENERATOR_ALREADY_EXISTS_ERROR"
-
-    def __init__(self, agent_generator_id: str):
-        super().__init__(
-            message=(
-                f"Failed to add the specified agent generator. An agent generator "
-                f"already exists with the agent generator ID '{agent_generator_id}'."
-            ),
-        )
-
-
-class AgentGeneratorParameterUpdateError(AgentGeneratorsServiceError):
-    code = "AGENT_GENERATOR_PARAMETER_UPDATE_ERROR"
-
-
-class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError):
-    code = "INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"
-
-    def __init__(self, agent_generator: str, parameter_name: str):
-        super().__init__(
-            message=(
-                f"Failed to update the agent generator parameter for agent generator "
-                f"'{agent_generator}'. The provided parameter name '{parameter_name}' "
-                f"was not found for the agent generator."
-            ),
-        )
-
-
-class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateError):
-    code = "INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR"
-
-    def __init__(
-        self,
-        agent_generator_str: str,
-        parameter_name: str,
-        parameter_value: str,
-        error_message: str,
-    ):
-        super().__init__(
-            message=(
-                f"Failed to update the agent generator parameter for agent generator "
-                f"'{agent_generator_str}'. The value provided '{parameter_value}' for "
-                f"the parameter '{parameter_name}' is invalid. {error_message}"
-            ),
-        )
 
 
 class AgentGeneratorsFrameworkError(AgentGeneratorsError):
@@ -201,39 +140,23 @@ class EmptyAgentGeneratorBuildStepNameError(AgentGeneratorBuildStepConfiguration
         )
 
 
-class AgentGeneratorNotRunningError(AgentGeneratorsFrameworkError):
-    code = "AGENT_GENERATOR_NOT_RUNNING_ERROR"
+class AgentGeneratorOperationError(
+    comp_excs.ComponentOperationError,
+    AgentGeneratorsFrameworkError,
+):
+    """
+    Base exception for all errors that occur during the operation of a particular
+    agent generator.
+    """
 
-    def __init__(
-        self,
-        agent_generator_str: str,
-    ):
-        super().__init__(
-            message=(
-                f"Failed to perform the requested operation on the agent generator "
-                f"'{agent_generator_str}'. The agent generator is not running which "
-                f"conflicts with the operation that was requested."
-            ),
-        )
+    code = "AGENT_GENERATOR_OPERATION_ERROR"
+
+    _COMPONENT_TYPE = "agent generator"
 
 
-class AgentGeneratorAlreadyRunningError(AgentGeneratorsFrameworkError):
-    code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        agent_generator_str: str,
-    ):
-        super().__init__(
-            message=(
-                f"Failed to perform the requested operation on the agent generator "
-                f"'{agent_generator_str}'. The agent generator is already running "
-                f"which conflicts with the operation that was requested."
-            ),
-        )
-
-
-class AgentGeneratorStartError(AgentGeneratorsFrameworkError):
+class AgentGeneratorStartError(
+    comp_excs.ComponentStartError, AgentGeneratorOperationError
+):
     code = "AGENT_GENERATOR_START_ERROR"
 
     def __init__(
@@ -243,16 +166,16 @@ class AgentGeneratorStartError(AgentGeneratorsFrameworkError):
         detail: Any,
     ):
         super().__init__(
-            message=(
-                f"Failed to start the agent generator '{agent_generator_str}'. "
-                f"{error_message}"
-            ),
+            component_str=agent_generator_str,
+            error_message=error_message,
             detail=detail,
         )
 
 
-class AgentGeneratorBuildError(AgentGeneratorsFrameworkError):
-    code = "AGENT_GENERATOR_BUILD_ERROR"
+class AgentGeneratorRuntimeError(
+    comp_excs.ComponentRuntimeError, AgentGeneratorOperationError
+):
+    code = "AGENT_GENERATOR_RUNTIME_ERROR"
 
     def __init__(
         self,
@@ -261,16 +184,18 @@ class AgentGeneratorBuildError(AgentGeneratorsFrameworkError):
         detail: Any,
     ):
         super().__init__(
-            message=(
-                f"Failed to build an agent with the agent generator "
-                f"'{agent_generator_str}'. {error_message}"
-            ),
+            component_str=agent_generator_str,
+            error_message=error_message,
             detail=detail,
         )
 
 
-class AgentGeneratorBuildStepError(AgentGeneratorsFrameworkError):
-    code = "AGENT_GENERATOR_BUILD_STEP_ERROR"
+class AgentGeneratorBuildStepRuntimeError(
+    comp_excs.ComponentRuntimeError,
+    AgentGeneratorOperationError,
+):
+    code = "AGENT_GENERATOR_BUILD_STEP_RUNTIME_ERROR"
+    _COMPONENT_TYPE = "agent generator build step"
 
     def __init__(
         self,
@@ -279,15 +204,15 @@ class AgentGeneratorBuildStepError(AgentGeneratorsFrameworkError):
         detail: Any,
     ):
         super().__init__(
-            message=(
-                f"An error occurred during the agent generator build step "
-                f"'{agent_generator_build_step_str}'. {error_message}"
-            ),
+            component_str=agent_generator_build_step_str,
+            error_message=error_message,
             detail=detail,
         )
 
 
-class AgentGeneratorStopError(AgentGeneratorsFrameworkError):
+class AgentGeneratorStopError(
+    comp_excs.ComponentStopError, AgentGeneratorOperationError
+):
     code = "AGENT_GENERATOR_STOP_ERROR"
 
     def __init__(
@@ -297,9 +222,145 @@ class AgentGeneratorStopError(AgentGeneratorsFrameworkError):
         detail: Any,
     ):
         super().__init__(
-            message=(
-                f"Failed to stop the agent generator '{agent_generator_str}'. "
-                f"{error_message}"
-            ),
+            component_str=agent_generator_str,
+            error_message=error_message,
             detail=detail,
+        )
+
+
+class AgentGeneratorStateError(
+    AgentGeneratorsFrameworkError,
+    comp_excs.ComponentStateError,
+):
+    """
+    Base exception for all errors that occur due to invalid state transitions or
+    operations performed on an agent generator in an invalid state.
+    """
+
+    code = "AGENT_GENERATOR_STATE_ERROR"
+
+    _COMPONENT_TYPE = "agent generator"
+
+
+class AgentGeneratorNotRunningError(
+    comp_excs.ComponentNotRunningError, AgentGeneratorStateError
+):
+    code = "AGENT_GENERATOR_NOT_RUNNING_ERROR"
+
+    def __init__(
+        self,
+        agent_generator_str: str,
+    ):
+        super().__init__(component_str=agent_generator_str)
+
+
+class AgentGeneratorAlreadyRunningError(
+    comp_excs.ComponentNotRunningError, AgentGeneratorStateError
+):
+    code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
+
+    def __init__(
+        self,
+        agent_generator_str: str,
+    ):
+        super().__init__(component_str=agent_generator_str)
+
+
+# class AgentGeneratorBuildError(AgentGeneratorsFrameworkError):
+#     code = "AGENT_GENERATOR_BUILD_ERROR"
+#
+#     def __init__(
+#         self,
+#         agent_generator_str: str,
+#         error_message: str,
+#         detail: Any,
+#     ):
+#         super().__init__(
+#             message=(
+#                 f"Failed to build an agent with the agent generator "
+#                 f"'{agent_generator_str}'. {error_message}"
+#             ),
+#             detail=detail,
+#         )
+#
+#
+# class AgentGeneratorBuildStepError(AgentGeneratorsFrameworkError):
+#     code = "AGENT_GENERATOR_BUILD_STEP_ERROR"
+#
+#     def __init__(
+#         self,
+#         agent_generator_build_step_str: str,
+#         error_message: str,
+#         detail: Any,
+#     ):
+#         super().__init__(
+#             message=(
+#                 f"An error occurred during the agent generator build step "
+#                 f"'{agent_generator_build_step_str}'. {error_message}"
+#             ),
+#             detail=detail,
+#         )
+
+
+class AgentGeneratorsServiceError(AgentGeneratorsError):
+    code = "AGENT_GENERATORS_SERVICE_ERROR"
+
+
+class AgentGeneratorNotFoundError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_NOT_FOUND_ERROR"
+
+    def __init__(self, agent_generator_id: str):
+        super().__init__(
+            message=(
+                f"Failed to find the requested agent generator. No agent generator was "
+                f"found with the provided agent generator ID '{agent_generator_id}'."
+            ),
+        )
+
+
+class AgentGeneratorAlreadyExistsError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_ALREADY_EXISTS_ERROR"
+
+    def __init__(self, agent_generator_id: str):
+        super().__init__(
+            message=(
+                f"Failed to add the specified agent generator. An agent generator "
+                f"already exists with the agent generator ID '{agent_generator_id}'."
+            ),
+        )
+
+
+class AgentGeneratorParameterUpdateError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_PARAMETER_UPDATE_ERROR"
+
+
+class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError):
+    code = "INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"
+
+    def __init__(self, agent_generator: str, parameter_name: str):
+        super().__init__(
+            message=(
+                f"Failed to update the agent generator parameter for agent generator "
+                f"'{agent_generator}'. The provided parameter name '{parameter_name}' "
+                f"was not found for the agent generator."
+            ),
+        )
+
+
+class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateError):
+    code = "INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR"
+
+    def __init__(
+        self,
+        agent_generator_str: str,
+        parameter_name: str,
+        parameter_value: str,
+        error_message: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to update the agent generator parameter for agent generator "
+                f"'{agent_generator_str}'. The value provided '{parameter_value}' for "
+                f"the parameter '{parameter_name}' is invalid. {error_message}"
+            ),
         )

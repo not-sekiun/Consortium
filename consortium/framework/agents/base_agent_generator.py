@@ -5,7 +5,8 @@ import sys
 import traceback
 import types
 import uuid
-from abc import ABC, abstractmethod
+
+# from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, final, get_type_hints
 
@@ -16,17 +17,15 @@ from consortium.framework._components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
 )
-from consortium.framework.exceptions._component_framework_exceptions import (
-    ComponentStartError,
-    ComponentStopError,
-)
 from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
     AgentGeneratorAlreadyRunningError,
-    AgentGeneratorBuildError,
     AgentGeneratorBuildStepConfigurationParameterTypeError,
+    # AgentGeneratorBuildError,
+    AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorConfigurationParameterTypeError,
     AgentGeneratorCreationParameterTypeError,
     AgentGeneratorNotRunningError,
+    AgentGeneratorRuntimeError,
     AgentGeneratorStartError,
     AgentGeneratorStopError,
     MissingAgentGeneratorConfigurationParameterError,
@@ -34,37 +33,45 @@ from consortium.server.exceptions.consortium_exceptions.agent_generators_consort
 from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
     ComponentAlreadyRunningError,
     ComponentNotRunningError,
+    ComponentRuntimeError,
+    ComponentStartError,
+    ComponentStopError,
 )
-from consortium.server.objects.agent_generator_objects import (
-    AgentGeneratorBuildStepStatus,
-)
+
+# from consortium.framework.agents.agent_generator_objects import (
+#     AgentGeneratorBuildStepStatus,
+# )
 from consortium.server.server_logging import LoggerType
 
 
 class _BaseAgentGeneratorBuildStepModel(BaseModel):
     name: str
     description: str
-    ignore_failure: bool
+    # ignore_failure: bool
 
 
-class BaseAgentGeneratorBuildStep(ABC):
+# class BaseAgentGeneratorBuildStep(ABC):
+class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     name: str
     description: str = ""
-    ignore_failure: bool = False
+    # ignore_failure: bool = False
 
     def __init__(self):
         self.agent_generator_build_step_id = uuid.uuid4()
         self.datetime_started = None
         self.datetime_stopped = None
-        self.status = AgentGeneratorBuildStepStatus()
+        self.environment = types.SimpleNamespace()
+        self.parameters = {}
+        # self.status = AgentGeneratorBuildStepStatus()
         self.logger = logger.bind(
             logger_name=f"Agent Generator Build Step {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
         )
-
         self.working_directory = pathlib.Path(
             inspect.getsourcefile(self.__class__)
         ).parent
+
+        super().__init__()
 
     def __init_subclass__(cls, **kwargs):
         expected_attrs_and_types_map = get_type_hints(cls)
@@ -82,7 +89,7 @@ class BaseAgentGeneratorBuildStep(ABC):
             _BaseAgentGeneratorBuildStepModel(
                 name=cls.name,
                 description=cls.description,
-                ignore_failure=cls.ignore_failure,
+                # ignore_failure=cls.ignore_failure,
             )
         except ValidationError as exc:
             attr = exc.errors()[0]["loc"][0]
@@ -100,64 +107,149 @@ class BaseAgentGeneratorBuildStep(ABC):
             f"AgentGeneratorBuildStep("
             f"name={self.name!r}, "
             f"description={self.description!r}, "
-            f"ignore_failure={self.ignore_failure}"
+            # f"ignore_failure={self.ignore_failure}"
             f")"
         )
 
-    @abstractmethod
-    async def on_running(
-        self,
-        stop_event: asyncio.Event,
-        parameters: dict,
-        environment: types.SimpleNamespace,
-    ): ...
+    @property
+    def time_elapsed_in_seconds(self) -> float | None:
+        if self.datetime_started and self.datetime_stopped:
+            return (self.datetime_stopped - self.datetime_started).total_seconds()
+        return None
 
-    async def start(
+    # TODO: Maybe think of a stricter way to prevent overriding this method.
+    @final
+    async def on_started(self) -> None:
+        self.datetime_started = datetime.now()
+
+    async def on_running(self) -> None: ...
+
+    @final
+    async def on_completed(self) -> None:
+        self.datetime_stopped = datetime.now()
+
+    @final
+    async def on_stopped(self) -> None:
+        self.datetime_stopped = datetime.now()
+
+    @final
+    async def on_cancelled(self) -> None:
+        self.datetime_stopped = datetime.now()
+
+    @final
+    async def on_errored(self, error: AgentGeneratorBuildStepRuntimeError) -> None:
+        self.datetime_stopped = datetime.now()
+        self.logger.error(error)
+
+    async def on_fatal(
+        self,
+        exc: Exception,
+        fatal_context: ComponentLifeCycleFatalContext,
+    ) -> None:
+        ctx_to_str_map = {
+            ComponentLifeCycleFatalContext.START: "starting",
+            ComponentLifeCycleFatalContext.RUNNING: "running",
+            ComponentLifeCycleFatalContext.STOP: "stopping",
+            ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
+            ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
+        }
+        self.logger.opt(colors=True).error(
+            "<bold><red>Fatal error occurred within agent generator build step {} while it was {}:</></>\n{}",
+            str(self),
+            ctx_to_str_map[fatal_context],
+            traceback.format_exc(),
+        )
+
+    async def run(
         self,
         stop_event: asyncio.Event,
         parameters: dict,
         environment: types.SimpleNamespace,
-    ):
-        self.datetime_started = datetime.now()
-        self.status.transition_to_running()
-        try:
-            await self.on_running(
-                stop_event=stop_event,
-                parameters=parameters,
-                environment=environment,
-            )
-            self.status.transition_to_completed()
-        except AgentGeneratorBuildError as exc:
-            self.status.transition_to_errored(exception=exc)
-            raise exc
-        except Exception as exc:
-            self.status.transition_to_fatal(
-                agent_generator_build_step_identifier=str(self),
-                exception=exc,
-            )
-            raise exc
-        finally:
-            self.datetime_stopped = datetime.now()
+    ) -> None:
+        # Override the `stop_event` and `environment` set during initialization to the
+        # ones provided by the AgentGenerator.
+        self.stop_event = stop_event
+        self.environment = environment
+        self.parameters = parameters
+        await super().start()
+        await self.wait_until_completed()
+
+    # @abstractmethod
+    # async def on_running(
+    #     self,
+    #     stop_event: asyncio.Event,
+    #     parameters: dict,
+    #     environment: types.SimpleNamespace,
+    # ): ...
+    #
+    # async def start(
+    #     self,
+    #     stop_event: asyncio.Event,
+    #     parameters: dict,
+    #     environment: types.SimpleNamespace,
+    # ):
+    #     self.datetime_started = datetime.now()
+    #     self.status.transition_to_running()
+    #     try:
+    #         await self.on_running(
+    #             stop_event=stop_event,
+    #             parameters=parameters,
+    #             environment=environment,
+    #         )
+    #         self.status.transition_to_completed()
+    #     except AgentGeneratorBuildStepRuntimeError as exc:
+    #         self.status.transition_to_errored(exception=exc)
+    #         raise exc
+    #     except Exception as exc:
+    #         self.status.transition_to_fatal(
+    #             agent_generator_build_step_identifier=str(self),
+    #             exception=exc,
+    #         )
+    #         raise exc
+    #     finally:
+    #         self.datetime_stopped = datetime.now()
 
     def to_json(self) -> dict[str, Any]:
         return {
             "agent_generator_build_step_id": str(self.agent_generator_build_step_id),
             "name": self.name,
             "description": self.description,
-            "ignore_failure": self.ignore_failure,
+            # "ignore_failure": self.ignore_failure,
             "datetime_started": self.datetime_started.isoformat()
             if self.datetime_started
             else None,
             "datetime_stopped": self.datetime_stopped.isoformat()
             if self.datetime_stopped
             else None,
-            "time_elapsed_in_seconds": (
-                self.datetime_stopped - self.datetime_started
-            ).seconds
-            if self.datetime_started and self.datetime_stopped
-            else None,
+            "time_elapsed_in_seconds": self.time_elapsed_in_seconds,
             "status": self.status.to_json(),
         }
+
+    def _construct_component_runtime_error_from_framework_runtime_error(
+        self,
+        error: ComponentRuntimeError,
+    ) -> AgentGeneratorBuildStepRuntimeError:
+        return AgentGeneratorBuildStepRuntimeError(
+            agent_generator_build_step_str=str(self),
+            error_message=error.message,
+            detail=error.detail,
+        )
+
+    def _construct_component_runtime_error_from_unhandled_exception(
+        self,
+        exc: Exception,
+    ) -> AgentGeneratorBuildStepRuntimeError:
+        return AgentGeneratorBuildStepRuntimeError(
+            agent_generator_build_step_str=str(self),
+            error_message=(
+                f"An unhandled exception was raised while running. "
+                f"{type(exc).__name__}: {exc}"
+            ),
+            detail={
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        )
 
 
 class _BaseAgentGeneratorParametersModel(BaseModel):
@@ -265,11 +357,16 @@ class BaseAgentGenerator(ComponentLifeCycle):
     @final
     async def on_running(self) -> None:
         for agent_generator_build_step in self.agent_generator_build_steps:
-            await agent_generator_build_step.start(
+            await agent_generator_build_step.run(
                 stop_event=self.stop_event,
                 parameters=self.parameters,
                 environment=self.environment,
             )
+            # await agent_generator_build_step.start(
+            #     stop_event=self.stop_event,
+            #     parameters=self.parameters,
+            #     environment=self.environment,
+            # )
             if self.stop_event.is_set():
                 break
 
@@ -277,7 +374,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
     async def on_cancelled(self) -> None: ...
 
-    async def on_errored(self, error: AgentGeneratorBuildError) -> None:
+    async def on_errored(self, error: AgentGeneratorRuntimeError) -> None:
         self.logger.error(error)
 
     async def on_fatal(
@@ -293,7 +390,8 @@ class BaseAgentGenerator(ComponentLifeCycle):
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
         self.logger.opt(colors=True).error(
-            "<bold><red>Fatal error occurred within plugin while it was {}:</></>\n{}",
+            "<bold><red>Fatal error occurred within agent generator {} while it was {}:</></>\n{}",
+            str(self),
             ctx_to_str_map[fatal_context],
             traceback.format_exc(),
         )
@@ -356,3 +454,29 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 "name": self.creating_agent_template.name,
             },
         }
+
+    def _construct_component_runtime_error_from_framework_runtime_error(
+        self,
+        error: ComponentRuntimeError,
+    ) -> AgentGeneratorRuntimeError:
+        return AgentGeneratorRuntimeError(
+            agent_generator_str=str(self),
+            error_message=error.message,
+            detail=error.detail,
+        )
+
+    def _construct_component_runtime_error_from_unhandled_exception(
+        self,
+        exc: Exception,
+    ) -> AgentGeneratorRuntimeError:
+        return AgentGeneratorRuntimeError(
+            agent_generator_str=str(self),
+            error_message=(
+                f"An unhandled exception was raised while running. "
+                f"{type(exc).__name__}: {exc}"
+            ),
+            detail={
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        )

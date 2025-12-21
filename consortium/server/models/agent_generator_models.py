@@ -2,16 +2,17 @@ from typing import Any
 
 from pydantic import BaseModel
 
+# from consortium.framework.agents.agent_generator_objects import (
+#     AgentGeneratorBuildStepState,
+# )
+from consortium.framework._components._component_status import State
 from consortium.server.models.c2_types_models import AgentTypeModel
 from consortium.server.models.common_models import ErrorModel
 from consortium.server.models.component_models import StatusModel
-from consortium.server.objects.agent_generator_objects import (
-    AgentGeneratorBuildStepState,
-)
 
 
 class AgentGeneratorBuildStepStatusModel(BaseModel):
-    state: AgentGeneratorBuildStepState
+    state: State
     error: ErrorModel | None
 
 

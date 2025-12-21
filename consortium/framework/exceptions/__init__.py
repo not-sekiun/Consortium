@@ -2,7 +2,7 @@ from consortium.framework.exceptions.agent_capabilties_framework_exception impor
     AgentCapabilityTaskingError,
 )
 from consortium.framework.exceptions.agent_generators_framework_exceptions import (
-    AgentGeneratorBuildError,
+    AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorStartError,
     AgentGeneratorStopError,
 )
@@ -26,7 +26,7 @@ __all__ = [
     "AgentCapabilityTaskingError",
     # Agent Generators
     "AgentGeneratorStartError",
-    "AgentGeneratorBuildError",
+    "AgentGeneratorBuildStepRuntimeError",
     "AgentGeneratorStopError",
     # Listeners
     "ListenerStartError",

@@ -12,7 +12,7 @@ class AgentGeneratorStartError(ComponentStartError):
     """
 
 
-class AgentGeneratorBuildError(ComponentRuntimeError):
+class AgentGeneratorBuildStepRuntimeError(ComponentRuntimeError):
     """
     Raise this exception to signal that an error occurred while the agent generator was
     building the agent.
