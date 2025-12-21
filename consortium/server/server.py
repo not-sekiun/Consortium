@@ -32,7 +32,7 @@ from consortium.server.api.payloads_api import router as payloads_api_router
 from consortium.server.api.server_api import router as server_api_router
 from consortium.server.api.user_accounts_api import router as user_accounts_api_router
 from consortium.server.api.users_api import router as users_api_router
-from consortium.server.models.config_models import LoggingConfigModel, ServerConfigModel
+from consortium.server.models.config_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_config import SERVER_RELEASE
 from consortium.server.server_exception_handlers import (
@@ -48,11 +48,8 @@ from consortium.server.server_middleware import (
 
 
 class Server:
-    def __init__(
-        self, server_config: ServerConfigModel, logging_config: LoggingConfigModel
-    ):
+    def __init__(self, server_config: ServerConfigModel):
         self.server_config = server_config
-        self.logging_config = logging_config
 
         self.status = ServerStatus.STOPPED
 

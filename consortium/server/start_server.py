@@ -12,6 +12,7 @@ from consortium.server.server_config import (
     CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH,
 )
 from consortium.server.server_logging import configure_logger
+from consortium.server.services.logging_service import LoggingService
 
 
 async def _start_server(arguments: argparse.Namespace) -> None:
@@ -122,9 +123,9 @@ async def _start_server(arguments: argparse.Namespace) -> None:
     from consortium.server.server import Server
 
     # Configure server and create a reference to it in the server singletons module.
-    server_singletons.server = Server(
-        server_config=server_config, logging_config=logging_config
-    )
+    server_singletons.server = Server(server_config=server_config)
+    # Initialize the logging service with the logging configuration.
+    server_singletons.logging_service = LoggingService(logging_config=logging_config)
     await server_singletons.server.start_server()
 
 

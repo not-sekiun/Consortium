@@ -106,8 +106,8 @@ class ConnectedAgentsService:
                 UUID4 string.
 
         Raises:
-            ListenerSpecificAgentNotFoundError: Raised if the agent with the specified
-                agent ID is not found.
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
 
         Returns:
             None
@@ -129,8 +129,8 @@ class ConnectedAgentsService:
                 UUID4 string.
 
         Raises:
-            ListenerSpecificAgentNotFoundError: Raised if the agent with the specified
-                agent ID is not found.
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
 
         Returns:
             None
@@ -165,7 +165,8 @@ class ConnectedAgentsService:
                 string.
 
         Raises:
-            ListenerSpecificAgentNotFoundError: Raised if the agent with the specified
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found
 
         Returns:
             Agent: The agent with the specified agent ID.

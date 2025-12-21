@@ -4,10 +4,10 @@ import json
 import aiohttp
 import jsonschema
 
-from consortium.framework.event_hooks import base_event_hook, event_type
+from consortium.framework.event_hooks import BaseEventHook, EventType
 
 
-class EventHook(base_event_hook.BaseEventHook):
+class EventHook(BaseEventHook):
     label = "consortium.event_hooks.webhook_sender"
     name = "Webhook sender"
     description = (
@@ -85,7 +85,7 @@ class EventHook(base_event_hook.BaseEventHook):
             return
 
         for event in config["events"]:
-            if event not in event_type.EventType:
+            if event not in EventType:
                 self.logger.warning(
                     "The provided string '{}' in the set of event types to send is not "
                     "a valid event type.",

@@ -1,9 +1,7 @@
 from pathlib import Path
 
-from consortium.components.agents.consortium.http.agent_generator import AgentGenerator
-from consortium.components.agents.consortium.http.agent_type import AgentType
-from consortium.framework.agents.base_agent_template import BaseAgentTemplate
-from consortium.framework.exceptions.options_framework_exceptions import (
+from consortium.framework.agents import BaseAgentTemplate
+from consortium.framework.exceptions import (
     OptionValueValidationError,
 )
 from consortium.framework.framework_types import JSONObject
@@ -12,6 +10,9 @@ from consortium.framework.options import (
     ListValueOption,
     SingleValueOption,
 )
+
+from .agent_generator import AgentGenerator
+from .agent_type import AgentType
 
 
 def _check_filename_does_not_traverse_directories(filename: str):

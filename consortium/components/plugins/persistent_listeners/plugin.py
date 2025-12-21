@@ -1,6 +1,6 @@
 import json
 
-from consortium.framework.plugins.base_plugin import BasePlugin
+from consortium.framework.plugins import BasePlugin
 
 
 class Plugin(BasePlugin):

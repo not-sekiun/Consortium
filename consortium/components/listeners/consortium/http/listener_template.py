@@ -1,4 +1,4 @@
-from consortium.framework.exceptions.options_framework_exceptions import (
+from consortium.framework.exceptions import (
     OptionValueValidationError,
 )
 from consortium.framework.framework_types import JSONObject

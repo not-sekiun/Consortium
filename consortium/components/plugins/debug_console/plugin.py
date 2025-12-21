@@ -9,14 +9,19 @@ from prompt_toolkit.formatted_text.html import HTML
 from prompt_toolkit.patch_stdout import StdoutProxy, patch_stdout
 from prompt_toolkit.styles import Style
 
-import consortium.server.server_singletons as server_singletons
-from consortium.framework.plugins.base_plugin import BasePlugin
+# import consortium.server.server_singletons as server_singletons  # TODO: Transition to self.server_services
+from consortium.framework.plugins import BasePlugin
 from consortium.server.server_logging import log_formatter
 
 
 class _ServicesMethodsCompleter(Completer):
-    def __init__(self, services_methods_completion_dict: dict[str, dict[str, None]]):
-        self.services_methods_completions_dict = services_methods_completion_dict
+    def __init__(
+        self,
+        services_methods_completion_dict: dict[str, dict[str, None]],
+        server_services,
+    ):
+        self._services_methods_completions_dict = services_methods_completion_dict
+        self._server_services = server_services
 
     # Checks to see if a key list exists in a dictionary. The key list is a list of
     # keys that are traversed recursively in the dictionary. So if the key list is
@@ -27,19 +32,19 @@ class _ServicesMethodsCompleter(Completer):
         self,
         key_list: list[str],
         string_to_complete: str,
-    ) -> list[str]:
-        current_dict = self.services_methods_completions_dict
+    ) -> tuple[bool, list[str | tuple[str, bool]]]:
+        current_dict = self._services_methods_completions_dict
         for key in key_list:
             if key not in current_dict:
                 # Key list is not even valid so return an empty list. This means that no
                 # such chain of namespaces exists.
-                return []
+                return False, []
             current_dict = current_dict[key]
 
         # Key list is valid but there are no more completions possible. This means that
         # we are at the end of the chain of namespaces.
         if current_dict is None:
-            return []
+            return False, []
 
         # Key list is valid and there are more completions possible. This means that we
         # are not at the end of the chain of namespaces so we return the next valid
@@ -48,7 +53,20 @@ class _ServicesMethodsCompleter(Completer):
         for key in current_dict:
             if key.startswith(string_to_complete):
                 valid_completions.append(key)
-        return valid_completions
+
+        # When we are completing members, the key list will have exactly one element.
+        # This means we are now completing attrs and methods. We return a tuple
+        # indicating if the member is callable or not along with a bool indicating
+        # whether we are completing for members of a service or services.
+        if len(key_list) == 1:
+            return True, [
+                (
+                    member,
+                    callable(getattr(vars(self._server_services)[key_list[0]], member)),
+                )
+                for member in valid_completions
+            ]
+        return False, valid_completions
 
     def get_completions(self, document, complete_event):
         space_separated_text = document.text.split()
@@ -61,18 +79,30 @@ class _ServicesMethodsCompleter(Completer):
 
         if "." in latest_space_separated_word:
             dot_separated_words = latest_space_separated_word.split(".")
-            for (
-                completion
-            ) in self._return_valid_completions_in_services_methods_completions_dict(
-                key_list=dot_separated_words[:-1],
-                string_to_complete=dot_separated_words[-1],
-            ):
-                yield Completion(
-                    completion,
-                    start_position=-len(dot_separated_words[-1]),
+            is_completing_members, completions = (
+                self._return_valid_completions_in_services_methods_completions_dict(
+                    key_list=dot_separated_words[:-1],
+                    string_to_complete=dot_separated_words[-1],
                 )
+            )
+            for completion_tuple in completions:
+                if is_completing_members:
+                    if completion_tuple[1]:
+                        display = "<a bg='ansiblue' fg='ansiwhite'> meth </a>"
+                    else:
+                        display = "<a bg='ansigreen' fg='ansiwhite'> attr </a>"
+                    yield Completion(
+                        completion_tuple[0],
+                        start_position=-len(dot_separated_words[-1]),
+                        display=HTML(f"{display} {completion_tuple[0]}"),
+                    )
+                else:
+                    yield Completion(
+                        completion_tuple[0],
+                        start_position=-len(dot_separated_words[-1]),
+                    )
         else:
-            for service in self.services_methods_completions_dict:
+            for service in self._services_methods_completions_dict:
                 if service.startswith(latest_space_separated_word.lstrip()):
                     yield Completion(
                         service,
@@ -117,18 +147,25 @@ class Plugin(BasePlugin):
             "API methods.",
         )
 
-        # TODO: Consider providing a dedicated logger service to interact with logging,
-        #  might be useful to send logs remotely or do custom things with them.
+        # FIXME: Consider providing a dedicated logger service to interact with logging,
+        #  might be useful to send logs remotely or do custom things with them. Log
+        #  index 2 is always stdout due to how server_logging sets up the loggers.
+        #  This is brittle. fix it.
         # Remove the current stdout logger and patch it with `StdoutProxy` to prevent
         # loguru from messing with prompt_toolkit's stdout handling. Retain the current
         # log configuration.
         logger.remove(2)
+        # FIXME: Weird bug: logger.remove(2) removes the stdout logger so when logger.add
+        #  errors out we see no output.
+        logging_config = self.server_services.logging_service.logging_config
         logger.add(
             StdoutProxy(raw=True),
             format=log_formatter,
-            level=server_singletons.server.logging_config.log_level,
-            colorize=server_singletons.server.logging_config.colorize,
+            level=logging_config.log_level,  # TODO: Make the names fit more closely with the param chagne log_level to level maybe
+            colorize=logging_config.colorize,
         )
+
+        print(vars(self.server_services))
 
     async def on_running(self) -> None:
         # Super fucking cursed dictionary comprehension within a dictionary
@@ -141,14 +178,10 @@ class Plugin(BasePlugin):
         # publicly accessible from the `server_singletons` module. All this for a
         # fucking autocomplete feature, whew.
         services_methods_completions_dict = {
-            attr: {
-                method: None
-                for method in dir(getattr(server_singletons, attr))
-                if callable(getattr(getattr(server_singletons, attr), method))
-                and not method.startswith("_")
+            service_name: {
+                member: None for member in dir(service) if not member.startswith("_")
             }
-            for attr in dir(server_singletons)
-            if attr.endswith("_service")
+            for service_name, service in vars(self.server_services).items()
         }
         services_methods_completions_dict["exit"] = None
         style = Style.from_dict(
@@ -168,14 +201,11 @@ class Plugin(BasePlugin):
         session = PromptSession(
             completer=_ServicesMethodsCompleter(
                 services_methods_completion_dict=services_methods_completions_dict,
+                server_services=self.server_services,
             ),
             style=style,
         )
-        globals_dict = {
-            attr: getattr(server_singletons, attr)
-            for attr in dir(server_singletons)
-            if attr.endswith("_service")
-        }
+        globals_dict = vars(self.server_services)
 
         with patch_stdout(raw=True):
             while True:
@@ -270,8 +300,9 @@ class Plugin(BasePlugin):
                             multiline=True,
                             prompt_continuation=prompt_continuation,
                             bottom_toolbar=HTML(
-                                "<bold>Press [Meta+Enter] or [Esc] followed by [Enter] to "
-                                "accept input. Press [Ctrl+C] to cancel input.</bold>",
+                                "<bold>Press [Meta+Enter] or [Esc] followed by [Enter] "
+                                "to accept input. Press [Ctrl+C] to cancel input."
+                                "</bold>",
                             ),
                         )
                     except KeyboardInterrupt:
@@ -322,9 +353,3 @@ class Plugin(BasePlugin):
                         exc=exc,
                         temporary_function_identifier=random_identifier,
                     )
-
-    async def on_errored(self, _exc: Exception) -> None:
-        self.logger.error(
-            "Debug console interpreter plugin encountered a fatal error while "
-            "running. Exiting console...",
-        )

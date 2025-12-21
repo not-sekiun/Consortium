@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.live import Live
 from rich.spinner import Spinner
 
-from consortium.framework.plugins.base_plugin import BasePlugin
+from consortium.framework.plugins import BasePlugin
 from consortium.server.server_config import (
     CONSORTIUM_HOME_DIRECTORY_PATH,
     SERVER_RELEASE,

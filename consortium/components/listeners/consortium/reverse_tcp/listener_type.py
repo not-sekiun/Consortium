@@ -1,4 +1,4 @@
-from consortium.framework.listeners.base_listener_type import BaseListenerType
+from consortium.framework.listeners import BaseListenerType
 
 
 class ListenerType(BaseListenerType):

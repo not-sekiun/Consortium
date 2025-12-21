@@ -8,7 +8,6 @@ from consortium.framework.exceptions.agent_generators_framework_exceptions impor
 )
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerRuntimeError,
-    ListenerSpecificAgentNotFoundError,
     ListenerStartError,
     ListenerStopError,
 )
@@ -32,7 +31,6 @@ __all__ = [
     "ListenerStartError",
     "ListenerRuntimeError",
     "ListenerStopError",
-    "ListenerSpecificAgentNotFoundError",  # TODO: Deprecate and replace with a more general exception
     # Options
     "OptionValueValidationError",
     # Plugins
