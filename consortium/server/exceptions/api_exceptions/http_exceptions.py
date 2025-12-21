@@ -1,23 +1,3 @@
-"""
-HTTP related errors that are not specific to any api endpoint. These errors are raised
-internally by the FastAPI framework and are not raised by the application code. They
-are included here to provide additional data for preprocessing in the custom defined
-server exception handlers at server_exception_handlers.py.
-- BaseAPIError: Base class for all API exceptions.
- - HTTPError: Generic HTTP error.
-   - UnauthorizedError: User not authorized to access resource (401 Unauthorized).
-   - ForbiddenError: User does not have permission to access resource (403 Forbidden).
-   - NotFoundError: Requested resource not found (404 Not Found).
-   - MethodNotAllowedError: Requested method not allowed for resource (405 Method Not
-   Allowed).
-   - UnprocessableEntityError: Request could not be processed due to invalid data (422
-   Unprocessable Entity).
-   - InternalServerErrorError: Internal server error occurred (500 Internal Server
-   Error).
-   - ServiceUnavailableError: Service is currently unavailable (503 Service
-   Unavailable).
-"""
-
 from typing import Any
 
 from pydantic import BaseModel, create_model

@@ -1,3 +1,51 @@
+"""
+Exception hierarchy for components errors:
+
+- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
+    - [`ComponentsError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentsError]
+        - [`ComponentsFrameworkError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentsFrameworkError]
+            - [`ComponentConfigurationError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentConfigurationError]
+                - [`InvalidComponentConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentConfigurationParameterTypeError]
+                - [`MissingComponentConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.MissingComponentConfigurationParameterError]
+                - [`EmptyComponentLabelError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.EmptyComponentLabelError]
+                - [`InvalidComponentVersionError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentVersionError]
+                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
+                - [`InvalidComponentDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentDependencyVersionSpecifierError]
+            - [`ComponentOperationError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentOperationError]
+                - [`ComponentStartError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentStartError]
+                - [`ComponentRuntimeError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentRuntimeError]
+                - [`ComponentStopError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentStopError]
+            - [`ComponentStateError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentStateError]
+                - [`ComponentNotRunningError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentNotRunningError]
+                - [`ComponentAlreadyRunningError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentAlreadyRunningError]
+        - [`ComponentsServiceError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentsServiceError]
+            - [`ComponentLoadingError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentLoadingError]
+                - [`InvalidComponentProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectManifestFileError]
+                    - [`InvalidComponentProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectManifestFileJSONError]
+                    - [`InvalidComponentProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectManifestFileSchemaError]
+                - [`InvalidComponentProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileError]
+                    - [`InvalidComponentProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileTOMLError]
+                    - [`InvalidComponentProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileDependencyError]
+                - [`InvalidComponentProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectFolderStructureError]
+                    - [`ComponentProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectManifestFileNotFoundError]
+                    - [`ComponentProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectEntryPointModuleNotFoundError]
+                - [`InvalidComponentProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectImplementationError]
+                    - [`ComponentProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectSymbolNotFoundError]
+                    - [`ComponentProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectInterfaceError]
+                    - [`InternalComponentProjectError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InternalComponentProjectError]
+                - [`IncompatibleComponentFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.IncompatibleComponentFrameworkVersionError]
+                - [`ComponentAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentAlreadyRegisteredError]
+                - [`DuplicateComponentLabelError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.DuplicateComponentLabelError]
+            - [`ComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentDependencyError]
+                - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ThirdPartyDependencyNotFoundError]
+                - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
+                - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentDependencyNotFoundError]
+                - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.IncompatibleComponentDependencyVersionError]
+                - [`ComponentDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentDependsOnInvalidComponentDependencyError]
+                - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentDependencyNotRunningError]
+            - [`ComponentNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentNotFoundError]
+"""
+
 from typing import Any
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
@@ -8,6 +56,17 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 class ComponentsError(BaseConsortiumError):
     """
     Base exception for all components related errors.
+
+    All exceptions that inherit from `ComponentsError` define, `code`, `message`, and
+    `detail` attributes. For brevity, `message` and `detail` are omitted within
+    the documentation here.
+
+    Attributes:
+        code: A **stable, machine-readable identifier** for the specific type of
+            error that occurred.
+        message: A human-readable message that describes the error.
+        detail: Any JSON-serializable data structure holding **structured, raw data**
+            relevant to the error.
     """
 
     code = "COMPONENTS_ERROR"
@@ -57,8 +116,8 @@ class ComponentConfigurationError(ComponentsFrameworkError):
 
 class InvalidComponentConfigurationParameterTypeError(ComponentConfigurationError):
     """
-    An error that is raised when a component's configuration parameter is of an invalid
-    type.
+    Raised when a component's configuration parameter is not of the expected type during
+    component configuration.
     """
 
     code = "INVALID_COMPONENT_CONFIGURATION_PARAMETER_TYPE_ERROR"
@@ -85,7 +144,8 @@ class InvalidComponentConfigurationParameterTypeError(ComponentConfigurationErro
 
 class MissingComponentConfigurationParameterError(ComponentConfigurationError):
     """
-    An error that is raised when a parameter is not declared in a component's definition.
+    Raised when a required parameter is not declared in a component's definition during
+    component configuration.
     """
 
     code = "MISSING_COMPONENT_CONFIGURATION_PARAMETER_ERROR"
@@ -106,8 +166,8 @@ class MissingComponentConfigurationParameterError(ComponentConfigurationError):
 
 class EmptyComponentLabelError(ComponentConfigurationError):
     """
-    An error that is raised when the label provided in a component's definition during
-    configuration is an empty string.
+    Raised when an empty label is provided in a component's definition during component
+    configuration.
     """
 
     code = "EMPTY_COMPONENT_LABEL_ERROR"
@@ -125,8 +185,8 @@ class EmptyComponentLabelError(ComponentConfigurationError):
 
 class InvalidComponentVersionError(ComponentConfigurationError):
     """
-    An error that is raised when the component version string provided in the component's
-    definition during configuration is not a valid version string according to PEP 440.
+    Raised when the component version string provided in the component's definition is not a
+    valid version string according to PEP 440 during component configuration.
     """
 
     code = "INVALID_COMPONENT_VERSION_ERROR"
@@ -143,9 +203,9 @@ class InvalidComponentVersionError(ComponentConfigurationError):
 
 class InvalidFrameworkVersionSpecifierError(ComponentConfigurationError):
     """
-    An error that is raised when the framework version specifier string provided in the
-    component's definition during configuration is not a valid version specifier string as
-    defined in PEP440.
+    Raised when the framework version specifier string provided in the component's
+    definition is not a valid version specifier string as defined in PEP 440 during
+    component configuration.
     """
 
     code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
@@ -166,9 +226,9 @@ class InvalidFrameworkVersionSpecifierError(ComponentConfigurationError):
 
 class InvalidComponentDependencyVersionSpecifierError(ComponentConfigurationError):
     """
-    An error that is raised when the component dependency version specifier string
-    provided in the component's definition during configuration is not a valid version
-    specifier string as defined in PEP440.
+    Raised when a component dependency version specifier string provided in the component's
+    definition is not a valid version specifier string as defined in PEP 440 during
+    component configuration.
     """
 
     code = "INVALID_COMPONENT_DEPENDENCY_VERSION_SPECIFIER_ERROR"
@@ -202,7 +262,7 @@ class ComponentOperationError(ComponentsFrameworkError):
 
 class ComponentStartError(ComponentOperationError):
     """
-    An error that is raised when a component fails to start.
+    Raised when a component fails to start during component operation.
     """
 
     code = "COMPONENT_START_ERROR"
@@ -226,7 +286,8 @@ class ComponentStartError(ComponentOperationError):
 
 class ComponentRuntimeError(ComponentOperationError):
     """
-    An error that is raised when a component encounters an error at runtime.
+    Raised when a component encounters an unhandled error at runtime during component
+    operation.
     """
 
     code = "COMPONENT_RUNTIME_ERROR"
@@ -248,7 +309,7 @@ class ComponentRuntimeError(ComponentOperationError):
 
 class ComponentStopError(ComponentOperationError):
     """
-    An error that is raised when a component fails to stop.
+    Raised when a component fails to stop during component operation.
     """
 
     code = "COMPONENT_STOP_ERROR"
@@ -272,8 +333,8 @@ class ComponentStopError(ComponentOperationError):
 
 class ComponentStateError(ComponentsFrameworkError):
     """
-    Base exception for all errors caused by attempting an operation on a component
-    while it is in an invalid state that conflicts with that operation
+    Base exception for all errors that occur due to invalid component state during
+    component operation.
     """
 
     code = "COMPONENT_STATE_ERROR"
@@ -281,8 +342,8 @@ class ComponentStateError(ComponentsFrameworkError):
 
 class ComponentNotRunningError(ComponentStateError):
     """
-    An error that is raised when an operation is attempted on a component that requires
-    that component to already be running but the component is not running.
+    Raised when an operation is attempted on a component that requires the component to
+    already be running but the component is not running.
     """
 
     code = "COMPONENT_NOT_RUNNING_ERROR"
@@ -302,9 +363,8 @@ class ComponentNotRunningError(ComponentStateError):
 
 class ComponentAlreadyRunningError(ComponentStateError):
     """
-    An error that is raised when an operation is attempted on a component that requires
-    that component to not already be started or running but the component is already started
-    or running.
+    Raised when an operation is attempted on a component that requires the component to not
+    already be started or running but the component is already started or running.
     """
 
     code = "COMPONENT_ALREADY_RUNNING_ERROR"
@@ -323,6 +383,10 @@ class ComponentAlreadyRunningError(ComponentStateError):
 
 
 class ComponentsServiceError(ComponentsError):
+    """
+    Base exception for all errors that occur within the components service.
+    """
+
     code = "COMPONENTS_SERVICE_ERROR"
 
     _COMPONENT_TYPE = "component"
@@ -344,16 +408,30 @@ class ComponentsServiceError(ComponentsError):
 
 
 class ComponentLoadingError(ComponentsServiceError):
+    """
+    Base exception for all errors that occur during the loading of a component.
+    """
+
     code = "COMPONENT_LOADING_ERROR"
 
 
 class InvalidComponentProjectManifestFileError(ComponentLoadingError):
+    """
+    Base exception for all errors that occur due to an invalid component project manifest
+    `manifest.json` file during component loading.
+    """
+
     code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_ERROR"
 
 
 class InvalidComponentProjectManifestFileJSONError(
     InvalidComponentProjectManifestFileError,
 ):
+    """
+    Raised when the component project manifest file is not valid JSON during component
+    loading.
+    """
+
     code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -369,6 +447,11 @@ class InvalidComponentProjectManifestFileJSONError(
 class InvalidComponentProjectManifestFileSchemaError(
     InvalidComponentProjectManifestFileError,
 ):
+    """
+    Raised when the component project manifest file does not conform to the expected JSON
+    schema during component loading.
+    """
+
     code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -385,10 +468,19 @@ class InvalidComponentProjectManifestFileSchemaError(
 
 
 class InvalidComponentProjectPyProjectFileError(ComponentLoadingError):
+    """
+    Base exception for all errors that occur due to an invalid `pyproject.toml` file
+    during component loading.
+    """
+
     code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_ERROR"
 
 
 class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
+    """
+    Raised when the `pyproject.toml` file is not a valid TOML file during component loading.
+    """
+
     code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -401,6 +493,11 @@ class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
 
 
 class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError):
+    """
+    Raised when the `pyproject.toml` file contains an invalid dependency entry during
+    component loading.
+    """
+
     code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -418,12 +515,22 @@ class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError)
 
 
 class InvalidComponentProjectFolderStructureError(ComponentLoadingError):
+    """
+    Base exception for all errors that occur due to an invalid component project folder
+    structure during component loading.
+    """
+
     code = "INVALID_COMPONENT_PROJECT_FOLDER_STRUCTURE_ERROR"
 
 
 class ComponentProjectManifestFileNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
+    """
+    Raised when the component project manifest file is not found in the component project
+    folder during component loading.
+    """
+
     code = "COMPONENT_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -440,6 +547,11 @@ class ComponentProjectManifestFileNotFoundError(
 class ComponentProjectEntryPointModuleNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
+    """
+    Raised when the component entry point module specified in the manifest is not found in
+    the component project folder during component loading.
+    """
+
     code = "COMPONENT_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -457,10 +569,20 @@ class ComponentProjectEntryPointModuleNotFoundError(
 
 
 class InvalidComponentProjectImplementationError(ComponentLoadingError):
+    """
+    Base exception for all errors that occur due to the component project not implementing
+    the required interface during component loading.
+    """
+
     code = "INVALID_COMPONENT_PROJECT_IMPLEMENTATION_ERROR"
 
 
 class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationError):
+    """
+    Raised when the component symbol name specified in the manifest is not found in the
+    component entry point module during component loading.
+    """
+
     code = "COMPONENT_PROJECT_SYMBOL_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -485,6 +607,11 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
 
 
 class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError):
+    """
+    Raised when the component class does not implement the required interface during
+    component loading.
+    """
+
     code = "COMPONENT_PROJECT_INTERFACE_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -506,6 +633,11 @@ class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError)
 
 
 class InternalComponentProjectError(InvalidComponentProjectImplementationError):
+    """
+    Raised when an unhandled exception from within the component is raised during component
+    loading.
+    """
+
     code = "INTERNAL_COMPONENT_PROJECT_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -525,6 +657,11 @@ class InternalComponentProjectError(InvalidComponentProjectImplementationError):
 
 
 class IncompatibleComponentFrameworkVersionError(ComponentLoadingError):
+    """
+    Raised when a component's required framework version is incompatible with the current
+    framework version during component loading.
+    """
+
     code = "INCOMPATIBLE_COMPONENT_FRAMEWORK_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -547,6 +684,11 @@ class IncompatibleComponentFrameworkVersionError(ComponentLoadingError):
 
 
 class ComponentAlreadyRegisteredError(ComponentLoadingError):
+    """
+    Raised when a component with the same ID is already registered in the components service
+    during component loading.
+    """
+
     code = "COMPONENT_ALREADY_REGISTERED_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -562,6 +704,11 @@ class ComponentAlreadyRegisteredError(ComponentLoadingError):
 
 
 class DuplicateComponentLabelError(ComponentLoadingError):
+    """
+    Raised when the label provided in the component's definition is already in use by
+    another component during component loading.
+    """
+
     code = "DUPLICATE_COMPONENT_LABEL_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -579,10 +726,20 @@ class DuplicateComponentLabelError(ComponentLoadingError):
 
 
 class ComponentDependencyError(ComponentsServiceError):
+    """
+    Base exception for all errors that occur during the resolution of component
+    dependencies.
+    """
+
     code = "COMPONENT_DEPENDENCY_ERROR"
 
 
 class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
+    """
+    Raised when a third-party dependency required by a component is not installed during
+    component dependency resolution.
+    """
+
     code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -604,6 +761,11 @@ class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
 
 
 class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
+    """
+    Raised when a third-party dependency's installed version is incompatible with the
+    version required by the component during component dependency resolution.
+    """
+
     code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -630,6 +792,11 @@ class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
 
 
 class ComponentDependencyNotFoundError(ComponentDependencyError):
+    """
+    Raised when a component dependency required by the component is not found in the
+    components service during component dependency resolution.
+    """
+
     code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -651,6 +818,11 @@ class ComponentDependencyNotFoundError(ComponentDependencyError):
 
 
 class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
+    """
+    Raised when a component dependency's version is incompatible with the version required
+    by the component during component dependency resolution.
+    """
+
     code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -677,6 +849,11 @@ class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
 
 
 class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError):
+    """
+    Raised when a component depends on another component that itself has invalid dependencies
+    during component dependency resolution.
+    """
+
     code = "COMPONENT_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -697,6 +874,11 @@ class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError
 
 
 class ComponentDependencyNotRunningError(ComponentDependencyError):
+    """
+    Raised when a component dependency required by the component is present but not currently
+    running during component dependency resolution.
+    """
+
     code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
@@ -717,6 +899,11 @@ class ComponentDependencyNotRunningError(ComponentDependencyError):
 
 
 class ComponentNotFoundError(ComponentsServiceError):
+    """
+    Raised when the requested component with the provided component ID was not found in the
+    components service.
+    """
+
     code = "COMPONENT_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (

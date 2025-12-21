@@ -1,11 +1,3 @@
-"""
-Errors for the api endpoint /api/login:
-
-- ConflictError: The request could not be completed due to a conflict with the current
-state of the resource.
-  - AlreadyLoggedInError: User is already logged in.
-"""
-
 from consortium.server.exceptions.api_exceptions.http_exceptions import ConflictError
 
 

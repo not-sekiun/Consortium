@@ -3,12 +3,12 @@ import uuid
 
 from loguru import logger
 
-from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
-    AgentTemplatesFrameworkError,
-)
-from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions import (
     AgentProfileLoadingError,
     AgentProfilesServiceError,
+)
+from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
+    AgentTemplatesFrameworkError,
 )
 from consortium.server.objects.c2_profile_objects import AgentProfile
 from consortium.server.server_config import CONSORTIUM_AGENTS_DIRECTORY_PATH

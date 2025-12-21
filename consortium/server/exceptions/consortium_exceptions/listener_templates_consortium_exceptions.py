@@ -8,7 +8,6 @@ Exception hierarchy for listener templates errors:
                 - [`InvalidListenerTemplateConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidListenerTemplateConfigurationParameterTypeError]
                 - [`MissingListenerTemplateConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.MissingListenerTemplateConfigurationParameterError]
                 - [`EmptyListenerTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.EmptyListenerTemplateLabelError]
-                - [`DuplicateListenerTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.DuplicateListenerTemplateLabelError]
                 - [`InvalidListenerTemplateVersionError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidListenerTemplateVersionError]
                 - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidListenerTemplateDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidListenerTemplateDependencyVersionSpecifierError]
@@ -118,24 +117,6 @@ class EmptyListenerTemplateLabelError(
 
     def __init__(self, listener_template_str_filepath: str):
         super().__init__(component_filepath=listener_template_str_filepath)
-
-
-# class DuplicateListenerTemplateLabelError(
-#     comp_excs.DuplicateComponentLabelError,
-#     ListenerTemplateConfigurationError,
-# ):
-#     """
-#     Raised when the label provided in a listener template's definition is already in use
-#     by another listener template during listener template configuration.
-#     """
-#
-#     code = "DUPLICATE_LISTENER_TEMPLATE_LABEL_ERROR"
-#
-#     def __init__(self, listener_template_str: str, label: str):
-#         super().__init__(
-#             component_str=listener_template_str,
-#             label=label,
-#         )
 
 
 class InvalidListenerTemplateVersionError(

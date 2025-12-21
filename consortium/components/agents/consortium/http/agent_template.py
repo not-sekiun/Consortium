@@ -159,7 +159,7 @@ class AgentTemplate(BaseAgentTemplate):
             validating_function=_check_filename_does_not_traverse_directories,
         ),
     }
-    compatible_listener_types = "consortium_http"
+    compatible_listener_types = {"consortium_http"}
     validating_function = _check_all_url_endpoints_unique
 
     def resolve_agent_generator_name(self, parameters: JSONObject) -> str:

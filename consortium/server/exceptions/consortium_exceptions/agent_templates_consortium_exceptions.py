@@ -8,7 +8,6 @@ Exception hierarchy for agent templates errors:
                 - [`InvalidAgentTemplateConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidAgentTemplateConfigurationParameterTypeError]
                 - [`MissingAgentTemplateConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.MissingAgentTemplateConfigurationParameterError]
                 - [`EmptyAgentTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.EmptyAgentTemplateLabelError]
-                - [`DuplicateAgentTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.DuplicateAgentTemplateLabelError]
                 - [`InvalidAgentTemplateVersionError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidAgentTemplateVersionError]
                 - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidAgentTemplateDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidAgentTemplateDependencyVersionSpecifierError]
@@ -118,24 +117,6 @@ class EmptyAgentTemplateLabelError(
 
     def __init__(self, agent_template_filepath: str):
         super().__init__(component_filepath=agent_template_filepath)
-
-
-class DuplicateAgentTemplateLabelError(
-    comp_excs.DuplicateComponentLabelError,
-    AgentTemplateConfigurationError,
-):
-    """
-    Raised when the label provided in an agent template's definition is already in use
-    by another agent template during agent template configuration.
-    """
-
-    code = "DUPLICATE_AGENT_TEMPLATE_LABEL_ERROR"
-
-    def __init__(self, agent_template_str: str, label: str):
-        super().__init__(
-            component_str=agent_template_str,
-            label=label,
-        )
 
 
 class InvalidAgentTemplateVersionError(
