@@ -46,7 +46,7 @@ def log_formatter(record):
     return (
         "<dim><white>{time:YYYY-MM-DDTHH:mm:ss.SSSZ}</></> <level>{level:<8}</> "
         + color
-        + "{extra[logger_name]}</></>: {message}\n"
+        + "{extra[logger_name]}</></>: {message}\n{exception}"
     )
 
 

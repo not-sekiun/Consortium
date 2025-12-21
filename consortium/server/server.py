@@ -1,5 +1,4 @@
 import socket
-import traceback
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -228,9 +227,8 @@ class Server:
         # skip past the middleware are handled internally by uvicorn and will NOT
         # trigger this except block. The traceback can be disabled by setting the
         # log_level parameter to "critical" in the uvicorn.run() call above.
-        except Exception:
-            logger.opt(ansi=True).critical(
-                "<red><bold>Unrecoverable unhandled exception occurred while server "
-                "was starting:\n{}</></>",
-                traceback.format_exc(),
+        except Exception as exc:
+            self._logger.opt(colors=True, exception=exc).critical(
+                "<white><RED><bold>Unrecoverable unhandled exception occurred in "
+                "server</></></>",
             )

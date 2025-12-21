@@ -187,7 +187,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
-        self.logger.opt(ansi=True).error(
+        self.logger.opt(colors=True).error(
             "<bold><red>Fatal error occurred within plugin while it was {}:</></>\n{}",
             ctx_to_str_map[fatal_context],
             traceback.format_exc(),

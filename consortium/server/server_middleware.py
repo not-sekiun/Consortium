@@ -152,11 +152,11 @@ async def log_rest_api_requests_and_responses(
         )
 
         if 100 <= response.status_code < 400:
-            rest_api_log_function = _rest_api_logger.opt(ansi=True).info
+            rest_api_log_function = _rest_api_logger.opt(colors=True).info
         elif 400 <= response.status_code < 500:
-            rest_api_log_function = _rest_api_logger.opt(ansi=True).warning
+            rest_api_log_function = _rest_api_logger.opt(colors=True).warning
         elif 500 <= response.status_code < 600:
-            rest_api_log_function = _rest_api_logger.opt(ansi=True).error
+            rest_api_log_function = _rest_api_logger.opt(colors=True).error
         else:
             raise ValueError("Invalid HTTP status code")
 
@@ -173,7 +173,7 @@ async def log_rest_api_requests_and_responses(
 
         return response
     except Exception:
-        _rest_api_logger.opt(ansi=True).error(
+        _rest_api_logger.opt(colors=True).error(
             (
                 "{}:{} <bold><blue>{}</></> {} - <bold><red>500 Internal Server Error"
                 "</></> {}"
@@ -185,7 +185,7 @@ async def log_rest_api_requests_and_responses(
             # length of the response as a JSON string
             len(json.dumps(InternalServerError().to_json())),
         )
-        _rest_api_logger.opt(ansi=True, raw=True).error(
+        _rest_api_logger.opt(colors=True, raw=True).error(
             "<bold><red>{}</></>",
             traceback.format_exc(),
         )

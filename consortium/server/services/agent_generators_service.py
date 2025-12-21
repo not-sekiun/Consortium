@@ -7,14 +7,15 @@ from loguru import logger
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
+    AgentGeneratorAlreadyExistsError,
+    AgentGeneratorAlreadyRunningError,
+    AgentGeneratorNotFoundError,
+    InvalidAgentGeneratorParameterNameError,
+    InvalidAgentGeneratorParameterValueError,
+)
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
-)
-from consortium.server.exceptions.framework_exceptions import (
-    agent_generators_framework_exceptions as framework_excs,
-)
-from consortium.server.exceptions.service_exceptions import (
-    agent_generators_service_exceptions as svc_excs,
 )
 from consortium.server.objects.agent_generator_objects import AgentGeneratorState
 from consortium.server.server_logging import LoggerType
@@ -60,7 +61,7 @@ class AgentGeneratorsService:
         try:
             agent_generator = self._agent_generators[agent_generator_id]
         except KeyError:
-            raise svc_excs.AgentGeneratorNotFoundError(
+            raise AgentGeneratorNotFoundError(
                 agent_generator_id=agent_generator_id
             ) from None
 
@@ -120,7 +121,7 @@ class AgentGeneratorsService:
     @log_and_propagate_error_on_service_method
     async def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
         if str(agent_generator.agent_generator_id) in self._agent_generators:
-            raise svc_excs.AgentGeneratorAlreadyExistsError(
+            raise AgentGeneratorAlreadyExistsError(
                 agent_generator_id=str(agent_generator.agent_generator_id),
             )
 
@@ -151,7 +152,9 @@ class AgentGeneratorsService:
             agent_generator_id=agent_generator_id,
         )
         if agent_generator.status.state == AgentGeneratorState.RUNNING:
-            raise framework_excs.AgentGeneratorAlreadyRunningError
+            raise AgentGeneratorAlreadyRunningError(
+                agent_generator_str=str(agent_generator),
+            )
 
         removed_agent_generator = self._agent_generators.pop(
             agent_generator.agent_generator_id
@@ -198,7 +201,9 @@ class AgentGeneratorsService:
             # Cannot update running agent generators because the parameters change wont be
             # reflected in the agent generator.
             if agent_generator.status.state == AgentGeneratorState.RUNNING:
-                raise framework_excs.AgentGeneratorAlreadyRunningError
+                raise AgentGeneratorAlreadyRunningError(
+                    agent_generator_str=str(agent_generator),
+                )
 
             # Fill in any missing parameters with values from the existing set of
             # parameters.
@@ -214,7 +219,7 @@ class AgentGeneratorsService:
                     parameter_name
                     not in agent_generator.creating_agent_template.options
                 ):
-                    raise svc_excs.InvalidAgentGeneratorParameterNameError(
+                    raise InvalidAgentGeneratorParameterNameError(
                         agent_generator=str(agent_generator),
                         parameter_name=parameter_name,
                     )
@@ -223,7 +228,7 @@ class AgentGeneratorsService:
                         parameter_name
                     ].validate_value(value=parameter_value)
                 except OptionValueValidationError as exc:
-                    raise svc_excs.InvalidAgentGeneratorParameterValueError(
+                    raise InvalidAgentGeneratorParameterValueError(
                         agent_generator_str=str(agent_generator),
                         parameter_name=parameter_name,
                         parameter_value=str(parameter_value),

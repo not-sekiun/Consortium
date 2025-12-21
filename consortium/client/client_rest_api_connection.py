@@ -25,6 +25,9 @@ def _requires_authentication(
     return wrapper
 
 
+# TODO: Consider transitioning to auto generation of client code using OpenAPI
+#    specifications once the API stabilizes. Figure out how to not have the API be name
+#    mangled.
 class ClientRESTAPIConnection:
     def __init__(
         self,
@@ -558,12 +561,17 @@ class ClientRESTAPIConnection:
             raise ClientRESTAPIOperationError(
                 f"{response_json['error']['code']}: "
                 f"{response_json['error']['message']} "
-                f"(Detail: {response_json['error']['detail']})",
+                f"(Detail: {response_json['error']['detail']})",  # TODO: Consider formatting this more nicely
             )
         elif "error" in response_json and not response_json["error"]["detail"]:
             raise ClientRESTAPIOperationError(
                 f"{response_json['error']['code']}: "
                 f"{response_json['error']['message']}",
+            )
+        else:
+            raise AssertionError(
+                "The REST API response does not contain an error field "
+                "despite indicating an error occurred.",
             )
 
     def _log_request_and_response(
@@ -584,7 +592,7 @@ class ClientRESTAPIConnection:
         format_string = (
             "<bold><blue>{}</></> {} " + color_string + "{} {}" + "</></> " + "{} {}"
         )
-        self._client_rest_api_connection_logger.opt(ansi=True).debug(
+        self._client_rest_api_connection_logger.opt(colors=True).debug(
             format_string,
             method.upper(),
             url,

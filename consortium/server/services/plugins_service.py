@@ -11,12 +11,8 @@ from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     PluginLoadingError,
-    PluginsFrameworkError,
-    PluginsServiceError,
+    PluginsError,
     PluginUnloadingError,
-)
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
 )
 from consortium.server.server_config import CONSORTIUM_PLUGINS_DIRECTORY_PATH
 from consortium.server.server_logging import LoggerType
@@ -491,13 +487,10 @@ class PluginsService:
             try:
                 self.register_plugin(plugin)
                 if plugin.autostart:
-                    try:
-                        await plugin.start()
-                    except BaseFrameworkException:
-                        raise
+                    await plugin.start()
                 self._logger.success("- Loaded plugin: {}", plugin)
                 self._logger.debug("- Loaded plugin: {!r}", plugin)
-            except (PluginsFrameworkError, PluginsServiceError) as exc:
+            except PluginsError as exc:
                 failed_to_load += 1
                 self._logger.error("- {}", str(exc))
             except Exception as exc:

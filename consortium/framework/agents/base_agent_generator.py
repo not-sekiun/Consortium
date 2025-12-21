@@ -20,11 +20,7 @@ from consortium.framework.exceptions._component_framework_exceptions import (
     ComponentStartError,
     ComponentStopError,
 )
-from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
-    ComponentAlreadyRunningError,
-    ComponentNotRunningError,
-)
-from consortium.server.exceptions.framework_exceptions.agent_generators_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
     AgentGeneratorAlreadyRunningError,
     AgentGeneratorBuildError,
     AgentGeneratorBuildStepConfigurationParameterTypeError,
@@ -34,6 +30,10 @@ from consortium.server.exceptions.framework_exceptions.agent_generators_framewor
     AgentGeneratorStartError,
     AgentGeneratorStopError,
     MissingAgentGeneratorConfigurationParameterError,
+)
+from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+    ComponentAlreadyRunningError,
+    ComponentNotRunningError,
 )
 from consortium.server.objects.agent_generator_objects import (
     AgentGeneratorBuildStepStatus,
@@ -292,7 +292,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
             ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
-        self.logger.opt(ansi=True).error(
+        self.logger.opt(colors=True).error(
             "<bold><red>Fatal error occurred within plugin while it was {}:</></>\n{}",
             ctx_to_str_map[fatal_context],
             traceback.format_exc(),

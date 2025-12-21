@@ -1,45 +1,79 @@
-# """
-# Exception hierarchy for agents framework:
-#
-# - BaseFrameworkException: Base class for all framework exceptions.
-#   - AgentGeneratorsFrameworkError: General error occurred in the agent generators
-#   framework.
-#     - AgentGeneratorConfigurationError: Error occurred during agent generator
-#     configuration.
-#       - AgentGeneratorConfigurationParameterTypeError: Invalid type for an agent
-#       generator configuration parameter.
-#       - RequiredAgentGeneratorConfigurationParameterNotDeclaredError: Required
-#       parameter not declared in agent generator configuration.
-#     - AgentGeneratorBuildStepConfigurationError: Error occurred during agent generator
-#     build step configuration.
-#       - AgentGeneratorBuildStepConfigurationParameterTypeError: Invalid type for a
-#       build step configuration parameter.
-#       - RequiredAgentGeneratorBuildStepConfigurationParameterNotDeclaredError:
-#       Required parameter not declared in build step configuration.
-#       - EmptyAgentGeneratorBuildStepNameError: The name provided for an agent generator
-#       build step is an empty string.
-#     - AgentGeneratorCreationError: Error occurred during agent generator creation.
-#       - AgentGeneratorCreationParameterTypeError: Invalid type for an agent generator
-#       creation parameter.
-#     - AgentGeneratorNotRunningError: An error occurred because the requested operation
-#     could not be completed while the agent generator is not running.
-#     - AgentGeneratorAlreadyRunningError: An error occurred because the requested
-#     operation could not be completed while the agent generator is running.
-#     - AgentGeneratorStartError: Error occurred while attempting to start an agent
-#     generator.
-#     - AgentGeneratorBuildError: Error occurred while attempting to build an agent.
-#     - AgentGeneratorBuildStepError: Error occurred during agent generator build step.
-#     - AgentGeneratorStopError: Error occurred while attempting to stop an agent.
-# """
-
 from typing import Any
 
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
+from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
+    BaseConsortiumError,
 )
 
 
-class AgentGeneratorsFrameworkError(BaseFrameworkException):
+class AgentGeneratorsError(BaseConsortiumError):
+    code = "AGENT_GENERATORS_ERROR"
+
+
+class AgentGeneratorsServiceError(AgentGeneratorsError):
+    code = "AGENT_GENERATORS_SERVICE_ERROR"
+
+
+class AgentGeneratorNotFoundError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_NOT_FOUND_ERROR"
+
+    def __init__(self, agent_generator_id: str):
+        super().__init__(
+            message=(
+                f"Failed to find the requested agent generator. No agent generator was "
+                f"found with the provided agent generator ID '{agent_generator_id}'."
+            ),
+        )
+
+
+class AgentGeneratorAlreadyExistsError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_ALREADY_EXISTS_ERROR"
+
+    def __init__(self, agent_generator_id: str):
+        super().__init__(
+            message=(
+                f"Failed to add the specified agent generator. An agent generator "
+                f"already exists with the agent generator ID '{agent_generator_id}'."
+            ),
+        )
+
+
+class AgentGeneratorParameterUpdateError(AgentGeneratorsServiceError):
+    code = "AGENT_GENERATOR_PARAMETER_UPDATE_ERROR"
+
+
+class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError):
+    code = "INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"
+
+    def __init__(self, agent_generator: str, parameter_name: str):
+        super().__init__(
+            message=(
+                f"Failed to update the agent generator parameter for agent generator "
+                f"'{agent_generator}'. The provided parameter name '{parameter_name}' "
+                f"was not found for the agent generator."
+            ),
+        )
+
+
+class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateError):
+    code = "INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR"
+
+    def __init__(
+        self,
+        agent_generator_str: str,
+        parameter_name: str,
+        parameter_value: str,
+        error_message: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to update the agent generator parameter for agent generator "
+                f"'{agent_generator_str}'. The value provided '{parameter_value}' for "
+                f"the parameter '{parameter_name}' is invalid. {error_message}"
+            ),
+        )
+
+
+class AgentGeneratorsFrameworkError(AgentGeneratorsError):
     code = "AGENT_GENERATORS_FRAMEWORK_ERROR"
 
 

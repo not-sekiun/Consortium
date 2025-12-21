@@ -3,20 +3,11 @@ import asyncio
 import enum
 
 from consortium.framework._components._component_status import State, Status
-from consortium.framework.exceptions._component_framework_exceptions import (
-    ComponentRuntimeError,
-    ComponentStartError,
-    ComponentStopError,
+from consortium.framework.exceptions import (
+    _component_framework_exceptions as framework_excs,
 )
-from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
-    ComponentAlreadyRunningError,
-    ComponentNotRunningError,
-    ComponentRuntimeError as ComponentRuntimeFrameworkError,
-    ComponentStartError as ComponentStartFrameworkError,
-    ComponentStopError as ComponentStopFrameworkError,
-)
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as consortium_excs,
 )
 
 
@@ -55,7 +46,9 @@ class ComponentLifeCycle(abc.ABC):
     async def on_cancelled(self) -> None: ...
 
     @abc.abstractmethod
-    async def on_errored(self, error: BaseFrameworkException) -> None: ...
+    async def on_errored(
+        self, error: consortium_excs.ComponentRuntimeError
+    ) -> None: ...
 
     @abc.abstractmethod
     async def on_fatal(
@@ -76,7 +69,9 @@ class ComponentLifeCycle(abc.ABC):
             or self.status.state == State.FATAL
             and self._runtime_loop_task is not None
         ):
-            raise ComponentAlreadyRunningError
+            raise consortium_excs.ComponentAlreadyRunningError(
+                component_str=str(self),
+            )
 
         self.stop_event.clear()
 
@@ -84,9 +79,9 @@ class ComponentLifeCycle(abc.ABC):
 
         try:
             await self.on_started()
-        except ComponentStartError as exc:
+        except framework_excs.ComponentStartError as exc:
             self.status._transition_to_initialized()
-            raise ComponentStartFrameworkError(
+            raise consortium_excs.ComponentStartError(
                 component_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
@@ -104,12 +99,14 @@ class ComponentLifeCycle(abc.ABC):
 
     async def stop(self) -> None:
         if self.status.state != State.RUNNING:
-            raise ComponentNotRunningError
+            raise consortium_excs.ComponentNotRunningError(
+                component_str=str(self),
+            )
 
         try:
             await self.on_stopped()
-        except ComponentStopError as exc:
-            raise ComponentStopFrameworkError(
+        except framework_excs.ComponentStopError as exc:
+            raise consortium_excs.ComponentStopError(
                 component_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
@@ -124,7 +121,9 @@ class ComponentLifeCycle(abc.ABC):
 
     async def cancel(self) -> None:
         if self.status.state != State.RUNNING:
-            raise ComponentNotRunningError
+            raise consortium_excs.ComponentNotRunningError(
+                component_str=str(self),
+            )
 
         self._runtime_loop_task.cancel()
 
@@ -155,11 +154,14 @@ class ComponentLifeCycle(abc.ABC):
 
     def _construct_component_runtime_error_from_exception(
         self,
-        exc,
-    ) -> ComponentRuntimeFrameworkError:
-        return ComponentRuntimeFrameworkError(
+        exc: Exception,
+    ) -> consortium_excs.ComponentRuntimeError:
+        return consortium_excs.ComponentRuntimeError(
             component_str=str(self),
-            error_message=f"{type(exc).__name__}: {exc}",
+            error_message=(
+                f"An unhandled exception was raised while running. "
+                f"{type(exc).__name__}: {exc}"
+            ),
             detail={
                 "type": type(exc).__name__,
                 "message": str(exc),
@@ -173,16 +175,17 @@ class ComponentLifeCycle(abc.ABC):
             await self.on_completed()
         except asyncio.CancelledError:
             return
-        except ComponentRuntimeError as exc:
+        except framework_excs.ComponentRuntimeError as exc:
             self.status._transition_to_errored(
-                error=ComponentRuntimeFrameworkError(
+                error=consortium_excs.ComponentRuntimeError(
+                    component_str=str(self),
                     error_message=exc.message,
                     detail=exc.detail,
                 ),
             )
             try:
                 await self.on_errored(
-                    error=ComponentRuntimeFrameworkError(
+                    error=consortium_excs.ComponentRuntimeError(
                         component_str=str(self),
                         error_message=exc.message,
                         detail=exc.detail,

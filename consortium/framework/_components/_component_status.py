@@ -1,7 +1,7 @@
 import enum
 
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
+from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+    ComponentRuntimeError,
 )
 
 
@@ -60,14 +60,14 @@ class Status:
                 "message": self.error.message,
                 "detail": self.error.detail,
             }
-            if isinstance(self.error, BaseFrameworkException)
+            if isinstance(self.error, ComponentRuntimeError)
             else None,
         }
 
     def _transition_to_state(
         self,
         new_state: State,
-        error: BaseFrameworkException | None = None,
+        error: ComponentRuntimeError | None = None,
     ):
         if new_state not in self._VALID_STATE_TRANSITIONS[self.state]:
             raise AssertionError(
@@ -105,8 +105,8 @@ class Status:
     def _transition_to_cancelled(self) -> None:
         self._transition_to_state(new_state=State.CANCELLED)
 
-    def _transition_to_errored(self, error: BaseFrameworkException) -> None:
+    def _transition_to_errored(self, error: ComponentRuntimeError) -> None:
         self._transition_to_state(new_state=State.ERRORED, error=error)
 
-    def _transition_to_fatal(self, error: BaseFrameworkException) -> None:
+    def _transition_to_fatal(self, error: ComponentRuntimeError) -> None:
         self._transition_to_state(new_state=State.FATAL, error=error)

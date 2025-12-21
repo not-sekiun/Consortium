@@ -180,7 +180,7 @@ class C2TypesService:
 
     @log_and_propagate_error_on_service_method
     def resolve_registered_compatible_agent_types_for_listener_types(self):
-        self._logger.warning(
+        self._logger.critical(
             "`resolve_registered_compatible_agent_types_for_listener_types()` is not"
             " implemented yet. Consider maybe implementing it if necessary. Or moving "
             "it to a profiles service consideration",

@@ -34,7 +34,7 @@ from consortium.server.objects.repository_objects import (
 )
 
 
-class AgentFileManager:
+class AgentFileManagerService:
     def __init__(self):
         # Assets service consists of all uploaded files onto the server that are meant
         # to be read only by agents.
@@ -64,12 +64,14 @@ class AgentFileManager:
         )
 
     def read_asset_by_asset_id(self, asset_id: str) -> bytes:
-        asset = self.get_asset_by_asset_id(asset_id)
-        return asset.read()
+        raise NotImplementedError
+        # asset = self.get_asset_by_asset_id(asset_id)
+        # return asset.read()
 
     def write_artifact_by_artifact_id(self, artifact_id: str, data: bytes) -> None:
-        artifact = self.get_artifact_by_artifact_id(artifact_id)
-        artifact.write(data)
+        raise NotImplementedError
+        # artifact = self.get_artifact_by_artifact_id(artifact_id)
+        # artifact.write(data)
 
 
 class SupportedOS(StrEnum):
@@ -140,7 +142,7 @@ class BaseAgentCapability:
         # essentially to allow us to demultiplex messages coming in over the wire from
         # the listener.
         self.result_messages_queue = asyncio.Queue()
-        self.file_manager = AgentFileManager
+        self.file_manager = AgentFileManagerService
 
     def __init_subclass__(cls, **kwargs):
         if not hasattr(cls, "name"):

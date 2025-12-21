@@ -12,7 +12,15 @@ class HTTPError(BaseAPIError):
     code = "HTTP_ERROR"
 
 
-# UnauthorizedError is a special error whose to_json() method returns None. This is
+# FIXME: Btw this can cause a subtle but not necessarily fatal bug for clients that
+#   expect a JSON response body for all error responses. If a client gets a 401 Unauthorized response with an empty
+#   body, it may raise an exception when trying to parse the empty body as JSON. This is
+#   especially relevant for the CLI client which expects JSON responses for all API
+#   calls. We should ensure that the CLI client can gracefully handle this case. But this
+#   bug only really pops up if a logged in client is unexpectedly logged out (e.g. due to
+#   session expiration) and then makes an API call that requires authentication. So its low
+#   priority to fix this client-side issue.
+# UnauthorizedError is a special error whose `to_json()` method returns None. This is
 # so that the JSON data returned as part of the response body is empty to prevent C2
 # server fingerprinting from unauthorized clients.
 class UnauthorizedError(HTTPError):

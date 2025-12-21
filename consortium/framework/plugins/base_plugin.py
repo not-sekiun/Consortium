@@ -27,11 +27,9 @@ from consortium.server.exceptions.consortium_exceptions.plugins_consortium_excep
     MissingPluginConfigurationParameterError,
     PluginAlreadyRunningError,
     PluginNotRunningError,
+    PluginRuntimeError,
     PluginStartError,
     PluginStopError,
-)
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
 )
 from consortium.server.server_logging import LoggerType
 
@@ -117,7 +115,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
     async def on_cancelled(self) -> None: ...
 
-    async def on_errored(self, error: BaseFrameworkException) -> None:
+    async def on_errored(self, error: PluginRuntimeError) -> None:
         self.logger.error(error)
 
     async def on_fatal(
@@ -132,7 +130,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
-        self.logger.opt(ansi=True).error(
+        self.logger.opt(colors=True).error(
             "<bold><red>Fatal error occurred within plugin while it was {}:</></>\n{}",
             ctx_to_str_map[fatal_context],
             traceback.format_exc(),
