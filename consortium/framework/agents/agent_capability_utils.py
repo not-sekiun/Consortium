@@ -1,4 +1,4 @@
-from consortium.framework.agents.agent_message_models import AgentTaskMessageModel
+from consortium.framework.agent_message_models import AgentTaskMessageModel
 
 
 def remove_task_message_arguments(

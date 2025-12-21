@@ -6,13 +6,15 @@ from typing import Any
 
 from loguru import logger
 
-import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.utils.exception_utils import remap_exception
-from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
+from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
     EmptyEventHookLabelError,
     InvalidEventHookConfigurationParameterTypeError,
     InvalidEventHookDependencyVersionSpecifierError,
@@ -101,7 +103,7 @@ class BaseEventHook(ComponentMetadata):
         ).parents[0]
         try:
             cls._validate_metadata()
-        except comp_excs.ComponentsFrameworkError as exc:
+        except comp_excs.ComponentsError as exc:
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,

@@ -32,8 +32,8 @@ Exception hierarchy for errors related to agent projects:
         handling an agent project.
 """
 
-from consortium.server.exceptions.service_exceptions import (
-    components_service_exceptions as comp_svc_excs,
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
 )
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -46,7 +46,7 @@ class AgentProfilesServiceError(BaseServiceException):
 
 class AgentProfileNotFoundError(
     AgentProfilesServiceError,
-    comp_svc_excs.ComponentNotFoundError,
+    comp_excs.ComponentNotFoundError,
 ):
     """
     An error that is raised when a agent profile is not found in the agent
@@ -63,7 +63,7 @@ class AgentProfileNotFoundError(
 
 class AgentProfileLoadingError(
     AgentProfilesServiceError,
-    comp_svc_excs.ComponentLoadingError,
+    comp_excs.ComponentLoadingError,
 ):
     """
     Base exception for all errors that occur during the loading of a agent profile.
@@ -76,7 +76,7 @@ class AgentProfileLoadingError(
 
 class InvalidAgentProfileProjectManifestFileError(
     AgentProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectManifestFileError,
+    comp_excs.InvalidComponentProjectManifestFileError,
 ):
     """
     Base exception for all errors that occur due to loading an invalid agent profile project
@@ -88,7 +88,7 @@ class InvalidAgentProfileProjectManifestFileError(
 
 class InvalidAgentProfileProjectManifestFileJSONError(
     InvalidAgentProfileProjectManifestFileError,
-    comp_svc_excs.InvalidComponentProjectManifestFileJSONError,
+    comp_excs.InvalidComponentProjectManifestFileJSONError,
 ):
     """
     An error that is raised when the agent profile project manifest file is not a valid JSON
@@ -103,7 +103,7 @@ class InvalidAgentProfileProjectManifestFileJSONError(
 
 class InvalidAgentProfileProjectManifestFileSchemaError(
     InvalidAgentProfileProjectManifestFileError,
-    comp_svc_excs.InvalidComponentProjectManifestFileSchemaError,
+    comp_excs.InvalidComponentProjectManifestFileSchemaError,
 ):
     """
     An error that is raised when the agent profile project manifest file does not conform to
@@ -125,7 +125,7 @@ class InvalidAgentProfileProjectManifestFileSchemaError(
 
 class InvalidAgentProfileProjectPyProjectFileError(
     AgentProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectPyProjectFileError,
+    comp_excs.InvalidComponentProjectPyProjectFileError,
 ):
     """
     Base exception for all errors that occur due to loading an invalid `pyproject.toml`
@@ -137,7 +137,7 @@ class InvalidAgentProfileProjectPyProjectFileError(
 
 class InvalidAgentProfileProjectPyProjectFileTOMLError(
     AgentProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
 ):
     """
     An error that is raised when the `pyproject.toml` file is not a valid TOML file
@@ -151,7 +151,7 @@ class InvalidAgentProfileProjectPyProjectFileTOMLError(
 
 class InvalidAgentProfileProjectPyProjectFileDependencyError(
     AgentProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
 ):
     """
     An error that is raised when the `pyproject.toml` file contains invalid dependency
@@ -173,7 +173,7 @@ class InvalidAgentProfileProjectPyProjectFileDependencyError(
 
 class InvalidAgentProfileProjectFolderStructureError(
     AgentProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectFolderStructureError,
+    comp_excs.InvalidComponentProjectFolderStructureError,
 ):
     """
     Base exception for all errors that occur due to the agent profile being loaded having an
@@ -185,7 +185,7 @@ class InvalidAgentProfileProjectFolderStructureError(
 
 class AgentProfileProjectManifestFileNotFoundError(
     InvalidAgentProfileProjectFolderStructureError,
-    comp_svc_excs.ComponentProjectManifestFileNotFoundError,
+    comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
     """
     An error that is raised when the agent profile project manifest file is not found in the
@@ -200,7 +200,7 @@ class AgentProfileProjectManifestFileNotFoundError(
 
 class AgentProfileProjectEntryPointModuleNotFoundError(
     InvalidAgentProfileProjectFolderStructureError,
-    comp_svc_excs.ComponentProjectEntryPointModuleNotFoundError,
+    comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """
     An error that is raised when the agent profile file specified in the manifest is not
@@ -222,7 +222,7 @@ class AgentProfileProjectEntryPointModuleNotFoundError(
 
 class InvalidAgentProfileProjectImplementationError(
     AgentProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectImplementationError,
+    comp_excs.InvalidComponentProjectImplementationError,
 ):
     """
     Base exception for all errors that occur due to the agent profile project not implementing
@@ -234,7 +234,7 @@ class InvalidAgentProfileProjectImplementationError(
 
 class AgentProfileProjectSymbolNotFoundError(
     InvalidAgentProfileProjectImplementationError,
-    comp_svc_excs.ComponentProjectSymbolNotFoundError,
+    comp_excs.ComponentProjectSymbolNotFoundError,
 ):
     """
     An error that is raised when the agent profile symbol name specified in the manifest is not
@@ -258,7 +258,7 @@ class AgentProfileProjectSymbolNotFoundError(
 
 class AgentProfileProjectInterfaceError(
     InvalidAgentProfileProjectImplementationError,
-    comp_svc_excs.ComponentProjectInterfaceError,
+    comp_excs.ComponentProjectInterfaceError,
 ):
     """
     An error that is raised when the agent profile class does not implement the required
@@ -280,7 +280,7 @@ class AgentProfileProjectInterfaceError(
 
 class InternalAgentProfileProjectError(
     InvalidAgentProfileProjectImplementationError,
-    comp_svc_excs.InternalComponentProjectError,
+    comp_excs.InternalComponentProjectError,
 ):
     """
     An error that is raised when an unhandled exception from within the agent profile is
@@ -302,7 +302,7 @@ class InternalAgentProfileProjectError(
 
 class IncompatibleAgentProfileFrameworkVersionError(
     AgentProfileLoadingError,
-    comp_svc_excs.IncompatibleComponentFrameworkVersionError,
+    comp_excs.IncompatibleComponentFrameworkVersionError,
 ):
     """
     An error that is raised when a agent profile is incompatible with the current framework
@@ -326,7 +326,7 @@ class IncompatibleAgentProfileFrameworkVersionError(
 
 class AgentProfileAlreadyRegisteredError(
     AgentProfileLoadingError,
-    comp_svc_excs.ComponentAlreadyRegisteredError,
+    comp_excs.ComponentAlreadyRegisteredError,
 ):
     """
     An error that is raised when a agent profile with the same ID is already registered in the
@@ -344,7 +344,7 @@ class AgentProfileAlreadyRegisteredError(
 
 class DuplicateAgentProfileLabelError(
     AgentProfileLoadingError,
-    comp_svc_excs.DuplicateComponentLabelError,
+    comp_excs.DuplicateComponentLabelError,
 ):
     """
     An error that is raised when a agent profile with the same `label` as the agent profile being
@@ -362,7 +362,7 @@ class DuplicateAgentProfileLabelError(
 
 class AgentProfileDependencyError(
     AgentProfilesServiceError,
-    comp_svc_excs.ComponentDependencyError,
+    comp_excs.ComponentDependencyError,
 ):
     """
     Base exception for all errors that occur during the resolution of a plugin's
@@ -376,7 +376,7 @@ class AgentProfileDependencyError(
 
 class ThirdPartyDependencyNotFoundError(
     AgentProfileDependencyError,
-    comp_svc_excs.ThirdPartyDependencyNotFoundError,
+    comp_excs.ThirdPartyDependencyNotFoundError,
 ):
     """
     An error that is raised when a third-party dependency required by a plugin is not
@@ -398,7 +398,7 @@ class ThirdPartyDependencyNotFoundError(
 
 class IncompatibleThirdPartyDependencyVersionError(
     AgentProfileDependencyError,
-    comp_svc_excs.IncompatibleThirdPartyDependencyVersionError,
+    comp_excs.IncompatibleThirdPartyDependencyVersionError,
 ):
     """
     An error that is raised when a third-party dependency required by a plugin is
@@ -424,7 +424,7 @@ class IncompatibleThirdPartyDependencyVersionError(
 
 class ComponentDependencyNotFoundError(
     AgentProfileDependencyError,
-    comp_svc_excs.ComponentDependencyNotFoundError,
+    comp_excs.ComponentDependencyNotFoundError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is not
@@ -446,7 +446,7 @@ class ComponentDependencyNotFoundError(
 
 class IncompatibleComponentDependencyVersionError(
     AgentProfileDependencyError,
-    comp_svc_excs.IncompatibleComponentDependencyVersionError,
+    comp_excs.IncompatibleComponentDependencyVersionError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is
@@ -472,7 +472,7 @@ class IncompatibleComponentDependencyVersionError(
 
 class AgentProfileDependsOnInvalidComponentDependencyError(
     AgentProfileDependencyError,
-    comp_svc_excs.ComponentDependsOnInvalidComponentDependencyError,
+    comp_excs.ComponentDependsOnInvalidComponentDependencyError,
 ):
     """
     An error that is raised when a plugin depends on another plugin dependency that
@@ -494,7 +494,7 @@ class AgentProfileDependsOnInvalidComponentDependencyError(
 
 class ComponentDependencyNotRunningError(
     AgentProfileDependencyError,
-    comp_svc_excs.ComponentDependencyNotRunningError,
+    comp_excs.ComponentDependencyNotRunningError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is present but

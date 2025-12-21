@@ -120,7 +120,7 @@ class PluginsService:
     ) -> tuple[
         list[BasePlugin],
         list[pathlib.Path],
-        list[tuple[pathlib.Path, PluginLoadingError]] | None,
+        list[tuple[pathlib.Path, PluginLoadingError]],
     ]:
         """
         Retrieves all plugins from the specified directory containing plugin project folders.
@@ -136,18 +136,20 @@ class PluginsService:
                 enabled state check in the plugin project manifests.
 
         Returns:
-            tuple[list[BasePlugin], list[pathlib.Path], list[tuple[pathlib.Path, PluginLoadingError]] | None]:
-                A tuple containing three elements:
+            tuple[list[BasePlugin], list[pathlib.Path], list[tuple[pathlib.Path, PluginLoadingError]]: A tuple containing three elements.
+
                 1. A list of successfully retrieved plugin instances.
-                2. A list of pathlib.Path objects representing the plugin project
-                    folders that were skipped because the plugins were disabled.
-                3. A list of tuples, each containing a pathlib.Path object representing
-                    the plugin project folder that failed to load and the corresponding
-                    `PluginLoadingError` exception.
+
+                2. A list of `pathlib.Path` objects representing the plugin project
+                folders that were skipped because the plugins were disabled.
+
+                3. A list of tuples, each containing a `pathlib.Path` object representing
+                the plugin project folder that failed to load and the corresponding
+                `PluginsError`
 
         Raises:
-            See [get_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.get_plugin_from_plugin_project_folder]
-            for possible exceptions raised during plugin retrieval.
+            PluginsError: See [get_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.get_plugin_from_plugin_project_folder]
+                for possible exceptions raised during plugin retrieval.
         """
         retrieved, skipped, errored = (
             self._plugin_registry_service.get_components_from_component_project_folder_directories(
@@ -185,9 +187,6 @@ class PluginsService:
             plugin (BasePlugin): The plugin instance to register. It must have a unique
             `plugin_id` and conform to the `BasePlugin` interface. The plugin's `label`
             must be unique across all registered plugins.
-
-        Returns:
-            None
 
         Raises:
             PluginAlreadyRegisteredError: If a plugin with the same `plugin_id` is
@@ -228,9 +227,9 @@ class PluginsService:
             successfully registered; otherwise, returns None.
 
         Raises:
-            See [get_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.get_plugin_from_plugin_project_folder]
-            and [register_plugin][consortium.server.services.plugins_service.PluginsService.register_plugin]
-            for possible exceptions raised during plugin retrieval.
+            `PluginsError`: See [get_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.get_plugin_from_plugin_project_folder]
+                and [register_plugin][consortium.server.services.plugins_service.PluginsService.register_plugin]
+                for possible exceptions raised during plugin registration.
         """
         plugin = self._plugin_registry_service.register_component_from_component_project_folder(
             component_project_folder=plugin_project_folder,
@@ -266,6 +265,10 @@ class PluginsService:
             None if the plugin is disabled or cannot be loaded.
 
         Raises:
+            `PluginsError`: See [get_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.get_plugin_from_plugin_project_folder]
+                and [register_plugin][consortium.server.services.plugins_service.PluginsService.register_plugin]
+                for possible exceptions raised during plugin loading.
+            `PluginStartError`: If the plugin fails to start.
         """
         plugin = await self._plugin_registry_service.load_component_from_component_project_folder(
             component_project_folder=plugin_project_folder,
@@ -634,9 +637,6 @@ class PluginsService:
                 stopped. If False, the method will return immediately after starting
                 the plugin.
 
-        Returns:
-            None
-
         Raises:
             PluginNotFoundError: If the plugin id is not found in the service.
             IncompatibleThirdPartyDependencyVersionError: If the plugin requires a
@@ -679,9 +679,6 @@ class PluginsService:
                 stopped. If False, the method will return immediately after stopping
                 the plugin.
 
-        Returns:
-            None
-
         Raises:
             PluginNotFoundError: If the plugin id is not found in the service.
             PluginStopError: If the plugin failed to stop for any reason.
@@ -709,9 +706,6 @@ class PluginsService:
             blocking (bool): Whether the method should block and wait until the plugin
                 is stopped and then started again or return immediately after
                 attempting to restart the plugin.
-
-        Returns:
-            None
 
         Raises:
             See [stop_plugin_by_plugin_id][consortium.server.services.plugins_service.PluginsService.stop_plugin_by_plugin_id]

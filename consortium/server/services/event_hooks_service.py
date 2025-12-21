@@ -6,11 +6,9 @@ from loguru import logger
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.framework_exceptions.event_hooks_framework_exceptions import (
-    EventHooksFrameworkError,
-)
-from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
     EventHookLoadingError,
+    EventHooksFrameworkError,
     EventHooksServiceError,
 )
 from consortium.server.server_config import CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH

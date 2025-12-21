@@ -23,17 +23,28 @@ Exception hierarchy for listeners errors:
 
 from typing import Any
 
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
-)
-from consortium.server.exceptions.framework_exceptions import (
-    components_framework_exceptions as comp_excs,
 )
 
 
 class ListenersError(BaseConsortiumError):
     """
-    Base exception for all listener-related errors.
+    Base exception for all listeners-related errors.
+
+    All exceptions that inherit from `ListenersError` define, `code`, `message`, and
+    `detail` attributes. For brevity, `message` and `detail` are omitted within
+    the documentation here.
+
+    Attributes:
+        code: A **stable, machine-readable identifier** for the specific type of
+            error that occurred.
+        message: A human-readable message that describes the error.
+        detail: Any JSON-serializable data structure holding **structured, raw data**
+            relevant to the error.
     """
 
     code = "LISTENER_ERROR"
@@ -52,7 +63,8 @@ class ListenerOperationError(
     ListenersFrameworkError,
 ):
     """
-    Base exception for all errors that occur during the operation of a listener.
+    Base exception for all errors that occur during the operation of a particular
+    listener.
     """
 
     code = "LISTENER_OPERATION_ERROR"
@@ -62,7 +74,7 @@ class ListenerOperationError(
 
 class ListenerStartError(comp_excs.ComponentStartError, ListenerOperationError):
     """
-    An error that is raised when a listener fails to start.
+    Raised when a listener fails to start during listener operation.
     """
 
     code = "LISTENER_START_ERROR"
@@ -82,7 +94,8 @@ class ListenerStartError(comp_excs.ComponentStartError, ListenerOperationError):
 
 class ListenerRuntimeError(comp_excs.ComponentRuntimeError, ListenerOperationError):
     """
-    An error that is raised when a listener encounters an error at runtime.
+    Raised when a listener encounters an unhandled error at runtime during listener
+    operation.
     """
 
     code = "LISTENER_RUNTIME_ERROR"
@@ -102,7 +115,7 @@ class ListenerRuntimeError(comp_excs.ComponentRuntimeError, ListenerOperationErr
 
 class ListenerStopError(comp_excs.ComponentStopError, ListenerOperationError):
     """
-    An error that is raised when a listener fails to stop.
+    Raised when a listener fails to stop during listener operation.
     """
 
     code = "LISTENER_STOP_ERROR"
@@ -125,8 +138,8 @@ class ListenerStateError(
     comp_excs.ComponentStateError,
 ):
     """
-    Base exception for all errors caused by attempting an operation on a listener
-    while it is in a conflicting invalid state.
+    Base exception for all errors that occur due to invalid listener state during
+    listener operation.
     """
 
     code = "LISTENER_STATE_ERROR"
@@ -137,8 +150,8 @@ class ListenerNotRunningError(
     ListenerStateError,
 ):
     """
-    Raised when an operation is attempted on a listener that requires it to already be
-    running but the listener is not running.
+    Raised when an operation is attempted on a listener that requires the listener to
+    already be running but the listener is not running.
     """
 
     code = "LISTENER_NOT_RUNNING_ERROR"
@@ -155,8 +168,8 @@ class ListenerAlreadyRunningError(
     ListenerStateError,
 ):
     """
-    Raised when an operation is attempted on a listener that requires it to not be
-    running but the listener is already running.
+    Raised when an operation is attempted on a listener that requires the listener to
+    not already be started or running but the listener is already started or running.
     """
 
     code = "LISTENER_ALREADY_RUNNING_ERROR"
@@ -170,7 +183,7 @@ class ListenerAlreadyRunningError(
 
 class ListenerCreationError(ListenersFrameworkError):
     """
-    Base exception for all errors that occur when a listener fails to be created.
+    Base exception for all errors that occur during the creation of a listener.
     """
 
     code = "LISTENER_CREATION_ERROR"
@@ -209,7 +222,8 @@ class ListenersServiceError(ListenersError):
 
 class ListenerNotFoundError(ListenersServiceError):
     """
-    Raised when the requested listener was not found in the listeners service.
+    Raised when the requested listener with the provided listener ID was not found in
+    the listeners service.
     """
 
     code = "LISTENER_NOT_FOUND_ERROR"
@@ -223,8 +237,8 @@ class ListenerNotFoundError(ListenersServiceError):
 
 class ListenerAlreadyExistsError(ListenersServiceError):
     """
-    Raised when attempting to add a listener that already exists in the listeners
-    service.
+    Raised when attempting to create a listener with a listener ID that already exists
+    in the listeners service.
     """
 
     code = "LISTENER_ALREADY_EXISTS_ERROR"
@@ -240,8 +254,8 @@ class ListenerAlreadyExistsError(ListenersServiceError):
 
 class ListenerParameterUpdateError(ListenersServiceError):
     """
-    Base exception for all errors that occur when updating a listener parameter
-    through the listeners service.
+    Base exception for all errors that occur when updating a listener parameter through
+    the listeners service.
     """
 
     code = "LISTENER_PARAMETER_UPDATE_ERROR"
@@ -249,26 +263,26 @@ class ListenerParameterUpdateError(ListenersServiceError):
 
 class InvalidListenerParameterNameError(ListenerParameterUpdateError):
     """
-    Raised when an invalid parameter name is provided for a listener when attempting
-    to update a listener through the listeners service.
+    Raised when an invalid parameter name is provided when attempting to update a
+    listener parameter through the listeners service.
     """
 
     code = "INVALID_LISTENER_PARAMETER_NAME_ERROR"
 
-    def __init__(self, listener: str, parameter_name: str):
+    def __init__(self, listener_str: str, parameter_name: str):
         super().__init__(
             message=(
-                f"Failed to update the listener parameter for listener '{listener}'. "
-                f"The provided parameter name '{parameter_name}' was not found for the "
-                f"listener."
+                f"Failed to update the listener parameter for listener "
+                f"'{listener_str}'. The provided parameter name '{parameter_name}' was "
+                f"not found for the listener."
             ),
         )
 
 
 class InvalidListenerParameterValueError(ListenerParameterUpdateError):
     """
-    Raised when an invalid parameter value is provided for a listener when attempting
-    to update a listener through the listeners service.
+    Raised when an invalid parameter value is provided when attempting to update a
+    listener parameter through the listeners service.
     """
 
     code = "INVALID_LISTENER_PARAMETER_VALUE_ERROR"

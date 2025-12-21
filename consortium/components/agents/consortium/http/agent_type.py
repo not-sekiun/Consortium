@@ -1,7 +1,7 @@
 from datetime import datetime
 
+from consortium.framework.agent_message_models import AgentResultMessageModel
 from consortium.framework.agents import (
-    AgentResultMessageModel,
     BaseAgentType,
     remove_task_message_arguments,
     request_response_capability,
@@ -114,8 +114,8 @@ ping_capability = request_response_capability(
         SingleValueOption(
             name="timeout",
             description=(
-                "The duration of time in seconds to wait before considering the ping to "
-                "have timed out."
+                "The duration of time in seconds to wait before considering the ping "
+                "to have timed out."
             ),
             required=False,
             default_value=5.0,
@@ -185,12 +185,12 @@ shell_capability = request_response_capability(
 
 
 class AgentType(BaseAgentType):
-    name = "agents/consortium/http"
+    name = "consortium_http/consortium_python"
     agent_capabilities = {
         disconnect_capability,
         kill_capability,
         delay_capability,
         sleep_capability,
-        shell_capability,
         ping_capability,
+        shell_capability,
     }

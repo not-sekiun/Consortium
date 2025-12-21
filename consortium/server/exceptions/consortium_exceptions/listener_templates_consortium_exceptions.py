@@ -25,11 +25,11 @@ Exception hierarchy for listener templates errors:
 
 from typing import Any
 
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
-)
-from consortium.server.exceptions.framework_exceptions import (
-    components_framework_exceptions as comp_excs,
 )
 
 
@@ -120,22 +120,22 @@ class EmptyListenerTemplateLabelError(
         super().__init__(component_filepath=listener_template_str_filepath)
 
 
-class DuplicateListenerTemplateLabelError(
-    comp_excs.DuplicateComponentLabelError,
-    ListenerTemplateConfigurationError,
-):
-    """
-    Raised when the label provided in a listener template's definition is already in use
-    by another listener template during listener template configuration.
-    """
-
-    code = "DUPLICATE_LISTENER_TEMPLATE_LABEL_ERROR"
-
-    def __init__(self, listener_template_str: str, label: str):
-        super().__init__(
-            component_str=listener_template_str,
-            label=label,
-        )
+# class DuplicateListenerTemplateLabelError(
+#     comp_excs.DuplicateComponentLabelError,
+#     ListenerTemplateConfigurationError,
+# ):
+#     """
+#     Raised when the label provided in a listener template's definition is already in use
+#     by another listener template during listener template configuration.
+#     """
+#
+#     code = "DUPLICATE_LISTENER_TEMPLATE_LABEL_ERROR"
+#
+#     def __init__(self, listener_template_str: str, label: str):
+#         super().__init__(
+#             component_str=listener_template_str,
+#             label=label,
+#         )
 
 
 class InvalidListenerTemplateVersionError(

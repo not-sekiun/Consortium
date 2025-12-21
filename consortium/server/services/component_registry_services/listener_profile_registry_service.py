@@ -1,7 +1,9 @@
 import pathlib
 import uuid
 
-import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions import (
     ComponentDependencyNotFoundError,
     ComponentDependencyNotRunningError,
@@ -37,25 +39,25 @@ class ListenerProfileRegistryService(
     ],
 ):
     _EXCEPTION_MAP = {
-        comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError: ListenerProfileProjectManifestFileNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError: InvalidListenerProfileProjectManifestFileJSONError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError: InvalidListenerProfileProjectManifestFileSchemaError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError: InvalidListenerProfileProjectPyProjectFileError,
-        comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
-        comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidListenerProfileProjectPyProjectFileDependencyError,
-        comp_ldr_svc_excs.ComponentProjectEntryPointModuleNotFoundError: ListenerProfileProjectEntryPointModuleNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError: ListenerProfileProjectSymbolNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectInterfaceError: ListenerProfileProjectInterfaceError,
-        comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError: IncompatibleListenerProfileFrameworkVersionError,
-        comp_ldr_svc_excs.InternalComponentProjectError: InternalListenerProfileProjectError,
-        comp_ldr_svc_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
-        comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
-        comp_ldr_svc_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
-        comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError: ListenerProfileDependsOnInvalidComponentDependencyError,
-        comp_ldr_svc_excs.ComponentNotFoundError: ListenerProfileNotFoundError,
-        comp_ldr_svc_excs.ComponentAlreadyRegisteredError: ListenerProfileAlreadyRegisteredError,
-        comp_ldr_svc_excs.DuplicateComponentLabelError: DuplicateListenerProfileLabelError,
+        comp_excs.ComponentProjectManifestFileNotFoundError: ListenerProfileProjectManifestFileNotFoundError,
+        comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidListenerProfileProjectManifestFileJSONError,
+        comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidListenerProfileProjectManifestFileSchemaError,
+        comp_excs.InvalidComponentProjectPyProjectFileError: InvalidListenerProfileProjectPyProjectFileError,
+        comp_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
+        comp_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
+        comp_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidListenerProfileProjectPyProjectFileDependencyError,
+        comp_excs.ComponentProjectEntryPointModuleNotFoundError: ListenerProfileProjectEntryPointModuleNotFoundError,
+        comp_excs.ComponentProjectSymbolNotFoundError: ListenerProfileProjectSymbolNotFoundError,
+        comp_excs.ComponentProjectInterfaceError: ListenerProfileProjectInterfaceError,
+        comp_excs.IncompatibleComponentFrameworkVersionError: IncompatibleListenerProfileFrameworkVersionError,
+        comp_excs.InternalComponentProjectError: InternalListenerProfileProjectError,
+        comp_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
+        comp_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
+        comp_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
+        comp_excs.ComponentDependsOnInvalidComponentDependencyError: ListenerProfileDependsOnInvalidComponentDependencyError,
+        comp_excs.ComponentNotFoundError: ListenerProfileNotFoundError,
+        comp_excs.ComponentAlreadyRegisteredError: ListenerProfileAlreadyRegisteredError,
+        comp_excs.DuplicateComponentLabelError: DuplicateListenerProfileLabelError,
     }
     _EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "listener_profile_project_folder",

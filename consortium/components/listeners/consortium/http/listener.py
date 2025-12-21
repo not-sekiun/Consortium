@@ -5,17 +5,12 @@ import jsonschema
 from aiohttp import web
 from pydantic import ValidationError
 
-from consortium.framework.agents import AgentResultMessageModel
-from consortium.framework.exceptions.listeners_framework_exceptions import (
-    ListenerStartError,
-)
-from consortium.framework.listeners import BaseListener
-from consortium.server.exceptions.framework_exceptions.agents_framework_exceptions import (
+from consortium.framework.exceptions import ListenerStartError
+from consortium.framework.listeners import AgentResultMessageModel, BaseListener
+from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
+    AgentNotFoundError,
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
-)
-from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
-    AgentNotFoundError,
 )
 
 
@@ -51,7 +46,7 @@ class Listener(BaseListener):
         )
 
         async def handle_agent_registration(request):
-            agent_registration_schema = {
+            agent_registration_json_schema = {
                 "type": "object",
                 "properties": {
                     "payload_id": {"type": "string"},
@@ -66,11 +61,12 @@ class Listener(BaseListener):
                     "hostname": {"type": "string"},
                 },
                 "oneOf": [{"required": ["payload_id"]}, {"required": ["agent_type"]}],
+                "additionalProperties": False,
             }
 
             try:
                 json_request_body = await request.json()
-                jsonschema.validate(json_request_body, agent_registration_schema)
+                jsonschema.validate(json_request_body, agent_registration_json_schema)
             except (json.JSONDecodeError, jsonschema.ValidationError):
                 return web.Response(status=401)
 
@@ -88,14 +84,14 @@ class Listener(BaseListener):
                 if agent_type:
                     self.logger.warning(
                         "Agent attempted to register with an invalid agent type: {}. "
-                        "Responded with 401 Unauthorized",
+                        "Responded with 401 Unauthorized.",
                         agent_type,
                     )
                     return web.Response(status=401)
                 else:
                     self.logger.warning(
                         "Agent attempted to register with an invalid payload ID: {}. "
-                        "Responded with 401 Unauthorized",
+                        "Responded with 401 Unauthorized.",
                         payload_id,
                     )
                     return web.Response(status=401)
@@ -133,7 +129,7 @@ class Listener(BaseListener):
 
         async def handle_agent_posting_results(request):
             # Validate JSON structure result from agent.
-            agent_result_schema = {
+            agent_result_json_schema = {
                 "type": "object",
                 "properties": {
                     "agent_id": {"type": "string"},
@@ -146,18 +142,20 @@ class Listener(BaseListener):
                             "data": {"type": "object"},
                         },
                         "required": ["success", "message", "data"],
+                        "additionalProperties": False,
                     },
                 },
                 "required": ["agent_id", "task_id", "result"],
+                "additionalProperties": False,
             }
 
             json_request_body = await request.json()
             try:
-                jsonschema.validate(json_request_body, agent_result_schema)
+                jsonschema.validate(json_request_body, agent_result_json_schema)
             except (json.JSONDecodeError, jsonschema.ValidationError):
                 self.logger.warning(
                     "Received invalid agent result JSON data from agent: {}. Responded "
-                    "with 401 Unauthorized",
+                    "with 401 Unauthorized.",
                     json_request_body,
                 )
                 return web.Response(status=401)
@@ -176,7 +174,7 @@ class Listener(BaseListener):
             except AgentNotFoundError:
                 self.logger.warning(
                     "Agent checked in with an invalid agent ID: {}. Responded with 401 "
-                    "Unauthorized",
+                    "Unauthorized.",
                     agent_id,
                 )
                 return web.Response(status=401)
@@ -210,7 +208,7 @@ class Listener(BaseListener):
             except ValidationError:
                 return web.Response(status=401)
 
-            await agent.add_result_message(result_message=result_message)
+            await agent.submit_result_message(result_message=result_message)
             return web.Response(status=200)
 
         for url_path in registration_url_paths:

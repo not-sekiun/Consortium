@@ -47,9 +47,12 @@ def _check_all_url_endpoints_unique(
 
 
 class AgentTemplate(BaseAgentTemplate):
-    label = "consortium.agents.http_agent"
-    name = "HTTP Agent"
-    description = "An agent that communicates over the HTTP transport."
+    label = "consortium.agents.python_http_agent"
+    name = "Consortium Python Agent"
+    description = (
+        "The canonical Consortium python agent that communicates over the HTTP "
+        "transport with its associated HTTP listener."
+    )
     version = "0.1.0"
     compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
@@ -156,6 +159,7 @@ class AgentTemplate(BaseAgentTemplate):
             validating_function=_check_filename_does_not_traverse_directories,
         ),
     }
+    compatible_listener_types = "consortium_http"
     validating_function = _check_all_url_endpoints_unique
 
     def resolve_agent_generator_name(self, parameters: JSONObject) -> str:

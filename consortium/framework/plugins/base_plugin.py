@@ -7,7 +7,6 @@ from typing import Any
 
 import loguru
 
-import consortium.server.exceptions.framework_exceptions.components_framework_exceptions as comp_excs
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import (
     ComponentLifeCycle,
@@ -16,6 +15,9 @@ from consortium.framework._components import (
     ComponentMetadataModel,
 )
 from consortium.framework.utils.exception_utils import remap_exception
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     EmptyPluginLabelError,
     InvalidFrameworkVersionSpecifierError,
@@ -30,12 +32,6 @@ from consortium.server.exceptions.consortium_exceptions.plugins_consortium_excep
 )
 from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
     BaseFrameworkException,
-)
-from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
-    ComponentAlreadyRunningError,
-    ComponentNotRunningError,
-    ComponentStartError,
-    ComponentStopError,
 )
 from consortium.server.server_logging import LoggerType
 
@@ -61,7 +57,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
     autostart: bool = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.plugin_id = uuid.uuid4()
         self.environment = types.SimpleNamespace()
         self.server_services = types.SimpleNamespace(
@@ -145,11 +141,11 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     async def start(self) -> None:
         try:
             await super().start()
-        except ComponentAlreadyRunningError:
+        except comp_excs.ComponentAlreadyRunningError:
             raise PluginAlreadyRunningError(
                 plugin_str=str(self),
             ) from None
-        except ComponentStartError as exc:
+        except comp_excs.ComponentStartError as exc:
             raise PluginStartError(
                 plugin_str=str(self),
                 error_message=exc.message,
@@ -159,11 +155,11 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     async def stop(self) -> None:
         try:
             await super().stop()
-        except ComponentNotRunningError:
+        except comp_excs.ComponentNotRunningError:
             raise PluginNotRunningError(
                 plugin_str=str(self),
             ) from None
-        except ComponentStopError as exc:
+        except comp_excs.ComponentStopError as exc:
             raise PluginStopError(
                 plugin_str=str(self),
                 error_message=exc.message,
@@ -173,7 +169,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     async def cancel(self) -> None:
         try:
             await super().cancel()
-        except ComponentNotRunningError:
+        except comp_excs.ComponentNotRunningError:
             raise PluginNotRunningError(
                 plugin_str=str(self),
             ) from None

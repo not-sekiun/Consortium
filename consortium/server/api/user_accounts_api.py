@@ -45,39 +45,39 @@ _user_account_not_found_error = api_excs.UserAccountNotFoundError(
 )
 _user_account_authentication_error = api_excs.UserAccountAuthenticationError()
 _user_account_username_already_exists_error_during_creation = api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
-    consortium_exception=consortium_excs.UserAccountUsernameAlreadyExistsError.during_user_account_creation(
+    consortium_exception=consortium_excs.UserAccountUsernameAlreadyExistsError._during_user_account_creation(
         username="<username>",
     ),
 )
 _empty_user_account_username_error_during_creation = api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
-    consortium_exception=consortium_excs.EmptyUserAccountUsernameError().during_user_account_creation(),
+    consortium_exception=consortium_excs.EmptyUserAccountUsernameError()._during_user_account_creation(),
 )
 _empty_user_account_password_error_during_creation = api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
-    consortium_exception=consortium_excs.EmptyUserAccountPasswordError().during_user_account_creation(),
+    consortium_exception=consortium_excs.EmptyUserAccountPasswordError()._during_user_account_creation(),
 )
 _invalid_user_account_role_error_during_creation = api_excs.InvalidUserAccountRoleError.from_consortium_exception(
-    consortium_exception=consortium_excs.InvalidUserAccountRoleError.during_user_account_creation(
+    consortium_exception=consortium_excs.InvalidUserAccountRoleError._during_user_account_creation(
         role="<role>",
     ),
 )
 _user_account_username_already_exists_error_during_modification = api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
-    consortium_exception=consortium_excs.UserAccountUsernameAlreadyExistsError.during_user_account_modification(
+    consortium_exception=consortium_excs.UserAccountUsernameAlreadyExistsError._during_user_account_modification(
         username="<username>",
         user_account_str="<user_account>",
     ),
 )
 _empty_user_account_username_error_during_modification = api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
-    consortium_exception=consortium_excs.EmptyUserAccountUsernameError().during_user_account_modification(
+    consortium_exception=consortium_excs.EmptyUserAccountUsernameError()._during_user_account_modification(
         user_account_str="<user_account>"
     ),
 )
 _empty_user_account_password_error_during_modification = api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
-    consortium_exception=consortium_excs.EmptyUserAccountPasswordError().during_user_account_modification(
+    consortium_exception=consortium_excs.EmptyUserAccountPasswordError()._during_user_account_modification(
         user_account_str="<user_account>"
     ),
 )
 _invalid_user_account_role_error_during_modification = api_excs.InvalidUserAccountRoleError.from_consortium_exception(
-    consortium_exception=consortium_excs.InvalidUserAccountRoleError.during_user_account_modification(
+    consortium_exception=consortium_excs.InvalidUserAccountRoleError._during_user_account_modification(
         user_account_str="<user_account>", role="<role>"
     ),
 )

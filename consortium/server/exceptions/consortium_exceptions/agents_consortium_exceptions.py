@@ -1,11 +1,15 @@
 from typing import Any
 
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
+from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
+    BaseConsortiumError,
 )
 
 
-class AgentsFrameworkError(BaseFrameworkException):
+class AgentsError(BaseConsortiumError):
+    code = "AGENTS_ERROR"
+
+
+class AgentsFrameworkError(AgentsError):
     code = "AGENTS_FRAMEWORK_ERROR"
 
 
@@ -152,7 +156,7 @@ class AgentTypeResolutionError(AgentCreationError):
     code = "AGENT_TYPE_RESOLUTION_ERROR"
 
     @classmethod
-    def due_to_payload_not_found_error(cls, payload_id):
+    def _due_to_payload_not_found_error(cls, payload_id):
         return cls(
             message=(
                 f"Failed to create the agent. Could not resolve the agent type "
@@ -165,7 +169,7 @@ class AgentTypeResolutionError(AgentCreationError):
         )
 
     @classmethod
-    def due_to_agent_type_not_found_error(cls, agent_type_name: str):
+    def _due_to_agent_type_not_found_error(cls, agent_type_name: str):
         return cls(
             message=(
                 f"Failed to create the agent. Could not resolve the agent type "
@@ -177,10 +181,26 @@ class AgentTypeResolutionError(AgentCreationError):
         )
 
     @classmethod
-    def due_to_no_identifier_provided(cls):
+    def _due_to_no_identifier_provided(cls):
         return cls(
             message=(
                 "Failed to create the agent. Could not resolve the agent type "
                 "because no identifier (payload ID or agent type name) was provided."
+            ),
+        )
+
+
+class AgentServiceError(AgentsError):
+    code = "AGENT_SERVICE_ERROR"
+
+
+class AgentNotFoundError(AgentServiceError):
+    code = "AGENT_NOT_FOUND_ERROR"
+
+    def __init__(self, agent_id: str):
+        super().__init__(
+            message=(
+                f"Failed to find the requested agent. No agent was found with the "
+                f"provided agent ID '{agent_id}'."
             ),
         )

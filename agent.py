@@ -20,7 +20,7 @@ SLEEP_TIME_JITTER = 0.5
 TASKS_URL_PATHS = ["/tasks"]
 RESULTS_URL_PATHS = ["/results"]
 REGISTRATION_URL_PATHS = ["/register"]
-AGENT_TYPE = "agents/consortium/http"
+AGENT_TYPE = "consortium_http/consortium_python"
 
 
 def shell_capability(arguments):

@@ -50,20 +50,28 @@ Exception hierarchy for plugins errors:
 
 from typing import Any
 
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
-)
-from consortium.server.exceptions.framework_exceptions import (
-    components_framework_exceptions as comp_framework_excs,
-)
-from consortium.server.exceptions.service_exceptions import (
-    components_service_exceptions as comp_ldr_svc_excs,
 )
 
 
 class PluginsError(BaseConsortiumError):
     """
     Base exception for all plugins related errors.
+
+    All exceptions that inherit from `PluginsError` define, `code`, `message`, and
+    `detail` attributes. For brevity, `message` and `detail` are omitted within
+    the documentation here.
+
+    Attributes:
+        code: A **stable, machine-readable identifier** for the specific type of
+            error that occurred.
+        message: A human-readable message that describes the error.
+        detail: Any JSON-serializable data structure holding **structured, raw data**
+            relevant to the error.
     """
 
     code = "PLUGINS_ERROR"
@@ -79,7 +87,7 @@ class PluginsServiceError(PluginsError):
 
 class PluginNotFoundError(
     PluginsServiceError,
-    comp_ldr_svc_excs.ComponentNotFoundError,
+    comp_excs.ComponentNotFoundError,
 ):
     """
     Raised when the requested plugin with the provided plugin ID was not found in the
@@ -94,7 +102,7 @@ class PluginNotFoundError(
         super().__init__(component_id=plugin_id)
 
 
-class PluginLoadingError(PluginsServiceError, comp_ldr_svc_excs.ComponentLoadingError):
+class PluginLoadingError(PluginsServiceError, comp_excs.ComponentLoadingError):
     """
     Base exception for all errors that occur during the loading of a plugin.
     """
@@ -106,7 +114,7 @@ class PluginLoadingError(PluginsServiceError, comp_ldr_svc_excs.ComponentLoading
 
 class InvalidPluginProjectManifestFileError(
     PluginLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectManifestFileError,
+    comp_excs.InvalidComponentProjectManifestFileError,
 ):
     """
     Base exception for all errors that occur due to an invalid plugin project manifest
@@ -118,7 +126,7 @@ class InvalidPluginProjectManifestFileError(
 
 class InvalidPluginProjectManifestFileJSONError(
     InvalidPluginProjectManifestFileError,
-    comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError,
+    comp_excs.InvalidComponentProjectManifestFileJSONError,
 ):
     """
     Raised when the plugin project manifest file is not valid JSON during plugin
@@ -133,7 +141,7 @@ class InvalidPluginProjectManifestFileJSONError(
 
 class InvalidPluginProjectManifestFileSchemaError(
     InvalidPluginProjectManifestFileError,
-    comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError,
+    comp_excs.InvalidComponentProjectManifestFileSchemaError,
 ):
     """
     Raised when the plugin project manifest file does not conform to the expected JSON
@@ -151,7 +159,7 @@ class InvalidPluginProjectManifestFileSchemaError(
 
 class InvalidPluginProjectPyProjectFileError(
     PluginLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError,
+    comp_excs.InvalidComponentProjectPyProjectFileError,
 ):
     """
     Base exception for all errors that occur due to an invalid `pyproject.toml` file
@@ -163,7 +171,7 @@ class InvalidPluginProjectPyProjectFileError(
 
 class InvalidPluginProjectPyProjectFileTOMLError(
     PluginLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
 ):
     """
     Raised when the `pyproject.toml` file is not a valid TOML file during plugin loading.
@@ -177,7 +185,7 @@ class InvalidPluginProjectPyProjectFileTOMLError(
 
 class InvalidPluginProjectPyProjectFileDependencyError(
     PluginLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
 ):
     """
     Raised when the `pyproject.toml` file contains an invalid dependency entry during
@@ -195,7 +203,7 @@ class InvalidPluginProjectPyProjectFileDependencyError(
 
 class InvalidPluginProjectFolderStructureError(
     PluginLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectFolderStructureError,
+    comp_excs.InvalidComponentProjectFolderStructureError,
 ):
     """
     Base exception for all errors that occur due to an invalid plugin project folder
@@ -207,7 +215,7 @@ class InvalidPluginProjectFolderStructureError(
 
 class PluginProjectManifestFileNotFoundError(
     InvalidPluginProjectFolderStructureError,
-    comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError,
+    comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
     """
     Raised when the plugin project manifest file is not found in the plugin project
@@ -222,7 +230,7 @@ class PluginProjectManifestFileNotFoundError(
 
 class PluginProjectEntryPointModuleNotFoundError(
     InvalidPluginProjectFolderStructureError,
-    comp_ldr_svc_excs.ComponentProjectEntryPointModuleNotFoundError,
+    comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """
     Raised when the plugin entry point module specified in the manifest is not found in
@@ -240,7 +248,7 @@ class PluginProjectEntryPointModuleNotFoundError(
 
 class InvalidPluginProjectImplementationError(
     PluginLoadingError,
-    comp_ldr_svc_excs.InvalidComponentProjectImplementationError,
+    comp_excs.InvalidComponentProjectImplementationError,
 ):
     """
     Base exception for all errors that occur due to the plugin project not implementing
@@ -252,7 +260,7 @@ class InvalidPluginProjectImplementationError(
 
 class PluginProjectSymbolNotFoundError(
     InvalidPluginProjectImplementationError,
-    comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError,
+    comp_excs.ComponentProjectSymbolNotFoundError,
 ):
     """
     Raised when the plugin symbol name specified in the manifest is not found in the
@@ -276,7 +284,7 @@ class PluginProjectSymbolNotFoundError(
 
 class PluginProjectInterfaceError(
     InvalidPluginProjectImplementationError,
-    comp_ldr_svc_excs.ComponentProjectInterfaceError,
+    comp_excs.ComponentProjectInterfaceError,
 ):
     """
     Raised when the plugin class does not implement the required interface during
@@ -298,7 +306,7 @@ class PluginProjectInterfaceError(
 
 class InternalPluginProjectError(
     InvalidPluginProjectImplementationError,
-    comp_ldr_svc_excs.InternalComponentProjectError,
+    comp_excs.InternalComponentProjectError,
 ):
     """
     Raised when an unhandled exception from within the plugin is raised during plugin
@@ -320,7 +328,7 @@ class InternalPluginProjectError(
 
 class IncompatiblePluginFrameworkVersionError(
     PluginLoadingError,
-    comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError,
+    comp_excs.IncompatibleComponentFrameworkVersionError,
 ):
     """
     Raised when a plugin's required framework version is incompatible with the current
@@ -344,7 +352,7 @@ class IncompatiblePluginFrameworkVersionError(
 
 class PluginAlreadyRegisteredError(
     PluginLoadingError,
-    comp_ldr_svc_excs.ComponentAlreadyRegisteredError,
+    comp_excs.ComponentAlreadyRegisteredError,
 ):
     """
     Raised when a plugin with the same ID is already registered in the plugins service
@@ -359,7 +367,7 @@ class PluginAlreadyRegisteredError(
 
 class DuplicatePluginLabelError(
     PluginLoadingError,
-    comp_ldr_svc_excs.DuplicateComponentLabelError,
+    comp_excs.DuplicateComponentLabelError,
 ):
     """
     Raised when the label provided in the plugin's definition is already in use by
@@ -377,7 +385,7 @@ class DuplicatePluginLabelError(
 
 class PluginDependencyError(
     PluginsServiceError,
-    comp_ldr_svc_excs.ComponentDependencyError,
+    comp_excs.ComponentDependencyError,
 ):
     """
     Base exception for all errors that occur during the resolution of plugin
@@ -391,7 +399,7 @@ class PluginDependencyError(
 
 class ThirdPartyDependencyNotFoundError(
     PluginDependencyError,
-    comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError,
+    comp_excs.ThirdPartyDependencyNotFoundError,
 ):
     """
     Raised when a third-party dependency required by a plugin is not installed during
@@ -413,7 +421,7 @@ class ThirdPartyDependencyNotFoundError(
 
 class IncompatibleThirdPartyDependencyVersionError(
     PluginDependencyError,
-    comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError,
+    comp_excs.IncompatibleThirdPartyDependencyVersionError,
 ):
     """
     Raised when a third-party dependency's installed version is incompatible with the
@@ -439,7 +447,7 @@ class IncompatibleThirdPartyDependencyVersionError(
 
 class ComponentDependencyNotFoundError(
     PluginDependencyError,
-    comp_ldr_svc_excs.ComponentDependencyNotFoundError,
+    comp_excs.ComponentDependencyNotFoundError,
 ):
     """
     Raised when a plugin dependency required by the plugin is not found in the plugins
@@ -461,7 +469,7 @@ class ComponentDependencyNotFoundError(
 
 class IncompatibleComponentDependencyVersionError(
     PluginDependencyError,
-    comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError,
+    comp_excs.IncompatibleComponentDependencyVersionError,
 ):
     """
     Raised when a plugin dependency's version is incompatible with the version required
@@ -487,7 +495,7 @@ class IncompatibleComponentDependencyVersionError(
 
 class PluginDependsOnInvalidComponentDependencyError(
     PluginDependencyError,
-    comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError,
+    comp_excs.ComponentDependsOnInvalidComponentDependencyError,
 ):
     """
     Raised when a plugin depends on another plugin that itself has invalid dependencies
@@ -509,7 +517,7 @@ class PluginDependsOnInvalidComponentDependencyError(
 
 class ComponentDependencyNotRunningError(
     PluginDependencyError,
-    comp_ldr_svc_excs.ComponentDependencyNotRunningError,
+    comp_excs.ComponentDependencyNotRunningError,
 ):
     """
     Raised when a plugin dependency required by the plugin is present but not currently
@@ -555,7 +563,7 @@ class PluginStopTimeoutError(PluginUnloadingError):
 
 
 class PluginsFrameworkError(
-    comp_framework_excs.ComponentsFrameworkError,
+    comp_excs.ComponentsFrameworkError,
     PluginsError,
 ):
     """
@@ -568,7 +576,7 @@ class PluginsFrameworkError(
 
 
 class PluginConfigurationError(
-    comp_framework_excs.ComponentConfigurationError,
+    comp_excs.ComponentConfigurationError,
     PluginsFrameworkError,
 ):
     """
@@ -580,7 +588,7 @@ class PluginConfigurationError(
 
 
 class InvalidPluginConfigurationParameterTypeError(
-    comp_framework_excs.InvalidComponentConfigurationParameterTypeError,
+    comp_excs.InvalidComponentConfigurationParameterTypeError,
     PluginConfigurationError,
 ):
     """
@@ -604,7 +612,7 @@ class InvalidPluginConfigurationParameterTypeError(
 
 
 class MissingPluginConfigurationParameterError(
-    comp_framework_excs.MissingComponentConfigurationParameterError,
+    comp_excs.MissingComponentConfigurationParameterError,
     PluginConfigurationError,
 ):
     """
@@ -622,7 +630,7 @@ class MissingPluginConfigurationParameterError(
 
 
 class EmptyPluginLabelError(
-    comp_framework_excs.EmptyComponentLabelError,
+    comp_excs.EmptyComponentLabelError,
     PluginConfigurationError,
 ):
     """
@@ -637,7 +645,7 @@ class EmptyPluginLabelError(
 
 
 class InvalidPluginVersionError(
-    comp_framework_excs.InvalidComponentVersionError,
+    comp_excs.InvalidComponentVersionError,
     PluginConfigurationError,
 ):
     """
@@ -655,7 +663,7 @@ class InvalidPluginVersionError(
 
 
 class InvalidFrameworkVersionSpecifierError(
-    comp_framework_excs.InvalidFrameworkVersionSpecifierError,
+    comp_excs.InvalidFrameworkVersionSpecifierError,
     PluginConfigurationError,
 ):
     """
@@ -674,7 +682,7 @@ class InvalidFrameworkVersionSpecifierError(
 
 
 class InvalidPluginDependencyVersionSpecifierError(
-    comp_framework_excs.InvalidComponentDependencyVersionSpecifierError,
+    comp_excs.InvalidComponentDependencyVersionSpecifierError,
     PluginConfigurationError,
 ):
     """
@@ -697,7 +705,7 @@ class InvalidPluginDependencyVersionSpecifierError(
 
 
 class PluginOperationError(
-    comp_framework_excs.ComponentOperationError,
+    comp_excs.ComponentOperationError,
     PluginsFrameworkError,
 ):
     """
@@ -708,7 +716,7 @@ class PluginOperationError(
     code = "PLUGIN_OPERATION_ERROR"
 
 
-class PluginStartError(comp_framework_excs.ComponentStartError, PluginOperationError):
+class PluginStartError(comp_excs.ComponentStartError, PluginOperationError):
     """
     Raised when a plugin fails to start during plugin operation.
     """
@@ -729,7 +737,7 @@ class PluginStartError(comp_framework_excs.ComponentStartError, PluginOperationE
 
 
 class PluginRuntimeError(
-    comp_framework_excs.ComponentRuntimeError,
+    comp_excs.ComponentRuntimeError,
     PluginOperationError,
 ):
     """
@@ -752,7 +760,7 @@ class PluginRuntimeError(
         )
 
 
-class PluginStopError(comp_framework_excs.ComponentStopError, PluginOperationError):
+class PluginStopError(comp_excs.ComponentStopError, PluginOperationError):
     """
     Raised when a plugin fails to stop during plugin operation.
     """
@@ -773,7 +781,7 @@ class PluginStopError(comp_framework_excs.ComponentStopError, PluginOperationErr
 
 
 class PluginStateError(
-    comp_framework_excs.ComponentStateError,
+    comp_excs.ComponentStateError,
     PluginsFrameworkError,
 ):
     """
@@ -785,7 +793,7 @@ class PluginStateError(
 
 
 class PluginNotRunningError(
-    comp_framework_excs.ComponentNotRunningError,
+    comp_excs.ComponentNotRunningError,
     PluginStateError,
 ):
     """
@@ -803,7 +811,7 @@ class PluginNotRunningError(
 
 
 class PluginAlreadyRunningError(
-    comp_framework_excs.ComponentAlreadyRunningError,
+    comp_excs.ComponentAlreadyRunningError,
     PluginStateError,
 ):
     """

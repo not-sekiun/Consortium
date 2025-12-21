@@ -23,7 +23,7 @@ from consortium.server.server_config import (
 from consortium.server.server_logging import LoggerType
 
 _rest_api_logger = logger.bind(
-    logger_name="REST API", logger_type=LoggerType.API_LOGGER
+    logger_name="REST API", logger_type=LoggerType.REST_API_LOGGER
 )
 _users_service = server_singletons.users_service
 

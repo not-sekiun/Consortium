@@ -1,8 +1,10 @@
 import pathlib
 import uuid
 
-import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
 from consortium.framework.utils.exception_utils import remap_exception
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.services.component_registry_services.component_registry_service import (
     ComponentRegistryService,
 )
@@ -28,9 +30,8 @@ class ExceptionRemappingComponentRegistryService(
             try:
                 return func(self, *args, **kwargs)
             except (
-                # TODO: Move to ComponentServiceError
-                comp_ldr_svc_excs.ComponentLoadingError,
-                comp_ldr_svc_excs.ComponentDependencyError,
+                comp_excs.ComponentLoadingError,
+                comp_excs.ComponentDependencyError,
             ) as exc:
                 raise remap_exception(
                     original_exception=exc,
@@ -59,7 +60,7 @@ class ExceptionRemappingComponentRegistryService(
     ) -> tuple[
         list[Component],
         list[pathlib.Path],
-        list[tuple[pathlib.Path, ComponentLoadingError]] | None,
+        list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:
         retrieved, skipped, errored = (
             super().get_components_from_component_project_folder_directories(
@@ -75,8 +76,8 @@ class ExceptionRemappingComponentRegistryService(
             if isinstance(
                 error,
                 (
-                    comp_ldr_svc_excs.ComponentLoadingError,
-                    comp_ldr_svc_excs.ComponentDependencyError,
+                    comp_excs.ComponentLoadingError,
+                    comp_excs.ComponentDependencyError,
                 ),
             ):
                 remapped_errored.append(

@@ -38,7 +38,7 @@ _listeners_service = server_singletons.listeners_service
 _listener_templates_service = server_singletons.listener_templates_service
 
 _listener_not_found_error = api_excs.ListenerNotFoundError.from_consortium_exception(
-    consortium_exceptions.ListenerNotFoundError(listener_id="string"),
+    consortium_exceptions.ListenerNotFoundError(listener_id="<listener_id>"),
 )
 _listener_already_running_error = (
     api_excs.ListenerAlreadyRunningError.from_consortium_exception(
@@ -71,18 +71,18 @@ _listener_stop_error = api_excs.ListenerStopError.from_consortium_exception(
 _invalid_listener_parameter_name_error = (
     api_excs.InvalidListenerParameterNameError.from_consortium_exception(
         consortium_exception=consortium_exceptions.InvalidListenerParameterNameError(
-            parameter_name="string",
-            listener="string",
+            listener_str="<listener_str>",
+            parameter_name="<parameter_name>",
         ),
     )
 )
 _invalid_listener_parameter_value_error = (
     api_excs.InvalidListenerParameterValueError.from_consortium_exception(
         consortium_exception=consortium_exceptions.InvalidListenerParameterValueError(
-            parameter_name="string",
-            parameter_value="string",
-            listener_str="string",
-            error_message="string",
+            listener_str="<listener_str>",
+            parameter_name="<parameter_name>",
+            parameter_value="<parameter_value>",
+            error_message="<error_message>",
         ),
     )
 )
@@ -310,16 +310,6 @@ async def update_listener_by_listener_id(
             ),
         ),
     ],
-    # The only update-able listener attributes are its name, description and parameters
-    # within the listener. Note that when instantiating the listener through its
-    # listener template the options of a listener template are responsible for setting
-    # both the name and endpoint string of the listener. Hence, when updating the
-    # parameters of a listener, the name and endpoint strings are also updated by
-    # running those update values through the listener template. However, it is
-    # possible to update the name of a listener independently of the parameters by
-    # simply not specifying any parameters when PUTing. But if the parameters are
-    # present they will override the name string even if it was specified in the
-    # request.
     name: Annotated[str, Body(embed=True)] = None,
     description: Annotated[str, Body(embed=True)] = None,
     parameters: Annotated[dict[str, JsonValue], Body(embed=True)] = None,

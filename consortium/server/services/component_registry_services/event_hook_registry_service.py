@@ -1,9 +1,11 @@
 import pathlib
 import uuid
 
-import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
-from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
+from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
     ComponentDependencyNotFoundError,
     ComponentDependencyNotRunningError,
     DuplicateEventHookLabelError,
@@ -40,25 +42,25 @@ class EventHookRegistryService(
     ExceptionRemappingComponentRegistryService[BaseEventHook, EventHookLoadingError],
 ):
     _EXCEPTION_MAP = {
-        comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError: EventHookProjectManifestFileNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError: InvalidEventHookProjectManifestFileJSONError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError: InvalidEventHookProjectManifestFileSchemaError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError: InvalidEventHookProjectPyProjectFileError,
-        comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
-        comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidEventHookProjectPyProjectFileDependencyError,
-        comp_ldr_svc_excs.ComponentProjectEntryPointModuleNotFoundError: EventHookProjectEntryPointModuleNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError: EventHookProjectSymbolNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectInterfaceError: EventHookProjectInterfaceError,
-        comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError: IncompatibleEventHookFrameworkVersionError,
-        comp_ldr_svc_excs.InternalComponentProjectError: InternalEventHookProjectError,
-        comp_ldr_svc_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
-        comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
-        comp_ldr_svc_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
-        comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError: EventHookDependsOnInvalidComponentDependencyError,
-        comp_ldr_svc_excs.ComponentNotFoundError: EventHookNotFoundError,
-        comp_ldr_svc_excs.ComponentAlreadyRegisteredError: EventHookAlreadyRegisteredError,
-        comp_ldr_svc_excs.DuplicateComponentLabelError: DuplicateEventHookLabelError,
+        comp_excs.ComponentProjectManifestFileNotFoundError: EventHookProjectManifestFileNotFoundError,
+        comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidEventHookProjectManifestFileJSONError,
+        comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidEventHookProjectManifestFileSchemaError,
+        comp_excs.InvalidComponentProjectPyProjectFileError: InvalidEventHookProjectPyProjectFileError,
+        comp_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
+        comp_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
+        comp_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidEventHookProjectPyProjectFileDependencyError,
+        comp_excs.ComponentProjectEntryPointModuleNotFoundError: EventHookProjectEntryPointModuleNotFoundError,
+        comp_excs.ComponentProjectSymbolNotFoundError: EventHookProjectSymbolNotFoundError,
+        comp_excs.ComponentProjectInterfaceError: EventHookProjectInterfaceError,
+        comp_excs.IncompatibleComponentFrameworkVersionError: IncompatibleEventHookFrameworkVersionError,
+        comp_excs.InternalComponentProjectError: InternalEventHookProjectError,
+        comp_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
+        comp_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
+        comp_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
+        comp_excs.ComponentDependsOnInvalidComponentDependencyError: EventHookDependsOnInvalidComponentDependencyError,
+        comp_excs.ComponentNotFoundError: EventHookNotFoundError,
+        comp_excs.ComponentAlreadyRegisteredError: EventHookAlreadyRegisteredError,
+        comp_excs.DuplicateComponentLabelError: DuplicateEventHookLabelError,
     }
     _EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "event_hook_project_folder",

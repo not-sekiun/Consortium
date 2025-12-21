@@ -2,7 +2,7 @@
   <img width="20%" src="docs/assets/logo.png">
 </p>
 
-<p align="center"><i>Insert Tagline here</i></p>
+<p align="center"><i>Consortium: modern C2 framework with a focus on extensibility</i></p>
 
 ---
 
@@ -29,26 +29,22 @@ listeners and agents.
 > I am working to resolve all these and work towards a 1.0.0 release so please raise any
 > problems, feature requests, or bug reports in the GitHub issues section.
 
-## ⚙️ Features
+## Features
 
-- **📡 Asynchronous multiplayer/multiserver support** - Multiple clients can connect to
+- **Asynchronous multiplayer/multiserver support** - Multiple clients can connect to
 the same server to perform all C2 related operations, including the sharing of agent
-sessions. The default client allows the ability to seamlessly switch between different
-servers. The server runs asynchronously on FastAPI allowing for blazing fast speeds.
-- **🤖 High extensibility and automation** - The server supports writing custom plugins
-and event hooks in python that interface natively with the backend. The server performs
-all communications through either its REST API (for most C2 related operations) or
-its websockets endpoint (for server initiated push events) allowing external
-programmatic access to the server.
-- **🔌 Modular listener-agent design** - Consortium ships with its own listeners and
-agents. However, custom listeners and agents can be added to the framework. Agents can
-be written in any language while listeners can be written in python to natively
-interact with the server, or they can be written in a different language to interact
-with the server through its REST API.
+sessions. Control RBAC permissions via user roles.
+- **High extensibility and automation, externally and natively** - Programmatic
+automation is possible through the server's **REST API** or **websockets events API**.
+Alternatively, users can write **plugins** and **event hooks** that interact _directly_ with
+the server's internal services.
+- **Language-agnostic modular listener-agent design** - Consortium ships with its own listeners and
+agents. **Custom listeners and agents** can be added to the framework. Agents can
+be written in any language while listeners can be written in python to _natively
+interact with the server_, or written in a different language to interact with the
+server _through its REST API_.
 
-and more!
-
-## ✨ Quickstart
+## Quickstart
 
 ### Prerequisites
 
@@ -103,7 +99,7 @@ git pull
 uv sync
 ```
 
-## 📚 Documentation
+## Documentation
 
 ### Server REST API Documentation
 
@@ -229,15 +225,13 @@ Examples:
 
 ### Complete Framework Documentation (WIP)
 
-The complete documentation for the Consortium framework is available at the
-[Consortium wiki](https://github.com/not-sekiun/Consortium). This wiki is also
-available locally under the `docs` folder from the project root. The wiki is hosted with
-`mkdocs`. To view it locally, install `mkdocs` through poetry and run it by changing
-directory into the `docs` folder and serving the documentation locally.
+Complete documentation is available at the [Consortium wiki](https://github.com/not-sekiun/Consortium).
+Alternatively, you can install dependencies to host and view the documentation locally.
+From the project root folder, run:
 
 ```shell
-cd docs
-poetry run mkdocs serve
+uv sync --group docs
+uv run mkdocs serve
 ```
 
 The wiki provides:
@@ -259,6 +253,7 @@ including:
 
 This project would not have been possible without the existence of the following
 excellently written libraries and frameworks.
+
 - [FastAPI](https://github.com/fastapi/fastapi) for the REST API and websockets server.
 - [Prompt-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) for the
 client CLI interface.
@@ -269,6 +264,7 @@ communication for the client.
 
 On top of that many other pre-existing C2 frameworks provided the inspiration and
 motivation to create this one.
+
 - [Empire, formerly Powershell-Empire](https://github.com/BC-SECURITY/Empire) for some
 of the client design and UI
 - [Mythic](https://github.com/its-a-feature/Mythic) for some elements of the framework

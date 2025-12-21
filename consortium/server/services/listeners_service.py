@@ -3,6 +3,7 @@ import uuid
 from typing import Any
 
 from loguru import logger
+from pydantic import validate_call
 
 # from consortium.framework.listeners._listener_status import ListenerState
 from consortium.framework._components._component_status import State
@@ -55,6 +56,7 @@ class ListenersService:
         )
 
     @log_and_propagate_error_on_service_method
+    @validate_call
     def get_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> BaseListener:
         listener_id = normalize_uuid(listener_id)
 

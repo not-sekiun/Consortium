@@ -322,15 +322,6 @@ async def update_agent_generator_by_agent_generator_id(
             ),
         ),
     ],
-    # The only update-able agent generator attributes are its name, description and
-    # parameters within the agent generator. Note that when instantiating the agent
-    # generator through its agent template the options of an agent template are
-    # responsible for setting the name of the agent generator. Hence, when updating the
-    # parameters of an agent generator, the name is also updated by running those update
-    # values through the agent template. However, it is possible to update the name of
-    # an agent generator independently of the parameters by simply not specifying any
-    # parameters when PUTing. But if the parameters are present they will override the
-    # name string even if it was specified in the request.
     name: Annotated[str, Body(embed=True)] = None,
     description: Annotated[str, Body(embed=True)] = None,
     parameters: Annotated[dict[str, Any], Body(embed=True)] = None,

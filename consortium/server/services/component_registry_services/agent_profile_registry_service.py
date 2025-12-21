@@ -1,7 +1,9 @@
 import pathlib
 import uuid
 
-import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
     AgentProfileAlreadyRegisteredError,
     AgentProfileDependsOnInvalidComponentDependencyError,
@@ -34,25 +36,25 @@ class AgentProfileRegistryService(
     ExceptionRemappingComponentRegistryService[AgentProfile, AgentProfileLoadingError],
 ):
     _EXCEPTION_MAP = {
-        comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError: AgentProfileProjectManifestFileNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError: InvalidAgentProfileProjectManifestFileJSONError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError: InvalidAgentProfileProjectManifestFileSchemaError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError: InvalidAgentProfileProjectPyProjectFileError,
-        comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
-        comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidAgentProfileProjectPyProjectFileDependencyError,
-        comp_ldr_svc_excs.ComponentProjectEntryPointModuleNotFoundError: AgentProfileProjectEntryPointModuleNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError: AgentProfileProjectSymbolNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectInterfaceError: AgentProfileProjectInterfaceError,
-        comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError: IncompatibleAgentProfileFrameworkVersionError,
-        comp_ldr_svc_excs.InternalComponentProjectError: InternalAgentProfileProjectError,
-        comp_ldr_svc_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
-        comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
-        comp_ldr_svc_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
-        comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError: AgentProfileDependsOnInvalidComponentDependencyError,
-        comp_ldr_svc_excs.ComponentNotFoundError: AgentProfileNotFoundError,
-        comp_ldr_svc_excs.ComponentAlreadyRegisteredError: AgentProfileAlreadyRegisteredError,
-        comp_ldr_svc_excs.DuplicateComponentLabelError: DuplicateAgentProfileLabelError,
+        comp_excs.ComponentProjectManifestFileNotFoundError: AgentProfileProjectManifestFileNotFoundError,
+        comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidAgentProfileProjectManifestFileJSONError,
+        comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidAgentProfileProjectManifestFileSchemaError,
+        comp_excs.InvalidComponentProjectPyProjectFileError: InvalidAgentProfileProjectPyProjectFileError,
+        comp_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
+        comp_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
+        comp_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidAgentProfileProjectPyProjectFileDependencyError,
+        comp_excs.ComponentProjectEntryPointModuleNotFoundError: AgentProfileProjectEntryPointModuleNotFoundError,
+        comp_excs.ComponentProjectSymbolNotFoundError: AgentProfileProjectSymbolNotFoundError,
+        comp_excs.ComponentProjectInterfaceError: AgentProfileProjectInterfaceError,
+        comp_excs.IncompatibleComponentFrameworkVersionError: IncompatibleAgentProfileFrameworkVersionError,
+        comp_excs.InternalComponentProjectError: InternalAgentProfileProjectError,
+        comp_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
+        comp_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
+        comp_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
+        comp_excs.ComponentDependsOnInvalidComponentDependencyError: AgentProfileDependsOnInvalidComponentDependencyError,
+        comp_excs.ComponentNotFoundError: AgentProfileNotFoundError,
+        comp_excs.ComponentAlreadyRegisteredError: AgentProfileAlreadyRegisteredError,
+        comp_excs.DuplicateComponentLabelError: DuplicateAgentProfileLabelError,
     }
     _EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "agent_profile_project_folder",

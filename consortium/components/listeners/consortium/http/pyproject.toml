@@ -2,6 +2,4 @@
 name = "consortium.agents.http-agent"
 dependencies = [
     "aiohttp",
-    "pydantic",
-    "jsonschema"
 ]

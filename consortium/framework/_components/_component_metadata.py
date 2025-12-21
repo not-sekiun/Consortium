@@ -4,7 +4,7 @@ from typing import Any, get_type_hints
 from packaging import requirements, specifiers, version
 from pydantic import BaseModel, ValidationError
 
-from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
     EmptyComponentLabelError,
     InvalidComponentConfigurationParameterTypeError,
     InvalidComponentDependencyVersionSpecifierError,

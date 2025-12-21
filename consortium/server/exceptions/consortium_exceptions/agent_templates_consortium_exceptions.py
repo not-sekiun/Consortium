@@ -25,11 +25,11 @@ Exception hierarchy for agent templates errors:
 
 from typing import Any
 
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
-)
-from consortium.server.exceptions.framework_exceptions import (
-    components_framework_exceptions as comp_excs,
 )
 
 

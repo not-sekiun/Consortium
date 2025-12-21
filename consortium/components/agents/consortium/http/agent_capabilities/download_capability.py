@@ -1,7 +1,7 @@
 import base64
 import pathlib
 
-from consortium.framework.agents.agent_message_models import (
+from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
 )

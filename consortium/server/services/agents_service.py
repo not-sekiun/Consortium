@@ -4,13 +4,13 @@ from typing import Any
 
 from loguru import logger
 
-from consortium.framework.agents._agent import Agent
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
 )
 from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
+from consortium.server.objects.agent_objects import Agent
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService
 from consortium.server.utils import (
@@ -218,7 +218,7 @@ class AgentsService:
     ) -> AgentTaskModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = AgentTaskModel(command=command, arguments=arguments)
-        await agent.add_task(task=task)
+        await agent.submit_task(task=task)
         # try:
         #     await agent.add_task(task=task)
         # except framework_excs.AgentCapabilityOptionValueValidationError as exc:

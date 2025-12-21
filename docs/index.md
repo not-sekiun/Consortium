@@ -7,7 +7,7 @@ hide:
 
 <img alt="Consortium logo" src="assets/logo.png" style="display: block;float: none;margin-left: 45%;margin-right: auto;width: 10%">
 
-<p style="text-align: center;"><i>Reinventing the wheel for the very last time</i></p>
+<p style="text-align: center;"><i>Consortium: modern C2 framework with a focus on extensibility</i></p>
 
 ---
 
@@ -40,30 +40,30 @@ listeners and agents.
 
     ---
 
-    - ⚙️ [Install Consortium](getting-started/installation.md) and get the framework
+    - [Install Consortium](getting-started/installation.md) and get the framework
     [up and running](getting-started/quick-start.md) as quickly as possible.
-    - 📝 Learn about the [basic concepts](about/) and [features](about/features.md)
+    - Learn about the [basic concepts](about/) and [features](about/features.md)
     that are unique to the framework.
-    - 🧭 Explore the [high level usage](manual/) of the framework.
+    - Explore the [high level usage](manual/) of the framework.
 
 -   __Usage__
 
     ---
 
-    - 📚 Look through the [Server API](rest-api/) to script your own automations and
+    - Look through the [Server API](rest-api/) to script your own automations and
     write your own clients.
-    - 📡 Learn how to develop your own [listeners](manual/listeners.md) and
+    - Learn how to develop your own [listeners](manual/listeners.md) and
     [agents](manual/agents.md) for the framework to customize it to your needs.
-    - 💪 Extend the framework even further by developing your own
+    - Extend the framework even further by developing your own
     [plugins](manual/plugins.md) or [event hooks](manual/event-hooks.md)
 
 -   __Advanced__
 
     ---
 
-    - 🔍 Look through the [API reference](reference/) for detailed information on
+    - Look through the [API reference](reference/) for detailed information on
     the framework components.
-    - 🔨 [Contribute to the core framework code](about/contributing.md) or help
+    - [Contribute to the core framework code](about/contributing.md) or help
     [improve the documentation](about/contributing.md).
 
 </div>

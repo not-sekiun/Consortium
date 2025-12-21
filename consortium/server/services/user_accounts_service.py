@@ -88,14 +88,14 @@ class UserAccountsService:
         role: UserRole,
     ) -> UserAccountModel:
         if not username:
-            raise EmptyUserAccountUsernameError.during_user_account_creation()
+            raise EmptyUserAccountUsernameError._during_user_account_creation()
         if not password:
-            raise EmptyUserAccountPasswordError.during_user_account_creation()
+            raise EmptyUserAccountPasswordError._during_user_account_creation()
         if role not in UserRole:
-            raise InvalidUserAccountRoleError.during_user_account_creation(role=role)
+            raise InvalidUserAccountRoleError._during_user_account_creation(role=role)
         for user_account in self.get_all_user_accounts():
             if user_account.username == username:
-                raise UserAccountUsernameAlreadyExistsError.during_user_account_creation(
+                raise UserAccountUsernameAlreadyExistsError._during_user_account_creation(
                     username=username,
                 )
 
@@ -126,12 +126,12 @@ class UserAccountsService:
         # TODO: Check for no ops and also add event firing
         if username is not None:
             if not username:
-                raise EmptyUserAccountUsernameError.during_user_account_modification(
+                raise EmptyUserAccountUsernameError._during_user_account_modification(
                     user_account_str=str(user_account),
                 )
             for existing_user_account in self.get_all_user_accounts():
                 if existing_user_account.username == username:
-                    raise UserAccountUsernameAlreadyExistsError.during_user_account_modification(
+                    raise UserAccountUsernameAlreadyExistsError._during_user_account_modification(
                         username=username,
                         user_account_str=str(user_account),
                     )
@@ -145,7 +145,7 @@ class UserAccountsService:
             )
         if password is not None:
             if not password:
-                raise EmptyUserAccountPasswordError.during_user_account_modification(
+                raise EmptyUserAccountPasswordError._during_user_account_modification(
                     user_account_str=str(user_account),
                 )
             old_password = user_account.password
@@ -158,7 +158,7 @@ class UserAccountsService:
             )
         if role is not None:
             if role not in UserRole:
-                raise InvalidUserAccountRoleError.during_user_account_modification(
+                raise InvalidUserAccountRoleError._during_user_account_modification(
                     role=role,
                     user_account_str=str(user_account),
                 )
@@ -281,7 +281,7 @@ class UserAccountsService:
             # strings, so we do not need to check for that condition here.
             new_user_account = UserAccountModel(**user_account_json_data)
             if new_user_account.username in existing_usernames:
-                raise UserAccountUsernameAlreadyExistsError.during_user_accounts_file_loading(
+                raise UserAccountUsernameAlreadyExistsError._during_user_accounts_file_loading(
                     username=new_user_account.username,
                     user_accounts_filepath=str(user_accounts_filepath),
                 )

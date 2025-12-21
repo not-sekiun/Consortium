@@ -8,15 +8,15 @@ from consortium.framework.exceptions._component_framework_exceptions import (
     ComponentStartError,
     ComponentStopError,
 )
-from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
-    BaseFrameworkException,
-)
-from consortium.server.exceptions.framework_exceptions.components_framework_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
     ComponentAlreadyRunningError,
     ComponentNotRunningError,
     ComponentRuntimeError as ComponentRuntimeFrameworkError,
     ComponentStartError as ComponentStartFrameworkError,
     ComponentStopError as ComponentStopFrameworkError,
+)
+from consortium.server.exceptions.framework_exceptions.base_framework_exception import (
+    BaseFrameworkException,
 )
 
 

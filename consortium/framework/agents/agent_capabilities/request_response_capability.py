@@ -3,12 +3,12 @@ from collections.abc import Awaitable
 from types import SimpleNamespace
 from typing import Protocol
 
-from consortium.framework.agents.agent_capabilities._common_protocols import (
-    _ResolveTimeoutProtocol,
-)
-from consortium.framework.agents.agent_message_models import (
+from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
+)
+from consortium.framework.agents.agent_capabilities._common_protocols import (
+    _ResolveTimeoutProtocol,
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,

@@ -8,7 +8,7 @@ from typing import Any, get_type_hints
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework.agents.agent_message_models import (
+from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
 )

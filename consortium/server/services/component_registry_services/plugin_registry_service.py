@@ -2,9 +2,11 @@ import asyncio
 import pathlib
 import uuid
 
-import consortium.server.exceptions.service_exceptions.components_service_exceptions as comp_ldr_svc_excs
 from consortium.framework._components._component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
+)
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     ComponentDependencyNotFoundError,
     ComponentDependencyNotRunningError,
@@ -37,25 +39,25 @@ class PluginRegistryService(
     ExceptionRemappingComponentRegistryService[BasePlugin, PluginLoadingError],
 ):
     _EXCEPTION_MAP = {
-        comp_ldr_svc_excs.ComponentProjectManifestFileNotFoundError: PluginProjectManifestFileNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileJSONError: InvalidPluginProjectManifestFileJSONError,
-        comp_ldr_svc_excs.InvalidComponentProjectManifestFileSchemaError: InvalidPluginProjectManifestFileSchemaError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileError: InvalidPluginProjectPyProjectFileError,
-        comp_ldr_svc_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
-        comp_ldr_svc_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
-        comp_ldr_svc_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidPluginProjectPyProjectFileDependencyError,
-        comp_ldr_svc_excs.ComponentProjectEntryPointModuleNotFoundError: PluginProjectEntryPointModuleNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectSymbolNotFoundError: PluginProjectSymbolNotFoundError,
-        comp_ldr_svc_excs.ComponentProjectInterfaceError: PluginProjectInterfaceError,
-        comp_ldr_svc_excs.IncompatibleComponentFrameworkVersionError: IncompatiblePluginFrameworkVersionError,
-        comp_ldr_svc_excs.InternalComponentProjectError: InternalPluginProjectError,
-        comp_ldr_svc_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
-        comp_ldr_svc_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
-        comp_ldr_svc_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
-        comp_ldr_svc_excs.ComponentDependsOnInvalidComponentDependencyError: PluginDependsOnInvalidComponentDependencyError,
-        comp_ldr_svc_excs.ComponentNotFoundError: PluginNotFoundError,
-        comp_ldr_svc_excs.ComponentAlreadyRegisteredError: PluginAlreadyRegisteredError,
-        comp_ldr_svc_excs.DuplicateComponentLabelError: DuplicatePluginLabelError,
+        comp_excs.ComponentProjectManifestFileNotFoundError: PluginProjectManifestFileNotFoundError,
+        comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidPluginProjectManifestFileJSONError,
+        comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidPluginProjectManifestFileSchemaError,
+        comp_excs.InvalidComponentProjectPyProjectFileError: InvalidPluginProjectPyProjectFileError,
+        comp_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
+        comp_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
+        comp_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidPluginProjectPyProjectFileDependencyError,
+        comp_excs.ComponentProjectEntryPointModuleNotFoundError: PluginProjectEntryPointModuleNotFoundError,
+        comp_excs.ComponentProjectSymbolNotFoundError: PluginProjectSymbolNotFoundError,
+        comp_excs.ComponentProjectInterfaceError: PluginProjectInterfaceError,
+        comp_excs.IncompatibleComponentFrameworkVersionError: IncompatiblePluginFrameworkVersionError,
+        comp_excs.InternalComponentProjectError: InternalPluginProjectError,
+        comp_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
+        comp_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
+        comp_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
+        comp_excs.ComponentDependsOnInvalidComponentDependencyError: PluginDependsOnInvalidComponentDependencyError,
+        comp_excs.ComponentNotFoundError: PluginNotFoundError,
+        comp_excs.ComponentAlreadyRegisteredError: PluginAlreadyRegisteredError,
+        comp_excs.DuplicateComponentLabelError: DuplicatePluginLabelError,
     }
     _EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "plugin_project_folder",

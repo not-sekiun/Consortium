@@ -2,19 +2,24 @@ from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
 from consortium.framework.framework_types import JSONObject
-from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
-from consortium.framework.options import ListValueOption, SingleValueOption
+from consortium.framework.listeners import BaseListenerTemplate
+from consortium.framework.options import (
+    ListValueOption,
+    SingleValueOption,
+    validate_is_ip_address,
+    validate_is_url_path,
+)
 
 from .listener import Listener
 from .listener_type import ListenerType
 
 
-def _check_all_url_endpoints_unique(
+def _validate_all_url_endpoints_unique(
     parameters: JSONObject,
 ) -> None:
     """
-    Checks that the sets of the tasks, results and registration URL paths are mutually
-    disjoint.
+    Validates that the sets of the tasks, results and registration URL paths are
+    mutually disjoint.
     """
     all_url_paths = (
         parameters["tasks_url_paths"]
@@ -32,9 +37,12 @@ def _check_all_url_endpoints_unique(
 
 
 class ListenerTemplate(BaseListenerTemplate):
-    label = "consortium.listeners.http_listener"
-    name = "HTTP Listener"
-    description = "A listener that communicates over the HTTP transport."
+    label = "consortium.listeners.consortium_http"
+    name = "Consortium HTTP Listener"
+    description = (
+        "The canonical Consortium listener implementation that communicates over the "
+        "HTTP transport with a custom JSON-based protocol."
+    )
     version = "0.1.0"
     compatible_framework_version = ">=1.0.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
@@ -57,6 +65,7 @@ class ListenerTemplate(BaseListenerTemplate):
             required=True,
             default_value="0.0.0.0",
             value_type=str,
+            validating_function=validate_is_ip_address,
         ),
         SingleValueOption(
             name="local_port",
@@ -79,7 +88,7 @@ class ListenerTemplate(BaseListenerTemplate):
             default_value=["/tasks"],
             allow_duplicates=False,
             value_type=str,
-            validating_regex=r"^\/[\w-]+(\.[\w-]+)*$",
+            validating_function=validate_is_url_path,
         ),
         ListValueOption(
             name="results_url_paths",
@@ -91,7 +100,7 @@ class ListenerTemplate(BaseListenerTemplate):
             default_value=["/results"],
             allow_duplicates=False,
             value_type=str,
-            validating_regex=r"^\/[\w-]+(\.[\w-]+)*$",
+            validating_function=validate_is_url_path,
         ),
         ListValueOption(
             name="registration_url_paths",
@@ -102,10 +111,10 @@ class ListenerTemplate(BaseListenerTemplate):
             required=True,
             default_value=["/register"],
             value_type=str,
-            validating_regex=r"^\/[\w-]+(\.[\w-]+)*$",
+            validating_function=validate_is_url_path,
         ),
     }
-    validating_function = _check_all_url_endpoints_unique
+    validating_function = _validate_all_url_endpoints_unique
 
     def resolve_listener_name(self, parameters: JSONObject) -> str:
         return parameters["name"]

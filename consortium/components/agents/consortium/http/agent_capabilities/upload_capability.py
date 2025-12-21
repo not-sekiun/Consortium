@@ -5,7 +5,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import BinaryIO
 
-from consortium.framework.agents.agent_message_models import (
+from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
 )

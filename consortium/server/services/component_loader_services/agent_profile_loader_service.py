@@ -4,11 +4,13 @@ from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplatesFrameworkError,
 )
+from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+    ComponentLoadingError,
+)
 from consortium.server.objects.c2_profile_objects import AgentProfile
 from consortium.server.services.component_loader_services.component_loader_service import (
     Component,
     ComponentLoaderService,
-    ComponentLoadingError,
 )
 
 

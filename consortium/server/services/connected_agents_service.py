@@ -1,11 +1,11 @@
 import uuid
 from typing import Any
 
-from consortium.framework.agents._agent import Agent
 from consortium.framework.agents.base_agent_type import BaseAgentType
-from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
 )
+from consortium.server.objects.agent_objects import Agent
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
 

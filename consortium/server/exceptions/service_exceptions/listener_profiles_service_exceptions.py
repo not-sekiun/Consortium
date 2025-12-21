@@ -31,8 +31,8 @@
 #         - InternalListenerProjectError: Raised when an internal error occurs while
 #         handling a listener project.
 # """
-from consortium.server.exceptions.service_exceptions import (
-    components_service_exceptions as comp_svc_excs,
+from consortium.server.exceptions.consortium_exceptions import (
+    components_consortium_exceptions as comp_excs,
 )
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceException,
@@ -45,7 +45,7 @@ class ListenerProfilesServiceError(BaseServiceException):
 
 class ListenerProfileNotFoundError(
     ListenerProfilesServiceError,
-    comp_svc_excs.ComponentNotFoundError,
+    comp_excs.ComponentNotFoundError,
 ):
     """
     An error that is raised when a listener profile is not found in the listener
@@ -62,7 +62,7 @@ class ListenerProfileNotFoundError(
 
 class ListenerProfileLoadingError(
     ListenerProfilesServiceError,
-    comp_svc_excs.ComponentLoadingError,
+    comp_excs.ComponentLoadingError,
 ):
     """
     Base exception for all errors that occur during the loading of a listener profile.
@@ -75,7 +75,7 @@ class ListenerProfileLoadingError(
 
 class InvalidListenerProfileProjectManifestFileError(
     ListenerProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectManifestFileError,
+    comp_excs.InvalidComponentProjectManifestFileError,
 ):
     """
     Base exception for all errors that occur due to loading an invalid listener profile project
@@ -87,7 +87,7 @@ class InvalidListenerProfileProjectManifestFileError(
 
 class InvalidListenerProfileProjectManifestFileJSONError(
     InvalidListenerProfileProjectManifestFileError,
-    comp_svc_excs.InvalidComponentProjectManifestFileJSONError,
+    comp_excs.InvalidComponentProjectManifestFileJSONError,
 ):
     """
     An error that is raised when the listener profile project manifest file is not a valid JSON
@@ -102,7 +102,7 @@ class InvalidListenerProfileProjectManifestFileJSONError(
 
 class InvalidListenerProfileProjectManifestFileSchemaError(
     InvalidListenerProfileProjectManifestFileError,
-    comp_svc_excs.InvalidComponentProjectManifestFileSchemaError,
+    comp_excs.InvalidComponentProjectManifestFileSchemaError,
 ):
     """
     An error that is raised when the listener profile project manifest file does not conform to
@@ -124,7 +124,7 @@ class InvalidListenerProfileProjectManifestFileSchemaError(
 
 class InvalidListenerProfileProjectPyProjectFileError(
     ListenerProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectPyProjectFileError,
+    comp_excs.InvalidComponentProjectPyProjectFileError,
 ):
     """
     Base exception for all errors that occur due to loading an invalid `pyproject.toml`
@@ -136,7 +136,7 @@ class InvalidListenerProfileProjectPyProjectFileError(
 
 class InvalidListenerProfileProjectPyProjectFileTOMLError(
     ListenerProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
 ):
     """
     An error that is raised when the `pyproject.toml` file is not a valid TOML file
@@ -150,7 +150,7 @@ class InvalidListenerProfileProjectPyProjectFileTOMLError(
 
 class InvalidListenerProfileProjectPyProjectFileDependencyError(
     ListenerProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
 ):
     """
     An error that is raised when the `pyproject.toml` file contains invalid dependency
@@ -172,7 +172,7 @@ class InvalidListenerProfileProjectPyProjectFileDependencyError(
 
 class InvalidListenerProfileProjectFolderStructureError(
     ListenerProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectFolderStructureError,
+    comp_excs.InvalidComponentProjectFolderStructureError,
 ):
     """
     Base exception for all errors that occur due to the listener profile being loaded having an
@@ -184,7 +184,7 @@ class InvalidListenerProfileProjectFolderStructureError(
 
 class ListenerProfileProjectManifestFileNotFoundError(
     InvalidListenerProfileProjectFolderStructureError,
-    comp_svc_excs.ComponentProjectManifestFileNotFoundError,
+    comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
     """
     An error that is raised when the listener profile project manifest file is not found in the
@@ -199,7 +199,7 @@ class ListenerProfileProjectManifestFileNotFoundError(
 
 class ListenerProfileProjectEntryPointModuleNotFoundError(
     InvalidListenerProfileProjectFolderStructureError,
-    comp_svc_excs.ComponentProjectEntryPointModuleNotFoundError,
+    comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """
     An error that is raised when the listener profile file specified in the manifest is not
@@ -221,7 +221,7 @@ class ListenerProfileProjectEntryPointModuleNotFoundError(
 
 class InvalidListenerProfileProjectImplementationError(
     ListenerProfileLoadingError,
-    comp_svc_excs.InvalidComponentProjectImplementationError,
+    comp_excs.InvalidComponentProjectImplementationError,
 ):
     """
     Base exception for all errors that occur due to the listener profile project not implementing
@@ -233,7 +233,7 @@ class InvalidListenerProfileProjectImplementationError(
 
 class ListenerProfileProjectSymbolNotFoundError(
     InvalidListenerProfileProjectImplementationError,
-    comp_svc_excs.ComponentProjectSymbolNotFoundError,
+    comp_excs.ComponentProjectSymbolNotFoundError,
 ):
     """
     An error that is raised when the listener profile symbol name specified in the manifest is not
@@ -257,7 +257,7 @@ class ListenerProfileProjectSymbolNotFoundError(
 
 class ListenerProfileProjectInterfaceError(
     InvalidListenerProfileProjectImplementationError,
-    comp_svc_excs.ComponentProjectInterfaceError,
+    comp_excs.ComponentProjectInterfaceError,
 ):
     """
     An error that is raised when the listener profile class does not implement the required
@@ -279,7 +279,7 @@ class ListenerProfileProjectInterfaceError(
 
 class InternalListenerProfileProjectError(
     InvalidListenerProfileProjectImplementationError,
-    comp_svc_excs.InternalComponentProjectError,
+    comp_excs.InternalComponentProjectError,
 ):
     """
     An error that is raised when an unhandled exception from within the listener profile is
@@ -301,7 +301,7 @@ class InternalListenerProfileProjectError(
 
 class IncompatibleListenerProfileFrameworkVersionError(
     ListenerProfileLoadingError,
-    comp_svc_excs.IncompatibleComponentFrameworkVersionError,
+    comp_excs.IncompatibleComponentFrameworkVersionError,
 ):
     """
     An error that is raised when a listener profile is incompatible with the current framework
@@ -325,7 +325,7 @@ class IncompatibleListenerProfileFrameworkVersionError(
 
 class ListenerProfileAlreadyRegisteredError(
     ListenerProfileLoadingError,
-    comp_svc_excs.ComponentAlreadyRegisteredError,
+    comp_excs.ComponentAlreadyRegisteredError,
 ):
     """
     An error that is raised when a listener profile with the same ID is already registered in the
@@ -343,7 +343,7 @@ class ListenerProfileAlreadyRegisteredError(
 
 class DuplicateListenerProfileLabelError(
     ListenerProfileLoadingError,
-    comp_svc_excs.DuplicateComponentLabelError,
+    comp_excs.DuplicateComponentLabelError,
 ):
     """
     An error that is raised when a listener profile with the same `label` as the listener profile being
@@ -361,7 +361,7 @@ class DuplicateListenerProfileLabelError(
 
 class ListenerProfileDependencyError(
     ListenerProfilesServiceError,
-    comp_svc_excs.ComponentDependencyError,
+    comp_excs.ComponentDependencyError,
 ):
     """
     Base exception for all errors that occur during the resolution of a plugin's
@@ -375,7 +375,7 @@ class ListenerProfileDependencyError(
 
 class ThirdPartyDependencyNotFoundError(
     ListenerProfileDependencyError,
-    comp_svc_excs.ThirdPartyDependencyNotFoundError,
+    comp_excs.ThirdPartyDependencyNotFoundError,
 ):
     """
     An error that is raised when a third-party dependency required by a plugin is not
@@ -397,7 +397,7 @@ class ThirdPartyDependencyNotFoundError(
 
 class IncompatibleThirdPartyDependencyVersionError(
     ListenerProfileDependencyError,
-    comp_svc_excs.IncompatibleThirdPartyDependencyVersionError,
+    comp_excs.IncompatibleThirdPartyDependencyVersionError,
 ):
     """
     An error that is raised when a third-party dependency required by a plugin is
@@ -423,7 +423,7 @@ class IncompatibleThirdPartyDependencyVersionError(
 
 class ComponentDependencyNotFoundError(
     ListenerProfileDependencyError,
-    comp_svc_excs.ComponentDependencyNotFoundError,
+    comp_excs.ComponentDependencyNotFoundError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is not
@@ -445,7 +445,7 @@ class ComponentDependencyNotFoundError(
 
 class IncompatibleComponentDependencyVersionError(
     ListenerProfileDependencyError,
-    comp_svc_excs.IncompatibleComponentDependencyVersionError,
+    comp_excs.IncompatibleComponentDependencyVersionError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is
@@ -471,7 +471,7 @@ class IncompatibleComponentDependencyVersionError(
 
 class ListenerProfileDependsOnInvalidComponentDependencyError(
     ListenerProfileDependencyError,
-    comp_svc_excs.ComponentDependsOnInvalidComponentDependencyError,
+    comp_excs.ComponentDependsOnInvalidComponentDependencyError,
 ):
     """
     An error that is raised when a plugin depends on another plugin dependency that
@@ -493,7 +493,7 @@ class ListenerProfileDependsOnInvalidComponentDependencyError(
 
 class ComponentDependencyNotRunningError(
     ListenerProfileDependencyError,
-    comp_svc_excs.ComponentDependencyNotRunningError,
+    comp_excs.ComponentDependencyNotRunningError,
 ):
     """
     An error that is raised when a plugin dependency required by a plugin is present but

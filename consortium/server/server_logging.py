@@ -1,5 +1,4 @@
 import sys
-from collections import defaultdict
 from enum import StrEnum
 
 from loguru import logger
@@ -16,21 +15,24 @@ class LoggerType(StrEnum):
     GENERATOR_LOGGER = "GENERATOR_LOGGER"
     EVENT_HOOK_LOGGER = "EVENT_HOOKS_LOGGER"
     PLUGIN_LOGGER = "PLUGIN_LOGGER"
-    API_LOGGER = "API_LOGGER"
+    REST_API_LOGGER = "REST_API_LOGGER"
+    EVENTS_API_LOGGER = "EVENTS_API_LOGGER"
     SERVICE_LOGGER = "SERVICE_LOGGER"
     SERVER_LOGGER = "SERVER_LOGGER"
 
 
 def log_formatter(record):
-    logger_type_to_color_str_map = defaultdict(lambda: "<dim><white>")
-    logger_type_to_color_str_map[LoggerType.LISTENER_LOGGER] = "<bold><blue>"
-    logger_type_to_color_str_map[LoggerType.AGENT_LOGGER] = "<bold><red>"
-    logger_type_to_color_str_map[LoggerType.GENERATOR_LOGGER] = "<bold><green>"
-    logger_type_to_color_str_map[LoggerType.EVENT_HOOK_LOGGER] = "<bold><yellow>"
-    logger_type_to_color_str_map[LoggerType.PLUGIN_LOGGER] = "<bold><cyan>"
-    logger_type_to_color_str_map[LoggerType.API_LOGGER] = "<bold><magenta>"
-    logger_type_to_color_str_map[LoggerType.SERVICE_LOGGER] = "<bold><magenta>"
-    logger_type_to_color_str_map[LoggerType.SERVER_LOGGER] = "<bold><magenta>"
+    logger_type_to_color_str_map = {
+        LoggerType.LISTENER_LOGGER: "<bold><blue>",
+        LoggerType.AGENT_LOGGER: "<bold><red>",
+        LoggerType.GENERATOR_LOGGER: "<bold><green>",
+        LoggerType.EVENT_HOOK_LOGGER: "<bold><yellow>",
+        LoggerType.PLUGIN_LOGGER: "<bold><cyan>",
+        LoggerType.REST_API_LOGGER: "<bold><magenta>",
+        LoggerType.EVENTS_API_LOGGER: "<bold><magenta>",
+        LoggerType.SERVICE_LOGGER: "<bold><magenta>",
+        LoggerType.SERVER_LOGGER: "<bold><magenta>",
+    }
 
     logger_type = record["extra"].get("logger_type")
 

@@ -1,9 +1,23 @@
+"""
+Exception hierarchy of the broadly grouped domain exceptions for `BaseConsortiumError`:
+
+- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
+    - [`ListenersError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersError]
+        - [`ListenersFrameworkError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersFrameworkError]
+        - [`ListenersServiceError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersServiceError]
+"""
+
 from typing import Any
 
 
 class BaseConsortiumError(Exception):
     """
     Base exception for all errors that occur within Consortium.
+
+    These exceptions are raised either by Consortium's core framework components or by
+    services built on top of those components and are broadly grouped into either
+    `<Domain>FrameworkError` or `<Domain>ServiceError` subclasses depending on
+    they layer in which they originated.
 
     Attributes:
         code: A **stable, machine-readable identifier** for the specific type of

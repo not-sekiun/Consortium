@@ -20,14 +20,12 @@ Example:
     )
     ```
 
-The `__all__` variable is set to only include the options classes along with the
-[`OptionType`][consortium.framework.options.option_types.OptionType] enum so you can
-(but are not recommended to) import all the options classes at once using the following
-import statement:
+Additionally, the options framework provides a set of validating functions that can be
+used to validate option values.
 
 Example:
     ```python
-    from consortium.framework.options import *
+    from consortium.framework.options import validate_is_ip_address
     ```
 """
 
@@ -39,6 +37,18 @@ from consortium.framework.options.single_value_option import SingleValueOption
 from consortium.framework.options.toggleable_choices_value_option import (
     ToggleableChoicesValueOption,
 )
+from consortium.framework.options.validating_functions import (
+    validate_is_cidr,
+    validate_is_datetime,
+    validate_is_directory_and_exists,
+    validate_is_file_and_exists,
+    validate_is_filesystem_path_and_exists,
+    validate_is_http_url,
+    validate_is_ip_address,
+    validate_is_url,
+    validate_is_url_path,
+    validate_is_uuid4,
+)
 
 __all__ = [
     "OptionType",
@@ -47,4 +57,14 @@ __all__ = [
     "ChoiceValueOption",
     "ToggleableChoicesValueOption",
     "DictionaryValueOption",
+    "validate_is_url_path",
+    "validate_is_filesystem_path_and_exists",
+    "validate_is_url",
+    "validate_is_cidr",
+    "validate_is_datetime",
+    "validate_is_uuid4",
+    "validate_is_http_url",
+    "validate_is_ip_address",
+    "validate_is_directory_and_exists",
+    "validate_is_file_and_exists",
 ]

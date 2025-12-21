@@ -295,7 +295,7 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
     code = "USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR"
 
     @classmethod
-    def during_user_account_creation(
+    def _during_user_account_creation(
         cls,
         username: str,
     ) -> UserAccountUsernameAlreadyExistsError:
@@ -307,7 +307,7 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
         )
 
     @classmethod
-    def during_user_account_modification(
+    def _during_user_account_modification(
         cls,
         user_account_str: str,
         username: str,
@@ -320,7 +320,7 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
         )
 
     @classmethod
-    def during_user_accounts_file_loading(
+    def _during_user_accounts_file_loading(
         cls,
         user_accounts_filepath: str,
         username: str,
@@ -346,7 +346,7 @@ class EmptyUserAccountUsernameError(UserAccountManagementError):
     code = "EMPTY_USER_ACCOUNT_USERNAME_ERROR"
 
     @classmethod
-    def during_user_account_creation(cls) -> EmptyUserAccountUsernameError:
+    def _during_user_account_creation(cls) -> EmptyUserAccountUsernameError:
         return cls(
             message=(
                 "Failed to create the user account. The provided username "
@@ -355,7 +355,7 @@ class EmptyUserAccountUsernameError(UserAccountManagementError):
         )
 
     @classmethod
-    def during_user_account_modification(
+    def _during_user_account_modification(
         cls,
         user_account_str: str,
     ) -> EmptyUserAccountUsernameError:
@@ -375,7 +375,7 @@ class EmptyUserAccountPasswordError(UserAccountManagementError):
     code = "EMPTY_USER_ACCOUNT_PASSWORD_ERROR"
 
     @classmethod
-    def during_user_account_creation(cls) -> EmptyUserAccountPasswordError:
+    def _during_user_account_creation(cls) -> EmptyUserAccountPasswordError:
         return cls(
             message=(
                 "Failed to create the user account. The provided password "
@@ -384,7 +384,7 @@ class EmptyUserAccountPasswordError(UserAccountManagementError):
         )
 
     @classmethod
-    def during_user_account_modification(
+    def _during_user_account_modification(
         cls,
         user_account_str: str,
     ) -> EmptyUserAccountPasswordError:
@@ -405,7 +405,7 @@ class InvalidUserAccountRoleError(UserAccountManagementError):
     code = "INVALID_USER_ACCOUNT_ROLE_ERROR"
 
     @classmethod
-    def during_user_account_creation(cls, role: str) -> InvalidUserAccountRoleError:
+    def _during_user_account_creation(cls, role: str) -> InvalidUserAccountRoleError:
         return cls(
             message=(
                 f"Failed to create the user account. The provided role '{role}' "
@@ -415,7 +415,7 @@ class InvalidUserAccountRoleError(UserAccountManagementError):
         )
 
     @classmethod
-    def during_user_account_modification(
+    def _during_user_account_modification(
         cls,
         user_account_str: str,
         role: str,
