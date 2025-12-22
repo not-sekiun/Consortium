@@ -11,7 +11,7 @@ class ClientConfig:
 
 
 @dataclass
-class ClientRelease:
+class Release:
     version: str
     codename: str  # codenames are reserved for every feature release
     datetime_released: datetime | None

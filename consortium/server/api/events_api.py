@@ -34,10 +34,8 @@ from consortium.server.server_config import (
     JSON_WEB_TOKEN_SECRET_KEY,
 )
 from consortium.server.server_dependencies import AuthorizeUserRequest
+from consortium.server.server_logging import LoggerType
 
-events_service = server_singletons.events_service
-users_service = server_singletons.users_service
-websockets_server_logger = logger.bind(logger_name="Websockets Server")
 router = APIRouter(
     prefix="/api/events",
     responses={
@@ -49,6 +47,13 @@ router = APIRouter(
     tags=["Events API"],
 )
 
+_events_service = server_singletons.events_service
+_users_service = server_singletons.users_service
+
+_logger = logger.bind(
+    logger_name="Websocket Events API",
+    logger_type=LoggerType.WEBSOCKET_EVENTS_API_LOGGER,
+)
 
 _client_action_websocket_message_json_schema = {
     "type": "object",
@@ -65,7 +70,7 @@ _client_action_websocket_message_json_schema = {
         },
         "events": {
             "type": "array",
-            "items": {"type": "string", "enum": events_service.get_all_event_types()},
+            "items": {"type": "string", "enum": _events_service.get_all_event_types()},
         },
     },
     "required": ["action"],
@@ -110,7 +115,7 @@ class _WebsocketManager:
     ) -> list[str]:
         try:
             subscribed_events = (
-                events_service.get_event_types_from_registered_event_handler(
+                _events_service.get_event_types_from_registered_event_handler(
                     event_handler=websocket_event_sender,
                 )
             )
@@ -125,7 +130,7 @@ class _WebsocketManager:
         self,
         websocket_event_sender: Callable[[Event], Awaitable[None]],
     ) -> list[str]:
-        all_events = events_service.get_all_event_types()
+        all_events = _events_service.get_all_event_types()
         subscribed_events = self._get_subscribed_events_for_websocket_event_sender(
             websocket_event_sender=websocket_event_sender,
         )
@@ -190,7 +195,7 @@ class _WebsocketManager:
         }
 
     async def _handle_get_all_events_action(self) -> None:
-        all_events = events_service.get_all_event_types()
+        all_events = _events_service.get_all_event_types()
         await self._websocket.send_json(
             self._construct_success_response_json(
                 message="Successfully retrieved all events.",
@@ -260,7 +265,7 @@ class _WebsocketManager:
             return
 
         for event in events_to_subscribe_to:
-            events_service.register_event_handler_to_event_type(
+            _events_service.register_event_handler_to_event_type(
                 event_type=event,
                 event_handler=self._websocket_event_sender,
             )
@@ -308,7 +313,7 @@ class _WebsocketManager:
             return
 
         for event in events_to_unsubscribe_from:
-            events_service.deregister_event_handler_from_event_type(
+            _events_service.deregister_event_handler_from_event_type(
                 event_type=event,
                 event_handler=self._websocket_event_sender,
             )
@@ -394,30 +399,30 @@ async def websocket_endpoint(
             algorithms=JSON_WEB_TOKEN_ALGORITHMS,
         )
         access_token = decoded_json_web_token["sub"]
-        websockets_server_logger.debug(
+        _logger.debug(
             "Received WebSocket connection request with an access token in the "
             "Authorization header.",
         )
-        user = users_service.get_user_by_access_token(
+        user = _users_service.get_user_by_access_token(
             access_token=access_token,
         )
-        websockets_server_logger.info(
+        _logger.info(
             f"{user} made a WebSocket connection to the events API.",
         )
     except (KeyError, IndexError):
-        websockets_server_logger.debug(
+        _logger.debug(
             "Failed to authorize the WebSocket connection request. The Authorization "
             "header was not provided.",
         )
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
     except jwt.exceptions.InvalidTokenError:
-        websockets_server_logger.debug(
+        _logger.debug(
             "Failed to authorize the WebSocket connection request. The value provided "
             "for the Authorization header was not a validly formatted JSON Web Token.",
         )
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
     except UserAccessTokenNotFoundError:
-        websockets_server_logger.debug(
+        _logger.debug(
             "Failed to authorize the WebSocket connection request. The access "
             "token provided in the JSON Web Token was not found.",
         )
@@ -430,7 +435,7 @@ async def websocket_endpoint(
         UserPermissions.USE_EVENTS_WEBSOCKET
         not in AuthorizeUserRequest.ROLE_PERMISSIONS[user.role]
     ):
-        websockets_server_logger.debug(
+        _logger.debug(
             f"Rejected WebSocket connection attempt because the user '{user}' had "
             f"insufficient permissions to interact with the events API.",
         )

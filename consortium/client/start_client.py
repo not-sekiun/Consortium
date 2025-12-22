@@ -52,21 +52,21 @@ async def _start_client(arguments: argparse.Namespace) -> None:
 
     # Configure logging.
     if arguments.debug:
-        log_level = "DEBUG"
+        level = "DEBUG"
     else:
-        log_level = "INFO"
+        level = "INFO"
     logger.remove()  # Remove all default loggers.
     logger.add(
         # We are using ISO8601 formatted datetime strings but ":" is invalid in
         # filenames, so we replace it with the character "-".
         f"{CONSORTIUM_CLIENT_LOGS_DIRECTORY_PATH}/{datetime.now().isoformat().replace(':', '-')}.log",
         format="[{time:YYYY-MM-DDTHH:mm:ssZ}] {level:<8} {extra[logger_name]}: {message}",
-        level=log_level,
+        level=level,
     )
     logger.add(
         sys.stdout,
         colorize=True,
-        level=log_level,
+        level=level,
     )
     logger.level("TRACE", color="<bold><cyan>")
     logger.level("DEBUG", color="<bold><green>")

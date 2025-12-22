@@ -16,7 +16,7 @@ class LoggerType(StrEnum):
     EVENT_HOOK_LOGGER = "EVENT_HOOKS_LOGGER"
     PLUGIN_LOGGER = "PLUGIN_LOGGER"
     REST_API_LOGGER = "REST_API_LOGGER"
-    EVENTS_API_LOGGER = "EVENTS_API_LOGGER"
+    WEBSOCKET_EVENTS_API_LOGGER = "WEBSOCKET_EVENTS_API_LOGGER"
     SERVICE_LOGGER = "SERVICE_LOGGER"
     SERVER_LOGGER = "SERVER_LOGGER"
 
@@ -29,7 +29,7 @@ def log_formatter(record):
         LoggerType.EVENT_HOOK_LOGGER: "<bold><yellow>",
         LoggerType.PLUGIN_LOGGER: "<bold><cyan>",
         LoggerType.REST_API_LOGGER: "<bold><magenta>",
-        LoggerType.EVENTS_API_LOGGER: "<bold><magenta>",
+        LoggerType.WEBSOCKET_EVENTS_API_LOGGER: "<bold><magenta>",
         LoggerType.SERVICE_LOGGER: "<bold><magenta>",
         LoggerType.SERVER_LOGGER: "<bold><magenta>",
     }
@@ -53,18 +53,18 @@ def log_formatter(record):
 def configure_logger(logging_config: LoggingConfigModel):
     logger.remove()  # Remove all default loggers.
     logger.add(
-        logging_config.log_file_path,
+        logging_config.log_file,
         format="{time:YYYY-MM-DDTHH:mm:ss.SSSZ} {level:<8} {extra[logger_name]}: {message}",
-        level=logging_config.log_level,
-        rotation=logging_config.log_file_rotation,
-        retention=logging_config.log_file_retention,
+        level=logging_config.level,
+        rotation=logging_config.rotation,
+        retention=logging_config.retention,
         colorize=False,
     )
     logger.add(
         sys.stdout,
         colorize=logging_config.colorize,
         format=log_formatter,
-        level=logging_config.log_level,
+        level=logging_config.level,
     )
     logger.level("TRACE", color="<dim><magenta>")
     logger.level("DEBUG", color="<bold><cyan>")

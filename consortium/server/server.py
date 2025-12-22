@@ -34,7 +34,6 @@ from consortium.server.api.user_accounts_api import router as user_accounts_api_
 from consortium.server.api.users_api import router as users_api_router
 from consortium.server.models.config_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
-from consortium.server.server_config import SERVER_RELEASE
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
@@ -125,8 +124,9 @@ class Server:
 
     @asynccontextmanager
     async def _lifespan(self, _app: FastAPI) -> AsyncGenerator[None, Any]:
+        server_release = server_singletons.release_service.release
         self._logger.info(
-            f'Starting server (v{SERVER_RELEASE.version} "{SERVER_RELEASE.codename}") '
+            f'Starting server (v{server_release.version} "{server_release.codename}") '
             f"at {self.server_config.local_host}:{self.server_config.local_port}...",
         )
         self.status = ServerStatus.RUNNING

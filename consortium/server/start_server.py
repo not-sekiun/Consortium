@@ -72,18 +72,16 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         with open(logging_config_filepath) as file:
             json_data = json.load(file)
         logging_config = LoggingConfigModel(
-            log_level="DEBUG"
-            if arguments.debug
-            else json_data.get("log_level", "INFO"),
-            log_file_path=json_data.get(
-                "log_file_path",
+            level="DEBUG" if arguments.debug else json_data.get("level", "INFO"),
+            log_file=json_data.get(
+                "log_file",
                 str(
                     CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH
                     / "{time:YYYY-MM-DDTHH-mm-ss}.log"
                 ),
             ),
-            log_file_rotation=json_data.get("log_file_rotation", None),
-            log_file_retention=json_data.get("log_file_retention", 1),
+            rotation=json_data.get("rotation", None),
+            retention=json_data.get("retention", 1),
             colorize=json_data.get("colorize", True),
         )
     except FileNotFoundError:

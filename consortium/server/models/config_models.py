@@ -12,7 +12,7 @@ class ServerConfigModel(BaseModel):
 
 
 class LoggingConfigModel(BaseModel):
-    log_level: Literal[
+    level: Literal[
         "TRACE",
         "DEBUG",
         "INFO",
@@ -21,7 +21,7 @@ class LoggingConfigModel(BaseModel):
         "ERROR",
         "CRITICAL",
     ]
-    log_file_path: str
-    log_file_rotation: str | int | None
-    log_file_retention: str | int | None
+    log_file: str
+    rotation: str | int | None
+    retention: str | int | None
     colorize: bool

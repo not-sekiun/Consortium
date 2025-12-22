@@ -17,20 +17,29 @@ from consortium.server.services.listener_templates_service import (
 from consortium.server.services.listeners_service import ListenersService
 from consortium.server.services.payloads_service import PayloadsService
 from consortium.server.services.plugins_service import PluginsService
+from consortium.server.services.release_service import ReleaseService
 from consortium.server.services.repository_service import RepositoryService
 from consortium.server.services.user_accounts_service import UserAccountsService
 from consortium.server.services.users_service import UsersService
+
+# The event hooks, listener profiles, agent profiles, and plugins services need the
+# server release service to be dependency injected into them when checking their '
+# respective components for compatibility with the current server version. Therefore,
+# we instantiate the server release service first.
+release_service = ReleaseService()
 
 # The event hooks, listeners, agent generators, agents, and users services need the
 # events service to be dependency injected into them so we instantiate the events
 # service first.
 events_service = EventsService()
-event_hooks_service = EventHooksService(events_service=events_service)
+event_hooks_service = EventHooksService(
+    events_service=events_service, release_service=release_service
+)
 
 # Agent profiles service needs to be instantiated before the agent templates service
 # because the agent templates service relies on the agent profiles service to retrieve
 # agent profiles.
-agent_profiles_service = AgentProfilesService()
+agent_profiles_service = AgentProfilesService(release_service=release_service)
 agent_templates_service = AgentTemplatesService(
     agent_profiles_service=agent_profiles_service,
 )
@@ -42,7 +51,7 @@ agent_generators_service = AgentGeneratorsService(
 # Listener profiles service needs to be instantiated before the listener templates
 # service because the listener templates service relies on the listener profiles
 # service to retrieve listener profiles.
-listener_profiles_service = ListenerProfilesService()
+listener_profiles_service = ListenerProfilesService(release_service=release_service)
 listener_templates_service = ListenerTemplatesService(
     listener_profiles_service=listener_profiles_service,
 )
@@ -84,7 +93,7 @@ users_service = UsersService()
 
 # The plugins service needs to be instantiated last so that the loaded plugins have
 # access to all the other services.
-plugins_service = PluginsService()
+plugins_service = PluginsService(release_service=release_service)
 
 # The server instance is instantiated dynamically at `start_server.py`. The configuration
 # values need to be passed into it over there before the instance can be assigned here.

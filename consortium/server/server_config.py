@@ -1,9 +1,6 @@
 import datetime
-import json
 import pathlib
 import secrets
-
-from consortium.server.models.server_models import ServerReleaseModel
 
 # JSON Web Token generation related config variables
 JSON_WEB_TOKEN_SECRET_KEY = secrets.token_hex(32)
@@ -47,9 +44,3 @@ CONSORTIUM_PLUGINS_DIRECTORY_PATH = CONSORTIUM_COMPONENTS_DIRECTORY_PATH / "plug
 CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH = (
     CONSORTIUM_COMPONENTS_DIRECTORY_PATH / "event_hooks"
 )
-
-# Server release information
-with open(
-    str(CONSORTIUM_RELEASE_JSON_FILE_PATH),
-) as file:
-    SERVER_RELEASE = ServerReleaseModel(**json.load(fp=file))

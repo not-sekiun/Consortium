@@ -20,12 +20,15 @@ from consortium.server.services.component_registry_services.event_hook_registry_
     EventHookRegistryService,
 )
 from consortium.server.services.events_service import EventsService
+from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class EventHooksService:
-    def __init__(self, events_service: EventsService):
-        self._event_hook_loader_service = EventHookLoaderService()
+    def __init__(self, events_service: EventsService, release_service: ReleaseService):
+        self._event_hook_loader_service = EventHookLoaderService(
+            release_service=release_service
+        )
         self._event_hook_registry_service = EventHookRegistryService(
             component_loader_service=self._event_hook_loader_service,
             component_framework_directory=CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,

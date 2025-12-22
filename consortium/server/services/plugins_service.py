@@ -22,13 +22,16 @@ from consortium.server.services.component_loader_services.plugin_loader_service 
 from consortium.server.services.component_registry_services.plugin_registry_service import (
     PluginRegistryService,
 )
+from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class PluginsService:
-    def __init__(self):
+    def __init__(self, release_service: ReleaseService):
         self._plugins = {}
-        self._plugin_loader_service = PluginLoaderService()
+        self._plugin_loader_service = PluginLoaderService(
+            release_service=release_service
+        )
         self._plugin_registry_service = PluginRegistryService(
             component_loader_service=self._plugin_loader_service,
             component_framework_directory=CONSORTIUM_PLUGINS_DIRECTORY_PATH,

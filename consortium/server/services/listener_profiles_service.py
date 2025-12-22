@@ -19,6 +19,7 @@ from consortium.server.services.component_loader_services.listener_profile_loade
 from consortium.server.services.component_registry_services.listener_profile_registry_service import (
     ListenerProfileRegistryService,
 )
+from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
@@ -26,8 +27,10 @@ from consortium.server.utils import log_and_propagate_error_on_service_method
 # accessed by the server's internal services, plugins, and event hooks. The external
 # forward facing REST API does not have access to this service.
 class ListenerProfilesService:
-    def __init__(self):
-        self._listener_profile_loader_service = ListenerProfileLoaderService()
+    def __init__(self, release_service: ReleaseService) -> None:
+        self._listener_profile_loader_service = ListenerProfileLoaderService(
+            release_service=release_service,
+        )
         self._listener_profile_registry_service = ListenerProfileRegistryService(
             component_loader_service=self._listener_profile_loader_service,
             component_framework_directory=CONSORTIUM_LISTENERS_DIRECTORY_PATH,

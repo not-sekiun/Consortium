@@ -10,9 +10,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
 )
 from consortium.server.models.config_models import ServerConfigModel
-from consortium.server.models.server_models import ServerReleaseModel
+from consortium.server.models.server_models import ReleaseModel
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_config import SERVER_RELEASE
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
 router = APIRouter(
@@ -26,11 +25,14 @@ router = APIRouter(
     tags=["Server API"],
 )
 
+_server = server_singletons.server
+_release_service = server_singletons.release_service
+
 
 @router.get(
     "/release",
     responses={
-        200: {"model": ServerReleaseModel},
+        200: {"model": ReleaseModel},
     },
 )
 async def get_server_release(
@@ -38,8 +40,8 @@ async def get_server_release(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_SERVER_RELEASE)),
     ],
-) -> ServerReleaseModel:
-    return SERVER_RELEASE
+) -> ReleaseModel:
+    return _release_service.release
 
 
 @router.get(

@@ -36,7 +36,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         super().__init__(
             prompt=HTML(
                 f"<b>Consortium (<ansiblue>Listeners</ansiblue>: "
-                f"<ansiblue>{listener_template['name']}' "
+                f"<ansiblue>{listener_template['name']} "
                 f"({listener_template['listener_template_id']})</ansiblue>) > </b>",
             ),
             commands=(

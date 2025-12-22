@@ -568,11 +568,6 @@ class ClientRESTAPIConnection:
                 f"{response_json['error']['code']}: "
                 f"{response_json['error']['message']}",
             )
-        else:
-            raise AssertionError(
-                "The REST API response does not contain an error field "
-                "despite indicating an error occurred.",
-            )
 
     def _log_request_and_response(
         self,

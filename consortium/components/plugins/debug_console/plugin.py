@@ -6,10 +6,10 @@ from loguru import logger
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.formatted_text.html import HTML
+from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.patch_stdout import StdoutProxy, patch_stdout
 from prompt_toolkit.styles import Style
 
-# import consortium.server.server_singletons as server_singletons  # TODO: Transition to self.server_services
 from consortium.framework.plugins import BasePlugin
 from consortium.server.server_logging import log_formatter
 
@@ -17,7 +17,7 @@ from consortium.server.server_logging import log_formatter
 class _ServicesMethodsCompleter(Completer):
     def __init__(
         self,
-        services_methods_completion_dict: dict[str, dict[str, None]],
+        services_methods_completion_dict: dict[str, dict[str, None] | None],
         server_services,
     ):
         self._services_methods_completions_dict = services_methods_completion_dict
@@ -57,7 +57,7 @@ class _ServicesMethodsCompleter(Completer):
         # When we are completing members, the key list will have exactly one element.
         # This means we are now completing attrs and methods. We return a tuple
         # indicating if the member is callable or not along with a bool indicating
-        # whether we are completing for members of a service or services.
+        # whether we are completing for members of a service or services themselves.
         if len(key_list) == 1:
             return True, [
                 (
@@ -161,22 +161,15 @@ class Plugin(BasePlugin):
         logger.add(
             StdoutProxy(raw=True),
             format=log_formatter,
-            level=logging_config.log_level,  # TODO: Make the names fit more closely with the param chagne log_level to level maybe
+            level=logging_config.level,
             colorize=logging_config.colorize,
         )
 
-        print(vars(self.server_services))
-
     async def on_running(self) -> None:
-        # Super fucking cursed dictionary comprehension within a dictionary
-        # comprehension. Essentially what we are doing is constructing a dictionary
-        # with keys of type string, each key corresponds to the symbol of a service.
-        # The values of those keys is another dictionary with keys that now correspond
-        # to the public methods (any property that is callable and that does not start
-        # with an underscore) of each service. This lets us dynamically build the
-        # completer based on whatever services are added to the framework and made
-        # publicly accessible from the `server_singletons` module. All this for a
-        # fucking autocomplete feature, whew.
+        # Construct completions dict. The keys are the symbols of every service in
+        # `self.server_services`. The values are dictionaries with keys that are the
+        # public methods and attributes of each service and whose values are `None` to
+        # indicate termination of auto-completion.
         services_methods_completions_dict = {
             service_name: {
                 member: None for member in dir(service) if not member.startswith("_")
@@ -198,12 +191,32 @@ class Plugin(BasePlugin):
             ("class:debug", "Debug"),
             ("class:surrounding_prompt", ") > "),
         ]
-        session = PromptSession(
+        history = InMemoryHistory()
+        # Passing in a `bottom_toolbar` in `prompt_async` will mutate the
+        # `PromptSession` object such that every subsequent call has the bottom
+        # toolbar. Passing in `None` does not remove the bottom toolbar so we need to
+        # have separate `PromptSessions` here
+        single_line_input_session = PromptSession(
             completer=_ServicesMethodsCompleter(
                 services_methods_completion_dict=services_methods_completions_dict,
                 server_services=self.server_services,
             ),
             style=style,
+            history=history,
+        )
+        multi_line_input_session = PromptSession(
+            completer=_ServicesMethodsCompleter(
+                services_methods_completion_dict=services_methods_completions_dict,
+                server_services=self.server_services,
+            ),
+            style=style,
+            multiline=True,
+            history=history,
+            bottom_toolbar=HTML(
+                "<bold>Press [Meta+Enter] or [Esc] followed by [Enter] "
+                "to accept input. Press [Ctrl+C] to cancel input."
+                "</bold>",
+            ),
         )
         globals_dict = vars(self.server_services)
 
@@ -211,17 +224,9 @@ class Plugin(BasePlugin):
             while True:
                 try:
                     expression = (
-                        # We need to explicitly provide the `multiline` and
-                        # `bottom_toolbar` parameters here because for some reason
-                        # those parameter values modified and persisted across
-                        # different calls to `prompt_async()`. This means that if a
-                        # multiline prompt is called for `prompt_async()` once then
-                        # those parameters that made it multiline will apply to the
-                        # single line prompt too unless explicitly set otherwise.
-                        await session.prompt_async(
+                        await single_line_input_session.prompt_async(
                             prompt,
                             style=style,
-                            multiline=False,
                         )
                     ).rstrip(" ")
 
@@ -241,7 +246,7 @@ class Plugin(BasePlugin):
                     # instantiating variables because the user is not aware of any
                     # implicit scoping happening in the background.
                     random_identifier = "_" + "".join(
-                        [random.choice(string.ascii_letters) for _ in range(10)],
+                        [random.choice(string.ascii_letters) for _ in range(8)],
                     )
                     temporary_function = (
                         f"async def {random_identifier}():"
@@ -295,19 +300,13 @@ class Plugin(BasePlugin):
                             return HTML(f"<bold><ansiwhite>{text}</ansiwhite></bold>")
 
                     try:
-                        multiline_input = await session.prompt_async(
+                        multi_line_input = await multi_line_input_session.prompt_async(
                             ".................... ",
-                            multiline=True,
                             prompt_continuation=prompt_continuation,
-                            bottom_toolbar=HTML(
-                                "<bold>Press [Meta+Enter] or [Esc] followed by [Enter] "
-                                "to accept input. Press [Ctrl+C] to cancel input."
-                                "</bold>",
-                            ),
                         )
                     except KeyboardInterrupt:
                         continue
-                    indent_input_lines_buffer = [expression] + multiline_input.split(
+                    indent_input_lines_buffer = [expression] + multi_line_input.split(
                         "\n",
                     )
 
@@ -318,12 +317,7 @@ class Plugin(BasePlugin):
                             indent_input_lines_buffer[1].lstrip(),
                         )
 
-                        # Create a temporary function to hold the code block. This
-                        # allows execution of asynchronous code blocks. At the very end
-                        # of execution the temporary function updates the global scope
-                        # with its local scope to retain the behavior of the interpreter
-                        # instantiating variables because the user is not aware of any
-                        # implicit scoping happening in the background.
+                        # Same procedure as executing single line inputs as above.
                         random_identifier = "_" + "".join(
                             [random.choice(string.ascii_letters) for _ in range(10)],
                         )
@@ -334,12 +328,8 @@ class Plugin(BasePlugin):
                             + f"\n{indent}".join(indent_input_lines_buffer)
                             + f"\n{indent}globals().update(locals())"
                         )
-                        # Create the temporary function to house asynchronous code.
                         exec(temporary_function, globals_dict)
-                        # Evaluate the function to obtain the coroutine that can then
-                        # be awaited in the current event loop.
                         await eval(f"{random_identifier}()", globals_dict)
-                        # Remove the dummy function from the global scope.
                         del globals_dict[random_identifier]
                     except Exception as exc:
                         _print_custom_formatted_exception_message(

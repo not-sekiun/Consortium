@@ -1,7 +1,7 @@
 {
-    "log_level": "INFO",
-    "log_file_path": "data/server/logs/{time}.log",
-    "log_file_rotation": null,
-    "log_file_retention": 1,
+    "level": "INFO",
+    "log_file": "data/server/logs/{time}.log",
+    "rotation": null,
+    "retention": 1,
     "colorize": true
 }

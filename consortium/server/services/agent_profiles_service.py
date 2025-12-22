@@ -19,6 +19,7 @@ from consortium.server.services.component_loader_services.agent_profile_loader_s
 from consortium.server.services.component_registry_services.agent_profile_registry_service import (
     AgentProfileRegistryService,
 )
+from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
@@ -26,8 +27,10 @@ from consortium.server.utils import log_and_propagate_error_on_service_method
 # accessed by the server's internal services, plugins, and event hooks. The external
 # forward facing REST API should not have access to this service.
 class AgentProfilesService:
-    def __init__(self):
-        self._agent_profile_loader_service = AgentProfileLoaderService()
+    def __init__(self, release_service: ReleaseService) -> None:
+        self._agent_profile_loader_service = AgentProfileLoaderService(
+            release_service=release_service,
+        )
         self._agent_profile_registry_service = AgentProfileRegistryService(
             component_loader_service=self._agent_profile_loader_service,
             component_framework_directory=CONSORTIUM_AGENTS_DIRECTORY_PATH,

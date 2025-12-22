@@ -12,7 +12,6 @@ from rich.spinner import Spinner
 from consortium.framework.plugins import BasePlugin
 from consortium.server.server_config import (
     CONSORTIUM_HOME_DIRECTORY_PATH,
-    SERVER_RELEASE,
 )
 
 
@@ -47,10 +46,10 @@ class Plugin(BasePlugin):
             return proc.returncode, proc.stdout, proc.stderr
 
     async def _get_latest_release_json_data(self) -> dict[str, str] | None:
-        latest_project_version_file_url = "https://raw.githubusercontent.com/not-sekiun/Consortium/refs/heads/main/data/release.json"
+        latest_release_json_file_url = "https://raw.githubusercontent.com/not-sekiun/Consortium/refs/heads/main/data/release.json"
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.get(latest_project_version_file_url) as response:
+                async with session.get(latest_release_json_file_url) as response:
                     if response.status != 200:
                         self.logger.error(
                             "Failed to retrieve latest release data. HTTP response status "
@@ -83,13 +82,13 @@ class Plugin(BasePlugin):
         if json_data is None:
             return
         latest_release_datetime = datetime.fromisoformat(json_data["datetime_released"])
-        current_release_datetime = SERVER_RELEASE.datetime_released
+        current_release = self.server_services.release_service.release
 
-        if latest_release_datetime > current_release_datetime:
+        if latest_release_datetime > current_release.datetime:
             self.logger.info("New release found.")
             self.logger.info(
-                f"- Current release: '{SERVER_RELEASE.codename}' "
-                f"(v{SERVER_RELEASE.version}) released at {SERVER_RELEASE.datetime_released}",
+                f"- Current release: '{current_release.codename}' "
+                f"(v{current_release.version}) released at {current_release.datetime_released}",
             )
             self.logger.info(
                 f"- Latest release: '{json_data['codename']}' (v{json_data['version']}) "

@@ -31,8 +31,8 @@ from consortium.server.exceptions.consortium_exceptions.components_consortium_ex
 )
 from consortium.server.server_config import (
     CONSORTIUM_HOME_DIRECTORY_PATH,
-    SERVER_RELEASE,
 )
+from consortium.server.services.release_service import ReleaseService
 
 Component = TypeVar("Component")
 
@@ -44,6 +44,9 @@ class ComponentLoaderService[Component]:
     _component_type: type[Component]
     _component_framework_error: type[Exception]
     _manifest_json_schema: dict[str, Any]
+
+    def __init__(self, release_service: ReleaseService):
+        self._release = release_service.release
 
     @staticmethod
     def _get_manifest_json_file_path(
@@ -256,7 +259,7 @@ class ComponentLoaderService[Component]:
         # it is compatible.
         if (
             component_framework_version
-            and version.Version(SERVER_RELEASE.version)
+            and version.Version(self._release.version)
             not in component_framework_version
         ):
             raise IncompatibleComponentFrameworkVersionError(
@@ -264,7 +267,7 @@ class ComponentLoaderService[Component]:
                 required_version=str(
                     component_class.compatible_framework_version,
                 ),
-                current_version=SERVER_RELEASE.version,
+                current_version=self._release.version,
             )
 
     def _validate_component_class(

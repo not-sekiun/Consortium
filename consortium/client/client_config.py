@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from consortium.client.objects.client_objects import ClientRelease
+from consortium.client.objects.client_objects import Release
 
 # File directory path related config variables. This is necessary since it allows the
 # server to be portable and not rely on hardcoded file paths even if they are relative
@@ -23,4 +23,4 @@ CONSORTIUM_COMMAND_ALIASES_JSON_FILE_PATH = (
 with open(
     str(CONSORTIUM_RELEASE_JSON_FILE_PATH),
 ) as file:
-    CLIENT_RELEASE = ClientRelease(**json.load(fp=file))
+    CLIENT_RELEASE = Release(**json.load(fp=file))
