@@ -7,7 +7,6 @@ from typing import Any, get_type_hints
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-import consortium.server.server_singletons as server_singletons
 from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
@@ -28,50 +27,9 @@ from consortium.server.exceptions.consortium_exceptions.agent_capabilities_conso
     InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
-from consortium.server.objects.repository_objects import (
-    RepositoryDirectory,
-    RepositoryFile,
+from consortium.server.services.agents_file_manager_service import (
+    AgentFileManagerService,
 )
-
-
-class AgentFileManagerService:
-    def __init__(self):
-        # Assets service consists of all uploaded files onto the server that are meant
-        # to be read only by agents.
-        self._assets_service = server_singletons.assets_service
-        self._artifacts_service = server_singletons.artifacts_service
-
-    def get_all_assets(self) -> list[RepositoryFile | RepositoryDirectory]:
-        return self._assets_service.get_all_repository_resources()
-
-    def get_asset_by_asset_id(
-        self,
-        asset_id: str,
-    ) -> RepositoryFile | RepositoryDirectory:
-        return self._assets_service.get_repository_resource_by_resource_id(
-            resource_id=asset_id,
-        )
-
-    def get_all_artifacts(self) -> list[RepositoryFile | RepositoryDirectory]:
-        return self._artifacts_service.get_all_repository_resources()
-
-    def get_artifact_by_artifact_id(
-        self,
-        artifact_id: str,
-    ) -> RepositoryFile | RepositoryDirectory:
-        return self._artifacts_service.get_repository_resource_by_resource_id(
-            resource_id=artifact_id,
-        )
-
-    def read_asset_by_asset_id(self, asset_id: str) -> bytes:
-        raise NotImplementedError
-        # asset = self.get_asset_by_asset_id(asset_id)
-        # return asset.read()
-
-    def write_artifact_by_artifact_id(self, artifact_id: str, data: bytes) -> None:
-        raise NotImplementedError
-        # artifact = self.get_artifact_by_artifact_id(artifact_id)
-        # artifact.write(data)
 
 
 class SupportedOS(StrEnum):

@@ -1,5 +1,6 @@
 import functools
 import inspect
+import types
 import uuid
 from collections.abc import Callable
 
@@ -51,3 +52,15 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
         return async_wrapper
     else:
         return sync_wrapper
+
+
+def construct_server_services_namespace_object(
+    server_singletons: types.ModuleType,
+) -> types.SimpleNamespace:
+    return types.SimpleNamespace(
+        **{
+            attr: getattr(server_singletons, attr)
+            for attr in dir(server_singletons)
+            if attr.endswith("_service") and not attr.startswith("_")
+        },
+    )

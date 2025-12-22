@@ -5,8 +5,6 @@ import sys
 import traceback
 import types
 import uuid
-
-# from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, final, get_type_hints
 
@@ -20,7 +18,6 @@ from consortium.framework._components import (
 from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
     AgentGeneratorAlreadyRunningError,
     AgentGeneratorBuildStepConfigurationParameterTypeError,
-    # AgentGeneratorBuildError,
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorConfigurationParameterTypeError,
     AgentGeneratorCreationParameterTypeError,
@@ -37,24 +34,17 @@ from consortium.server.exceptions.consortium_exceptions.components_consortium_ex
     ComponentStartError,
     ComponentStopError,
 )
-
-# from consortium.framework.agents.agent_generator_objects import (
-#     AgentGeneratorBuildStepStatus,
-# )
 from consortium.server.server_logging import LoggerType
 
 
 class _BaseAgentGeneratorBuildStepModel(BaseModel):
     name: str
     description: str
-    # ignore_failure: bool
 
 
-# class BaseAgentGeneratorBuildStep(ABC):
 class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     name: str
     description: str = ""
-    # ignore_failure: bool = False
 
     def __init__(self):
         self.agent_generator_build_step_id = uuid.uuid4()
@@ -62,7 +52,6 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         self.datetime_stopped = None
         self.environment = types.SimpleNamespace()
         self.parameters = {}
-        # self.status = AgentGeneratorBuildStepStatus()
         self.logger = logger.bind(
             logger_name=f"Agent Generator Build Step {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
@@ -89,7 +78,6 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             _BaseAgentGeneratorBuildStepModel(
                 name=cls.name,
                 description=cls.description,
-                # ignore_failure=cls.ignore_failure,
             )
         except ValidationError as exc:
             attr = exc.errors()[0]["loc"][0]
@@ -107,7 +95,6 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             f"AgentGeneratorBuildStep("
             f"name={self.name!r}, "
             f"description={self.description!r}, "
-            # f"ignore_failure={self.ignore_failure}"
             f")"
         )
 
@@ -173,41 +160,6 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         self.parameters = parameters
         await super().start()
         await self.wait_until_stopped()
-
-    # @abstractmethod
-    # async def on_running(
-    #     self,
-    #     stop_event: asyncio.Event,
-    #     parameters: dict,
-    #     environment: types.SimpleNamespace,
-    # ): ...
-    #
-    # async def start(
-    #     self,
-    #     stop_event: asyncio.Event,
-    #     parameters: dict,
-    #     environment: types.SimpleNamespace,
-    # ):
-    #     self.datetime_started = datetime.now()
-    #     self.status.transition_to_running()
-    #     try:
-    #         await self.on_running(
-    #             stop_event=stop_event,
-    #             parameters=parameters,
-    #             environment=environment,
-    #         )
-    #         self.status.transition_to_completed()
-    #     except AgentGeneratorBuildStepRuntimeError as exc:
-    #         self.status.transition_to_errored(exception=exc)
-    #         raise exc
-    #     except Exception as exc:
-    #         self.status.transition_to_fatal(
-    #             agent_generator_build_step_identifier=str(self),
-    #             exception=exc,
-    #         )
-    #         raise exc
-    #     finally:
-    #         self.datetime_stopped = datetime.now()
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -307,6 +259,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
         self.agent_generator_id = uuid.uuid4()
         self.datetime_created = datetime.now()
         self.environment = types.SimpleNamespace()
+
         self.logger = logger.bind(
             logger_name=f"Agent Generator {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
@@ -362,11 +315,6 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 parameters=self.parameters,
                 environment=self.environment,
             )
-            # await agent_generator_build_step.start(
-            #     stop_event=self.stop_event,
-            #     parameters=self.parameters,
-            #     environment=self.environment,
-            # )
             if self.stop_event.is_set():
                 break
 

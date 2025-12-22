@@ -206,34 +206,6 @@ class Agent:
     def __str__(self) -> str:
         return f"'{self.name}' ({self.agent_id})"
 
-    @property
-    def tasks(self):
-        return self.get_all_tasks()
-
-    @property
-    def queued_tasks(self):
-        return self.get_all_tasks(state=AgentTaskState.QUEUED)
-
-    @property
-    def running_tasks(self):
-        return self.get_all_tasks(state=AgentTaskState.RUNNING)
-
-    @property
-    def completed_tasks(self):
-        return self.get_all_tasks(state=AgentTaskState.COMPLETED)
-
-    @property
-    def results(self):
-        return self.get_all_results()
-
-    @property
-    def successful_results(self):
-        return self.get_all_results(success=True)
-
-    @property
-    def failed_results(self):
-        return self.get_all_results(success=False)
-
     async def submit_task(self, task: AgentTaskModel) -> None:
         # TODO: Convert this to use a lookup dictionary instead of iterating through
         #  all agent capabilities.
@@ -341,6 +313,15 @@ class Agent:
                 *self._completed_tasks.values(),
             ]
 
+    def get_all_queued_tasks(self):
+        return self.get_all_tasks(state=AgentTaskState.QUEUED)
+
+    def get_all_running_tasks(self):
+        return self.get_all_tasks(state=AgentTaskState.RUNNING)
+
+    def get_all_completed_tasks(self):
+        return self.get_all_tasks(state=AgentTaskState.COMPLETED)
+
     def get_task_by_task_id(
         self,
         task_id: str | uuid.UUID,
@@ -353,14 +334,6 @@ class Agent:
                 return task
         raise AgentTaskNotFoundError(task_id=task_id)
 
-    def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID):
-        task_id = normalize_uuid(value=task_id)
-
-        try:
-            self._queued_tasks.pop(task_id)
-        except KeyError:
-            raise AgentTaskNotFoundError(task_id=task_id) from None
-
     def get_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
         return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.QUEUED)
 
@@ -369,6 +342,14 @@ class Agent:
 
     def get_completed_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
         return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.COMPLETED)
+
+    def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID):
+        task_id = normalize_uuid(value=task_id)
+
+        try:
+            self._queued_tasks.pop(task_id)
+        except KeyError:
+            raise AgentTaskNotFoundError(task_id=task_id) from None
 
     async def submit_result_message(
         self, result_message: AgentResultMessageModel
@@ -389,6 +370,12 @@ class Agent:
                 result for result in self._results.values() if result.success == success
             ]
         return list(self._results.values())
+
+    def get_all_successful_results(self):
+        return self.get_all_results(success=True)
+
+    def get_all_failed_results(self):
+        return self.get_all_results(success=False)
 
     def get_result_by_task_id(self, task_id: str | uuid.UUID) -> AgentResultModel:
         task_id = normalize_uuid(value=task_id)

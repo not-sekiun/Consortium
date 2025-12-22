@@ -72,6 +72,7 @@ class AgentsService:
         self._logger.debug("Retrieved agent: {!r}", agent)
         return agent
 
+    @log_and_propagate_error_on_service_method
     def get_all_agents(self) -> list[Agent]:
         all_agents = list(self._agents.values())
         self._logger.debug(
@@ -141,10 +142,6 @@ class AgentsService:
     ) -> AgentTaskModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = agent.get_task_by_task_id(task_id=task_id)
-        # try:
-        #     task = agent.get_task_by_task_id(task_id=task_id)
-        # except framework_excs.AgentTaskNotFoundError:
-        #     raise svc_excs.AgentTaskNotFoundError(task_id=task_id) from None
         self._logger.debug(
             "Retrieved task {} from agent {}",
             task_id,
@@ -217,30 +214,10 @@ class AgentsService:
         arguments: dict[str, Any],
     ) -> AgentTaskModel:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
+
         task = AgentTaskModel(command=command, arguments=arguments)
         await agent.submit_task(task=task)
-        # try:
-        #     await agent.add_task(task=task)
-        # except framework_excs.AgentCapabilityOptionValueValidationError as exc:
-        #     raise svc_excs.AgentCapabilityOptionValueValidationError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except framework_excs.MissingRequiredAgentCapabilityOptionError as exc:
-        #     raise svc_excs.MissingRequiredAgentCapabilityOptionError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except framework_excs.AgentCapabilityOptionNotFoundError as exc:
-        #     raise svc_excs.AgentCapabilityOptionNotFoundError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
-        # except framework_excs.AgentCapabilityNotFoundError as exc:
-        #     raise svc_excs.AgentCapabilityNotFoundError(
-        #         message=exc.message,
-        #         detail=exc.detail,
-        #     ) from None
+
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_TASKED,
@@ -320,60 +297,6 @@ class AgentsService:
 
         return agent
 
-    # async def update_agent_name_by_agent_id(
-    #     self,
-    #     agent_id: str,
-    #     name: str,
-    # ) -> None:
-    #     agent = self.get_agent_by_agent_id(agent_id=agent_id)
-    #     old_name = agent.name
-    #     agent.name = name
-    #     await self._events_service.trigger_event(
-    #         event=Event(
-    #             event_type=EventType.AGENT_UPDATED,
-    #             data={"agent_id": str(agent.agent_id)},
-    #         ),
-    #     )
-    #     self._logger.info(
-    #         "Updated agent name for agent {} from '{}' to '{}'",
-    #         agent,
-    #         old_name,
-    #         name,
-    #     )
-    #     self._logger.debug(
-    #         "Updated agent name for agent {!r} from '{}' to '{}'",
-    #         agent,
-    #         old_name,
-    #         name,
-    #     )
-    #
-    # async def update_agent_description_by_agent_id(
-    #     self,
-    #     agent_id: str,
-    #     description: str,
-    # ) -> None:
-    #     agent = self.get_agent_by_agent_id(agent_id=agent_id)
-    #     old_description = agent.description
-    #     agent.description = description
-    #     await self._events_service.trigger_event(
-    #         event=Event(
-    #             event_type=EventType.AGENT_UPDATED,
-    #             data={"agent_id": str(agent.agent_id)},
-    #         ),
-    #     )
-    #     self._logger.info(
-    #         "Updated agent description for agent {} from '{}' to '{}'.",
-    #         agent,
-    #         old_description,
-    #         description,
-    #     )
-    #     self._logger.debug(
-    #         "Updated agent description for agent {!r} from '{}' to {}.",
-    #         agent,
-    #         old_description,
-    #         description,
-    #     )
-
     @log_and_propagate_error_on_service_method
     def delete_queued_agent_task_by_agent_id_and_task_id(
         self,
@@ -382,8 +305,3 @@ class AgentsService:
     ):
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         agent.delete_queued_task_by_task_id(task_id=task_id)
-
-    #     try:
-    #         agent.delete_queued_task_by_task_id(task_id=task_id)
-    #     except framework_excs.AgentTaskNotFoundError:
-    #         raise svc_excs.AgentTaskNotFoundError(task_id=task_id) from None

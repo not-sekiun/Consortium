@@ -242,8 +242,9 @@ class RepositoryService:
     @log_and_propagate_error_on_service_method
     def create_repository_directory(
         self,
-        content: bytes | BinaryIO | str | pathlib.Path,
-        archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"],
+        content: bytes | BinaryIO | str | pathlib.Path | None = None,
+        archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"]
+        | None = None,
         name: str | None = None,
         description: str = "",
     ) -> RepositoryDirectory:

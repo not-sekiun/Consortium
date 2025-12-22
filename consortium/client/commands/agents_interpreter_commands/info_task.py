@@ -69,7 +69,7 @@ class InfoTaskCommand(BaseCommand):
         arguments_table.add_column("Argument")
         arguments_table.add_column("Value")
         for argument, value in task["arguments"].items():
-            arguments_table.add_row(argument, value)
+            arguments_table.add_row(argument, str(value))
         table.add_row("Arguments", arguments_table)
         table.add_row("State", format_agent_task_state_string_with_color(task["state"]))
         table.add_row("Datetime Started", task["datetime_started"])

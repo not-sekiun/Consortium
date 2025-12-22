@@ -91,12 +91,16 @@ def construct_agent_capability_command(
               {agent_capability_json_data["name"]} --single_value_param some:str:str  # If you want to include the substring :str in the value itself append :str behind it.
               {agent_capability_json_data["name"]} --single_value_param 1:int # Set the option to an integer value. This ignores the option"s specified type.
               {agent_capability_json_data["name"]} --single_value_param 1 -t int # Does the same thing as the above command.
+
               {agent_capability_json_data["name"]} --choice_value_param 1 # If no type is specified, implicit type conversion is done for each choice. This choice will therefore match an integer 1 even if its value is a string.
               {agent_capability_json_data["name"]} --choice_value_param 1 -t int # If a type is specified, implicit type conversion is not done for each choice. Hence, the the choice contains a string "1" instead of an integer 1 it will not match.
+
               {agent_capability_json_data["name"]} --list_value_param 1 2 3:int  # If the list value option specifies a string type or no type at all, set the option to a list the strings 1 and 2 and an integer, 3.
               {agent_capability_json_data["name"]} --list_value_param 1 2 3 -t int   # Set the option to a list of integers 1, 2, and 3.
               {agent_capability_json_data["name"]} --list_value_param 1 2 3:str -t int   # Set the option to a list of integers 1, 2, and a string, 3. Individual type annotations will override the type set by the --value-type flag.
+
               {agent_capability_json_data["name"]} --dictionary_value_param key1 1 key2 2 key3 3:str -t int   # Set the option to a dictionary containing integers 1, 2, and a string, 3 to their respective keys. The keys must be strings.
+
               {agent_capability_json_data["name"]} --toggleable_choices_value_param choice1 choice2 choice4  # Toggle choice1 choice2, and choice4 to True, every other choice is toggled to False. The default behaviour is to toggle choices to True.
               {agent_capability_json_data["name"]} --toggleable_choices_value_param true:bool choice2 choice4  # Does the same thing as the above command.
               {agent_capability_json_data["name"]} --toggleable_choices_value_param false:bool choice1 choice2 choice4  # Providing a boolean as the very first value wil toggle choice1 choice2, and choice4 to False, every other choice is toggled to True.
@@ -108,7 +112,7 @@ def construct_agent_capability_command(
               {agent_capability_json_data["name"]} --toggleable_choices_value_param 0 -t bool  # Does the same thing as the above command.
             """,
         )
-        group = "Remote Agent Commands"
+        group = "Agent Capability Commands"
 
         def configure_parser(self, parser: ArgumentParser) -> None:
             options = agent_capability_json_data["options"]

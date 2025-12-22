@@ -65,7 +65,7 @@ class InfoResultCommand(BaseCommand):
         table.add_column("Data")
         table.add_row("Result ID", result["result_id"])
         table.add_row("Task ID", result["task_id"])
-        table.add_row("Success", result["success"])
+        table.add_row("Success", str(result["success"]))
         table.add_row("Message", result["message"])
         table.add_row("Datetime finished", result["datetime_finished"])
 

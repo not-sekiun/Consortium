@@ -22,6 +22,7 @@ from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_e
     InvalidFrameworkVersionSpecifierError,
     MissingEventHookConfigurationParameterError,
 )
+from consortium.server.utils import construct_server_services_namespace_object
 
 
 class _EventHookModel(ComponentMetadataModel):
@@ -86,14 +87,7 @@ class BaseEventHook(ComponentMetadata):
             logger_name=f"Event Hook - {self}",
         )
         self.environment = types.SimpleNamespace()
-        # Dynamically construct the `server_services` simple namespace object by
-        # iterating over the attributes of the `server_singletons` module and adding
-        # any object with an attribute that ends with `_service`.
-        services_dict = {}
-        for attr in dir(server_singletons):
-            if attr.endswith("_service"):
-                services_dict[attr] = getattr(server_singletons, attr)
-        self.server_services = types.SimpleNamespace(**services_dict)
+
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
@@ -101,6 +95,10 @@ class BaseEventHook(ComponentMetadata):
         cls.event_hook_project_folder = pathlib.Path(
             sys.modules[cls.__module__].__file__,
         ).parents[0]
+        cls.server_services = construct_server_services_namespace_object(
+            server_singletons=server_singletons
+        )
+
         try:
             cls._validate_metadata()
         except comp_excs.ComponentsError as exc:
@@ -110,6 +108,7 @@ class BaseEventHook(ComponentMetadata):
                 exception_map=cls._EXCEPTION_MAP,
                 exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
             ) from None
+
         super().__init_subclass__(**kwargs)
 
     def __str__(self):

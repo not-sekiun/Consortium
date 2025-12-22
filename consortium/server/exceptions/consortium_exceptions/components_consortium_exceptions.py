@@ -123,7 +123,7 @@ class InvalidComponentConfigurationParameterTypeError(ComponentConfigurationErro
     code = "INVALID_COMPONENT_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to configure the $C_LOWER$ '{component_str}'. The parameter "
+        "Failed to configure the $C_LOWER$ {component_str}. The parameter "
         "`{parameter_name}` must be of type `{parameter_type}` in the $C_LOWER$'s "
         "definition. Modify the $C_LOWER$'s `{parameter_name}` class variable to be of "
         "the proper type."
@@ -151,7 +151,7 @@ class MissingComponentConfigurationParameterError(ComponentConfigurationError):
     code = "MISSING_COMPONENT_CONFIGURATION_PARAMETER_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to configure the $C_LOWER$ '{component_str}'. The parameter "
+        "Failed to configure the $C_LOWER$ {component_str}. The parameter "
         "`{parameter_name}` was not declared in the $C_LOWER$'s definition. Modify the "
         "$C_LOWER$ to include `{parameter_name}` as a class variable of the proper "
         "type."
@@ -192,7 +192,7 @@ class InvalidComponentVersionError(ComponentConfigurationError):
     code = "INVALID_COMPONENT_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to configure the $C_LOWER$ '{component_str}'. The $C_LOWER$ version "
+        "Failed to configure the $C_LOWER$ {component_str}. The $C_LOWER$ version "
         "string provided '{version}' is not a valid versioning string. See PEP"
         " 440 for more details on valid versioning strings."
     )
@@ -211,7 +211,7 @@ class InvalidFrameworkVersionSpecifierError(ComponentConfigurationError):
     code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to configure the $C_LOWER$ '{component_str}'. The framework version "
+        "Failed to configure the $C_LOWER$ {component_str}. The framework version "
         "specifier string provided '{framework_version_specifier}' is not a "
         "valid version specifier string. See PEP 440 for details on version "
         "specifier strings."
@@ -234,7 +234,7 @@ class InvalidComponentDependencyVersionSpecifierError(ComponentConfigurationErro
     code = "INVALID_COMPONENT_DEPENDENCY_VERSION_SPECIFIER_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to configure the $C_LOWER$ '{component_str}'. The component's "
+        "Failed to configure the $C_LOWER$ {component_str}. The component's "
         "`component_dependencies` configuration parameter contains the invalid "
         "dependency entry '{invalid_dependency_entry}'. Check that the dependency "
         "parameter contains entries conforming to PEP 508."
@@ -267,9 +267,7 @@ class ComponentStartError(ComponentOperationError):
 
     code = "COMPONENT_START_ERROR"
 
-    _MESSAGE_TEMPLATE = (
-        "Failed to start the $C_LOWER$ '{component_str}'. {error_message}"
-    )
+    _MESSAGE_TEMPLATE = "Failed to start the $C_LOWER$ {component_str}. {error_message}"
 
     def __init__(
         self,
@@ -292,7 +290,7 @@ class ComponentRuntimeError(ComponentOperationError):
 
     code = "COMPONENT_RUNTIME_ERROR"
 
-    _MESSAGE_TEMPLATE = "Failed to run the $C_LOWER$ '{component_str}'. {error_message}"
+    _MESSAGE_TEMPLATE = "Failed to run the $C_LOWER$ {component_str}. {error_message}"
 
     def __init__(
         self,
@@ -314,9 +312,7 @@ class ComponentStopError(ComponentOperationError):
 
     code = "COMPONENT_STOP_ERROR"
 
-    _MESSAGE_TEMPLATE = (
-        "Failed to stop the $C_LOWER$ '{component_str}'. {error_message}"
-    )
+    _MESSAGE_TEMPLATE = "Failed to stop the $C_LOWER$ {component_str}. {error_message}"
 
     def __init__(
         self,
@@ -349,7 +345,7 @@ class ComponentNotRunningError(ComponentStateError):
     code = "COMPONENT_NOT_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to perform the requested operation on the $C_LOWER$ '{component_str}'. "
+        "Failed to perform the requested operation on the $C_LOWER$ {component_str}. "
         "The $C_LOWER$ is not running which conflicts with the operation that was "
         "requested."
     )
@@ -692,7 +688,7 @@ class ComponentAlreadyRegisteredError(ComponentLoadingError):
     code = "COMPONENT_ALREADY_REGISTERED_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to register the $COMPONENT_TYPE$ '{component_str}'. A $COMPONENT_TYPE$ with the same "
+        "Failed to register the $COMPONENT_TYPE$ {component_str}. A $COMPONENT_TYPE$ with the same "
         "ID '{component_id}' has already been registered in the $COMPONENT_TYPE$s service."
     )
 
@@ -712,7 +708,7 @@ class DuplicateComponentLabelError(ComponentLoadingError):
     code = "DUPLICATE_COMPONENT_LABEL_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to register the $COMPONENT_TYPE$ '{component_str}'. A $COMPONENT_TYPE$ with the same "
+        "Failed to register the $COMPONENT_TYPE$ {component_str}. A $COMPONENT_TYPE$ with the same "
         "label '{label}' has already been registered in the $COMPONENT_TYPE$s "
         "service. Check that you are not registering an already registered "
         "$COMPONENT_TYPE$ or that the $COMPONENT_TYPE$ you are registering has a unique label."

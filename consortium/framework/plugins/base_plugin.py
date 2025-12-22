@@ -32,6 +32,7 @@ from consortium.server.exceptions.consortium_exceptions.plugins_consortium_excep
     PluginStopError,
 )
 from consortium.server.server_logging import LoggerType
+from consortium.server.utils import construct_server_services_namespace_object
 
 
 class _PluginModel(ComponentMetadataModel):
@@ -58,13 +59,6 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     def __init__(self) -> None:
         self.plugin_id = uuid.uuid4()
         self.environment = types.SimpleNamespace()
-        self.server_services = types.SimpleNamespace(
-            **{
-                attr: getattr(server_singletons, attr)
-                for attr in dir(server_singletons)
-                if attr.endswith("_service") and not attr.startswith("_")
-            },
-        )
         self.logger = loguru.logger.bind(
             logger_name=f"Plugin - {self}",
             logger_type=LoggerType.PLUGIN_LOGGER,
@@ -75,6 +69,10 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         cls.plugin_project_folder = pathlib.Path(
             sys.modules[cls.__module__].__file__,
         ).parents[0]
+        cls.server_services = construct_server_services_namespace_object(
+            server_singletons=server_singletons
+        )
+
         try:
             cls._validate_metadata()
         except comp_excs.ComponentsFrameworkError as exc:
@@ -84,6 +82,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
                 exception_map=cls._METADATA_EXCEPTION_MAP,
                 exception_kwargs_map=cls._METADATA_EXCEPTION_KWARGS_MAP,
             ) from None
+
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:

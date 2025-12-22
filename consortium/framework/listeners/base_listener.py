@@ -148,6 +148,9 @@ class BaseListener(ComponentLifeCycle):  # ABC):
 
         super().__init__()
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
     def __str__(self) -> str:
         return f"'{self.name}' ({self.listener_id})"
 
