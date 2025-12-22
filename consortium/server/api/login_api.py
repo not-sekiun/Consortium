@@ -24,8 +24,8 @@ router = APIRouter(
     tags=["Login API"],
 )
 
-user_accounts_service = server_singletons.user_accounts_service
-users_service = server_singletons.users_service
+_user_accounts_service = server_singletons.user_accounts_service
+_users_service = server_singletons.users_service
 
 _already_logged_in_error = AlreadyLoggedInError()
 
@@ -52,7 +52,7 @@ async def login_to_server(
         raise AlreadyLoggedInError
 
     try:
-        user = users_service.login_user(
+        user = _users_service.login_user(
             username=form_data.username,
             password=form_data.password,
         )

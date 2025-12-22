@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import uuid
 from typing import Any
@@ -82,7 +83,7 @@ class AgentGeneratorsService:
         return all_agent_generators
 
     @log_and_propagate_error_on_service_method
-    async def create_agent_generator_from_agent_template_by_agent_template_id(
+    def create_agent_generator_from_agent_template_by_agent_template_id(
         self,
         agent_template_id: str | uuid.UUID,
         parameters: dict[str, Any],
@@ -103,11 +104,16 @@ class AgentGeneratorsService:
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_GENERATOR_CREATED,
-                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
-            ),
+
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_GENERATOR_CREATED,
+                    data={
+                        "agent_generator_id": str(agent_generator.agent_generator_id)
+                    },
+                ),
+            )
         )
         self._logger.info(
             "Created agent generator: {}",
@@ -120,7 +126,7 @@ class AgentGeneratorsService:
         return agent_generator
 
     @log_and_propagate_error_on_service_method
-    async def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
+    def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
         if str(agent_generator.agent_generator_id) in self._agent_generators:
             raise AgentGeneratorAlreadyExistsError(
                 agent_generator_id=str(agent_generator.agent_generator_id),
@@ -129,11 +135,16 @@ class AgentGeneratorsService:
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_GENERATOR_ADDED,
-                data={"agent_generator_id": str(agent_generator.agent_generator_id)},
-            ),
+
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_GENERATOR_ADDED,
+                    data={
+                        "agent_generator_id": str(agent_generator.agent_generator_id)
+                    },
+                ),
+            )
         )
         self._logger.info(
             "Added agent generator: {}",
@@ -145,7 +156,7 @@ class AgentGeneratorsService:
         )
 
     @log_and_propagate_error_on_service_method
-    async def remove_agent_generator_by_agent_generator_id(
+    def remove_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str | uuid.UUID,
     ) -> None:
@@ -160,21 +171,24 @@ class AgentGeneratorsService:
         removed_agent_generator = self._agent_generators.pop(
             str(agent_generator.agent_generator_id)
         )
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_GENERATOR_REMOVED,
-                data={
-                    "agent_generator_id": str(
-                        removed_agent_generator.agent_generator_id,
-                    ),
-                },
-            ),
+
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_GENERATOR_REMOVED,
+                    data={
+                        "agent_generator_id": str(
+                            removed_agent_generator.agent_generator_id,
+                        ),
+                    },
+                ),
+            )
         )
         self._logger.info("Removed agent generator: {}", removed_agent_generator)
         self._logger.debug("- {!r}", removed_agent_generator)
 
     @log_and_propagate_error_on_service_method
-    async def update_agent_generator_by_agent_generator_id(
+    def update_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str | uuid.UUID,
         name: str | None = None,
@@ -306,14 +320,18 @@ class AgentGeneratorsService:
         # Only fire events for meaningful changes, skip firing if a no-op update
         # occurred.
         if updated:
-            await self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_GENERATOR_UPDATED,
-                    data={
-                        "agent_generator_id": str(agent_generator.agent_generator_id),
-                        "updated": updated,
-                    },
-                ),
+            asyncio.create_task(
+                self._events_service.trigger_event(
+                    event=Event(
+                        event_type=EventType.AGENT_GENERATOR_UPDATED,
+                        data={
+                            "agent_generator_id": str(
+                                agent_generator.agent_generator_id
+                            ),
+                            "updated": updated,
+                        },
+                    ),
+                )
             )
         else:
             self._logger.debug(

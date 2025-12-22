@@ -189,7 +189,7 @@ class _AgentHandler:
         payload_id = agent_registration_message.pop("payload_id", None)
         agent_type = agent_registration_message.pop("agent_type", None)
         try:
-            agent = self._connected_agents_service.register_new_connected_agent(
+            agent = self._connected_agents_service.register_agent(
                 payload_id=payload_id,
                 agent_type=agent_type,
                 **agent_registration_message,

@@ -12,7 +12,7 @@ class Plugin(BasePlugin):
         "and run those listeners that were previously created and running again."
     )
     version = "0.1.0"
-    compatible_framework_version = ">=1.0.0"
+    compatible_framework_version = ">=0.1.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
     autostart = True
 
@@ -68,7 +68,7 @@ class Plugin(BasePlugin):
                     self.logger.success(
                         "Creating and starting listener '{}'...", listener_name
                     )
-                    listener = await self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
+                    listener = self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
                         ),
@@ -81,7 +81,7 @@ class Plugin(BasePlugin):
                     )
                 else:
                     self.logger.success("Creating listener '{}'...", listener_name)
-                    await self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
+                    self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
                         ),

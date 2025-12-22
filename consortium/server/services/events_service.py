@@ -13,7 +13,7 @@ from consortium.server.server_logging import LoggerType
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
-# TODO: Support creating custom events.
+# TODO: Support creating custom events. <- get a load of this guy i dont know about that lol
 class EventsService:
     def __init__(self):
         self._event_handlers = {}

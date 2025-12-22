@@ -32,8 +32,8 @@ router = APIRouter(
     tags=["Agent Templates API"],
 )
 
-agent_templates_service = server_singletons.agent_templates_service
-agent_generators_service = server_singletons.agent_generators_service
+_agent_templates_service = server_singletons.agent_templates_service
+_agent_generators_service = server_singletons.agent_generators_service
 
 _agent_template_not_found_error = (
     api_excs.AgentTemplateNotFoundError.from_consortium_exception(
@@ -94,7 +94,7 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
     ],
 ) -> AgentGeneratorModel:
     try:
-        agent_generator = await agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
+        agent_generator = _agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
             agent_template_id=agent_template_id,
             parameters=options,
         )
@@ -134,7 +134,7 @@ def get_all_agent_templates(
 ) -> list[AgentTemplateModel]:
     return [
         AgentTemplateModel(**agent_template.to_json())
-        for agent_template in agent_templates_service.get_all_agent_templates()
+        for agent_template in _agent_templates_service.get_all_agent_templates()
     ]
 
 
@@ -159,7 +159,7 @@ def get_agent_template_by_agent_template_id(
 ) -> AgentTemplateModel:
     try:
         agent_template = (
-            agent_templates_service.get_agent_template_by_agent_template_id(
+            _agent_templates_service.get_agent_template_by_agent_template_id(
                 agent_template_id,
             )
         )

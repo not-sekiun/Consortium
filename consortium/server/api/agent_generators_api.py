@@ -34,8 +34,8 @@ router = APIRouter(
     tags=["Agent Generators API"],
 )
 
-agent_generators_service = server_singletons.agent_generators_service
-agent_templates_service = server_singletons.agent_templates_service
+_agent_generators_service = server_singletons.agent_generators_service
+_agent_templates_service = server_singletons.agent_templates_service
 
 _agent_generator_not_found_error = (
     api_excs.AgentGeneratorNotFoundError.from_consortium_exception(
@@ -116,7 +116,7 @@ def get_all_agent_generators(
 ) -> list[AgentGeneratorModel]:
     return [
         AgentGeneratorModel(**agent_generator.to_json())
-        for agent_generator in agent_generators_service.get_all_agent_generators()
+        for agent_generator in _agent_generators_service.get_all_agent_generators()
     ]
 
 
@@ -142,7 +142,7 @@ def get_agent_generator_by_agent_generator_id(
 ) -> AgentGeneratorModel:
     try:
         return AgentGeneratorModel(
-            **agent_generators_service.get_agent_generator_by_agent_generator_id(
+            **_agent_generators_service.get_agent_generator_by_agent_generator_id(
                 agent_generator_id,
             ).to_json(),
         )
@@ -176,7 +176,7 @@ async def start_agent_generator_by_agent_generator_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        await agent_generators_service.start_agent_generator_by_agent_generator_id(
+        await _agent_generators_service.start_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except consortium_excs.AgentGeneratorStartError as exc:
@@ -226,7 +226,7 @@ async def stop_agent_generator_by_agent_generator_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        await agent_generators_service.stop_agent_generator_by_agent_generator_id(
+        await _agent_generators_service.stop_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except consortium_excs.AgentGeneratorNotFoundError as exc:
@@ -273,7 +273,7 @@ async def cancel_agent_generator_by_agent_generator_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        await agent_generators_service.cancel_agent_generator_by_agent_generator_id(
+        await _agent_generators_service.cancel_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except consortium_excs.AgentGeneratorNotFoundError as exc:
@@ -325,7 +325,7 @@ async def update_agent_generator_by_agent_generator_id(
 ) -> AgentGeneratorModel:
     try:
         agent_generator = (
-            await agent_generators_service.update_agent_generator_by_agent_generator_id(
+            _agent_generators_service.update_agent_generator_by_agent_generator_id(
                 agent_generator_id=agent_generator_id,
                 name=name,
                 description=description,
@@ -372,7 +372,7 @@ async def delete_agent_generator_by_agent_generator_id(
     ],
 ):
     try:
-        await agent_generators_service.remove_agent_generator_by_agent_generator_id(
+        _agent_generators_service.remove_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
     except consortium_excs.AgentGeneratorNotFoundError as exc:

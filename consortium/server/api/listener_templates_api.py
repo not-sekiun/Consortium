@@ -35,7 +35,6 @@ router = APIRouter(
 _listener_templates_service = server_singletons.listener_templates_service
 _listeners_service = server_singletons.listeners_service
 
-
 _listener_template_not_found_error = (
     api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
         consortium_exception=consortium_excs.ListenerTemplateIDNotFoundError(
@@ -92,7 +91,7 @@ async def create_listener_through_listener_template_by_listener_template_id(
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.CREATE_LISTENER))],
 ) -> ListenerModel:
     try:
-        listener = await _listeners_service.create_listener_from_listener_template_by_listener_template_id(
+        listener = _listeners_service.create_listener_from_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
             parameters=options,
         )

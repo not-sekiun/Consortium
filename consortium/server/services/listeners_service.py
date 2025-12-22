@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import uuid
 from typing import Any
@@ -76,7 +77,7 @@ class ListenersService:
         return all_listeners
 
     @log_and_propagate_error_on_service_method
-    async def create_listener_from_listener_template_by_listener_template_id(
+    def create_listener_from_listener_template_by_listener_template_id(
         self,
         listener_template_id: str | uuid.UUID,
         parameters: dict[str, Any],
@@ -93,11 +94,13 @@ class ListenersService:
             parameters=parameters,
         )
         self._listeners[str(listener.listener_id)] = listener
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.LISTENER_CREATED,
-                data={"listener_id": str(listener.listener_id)},
-            ),
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.LISTENER_CREATED,
+                    data=listener.to_json(),
+                ),
+            )
         )
         self._logger.info("Created listener: {}", listener)
         self._logger.debug("- {!r}", listener)
@@ -105,24 +108,24 @@ class ListenersService:
         return listener
 
     @log_and_propagate_error_on_service_method
-    async def add_listener(self, listener: BaseListener) -> None:
+    def add_listener(self, listener: BaseListener) -> None:
         if str(listener.listener_id) in self._listeners:
             raise ListenerAlreadyExistsError(
                 listener_id=str(listener.listener_id),
             )
 
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.LISTENER_ADDED,
-                data={"listener_id": str(listener.listener_id)},
-            ),
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.LISTENER_ADDED,
+                    data=listener.to_json(),
+                ),
+            )
         )
         self._listeners[str(listener.listener_id)] = listener
 
     @log_and_propagate_error_on_service_method
-    async def remove_listener_by_listener_id(
-        self, listener_id: str | uuid.UUID
-    ) -> None:
+    def remove_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == State.RUNNING:
             raise ListenerAlreadyRunningError(
@@ -130,17 +133,19 @@ class ListenersService:
             )
 
         removed_listener = self._listeners.pop(str(listener.listener_id))
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.LISTENER_REMOVED,
-                data={"listener_id": str(removed_listener.listener_id)},
-            ),
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.LISTENER_REMOVED,
+                    data=removed_listener.to_json(),
+                ),
+            )
         )
         self._logger.info("Removed listener: {}", removed_listener)
         self._logger.debug("- {!r}", removed_listener)
 
     @log_and_propagate_error_on_service_method
-    async def update_listener_by_listener_id(
+    def update_listener_by_listener_id(
         self,
         listener_id: str | uuid.UUID,
         name: str | None = None,
@@ -182,7 +187,7 @@ class ListenersService:
             for parameter_name, parameter_value in parameters.items():
                 if parameter_name not in listener.creating_listener_template.options:
                     raise InvalidListenerParameterNameError(
-                        listener=str(listener),
+                        listener_str=str(listener),
                         parameter_name=parameter_name,
                     )
                 try:
@@ -264,14 +269,16 @@ class ListenersService:
         # Only fire events for meaningful changes, skip firing if a no-op update
         # occurred.
         if updated:
-            await self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.LISTENER_UPDATED,
-                    data={
-                        "listener_id": str(listener.listener_id),
-                        "updated": updated,
-                    },
-                ),
+            asyncio.create_task(
+                self._events_service.trigger_event(
+                    event=Event(
+                        event_type=EventType.LISTENER_UPDATED,
+                        data={
+                            "listener_id": str(listener.listener_id),
+                            "updated": updated,
+                        },
+                    ),
+                )
             )
         else:
             self._logger.debug(

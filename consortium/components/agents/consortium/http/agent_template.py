@@ -55,7 +55,7 @@ class AgentTemplate(BaseAgentTemplate):
         "transport with its associated HTTP listener."
     )
     version = "0.1.0"
-    compatible_framework_version = ">=1.0.0"
+    compatible_framework_version = ">=0.1.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
     agent_generator = AgentGenerator
     agent_type = AgentType

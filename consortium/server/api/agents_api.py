@@ -433,7 +433,7 @@ async def update_agent_by_agent_id(
     description: Annotated[str, Body(embed=True)] = None,
 ) -> AgentModel:
     try:
-        agent = await _agents_service.update_agent_by_agent_id(
+        agent = _agents_service.update_agent_by_agent_id(
             agent_id=agent_id, name=name, description=description
         )
     except consortium_excs.AgentNotFoundError as exc:

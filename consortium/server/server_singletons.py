@@ -72,7 +72,7 @@ agents_service = AgentsService(
     events_service=events_service,
 )
 
-# The payloads service relies on the agent_templates_service to check that the metadata
+# The payloads service relies on the _agent_templates_service to check that the metadata
 # of loaded payloads is correct
 payloads_service = PayloadsService(
     repository_service=RepositoryService(

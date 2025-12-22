@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 
 from loguru import logger
@@ -91,8 +92,10 @@ class UsersService:
         user = User(user_account=user_account)
         self._users[str(user.user_id)] = user
 
-        self._events_service.trigger_event(
-            event=Event(event_type=EventType.USER_LOGGED_IN, data=user.to_json())
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(event_type=EventType.USER_LOGGED_IN, data=user.to_json())
+            )
         )
         self._logger.info("User logged in: {}", user)
         self._logger.debug("- {!r}", user)
@@ -105,10 +108,12 @@ class UsersService:
 
         deleted_user = self._users.pop(str(user.user_id))
 
-        self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.USER_LOGGED_OUT,
-                data={"user_id": str(user.user_id)},
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.USER_LOGGED_OUT,
+                    data={"user_id": str(user.user_id)},
+                )
             )
         )
         self._logger.info("User logged out: {}", deleted_user)

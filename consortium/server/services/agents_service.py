@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from datetime import datetime
 from typing import Any
@@ -34,31 +35,38 @@ class AgentsService:
         return "AgentsService()"
 
     @log_and_propagate_error_on_service_method
-    async def register_agent(self, *args, **kwargs) -> Agent:
+    def register_agent(self, *args, **kwargs) -> Agent:
         agent = Agent(*args, **kwargs)
         self._agents[str(agent.agent_id)] = agent
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_REGISTERED,
-                data={"agent_id": str(agent.agent_id)},
-            ),
+
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_REGISTERED,
+                    data={"agent_id": str(agent.agent_id)},
+                ),
+            )
         )
-        self._logger.info("Created and added agent: {}", agent)
-        self._logger.debug("Created and added agent: {!r}", agent)
+        self._logger.info("Registered agent: {}", agent)
+        self._logger.debug("- {!r}", agent)
+
         return agent
 
     @log_and_propagate_error_on_service_method
-    async def remove_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
+    def deregister_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         del self._agents[str(agent.agent_id)]
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_DEREGISTERED,
-                data={"agent_id": str(agent.agent_id)},
-            ),
+
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_DEREGISTERED,
+                    data={"agent_id": str(agent.agent_id)},
+                ),
+            )
         )
-        self._logger.info("Removed agent: {}", agent)
-        self._logger.debug("Removed agent: {!r}", agent)
+        self._logger.info("Deregistered agent: {}", agent)
+        self._logger.debug("- {!r}", agent)
 
     @log_and_propagate_error_on_service_method
     def get_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> Agent:
@@ -229,19 +237,21 @@ class AgentsService:
         return task
 
     @log_and_propagate_error_on_service_method
-    async def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
+    def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_CHECKED_IN,
-                data={"agent_id": str(agent.agent_id)},
-            ),
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event=Event(
+                    event_type=EventType.AGENT_CHECKED_IN,
+                    data={"agent_id": str(agent.agent_id)},
+                ),
+            )
         )
         agent.datetime_last_checked_in = datetime.now()
         self._logger.debug("Checked in agent {!r}", agent)
 
     @log_and_propagate_error_on_service_method
-    async def update_agent_by_agent_id(
+    def update_agent_by_agent_id(
         self,
         agent_id: str | uuid.UUID,
         name: str | None = None,
@@ -282,11 +292,13 @@ class AgentsService:
             }
 
         if updated:
-            await self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_UPDATED,
-                    data={"agent_id": str(agent.agent_id)},
-                ),
+            asyncio.create_task(
+                self._events_service.trigger_event(
+                    event=Event(
+                        event_type=EventType.AGENT_UPDATED,
+                        data={"agent_id": str(agent.agent_id)},
+                    ),
+                )
             )
         else:
             self._logger.debug(

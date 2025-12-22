@@ -315,7 +315,7 @@ async def update_listener_by_listener_id(
     parameters: Annotated[dict[str, JsonValue], Body(embed=True)] = None,
 ) -> ListenerModel:
     try:
-        listener = await _listeners_service.update_listener_by_listener_id(
+        listener = _listeners_service.update_listener_by_listener_id(
             listener_id=listener_id,
             name=name,
             description=description,
@@ -362,7 +362,7 @@ async def delete_listener_by_listener_id(
     ],
 ) -> SuccessResponseModel:
     try:
-        await _listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
+        _listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
     except consortium_exceptions.ListenerNotFoundError:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=consortium_exceptions.ListenerNotFoundError(

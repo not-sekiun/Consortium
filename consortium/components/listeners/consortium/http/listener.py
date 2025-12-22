@@ -73,7 +73,7 @@ class Listener(BaseListener):
             payload_id = json_request_body.pop("payload_id", None)
             agent_type = json_request_body.pop("agent_type", None)
             try:
-                agent = await self.connected_agents_service.register_agent(
+                agent = self.connected_agents_service.register_agent(
                     payload_id=payload_id,
                     agent_type=agent_type,
                     endpoint=request.remote,
@@ -127,7 +127,7 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
-            await self.connected_agents_service.check_in_agent_by_agent_id(
+            self.connected_agents_service.check_in_agent_by_agent_id(
                 agent_id=agent_id,
             )
 
@@ -211,7 +211,7 @@ class Listener(BaseListener):
 
             # Only if the task ID is valid do we consider it a valid agent that has
             # checked in.
-            await self.connected_agents_service.check_in_agent_by_agent_id(
+            self.connected_agents_service.check_in_agent_by_agent_id(
                 agent_id=agent_id,
             )
 
