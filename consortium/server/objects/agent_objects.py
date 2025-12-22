@@ -206,6 +206,34 @@ class Agent:
     def __str__(self) -> str:
         return f"'{self.name}' ({self.agent_id})"
 
+    @property
+    def tasks(self):
+        return self.get_all_tasks()
+
+    @property
+    def queued_tasks(self):
+        return self.get_all_tasks(state=AgentTaskState.QUEUED)
+
+    @property
+    def running_tasks(self):
+        return self.get_all_tasks(state=AgentTaskState.RUNNING)
+
+    @property
+    def completed_tasks(self):
+        return self.get_all_tasks(state=AgentTaskState.COMPLETED)
+
+    @property
+    def results(self):
+        return self.get_all_results()
+
+    @property
+    def successful_results(self):
+        return self.get_all_results(success=True)
+
+    @property
+    def failed_results(self):
+        return self.get_all_results(success=False)
+
     async def submit_task(self, task: AgentTaskModel) -> None:
         # TODO: Convert this to use a lookup dictionary instead of iterating through
         #  all agent capabilities.
@@ -332,6 +360,15 @@ class Agent:
             self._queued_tasks.pop(task_id)
         except KeyError:
             raise AgentTaskNotFoundError(task_id=task_id) from None
+
+    def get_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.QUEUED)
+
+    def get_running_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.RUNNING)
+
+    def get_completed_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.COMPLETED)
 
     async def submit_result_message(
         self, result_message: AgentResultMessageModel

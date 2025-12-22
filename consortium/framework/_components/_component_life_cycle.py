@@ -58,17 +58,7 @@ class ComponentLifeCycle(abc.ABC):
     ) -> None: ...
 
     async def start(self) -> None:
-        if (
-            self.status.state
-            not in (
-                State.INITIALIZED,
-                State.STOPPED,
-                State.CANCELLED,
-                State.ERRORED,
-            )
-            or self.status.state == State.FATAL
-            and self._runtime_loop_task is not None
-        ):
+        if self.status.state in (State.RUNNING, State.STARTED):
             raise consortium_excs.ComponentAlreadyRunningError(
                 component_str=str(self),
             )

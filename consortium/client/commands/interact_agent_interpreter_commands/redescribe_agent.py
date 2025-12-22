@@ -23,6 +23,7 @@ class RedescribeAgentCommand(RedescribeAgentAgentsInterpreterCommand):
           redescribe_agent 123e4567-e89b-12d3-a456-42661417400 "New description"  # Change the description of a specific agent.
         """,
     )
+    group = "Agent Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

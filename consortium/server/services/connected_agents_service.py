@@ -1,11 +1,14 @@
 import uuid
 from typing import Any
 
+from loguru import logger
+
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
 )
 from consortium.server.objects.agent_objects import Agent
+from consortium.server.server_logging import LoggerType
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
@@ -16,6 +19,9 @@ class ConnectedAgentsService:
 
         self._agents_service = server_singletons.agents_service
         self._agents = {}
+        self._logger = logger.bind(
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
+        )
 
     def __str__(self) -> str:
         return "Connected Agents Service"

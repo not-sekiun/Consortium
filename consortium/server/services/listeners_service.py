@@ -130,7 +130,7 @@ class ListenersService:
                 listener_str=str(listener),
             )
 
-        removed_listener = self._listeners.pop(listener_id)
+        removed_listener = self._listeners.pop(str(listener.listener_id))
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_REMOVED,

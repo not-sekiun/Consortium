@@ -25,6 +25,7 @@ class ListResultsCommand(ListResultsAgentsInterpreterCommand):
           list_results 123e4567-e89b-12d3-a456-42661417400  # List all results for a specific agent.
         """,
     )
+    group = "Task and Result Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

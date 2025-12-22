@@ -23,6 +23,7 @@ class InfoResultCommand(InfoResultAgentsInterpreterCommand):
             info_result 123e4567-e89b-12d3-a456-42661417400 43e56f0b-c3d2-4c70-82a9-8d27ded2cb2f  # Display detailed information about a specific result for a specific agent.
         """,
     )
+    group = "Task and Result Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

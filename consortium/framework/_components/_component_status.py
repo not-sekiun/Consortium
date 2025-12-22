@@ -31,6 +31,10 @@ class Status:
             State.ERRORED,
             State.FATAL,
         },
+        State.COMPLETED: {
+            State.STARTED,
+            State.FATAL,
+        },
         State.STOPPED: {
             State.STARTED,
             State.FATAL,

@@ -185,7 +185,7 @@ shell_capability = request_response_capability(
 
 
 class AgentType(BaseAgentType):
-    name = "consortium_http/consortium_python"
+    name = "consortium_http/eula_agent"
     agent_capabilities = {
         disconnect_capability,
         kill_capability,

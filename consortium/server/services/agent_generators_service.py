@@ -158,7 +158,7 @@ class AgentGeneratorsService:
             )
 
         removed_agent_generator = self._agent_generators.pop(
-            agent_generator.agent_generator_id
+            str(agent_generator.agent_generator_id)
         )
         await self._events_service.trigger_event(
             event=Event(

@@ -1,5 +1,4 @@
 import json
-import traceback
 from http.client import responses
 
 import jwt
@@ -172,8 +171,8 @@ async def log_rest_api_requests_and_responses(
         )
 
         return response
-    except Exception:
-        _rest_api_logger.opt(colors=True).error(
+    except Exception as exc:
+        _rest_api_logger.opt(colors=True, exception=exc).error(
             (
                 "{}:{} <bold><blue>{}</></> {} - <bold><red>500 Internal Server Error"
                 "</></> {}"
@@ -184,10 +183,6 @@ async def log_rest_api_requests_and_responses(
             request.url.path,
             # length of the response as a JSON string
             len(json.dumps(InternalServerError().to_json())),
-        )
-        _rest_api_logger.opt(colors=True, raw=True).error(
-            "<bold><red>{}</></>",
-            traceback.format_exc(),
         )
         return JSONResponse(
             status_code=InternalServerError().status_code,

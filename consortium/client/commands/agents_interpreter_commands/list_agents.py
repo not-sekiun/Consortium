@@ -21,6 +21,7 @@ class ListAgentsCommand(BaseCommand):
           list_agents
         """,
     )
+    group = "Agent Management Commands"
 
     async def run_command(
         self,

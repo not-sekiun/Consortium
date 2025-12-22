@@ -83,20 +83,22 @@ class Listener(BaseListener):
             except AgentTypeResolutionError:
                 if agent_type:
                     self.logger.warning(
-                        "Agent attempted to register with an invalid agent type: {}. "
-                        "Responded with 401 Unauthorized.",
+                        "Agent from {} attempted to register with an invalid agent "
+                        "type: {}. Responded with 401 Unauthorized.",
+                        request.remote,
                         agent_type,
                     )
                     return web.Response(status=401)
                 else:
                     self.logger.warning(
-                        "Agent attempted to register with an invalid payload ID: {}. "
-                        "Responded with 401 Unauthorized.",
+                        "Agent from {} attempted to register with an invalid payload "
+                        "ID: {}. Responded with 401 Unauthorized.",
+                        request.remote,
                         payload_id,
                     )
                     return web.Response(status=401)
             self.logger.info(
-                "Agent '{}' checked in from endpoint: {}",
+                "Agent {} checked in from: {}",
                 str(agent),
                 request.remote,
             )
@@ -109,8 +111,20 @@ class Listener(BaseListener):
                     agent_id=agent_id,
                 )
             except AgentNotFoundError:
+                self.logger.warning(
+                    "Agent from {} attempted to retrieve tasks with an invalid agent "
+                    "ID: {}. Responded with 401 Unauthorized.",
+                    request.remote,
+                    agent_id,
+                )
                 return web.Response(status=401)
             except KeyError:  # No Cookie header provided
+                self.logger.warning(
+                    "Unidentified client {} attempted to retrieve tasks without "
+                    "providing an agent ID in the Cookie header. Responded with 401 "
+                    "Unauthorized.",
+                    request.remote,
+                )
                 return web.Response(status=401)
 
             await self.connected_agents_service.check_in_agent_by_agent_id(
@@ -119,7 +133,7 @@ class Listener(BaseListener):
 
             agent_messages = []
             while True:
-                agent_message = agent.get_next_task_message_without_waiting()
+                agent_message = await agent.get_next_task_message(timeout=0)
 
                 if agent_message is None:
                     break
@@ -154,8 +168,9 @@ class Listener(BaseListener):
                 jsonschema.validate(json_request_body, agent_result_json_schema)
             except (json.JSONDecodeError, jsonschema.ValidationError):
                 self.logger.warning(
-                    "Received invalid agent result JSON data from agent: {}. Responded "
-                    "with 401 Unauthorized.",
+                    "Unidentified client {} sent malformed agent result data: {}. "
+                    "Responded with 401 Unauthorized.",
+                    request.remote,
                     json_request_body,
                 )
                 return web.Response(status=401)
@@ -173,19 +188,22 @@ class Listener(BaseListener):
                 )
             except AgentNotFoundError:
                 self.logger.warning(
-                    "Agent checked in with an invalid agent ID: {}. Responded with 401 "
-                    "Unauthorized.",
+                    "Agent from {} checked in with an invalid agent ID: {}. Responded "
+                    "with 401 Unauthorized.",
+                    request.remote,
                     agent_id,
                 )
                 return web.Response(status=401)
 
-            # Check if the task ID is valid.
+            # Check if the task ID is for a valid task that is currently marked as
+            # running.
             try:
-                _ = agent.get_running_task_by_task_id(task_id)
+                _ = agent.get_running_task_by_task_id(task_id=task_id)
             except AgentTaskNotFoundError:
                 self.logger.warning(
-                    "Agent {} checked in and posted a result with an invalid task ID: "
-                    "{}. Responded with 401 Unauthorized.",
+                    "Agent {} from {} checked in and posted a result with an invalid "
+                    "task ID: {}. Responded with 401 Unauthorized.",
+                    request.remote,
                     str(agent),
                     task_id,
                 )

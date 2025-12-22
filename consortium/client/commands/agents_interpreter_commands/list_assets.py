@@ -23,6 +23,7 @@ class ListAssetsCommand(BaseCommand):
           list_assets
         """,
     )
+    group = "Asset Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         pass

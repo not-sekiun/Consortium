@@ -108,7 +108,7 @@ def construct_agent_capability_command(
               {agent_capability_json_data["name"]} --toggleable_choices_value_param 0 -t bool  # Does the same thing as the above command.
             """,
         )
-        group = "Agent Commands"
+        group = "Remote Agent Commands"
 
         def configure_parser(self, parser: ArgumentParser) -> None:
             options = agent_capability_json_data["options"]

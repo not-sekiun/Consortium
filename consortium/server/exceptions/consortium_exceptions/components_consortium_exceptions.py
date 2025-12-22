@@ -370,7 +370,7 @@ class ComponentAlreadyRunningError(ComponentStateError):
     code = "COMPONENT_ALREADY_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to perform the requested operation on the $C_LOWER$ '{component_str}'. "
+        "Failed to perform the requested operation on the $C_LOWER$ {component_str}. "
         "The $C_LOWER$ is already running which conflicts with the operation that was "
         "requested."
     )

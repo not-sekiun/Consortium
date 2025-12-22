@@ -18,11 +18,11 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
         try:
             return await func(self, *args, **kwargs)
         except BaseConsortiumError as exc:
-            self._logger.warning("{}: {}", type(exc).__name__, exc)
+            self._logger.error("{}: {}", type(exc).__name__, exc)
             raise
         except Exception as exc:
-            self._logger.opt(exception=True).error(
-                "({}.{}) {}: {}",
+            self._logger.opt(ansi=True, exception=exc).critical(
+                "<white><RED><bold>Unhandled exception in {}.{}. {}: {}</></></>",
                 type(self).__name__,
                 func.__name__,
                 type(exc).__name__,
@@ -35,11 +35,11 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
         try:
             return func(self, *args, **kwargs)
         except BaseConsortiumError as exc:
-            self._logger.warning("{}: {}", type(exc).__name__, exc)
+            self._logger.error("{}: {}", type(exc).__name__, exc)
             raise
         except Exception as exc:
-            self._logger.opt(exception=True).error(
-                "({}.{}) {}: {}",
+            self._logger.opt(ansi=True, exception=exc).critical(
+                "<white><RED><bold>Unhandled exception in {}.{}. {}: {}</></></>",
                 type(self).__name__,
                 func.__name__,
                 type(exc).__name__,

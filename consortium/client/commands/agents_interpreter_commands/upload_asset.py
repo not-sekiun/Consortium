@@ -25,6 +25,7 @@ class UploadAssetCommand(BaseCommand):
           upload_asset /absolute/path/to/asset_directory
         """,
     )
+    group = "Asset Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
