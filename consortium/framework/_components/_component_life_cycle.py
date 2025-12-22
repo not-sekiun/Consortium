@@ -96,8 +96,9 @@ class ComponentLifeCycle(abc.ABC):
             raise exc
 
         self.stop_event.clear()
-        self.status._transition_to_running()
+
         self._runtime_loop_task = asyncio.create_task(self._runtime_loop())
+        self._runtime_loop_task.add_done_callback(self._clear_runtime_loop_task)
 
     async def stop(self) -> None:
         if self.status.state != State.RUNNING:
@@ -158,7 +159,11 @@ class ComponentLifeCycle(abc.ABC):
                 )
                 raise exc
 
-    async def wait_until_completed(self) -> None:
+    async def wait_until_started(self) -> None:
+        while self.status.state in (State.INITIALIZED, State.STARTED):
+            await asyncio.sleep(0)
+
+    async def wait_until_stopped(self) -> None:
         if self._runtime_loop_task is not None:
             try:
                 await self._runtime_loop_task
@@ -193,6 +198,7 @@ class ComponentLifeCycle(abc.ABC):
 
     async def _runtime_loop(self) -> None:
         try:
+            self.status._transition_to_running()
             await self.on_running()
             self.status._transition_to_completed()
             await self.on_completed()
@@ -227,3 +233,6 @@ class ComponentLifeCycle(abc.ABC):
                 exc=exc,
                 fatal_context=ComponentLifeCycleFatalContext.RUNNING,
             )
+
+    def _clear_runtime_loop_task(self, _task: asyncio.Task) -> None:
+        self._runtime_loop_task = None

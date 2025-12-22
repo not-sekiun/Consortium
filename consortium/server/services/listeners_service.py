@@ -284,10 +284,15 @@ class ListenersService:
         return listener
 
     @log_and_propagate_error_on_service_method
-    async def start_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> None:
+    async def start_listener_by_listener_id(
+        self, listener_id: str | uuid.UUID, blocking: bool = False
+    ) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.start()
+        if blocking:
+            await listener.wait_until_started()
+
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_STARTED,
@@ -298,10 +303,15 @@ class ListenersService:
         self._logger.debug("- {!r}", listener)
 
     @log_and_propagate_error_on_service_method
-    async def stop_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> None:
+    async def stop_listener_by_listener_id(
+        self, listener_id: str | uuid.UUID, blocking: bool = False
+    ) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.stop()
+        if blocking:
+            await listener.wait_until_stopped()
+
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_STOPPED,
@@ -313,11 +323,14 @@ class ListenersService:
 
     @log_and_propagate_error_on_service_method
     async def cancel_listener_by_listener_id(
-        self, listener_id: str | uuid.UUID
+        self, listener_id: str | uuid.UUID, blocking: bool = False
     ) -> None:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.cancel()
+        if blocking:
+            await listener.wait_until_stopped()
+
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_CANCELLED,

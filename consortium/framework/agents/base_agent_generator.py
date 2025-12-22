@@ -172,7 +172,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         self.environment = environment
         self.parameters = parameters
         await super().start()
-        await self.wait_until_completed()
+        await self.wait_until_stopped()
 
     # @abstractmethod
     # async def on_running(

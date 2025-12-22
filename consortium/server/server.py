@@ -124,36 +124,112 @@ class Server:
 
     @asynccontextmanager
     async def _lifespan(self, _app: FastAPI) -> AsyncGenerator[None, Any]:
+        await self._server_startup_procedure()
+        yield
+        await self._server_shutdown_procedure()
+
+    async def _server_shutdown_procedure(self) -> None:
+        self._logger.info("Shutting down server...")
+        self.status = ServerStatus.SHUTTING_DOWN
+
+        # Signal to event hooks that the server is stopping first.
+        await server_singletons.events_service.trigger_event(
+            event=Event(event_type=EventType.STOP_SERVER),
+        )
+
+        # TODO: Add `timeout` to prevent hanging during shutdown. Do not replace
+        #  `blocking` because we want non block (false, Any), block with finite timeout
+        #  (true, float), block forever (true, None).
+        self._logger.info("- Stopping all running listeners...")
+        # Gracefully stop all running listeners.
+        for listener in server_singletons.listeners_service.get_all_listeners():
+            if listener.status.state == State.RUNNING:
+                try:
+                    await server_singletons.listeners_service.stop_listener_by_listener_id(
+                        listener_id=listener.listener_id,
+                        blocking=True,
+                    )
+                    self._logger.success(
+                        "  - Stopped listener: {}.",
+                        listener,
+                    )
+                except Exception as exc:
+                    self._logger.error(
+                        "  - Failed to stop listener {} due to error: {}",
+                        listener,
+                        exc,
+                    )
+            else:
+                self._logger.info(
+                    "  - Listener {} is not running, skipped stop procedure.",
+                    listener,
+                )
+
+        # Gracefully stop all running agent generators.
+        self._logger.info("- Stopping all running agent generators...")
+        for (
+            agent_generator
+        ) in server_singletons.agent_generators_service.get_all_agent_generators():
+            if agent_generator.status.state == State.RUNNING:
+                try:
+                    await server_singletons.agent_generators_service.stop_agent_generator_by_id(
+                        agent_generator_id=agent_generator.agent_generator_id,
+                        blocking=True,
+                    )
+                    self._logger.success(
+                        "  - Stopped agent generator: {}.",
+                        agent_generator,
+                    )
+                except Exception as exc:
+                    self._logger.error(
+                        "  - Failed to stop agent generator {} due to error: {}",
+                        agent_generator,
+                        exc,
+                    )
+            else:
+                self._logger.info(
+                    "  - Agent generator {} is not running, skipped stop procedure.",
+                    agent_generator,
+                )
+
+        # Gracefully stop all running plugins.
+        self._logger.info("- Stopping all running plugins...")
+        for plugin in server_singletons.plugins_service.get_all_plugins():
+            if plugin.status.state == State.RUNNING:
+                try:
+                    await server_singletons.plugins_service.stop_plugin_by_plugin_id(
+                        plugin_id=plugin.plugin_id,
+                        blocking=True,
+                    )
+                    self._logger.success(
+                        "  - Stopped plugin: {}.",
+                        plugin,
+                    )
+                except Exception as exc:
+                    self._logger.error(
+                        "  - Failed to stop plugin {} due to error: {}",
+                        plugin,
+                        exc,
+                    )
+            else:
+                self._logger.info(
+                    "  - Plugin {} is not running, skipped stop procedure.",
+                    plugin,
+                )
+
+        self._logger.info("Server shutdown complete.")
+        # Flush and complete the logger.
+        await self._logger.complete()
+        self.status = ServerStatus.STOPPED
+
+    async def _server_startup_procedure(self) -> None:
         server_release = server_singletons.release_service.release
         self._logger.info(
             f'Starting server (v{server_release.version} "{server_release.codename}") '
             f"at {self.server_config.local_host}:{self.server_config.local_port}...",
         )
         self.status = ServerStatus.RUNNING
-        await self._server_startup_procedure()
-        yield
-        self._logger.info("Shutting down server...")
-        self.status = ServerStatus.SHUTTING_DOWN
-        await self._server_shutdown_procedure()
-        self._logger.info("Server shutdown complete.")
-        await self._logger.complete()
-        self.status = ServerStatus.STOPPED
 
-    @staticmethod
-    async def _server_shutdown_procedure() -> None:
-        # Gracefully stop all running plugins.
-        for plugin in server_singletons.plugins_service.get_all_plugins():
-            if plugin.status.state == State.RUNNING:
-                await server_singletons.plugins_service.stop_plugin_by_plugin_id(
-                    plugin_id=str(plugin.plugin_id),
-                    blocking=True,
-                )
-        await server_singletons.events_service.trigger_event(
-            event=Event(event_type=EventType.STOP_SERVER),
-        )
-
-    @staticmethod
-    async def _server_startup_procedure() -> None:
         # Setup all services and emit startup event.
         server_singletons.user_accounts_service.load_framework_user_accounts()
         # Load listener and agent profiles before running the C2 type resolution so

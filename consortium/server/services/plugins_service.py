@@ -6,7 +6,6 @@ import uuid
 from loguru import logger
 
 # from consortium.framework.plugins._plugin_status import PluginState
-from consortium.framework._components._component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
@@ -654,10 +653,10 @@ class PluginsService:
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
         await plugin.start()
 
-        if not blocking:
-            return
-        while plugin.status.state in (State.INITIALIZED, State.STARTED):
-            await asyncio.sleep(0.1)
+        if blocking:
+            await plugin.wait_until_started()
+
+        self._logger.debug("Started plugin: {!r}", plugin)
 
     @log_and_propagate_error_on_service_method
     async def stop_plugin_by_plugin_id(
@@ -683,10 +682,10 @@ class PluginsService:
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
         await plugin.stop()
 
-        if not blocking:
-            return
-        while plugin.status.state == State.RUNNING:
-            await asyncio.sleep(0.1)
+        if blocking:
+            await plugin.wait_until_stopped()
+
+        self._logger.debug("Stopped plugin: {!r}", plugin)
 
     @log_and_propagate_error_on_service_method
     async def restart_plugin_by_plugin_id(
@@ -722,6 +721,37 @@ class PluginsService:
             task.add_done_callback(
                 lambda finished_task: self._restart_plugin_tasks.remove(finished_task),
             )
+
+        plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
+        self._logger.debug("Restarted plugin: {!r}", plugin)
+
+    @log_and_propagate_error_on_service_method
+    async def cancel_plugin_by_plugin_id(
+        self,
+        plugin_id: str | uuid.UUID,
+        blocking: bool = False,
+    ) -> None:
+        """
+        Cancels a plugin by its plugin id. The plugin must be registered to the
+        service.
+
+        Args:
+            plugin_id (str): The plugin id to cancel.
+            blocking (bool): If True, the method will block and wait until the plugin is
+                cancelled. If False, the method will return immediately after
+                cancelling the plugin.
+
+        Raises:
+            PluginNotFoundError: If the plugin id is not found in the service.
+            PluginNotRunningError: If the plugin is not running.
+        """
+        plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
+        await plugin.cancel()
+
+        if blocking:
+            await plugin.wait_until_stopped()
+
+        self._logger.debug("Cancelled plugin: {!r}", plugin)
 
     @log_and_propagate_error_on_service_method
     def get_plugin_by_plugin_id(self, plugin_id: str) -> BasePlugin:

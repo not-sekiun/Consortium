@@ -328,12 +328,16 @@ class AgentGeneratorsService:
     async def start_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str | uuid.UUID,
+        blocking: bool = False,
     ) -> None:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
 
         await agent_generator.start()
+        if blocking:
+            await agent_generator.wait_until_started()
+
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_STARTED,
@@ -347,12 +351,16 @@ class AgentGeneratorsService:
     async def stop_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str | uuid.UUID,
+        blocking: bool = False,
     ) -> None:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
 
         await agent_generator.stop()
+        if blocking:
+            await agent_generator.wait_until_stopped()
+
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_STOPPED,
@@ -366,12 +374,16 @@ class AgentGeneratorsService:
     async def cancel_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str | uuid.UUID,
+        blocking: bool = False,
     ) -> None:
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
 
         await agent_generator.cancel()
+        if blocking:
+            await agent_generator.wait_until_stopped()
+
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_GENERATOR_CANCELLED,
