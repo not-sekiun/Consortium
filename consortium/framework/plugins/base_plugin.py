@@ -41,7 +41,8 @@ class _PluginModel(ComponentMetadataModel):
 
 class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     _METADATA_MODEL = _PluginModel
-    _METADATA_EXCEPTION_MAP = {
+
+    _COMPONENT_METADATA_EXCEPTION_MAP = {
         comp_excs.MissingComponentConfigurationParameterError: MissingPluginConfigurationParameterError,
         comp_excs.EmptyComponentLabelError: EmptyPluginLabelError,
         comp_excs.InvalidComponentVersionError: InvalidPluginVersionError,
@@ -49,7 +50,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidPluginDependencyVersionSpecifierError,
         comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidPluginConfigurationParameterTypeError,
     }
-    _METADATA_EXCEPTION_KWARGS_MAP = {
+    _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "plugin_str",
         "component_filepath": "plugin_filepath",
     }
@@ -79,8 +80,8 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,
-                exception_map=cls._METADATA_EXCEPTION_MAP,
-                exception_kwargs_map=cls._METADATA_EXCEPTION_KWARGS_MAP,
+                exception_map=cls._COMPONENT_METADATA_EXCEPTION_MAP,
+                exception_kwargs_map=cls._COMPONENT_METADATA_EXCEPTION_KWARGS_MAP,
             ) from None
 
         super().__init_subclass__(**kwargs)

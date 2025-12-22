@@ -104,7 +104,7 @@ class Client:
             elif return_status.type == ClientReturnStatusType.SWITCH_CLIENT_SESSION:
                 try:
                     # The command will make sure that the client connection is valid.
-                    return_status = await return_status.data["client_session"].run()
+                    return_status = await return_status.data["client_session"].execute()
                 # Catch any fatal errors raised by the client session. If a fatal error
                 # occurs in any of the interpreters it is already printed and the error
                 # reraised. We catch it here and kill the session.

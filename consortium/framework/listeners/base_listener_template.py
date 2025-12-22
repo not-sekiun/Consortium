@@ -66,7 +66,8 @@ class _ListenerTemplateModel(ComponentMetadataModel):
 
 class BaseListenerTemplate(ComponentMetadata, ABC):
     _METADATA_MODEL = _ListenerTemplateModel
-    _EXCEPTION_MAP = {
+
+    _COMPONENT_METADATA_EXCEPTION_MAP = {
         comp_excs.MissingComponentConfigurationParameterError: MissingListenerTemplateConfigurationParameterError,
         comp_excs.EmptyComponentLabelError: EmptyListenerTemplateLabelError,
         comp_excs.InvalidComponentVersionError: InvalidListenerTemplateVersionError,
@@ -74,7 +75,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidListenerTemplateDependencyVersionSpecifierError,
         comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidListenerTemplateConfigurationParameterTypeError,
     }
-    _EXCEPTION_KWARGS_MAP = {
+    _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "listener_template_str",
         "component_filepath": "listener_template_filepath",
     }
@@ -95,12 +96,12 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
 
         try:
             cls._validate_metadata()
-        except comp_excs.ComponentsError as exc:
+        except comp_excs.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,
-                exception_map=cls._EXCEPTION_MAP,
-                exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
+                exception_map=cls._COMPONENT_METADATA_EXCEPTION_MAP,
+                exception_kwargs_map=cls._COMPONENT_METADATA_EXCEPTION_KWARGS_MAP,
             ) from None
 
         # Check that options do not have duplicate names.

@@ -3,7 +3,7 @@ import sys
 from collections.abc import Callable
 from enum import Enum, StrEnum
 from inspect import signature
-from typing import Any, get_type_hints
+from typing import TYPE_CHECKING, Any, get_type_hints
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -27,9 +27,9 @@ from consortium.server.exceptions.consortium_exceptions.agent_capabilities_conso
     InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
-from consortium.server.services.agents_file_manager_service import (
-    AgentFileManagerService,
-)
+
+if TYPE_CHECKING:
+    from consortium.server.objects.agent_objects import Agent
 
 
 class SupportedOS(StrEnum):
@@ -100,7 +100,6 @@ class BaseAgentCapability:
         # essentially to allow us to demultiplex messages coming in over the wire from
         # the listener.
         self.result_messages_queue = asyncio.Queue()
-        self.file_manager = AgentFileManagerService
 
     def __init_subclass__(cls, **kwargs):
         if not hasattr(cls, "name"):
@@ -226,8 +225,9 @@ class BaseAgentCapability:
                 await self.send_to_agent(task_message)
                 return await self.recv_from_agent()
 
-    async def run(
+    async def execute(
         self,
+        agent: Agent,
         task_message: AgentTaskMessageModel,
     ) -> AgentResultMessageModel:
         return await self.send_and_recv_from_agent(

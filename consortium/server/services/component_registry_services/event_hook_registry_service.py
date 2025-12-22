@@ -41,7 +41,7 @@ from consortium.server.services.events_service import EventsService
 class EventHookRegistryService(
     ExceptionRemappingComponentRegistryService[BaseEventHook, EventHookLoadingError],
 ):
-    _EXCEPTION_MAP = {
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP = {
         comp_excs.ComponentProjectManifestFileNotFoundError: EventHookProjectManifestFileNotFoundError,
         comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidEventHookProjectManifestFileJSONError,
         comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidEventHookProjectManifestFileSchemaError,
@@ -62,7 +62,7 @@ class EventHookRegistryService(
         comp_excs.ComponentAlreadyRegisteredError: EventHookAlreadyRegisteredError,
         comp_excs.DuplicateComponentLabelError: DuplicateEventHookLabelError,
     }
-    _EXCEPTION_KWARGS_MAP = {
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "event_hook_project_folder",
         "component_file": "event_hook_file",
         "component_symbol": "event_hook_symbol",

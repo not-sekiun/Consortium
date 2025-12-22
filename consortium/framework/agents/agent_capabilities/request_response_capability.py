@@ -1,7 +1,7 @@
 import asyncio
 from collections.abc import Awaitable
 from types import SimpleNamespace
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
@@ -22,10 +22,14 @@ from consortium.framework.options import (
     ToggleableChoicesValueOption,
 )
 
+if TYPE_CHECKING:
+    from consortium.server.objects.agent_objects import Agent
+
 
 class _TaskMessageHandlerProtocol(Protocol):
     def __call__(
         self,
+        agent: Agent,
         task_message: AgentTaskMessageModel,
         context: SimpleNamespace,
     ) -> AgentTaskMessageModel | Awaitable[AgentTaskMessageModel]: ...
@@ -34,6 +38,7 @@ class _TaskMessageHandlerProtocol(Protocol):
 class _ResultMessageHandlerProtocol(Protocol):
     def __call__(
         self,
+        agent: Agent,
         result_message: AgentResultMessageModel,
         context: SimpleNamespace,
     ) -> AgentResultMessageModel | Awaitable[AgentResultMessageModel]: ...
@@ -42,6 +47,7 @@ class _ResultMessageHandlerProtocol(Protocol):
 class _TimeoutHandlerProtocol(Protocol):
     def __call__(
         self,
+        agent: Agent,
         context: SimpleNamespace,
     ) -> AgentResultMessageModel | Awaitable[AgentResultMessageModel]: ...
 
@@ -65,20 +71,22 @@ def request_response_capability(
     result_handler: _ResultMessageHandlerProtocol | None = None,
     timeout_handler: _TimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
-    async def _run(
-        self, task_message: AgentTaskMessageModel
+    async def _execute(
+        self, agent: Agent, task_message: AgentTaskMessageModel
     ) -> AgentResultMessageModel:
         context = SimpleNamespace()
 
         if resolve_timeout:
             send_and_recv_timeout = resolve_timeout(
-                task_message=task_message, context=context
+                agent=agent, task_message=task_message, context=context
             )
         else:
             send_and_recv_timeout = timeout
 
         if task_handler:
-            task_message = task_handler(task_message=task_message, context=context)
+            task_message = task_handler(
+                agent=agent, task_message=task_message, context=context
+            )
             if asyncio.iscoroutine(task_message):
                 task_message = await task_message
 
@@ -88,7 +96,7 @@ def request_response_capability(
             )
         except TimeoutError:
             if timeout_handler:
-                result_message = timeout_handler(context=context)
+                result_message = timeout_handler(agent=agent, context=context)
                 if asyncio.iscoroutine(result_message):
                     result_message = await result_message
                 return result_message
@@ -97,6 +105,7 @@ def request_response_capability(
 
         if result_handler:
             result_message = result_handler(
+                agent=agent,
                 result_message=result_message,
                 context=context,
             )
@@ -120,6 +129,6 @@ def request_response_capability(
             "authors": authors,
             "requires_admin": requires_admin,
             "supported_oses": supported_oses,
-            "run": _run,
+            "execute": _execute,
         },
     )

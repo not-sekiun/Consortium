@@ -66,7 +66,8 @@ class BaseEventHook(ComponentMetadata):
     """
 
     _METADATA_MODEL = _EventHookModel
-    _EXCEPTION_MAP = {
+
+    _COMPONENT_METADATA_EXCEPTION_MAP = {
         comp_excs.MissingComponentConfigurationParameterError: MissingEventHookConfigurationParameterError,
         comp_excs.EmptyComponentLabelError: EmptyEventHookLabelError,
         comp_excs.InvalidComponentVersionError: InvalidEventHookVersionError,
@@ -74,7 +75,7 @@ class BaseEventHook(ComponentMetadata):
         comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidEventHookDependencyVersionSpecifierError,
         comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidEventHookConfigurationParameterTypeError,
     }
-    _EXCEPTION_KWARGS_MAP = {
+    _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "event_hook_str",
         "component_filepath": "event_hook_filepath",
     }
@@ -101,12 +102,12 @@ class BaseEventHook(ComponentMetadata):
 
         try:
             cls._validate_metadata()
-        except comp_excs.ComponentsError as exc:
+        except comp_excs.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,
-                exception_map=cls._EXCEPTION_MAP,
-                exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
+                exception_map=cls._COMPONENT_METADATA_EXCEPTION_MAP,
+                exception_kwargs_map=cls._COMPONENT_METADATA_EXCEPTION_KWARGS_MAP,
             ) from None
 
         super().__init_subclass__(**kwargs)

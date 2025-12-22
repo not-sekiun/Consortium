@@ -80,14 +80,14 @@ sleep_capability = request_response_capability(
 )
 
 
-def ping_task_handler(task_message, context):
+def ping_task_handler(agent, task_message, context):
     context.task_id = task_message.task_id
     context.start = datetime.now()
     task_message = remove_task_message_arguments(task_message, ["timeout"])
     return task_message
 
 
-def ping_result_handler(result_message, context):
+def ping_result_handler(agent, result_message, context):
     end = datetime.now()
     delta = end - context.start
     result_message.message = (
@@ -96,7 +96,7 @@ def ping_result_handler(result_message, context):
     return result_message
 
 
-def ping_timeout_handler(context):
+def ping_timeout_handler(agent, context):
     result_message = AgentResultMessageModel(
         task_id=context.task_id,
         success=False,
@@ -123,7 +123,9 @@ ping_capability = request_response_capability(
             greater_than=0,
         )
     },
-    resolve_timeout=lambda task_message, context: task_message.arguments["timeout"],
+    resolve_timeout=lambda agent, task_message, context: task_message.arguments[
+        "timeout"
+    ],
     task_handler=ping_task_handler,
     result_handler=ping_result_handler,
     timeout_handler=ping_timeout_handler,

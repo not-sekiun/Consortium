@@ -35,7 +35,7 @@ from consortium.server.services.component_registry_services.exception_remapping_
 class AgentProfileRegistryService(
     ExceptionRemappingComponentRegistryService[AgentProfile, AgentProfileLoadingError],
 ):
-    _EXCEPTION_MAP = {
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP = {
         comp_excs.ComponentProjectManifestFileNotFoundError: AgentProfileProjectManifestFileNotFoundError,
         comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidAgentProfileProjectManifestFileJSONError,
         comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidAgentProfileProjectManifestFileSchemaError,
@@ -56,7 +56,7 @@ class AgentProfileRegistryService(
         comp_excs.ComponentAlreadyRegisteredError: AgentProfileAlreadyRegisteredError,
         comp_excs.DuplicateComponentLabelError: DuplicateAgentProfileLabelError,
     }
-    _EXCEPTION_KWARGS_MAP = {
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "agent_profile_project_folder",
         "component_file": "agent_profile_file",
         "component_symbol": "agent_profile_symbol",

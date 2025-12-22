@@ -41,6 +41,9 @@ from consortium.server.models.agent_models import (
     AgentTaskState,
 )
 from consortium.server.server_logging import LoggerType
+from consortium.server.services.agent_file_manager_service import (
+    AgentFileManagerService,
+)
 from consortium.server.utils import normalize_uuid
 
 
@@ -159,6 +162,7 @@ class Agent:
         self.hostname = hostname
         self.agent_data = agent_data
 
+        self.agent_file_manager_service = AgentFileManagerService(agent=self)
         self.agent_logger = logger.bind(
             logger_name=f"Agent {self}",
             logger_type=LoggerType.AGENT_LOGGER,
@@ -435,7 +439,8 @@ class Agent:
         ):
             if agent_capability.is_atomic:
                 async with self._task_messages_queue_lock:
-                    result_message = await agent_capability.run(
+                    result_message = await agent_capability.execute(
+                        agent=self,
                         task_message=task_message,
                     )
             else:
@@ -445,7 +450,8 @@ class Agent:
                 # capabilities.
                 async with self._task_messages_queue_lock:
                     pass
-                result_message = await agent_capability.run(
+                result_message = await agent_capability.execute(
+                    agent=self,
                     task_message=task_message,
                 )
 

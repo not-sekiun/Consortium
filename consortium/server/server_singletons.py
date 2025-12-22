@@ -89,7 +89,7 @@ artifacts_service = RepositoryService(
     repository_directory_path=CONSORTIUM_ARTIFACTS_DIRECTORY_PATH,
 )
 user_accounts_service = UserAccountsService()
-users_service = UsersService()
+users_service = UsersService(events_service=events_service)
 
 # The plugins service needs to be instantiated last so that the loaded plugins have
 # access to all the other services.

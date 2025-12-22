@@ -3,12 +3,15 @@ import uuid
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions import (
     UserAccessTokenNotFoundError,
     UserIDNotFoundError,
 )
 from consortium.server.objects.user_objects import User
 from consortium.server.server_logging import LoggerType
+from consortium.server.services.events_service import EventsService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
@@ -16,7 +19,8 @@ from consortium.server.utils import (
 
 
 class UsersService:
-    def __init__(self) -> None:
+    def __init__(self, events_service: EventsService) -> None:
+        self._events_service = events_service
         self._users = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -87,8 +91,12 @@ class UsersService:
         user = User(user_account=user_account)
         self._users[str(user.user_id)] = user
 
+        self._events_service.trigger_event(
+            event=Event(event_type=EventType.USER_LOGGED_IN, data=user.to_json())
+        )
         self._logger.info("User logged in: {}", user)
         self._logger.debug("- {!r}", user)
+
         return user
 
     @log_and_propagate_error_on_service_method
@@ -96,5 +104,12 @@ class UsersService:
         user = self.get_user_by_user_id(user_id=user_id)
 
         deleted_user = self._users.pop(str(user.user_id))
+
+        self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.USER_LOGGED_OUT,
+                data={"user_id": str(user.user_id)},
+            )
+        )
         self._logger.info("User logged out: {}", deleted_user)
         self._logger.debug("- {!r}", deleted_user)

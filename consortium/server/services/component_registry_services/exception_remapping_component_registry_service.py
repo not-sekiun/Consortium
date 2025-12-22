@@ -17,8 +17,8 @@ from consortium.server.services.component_registry_services.component_registry_s
 class ExceptionRemappingComponentRegistryService(
     ComponentRegistryService[Component, ComponentLoadingError],
 ):
-    _EXCEPTION_MAP: dict[type[Exception], type[Exception]]
-    _EXCEPTION_KWARGS_MAP: dict[str, str]
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP: dict[type[Exception], type[Exception]]
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP: dict[str, str]
 
     @staticmethod
     def _remap_exception_decorator(func):
@@ -36,8 +36,8 @@ class ExceptionRemappingComponentRegistryService(
                 raise remap_exception(
                     original_exception=exc,
                     original_kwargs=exc._kwargs,
-                    exception_map=self._METADATA_EXCEPTION_MAP,
-                    exception_kwargs_map=self._METADATA_EXCEPTION_KWARGS_MAP,
+                    exception_map=self._COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP,
+                    exception_kwargs_map=self._COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP,
                 ) from None
 
         return wrapper
@@ -86,8 +86,8 @@ class ExceptionRemappingComponentRegistryService(
                         remap_exception(
                             original_exception=error,
                             original_kwargs=error._kwargs,
-                            exception_map=self._EXCEPTION_MAP,
-                            exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
+                            exception_map=self._COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP,
+                            exception_kwargs_map=self._COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP,
                         ),
                     ),
                 )

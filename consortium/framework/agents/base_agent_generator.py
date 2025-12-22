@@ -104,12 +104,16 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             return (self.datetime_stopped - self.datetime_started).total_seconds()
         return None
 
+    async def build(self, parameters: dict) -> None: ...
+
     # TODO: Maybe think of a stricter way to prevent overriding this method.
     @final
     async def on_started(self) -> None:
         self.datetime_started = datetime.now()
 
-    async def on_running(self) -> None: ...
+    @final
+    async def on_running(self) -> None:
+        await self.build(parameters=self.parameters)
 
     @final
     async def on_completed(self) -> None:

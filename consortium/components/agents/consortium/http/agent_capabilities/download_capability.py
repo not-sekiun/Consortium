@@ -125,7 +125,7 @@ class DownloadCapability(BaseAgentCapability):
         ),
     }
 
-    async def run(
+    async def execute(
         self,
         task_message: AgentTaskMessageModel,
     ) -> AgentResultMessageModel:

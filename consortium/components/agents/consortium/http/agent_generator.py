@@ -26,9 +26,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         "executable with pyinstaller if specified by the 'format' option."
     )
 
-    async def on_running(self) -> None:
-        parameters = self.parameters
-
+    async def build(self, parameters: dict) -> None:
         with open(
             self.working_directory / "agent_source" / "_agent.py",
         ) as file:

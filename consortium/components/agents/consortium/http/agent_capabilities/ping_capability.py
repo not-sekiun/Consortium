@@ -40,7 +40,7 @@ class PingCapability(BaseAgentCapability):
     }
     authors = {"Sekiun (github.com/not-sekiun)"}
 
-    async def run(
+    async def execute(
         self,
         task_message: AgentTaskMessageModel,
     ) -> AgentResultMessageModel:

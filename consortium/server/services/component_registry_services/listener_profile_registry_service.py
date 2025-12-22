@@ -38,7 +38,7 @@ class ListenerProfileRegistryService(
         ListenerProfileLoadingError,
     ],
 ):
-    _EXCEPTION_MAP = {
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP = {
         comp_excs.ComponentProjectManifestFileNotFoundError: ListenerProfileProjectManifestFileNotFoundError,
         comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidListenerProfileProjectManifestFileJSONError,
         comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidListenerProfileProjectManifestFileSchemaError,
@@ -59,7 +59,7 @@ class ListenerProfileRegistryService(
         comp_excs.ComponentAlreadyRegisteredError: ListenerProfileAlreadyRegisteredError,
         comp_excs.DuplicateComponentLabelError: DuplicateListenerProfileLabelError,
     }
-    _EXCEPTION_KWARGS_MAP = {
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "listener_profile_project_folder",
         "component_file": "listener_profile_file",
         "component_symbol": "listener_profile_symbol",

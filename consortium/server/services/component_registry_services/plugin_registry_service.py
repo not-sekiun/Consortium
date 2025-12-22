@@ -38,7 +38,7 @@ from consortium.server.services.component_registry_services.exception_remapping_
 class PluginRegistryService(
     ExceptionRemappingComponentRegistryService[BasePlugin, PluginLoadingError],
 ):
-    _EXCEPTION_MAP = {
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP = {
         comp_excs.ComponentProjectManifestFileNotFoundError: PluginProjectManifestFileNotFoundError,
         comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidPluginProjectManifestFileJSONError,
         comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidPluginProjectManifestFileSchemaError,
@@ -59,7 +59,7 @@ class PluginRegistryService(
         comp_excs.ComponentAlreadyRegisteredError: PluginAlreadyRegisteredError,
         comp_excs.DuplicateComponentLabelError: DuplicatePluginLabelError,
     }
-    _EXCEPTION_KWARGS_MAP = {
+    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "plugin_project_folder",
         "component_file": "plugin_file",
         "component_symbol": "plugin_symbol",

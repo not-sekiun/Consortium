@@ -67,7 +67,8 @@ class _AgentTemplateModel(ComponentMetadataModel):
 
 class BaseAgentTemplate(ComponentMetadata, ABC):
     _METADATA_MODEL = _AgentTemplateModel
-    _EXCEPTION_MAP = {
+
+    _COMPONENT_METADATA_EXCEPTION_MAP = {
         comp_excs.MissingComponentConfigurationParameterError: MissingAgentTemplateConfigurationParameterError,
         comp_excs.EmptyComponentLabelError: EmptyAgentTemplateLabelError,
         comp_excs.InvalidComponentVersionError: InvalidAgentTemplateVersionError,
@@ -75,7 +76,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidAgentTemplateDependencyVersionSpecifierError,
         comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidAgentTemplateConfigurationParameterTypeError,
     }
-    _EXCEPTION_KWARGS_MAP = {
+    _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "agent_template_str",
         "component_filepath": "agent_template_filepath",
     }
@@ -95,12 +96,12 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
 
         try:
             cls._validate_metadata()
-        except comp_excs.ComponentsError as exc:
+        except comp_excs.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,
-                exception_map=cls._EXCEPTION_MAP,
-                exception_kwargs_map=cls._EXCEPTION_KWARGS_MAP,
+                exception_map=cls._COMPONENT_METADATA_EXCEPTION_MAP,
+                exception_kwargs_map=cls._COMPONENT_METADATA_EXCEPTION_KWARGS_MAP,
             ) from None
 
         # Check that options do not have duplicate names.
