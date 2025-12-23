@@ -14,7 +14,7 @@ from consortium.framework._components import (
     ComponentMetadata,
     ComponentMetadataModel,
 )
-from consortium.framework.utils.exception_utils import remap_exception
+from consortium.framework._utils import remap_exception
 from consortium.server.exceptions.consortium_exceptions import (
     components_consortium_exceptions as comp_excs,
 )

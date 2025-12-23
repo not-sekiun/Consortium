@@ -11,7 +11,6 @@ from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_e
     EventHooksFrameworkError,
     EventHooksServiceError,
 )
-from consortium.server.server_config import CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.component_loader_services.event_hook_loader_service import (
     EventHookLoaderService,
@@ -25,13 +24,21 @@ from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class EventHooksService:
-    def __init__(self, events_service: EventsService, release_service: ReleaseService):
+    def __init__(
+        self,
+        events_service: EventsService,
+        release_service: ReleaseService,
+        event_hooks_directory: pathlib.Path,
+        consortium_root: pathlib.Path,
+    ) -> None:
+        self._event_hooks_directory = event_hooks_directory
         self._event_hook_loader_service = EventHookLoaderService(
-            release_service=release_service
+            consortium_root=consortium_root,
+            release_service=release_service,
         )
         self._event_hook_registry_service = EventHookRegistryService(
             component_loader_service=self._event_hook_loader_service,
-            component_framework_directory=CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
+            component_framework_directory=self._event_hooks_directory,
             events_service=events_service,
         )
         self._logger = logger.bind(
@@ -229,7 +236,7 @@ class EventHooksService:
         self._logger.info("Loading framework event hooks...")
         retrieved, skipped, errored = (
             self.get_event_hooks_from_event_hook_project_folder_directories(
-                directory=CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
+                directory=self._event_hooks_directory,
                 ignore_enabled_event_hook_flag=ignore_enabled_event_hook_flag,
             )
         )
@@ -260,7 +267,7 @@ class EventHooksService:
         self._logger.info(
             "Loaded event hooks from '{}' ({} event hook(s) loaded, {} event "
             "hook(s) skipped, {} event hook(s) failed to load).",
-            str(CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH),
+            str(self._event_hooks_directory),
             len(retrieved) - failed_to_load,
             len(skipped),
             len(errored) + failed_to_load,
@@ -273,7 +280,7 @@ class EventHooksService:
         for event_hook in self.get_all_event_hooks():
             if (
                 event_hook.event_hook_project_folder.parent
-                == CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH
+                == self._event_hooks_directory
             ):
                 self.unload_event_hook_by_event_hook_id(
                     event_hook_id=str(event_hook.event_hook_id),

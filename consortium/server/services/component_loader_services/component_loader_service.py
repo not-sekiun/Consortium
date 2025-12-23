@@ -29,9 +29,6 @@ from consortium.server.exceptions.consortium_exceptions.components_consortium_ex
     InvalidComponentProjectPyProjectFileTOMLError,
     ThirdPartyDependencyNotFoundError,
 )
-from consortium.server.server_config import (
-    CONSORTIUM_HOME_DIRECTORY_PATH,
-)
 from consortium.server.services.release_service import ReleaseService
 
 Component = TypeVar("Component")
@@ -45,7 +42,8 @@ class ComponentLoaderService[Component]:
     _component_framework_error: type[Exception]
     _manifest_json_schema: dict[str, Any]
 
-    def __init__(self, release_service: ReleaseService):
+    def __init__(self, release_service: ReleaseService, consortium_root: pathlib.Path):
+        self._consortium_root = consortium_root
         self._release = release_service.release
 
     @staticmethod
@@ -209,9 +207,7 @@ class ComponentLoaderService[Component]:
 
         # Check for valid symbol names in the required component project file.
         component_module_path = ".".join(
-            component_file.relative_to(
-                CONSORTIUM_HOME_DIRECTORY_PATH,
-            ).parts,
+            component_file.relative_to(self._consortium_root).parts
         )[: -len(".py")]
 
         # Check for exceptions that occur during import

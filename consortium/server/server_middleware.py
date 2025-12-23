@@ -15,7 +15,7 @@ from consortium.server.exceptions.consortium_exceptions.users_consortium_excepti
     UserAccessTokenNotFoundError,
 )
 from consortium.server.objects.server_objects import ServerStatus
-from consortium.server.server_config import (
+from consortium.server.server_jwt_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
 )

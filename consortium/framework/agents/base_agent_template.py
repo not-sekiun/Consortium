@@ -9,6 +9,7 @@ from typing import get_type_hints
 from pydantic import ConfigDict
 
 from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
+from consortium.framework._utils import format_docstring_to_single_line, remap_exception
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.framework_types import (
@@ -23,8 +24,6 @@ from consortium.framework.options import (
     SingleValueOption,
     ToggleableChoicesValueOption,
 )
-from consortium.framework.utils.exception_utils import remap_exception
-from consortium.framework.utils.formatter_utils import format_docstring_to_single_line
 from consortium.server.exceptions.consortium_exceptions import (
     components_consortium_exceptions as comp_excs,
 )

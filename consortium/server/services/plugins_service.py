@@ -5,15 +5,15 @@ import uuid
 
 from loguru import logger
 
+from consortium.framework._utils import remap_exception
+
 # from consortium.framework.plugins._plugin_status import PluginState
 from consortium.framework.plugins.base_plugin import BasePlugin
-from consortium.framework.utils.exception_utils import remap_exception
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     PluginLoadingError,
     PluginsError,
     PluginUnloadingError,
 )
-from consortium.server.server_config import CONSORTIUM_PLUGINS_DIRECTORY_PATH
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.component_loader_services.plugin_loader_service import (
     PluginLoaderService,
@@ -26,14 +26,20 @@ from consortium.server.utils import log_and_propagate_error_on_service_method
 
 
 class PluginsService:
-    def __init__(self, release_service: ReleaseService):
+    def __init__(
+        self,
+        release_service: ReleaseService,
+        plugins_directory: pathlib.Path,
+        consortium_root: pathlib.Path,
+    ):
+        self._plugins_directory = plugins_directory
         self._plugins = {}
         self._plugin_loader_service = PluginLoaderService(
-            release_service=release_service
+            consortium_root=consortium_root, release_service=release_service
         )
         self._plugin_registry_service = PluginRegistryService(
             component_loader_service=self._plugin_loader_service,
-            component_framework_directory=CONSORTIUM_PLUGINS_DIRECTORY_PATH,
+            component_framework_directory=self._plugins_directory,
         )
         self._restart_plugin_tasks = set()
         self._logger = logger.bind(
@@ -436,7 +442,7 @@ class PluginsService:
         self._logger.info("Loading framework plugins...")
         retrieved, skipped, errored = (
             self.get_plugins_from_plugin_project_folder_directories(
-                directory=CONSORTIUM_PLUGINS_DIRECTORY_PATH,
+                directory=self._plugins_directory,
                 ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
             )
         )
@@ -507,7 +513,7 @@ class PluginsService:
         self._logger.info(
             "Loaded plugins from '{}' ({} plugin(s) loaded, {} plugin(s) "
             "skipped, {} plugin(s) failed to load).",
-            str(CONSORTIUM_PLUGINS_DIRECTORY_PATH),
+            str(self._plugins_directory),
             len(resolved_ordered_plugins) - failed_to_load,
             len(skipped),
             len(errored) + len(unresolved_plugins) + failed_to_load,
@@ -524,7 +530,7 @@ class PluginsService:
         number_of_unloaded_plugins = 0
         unload_plugin_tasks = []
         for plugin in self.get_all_plugins():
-            if plugin.plugin_project_folder.parent == CONSORTIUM_PLUGINS_DIRECTORY_PATH:
+            if plugin.plugin_project_folder.parent == self._plugins_directory:
                 unload_plugin_tasks.append(
                     asyncio.create_task(
                         self.unload_plugin_by_plugin_id(
@@ -587,7 +593,7 @@ class PluginsService:
         # Recursively search through the framework's plugin project folders directory
         # to find all plugin project folders. If a plugin project folder is found that
         # is not already loaded (it failed to unload), load it.
-        for plugin_project_folder in CONSORTIUM_PLUGINS_DIRECTORY_PATH.rglob("*"):
+        for plugin_project_folder in self._plugins_directory.rglob("*"):
             if plugin_project_folder.name != "plugin_project_manifest.json":
                 continue
             plugin_loaded = False

@@ -1,21 +1,22 @@
 import argparse
 import asyncio
 import json
+import pathlib
 
 from pydantic import ValidationError
 
 import consortium.server.server_reloader as server_reloader
 from consortium.server.models.config_models import LoggingConfigModel, ServerConfigModel
-from consortium.server.server_config import (
-    CONSORTIUM_LOGGING_CONFIG_JSON_FILE_PATH,
-    CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH,
-    CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH,
-)
 from consortium.server.server_logging import configure_logger
 from consortium.server.services.logging_service import LoggingService
 
 
 async def _start_server(arguments: argparse.Namespace) -> None:
+    # Resolve necessary file and directory paths first. We dont do this through the
+    # `ConsortiumPathsService` because that service depends on the logging service being
+    # initialized first, which we are doing here.
+    consortium_root = pathlib.Path(__file__).parents[2]
+
     # First thing we check is if reloading is enabled. If the reload flag is set, we
     # essentially just run the entire server again (through the entry point script)
     # with all the same arguments as before just without the reload flag (otherwise
@@ -23,14 +24,16 @@ async def _start_server(arguments: argparse.Namespace) -> None:
     # time is run in a subprocess that is terminated and started whenever file changes
     # are detected.
     if arguments.reload:
-        server_reloader.main()
+        server_reloader.main(consortium_root=consortium_root)
         return
 
     # Configure server from configuration file.
     if arguments.server_config is None:
         # Use relative pathing from the module to allow directory independent
         # invocation.
-        server_config_filepath = CONSORTIUM_SERVER_CONFIG_JSON_FILE_PATH
+        server_config_filepath = (
+            consortium_root / "data" / "server" / "server_config.json"
+        )
     else:
         server_config_filepath = arguments.server_config
     try:
@@ -65,7 +68,9 @@ async def _start_server(arguments: argparse.Namespace) -> None:
 
     # Configure logging from configuration file.
     if arguments.logging_config is None:
-        logging_config_filepath = CONSORTIUM_LOGGING_CONFIG_JSON_FILE_PATH
+        logging_config_filepath = (
+            consortium_root / "data" / "server" / "logging_config.json"
+        )
     else:
         logging_config_filepath = arguments.logging_config
     try:
@@ -76,7 +81,10 @@ async def _start_server(arguments: argparse.Namespace) -> None:
             log_file=json_data.get(
                 "log_file",
                 str(
-                    CONSORTIUM_SERVER_LOGS_DIRECTORY_PATH
+                    consortium_root
+                    / "data"
+                    / "server"
+                    / "logs"
                     / "{time:YYYY-MM-DDTHH-mm-ss}.log"
                 ),
             ),

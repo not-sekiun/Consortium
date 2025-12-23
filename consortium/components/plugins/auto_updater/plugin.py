@@ -10,9 +10,6 @@ from rich.live import Live
 from rich.spinner import Spinner
 
 from consortium.framework.plugins import BasePlugin
-from consortium.server.server_config import (
-    CONSORTIUM_HOME_DIRECTORY_PATH,
-)
 
 
 class Plugin(BasePlugin):
@@ -104,7 +101,11 @@ class Plugin(BasePlugin):
                     # also helps prevent log messages from other plugins/components from
                     # interleaving with the update process messages.
                     self.logger.info("[1/3] Changing to project root...")
-                    os.chdir(str(CONSORTIUM_HOME_DIRECTORY_PATH.resolve()))
+                    os.chdir(
+                        str(
+                            self.server_services.consortium_paths_service.consortium_root.resolve()
+                        )
+                    )
                     self.logger.info("[2/3] Pulling new release...")
                     return_code, stdout, stderr = self._run_cmd_with_spinner(
                         "git pull",

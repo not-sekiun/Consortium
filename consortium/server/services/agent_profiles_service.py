@@ -12,7 +12,6 @@ from consortium.server.exceptions.consortium_exceptions.agent_templates_consorti
     AgentTemplatesFrameworkError,
 )
 from consortium.server.objects.c2_profile_objects import AgentProfile
-from consortium.server.server_config import CONSORTIUM_AGENTS_DIRECTORY_PATH
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.component_loader_services.agent_profile_loader_service import (
     AgentProfileLoaderService,
@@ -28,13 +27,20 @@ from consortium.server.utils import log_and_propagate_error_on_service_method
 # accessed by the server's internal services, plugins, and event hooks. The external
 # forward facing REST API should not have access to this service.
 class AgentProfilesService:
-    def __init__(self, release_service: ReleaseService) -> None:
+    def __init__(
+        self,
+        release_service: ReleaseService,
+        agents_directory: pathlib.Path,
+        consortium_root: pathlib.Path,
+    ) -> None:
+        self._agents_directory = agents_directory
         self._agent_profile_loader_service = AgentProfileLoaderService(
+            consortium_root=consortium_root,
             release_service=release_service,
         )
         self._agent_profile_registry_service = AgentProfileRegistryService(
             component_loader_service=self._agent_profile_loader_service,
-            component_framework_directory=CONSORTIUM_AGENTS_DIRECTORY_PATH,
+            component_framework_directory=self._agents_directory,
         )
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -182,7 +188,7 @@ class AgentProfilesService:
         self._logger.info("Loading framework agent profiles...")
         retrieved, skipped, errored = (
             self.get_agent_profiles_from_agent_profile_project_folder_directories(
-                directory=CONSORTIUM_AGENTS_DIRECTORY_PATH,
+                directory=self._agents_directory,
                 ignore_enabled_agent_profile_flag=ignore_enabled_agent_profile_flag,
             )
         )
@@ -216,7 +222,7 @@ class AgentProfilesService:
         self._logger.info(
             "Loaded agent profiles from '{}' ({} agent profile(s) loaded, "
             "{} agent profile(s) skipped, {} agent profile(s) failed to load).",
-            str(CONSORTIUM_AGENTS_DIRECTORY_PATH),
+            str(self._agents_directory),
             len(retrieved) - failed_to_load,
             len(skipped),
             len(errored) + failed_to_load,
@@ -227,10 +233,7 @@ class AgentProfilesService:
         self._logger.info("Unloading framework agent profiles...")
         unloaded_agent_profiles = 0
         for agent_profile in self.get_all_agent_profiles():
-            if (
-                agent_profile.agent_project_folder.parent
-                == CONSORTIUM_AGENTS_DIRECTORY_PATH
-            ):
+            if agent_profile.agent_project_folder.parent == self._agents_directory:
                 await self.unload_agent_profile_by_agent_profile_id(
                     agent_profile_id=str(agent_profile.agent_profile_id),
                 )

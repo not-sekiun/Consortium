@@ -1,4 +1,5 @@
 import os
+import pathlib
 import subprocess
 import sys
 import time
@@ -7,13 +8,6 @@ from datetime import datetime
 from prompt_toolkit import HTML, print_formatted_text
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
-
-from consortium.server.server_config import (
-    CONSORTIUM_AGENTS_DIRECTORY_PATH,
-    CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH,
-    CONSORTIUM_LISTENERS_DIRECTORY_PATH,
-    CONSORTIUM_PLUGINS_DIRECTORY_PATH,
-)
 
 
 class _ServerSubprocessManager:
@@ -66,7 +60,7 @@ def _print_delimiter_text(text) -> None:
     print_formatted_text(HTML(f"<b><ansigreen>{output}</ansigreen></b>"))
 
 
-def main() -> None:
+def main(consortium_root: pathlib.Path) -> None:
     _print_delimiter_text(
         f"[{datetime.now().isoformat()}] Starting server with framework reloading "
         f"enabled...",
@@ -81,10 +75,10 @@ def main() -> None:
     )
 
     observed_directories = [
-        str(CONSORTIUM_LISTENERS_DIRECTORY_PATH.resolve()),
-        str(CONSORTIUM_AGENTS_DIRECTORY_PATH.resolve()),
-        str(CONSORTIUM_EVENT_HOOKS_DIRECTORY_PATH.resolve()),
-        str(CONSORTIUM_PLUGINS_DIRECTORY_PATH.resolve()),
+        str((consortium_root / "consortium" / "components" / "listeners").resolve()),
+        str((consortium_root / "consortium" / "components" / "agents").resolve()),
+        str((consortium_root / "consortium" / "components" / "event_hooks").resolve()),
+        str((consortium_root / "consortium" / "components" / "plugins").resolve()),
     ]
     observer = Observer()
     for directory in observed_directories:

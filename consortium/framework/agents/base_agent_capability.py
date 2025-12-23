@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, get_type_hints
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from consortium.framework._utils import format_docstring_to_single_line
 from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
@@ -19,7 +20,6 @@ from consortium.framework.options import (
     SingleValueOption,
     ToggleableChoicesValueOption,
 )
-from consortium.framework.utils.formatter_utils import format_docstring_to_single_line
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
     CustomOSStringAlreadyRegisteredError,
     DuplicateAgentCapabilityOptionNameError,

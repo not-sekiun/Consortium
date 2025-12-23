@@ -11,7 +11,7 @@ from consortium.server.exceptions.consortium_exceptions.users_consortium_excepti
 )
 from consortium.server.objects.user_account_objects import UserPermissions, UserRole
 from consortium.server.objects.user_objects import User
-from consortium.server.server_config import (
+from consortium.server.server_jwt_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
 )

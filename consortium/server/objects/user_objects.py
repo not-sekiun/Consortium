@@ -4,7 +4,7 @@ from datetime import datetime
 import jwt
 
 from consortium.server.models.user_account_models import UserAccountModel
-from consortium.server.server_config import (
+from consortium.server.server_jwt_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_EXPIRATION_DURATION,
     JSON_WEB_TOKEN_SECRET_KEY,

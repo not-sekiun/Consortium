@@ -1,4 +1,5 @@
 import json
+import pathlib
 import uuid
 from pathlib import Path
 
@@ -24,7 +25,6 @@ from consortium.server.exceptions.consortium_exceptions.user_accounts_consortium
 )
 from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
-from consortium.server.server_config import CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH
 from consortium.server.server_logging import LoggerType
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
@@ -33,7 +33,8 @@ from consortium.server.utils import (
 
 
 class UserAccountsService:
-    def __init__(self):
+    def __init__(self, user_accounts_json_file: pathlib.Path):
+        self._user_accounts_json_file = user_accounts_json_file
         self._user_accounts = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -344,7 +345,7 @@ class UserAccountsService:
 
         try:
             loaded_user_accounts = self.load_user_accounts_from_user_accounts_file(
-                user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
+                user_accounts_filepath=self._user_accounts_json_file,
             )
         except UserAccountsServiceError as exc:
             self._logger.error(exc)
@@ -368,7 +369,7 @@ class UserAccountsService:
                     user_account_id=user_account_id,
                 )
             loaded_user_accounts = self.load_user_accounts_from_user_accounts_file(
-                user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
+                user_accounts_filepath=self._user_accounts_json_file,
             )
         except UserAccountsServiceError as exc:
             self._logger.error("{}: {}", exc.__class__.__name__, exc)
@@ -388,7 +389,7 @@ class UserAccountsService:
 
         try:
             number_of_bytes_written = self.write_user_accounts_to_user_accounts_file(
-                user_accounts_filepath=CONSORTIUM_USER_ACCOUNTS_JSON_FILE_PATH,
+                user_accounts_filepath=self._user_accounts_json_file,
             )
         except UserAccountsServiceError as exc:
             self._logger.error(exc)

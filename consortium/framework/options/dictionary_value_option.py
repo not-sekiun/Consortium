@@ -4,6 +4,7 @@ from typing import get_type_hints
 
 from pydantic import BaseModel, ValidationError
 
+from consortium.framework._utils import resolve_validating_function_string
 from consortium.framework.exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
@@ -13,7 +14,6 @@ from consortium.framework.options._option_argument_validators import (
     validate_validating_function_argument,
     validate_validating_regex_argument,
 )
-from consortium.framework.options._utils import resolve_validating_function_string
 from consortium.framework.options.option_types import OptionType
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     InvalidOptionConfigurationParameterTypeError,

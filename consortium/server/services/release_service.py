@@ -1,11 +1,14 @@
 import json
+import pathlib
 from functools import cached_property
 
 from consortium.server.models.server_models import ReleaseModel
-from consortium.server.server_config import CONSORTIUM_RELEASE_JSON_FILE_PATH
 
 
 class ReleaseService:
+    def __init__(self, release_json_file: pathlib.Path):
+        self._release_json_file = release_json_file
+
     def __str__(self):
         return "Release Service"
 
@@ -14,5 +17,5 @@ class ReleaseService:
 
     @cached_property
     def release(self):
-        with CONSORTIUM_RELEASE_JSON_FILE_PATH.open("r") as file:
+        with self._release_json_file.open("r") as file:
             return ReleaseModel(**json.load(file))

@@ -29,11 +29,11 @@ from consortium.server.exceptions.consortium_exceptions.users_consortium_excepti
     UserAccessTokenNotFoundError,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_config import (
+from consortium.server.server_dependencies import AuthorizeUserRequest
+from consortium.server.server_jwt_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
 )
-from consortium.server.server_dependencies import AuthorizeUserRequest
 from consortium.server.server_logging import LoggerType
 
 router = APIRouter(
