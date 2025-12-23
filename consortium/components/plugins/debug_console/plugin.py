@@ -9,6 +9,7 @@ from prompt_toolkit.formatted_text.html import HTML
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.patch_stdout import StdoutProxy, patch_stdout
 from prompt_toolkit.styles import Style
+from rich.pretty import pprint
 
 from consortium.framework.plugins import BasePlugin
 from consortium.server.server_logging import log_formatter
@@ -266,7 +267,7 @@ class Plugin(BasePlugin):
                         # Print the result of the expression if it is not None to
                         # simulate the behavior of the interpreter.
                         if result is not None:
-                            print(result)
+                            pprint(result)
                         # Remove the temporary function from the global scope so that
                         # it can't be accessed from the interpreter.
                         del globals_dict[random_identifier]

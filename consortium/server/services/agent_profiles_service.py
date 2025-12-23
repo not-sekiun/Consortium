@@ -3,6 +3,7 @@ import uuid
 
 from loguru import logger
 
+import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions import (
     AgentProfileLoadingError,
     AgentProfilesServiceError,
@@ -104,6 +105,8 @@ class AgentProfilesService:
         agent_profile = await self._agent_profile_registry_service.load_component(
             component=agent_profile,
         )
+        server_singletons.c2_types_service._resolve_agent_type_references()
+        server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles()
         self._logger.debug("Loaded agent profile: {}", agent_profile)
 
     @log_and_propagate_error_on_service_method
@@ -124,6 +127,9 @@ class AgentProfilesService:
                 "`True`.",
                 str(agent_profile_project_folder),
             )
+        else:
+            server_singletons.c2_types_service._resolve_agent_type_references()
+            server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles()
         self._logger.debug("Loaded agent profile: {}", agent_profile)
         return agent_profile
 
@@ -137,6 +143,7 @@ class AgentProfilesService:
                 component_id=agent_profile_id,
             )
         )
+        server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles()
         self._logger.info("Unloaded agent profile: {}", agent_profile)
         self._logger.debug("Unloaded agent profile: {!r}", agent_profile)
 
@@ -160,6 +167,9 @@ class AgentProfilesService:
                 "`True`.",
                 agent_profile_id,
             )
+        else:
+            server_singletons.c2_types_service._resolve_agent_type_references()
+            server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles()
         self._logger.info("Reloaded agent profile: {}", agent_profile)
         self._logger.debug("Reloaded agent profile: {!r}", agent_profile)
         return agent_profile

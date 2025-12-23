@@ -3,6 +3,7 @@ import uuid
 
 from loguru import logger
 
+import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions import (  # InternalListenerProjectError,; InvalidListenerProjectFolderStructureError,; InvalidListenerProjectImplementationError,; InvalidListenerProjectManifestFileError,; InvalidListenerProjectManifestFileJSONError,; InvalidListenerProjectManifestFileSchemaError,; ListenerProjectInterfaceError,; ListenerProjectListenerFileNotFoundError,; ListenerProjectListenerTemplateFileNotFoundError,; ListenerProjectListenerTypeFileNotFoundError,; ListenerProjectManifestFileNotFoundError,; ListenerProjectSymbolNotFoundError,; InvalidListenerProfileProjectImplementationError,
     ListenerProfileLoadingError,
     ListenerProfilesServiceError,
@@ -106,6 +107,9 @@ class ListenerProfilesService:
         listener_profile = await self._listener_profile_registry_service.load_component(
             component=listener_profile,
         )
+        server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles(
+            listener_profile
+        )
         self._logger.debug("Loaded listener profile: {}", listener_profile)
 
     @log_and_propagate_error_on_service_method
@@ -125,6 +129,10 @@ class ListenerProfilesService:
                 "load it by setting the `ignore_enabled_listener_profile_flag` to "
                 "`True`.",
                 str(listener_profile_project_folder),
+            )
+        else:
+            server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles(
+                listener_profile
             )
         self._logger.debug("Loaded listener profile: {}", listener_profile)
         return listener_profile
@@ -161,6 +169,10 @@ class ListenerProfilesService:
                 "reload it by setting the `ignore_enabled_listener_profile_flag` to "
                 "`True`.",
                 listener_profile_id,
+            )
+        else:
+            server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles(
+                listener_profile
             )
         self._logger.info("Reloaded listener profile: {}", listener_profile)
         self._logger.debug("Reloaded listener profile: {!r}", listener_profile)

@@ -21,6 +21,7 @@ class ListListenerTemplatesCommand(BaseCommand):
           list_listener_templates
         """,
     )
+    group = "Listener Template Management Commands"
 
     async def run_command(
         self,

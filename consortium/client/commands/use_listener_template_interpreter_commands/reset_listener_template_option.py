@@ -25,6 +25,7 @@ class ResetListenerTemplateOptionCommand(BaseCommand):
           reset_listener_template_option option_str
         """,
     )
+    group = "Listener Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

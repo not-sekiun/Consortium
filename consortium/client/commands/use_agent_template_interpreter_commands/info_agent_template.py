@@ -22,6 +22,7 @@ class InfoAgentTemplateCommand(GeneratorsInterpreterInfoAgentTemplateCommand):
           info_agent_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
+    group = "Agent Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
@@ -44,12 +45,12 @@ class InfoAgentTemplateCommand(GeneratorsInterpreterInfoAgentTemplateCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-            if parsed_args.agent_template_id is None:
-                agent_template = command_context.environment["agent_template"]
-            else:
+            if parsed_args.agent_template_id is not None:
                 agent_template = await client_rest_api_connection.get_agent_template_by_agent_template_id(
-                    parsed_args.agent_template_id,
+                    agent_template_id=parsed_args.agent_template_id
                 )
+            else:
+                agent_template = command_context.environment["agent_template"]
             self._display_agent_template_info(agent_template=agent_template)
         except SystemExit:
             pass

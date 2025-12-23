@@ -14,5 +14,6 @@ class AgentTemplateModel(BaseModel):
     compatible_framework_version: str
     authors: list[str]
     agent_type: AgentTypeModel
+    compatible_listener_types: list[str]
     options: dict[str, Any]
     validating_function: None | str

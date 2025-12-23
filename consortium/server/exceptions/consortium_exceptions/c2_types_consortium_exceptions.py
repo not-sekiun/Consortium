@@ -169,3 +169,48 @@ class AgentTypeNotFoundError(C2TypesServiceError):
                 f"found with the provided agent type name '{agent_type_name}'."
             ),
         )
+
+
+class DuplicateAgentTypeNameError(C2TypesServiceError):
+    """
+    Raised when multiple distinct agent types with the same name are found in the C2
+    types service.
+    """
+
+    code = "DUPLICATE_AGENT_TYPE_NAME_ERROR"
+
+    def __init__(
+        self,
+        agent_template_str: str,
+        conflicting_agent_template_str: str,
+        agent_type_name: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to resolve agent type references. Agent template "
+                f"{agent_template_str} declared agent type '{agent_type_name}', but "
+                f"{conflicting_agent_template_str} already declared another distinct"
+                f"agent type with that name. Check that distinct agent types declare "
+                f"distinct names."
+            ),
+        )
+
+
+class UnresolvableAgentTypeReferenceError(C2TypesServiceError):
+    """
+    Raised when an agent type reference cannot be resolved to a known agent type in
+    the C2 types service.
+    """
+
+    code = "UNRESOLVABLE_AGENT_TYPE_REFERENCE_ERROR"
+
+    def __init__(self, agent_template_str: str, agent_type_name: str):
+        super().__init__(
+            message=(
+                f"Failed to resolve agent type reference for agent template "
+                f"{agent_template_str}. No known agent type with the name "
+                f"'{agent_type_name}' could be found. Check that at least one agent "
+                f"type was defined with that name and loaded for the reference to be "
+                f"resolved."
+            ),
+        )

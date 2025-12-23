@@ -63,6 +63,7 @@ class SetListenerTemplateOptionCommand(BaseCommand):
           set_listener_template_option toggleable_choices_value_option 0 -t bool  # Does the same thing as the above command.
         """,
     )
+    group = "Listener Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

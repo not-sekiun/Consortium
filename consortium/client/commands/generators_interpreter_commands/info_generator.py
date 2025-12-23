@@ -28,6 +28,7 @@ class InfoGeneratorCommand(BaseCommand):
           info_generator 123e4567-e89b-12d3-a456-42661417400
         """,
     )
+    group = "Agent Generator Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
@@ -125,7 +126,7 @@ class InfoGeneratorCommand(BaseCommand):
             table.add_row(
                 "Compatible Listener Types",
                 "\n".join(
-                    list(agent_generator["agent_type"]["compatible_listener_types"]),
+                    list(agent_generator["compatible_listener_types"]),
                 ),
             )
             parameter_table = Table()

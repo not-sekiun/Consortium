@@ -21,6 +21,7 @@ class CreateGeneratorCommand(BaseCommand):
           create_generator
         """,
     )
+    group = "Agent Generator Management Commands"
 
     async def run_command(self, command_context: CommandContext) -> ReturnStatus:
         try:

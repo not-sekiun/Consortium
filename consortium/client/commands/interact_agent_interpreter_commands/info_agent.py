@@ -41,15 +41,14 @@ class InfoAgentCommand(InfoAgentAgentsInterpreterCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-            await self.display_agent_info_from_agent_id(
-                client_rest_api_connection=client_rest_api_connection,
-                agent_id=parsed_args.agent_id
-                if parsed_args.agent_id
-                else command_context.environment["agent"]["agent_id"],
-            )
+            if parsed_args.agent_id is not None:
+                agent = await client_rest_api_connection.get_agent_by_agent_id(
+                    agent_id=parsed_args.agent_id[0]
+                )
+            else:
+                agent = command_context.environment["agent"]
+            self._display_agent_info(agent=agent)
         except SystemExit:
             pass
 
-        return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
-        )
+        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)

@@ -26,6 +26,7 @@ class InfoListenerCommand(BaseCommand):
           info_listener 123e4567-e89b-12d3-a456-42661417400
         """,
     )
+    group = "Listener Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

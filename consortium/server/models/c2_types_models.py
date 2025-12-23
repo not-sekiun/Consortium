@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class ListenerTypeModel(BaseModel):
     name: str
+    registered_compatible_agent_types: list[str]
 
 
 class AgentCapabilityModel(BaseModel):

@@ -36,6 +36,7 @@ class ConnectCommand(BaseCommand):
           connect -u username -p password -rh server.com -rp 1234  # Connect through manually provided connection details.
         """,
     )
+    group = "Client Session Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

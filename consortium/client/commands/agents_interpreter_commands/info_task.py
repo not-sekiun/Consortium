@@ -29,7 +29,7 @@ class InfoTaskCommand(BaseCommand):
             info_task 123e4567-e89b-12d3-a456-42661417400 43e56f0b-c3d2-4c70-82a9-8d27ded2cb2f
         """,
     )
-    group = "Task and Result Management Commands"
+    group = "Tasks and Results Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

@@ -24,6 +24,7 @@ class LaunchListenerCommand(BaseCommand):
           launch_listener
         """,
     )
+    group = "Listener Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         pass

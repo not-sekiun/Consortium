@@ -28,6 +28,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
           info_listener_template_option local_host
         """,
     )
+    group = "Listener Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

@@ -23,6 +23,7 @@ class InfoAgentTemplateCommand(BaseCommand):
           info_agent_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
+    group = "Agent Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
@@ -61,7 +62,7 @@ class InfoAgentTemplateCommand(BaseCommand):
         table.add_row(
             "Compatible Listener Types",
             "\n".join(
-                list(agent_template["agent_type"]["compatible_listener_types"]),
+                list(agent_template["compatible_listener_types"]),
             ),
         )
         CONSOLE.print(table)

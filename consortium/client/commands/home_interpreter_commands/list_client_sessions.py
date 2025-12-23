@@ -26,6 +26,7 @@ class ListClientSessionsCommand(BaseCommand):
           list_client_sessions
         """,
     )
+    group = "Client Session Management Commands"
 
     async def run_command(
         self,
@@ -38,12 +39,14 @@ class ListClientSessionsCommand(BaseCommand):
             table = Table(title="Client Sessions")
             table.add_column("Client Session ID")
             table.add_column("Name")
+            table.add_column("Username")
             table.add_column("Remote Host")
             table.add_column("Remote Port")
             for client_session in all_client_sessions:
                 table.add_row(
                     str(client_session.client_session_id),
                     client_session.name,
+                    client_session.username,
                     client_session.remote_host,
                     str(client_session.remote_port),
                 )

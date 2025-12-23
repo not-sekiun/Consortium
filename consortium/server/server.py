@@ -225,8 +225,9 @@ class Server:
     async def _server_startup_procedure(self) -> None:
         server_release = server_singletons.release_service.release
         self._logger.info(
-            f'Starting server (v{server_release.version} "{server_release.codename}") '
-            f"at {self.server_config.local_host}:{self.server_config.local_port}...",
+            f"Starting server (v{server_release.version} ({server_release.codename}) "
+            f"released {server_release.datetime_released}) at "
+            f"{self.server_config.local_host}:{self.server_config.local_port}...",
         )
         self.status = ServerStatus.RUNNING
 
@@ -236,7 +237,7 @@ class Server:
         # that any profiles that register custom listener/agent types are accounted for.
         await server_singletons.listener_profiles_service.load_framework_listener_profiles()
         await server_singletons.agent_profiles_service.load_framework_agent_profiles()
-        server_singletons.c2_types_service.resolve_registered_compatible_agent_types_for_listener_types()
+        server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles()
         # Load repository metadata before loading payloads metadata because the payloads
         # metadata depends on repository information.
         server_singletons.payloads_service._repository_service.load_repository_metadata()

@@ -29,6 +29,7 @@ class ListGeneratorsCommand(BaseCommand):
           list_generators
         """,
     )
+    group = "Agent Generator Management Commands"
 
     async def run_command(
         self,

@@ -43,13 +43,12 @@ class InfoListenerTemplateCommand(ListenersInterpreterInfoListenerTemplateComman
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-
-            if parsed_args.listener_template_id is None:
-                listener_template = command_context.environment["listener_template"]
-            else:
+            if parsed_args.listener_template_id is not None:
                 listener_template = await client_rest_api_connection.get_listener_template_by_listener_template_id(
-                    parsed_args.listener_template_id,
+                    listener_template_id=parsed_args.listener_template_id
                 )
+            else:
+                listener_template = command_context.environment["listener_template"]
             self._display_listener_template_info(listener_template=listener_template)
         except SystemExit:
             pass

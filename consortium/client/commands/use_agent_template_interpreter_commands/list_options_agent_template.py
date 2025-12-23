@@ -23,6 +23,7 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
           list_options_agent_template
         """,
     )
+    group = "Agent Template Management Commands"
 
     async def run_command(
         self,

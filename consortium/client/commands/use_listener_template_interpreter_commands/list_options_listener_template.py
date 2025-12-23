@@ -25,6 +25,7 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
           list_options_listener_template
         """,
     )
+    group = "Listener Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         pass

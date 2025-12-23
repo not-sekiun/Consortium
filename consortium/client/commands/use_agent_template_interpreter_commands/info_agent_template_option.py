@@ -26,6 +26,7 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
           info_agent_template_option remote_host
         """,
     )
+    group = "Agent Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

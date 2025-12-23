@@ -23,6 +23,7 @@ class InfoListenerTemplateCommand(BaseCommand):
           info_listener_template 123e4567-e89b-12d3-a456-42661417400
         """,
     )
+    group = "Listener Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
@@ -80,7 +81,7 @@ class InfoListenerTemplateCommand(BaseCommand):
                 "client_rest_api_connection"
             ]
             listener_template = await client_rest_api_connection.get_listener_template_by_listener_template_id(
-                parsed_args.listener_template_id[0],
+                listener_template_id=parsed_args.listener_template_id[0],
             )
             self._display_listener_template_info(listener_template=listener_template)
         except SystemExit:

@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
 )
@@ -34,14 +33,9 @@ class InfoAgentCommand(BaseCommand):
         )
 
     @staticmethod
-    async def display_agent_info_from_agent_id(
-        client_rest_api_connection: ClientRESTAPIConnection,
-        agent_id: str,
+    def _display_agent_info(
+        agent: dict,
     ) -> None:
-        agent = await client_rest_api_connection.get_agent_by_agent_id(
-            agent_id,
-        )
-
         table = Table(title="Agent Information")
         table.add_column("Information")
         table.add_column("Data")
@@ -52,28 +46,6 @@ class InfoAgentCommand(BaseCommand):
         table.add_row("Name", agent["name"])
         table.add_row("Description", agent["description"])
         table.add_row("Endpoint", agent["endpoint"])
-        # agent_type_table = Table()
-        # agent_type_table.add_column("Information")
-        # agent_type_table.add_column("Data")
-        # agent_type_table.add_row(
-        #     "Agent Type ID",
-        #     agent["agent_type"]["agent_type_id"],
-        # )
-        # agent_type_table.add_row(
-        #     "Name",
-        #     agent["agent_type"]["name"],
-        # )
-        # agent_type_table.add_row(
-        #     "Compatible Listener Types",
-        #     "\n".join(
-        #         [
-        #             f"'{listener_type['name']}' ({listener_type['listener_type_id']})"
-        #             for listener_type in agent["agent_type"][
-        #                 "compatible_listener_types"
-        #             ]
-        #         ],
-        #     ),
-        # )
         table.add_row("Agent Type", agent["agent_type"]["name"])
         table.add_row(
             "Agent Capabilities",
@@ -107,13 +79,11 @@ class InfoAgentCommand(BaseCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-            await self.display_agent_info_from_agent_id(
-                client_rest_api_connection=client_rest_api_connection,
-                agent_id=parsed_args.agent_id[0],
+            agent = await client_rest_api_connection.get_agent_by_agent_id(
+                agent_id=parsed_args.agent_id[0]
             )
+            self._display_agent_info(agent=agent)
         except SystemExit:
             pass
 
-        return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
-        )
+        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)

@@ -24,6 +24,7 @@ class ListListenersCommand(BaseCommand):
           list_listeners
         """,
     )
+    group = "Listener Management Commands"
 
     async def run_command(
         self,

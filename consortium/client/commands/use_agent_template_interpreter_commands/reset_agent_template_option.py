@@ -25,6 +25,7 @@ class ResetAgentTemplateOptionCommand(BaseCommand):
           reset_agent_template_option option_str
         """,
     )
+    group = "Agent Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

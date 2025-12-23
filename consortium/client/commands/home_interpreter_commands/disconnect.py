@@ -31,6 +31,7 @@ class DisconnectCommand(BaseCommand):
           disconnect 123e4567-e89b-12d3-a456-42661417400
         """,
     )
+    group = "Client Session Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

@@ -264,9 +264,6 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             "component_dependencies": list(map(str, self.component_dependencies)),
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
             "listener_type": self.listener_type.to_json(),
-            "registered_compatible_agent_types": list(
-                self.registered_compatible_agent_types
-            ),
             "options": {
                 name: option.to_json() for name, option in self.options.items()
             },

@@ -31,6 +31,7 @@ class RedescribeClientSessionCommand(BaseCommand):
           redescribe_client_session 123e4567-e89b-12d3-a456-42661417400 "New description"
         """,
     )
+    group = "Client Session Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
@@ -48,6 +49,18 @@ class RedescribeClientSessionCommand(BaseCommand):
             help="New description to assign to the specified client session.",
             nargs=1,
         )
+
+    @staticmethod
+    async def _redescribe_client_session(
+        client_session_id: str,
+        new_description: str,
+    ) -> None:
+        client_session = (
+            client_sessions_service.get_client_session_by_client_session_id(
+                client_session_id=client_session_id,
+            )
+        )
+        client_session.description = new_description
 
     async def run_command(
         self,

@@ -21,6 +21,7 @@ class ListAgentTemplatesCommand(BaseCommand):
           list_agent_templates
         """,
     )
+    group = "Agent Template Management Commands"
 
     async def run_command(
         self,

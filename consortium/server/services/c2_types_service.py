@@ -4,8 +4,11 @@ from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.listeners.base_listener_type import BaseListenerType
 from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
     AgentTypeNotFoundError,
+    DuplicateAgentTypeNameError,
     ListenerTypeNotFoundError,
+    UnresolvableAgentTypeReferenceError,
 )
+from consortium.server.objects.c2_profile_objects import ListenerProfile
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
@@ -178,10 +181,67 @@ class C2TypesService:
             )
             return False
 
-    @log_and_propagate_error_on_service_method
-    def resolve_registered_compatible_agent_types_for_listener_types(self):
-        self._logger.critical(
-            "`resolve_registered_compatible_agent_types_for_listener_types()` is not"
-            " implemented yet. Consider maybe implementing it if necessary. Or moving "
-            "it to a profiles service consideration",
-        )
+    def _resolve_registered_compatible_agent_types_for_listener_profiles(
+        self, *listener_profiles: ListenerProfile
+    ) -> None:
+        if not listener_profiles:
+            listener_profiles = (
+                self._listener_profiles_service.get_all_listener_profiles()
+            )
+
+        # `registered_compatible_agent_types` for each listener type is a reverse index
+        # of the `compatible_listener_types` for each agent type.
+        for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
+            for listener_profile in listener_profiles:
+                if (
+                    listener_profile.listener_type.name
+                    in agent_profile.agent_template.compatible_listener_types
+                ):
+                    listener_profile.listener_type.registered_compatible_agent_types.add(
+                        agent_profile.agent_type.name
+                    )
+
+    def _resolve_agent_type_references(self) -> None:
+        agent_type_name_to_agent_profile_map = {}
+        # Construct a mapping of agent type names to agent profiles for reference
+        # resolution. While constructing, check for duplicate agent type names mapped to
+        # different agent type classes.
+        for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
+            agent_type = agent_profile.agent_type
+            # At this point agent type could be a string indicating an agent type
+            # reference.
+            if isinstance(agent_type, BaseAgentType):
+                if agent_type.name not in agent_type_name_to_agent_profile_map:
+                    agent_type_name_to_agent_profile_map[agent_type.name] = (
+                        agent_profile
+                    )
+                elif (
+                    agent_type.__class__
+                    is not agent_type_name_to_agent_profile_map[
+                        agent_type.name
+                    ].agent_type.__class__
+                ):
+                    raise DuplicateAgentTypeNameError(
+                        agent_template_str=str(agent_profile.agent_template),
+                        conflicting_agent_template_str=str(
+                            agent_type_name_to_agent_profile_map[
+                                agent_type.name
+                            ].agent_template
+                        ),
+                        agent_type_name=agent_type.name,
+                    )
+
+        # Resolve agent type references in agent profiles.
+        for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
+            agent_type = agent_profile.agent_type
+            if isinstance(agent_type, str):
+                if agent_type in agent_type_name_to_agent_profile_map:
+                    # Agent types need to be instances of the class
+                    agent_profile.agent_type = agent_type_name_to_agent_profile_map[
+                        agent_type
+                    ]()
+                else:
+                    raise UnresolvableAgentTypeReferenceError(
+                        agent_template_str=str(agent_profile.agent_template),
+                        agent_type_name=agent_type,
+                    )
