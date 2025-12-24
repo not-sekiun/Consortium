@@ -77,7 +77,7 @@ class TasksListCommand(ListTasksAgentsInterpreterCommand):
             await self._list_tasks_from_agent_id(
                 client_rest_api_connection=client_rest_api_connection,
                 agent_id=agent["agent_id"],
-                agent_name=agent["agent_name"],
+                agent_name=agent["name"],
                 display_queued=parsed_args.queued,
                 display_running=parsed_args.running,
                 display_completed=parsed_args.completed,

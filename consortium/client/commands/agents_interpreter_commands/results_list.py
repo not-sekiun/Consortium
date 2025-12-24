@@ -111,7 +111,7 @@ class ResultsListCommand(BaseCommand):
                 str(agent_result["datetime_finished"]),
                 f"{agent_result['elapsed_seconds']:.2f}s",
             )
-        CONSOLE.print(table)
+        CONSOLE.print(table, "")
 
     async def run_command(
         self,
@@ -134,7 +134,6 @@ class ResultsListCommand(BaseCommand):
                         display_failure=parsed_args.failure,
                         display_error=parsed_args.error,
                     )
-                    print()
             else:
                 agent = await client_rest_api_connection.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id,

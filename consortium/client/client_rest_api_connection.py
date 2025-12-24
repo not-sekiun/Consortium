@@ -353,6 +353,13 @@ class ClientRESTAPIConnection:
         )
 
     @_requires_authentication
+    async def get_all_agent_tasks(self) -> list[dict[str, Any]]:
+        return await self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/tasks",
+        )
+
+    @_requires_authentication
     async def get_agent_task_by_task_id(self, task_id: str):
         return await self._make_request(
             method="GET",
@@ -408,6 +415,13 @@ class ClientRESTAPIConnection:
         return self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks/{task_id}",
+        )
+
+    @_requires_authentication
+    async def get_all_agent_results(self) -> list[dict[str, Any]]:
+        return await self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/results",
         )
 
     @_requires_authentication
@@ -570,7 +584,7 @@ class ClientRESTAPIConnection:
                 "is_directory": str(is_directory).lower(),
                 "name": name,
                 "description": description,
-                "asset_directory_archive_file_format": ""
+                "directory_archive_file_format": ""
                 if asset_directory_archive_file_format is None
                 else asset_directory_archive_file_format,
             },

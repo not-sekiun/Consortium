@@ -58,7 +58,7 @@ class Status:
 
     def to_json(self):
         return {
-            "status": self.state,
+            "state": self.state,
             "error": {
                 "code": self.error.code,
                 "message": self.error.message,

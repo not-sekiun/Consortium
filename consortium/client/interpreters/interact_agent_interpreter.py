@@ -122,8 +122,6 @@ class InteractAgentInterpreter(ClientInterpreter):
         agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
         for command in [
             "info_agent",
-            "result_info",
-            "task_info",
             "interact_agent",
             "results_list",
             "tasks_list",
@@ -131,6 +129,21 @@ class InteractAgentInterpreter(ClientInterpreter):
             "redescribe_agent",
         ]:
             nested_completer_dict[command] = agent_ids_completion
+
+        # Register commands that take the task or result ID as a positional argument
+        all_tasks = await self.environment[
+            "client_rest_api_connection"
+        ].get_all_agent_tasks()
+        nested_completer_dict["task_info"] = {
+            task["task_id"]: None for task in all_tasks
+        }
+
+        all_results = await self.environment[
+            "client_rest_api_connection"
+        ].get_all_agent_results()
+        nested_completer_dict["result_info"] = {
+            result["result_id"]: None for result in all_results
+        }
 
         # Register commands that take the asset ID as the first positional argument to
         # autocomplete with.
@@ -174,6 +187,14 @@ class InteractAgentInterpreter(ClientInterpreter):
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
         )
+        await self.environment["client_websockets_api_connection"].subscribe_to_event(
+            event_type="AGENT_TASKED",
+            event_handler=self._update_autocomplete,
+        )
+        await self.environment["client_websockets_api_connection"].subscribe_to_event(
+            event_type="AGENT_RESULT_RECEIVED",
+            event_handler=self._update_autocomplete,
+        )
         # Start the websocket connection to listen for all registered events.
         await self.environment["client_websockets_api_connection"].start()
 
@@ -189,6 +210,18 @@ class InteractAgentInterpreter(ClientInterpreter):
         ].unsubscribe_from_event(
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
+        )
+        await self.environment[
+            "client_websockets_api_connection"
+        ].unsubscribe_from_event(
+            event_type="AGENT_TASKED",
+            event_handler=self._update_autocomplete,
+        )
+        await self.environment[
+            "client_websockets_api_connection"
+        ].unsubscribe_from_event(
+            event_type="AGENT_RESULT_RECEIVED",
+            event_handler=self._update_autocomplete,
         )
 
     async def on_enter_interpreter(self) -> None:

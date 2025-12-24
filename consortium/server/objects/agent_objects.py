@@ -271,6 +271,17 @@ class Agent:
 
         self._queued_tasks[str(task.task_id)] = task
 
+        # Fire the event to notify all event handlers that an agent has been tasked.
+        await self._events_service.trigger_event(
+            event=Event(
+                event_type=EventType.AGENT_TASKED,
+                data={
+                    "agent_id": str(self.agent_id),
+                    "task": task.model_dump(mode="json"),
+                },
+            ),
+        )
+
         await self._start_agent_capability(
             agent_capability=agent_capability,
             task=task,

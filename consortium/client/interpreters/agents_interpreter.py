@@ -109,6 +109,14 @@ class AgentsInterpreter(ClientInterpreter):
             event_type="AGENT_REGISTERED",
             event_handler=self._agent_registered_event_handler,
         )
+        await self.environment["client_websockets_api_connection"].subscribe_to_event(
+            event_type="AGENT_TASKED",
+            event_handler=self._update_autocomplete,
+        )
+        await self.environment["client_websockets_api_connection"].subscribe_to_event(
+            event_type="AGENT_RESULT_RECEIVED",
+            event_handler=self._update_autocomplete,
+        )
         await self.environment["client_websockets_api_connection"].start()
 
     async def _teardown_event_handlers(self) -> None:
@@ -123,6 +131,24 @@ class AgentsInterpreter(ClientInterpreter):
         ].unsubscribe_from_event(
             event_type="AGENT_REGISTERED",
             event_handler=self._agent_registered_event_handler,
+        )
+        await self.environment[
+            "client_websockets_api_connection"
+        ].unsubscribe_from_event(
+            event_type="AGENT_RESULT_RECEIVED",
+            event_handler=self._agent_result_received_event_handler,
+        )
+        await self.environment[
+            "client_websockets_api_connection"
+        ].unsubscribe_from_event(
+            event_type="AGENT_TASKED",
+            event_handler=self._update_autocomplete,
+        )
+        await self.environment[
+            "client_websockets_api_connection"
+        ].unsubscribe_from_event(
+            event_type="AGENT_RESULT_RECEIVED",
+            event_handler=self._update_autocomplete,
         )
 
     async def on_enter_interpreter(self) -> None:

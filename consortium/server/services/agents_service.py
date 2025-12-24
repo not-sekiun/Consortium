@@ -117,7 +117,7 @@ class AgentsService:
         return all_tasks
 
     @log_and_propagate_error_on_service_method
-    def get_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+    def get_agent_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
         for agent in self._agents.values():
             try:
                 task = agent.get_task_by_task_id(task_id=task_id)

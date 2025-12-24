@@ -167,7 +167,7 @@ async def log_rest_api_requests_and_responses(
             request.url.path,
             response.status_code,
             responses[response.status_code],
-            response.headers["content-max_length"],
+            response.headers["content-length"],
         )
 
         return response
