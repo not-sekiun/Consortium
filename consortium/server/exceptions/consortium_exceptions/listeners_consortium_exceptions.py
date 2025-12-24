@@ -138,7 +138,7 @@ class ListenerStateError(
     comp_excs.ComponentStateError,
 ):
     """
-    Base exception for all errors that occur due to invalid listener state during
+    Base exception for all errors that occur due to invalid listener status during
     listener operation.
     """
 

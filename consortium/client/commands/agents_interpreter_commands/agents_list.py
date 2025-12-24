@@ -12,13 +12,13 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
 
 
-class ListAgentsCommand(BaseCommand):
-    name = "list_agents"
+class AgentsListCommand(BaseCommand):
+    name = "agents_list"
     description = "List all connected agents along with their essential information."
     epilog = format_argparse_epilog(
         """
         Examples:
-          list_agents
+          agents_list
         """,
     )
     group = "Agent Management Commands"
@@ -34,17 +34,20 @@ class ListAgentsCommand(BaseCommand):
             ]
             all_agents = await client_rest_api_connection.get_all_agents()
 
-            table = Table(title="Agents")
+            table = Table(title="Agents", highlight=True)
             table.add_column("Agent ID")
             table.add_column("Name")
+            table.add_column("Description")
             table.add_column("Endpoint")
+            table.add_column("Agent Type")
             for agent in all_agents:
                 table.add_row(
-                    agent["agent_id"],
-                    agent["name"],
-                    agent["endpoint"],
+                    str(agent["agent_id"]),
+                    str(agent["name"]),
+                    str(agent["description"]),
+                    str(agent["endpoint"]),
+                    str(agent["agent_type"]["name"]),
                 )
-
             CONSOLE.print(table)
         except SystemExit:
             pass

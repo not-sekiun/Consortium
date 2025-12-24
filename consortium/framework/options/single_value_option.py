@@ -56,11 +56,11 @@ class SingleValueOption(BaseOption):
         value_type: The type of the value that the option can accept. If `None`, the
             option can accept values of type `str`, `int`, `float`, or `bool`.
         minimum_length: If `value_type` is of type `str`, this parameter specifies the
-            minimum length of the string value that the option can accept.  If `None`,
-            there is no minimum length.
+            minimum max_length of the string value that the option can accept.  If `None`,
+            there is no minimum max_length.
         maximum_length: If `value_type` is of type `str`, this parameter specifies the
-            maximum length of the string value that the option can accept. If `None`,
-            there is no maximum length.
+            maximum max_length of the string value that the option can accept. If `None`,
+            there is no maximum max_length.
         greater_than: If `value_type` is of type `int` or `float`, the numeric value of
             the option must be greater than this value.
         less_than: If `value_type` is of type `int` or `float`, the numeric value of

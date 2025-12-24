@@ -605,7 +605,7 @@ span.ap-marker-container:hover span.ap-marker {
   position: absolute;
   z-index: 1;
   white-space: nowrap;
-  /* Prevents the text from wrapping and makes sure the tooltip width adapts to the text length */
+  /* Prevents the text from wrapping and makes sure the tooltip width adapts to the text max_length */
   font-size: 13px;
   line-height: 2em;
   bottom: 100%;

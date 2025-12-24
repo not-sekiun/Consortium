@@ -7,6 +7,7 @@ from consortium.framework.exceptions import (
 from consortium.framework.framework_types import JSONObject
 from consortium.framework.options import (
     ChoiceValueOption,
+    DictionaryValueOption,
     ListValueOption,
     SingleValueOption,
 )
@@ -48,11 +49,11 @@ def _check_all_url_endpoints_unique(
 
 
 class AgentTemplate(BaseAgentTemplate):
-    label = "consortium.agents.python_http_agent"
-    name = "Consortium Python Agent"
+    label = "consortium.agents.consortium_http.eula"
+    name = "Consortium HTTP Eula Agent"
     description = (
-        "The canonical Consortium python agent that communicates over the HTTP "
-        "transport with its associated HTTP listener."
+        "The canonical Consortium agent, eula, written in Python 3 that communicates "
+        "over the HTTP transport with its associated HTTP listener."
     )
     version = "0.1.0"
     compatible_framework_version = ">=0.1.0"
@@ -100,7 +101,7 @@ class AgentTemplate(BaseAgentTemplate):
         ListValueOption(
             name="results_url_paths",
             description=(
-                "A list of available URL paths for the agent to randomly submit "
+                "A list of available URL paths for the agent to randomly POST results "
                 "to when returning the results of finished tasks."
             ),
             default_value=["/results"],
@@ -121,7 +122,7 @@ class AgentTemplate(BaseAgentTemplate):
         SingleValueOption(
             name="sleep_time",
             description=(
-                "The amount of time in seconds to sleep for between each request "
+                "The amount of time in seconds to sleep for between each HTTP request "
                 "made to the listener."
             ),
             default_value=1.0,
@@ -150,14 +151,25 @@ class AgentTemplate(BaseAgentTemplate):
             available_values={"script", "executable", "oneliner"},
         ),
         SingleValueOption(
-            name="filename",
+            name="file_name",
             description=(
-                "The filename of the agent to be generated. The appropriate file "
+                "The file name of the agent to be generated. The appropriate file "
                 "extension is appended depending on the value of the 'format' "
                 "option of the generated agent."
             ),
             default_value="agent",
             validating_function=_check_filename_does_not_traverse_directories,
+        ),
+        DictionaryValueOption(
+            name="extra_headers",
+            description=(
+                "A dictionary of extra HTTP headers to include in each request made "
+                "by the agent to the listener."
+            ),
+            default_value={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)",
+            },
+            value_type=str,
         ),
     }
     compatible_listener_types = {"consortium_http"}

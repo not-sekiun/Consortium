@@ -28,7 +28,7 @@ class ClientInterpreterLexer(BaseLexer):
         OUTPUT_TOKEN = "OUTPUT_TOKEN"
 
     def __init__(self):
-        # Previous lexer state is only here to help us differentiate between
+        # Previous lexer status is only here to help us differentiate between
         # a backslash escape inside a quoted string and a backslash escape
         # outside a quoted string.
         self._previous_lexer_state = None
@@ -138,9 +138,9 @@ class ClientInterpreterLexer(BaseLexer):
 
     def tokenize(self, input_string: str) -> TokenizedString:
         # TODO: Prevent states from interfering.
-        # Reset lexer state to its default state since incomplete quotes (while raising
-        # the appropriate errors) can cause the state to not be initialized to its
-        # default state when _yield_token() is called again.
+        # Reset lexer status to its default status since incomplete quotes (while raising
+        # the appropriate errors) can cause the status to not be initialized to its
+        # default status when _yield_token() is called again.
         self._lexer_state = self.PseudoShellStyleLexerState.DEFAULT
         self._previous_lexer_state = None
         self._token_buffer = ""

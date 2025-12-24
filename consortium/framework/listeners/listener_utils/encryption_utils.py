@@ -4,12 +4,12 @@ import string
 
 def generate_token(length: int = 32, generate_as_bytes: bool = False) -> str | bytes:
     """
-    Generate a random token of a particular length using a cryptographically secure
+    Generate a random token of a particular max_length using a cryptographically secure
     random number generator as provided by the Python `secrets` module.
 
     Args:
         length:
-            The length of the token to generate. The default length is 32.
+            The max_length of the token to generate. The default max_length is 32.
         generate_as_bytes:
             Whether to generate the token as bytes or as a hexadecimal string. The
             default value is `False` to generate as a hexadecimal string.
@@ -36,7 +36,7 @@ def generate_string(
             The set of characters to sample from when generating the string. The default
             value is a set of alphanumeric characters in lowercase.
         length:
-            The length of the string to generate. The default length is 32.
+            The max_length of the string to generate. The default max_length is 32.
 
     Returns:
         The generated string.

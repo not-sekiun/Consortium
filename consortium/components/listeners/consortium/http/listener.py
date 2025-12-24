@@ -51,6 +51,7 @@ class Listener(BaseListener):
                 "properties": {
                     "payload_id": {"type": "string"},
                     "agent_type": {"type": "string"},
+                    "user": {"type": "string"},
                     "is_admin": {"type": "boolean"},
                     "os": {"type": "string"},
                     "version": {"type": "string"},
@@ -113,7 +114,7 @@ class Listener(BaseListener):
             except AgentNotFoundError:
                 self.logger.warning(
                     "Agent from {} attempted to retrieve tasks with an invalid agent "
-                    "ID: {}. Responded with 401 Unauthorized.",
+                    "ID '{}'. Responded with 401 Unauthorized.",
                     request.remote,
                     agent_id,
                 )
@@ -146,7 +147,6 @@ class Listener(BaseListener):
             agent_result_json_schema = {
                 "type": "object",
                 "properties": {
-                    "agent_id": {"type": "string"},
                     "task_id": {"type": "string"},
                     "result": {
                         "type": "object",
@@ -159,14 +159,29 @@ class Listener(BaseListener):
                         "additionalProperties": False,
                     },
                 },
-                "required": ["agent_id", "task_id", "result"],
+                "required": ["task_id", "result"],
                 "additionalProperties": False,
             }
 
-            json_request_body = await request.json()
             try:
+                agent_id = request.headers["Cookie"]
+            except KeyError:  # No Cookie header provided
+                self.logger.warning(
+                    "Unidentified client {} attempted to send results without "
+                    "providing an agent ID in the Cookie header. Responded with 401 "
+                    "Unauthorized.",
+                    request.remote,
+                )
+                return web.Response(status=401)
+
+            try:
+                json_request_body = await request.json()
                 jsonschema.validate(json_request_body, agent_result_json_schema)
-            except (json.JSONDecodeError, jsonschema.ValidationError):
+                task_id = json_request_body["task_id"]
+                success = json_request_body["result"]["success"]
+                message = json_request_body["result"]["message"]
+                data = json_request_body["result"]["data"]
+            except (json.JSONDecodeError, jsonschema.ValidationError, KeyError):
                 self.logger.warning(
                     "Unidentified client {} sent malformed agent result data: {}. "
                     "Responded with 401 Unauthorized.",
@@ -174,12 +189,6 @@ class Listener(BaseListener):
                     json_request_body,
                 )
                 return web.Response(status=401)
-
-            agent_id = json_request_body["agent_id"]
-            task_id = json_request_body["task_id"]
-            success = json_request_body["result"]["success"]
-            message = json_request_body["result"]["message"]
-            data = json_request_body["result"]["data"]
 
             # Check if the agent ID is valid.
             try:
@@ -252,6 +261,3 @@ class Listener(BaseListener):
             await self.environment.runner.cleanup()
         except AttributeError:
             pass
-
-    async def on_errored(self, exception: Exception) -> None:
-        self.logger.error(exception)

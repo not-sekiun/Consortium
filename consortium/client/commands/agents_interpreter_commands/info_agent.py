@@ -36,31 +36,32 @@ class InfoAgentCommand(BaseCommand):
     def _display_agent_info(
         agent: dict,
     ) -> None:
-        table = Table(title="Agent Information")
+        table = Table(title="Agent Information", highlight=True)
         table.add_column("Information")
         table.add_column("Data")
         table.add_row(
             "Agent ID",
             agent["agent_id"],
         )
-        table.add_row("Name", agent["name"])
-        table.add_row("Description", agent["description"])
-        table.add_row("Endpoint", agent["endpoint"])
-        table.add_row("Agent Type", agent["agent_type"]["name"])
+        table.add_row("Name", str(agent["name"]))
+        table.add_row("Description", str(agent["description"]))
+        table.add_row("Endpoint", str(agent["endpoint"]))
+        table.add_row("Agent Type", str(agent["agent_type"]["name"]))
         table.add_row(
             "Agent Capabilities",
             "\n".join(list(agent["agent_type"]["agent_capabilities"])),
         )
+        table.add_row("User", str(agent["user"]))
         table.add_row("Running As Admin", str(agent["is_admin"]))
-        table.add_row("Operating System", agent["os"])
-        table.add_row("System Version", agent["version"])
-        table.add_row("System Arch", agent["arch"])
+        table.add_row("Operating System", str(agent["os"]))
+        table.add_row("System Version", str(agent["version"]))
+        table.add_row("System Arch", str(agent["arch"]))
         table.add_row("Process ID", str(agent["pid"]))
-        table.add_row("System Locale", agent["locale"])
-        table.add_row("Remote Host Address", agent["remote_host_address"])
-        table.add_row("Local Host Address", agent["local_host_address"])
-        table.add_row("First Checked In", agent["datetime_first_checked_in"])
-        table.add_row("Last Checked In", agent["datetime_last_checked_in"])
+        table.add_row("System Locale", str(agent["locale"]))
+        table.add_row("Remote Host Address", str(agent["remote_host_address"]))
+        table.add_row("Local Host Address", str(agent["local_host_address"]))
+        table.add_row("First Checked In", str(agent["datetime_first_checked_in"]))
+        table.add_row("Last Checked In", str(agent["datetime_last_checked_in"]))
         agent_data_table = Table()
         agent_data_table.add_column("Information")
         agent_data_table.add_column("Data")

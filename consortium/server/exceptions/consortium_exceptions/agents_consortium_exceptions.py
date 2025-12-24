@@ -51,11 +51,11 @@ class AgentResultTaskIDNotFoundError(AgentResultNotFoundError):
 class AgentResultHasNoCorrespondingTaskError(AgentsFrameworkError):
     code = "AGENT_RESULT_HAS_NO_CORRESPONDING_TASK_ERROR"
 
-    def __init__(self, result_id: str, corresponding_task_id: str, agent_str: str):
+    def __init__(self, corresponding_task_id: str, agent_str: str):
         super().__init__(
             message=(
-                f"Failed to add the agent result '{result_id}' to the agent "
-                f"{agent_str}. The agent result that was added corresponds to task ID "
+                f"Failed to add the agent result to the agent {agent_str}. The agent "
+                f"result that was added corresponds to task ID "
                 f"'{corresponding_task_id}', but no running task exists with that ID."
             ),
         )

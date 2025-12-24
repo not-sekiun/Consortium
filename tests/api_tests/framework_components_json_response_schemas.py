@@ -2,7 +2,7 @@
 STATUS_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "state": {"type": "string"},
+        "status": {"type": "string"},
         "error": {
             "anyOf": [
                 {"type": "null"},
@@ -19,7 +19,7 @@ STATUS_JSON_SCHEMA = {
             ],
         },
     },
-    "required": ["state", "error"],
+    "required": ["status", "error"],
     "additionalProperties": False,
 }
 

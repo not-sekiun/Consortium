@@ -45,6 +45,13 @@ class BaseAgentType:
                 agent_type_filepath=sys.modules[cls.__module__].__file__,
             )
 
+        # Reassign agent_capabilities to be a dictionary mapping capability names to
+        # capability types for easier usage.
+        cls.agent_capabilities = {
+            agent_capability.name: agent_capability
+            for agent_capability in cls.agent_capabilities
+        }
+
     def __str__(self) -> str:
         return f"'{self.name}'"
 
@@ -60,7 +67,7 @@ class BaseAgentType:
         return {
             "name": self.name,
             "agent_capabilities": {
-                agent_capability.name: agent_capability.to_json()
-                for agent_capability in self.agent_capabilities
+                name: agent_capability.to_json()
+                for name, agent_capability in self.agent_capabilities.items()
             },
         }

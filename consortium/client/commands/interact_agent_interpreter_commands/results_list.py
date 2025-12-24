@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 from consortium.client.commands.agents_interpreter_commands import (
-    ListResultsCommand as ListResultsAgentsInterpreterCommand,
+    ResultsListCommand as ResultsListAgentsInterpreterCommand,
 )
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
@@ -10,19 +10,19 @@ from consortium.client.repl_framework.base_command import CommandContext, Return
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ListResultsCommand(ListResultsAgentsInterpreterCommand):
-    name = "list_results"
+class ResultsListCommand(ResultsListAgentsInterpreterCommand):
+    name = "results_list"
     description = (
-        "List an agents results along with their essential information for a "
-        "specified agent or for the currently selected agent being interacted with."
+        "List all results for the currently selected agent being interacted with or a "
+        "particular agent's results if its agent ID is provided."
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-          list_results  # List all results for the currently selected agent being interacted with.
-          list_results -s
-          list_results --fail
-          list_results 123e4567-e89b-12d3-a456-42661417400  # List all results for a specific agent.
+          results_list  # List all results for the currently selected agent being interacted with.
+          results_list -s  # List only results with a status of 'SUCCESS' for the currently selected agent.
+          results_list --failure --error  # List only results with a status of 'FAILURE' and 'ERROR' for the currently selected agent.
+          results_list 123e4567-e89b-12d3-a456-42661417400  # List all results for a specific agent.
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -41,13 +41,19 @@ class ListResultsCommand(ListResultsAgentsInterpreterCommand):
         parser.add_argument(
             "-s",
             "--success",
-            help="List only results that have a state of SUCCESS.",
+            help="List only results with a status of SUCCESS.",
             action="store_true",
         )
         parser.add_argument(
             "-f",
-            "--fail",
-            help="List only results that have a state of FAIL.",
+            "--failure",
+            help="List only results with a status of 'FAILURE'.",
+            action="store_true",
+        )
+        parser.add_argument(
+            "-e",
+            "--error",
+            help="List only results with a status of 'ERROR'.",
             action="store_true",
         )
 
@@ -60,13 +66,21 @@ class ListResultsCommand(ListResultsAgentsInterpreterCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
+
+            if parsed_args.agent_id:
+                agent = await client_rest_api_connection.get_agent_by_agent_id(
+                    agent_id=parsed_args.agent_id,
+                )
+            else:
+                agent = command_context.environment["agent"]
+
             await self._list_results_from_agent_id(
                 client_rest_api_connection=client_rest_api_connection,
-                display_result_status_success=parsed_args.success,
-                display_result_status_fail=parsed_args.fail,
-                agent_id=parsed_args.agent_id
-                if parsed_args.agent_id
-                else command_context.environment["agent"]["agent_id"],
+                agent_id=agent["agent_id"],
+                agent_name=agent["name"],
+                display_success=parsed_args.success,
+                display_failure=parsed_args.failure,
+                display_error=parsed_args.error,
             )
         except SystemExit:
             pass

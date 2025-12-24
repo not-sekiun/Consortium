@@ -61,7 +61,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         parameters (dict[str, Any]): Configuration parameters used to customize the
             listener's behavior. Available parameters are defined in the associated
             listener template.
-        status (ListenerStatus): Current listener state and any error information if
+        status (ListenerStatus): Current listener status and any error information if
             the listener has encountered issues.
         datetime_created (datetime): Timestamp for when a particular listener instance
             was created.

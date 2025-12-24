@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends
@@ -19,7 +20,9 @@ from consortium.server.exceptions.consortium_exceptions import (
 from consortium.server.models.agent_models import (
     AgentModel,
     AgentResultModel,
+    AgentResultStatus,
     AgentTaskModel,
+    AgentTaskStatus,
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -115,7 +118,7 @@ def get_all_agents(
     },
 )
 def get_agent_by_agent_id(
-    agent_id: str,
+    agent_id: str | uuid.UUID,
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_AGENT_BY_AGENT_ID))
     ],
@@ -129,6 +132,43 @@ def get_agent_by_agent_id(
 
 
 @router.get(
+    "/tasks",
+    responses={
+        200: {"model": list[AgentTaskModel]},
+    },
+)
+def get_all_agent_tasks(
+    _: Annotated[
+        None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS))
+    ],
+    status: AgentTaskStatus | None = None,
+) -> list[AgentTaskModel]:
+    return _agents_service.get_all_agent_tasks(status=status)
+
+
+@router.get(
+    "/tasks/{task_id}",
+    responses={
+        200: {"model": AgentTaskModel},
+        404: {"model": _agent_task_not_found_error.to_pydantic_model()},
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+    },
+)
+def get_agent_task_by_task_id(
+    task_id: str | uuid.UUID,
+    _: Annotated[
+        None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS))
+    ],
+) -> AgentTaskModel:
+    try:
+        return _agents_service.get_agent_task_by_task_id(task_id=task_id)
+    except consortium_excs.AgentTaskNotFoundError as exc:
+        raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
+            consortium_exception=exc
+        ) from None
+
+
+@router.get(
     "/{agent_id}/tasks",
     responses={
         200: {"model": list[AgentTaskModel]},
@@ -137,85 +177,17 @@ def get_agent_by_agent_id(
     },
 )
 def get_all_agent_tasks_by_agent_id(
-    agent_id: str,
+    agent_id: str | uuid.UUID,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
     ],
+    status: AgentTaskStatus | None = None,
 ) -> list[AgentTaskModel]:
     try:
-        return _agents_service.get_all_agent_tasks_by_agent_id(agent_id=agent_id)
-    except consortium_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-
-
-@router.get(
-    "/{agent_id}/tasks/queued",
-    responses={
-        200: {"model": list[AgentTaskModel]},
-        404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
-    },
-)
-def get_all_queued_tasks_by_agent_id(
-    agent_id: str,
-    _: Annotated[
-        None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
-    ],
-) -> list[AgentTaskModel]:
-    try:
-        return _agents_service.get_all_queued_tasks_by_agent_id(agent_id=agent_id)
-    except consortium_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-
-
-@router.get(
-    "/{agent_id}/tasks/running",
-    responses={
-        200: {"model": list[AgentTaskModel]},
-        404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
-    },
-)
-def get_all_running_agent_tasks_by_agent_id(
-    agent_id: str,
-    _: Annotated[
-        None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
-    ],
-) -> list[AgentTaskModel]:
-    try:
-        return _agents_service.get_all_running_agent_tasks_by_agent_id(
-            agent_id=agent_id
+        return _agents_service.get_all_agent_tasks_by_agent_id(
+            agent_id=agent_id, status=status
         )
-    except consortium_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-
-
-@router.get(
-    "/{agent_id}/tasks/completed",
-    responses={
-        200: {"model": list[AgentTaskModel]},
-        404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
-    },
-)
-def get_all_completed_tasks_by_agent_id(
-    agent_id: str,
-    _: Annotated[
-        None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
-    ],
-) -> list[AgentTaskModel]:
-    try:
-        return _agents_service.get_all_completed_tasks_by_agent_id(agent_id=agent_id)
     except consortium_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
@@ -234,8 +206,8 @@ def get_all_completed_tasks_by_agent_id(
     },
 )
 def get_agent_tasks_by_agent_id_and_task_id(
-    agent_id: str,
-    task_id: str,
+    agent_id: str | uuid.UUID,
+    task_id: str | uuid.UUID,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
@@ -256,6 +228,44 @@ def get_agent_tasks_by_agent_id_and_task_id(
 
 
 @router.get(
+    "/results",
+    responses={
+        200: {"model": list[AgentResultModel]},
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+    },
+)
+def get_all_agent_results(
+    _: Annotated[
+        None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
+    ],
+    status: AgentResultStatus | None = None,
+) -> list[AgentResultModel]:
+    return _agents_service.get_all_agent_results(status=status)
+
+
+@router.get(
+    "/results/{result_id}",
+    responses={
+        200: {"model": list[AgentResultModel]},
+        404: {"model": _agent_result_not_found_error.to_pydantic_model()},
+        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+    },
+)
+def get_agent_results_by_result_id(
+    _: Annotated[
+        None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
+    ],
+    result_id: str | uuid.UUID,
+) -> list[AgentResultModel]:
+    try:
+        return _agents_service.get_agent_result_by_result_id(result_id=result_id)
+    except consortium_excs.AgentResultIDNotFoundError as exc:
+        raise api_excs.AgentResultNotFoundError.from_consortium_exception(
+            consortium_exception=exc
+        ) from None
+
+
+@router.get(
     "/{agent_id}/results",
     responses={
         200: {"model": list[AgentResultModel]},
@@ -264,67 +274,16 @@ def get_agent_tasks_by_agent_id_and_task_id(
     },
 )
 def get_all_agent_results_by_agent_id(
-    agent_id: str,
+    agent_id: str | uuid.UUID,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
     ],
+    status: AgentResultStatus | None = None,
 ) -> list[AgentResultModel]:
     try:
-        return _agents_service.get_all_agent_results_by_agent_id(agent_id=agent_id)
-    except consortium_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-
-
-@router.get(
-    "/{agent_id}/results/success",
-    responses={
-        200: {"model": list[AgentResultModel]},
-        404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
-    },
-)
-def get_all_successful_agent_results_by_agent_id(
-    agent_id: str,
-    _: Annotated[
-        None,
-        Depends(
-            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID)
-        ),
-    ],
-) -> list[AgentResultModel]:
-    try:
-        return _agents_service.get_all_successful_agent_results_by_agent_id(
-            agent_id=agent_id
-        )
-    except consortium_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-
-
-@router.get(
-    "/{agent_id}/results/fail",
-    responses={
-        200: {"model": list[AgentResultModel]},
-        404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
-    },
-)
-def get_all_failed_agent_results_by_agent_id(
-    agent_id: str,
-    _: Annotated[
-        None,
-        Depends(
-            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID)
-        ),
-    ],
-) -> list[AgentResultModel]:
-    try:
-        return _agents_service.get_all_failed_agent_results_by_agent_id(
-            agent_id=agent_id
+        return _agents_service.get_all_agent_results_by_agent_id(
+            agent_id=agent_id, status=status
         )
     except consortium_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
@@ -344,8 +303,8 @@ def get_all_failed_agent_results_by_agent_id(
     },
 )
 def get_agent_result_by_agent_id_and_result_id(
-    agent_id: str,
-    result_id: str,
+    agent_id: str | uuid.UUID,
+    result_id: str | uuid.UUID,
     _: Annotated[
         None,
         Depends(
@@ -381,7 +340,7 @@ def get_agent_result_by_agent_id_and_result_id(
     },
 )
 async def task_agent_by_agent_id(
-    agent_id: str,
+    agent_id: str | uuid.UUID,
     command: Annotated[str, Body()],
     arguments: Annotated[dict[str, Any] | list, Body()],
     _: Annotated[
@@ -425,7 +384,7 @@ async def task_agent_by_agent_id(
     },
 )
 async def update_agent_by_agent_id(
-    agent_id: str,
+    agent_id: str | uuid.UUID,
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.UPDATE_AGENT_BY_AGENT_ID))
     ],
@@ -456,8 +415,8 @@ async def update_agent_by_agent_id(
     },
 )
 async def delete_queued_agent_task_by_agent_id_and_task_id(
-    agent_id: str,
-    task_id: str,
+    agent_id: str | uuid.UUID,
+    task_id: str | uuid.UUID,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.DELETE_AGENT_TASK_BY_TASK_ID)),

@@ -233,8 +233,8 @@ class AgentGeneratorStateError(
     comp_excs.ComponentStateError,
 ):
     """
-    Base exception for all errors that occur due to invalid state transitions or
-    operations performed on an agent generator in an invalid state.
+    Base exception for all errors that occur due to invalid status transitions or
+    operations performed on an agent generator in an invalid status.
     """
 
     code = "AGENT_GENERATOR_STATE_ERROR"

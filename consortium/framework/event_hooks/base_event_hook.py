@@ -57,7 +57,7 @@ class BaseEventHook(ComponentMetadata):
             for this event hook to function.
         event_hook_project_folder (Path): Filesystem path to the project directory
             containing this event hook's source code.
-        environment (SimpleNamespace): Namespace for storing hook-specific state shared
+        environment (SimpleNamespace): Namespace for storing hook-specific status shared
             across event invocations without naming conflicts.
         server_services (SimpleNamespace): Namespace providing programmatic access to
             server-level framework services.

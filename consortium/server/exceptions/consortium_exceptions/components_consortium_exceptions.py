@@ -329,7 +329,7 @@ class ComponentStopError(ComponentOperationError):
 
 class ComponentStateError(ComponentsFrameworkError):
     """
-    Base exception for all errors that occur due to invalid component state during
+    Base exception for all errors that occur due to invalid component status during
     component operation.
     """
 

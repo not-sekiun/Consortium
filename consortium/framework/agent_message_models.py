@@ -45,14 +45,12 @@ class AgentResultMessageModel(BaseModel):
     Model representing a result message sent from an agent.
 
     Attributes:
-        result_id (uuid.UUID): Unique identifier for the result.
         task_id (uuid.UUID): Unique identifier for the associated task.
         success (bool): Indicates if the task was successful.
         message (str): A message providing additional information about the result.
         data (dict[str, Any]): Additional data related to the result.
     """
 
-    result_id: uuid.UUID = Field(default_factory=uuid.uuid4)
     task_id: uuid.UUID
     success: bool
     message: str
@@ -70,7 +68,6 @@ class AgentResultMessageModel(BaseModel):
         Serialize the AgentResultMessageModel to a JSON-compatible dictionary.
         """
         return {
-            "result_id": str(self.result_id),
             "task_id": str(self.task_id),
             "success": self.success,
             "message": self.message,

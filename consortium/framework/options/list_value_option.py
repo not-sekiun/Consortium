@@ -66,11 +66,11 @@ class ListValueOption(BaseOption[list[Primitive]]):
             homogeneous and the data type of its elements can only be one of `str`,
             `int`, `float`, or `bool`.
         minimum_length: If `value_type` is of type `str`, this parameter specifies the
-            minimum length of each string element that the option can accept.  If
-            `None`, there is no minimum length.
+            minimum max_length of each string element that the option can accept.  If
+            `None`, there is no minimum max_length.
         maximum_length: If `value_type` is of type `str`, this parameter specifies the
-            maximum length of each string element that the option can accept. If
-            `None`, there is no maximum length.
+            maximum max_length of each string element that the option can accept. If
+            `None`, there is no maximum max_length.
         greater_than: If `value_type` is of type `int` or `float`, the numeric value of
             each element of the option must be greater than this value.
         less_than: If `value_type` is of type `int` or `float`, the numeric value of
@@ -106,11 +106,11 @@ class ListValueOption(BaseOption[list[Primitive]]):
             homogeneous and the data type of its elements can only be one of `str`,
             `int`, `float`, or `bool`.
         minimum_length: If `value_type` is of type `str`, this parameter specifies the
-            minimum length of each string element that the option can accept.  If
-            `None`, there is no minimum length.
+            minimum max_length of each string element that the option can accept.  If
+            `None`, there is no minimum max_length.
         maximum_length: If `value_type` is of type `str`, this parameter specifies the
-            maximum length of each string element that the option can accept. If
-            `None`, there is no maximum length.
+            maximum max_length of each string element that the option can accept. If
+            `None`, there is no maximum max_length.
         greater_than: If `value_type` is of type `int` or `float`, the numeric value of
             each element of the option must be greater than this value.
         less_than: If `value_type` is of type `int` or `float`, the numeric value of

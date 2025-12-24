@@ -9,8 +9,15 @@ from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
+    AgentResultIDNotFoundError,
+    AgentTaskNotFoundError,
 )
-from consortium.server.models.agent_models import AgentResultModel, AgentTaskModel
+from consortium.server.models.agent_models import (
+    AgentResultModel,
+    AgentResultStatus,
+    AgentTaskModel,
+    AgentTaskStatus,
+)
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService
@@ -90,57 +97,61 @@ class AgentsService:
         return all_agents
 
     @log_and_propagate_error_on_service_method
-    def get_all_agent_tasks_by_agent_id(
-        self, agent_id: str | uuid.UUID
+    def get_all_agent_tasks(
+        self, status: AgentTaskStatus | None = None
     ) -> list[AgentTaskModel]:
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        all_tasks = agent.get_all_tasks()
-        self._logger.debug(
-            "Retrieved all agent tasks from agent {} ({} retrieved)",
-            agent,
-            len(all_tasks),
-        )
+        all_tasks = []
+        for agent in self._agents.values():
+            all_tasks.extend(agent.get_all_tasks(status=status))
+        if status is None:
+            self._logger.debug(
+                "Retrieved all tasks from all agents ({} retrieved)",
+                len(all_tasks),
+            )
+        else:
+            self._logger.debug(
+                "Retrieved all tasks from all agents with status {} ({} retrieved)",
+                status,
+                len(all_tasks),
+            )
         return all_tasks
 
     @log_and_propagate_error_on_service_method
-    def get_all_queued_tasks_by_agent_id(
-        self, agent_id: str | uuid.UUID
-    ) -> list[AgentTaskModel]:
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        queued_tasks = agent.get_all_queued_tasks()
-        self._logger.debug(
-            "Retrieved queued tasks from agent {} ({} retrieved)",
-            agent_id,
-            len(queued_tasks),
-        )
-        return queued_tasks
+    def get_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+        for agent in self._agents.values():
+            try:
+                task = agent.get_task_by_task_id(task_id=task_id)
+                self._logger.debug(
+                    "Retrieved task {} from agent {}",
+                    task_id,
+                    agent,
+                )
+                return task
+            except AgentTaskNotFoundError:
+                continue
+
+        raise AgentTaskNotFoundError(task_id=task_id) from None
 
     @log_and_propagate_error_on_service_method
-    def get_all_running_tasks_by_agent_id(
-        self, agent_id: str | uuid.UUID
+    def get_all_agent_tasks_by_agent_id(
+        self, agent_id: str | uuid.UUID, status: AgentTaskStatus | None = None
     ) -> list[AgentTaskModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        running_tasks = agent.get_all_running_tasks()
-        self._logger.debug(
-            "Retrieved running tasks from agent {} ({} retrieved)",
-            agent_id,
-            len(running_tasks),
-        )
-        return running_tasks
-
-    @log_and_propagate_error_on_service_method
-    def get_all_completed_tasks_by_agent_id(
-        self,
-        agent_id: str | uuid.UUID,
-    ) -> list[AgentTaskModel]:
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        completed_tasks = agent.get_all_completed_tasks()
-        self._logger.debug(
-            "Retrieved completed tasks from agent {} ({} retrieved)",
-            agent_id,
-            len(completed_tasks),
-        )
-        return completed_tasks
+        all_tasks = agent.get_all_tasks(status=status)
+        if status is None:
+            self._logger.debug(
+                "Retrieved agent tasks from agent {} ({} retrieved)",
+                agent,
+                len(all_tasks),
+            )
+        else:
+            self._logger.debug(
+                "Retrieved agent tasks from agent {} with status {} ({} retrieved)",
+                agent,
+                status,
+                len(all_tasks),
+            )
+        return all_tasks
 
     @log_and_propagate_error_on_service_method
     def get_agent_task_by_agent_id_and_task_id(
@@ -158,46 +169,65 @@ class AgentsService:
         return task
 
     @log_and_propagate_error_on_service_method
-    def get_all_agent_results_by_agent_id(
-        self,
-        agent_id: str | uuid.UUID,
+    def get_all_agent_results(
+        self, status: AgentResultStatus | None = None
     ) -> list[AgentResultModel]:
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        all_results = agent.get_all_results()
-        self._logger.debug(
-            "Retrieved all agent results from agent {} ({} retrieved)",
-            agent,
-            len(all_results),
-        )
+        all_results = []
+        for agent in self._agents.values():
+            all_results.extend(agent.get_all_results(status=status))
+        if status is None:
+            self._logger.debug(
+                "Retrieved all results from all agents ({} retrieved)",
+                len(all_results),
+            )
+        else:
+            self._logger.debug(
+                "Retrieved all results from all agents with status {} ({} retrieved)",
+                status,
+                len(all_results),
+            )
         return all_results
 
     @log_and_propagate_error_on_service_method
-    def get_all_successful_agent_results_by_agent_id(
-        self,
-        agent_id: str | uuid.UUID,
-    ) -> list[AgentResultModel]:
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        successful_results = agent.get_all_successful_results()
-        self._logger.debug(
-            "Retrieved successful results from agent {} ({} retrieved)",
-            agent_id,
-            len(successful_results),
-        )
-        return successful_results
+    def get_agent_result_by_result_id(
+        self, result_id: str | uuid.UUID
+    ) -> AgentResultModel:
+        for agent in self._agents.values():
+            try:
+                result = agent.get_result_by_result_id(result_id=result_id)
+                self._logger.debug(
+                    "Retrieved result {} from agent {}",
+                    result_id,
+                    agent,
+                )
+                return result
+            except AgentResultIDNotFoundError:
+                continue
+
+        raise AgentResultIDNotFoundError(result_id=result_id) from None
 
     @log_and_propagate_error_on_service_method
-    def get_all_failed_agent_results_by_agent_id(
+    def get_all_agent_results_by_agent_id(
         self,
         agent_id: str | uuid.UUID,
+        status: AgentResultStatus | None = None,
     ) -> list[AgentResultModel]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        failed_results = agent.get_all_failed_results()
-        self._logger.debug(
-            "Retrieved failed results from agent {} ({} retrieved)",
-            agent_id,
-            len(failed_results),
-        )
-        return failed_results
+        all_results = agent.get_all_results(status=status)
+        if status is None:
+            self._logger.debug(
+                "Retrieved agent results from agent {} ({} retrieved)",
+                agent,
+                len(all_results),
+            )
+        else:
+            self._logger.debug(
+                "Retrieved agent results from agent {} with status {} ({} retrieved)",
+                agent,
+                status,
+                len(all_results),
+            )
+        return all_results
 
     @log_and_propagate_error_on_service_method
     def get_agent_result_by_agent_id_and_result_id(
@@ -208,9 +238,25 @@ class AgentsService:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         result = agent.get_result_by_result_id(result_id=result_id)
         self._logger.debug(
-            "Retrieved result {!r} from agent {!r}",
-            result_id,
+            "Retrieved result {!r} from agent {!r} through result ID",
+            result,
             agent,
+        )
+        return result
+
+    @log_and_propagate_error_on_service_method
+    def get_agent_result_by_agent_id_and_task_id(
+        self,
+        agent_id: str | uuid.UUID,
+        task_id: str | uuid.UUID,
+    ) -> AgentResultModel:
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        result = agent.get_result_by_task_id(task_id=task_id)
+        self._logger.debug(
+            "Retrieved result {!r} from agent {!r} through task ID {}",
+            result,
+            agent,
+            str(task_id),
         )
         return result
 
@@ -312,8 +358,8 @@ class AgentsService:
     @log_and_propagate_error_on_service_method
     def delete_queued_agent_task_by_agent_id_and_task_id(
         self,
-        agent_id: str,
-        task_id: str,
+        agent_id: str | uuid.UUID,
+        task_id: str | uuid.UUID,
     ):
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         agent.delete_queued_task_by_task_id(task_id=task_id)

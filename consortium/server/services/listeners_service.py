@@ -210,7 +210,7 @@ class ListenersService:
                 # Create a temporary listener whose attributes we copy over to the
                 # existing listener. This allows us to perform the `name` and
                 # `endpoint` resolution required to update the attribute without
-                # inadvertently overwriting any existing state within the existing
+                # inadvertently overwriting any existing status within the existing
                 # listener.
                 temp_listener = listener.creating_listener_template.create_listener(
                     parameters=parameters,

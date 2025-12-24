@@ -99,6 +99,7 @@ def request_response_capability(
                 result_message = timeout_handler(agent=agent, context=context)
                 if asyncio.iscoroutine(result_message):
                     result_message = await result_message
+                print(result_message)
                 return result_message
             else:
                 raise

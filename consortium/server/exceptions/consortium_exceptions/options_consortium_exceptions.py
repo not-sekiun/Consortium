@@ -156,7 +156,7 @@ class InvalidOptionValueLengthRangeError(OptionConfigurationError):
 class InvalidOptionValueLengthBoundError(OptionConfigurationError):
     """
     Raised when the `minimum_length` or `maximum_length` parameter provided for an
-    option specifying the length of the string value is less than zero during option
+    option specifying the max_length of the string value is less than zero during option
     configuration.
     """
 

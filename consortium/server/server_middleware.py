@@ -167,7 +167,7 @@ async def log_rest_api_requests_and_responses(
             request.url.path,
             response.status_code,
             responses[response.status_code],
-            response.headers["content-length"],
+            response.headers["content-max_length"],
         )
 
         return response
@@ -181,7 +181,7 @@ async def log_rest_api_requests_and_responses(
             request.client.port,
             request.method,
             request.url.path,
-            # length of the response as a JSON string
+            # max_length of the response as a JSON string
             len(json.dumps(InternalServerError().to_json())),
         )
         return JSONResponse(

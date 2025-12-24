@@ -52,15 +52,28 @@ class AgentsInterpreter(ClientInterpreter):
         agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
         for command in [
             "info_agent",
-            "info_result",
-            "info_task",
             "interact_agent",
-            "list_results",
-            "list_tasks",
+            "results_list",
+            "tasks_list",
             "rename_agent",
             "redescribe_agent",
         ]:
             nested_completer_dict[command] = agent_ids_completion
+
+        # Register commands that take the task or result ID as a positional argument
+        all_tasks = await self.environment[
+            "client_rest_api_connection"
+        ].get_all_agent_tasks()
+        nested_completer_dict["task_info"] = {
+            task["task_id"]: None for task in all_tasks
+        }
+
+        all_results = await self.environment[
+            "client_rest_api_connection"
+        ].get_all_agent_results()
+        nested_completer_dict["result_info"] = {
+            result["result_id"]: None for result in all_results
+        }
 
         # Register commands that take the asset ID as the first positional argument to
         # autocomplete with.

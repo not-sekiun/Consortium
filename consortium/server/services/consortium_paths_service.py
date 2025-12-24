@@ -46,7 +46,7 @@ class ConsortiumPathsService:
         # These two methods will raise exceptions that are not subclasses of
         # `BaseConsortiumErrors` if there are issues with the paths that prevent
         # safe server startup. This is to ensure that the server does not start
-        # in an invalid state by aborting the startup procedure.
+        # in an invalid status by aborting the startup procedure.
         self._validate_user_accounts_json_file_exist()
         self._auto_create_missing_directories()
 

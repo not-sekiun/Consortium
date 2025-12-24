@@ -258,7 +258,7 @@ class AgentGeneratorsService:
                 # Create a temporary agent generator whose attributes we copy over to the
                 # existing agent generator. This allows us to perform the `name`
                 # resolution required to update the attribute without
-                # inadvertently overwriting any existing state within the existing
+                # inadvertently overwriting any existing status within the existing
                 # agent generator.
                 temp_agent_generator = (
                     agent_generator.creating_agent_template.create_agent_generator(

@@ -32,7 +32,7 @@ LISTENER_JSON_SCHEMA = {
         "status": {
             "type": "object",
             "properties": {
-                "state": {"type": "string"},
+                "status": {"type": "string"},
                 "error": {
                     "anyOf": [
                         {"type": "null"},
@@ -47,7 +47,7 @@ LISTENER_JSON_SCHEMA = {
                     ],
                 },
             },
-            "required": ["state", "error"],
+            "required": ["status", "error"],
         },
     },
     "required": [

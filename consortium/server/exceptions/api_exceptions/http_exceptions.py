@@ -102,7 +102,7 @@ class ConflictError(HTTPError):
     def __init__(
         self,
         message: str = "The request could not be completed due to a conflict with the "
-        "current state of the resource.",
+        "current status of the resource.",
         detail: Any | None = None,
     ) -> None:
         super().__init__(

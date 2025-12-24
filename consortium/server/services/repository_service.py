@@ -183,7 +183,7 @@ class RepositoryService:
                     )
 
                 # TODO: Handle conditions where the metadata corrupts and no longer
-                #  corresponds to the actual state of affairs in the repository directory
+                #  corresponds to the actual status of affairs in the repository directory
                 if not repository_resource_json["exists_on_disk"]:
                     raise UnsyncedRepositoryMetadataFileError(
                         repository_directory_path=str(self.repository_directory_path)

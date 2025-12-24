@@ -70,7 +70,7 @@ class PluginsService:
             plugin_project_folder (pathlib.Path): The path of the folder containing the
                 plugin project.
             ignore_enabled_plugin_flag (bool): If `True`, the method bypasses the
-                enabled state check in the plugin project manifest.
+                enabled status check in the plugin project manifest.
 
         Returns:
             BasePlugin | None: An instance of the plugin if successfully retrieved, or
@@ -137,7 +137,7 @@ class PluginsService:
             directory (pathlib.Path): The path of the directory containing plugin
                 project folders.
             ignore_enabled_plugin_flag (bool): If `True`, the method bypasses the
-                enabled state check in the plugin project manifests.
+                enabled status check in the plugin project manifests.
 
         Returns:
             tuple[list[BasePlugin], list[pathlib.Path], list[tuple[pathlib.Path, PluginLoadingError]]: A tuple containing three elements.
@@ -329,7 +329,7 @@ class PluginsService:
         # # so we do not need to check it again.
         # plugin = self.get_plugin_by_plugin_id(plugin_id)
         #
-        # if plugin.status.state == State.RUNNING:
+        # if plugin.status.status == State.RUNNING:
         #     try:
         #         await plugin.stop()
         #     except BaseFrameworkException as exc:
@@ -343,19 +343,19 @@ class PluginsService:
         #     # on the timeout.
         #     await plugin.stop_event.wait()
         #     if timeout is None:
-        #         while plugin.status.state == State.RUNNING:
+        #         while plugin.status.status == State.RUNNING:
         #             await asyncio.sleep(1)
         #     else:
         #         # Every second check if the plugin has stopped and break early if it
         #         # has.
         #         for _ in range(timeout):
-        #             if plugin.status.state != State.RUNNING:
+        #             if plugin.status.status != State.RUNNING:
         #                 break
         #             await asyncio.sleep(1)
         #
-        #     # Check the state after the timeout and determine if we forcefully need to
+        #     # Check the status after the timeout and determine if we forcefully need to
         #     # cancel the plugin.
-        #     if plugin.status.state != State.STOPPED:
+        #     if plugin.status.status != State.STOPPED:
         #         if not force_unload:
         #             raise PluginStopTimeoutError(plugin_str=str(plugin))
         #         else:

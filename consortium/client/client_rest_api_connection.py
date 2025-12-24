@@ -353,6 +353,13 @@ class ClientRESTAPIConnection:
         )
 
     @_requires_authentication
+    async def get_agent_task_by_task_id(self, task_id: str):
+        return await self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/tasks/{task_id}",
+        )
+
+    @_requires_authentication
     async def get_all_agent_tasks_by_agent_id(
         self,
         agent_id: str,
@@ -369,7 +376,7 @@ class ClientRESTAPIConnection:
     ) -> list[dict[str, Any]]:
         return await self._make_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks/queued",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks?status=QUEUED",
         )
 
     @_requires_authentication
@@ -379,7 +386,7 @@ class ClientRESTAPIConnection:
     ) -> list[dict[str, Any]]:
         return await self._make_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks/running",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks?status=RUNNING",
         )
 
     @_requires_authentication
@@ -389,7 +396,7 @@ class ClientRESTAPIConnection:
     ) -> list[dict[str, Any]]:
         return await self._make_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks/completed",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks?status=COMPLETED",
         )
 
     @_requires_authentication
@@ -401,6 +408,13 @@ class ClientRESTAPIConnection:
         return self._make_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks/{task_id}",
+        )
+
+    @_requires_authentication
+    async def get_agent_result_by_result_id(self, result_id: str):
+        return await self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/results/{result_id}",
         )
 
     @_requires_authentication
@@ -420,7 +434,7 @@ class ClientRESTAPIConnection:
     ) -> list[dict[str, Any]]:
         return await self._make_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/results/success",
+            url=f"{self._api_base_url}/agents/{agent_id}/results?status=SUCCESS",
         )
 
     @_requires_authentication
@@ -430,7 +444,17 @@ class ClientRESTAPIConnection:
     ) -> list[dict[str, Any]]:
         return await self._make_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/results/fail",
+            url=f"{self._api_base_url}/agents/{agent_id}/results?status=FAILURE",
+        )
+
+    @_requires_authentication
+    async def get_all_errored_agent_results_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        return await self._make_request(
+            method="GET",
+            url=f"{self._api_base_url}/agents/{agent_id}/results?status=ERROR",
         )
 
     @_requires_authentication

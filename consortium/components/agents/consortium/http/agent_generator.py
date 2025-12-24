@@ -4,6 +4,9 @@ from consortium.framework.agents import (
     BaseAgentGenerator,
     BaseAgentGeneratorBuildStep,
 )
+from consortium.framework.agents.agent_generator_utils.string_utils import (
+    multiple_string_replace,
+)
 from consortium.framework.exceptions import (
     AgentGeneratorStartError,
 )
@@ -12,31 +15,33 @@ from consortium.framework.exceptions import (
 class BuildAgent(BaseAgentGeneratorBuildStep):
     name = "Build Agent"
     description = (
-        "Export the agent to the server's payloads service. Freeze the agent into an "
-        "executable with pyinstaller if specified by the 'format' option."
+        "Build and export the agent to the server's payloads service. Will optionally "
+        "freeze the agent into a bundled self-extracting executable with PyInstaller "
+        "if specified by the 'format' option."
     )
 
     async def build(self, parameters: dict) -> None:
-        self.logger.critical("I love gooning to femboys.")
-        # with open(
-        #     self.working_directory / "agent_source" / "_agent.py",
-        # ) as file:
-        #     template_source_code = file.read()
-        #     source_code = multiple_string_replace(
-        #         template_source_code,
-        #         {
-        #             "REMOTE_HOST": repr(parameters["remote_host"]),
-        #             "REMOTE_PORT": repr(parameters["remote_port"]),
-        #             "SLEEP_TIME": repr(parameters["sleep_time"]),
-        #             "SLEEP_TIME_JITTER": repr(parameters["sleep_time_jitter"]),
-        #             "TASKS_URL_PATHS": repr(parameters["tasks_url_paths"]),
-        #             "RESULTS_URL_PATHS": repr(parameters["results_url_paths"]),
-        #             "REGISTRATION_URL_PATHS": repr(
-        #                 parameters["registration_url_paths"]
-        #             ),
-        #         },
-        #     )
-        #
+        with open(
+            self.working_directory / "agent_source" / "_agent.py",
+        ) as file:
+            template_source_code = file.read()
+            source_code = multiple_string_replace(
+                template_source_code,
+                {
+                    "REMOTE_HOST": repr(parameters["remote_host"]),
+                    "REMOTE_PORT": repr(parameters["remote_port"]),
+                    "SLEEP_TIME": repr(parameters["sleep_time"]),
+                    "SLEEP_TIME_JITTER": repr(parameters["sleep_time_jitter"]),
+                    "TASKS_URL_PATHS": repr(parameters["tasks_url_paths"]),
+                    "RESULTS_URL_PATHS": repr(parameters["results_url_paths"]),
+                    "REGISTRATION_URL_PATHS": repr(
+                        parameters["registration_url_paths"]
+                    ),
+                    "EXTRA_HEADERS": repr(parameters["extra_headers"]),
+                },
+            )
+        print(source_code)
+
         # if parameters["format"] == "script":
         #     with open(
         #         CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / (parameters["filename"] + ".py"),
@@ -87,8 +92,9 @@ class AgentGenerator(BaseAgentGenerator):
     ]
 
     async def on_started(self) -> None:
-        if self.parameters["format"] == "executable" and (
-            shutil.which("pyinstaller") is None or shutil.which("python") is None
+        if (
+            self.parameters["format"] == "executable"
+            and shutil.which("pyinstaller") is None
         ):
             raise AgentGeneratorStartError(
                 "For the `format` option set to 'executable', the `pyinstaller` "

@@ -58,7 +58,7 @@ class Status:
 
     def to_json(self):
         return {
-            "state": self.state,
+            "status": self.state,
             "error": {
                 "code": self.error.code,
                 "message": self.error.message,
@@ -75,17 +75,17 @@ class Status:
     ):
         if new_state not in self._VALID_STATE_TRANSITIONS[self.state]:
             raise AssertionError(
-                f"Invalid state transition from current state '{self.state}' to new "
-                f"state '{new_state}'.",
+                f"Invalid status transition from current status '{self.state}' to new "
+                f"status '{new_state}'.",
             )
         if new_state in (State.ERRORED, State.FATAL) and error is None:
             raise AssertionError(
-                f"When transitioning to the '{new_state}' state, an error must be "
+                f"When transitioning to the '{new_state}' status, an error must be "
                 f"provided.",
             )
         if new_state not in (State.ERRORED, State.FATAL) and error is not None:
             raise AssertionError(
-                f"When transitioning to the '{new_state}' state, no error should be "
+                f"When transitioning to the '{new_state}' status, no error should be "
                 f"provided.",
             )
         self.state = new_state

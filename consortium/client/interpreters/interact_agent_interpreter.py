@@ -122,11 +122,11 @@ class InteractAgentInterpreter(ClientInterpreter):
         agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
         for command in [
             "info_agent",
-            "info_result",
-            "info_task",
+            "result_info",
+            "task_info",
             "interact_agent",
-            "list_results",
-            "list_tasks",
+            "results_list",
+            "tasks_list",
             "rename_agent",
             "redescribe_agent",
         ]:
@@ -162,12 +162,7 @@ class InteractAgentInterpreter(ClientInterpreter):
         event: dict[str, Any],
     ) -> None:
         if event["data"]["agent_id"] == self.environment["agent"]["agent_id"]:
-            result = await self.environment[
-                "client_rest_api_connection"
-            ].get_agent_result_by_agent_id_and_result_id(
-                agent_id=self.environment["agent"]["agent_id"],
-                result_id=event["data"]["result_id"],
-            )
+            result = event["data"]["result"]
             print_info(
                 f"Received result with result ID '{result['result_id']}' for "
                 f"task with task ID '{result['task_id']}':\n{result['message']}",

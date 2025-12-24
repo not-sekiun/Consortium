@@ -88,8 +88,7 @@ def ping_task_handler(agent, task_message, context):
 
 
 def ping_result_handler(agent, result_message, context):
-    end = datetime.now()
-    delta = end - context.start
+    delta = datetime.now() - context.start
     result_message.message = (
         f"Agent returned ping response. Latency: {delta.total_seconds():.3f} seconds"
     )
@@ -97,10 +96,14 @@ def ping_result_handler(agent, result_message, context):
 
 
 def ping_timeout_handler(agent, context):
+    delta = datetime.now() - context.start
     result_message = AgentResultMessageModel(
         task_id=context.task_id,
         success=False,
-        message="Ping request timed out.",
+        message=(
+            f"Ping request timed out before agent could return ping response. "
+            f"Latency: {delta.total_seconds():.3f} seconds"
+        ),
         data={},
     )
     return result_message

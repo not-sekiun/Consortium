@@ -22,7 +22,7 @@ class ComponentLifeCycleFatalContext(enum.StrEnum):
 
 
 # Life cycles are abstractions of entities that can run separately from the event loop.
-# They handle starting, stopping, cancelling and manage state transitions based on
+# They handle starting, stopping, cancelling and manage status transitions based on
 # signalling errors raised from hook methods.
 class ComponentLifeCycle(abc.ABC):
     def __init__(self):

@@ -785,7 +785,7 @@ class PluginStateError(
     PluginsFrameworkError,
 ):
     """
-    Base exception for all errors that occur due to invalid plugin state during
+    Base exception for all errors that occur due to invalid plugin status during
     plugin operation.
     """
 
