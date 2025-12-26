@@ -14,18 +14,19 @@ from consortium.client.repl_framework.base_command import (
 from consortium.client.utils.formatter_utils import (
     format_agent_result_status_string_with_color,
     format_argparse_epilog,
+    format_datetime_as_human_readable_str,
     format_dict_as_multi_line_key_value_string,
 )
 from consortium.client.utils.printer_utils import CONSOLE
 
 
 class ResultInfoCommand(BaseCommand):
-    name = "result_info"
-    description = "Display detailed information about a specific agent result."
+    name = "r-info"
+    description = "Display information about an agent's result by its result ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-            result_info 123e4567-e89b-12d3-a456-42661417400
+            r-info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -33,7 +34,7 @@ class ResultInfoCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "result_id",
-            help="The result ID of the result to display detailed information for.",
+            help="ID of the result to display information for.",
             type=str,
         )
 
@@ -63,8 +64,18 @@ class ResultInfoCommand(BaseCommand):
             ),
         )
         table.add_row("Message", str(result["message"]))
-        table.add_row("Datetime Started", str(result["datetime_finished"]))
-        table.add_row("Datetime Finished", str(result["datetime_finished"]))
+        table.add_row(
+            "Datetime Started",
+            format_datetime_as_human_readable_str(
+                datetime_str=result["datetime_started"]
+            ),
+        )
+        table.add_row(
+            "Datetime Finished",
+            format_datetime_as_human_readable_str(
+                datetime_str=result["datetime_finished"], include_elapsed_time=True
+            ),
+        )
         table.add_row("Elapsed Time", f"{result['elapsed_seconds']:.2f}s")
         CONSOLE.print(table)
 

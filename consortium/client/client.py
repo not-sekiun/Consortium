@@ -87,7 +87,7 @@ class Client:
         # connection failed, or we run the client session's own interpreter loop for a
         # successful initial connection.
         if client_session is None:
-            return_status = await DisconnectedInterpreter().run_interpreter()
+            return_status = await DisconnectedInterpreter().run()
         else:
             client_sessions_service.add_client_session(client_session=client_session)
             return_status = await client_session.run()
@@ -100,7 +100,7 @@ class Client:
             if return_status.type == ClientReturnStatusType.EXIT:
                 return
             elif return_status.type == ClientReturnStatusType.EXIT_CLIENT_SESSION:
-                return_status = await DisconnectedInterpreter().run_interpreter()
+                return_status = await DisconnectedInterpreter().run()
             elif return_status.type == ClientReturnStatusType.SWITCH_CLIENT_SESSION:
                 try:
                     # The command will make sure that the client connection is valid.
@@ -114,7 +114,7 @@ class Client:
                             "client_session"
                         ].client_session_id,
                     )
-                    return_status = await DisconnectedInterpreter().run_interpreter()
+                    return_status = await DisconnectedInterpreter().run()
             else:
                 raise AssertionError(
                     "Failed to handle return status from interpreter. The return "

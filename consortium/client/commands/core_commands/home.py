@@ -13,10 +13,7 @@ from consortium.client.utils.printer_utils import print_info
 
 class HomeCommand(BaseCommand):
     name = "home"
-    description = (
-        "Return to the home interpreter, the main control interface of the Consortium "
-        "framework."
-    )
+    description = "Switch to the home interpreter to manage client sessions"
     epilog = format_argparse_epilog(
         """
         Examples:

@@ -17,8 +17,7 @@ from consortium.client.utils.printer_utils import CONSOLE, print_error
 class HelpCommand(BaseCommand):
     name = "help"
     description = (
-        "Display the help summary of a specific command or display the help menu "
-        "listing all available commands for the current interpreter."
+        "Display help menu for the current interpreter, or for a specific command"
     )
     epilog = format_argparse_epilog(
         """
@@ -32,7 +31,7 @@ class HelpCommand(BaseCommand):
         parser.add_argument(
             "command_name",
             nargs="?",
-            help="The name of the command to display the help summary for.",
+            help="Name of the command to display the help summary for.",
         )
 
     @staticmethod

@@ -35,7 +35,7 @@ class AgentsInterpreter(ClientInterpreter):
             client_session=client_session,
         )
 
-    async def _update_autocomplete(self) -> None:
+    async def _initialize_autocompleter(self) -> None:
         all_agents = await self.environment[
             "client_rest_api_connection"
         ].get_all_agents()
@@ -51,12 +51,12 @@ class AgentsInterpreter(ClientInterpreter):
         # autocomplete with.
         agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
         for command in [
-            "info_agent",
-            "interact_agent",
-            "results_list",
-            "tasks_list",
-            "rename_agent",
-            "redescribe_agent",
+            "ag-info",
+            "ag-interact",
+            "r-ls",
+            "t-ls",
+            "ag-name",
+            "ag-desc",
         ]:
             nested_completer_dict[command] = agent_ids_completion
 
@@ -64,21 +64,18 @@ class AgentsInterpreter(ClientInterpreter):
         all_tasks = await self.environment[
             "client_rest_api_connection"
         ].get_all_agent_tasks()
-        nested_completer_dict["task_info"] = {
-            task["task_id"]: None for task in all_tasks
-        }
-
+        nested_completer_dict["t-info"] = {task["task_id"]: None for task in all_tasks}
         all_results = await self.environment[
             "client_rest_api_connection"
         ].get_all_agent_results()
-        nested_completer_dict["result_info"] = {
+        nested_completer_dict["r-info"] = {
             result["result_id"]: None for result in all_results
         }
 
         # Register commands that take the asset ID as the first positional argument to
         # autocomplete with.
         assets_completion = {asset["resource_id"]: None for asset in all_assets}
-        for command in ["download_asset", "info_asset"]:
+        for command in ["as-dl", "as-info"]:
             nested_completer_dict[command] = assets_completion
 
         # Register the help command to autocomplete with all available commands. This
@@ -90,19 +87,56 @@ class AgentsInterpreter(ClientInterpreter):
             nested_completer_dict,
         )
 
-    # We don't actually care about the event data so we just ignore it. We just need to
-    # know a change happened so that we can update the autocompleter.
+    async def _agent_tasked_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        task = event["data"]["task"]
+
+        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
+            self.prompt_session.completer,
+        )
+        nested_completer_dict["t-info"][task["task_id"]] = None
+        self.prompt_session.completer = NestedCompleter.from_nested_dict(
+            nested_completer_dict,
+        )
+
+    async def _agent_result_received_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        result = event["data"]["result"]
+
+        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
+            self.prompt_session.completer,
+        )
+        nested_completer_dict["r-info"][result["result_id"]] = None
+        self.prompt_session.completer = NestedCompleter.from_nested_dict(
+            nested_completer_dict,
+        )
+
     async def _agent_registered_event_handler(
         self,
         event: dict[str, Any],
     ) -> None:
-        agent = await self.environment[
-            "client_rest_api_connection"
-        ].get_agent_by_agent_id(
-            agent_id=event["data"]["agent_id"],
+        agent = (event["data"],)
+        print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in")
+
+        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
+            self.prompt_session.completer,
         )
-        print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in.")
-        await self._update_autocomplete()
+        for command in [
+            "ag-info",
+            "ag-interact",
+            "r-ls",
+            "t-ls",
+            "ag-name",
+            "ag-desc",
+        ]:
+            nested_completer_dict[command][agent["agent_id"]] = None
+        self.prompt_session.completer = NestedCompleter.from_nested_dict(
+            nested_completer_dict,
+        )
 
     async def _setup_event_handlers(self) -> None:
         await self.environment["client_websockets_api_connection"].subscribe_to_event(
@@ -111,11 +145,11 @@ class AgentsInterpreter(ClientInterpreter):
         )
         await self.environment["client_websockets_api_connection"].subscribe_to_event(
             event_type="AGENT_TASKED",
-            event_handler=self._update_autocomplete,
+            event_handler=self._agent_tasked_event_handler,
         )
         await self.environment["client_websockets_api_connection"].subscribe_to_event(
             event_type="AGENT_RESULT_RECEIVED",
-            event_handler=self._update_autocomplete,
+            event_handler=self._agent_result_received_event_handler,
         )
         await self.environment["client_websockets_api_connection"].start()
 
@@ -135,27 +169,21 @@ class AgentsInterpreter(ClientInterpreter):
         await self.environment[
             "client_websockets_api_connection"
         ].unsubscribe_from_event(
+            event_type="AGENT_TASKED",
+            event_handler=self._agent_tasked_event_handler,
+        )
+        await self.environment[
+            "client_websockets_api_connection"
+        ].unsubscribe_from_event(
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
         )
-        await self.environment[
-            "client_websockets_api_connection"
-        ].unsubscribe_from_event(
-            event_type="AGENT_TASKED",
-            event_handler=self._update_autocomplete,
-        )
-        await self.environment[
-            "client_websockets_api_connection"
-        ].unsubscribe_from_event(
-            event_type="AGENT_RESULT_RECEIVED",
-            event_handler=self._update_autocomplete,
-        )
 
-    async def on_enter_interpreter(self) -> None:
-        await self._update_autocomplete()
+    async def on_enter(self) -> None:
+        await self._initialize_autocompleter()
         await self._setup_event_handlers()
 
-    async def on_exit_interpreter(self) -> None:
+    async def on_exit(self) -> None:
         # The exit command when executed will disconnect the websocket connection but
         # this method will still run so we need to first check if the client websockets
         # API connection has already been disconnected.

@@ -17,13 +17,19 @@ from consortium.client.repl_framework.base_parser import (
 class BaseInterpreter:
     def __init__(
         self,
-        prompt_session: PromptSession = PromptSession(),
+        prompt_session: PromptSession | None = None,
         commands: list[BaseCommand] = None,
         environment: dict = None,
         ignore_keyboard_interrupt: bool = False,
-        lexer: BaseLexer = SimpleLexer(),
-        parser: BaseParser = SimpleParser(),
+        lexer: BaseLexer | None = None,
+        parser: BaseParser | None = None,
     ):
+        if prompt_session is None:
+            prompt_session = PromptSession()
+        if lexer is None:
+            lexer = SimpleLexer()
+        if parser is None:
+            parser = SimpleParser()
         if commands is None:
             commands = []
         if environment is None:
@@ -56,24 +62,24 @@ class BaseInterpreter:
     async def on_interrupt(self) -> None:
         pass
 
-    async def on_enter_interpreter(self) -> None:
+    async def on_enter(self) -> None:
         pass
 
-    async def on_exit_interpreter(self) -> None:
+    async def on_exit(self) -> None:
         pass
 
-    async def on_interpreter_loop(self) -> None:
+    async def on_loop(self) -> None:
         pass
 
-    async def on_interpreter_errored(self, exc: Exception) -> None:
+    async def on_error(self, exc: Exception) -> None:
         raise exc
 
-    async def run_interpreter(self) -> ReturnStatus:
-        await self.on_enter_interpreter()
+    async def run(self) -> ReturnStatus:
+        await self.on_enter()
 
         while True:
             try:
-                await self.on_interpreter_loop()
+                await self.on_loop()
 
                 input_string = await self.read_input()
                 if not input_string:
@@ -93,7 +99,7 @@ class BaseInterpreter:
             except KeyboardInterrupt:
                 await self.on_interrupt()
                 if not self.ignore_keyboard_interrupt:
-                    await self.on_exit_interpreter()
+                    await self.on_exit()
                     return ReturnStatus(type=ReturnStatusType.EXIT)
             except Exception as exc:
-                await self.on_interpreter_errored(exc)
+                await self.on_error(exc)

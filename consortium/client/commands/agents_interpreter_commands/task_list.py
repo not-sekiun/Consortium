@@ -12,26 +12,23 @@ from consortium.client.repl_framework.base_command import (
     ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import (
-    abbreviate_string,
     format_agent_task_status_string_with_color,
     format_argparse_epilog,
+    format_datetime_as_human_readable_str,
     format_dict_as_single_line_key_value_string,
 )
 from consortium.client.utils.printer_utils import CONSOLE
 
 
-class TasksListCommand(BaseCommand):
-    name = "tasks_list"
-    description = (
-        "List all agent tasks or a particular agent's tasks if its agent ID is "
-        "provided."
-    )
+class TaskListCommand(BaseCommand):
+    name = "t-ls"
+    description = "List all tasks, or a specific agent's tasks by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          tasks_list  # If the agent ID is not specified, all tasks will be listed.
-          tasks_list 123e4567-e89b-12d3-a456-42661417400  -q  # List only tasks with a status of  'QUEUED' for a specific agent.
-          tasks_list --running --completed  # List only tasks with a status of 'RUNNING' and 'COMPLETED' across all agents.
+          t-ls  # If no filters are provided, list all tasks across all agents regardless of status.
+          t-ls --running --completed  # Filters can be combined; this lists all tasks with status RUNNING and COMPLETED.
+          t-ls 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -40,8 +37,8 @@ class TasksListCommand(BaseCommand):
         parser.add_argument(
             "agent_id",
             help=(
-                "The agent ID of the agent to list tasks for. If not provided, all "
-                "tasks across all agents will be listed."
+                "ID of the agent to list tasks for. If not provided, all tasks across "
+                "all agents will be listed."
             ),
             type=str,
             nargs="?",
@@ -49,19 +46,19 @@ class TasksListCommand(BaseCommand):
         parser.add_argument(
             "-q",
             "--queued",
-            help="List only tasks with a status of 'QUEUED'.",
+            help="List only tasks with status QUEUED.",
             action="store_true",
         )
         parser.add_argument(
             "-r",
             "--running",
-            help="List only tasks with a status of 'RUNNING'",
+            help="List only tasks with status RUNNING.",
             action="store_true",
         )
         parser.add_argument(
             "-c",
             "--completed",
-            help="List only tasks with a status of 'COMPLETED'",
+            help="List only tasks with status COMPLETED.",
             action="store_true",
         )
 
@@ -76,27 +73,30 @@ class TasksListCommand(BaseCommand):
     ) -> None:
         agent_tasks = []
         if not display_queued and not display_running and not display_completed:
-            agent_tasks += (
+            agent_tasks = (
                 await client_rest_api_connection.get_all_agent_tasks_by_agent_id(
                     agent_id=agent_id,
                 )
             )
-        if display_queued:
-            agent_tasks += (
-                await client_rest_api_connection.get_all_queued_tasks_by_agent_id(
-                    agent_id=agent_id,
+        else:
+            if display_queued:
+                agent_tasks.extend(
+                    await client_rest_api_connection.get_all_queued_tasks_by_agent_id(
+                        agent_id=agent_id,
+                    )
                 )
-            )
-        if display_running:
-            agent_tasks += await client_rest_api_connection.get_all_running_agent_tasks_by_agent_id(
-                agent_id=agent_id,
-            )
-        if display_completed:
-            agent_tasks += (
-                await client_rest_api_connection.get_all_completed_tasks_by_agent_id(
-                    agent_id=agent_id,
+            if display_running:
+                agent_tasks.extend(
+                    await client_rest_api_connection.get_all_running_agent_tasks_by_agent_id(
+                        agent_id=agent_id,
+                    )
                 )
-            )
+            if display_completed:
+                agent_tasks.extend(
+                    await client_rest_api_connection.get_all_completed_tasks_by_agent_id(
+                        agent_id=agent_id,
+                    )
+                )
 
         table = Table(title=f"Tasks For '{agent_name}' ({agent_id})", highlight=True)
         table.add_column("Task ID")
@@ -106,7 +106,7 @@ class TasksListCommand(BaseCommand):
         table.add_column("Datetime Started")
         for agent_task in agent_tasks:
             table.add_row(
-                abbreviate_string(string=agent_task["task_id"]),
+                agent_task["task_id"],
                 str(agent_task["command"]),
                 format_dict_as_single_line_key_value_string(
                     input_dict=agent_task["arguments"],
@@ -114,7 +114,9 @@ class TasksListCommand(BaseCommand):
                 format_agent_task_status_string_with_color(
                     status_str=agent_task["status"],
                 ),
-                str(agent_task["datetime_started"]),
+                format_datetime_as_human_readable_str(
+                    datetime_str=agent_task["datetime_started"]
+                ),
             )
         CONSOLE.print(table, "")
 

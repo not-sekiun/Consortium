@@ -1,55 +1,55 @@
-from consortium.client.commands.agents_interpreter_commands.agents_list import (
-    AgentsListCommand,
+from consortium.client.commands.agents_interpreter_commands.agent_describe import (
+    AgentDescribeCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.download_asset import (
-    DownloadAssetCommand,
+from consortium.client.commands.agents_interpreter_commands.agent_info import (
+    AgentInfoCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.info_agent import (
-    InfoAgentCommand,
+from consortium.client.commands.agents_interpreter_commands.agent_interact import (
+    AgentInteractCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.info_asset import (
-    InfoAssetCommand,
+from consortium.client.commands.agents_interpreter_commands.agent_list import (
+    AgentListCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.interact_agent import (
-    InteractAgentCommand,
+from consortium.client.commands.agents_interpreter_commands.agent_rename import (
+    AgentRenameCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.list_assets import (
-    ListAssetsCommand,
+from consortium.client.commands.agents_interpreter_commands.asset_download import (
+    AssetDownloadCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.redescribe_agent import (
-    RedescribeAgentCommand,
+from consortium.client.commands.agents_interpreter_commands.asset_info import (
+    AssetInfoCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.rename_agent import (
-    RenameAgentCommand,
+from consortium.client.commands.agents_interpreter_commands.asset_list import (
+    AssetListCommand,
+)
+from consortium.client.commands.agents_interpreter_commands.asset_upload import (
+    AssetUploadCommand,
 )
 from consortium.client.commands.agents_interpreter_commands.result_info import (
     ResultInfoCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.results_list import (
-    ResultsListCommand,
+from consortium.client.commands.agents_interpreter_commands.result_list import (
+    ResultListCommand,
 )
 from consortium.client.commands.agents_interpreter_commands.task_info import (
     TaskInfoCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.tasks_list import (
-    TasksListCommand,
-)
-from consortium.client.commands.agents_interpreter_commands.upload_asset import (
-    UploadAssetCommand,
+from consortium.client.commands.agents_interpreter_commands.task_list import (
+    TaskListCommand,
 )
 
 AGENTS_INTERPRETER_COMMANDS = [
-    DownloadAssetCommand(),
-    InfoAgentCommand(),
-    InfoAssetCommand(),
+    AssetDownloadCommand(),
+    AgentInfoCommand(),
+    AssetInfoCommand(),
     ResultInfoCommand(),
     TaskInfoCommand(),
-    InteractAgentCommand(),
-    AgentsListCommand(),
-    ListAssetsCommand(),
-    ResultsListCommand(),
-    TasksListCommand(),
-    RedescribeAgentCommand(),
-    RenameAgentCommand(),
-    UploadAssetCommand(),
+    AgentInteractCommand(),
+    AgentListCommand(),
+    AssetListCommand(),
+    ResultListCommand(),
+    TaskListCommand(),
+    AgentDescribeCommand(),
+    AgentRenameCommand(),
+    AssetUploadCommand(),
 ]

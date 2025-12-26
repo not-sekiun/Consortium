@@ -96,7 +96,7 @@ class DisconnectedInterpreter(BaseInterpreter):
     # TODO: Provide more comprehensive error handling in the commands.
     # In general, when an error is raised on the REST API side we simply print the error
     # message to the console and interrupt whichever operation we were attempting to do.
-    async def on_interpreter_errored(self, exc: Exception) -> None:
+    async def on_error(self, exc: Exception) -> None:
         if isinstance(exc, ClientRESTAPIOperationError):
             print_error(f"Error: {exc}")
         else:
@@ -105,7 +105,7 @@ class DisconnectedInterpreter(BaseInterpreter):
 
     # TODO: Find a way for interpreters to "inherit" command completions or share
     #  common command completions. Probably could just make it a parameter
-    async def on_interpreter_loop(self) -> None:
+    async def on_loop(self) -> None:
         all_client_sessions = client_sessions_service.get_all_client_sessions()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
@@ -133,12 +133,12 @@ class DisconnectedInterpreter(BaseInterpreter):
 
     # TODO: Find a better way to add multiline support without needing to rewrite the
     #  entire interpreter run loop part.
-    async def run_interpreter(self):
-        await self.on_enter_interpreter()
+    async def run(self):
+        await self.on_enter()
 
         while True:
             try:
-                await self.on_interpreter_loop()
+                await self.on_loop()
 
                 input_string = await self.read_input()
 
@@ -180,6 +180,6 @@ class DisconnectedInterpreter(BaseInterpreter):
                 if not self.ignore_keyboard_interrupt:
                     break
             except Exception as exc:
-                await self.on_interpreter_errored(exc)
+                await self.on_error(exc)
 
-        await self.on_exit_interpreter()
+        await self.on_exit()

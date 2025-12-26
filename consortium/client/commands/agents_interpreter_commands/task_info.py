@@ -14,18 +14,19 @@ from consortium.client.repl_framework.base_command import (
 from consortium.client.utils.formatter_utils import (
     format_agent_task_status_string_with_color,
     format_argparse_epilog,
+    format_datetime_as_human_readable_str,
     format_dict_as_multi_line_key_value_string,
 )
 from consortium.client.utils.printer_utils import CONSOLE
 
 
 class TaskInfoCommand(BaseCommand):
-    name = "task_info"
-    description = "Display detailed information about a specific agent task."
+    name = "t-info"
+    description = "Display information about an agent's task by its task ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-            task_info 123e4567-e89b-12d3-a456-42661417400
+            t-info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -33,7 +34,7 @@ class TaskInfoCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "task_id",
-            help="The task ID of the task to display detailed information for.",
+            help="ID of the task to display information for.",
             type=str,
         )
 
@@ -58,7 +59,12 @@ class TaskInfoCommand(BaseCommand):
         table.add_row(
             "Status", format_agent_task_status_string_with_color(task["status"])
         )
-        table.add_row("Datetime Started", task["datetime_started"])
+        table.add_row(
+            "Datetime Started",
+            format_datetime_as_human_readable_str(
+                datetime_str=task["datetime_started"], include_elapsed_time=True
+            ),
+        )
 
         CONSOLE.print(table)
 

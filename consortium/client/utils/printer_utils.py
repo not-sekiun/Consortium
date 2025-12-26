@@ -1,7 +1,7 @@
 from rich.console import Console
 
 # Rich console instance for the client to use for printing.
-CONSOLE = Console()
+CONSOLE = Console(highlight=True)
 
 
 def print_success(*args, highlight: bool | None = False, **kwargs):

@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 from consortium.client.commands.agents_interpreter_commands import (
-    RenameAgentCommand as RenameAgentAgentsInterpreterCommand,
+    AgentDescribeCommand as AgentDescribeAgentsInterpreterCommand,
 )
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
@@ -10,17 +10,16 @@ from consortium.client.repl_framework.base_command import CommandContext, Return
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class RenameAgentCommand(RenameAgentAgentsInterpreterCommand):
-    name = "rename_agent"
+class AgentDescribeCommand(AgentDescribeAgentsInterpreterCommand):
+    name = "ag-desc"
     description = (
-        "Change the name of a specific agent or the currently selected agent being "
-        "interacted with."
+        "Set the description of the current agent, or a specific agent by its agent ID"
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-          rename_agent "New name"  # Change the name of the currently selected agent.
-          rename_agent 123e4567-e89b-12d3-a456-42661417400 "New name"  # Change the name of a specific agent.
+          ag-desc "New description"
+          ag-desc 123e4567-e89b-12d3-a456-42661417400 "New description"
         """,
     )
     group = "Agent Management Commands"
@@ -29,14 +28,14 @@ class RenameAgentCommand(RenameAgentAgentsInterpreterCommand):
         parser.add_argument(
             "agent_id",
             help=(
-                "Agent ID of the agent to rename. If not provided, the currently "
-                "selected agent will be renamed."
+                "ID of the agent whose description should be changed (defaults to the "
+                "current agent being interacted with if not provided)."
             ),
             nargs="?",
         )
         parser.add_argument(
-            "name",
-            help="The name to assign to the agent.",
+            "description",
+            help="New description for the agent.",
             nargs=1,
         )
 
@@ -46,12 +45,12 @@ class RenameAgentCommand(RenameAgentAgentsInterpreterCommand):
             client_rest_api_connection = command_context.environment[
                 "client_rest_api_connection"
             ]
-            await self._rename_agent_by_agent_id(
+            await self._redescribe_agent_by_agent_id(
                 client_rest_api_connection=client_rest_api_connection,
                 agent_id=parsed_commands.agent_id
                 if parsed_commands.agent_id
                 else command_context.environment["agent"]["agent_id"],
-                new_name=parsed_commands.name[0],
+                description=parsed_commands.description[0],
             )
         except SystemExit:
             pass

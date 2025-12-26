@@ -17,14 +17,14 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
 
 
-class DownloadAssetCommand(BaseCommand):
-    name = "download_asset"
-    description = "Download a specific asset by its asset ID."
+class AssetDownloadCommand(BaseCommand):
+    name = "as-dl"
+    description = "Download an asset by its asset ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          download_asset 123e4567-e89b-12d3-a456-42661417400
-          download_asset 123e4567-e89b-12d3-a456-42661417400 --decompress  # Automatically decompresses the asset if it is an asset directory.
+          as-dl 123e4567-e89b-12d3-a456-42661417400
+          as-dl 123e4567-e89b-12d3-a456-42661417400 --decompress  # Automatically decompresses the asset if it is an asset directory.
         """,
     )
     group = "Asset Management Commands"
@@ -32,25 +32,25 @@ class DownloadAssetCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "asset_id",
-            help="The asset ID of the asset to display detailed information for.",
+            help="ID of the asset to download",
             nargs=1,
         )
         parser.add_argument(
             "-o",
             "--output",
-            help="The output file path to write the asset file to. If not provided, the "
-            "asset file is written to the current working directory with the file "
-            "name provided from the server.",
+            help=(
+                "Output path to write the asset file or directory to (defaults to "
+                "current working directory with the assets name)."
+            ),
             nargs="?",
         )
         parser.add_argument(
             "-d",
             "--decompress",
             help=(
-                "Whether to automatically decompress archive (.zip) asset directories "
-                "downloaded from the server or not. By default, this is not enabled. "
-                "Note that if an asset is specifically marked as a file and is a zip "
-                "file, decompression will not occur even with this flag set."
+                "Automatically decompress downloaded archive (.zip) asset directories "
+                "(disabled by default). Does not decompress assets explicitly marked "
+                "as files even if they are zip archives."
             ),
             action="store_true",
         )
@@ -95,7 +95,7 @@ class DownloadAssetCommand(BaseCommand):
             )
             with Progress() as progress:
                 downloading_task = progress.add_task(
-                    "[bold][blue][*][/][/] Downloading...",
+                    "",
                     total=asset["size"],
                 )
                 with output_file_path.open("wb") as output_file:

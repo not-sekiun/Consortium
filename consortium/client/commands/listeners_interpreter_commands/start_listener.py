@@ -12,13 +12,13 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class StartListenerCommand(BaseCommand):
-    name = "start_listener"
+class StartCommand(BaseCommand):
+    name = "start"
     description = "Start a created listener using its configured parameters."
     epilog = format_argparse_epilog(
         """
         Examples:
-          start_listener 123e4567-e89b-12d3-a456-42661417400
+          start 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Listener Management Commands"
@@ -26,7 +26,7 @@ class StartListenerCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "listener_id",
-            help="Listener ID of the listener to start.",
+            help="ID of the listener to start.",
             nargs=1,
         )
 

@@ -102,6 +102,7 @@ agents_service = AgentsService(
 # The payloads service relies on the _agent_templates_service to check that the metadata
 # of loaded payloads is correct
 payloads_service = PayloadsService(
+    events_service=events_service,
     repository_service=RepositoryService(
         repository_directory_path=consortium_paths_service.payloads_directory
     ),

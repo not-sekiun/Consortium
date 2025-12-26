@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 from consortium.client.commands.agents_interpreter_commands import (
-    InfoAgentCommand as InfoAgentAgentsInterpreterCommand,
+    AgentInfoCommand as InfoAgentAgentsInterpreterCommand,
 )
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
@@ -10,17 +10,17 @@ from consortium.client.repl_framework.base_command import CommandContext, Return
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class InfoAgentCommand(InfoAgentAgentsInterpreterCommand):
-    name = "info_agent"
+class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
+    name = "ag-info"
     description = (
-        "Display detailed information about a specific agent or for the currently "
-        "selected agent being interacted with."
+        "Display information about the current agent, or a specific agent by its agent "
+        "ID"
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-          info_agent  # Display detailed information about the currently selected agent.
-          info_agent 123e4567-e89b-12d3-a456-42661417400  # Display detailed information about a specific agent.
+          ag-info
+          ag-info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Agent Management Commands"
@@ -28,7 +28,10 @@ class InfoAgentCommand(InfoAgentAgentsInterpreterCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_id",
-            help="The agent ID of the agent to display detailed information for.",
+            help=(
+                "ID of the agent to display information for (defaults to the current "
+                "agent being interacted with if not provided)."
+            ),
             nargs="?",
         )
 

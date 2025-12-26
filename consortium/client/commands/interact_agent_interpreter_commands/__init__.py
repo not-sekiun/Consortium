@@ -4,28 +4,28 @@ from consortium.client.commands.agents_interpreter_commands.result_info import (
 from consortium.client.commands.agents_interpreter_commands.task_info import (
     TaskInfoCommand,
 )
-from consortium.client.commands.interact_agent_interpreter_commands.info_agent import (
-    InfoAgentCommand,
+from consortium.client.commands.interact_agent_interpreter_commands.agent_describe import (
+    AgentDescribeCommand,
 )
-from consortium.client.commands.interact_agent_interpreter_commands.redescribe_agent import (
-    RedescribeAgentCommand,
+from consortium.client.commands.interact_agent_interpreter_commands.agent_info import (
+    AgentInfoCommand,
 )
-from consortium.client.commands.interact_agent_interpreter_commands.rename_agent import (
-    RenameAgentCommand,
+from consortium.client.commands.interact_agent_interpreter_commands.agent_rename import (
+    AgentRenameCommand,
 )
-from consortium.client.commands.interact_agent_interpreter_commands.results_list import (
-    ResultsListCommand,
+from consortium.client.commands.interact_agent_interpreter_commands.result_list import (
+    ResultListCommand,
 )
-from consortium.client.commands.interact_agent_interpreter_commands.tasks_list import (
-    TasksListCommand,
+from consortium.client.commands.interact_agent_interpreter_commands.task_list import (
+    TaskListCommand,
 )
 
 INTERACT_AGENT_INTERPRETER_COMMANDS = [
-    InfoAgentCommand(),
+    AgentInfoCommand(),
     TaskInfoCommand(),
     ResultInfoCommand(),
-    ResultsListCommand(),
-    TasksListCommand(),
-    RedescribeAgentCommand(),
-    RenameAgentCommand(),
+    ResultListCommand(),
+    TaskListCommand(),
+    AgentDescribeCommand(),
+    AgentRenameCommand(),
 ]

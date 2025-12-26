@@ -25,7 +25,7 @@ class AgentTaskModel(BaseModel):
 
 class AgentResultStatus(StrEnum):
     SUCCESS = "SUCCESS"
-    FAILURE = "FAIL"
+    FAILURE = "FAILURE"
     ERROR = "ERROR"
 
 

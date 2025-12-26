@@ -175,7 +175,7 @@ def get_agent_result_by_result_id(
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
     ],
     result_id: UUID4,
-) -> list[AgentResultModel]:
+) -> AgentResultModel:
     try:
         return _agents_service.get_agent_result_by_result_id(result_id=result_id)
     except consortium_excs.AgentResultIDNotFoundError as exc:

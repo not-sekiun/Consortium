@@ -15,14 +15,14 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
 
 
-class UploadAssetCommand(BaseCommand):
-    name = "upload_asset"
-    description = "Upload a specific asset."
+class AssetUploadCommand(BaseCommand):
+    name = "as-up"
+    description = "Upload an asset file or directory from its file or directory path"
     epilog = format_argparse_epilog(
         """
         Examples:
-          upload_asset relative/path/to/asset_file.txt
-          upload_asset /absolute/path/to/asset_directory
+          as-up relative/path/to/asset_file.txt
+          as-up /absolute/path/to/asset_directory
         """,
     )
     group = "Asset Management Commands"
@@ -30,25 +30,22 @@ class UploadAssetCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "asset_path",
-            help=(
-                "The path of the asset to upload. This can be a path to a file or a "
-                "directory."
-            ),
+            help=("Relative or absolute path to the file or directory to upload."),
             nargs=1,
         )
         parser.add_argument(
             "-n",
             "--name",
             help=(
-                "The name to give the asset when being uploaded. By default this is "
-                "the file or directory name."
+                "Name to give the asset when uploaded (defaults to the file or "
+                "directory name)."
             ),
             nargs="?",
         )
         parser.add_argument(
             "-d",
             "--description",
-            help="The description to give the asset when being uploaded.",
+            help="Description for the asset.",
             nargs="?",
             default="",
         )

@@ -102,7 +102,7 @@ class ClientInterpreter(BaseInterpreter):
     # TODO: Provide more comprehensive error handling in the commands.
     # In general, when an error is raised on the REST API side we simply print the error
     # message to the console and interrupt whichever operation we were attempting to do.
-    async def on_interpreter_errored(self, exc: Exception) -> None:
+    async def on_error(self, exc: Exception) -> None:
         if isinstance(exc, ClientRESTAPIOperationError):
             print_error(f"Error: {exc}")
             return
@@ -111,12 +111,12 @@ class ClientInterpreter(BaseInterpreter):
         CONSOLE.print(f"[bold red]{traceback.format_exc()}")
         raise exc
 
-    async def run_interpreter(self) -> ReturnStatus:
-        await self.on_enter_interpreter()
+    async def run(self) -> ReturnStatus:
+        await self.on_enter()
 
         while True:
             try:
-                await self.on_interpreter_loop()
+                await self.on_loop()
 
                 input_string = await self.read_input()
                 if not input_string:
@@ -148,14 +148,14 @@ class ClientInterpreter(BaseInterpreter):
                     if command_return_status.type == ClientReturnStatusType.CONTINUE:
                         continue
                     else:
-                        await self.on_exit_interpreter()
+                        await self.on_exit()
                         return command_return_status
                 else:
                     await self.on_command_not_found(parsed_command)
             except KeyboardInterrupt:
                 await self.on_interrupt()
                 if not self.ignore_keyboard_interrupt:
-                    await self.on_exit_interpreter()
+                    await self.on_exit()
                     return ReturnStatus(type=ClientReturnStatusType.EXIT)
             except Exception as exc:
-                await self.on_interpreter_errored(exc)
+                await self.on_error(exc)

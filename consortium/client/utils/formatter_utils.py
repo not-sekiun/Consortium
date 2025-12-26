@@ -1,4 +1,5 @@
 import textwrap
+from datetime import UTC, datetime
 
 from rich.console import Console
 from rich.text import Text
@@ -73,8 +74,8 @@ def format_agent_result_status_string_with_color(
 ) -> str:
     state_string_to_colored_state_string_map = {
         "SUCCESS": "[bold green]SUCCESS[/]",
-        "FAILED": "[bold red]FAILED[/]",
-        "ERRORED": "[bold white on red]ERRORED[/]",
+        "FAILURE": "[bold red]FAILURE[/]",
+        "ERROR": "[bold white on red]ERROR[/]",
     }
 
     if status_str in state_string_to_colored_state_string_map:
@@ -100,11 +101,19 @@ def format_snake_case_to_title(snake_case_str: str) -> str:
     return " ".join([word.capitalize() for word in snake_case_str.split("_")])
 
 
-def format_dict_as_multi_line_key_value_string(input_dict: dict) -> str:
+def format_dict_as_multi_line_key_value_string(
+    input_dict: dict, display_value_as_repr: bool = True
+) -> str:
+    if not input_dict:
+        return ""
+
     max_key_length = max(len(key) for key in input_dict.keys())
     formatted_strings = []
     for key, value in input_dict.items():
-        formatted_strings.append(f"• {key:<{max_key_length}} : {value!r}")
+        if display_value_as_repr:
+            formatted_strings.append(f"• {key:<{max_key_length}} : {value!r}")
+        else:
+            formatted_strings.append(f"• {key:<{max_key_length}} : {value}")
     return "\n".join(formatted_strings)
 
 
@@ -115,7 +124,69 @@ def format_dict_as_single_line_key_value_string(input_dict: dict) -> str:
     return ", ".join(formatted_strings)
 
 
-def abbreviate_string(string: str, max_length: int = 8) -> str:
-    if len(string) <= max_length:
-        return string
-    return string[:max_length] + "..."
+def format_list_as_multi_line_bulleted_string(input_list: list) -> str:
+    if not input_list:
+        return ""
+
+    formatted_strings = []
+    for item in input_list:
+        formatted_strings.append(f"• {item}")
+    return "\n".join(formatted_strings)
+
+
+def format_size_bytes_as_human_readable_str(size_bytes: int):
+    if size_bytes == 0:
+        return "0 B"
+    # IEC Standard (Binary)
+    units = ("B", "KiB", "MiB", "GiB", "TiB")
+    i = 0
+    while size_bytes >= 1024 and i < len(units) - 1:
+        size_bytes /= 1024
+        i += 1
+    return f"{size_bytes:.2f} {units[i]}"
+
+
+def format_seconds_as_human_readable_str(seconds: float) -> str:
+    if seconds <= 0:
+        return "0s"
+
+    # Very short durations: keep precision
+    if seconds < 60:
+        return f"{seconds:.2f}s".rstrip("0").rstrip(".")
+
+    days, remainder = divmod(seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, secs = divmod(remainder, 60)
+
+    parts: list[str] = []
+
+    if days > 0:
+        parts.append(f"{int(days)}d")
+    if hours > 0:
+        parts.append(f"{int(hours)}h")
+    if minutes > 0:
+        parts.append(f"{int(minutes)}m")
+
+    # For durations over a minute, seconds are rounded and optional
+    if int(secs) > 0 and not parts:
+        # Only include seconds if nothing else was shown (e.g. 1m 0s → 1m)
+        parts.append(f"{int(secs)}s")
+
+    return " ".join(parts)
+
+
+def format_datetime_as_human_readable_str(
+    datetime_str: str, include_elapsed_time: bool = False
+) -> str:
+    datetime_obj = datetime.fromisoformat(datetime_str)
+    datetime_obj = datetime_obj.astimezone(UTC)
+    elapsed_seconds = (datetime.now(UTC) - datetime_obj).total_seconds()
+
+    if include_elapsed_time:
+        datetime_to_nearest_second = datetime_obj.strftime("%Y-%m-%d %H:%M:%S")
+        return (
+            f"{datetime_to_nearest_second} "
+            f"({format_seconds_as_human_readable_str(elapsed_seconds)} ago)"
+        )
+    else:
+        return datetime_obj.strftime("%Y-%m-%d %H:%M:%S")

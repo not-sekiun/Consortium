@@ -10,17 +10,21 @@ from consortium.client.repl_framework.base_command import (
     CommandContext,
     ReturnStatus,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_datetime_as_human_readable_str,
+    format_dict_as_multi_line_key_value_string,
+)
 from consortium.client.utils.printer_utils import CONSOLE
 
 
-class InfoAgentCommand(BaseCommand):
-    name = "info_agent"
-    description = "Display detailed information about a specific agent."
+class AgentInfoCommand(BaseCommand):
+    name = "ag-info"
+    description = "Display information about an agent by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          info_agent 123e4567-e89b-12d3-a456-42661417400
+          ag-info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Agent Management Commands"
@@ -28,7 +32,7 @@ class InfoAgentCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_id",
-            help="The agent ID of the agent to display detailed information for.",
+            help="ID of the agent to display information for.",
             nargs=1,
         )
 
@@ -49,7 +53,15 @@ class InfoAgentCommand(BaseCommand):
         table.add_row("Agent Type", str(agent["agent_type"]["name"]))
         table.add_row(
             "Agent Capabilities",
-            "\n".join(list(agent["agent_type"]["agent_capabilities"])),
+            format_dict_as_multi_line_key_value_string(
+                input_dict={
+                    name: capability["description"]
+                    for name, capability in agent["agent_type"][
+                        "agent_capabilities"
+                    ].items()
+                },
+                display_value_as_repr=False,
+            ),
         )
         table.add_row("User", str(agent["user"]))
         table.add_row("Running As Admin", str(agent["is_admin"]))
@@ -60,16 +72,26 @@ class InfoAgentCommand(BaseCommand):
         table.add_row("System Locale", str(agent["locale"]))
         table.add_row("Remote Host Address", str(agent["remote_host_address"]))
         table.add_row("Local Host Address", str(agent["local_host_address"]))
-        table.add_row("First Checked In", str(agent["datetime_first_checked_in"]))
-        table.add_row("Last Checked In", str(agent["datetime_last_checked_in"]))
-        agent_data_table = Table()
-        agent_data_table.add_column("Information")
-        agent_data_table.add_column("Data")
-        for key, value in agent["agent_data"].items():
-            agent_data_table.add_row(key, str(value))
-        table.add_row("Agent Data", agent_data_table)
+        table.add_row(
+            "First Checked In",
+            format_datetime_as_human_readable_str(
+                datetime_str=agent["datetime_first_checked_in"],
+                include_elapsed_time=True,
+            ),
+        )
+        table.add_row(
+            "Last Checked In",
+            format_datetime_as_human_readable_str(
+                datetime_str=agent["datetime_last_checked_in"],
+                include_elapsed_time=True,
+            ),
+        )
+        table.add_row(
+            "Agent Data",
+            format_dict_as_multi_line_key_value_string(agent["agent_data"]),
+        )
 
-        CONSOLE.print(table)
+        CONSOLE.print(table, "")
 
     async def run_command(
         self,

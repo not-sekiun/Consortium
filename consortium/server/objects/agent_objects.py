@@ -265,22 +265,12 @@ class Agent:
                     option_name=option_name,
                 )
 
+        # TODO: Handle validation failure here.
         # Run validation function on the entire set of arguments if one was provided.
         if agent_capability.validating_function:
             agent_capability.validating_function(task.arguments)
 
         self._queued_tasks[str(task.task_id)] = task
-
-        # Fire the event to notify all event handlers that an agent has been tasked.
-        await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_TASKED,
-                data={
-                    "agent_id": str(self.agent_id),
-                    "task": task.model_dump(mode="json"),
-                },
-            ),
-        )
 
         await self._start_agent_capability(
             agent_capability=agent_capability,
@@ -365,6 +355,8 @@ class Agent:
         except KeyError:
             raise AgentTaskNotFoundError(task_id=task_id) from None
 
+    # TODO: Make the service submit result messages so users dont call low level
+    #  framework methods
     async def submit_result_message(
         self, result_message: AgentResultMessageModel
     ) -> None:

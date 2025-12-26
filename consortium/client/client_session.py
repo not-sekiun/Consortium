@@ -100,7 +100,7 @@ class ClientSession:
         interpreter = HomeInterpreter(client_session=self)
 
         while True:
-            interpreter_return_status = await interpreter.run_interpreter()
+            interpreter_return_status = await interpreter.run()
             if interpreter_return_status.type in (
                 ClientReturnStatusType.EXIT,
                 ClientReturnStatusType.EXIT_CLIENT_SESSION,

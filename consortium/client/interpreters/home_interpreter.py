@@ -35,7 +35,7 @@ class HomeInterpreter(ClientInterpreter):
 
     # TODO: Find a way for interpreters to "inherit" command completions or share
     #  common command completions. Probably could just make it a parameter
-    async def on_interpreter_loop(self) -> None:
+    async def on_loop(self) -> None:
         all_client_sessions = client_sessions_service.get_all_client_sessions()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(

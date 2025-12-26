@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 
 from consortium.client.commands.agents_interpreter_commands import (
-    ResultsListCommand as ResultsListAgentsInterpreterCommand,
+    ResultListCommand as ResultListAgentsInterpreterCommand,
 )
 from consortium.client.objects.client_return_status_objects import (
     ClientReturnStatusType,
@@ -10,19 +10,18 @@ from consortium.client.repl_framework.base_command import CommandContext, Return
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ResultsListCommand(ResultsListAgentsInterpreterCommand):
-    name = "results_list"
+class ResultListCommand(ResultListAgentsInterpreterCommand):
+    name = "r-ls"
     description = (
-        "List all results for the currently selected agent being interacted with or a "
-        "particular agent's results if its agent ID is provided."
+        "List all results for the current agent, or for a specific agent by its agent "
+        "ID"
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-          results_list  # List all results for the currently selected agent being interacted with.
-          results_list -s  # List only results with a status of 'SUCCESS' for the currently selected agent.
-          results_list --failure --error  # List only results with a status of 'FAILURE' and 'ERROR' for the currently selected agent.
-          results_list 123e4567-e89b-12d3-a456-42661417400  # List all results for a specific agent.
+          r-ls  # If no filters are provided, list all results regardless of status.
+          r-ls --failure --error  # Filters can be combined; this lists all results with status FAILURE and ERROR.
+          r-ls 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -31,9 +30,8 @@ class ResultsListCommand(ResultsListAgentsInterpreterCommand):
         parser.add_argument(
             "agent_id",
             help=(
-                "The agent ID of the agent to list tasks for. If not provided, the "
-                "agent ID of the currently selected agent being interacted with will "
-                "be used."
+                "ID of the agent to list results for (defaults to the current agent "
+                "if not provided)."
             ),
             type=str,
             nargs="?",
@@ -41,19 +39,19 @@ class ResultsListCommand(ResultsListAgentsInterpreterCommand):
         parser.add_argument(
             "-s",
             "--success",
-            help="List only results with a status of SUCCESS.",
+            help="List only results with status SUCCESS.",
             action="store_true",
         )
         parser.add_argument(
             "-f",
             "--failure",
-            help="List only results with a status of 'FAILURE'.",
+            help="List only results with status FAILURE.",
             action="store_true",
         )
         parser.add_argument(
             "-e",
             "--error",
-            help="List only results with a status of 'ERROR'.",
+            help="List only results with status ERROR.",
             action="store_true",
         )
 

@@ -16,9 +16,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class BannerCommand(BaseCommand):
     name = "banner"
-    description = (
-        "Display a banner with information and branding about the Consortium framework."
-    )
+    description = "Display a banner with information about the Consortium framework"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -49,11 +47,11 @@ class BannerCommand(BaseCommand):
         banner_art = [star_banner]
 
         if client_rest_api_connection is None:
-            number_of_running_listeners = "N/A"
-            number_of_running_agents = "N/A"
+            number_of_active_listeners = "N/A"
+            number_of_online_agents = "N/A"
             server_release_formatted_string = "N/A"
             connection_status_banner = (
-                "[bold white]    Connection Status  - [bold red]Disconnected"
+                "[bold white]    Connection Status  : [bold red]Disconnected"
             )
         else:
             server_release = await client_rest_api_connection.get_server_release()
@@ -65,10 +63,11 @@ class BannerCommand(BaseCommand):
             own_user = await client_rest_api_connection.get_own_user_info()
             agents = await client_rest_api_connection.get_all_agents()
 
-            number_of_running_listeners = str(len(listeners))
-            number_of_running_agents = str(len(agents))
+            number_of_active_listeners = str(len(listeners))
+            number_of_online_agents = str(len(agents))
             server_release_formatted_string = (
-                f"v{server_release['version']} ({server_release['codename']})"
+                f"[bold cyan]v{server_release['version']} "
+                f"[bold white]({server_release['codename']})"
             )
 
             role = own_user["role"]
@@ -77,27 +76,29 @@ class BannerCommand(BaseCommand):
             else:  # Display the role in red for accounts with the ADMIN role.
                 role_color = "red"
             connection_status_banner = (
-                "[bold white]    Connection Status  - "
-                f"[bold green]Connected[bold white] as '{client_rest_api_connection.username}' "
+                "    Connection Status  : "
+                f"[bold green]Connected[bold white] as "
+                f"'{client_rest_api_connection.username}' "
                 f"([{role_color}]{role}[bold white])"
             )
 
         random_banner_art = random.choice(banner_art)
         author_banner = (
-            "[bold white]    Author             - "
+            "[bold white]    Author             : "
             "Sekiun (https://github.com/not-sekiun)"
         )
         client_version_banner = (
-            f"[bold white]    Client Release     - "
-            f"v{CLIENT_RELEASE.version} ({CLIENT_RELEASE.codename})"
+            f"[bold white]    Client Release     : "
+            f"[bold cyan]v{CLIENT_RELEASE.version} "
+            f"[bold white]({CLIENT_RELEASE.codename})"
         )
         server_version_banner = (
-            f"[bold white]    Server Release     - {server_release_formatted_string}"
+            f"[bold white]    Server Release     : {server_release_formatted_string}"
         )
         info_banner = (
-            "[bold white]    Server Information - "
-            f"[bold white]{number_of_running_listeners} Running listener(s) | "
-            f"[bold white]{number_of_running_agents} Running agent(s)"
+            "[bold white]    Server Information : "
+            f"[bold cyan]{number_of_active_listeners} [bold white]active [bold magenta]listener[bold white](s) | "
+            f"[bold cyan]{number_of_online_agents} [bold white]online [bold magenta]agent[bold white](s)"
         )
 
         CONSOLE.print(random_banner_art)

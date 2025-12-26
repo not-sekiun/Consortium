@@ -1,5 +1,3 @@
-from argparse import ArgumentParser
-
 from rich.table import Table
 
 from consortium.client.objects.client_return_status_objects import (
@@ -10,13 +8,16 @@ from consortium.client.repl_framework.base_command import (
     CommandContext,
     ReturnStatus,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_size_bytes_as_human_readable_str,
+)
 from consortium.client.utils.printer_utils import CONSOLE
 
 
-class ListAssetsCommand(BaseCommand):
-    name = "list_assets"
-    description = "List all assets along with their essential information."
+class AssetListCommand(BaseCommand):
+    name = "as-ls"
+    description = "List all assets along with their essential information"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -24,9 +25,6 @@ class ListAssetsCommand(BaseCommand):
         """,
     )
     group = "Asset Management Commands"
-
-    def configure_parser(self, parser: ArgumentParser) -> None:
-        pass
 
     async def run_command(
         self,
@@ -40,21 +38,19 @@ class ListAssetsCommand(BaseCommand):
 
             assets = await client_rest_api_connection.get_all_assets()
 
-            table = Table(title="Assets")
+            table = Table(title="Assets", highlight=True)
             table.add_column("Asset ID")
             table.add_column("Name")
-            table.add_column("Description")
             table.add_column("Type")
+            table.add_column("Size")
             for asset in assets:
                 table.add_row(
-                    asset["resource_id"]
-                    if asset["is_directory"]
-                    else asset["resource_id"],
+                    asset["resource_id"],
                     asset["name"],
-                    asset["description"],
-                    "Directory" if asset["is_directory"] else "File",
+                    "DIRECTORY" if asset["is_directory"] else "FILE",
+                    format_size_bytes_as_human_readable_str(size_bytes=asset["size"]),
                 )
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

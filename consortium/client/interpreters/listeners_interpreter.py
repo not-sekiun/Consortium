@@ -60,7 +60,7 @@ class ListenersInterpreter(ClientInterpreter):
         for key, value in {
             command: {listener["listener_id"]: None for listener in all_listeners}
             for command in [
-                "start_listener",
+                "start",
                 "stop_listener",
                 "cancel_listener",
                 "delete_listener",
@@ -137,11 +137,11 @@ class ListenersInterpreter(ClientInterpreter):
             event_handler=self._listener_created_or_removed_event_handler,
         )
 
-    async def on_enter_interpreter(self) -> None:
+    async def on_enter(self) -> None:
         await self._update_autocomplete()
         await self._setup_event_handlers()
 
-    async def on_exit_interpreter(self) -> None:
+    async def on_exit(self) -> None:
         # The exit command when executed will disconnect the websocket connection but
         # this method will still run so we need to first check if the client websockets
         # API connection has already been disconnected.

@@ -12,25 +12,22 @@ from consortium.client.repl_framework.base_command import (
     ReturnStatus,
 )
 from consortium.client.utils.formatter_utils import (
-    abbreviate_string,
     format_agent_result_status_string_with_color,
     format_argparse_epilog,
+    format_datetime_as_human_readable_str,
 )
 from consortium.client.utils.printer_utils import CONSOLE
 
 
-class ResultsListCommand(BaseCommand):
-    name = "results_list"
-    description = (
-        "List all agent results or a particular agent's results if its agent ID is "
-        "provided."
-    )
+class ResultListCommand(BaseCommand):
+    name = "r-ls"
+    description = "List all results, or a specific agent's results by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          results_list 123e4567-e89b-12d3-a456-42661417400  # If the result status is not specified, all results will be listed.
-          results_list 123e4567-e89b-12d3-a456-42661417400  -s
-          results_list 123e4567-e89b-12d3-a456-42661417400  --failure
+          r-ls  # If no filters are provided, list all results across all agent regardless of status.
+          r-ls --failure --error  # Filters can be combined; this lists all results with status FAILURE and ERROR.
+          r-ls 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -38,27 +35,29 @@ class ResultsListCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_id",
-            help="The agent ID of the agent to list results for. If not provided, all "
-            "results across all agents will be listed.",
+            help=(
+                "ID of the agent to list results for. If not provided, all results "
+                "across all agents will be listed."
+            ),
             type=str,
             nargs="?",
         )
         parser.add_argument(
             "-s",
             "--success",
-            help="List only results with a status of SUCCESS.",
+            help="List only results with status SUCCESS.",
             action="store_true",
         )
         parser.add_argument(
             "-f",
             "--failure",
-            help="List only results with a status of 'FAILURE'.",
+            help="List only results with status FAILURE.",
             action="store_true",
         )
         parser.add_argument(
             "-e",
             "--error",
-            help="List only results with a status of 'ERROR'.",
+            help="List only results with status ERROR.",
             action="store_true",
         )
 
@@ -74,41 +73,50 @@ class ResultsListCommand(BaseCommand):
         agent_results = []
         # If no result status is specified, list all results. If any one of the
         # result states is specified, only list those results.
-        if not display_success and not display_failure:
-            agent_results += (
+        if not display_success and not display_failure and not display_error:
+            agent_results = (
                 await client_rest_api_connection.get_all_agent_results_by_agent_id(
                     agent_id=agent_id,
                 )
             )
-        if display_success:
-            agent_results += await client_rest_api_connection.get_all_successful_agent_results_by_agent_id(
-                agent_id=agent_id,
-            )
-        if display_failure:
-            agent_results += await client_rest_api_connection.get_all_failed_agent_results_by_agent_id(
-                agent_id=agent_id,
-            )
-        if display_error:
-            agent_results += await client_rest_api_connection.get_all_errored_agent_results_by_agent_id(
-                agent_id=agent_id,
-            )
+        else:
+            if display_success:
+                agent_results.extend(
+                    await client_rest_api_connection.get_all_successful_agent_results_by_agent_id(
+                        agent_id=agent_id,
+                    )
+                )
+            if display_failure:
+                agent_results.extend(
+                    await client_rest_api_connection.get_all_failed_agent_results_by_agent_id(
+                        agent_id=agent_id,
+                    )
+                )
+            if display_error:
+                agent_results.extend(
+                    await client_rest_api_connection.get_all_errored_agent_results_by_agent_id(
+                        agent_id=agent_id,
+                    )
+                )
 
         table = Table(title=f"Results For '{agent_name}' ({agent_id})", highlight=True)
         table.add_column("Result ID")
-        table.add_column("Task ID")
+        table.add_column("Task ID", style="bold yellow", highlight=False, max_width=9)
         table.add_column("Command")
         table.add_column("Status")
         table.add_column("Datetime Finished")
         table.add_column("Elapsed Time")
         for agent_result in agent_results:
             table.add_row(
-                abbreviate_string(string=agent_result["result_id"]),
-                abbreviate_string(string=agent_result["task_id"]),
+                agent_result["result_id"],
+                agent_result["task_id"],
                 agent_result["command"],
                 format_agent_result_status_string_with_color(
                     status_str=str(agent_result["status"]),
                 ),
-                str(agent_result["datetime_finished"]),
+                format_datetime_as_human_readable_str(
+                    datetime_str=agent_result["datetime_finished"]
+                ),
                 f"{agent_result['elapsed_seconds']:.2f}s",
             )
         CONSOLE.print(table, "")

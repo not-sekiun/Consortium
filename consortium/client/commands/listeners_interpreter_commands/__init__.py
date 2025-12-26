@@ -26,7 +26,7 @@ from consortium.client.commands.listeners_interpreter_commands.set_listener_para
     SetListenerParameterCommand,
 )
 from consortium.client.commands.listeners_interpreter_commands.start_listener import (
-    StartListenerCommand,
+    StartCommand,
 )
 from consortium.client.commands.listeners_interpreter_commands.stop_listener import (
     StopListenerCommand,
@@ -48,7 +48,7 @@ LISTENERS_INTERPRETER_COMMANDS = [
     RedescribeListenerCommand(),
     RenameListenerCommand(),
     SetListenerParameterCommand(),
-    StartListenerCommand(),
+    StartCommand(),
     StopListenerCommand(),
     UnsetListenerParameterCommand(),
     UseListenerTemplateCommand(),

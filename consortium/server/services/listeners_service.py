@@ -274,7 +274,7 @@ class ListenersService:
                     event=Event(
                         event_type=EventType.LISTENER_UPDATED,
                         data={
-                            "listener_id": str(listener.listener_id),
+                            "listener": listener.to_json(),
                             "updated": updated,
                         },
                     ),
@@ -302,7 +302,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_STARTED,
-                data={"listener_id": str(listener.listener_id)},
+                data=listener.to_json(),
             ),
         )
         self._logger.info("Started listener: {}", listener)
@@ -321,7 +321,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_STOPPED,
-                data={"listener_id": str(listener.listener_id)},
+                data=listener.to_json(),
             ),
         )
         self._logger.info("Stopped listener: {}", listener)
@@ -340,7 +340,7 @@ class ListenersService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.LISTENER_CANCELLED,
-                data={"listener_id": str(listener.listener_id)},
+                data=listener.to_json(),
             ),
         )
         self._logger.info("Cancelled listener: {}", listener)

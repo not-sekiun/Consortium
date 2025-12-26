@@ -50,7 +50,7 @@ class AgentsService:
             self._events_service.trigger_event(
                 event=Event(
                     event_type=EventType.AGENT_REGISTERED,
-                    data={"agent_id": str(agent.agent_id)},
+                    data=agent.to_json(),
                 ),
             )
         )
@@ -68,7 +68,7 @@ class AgentsService:
             self._events_service.trigger_event(
                 event=Event(
                     event_type=EventType.AGENT_DEREGISTERED,
-                    data={"agent_id": str(agent.agent_id)},
+                    data=agent.to_json(),
                 ),
             )
         )
@@ -275,7 +275,10 @@ class AgentsService:
         await self._events_service.trigger_event(
             event=Event(
                 event_type=EventType.AGENT_TASKED,
-                data={"agent_id": str(agent.agent_id)},
+                data={
+                    "agent_id": str(agent.agent_id),
+                    "task": task.model_dump(mode="json"),
+                },
             ),
         )
         self._logger.info("Tasked agent {} with task {}", agent, task)
@@ -289,7 +292,7 @@ class AgentsService:
             self._events_service.trigger_event(
                 event=Event(
                     event_type=EventType.AGENT_CHECKED_IN,
-                    data={"agent_id": str(agent.agent_id)},
+                    data=agent.to_json(),
                 ),
             )
         )
@@ -342,7 +345,7 @@ class AgentsService:
                 self._events_service.trigger_event(
                     event=Event(
                         event_type=EventType.AGENT_UPDATED,
-                        data={"agent_id": str(agent.agent_id)},
+                        data=agent.to_json(),
                     ),
                 )
             )

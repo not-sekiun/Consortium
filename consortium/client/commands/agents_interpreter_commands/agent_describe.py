@@ -13,13 +13,13 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class RedescribeAgentCommand(BaseCommand):
-    name = "redescribe_agent"
-    description = "Change the description of a specific agent."
+class AgentDescribeCommand(BaseCommand):
+    name = "ag-desc"
+    description = "Set the description of an agent by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          redescribe_agent 123e4567-e89b-12d3-a456-42661417400 "New description"
+          ag-desc 123e4567-e89b-12d3-a456-42661417400 "New description"
         """,
     )
     group = "Agent Management Commands"
@@ -27,12 +27,12 @@ class RedescribeAgentCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_id",
-            help="Agent ID of the agent to redescribe.",
+            help="ID of the agent whose description should be changed.",
             nargs=1,
         )
         parser.add_argument(
             "description",
-            help="The description to assign to the agent.",
+            help="New description for the agent.",
             nargs=1,
         )
 

@@ -8,17 +8,20 @@ from consortium.client.repl_framework.base_command import (
     CommandContext,
     ReturnStatus,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_datetime_as_human_readable_str,
+)
 from consortium.client.utils.printer_utils import CONSOLE
 
 
-class AgentsListCommand(BaseCommand):
-    name = "agents_list"
-    description = "List all connected agents along with their essential information."
+class AgentListCommand(BaseCommand):
+    name = "ag-ls"
+    description = "List all agents along with their essential information"
     epilog = format_argparse_epilog(
         """
         Examples:
-          agents_list
+          ag-ls
         """,
     )
     group = "Agent Management Commands"
@@ -36,19 +39,21 @@ class AgentsListCommand(BaseCommand):
 
             table = Table(title="Agents", highlight=True)
             table.add_column("Agent ID")
-            table.add_column("Name")
-            table.add_column("Description")
-            table.add_column("Endpoint")
             table.add_column("Agent Type")
+            table.add_column("Name")
+            table.add_column("Endpoint")
+            table.add_column("Last Checked In")
             for agent in all_agents:
                 table.add_row(
                     str(agent["agent_id"]),
-                    str(agent["name"]),
-                    str(agent["description"]),
-                    str(agent["endpoint"]),
                     str(agent["agent_type"]["name"]),
+                    str(agent["name"]),
+                    str(agent["endpoint"]),
+                    format_datetime_as_human_readable_str(
+                        agent["datetime_last_checked_in"], include_elapsed_time=True
+                    ),
                 )
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 
