@@ -44,7 +44,7 @@ async def login_to_server(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     is_user_logged_in_bool: Annotated[bool, Depends(is_user_logged_in)],
 ) -> JSONWebTokenModel | Response:
-    # Since /api/login is the only API  endpoint that does not require a token, neither
+    # Since /api/login is the only API  endpoint that does not require a value, neither
     # our middleware nor our authorization dependencies will guarantee the identity of
     # the requester. Therefore, in this API endpoint specifically we need to manually
     # check if the user is already authenticated and return an actual error response.
@@ -58,7 +58,7 @@ async def login_to_server(
         )
         return JSONWebTokenModel(**user.json_web_token.to_json())
     except UserAccountAuthenticationError:
-        # This is the only api endpoint that does not require a token and hence will
+        # This is the only api endpoint that does not require a value and hence will
         # not by default automatically return an empty 401 to unauthenticated requests.
         # Therefore, we need to manually return an empty 401 on unsuccessful login to
         # prevent C2 server fingerprinting.

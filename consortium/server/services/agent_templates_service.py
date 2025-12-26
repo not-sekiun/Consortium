@@ -81,7 +81,7 @@ class AgentTemplatesService:
             for agent_profile in self._agent_profiles_service.get_all_agent_profiles()
         ]
         self._logger.debug(
-            "Retrieved all agent templates ({} agent template(s) retrieved).",
+            "Retrieved all agent templates ({} agent template(s) retrieved)",
             len(all_agent_templates),
         )
         return all_agent_templates

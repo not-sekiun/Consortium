@@ -1,18 +1,18 @@
 from argparse import ArgumentParser
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.commands.home_interpreter_commands.info_client_session import (
-    InfoClientSessionCommand as HomeInterpreterClientSessionCommand,
+from consortium.client.commands.home_interpreter_commands.client_session_info import (
+    ClientSessionInfoCommand as HomeInterpreterClientSessionCommand,
 )
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error
@@ -20,12 +20,12 @@ from consortium.client.utils.printer_utils import print_error
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class InfoClientSessionCommand(HomeInterpreterClientSessionCommand):
+class ClientSessionInfoCommand(HomeInterpreterClientSessionCommand):
     description = "Display detailed information for a specific client session."
     epilog = format_argparse_epilog(
         """
         Examples:
-          info_client_session 123e4567-e89b-12d3-a456-42661417400
+          info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
 
@@ -47,12 +47,12 @@ class InfoClientSessionCommand(HomeInterpreterClientSessionCommand):
             default=False,
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
+            parsed_args = self.parser.parse_args(context.arguments)
 
             try:
                 client_session = (
@@ -62,7 +62,7 @@ class InfoClientSessionCommand(HomeInterpreterClientSessionCommand):
                 )
                 await self._display_client_session_info(
                     client_session=client_session,
-                    client_rest_api_connection=client_session.client_rest_api_connection,
+                    client_rest_api_connection=client_session.rest_api,
                     show_password=parsed_args.password,
                 )
             except ClientSessionNotFoundError as exc:
@@ -71,5 +71,5 @@ class InfoClientSessionCommand(HomeInterpreterClientSessionCommand):
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

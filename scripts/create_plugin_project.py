@@ -55,7 +55,7 @@ def main():
         )
         plugin_label = plugin_label.strip()
         if not plugin_label:
-            print("Plugin label cannot be empty.")
+            print("Plugin label cannot be empty")
             continue
         break
 
@@ -66,7 +66,7 @@ def main():
         )
         name = name.strip()
         if not name:
-            print("Plugin name cannot be empty.")
+            print("Plugin name cannot be empty")
             continue
         plugin_directory = to_snake_case(name)
         plugin_module = to_snake_case(name) + "_plugin.py"
@@ -97,7 +97,7 @@ def main():
     with open(plugin_project_directory / f"{plugin_module}", "w") as f:
         f.write(PLUGIN_TEMPLATE.format(plugin_label=plugin_label, name=name))
 
-    print(f"Created plugin project directory at '{plugin_project_directory}'.")
+    print(f"Created plugin project directory at '{plugin_project_directory}'")
     print(
         "Note: Add third-party dependencies within the project's `pyproject.toml` file.",
     )
@@ -111,4 +111,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\nPlugin project creation aborted.")
+        print("\nPlugin project creation aborted")

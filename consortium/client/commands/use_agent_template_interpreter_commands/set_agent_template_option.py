@@ -1,13 +1,13 @@
 import copy
 from argparse import ArgumentParser
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import (
@@ -442,15 +442,13 @@ class SetAgentTemplateOptionCommand(BaseCommand):
             if choice not in toggled_on_values:
                 agent_template_option["value"][choice] = not toggle_value
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            agent_template_options = command_context.environment["agent_template"][
-                "options"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            agent_template_options = context.environment["agent_template"]["options"]
 
             option_name = parsed_args.option_name[0]
             option_values = parsed_args.option_values
@@ -461,7 +459,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                 print_error(
                     f'Listener template option "{option_name}" does not exist',
                 )
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             try:
                 if option["option_type"] == "SINGLE_VALUE_OPTION":
@@ -471,7 +469,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                             f'"{option_name}" of option type "{option["option_type"]}" '
                             f"but got {len(option_values)} values instead.",
                         )
-                        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                        return ReturnStatus(type=ReturnStatusType.CONTINUE)
                     self._handle_single_value_option(
                         option_name=option_name,
                         option_value=option_values[0],
@@ -485,7 +483,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                             f'"{option_name}" of option type "{option["option_type"]}" '
                             f"but got {len(option_values)} values instead.",
                         )
-                        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                        return ReturnStatus(type=ReturnStatusType.CONTINUE)
                     self._handle_choice_value_option(
                         option_name=option_name,
                         option_value=option_values[0],
@@ -507,7 +505,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                             f'"{option["option_type"]}" but got {len(option_values)} '
                             f"values instead.",
                         )
-                        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                        return ReturnStatus(type=ReturnStatusType.CONTINUE)
                     self._handle_dictionary_value_option(
                         option_name=option_name,
                         option_values=option_values,
@@ -521,7 +519,7 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                             f'"{option_name}" of option type "{option["option_type"]}" '
                             f"but got {len(option_values)} values instead.",
                         )
-                        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                        return ReturnStatus(type=ReturnStatusType.CONTINUE)
                     self._handle_toggleable_choice_value_option(
                         option_name=option_name,
                         option_values=option_values,
@@ -530,10 +528,10 @@ class SetAgentTemplateOptionCommand(BaseCommand):
                     )
             except ValueError as exc:
                 print_error(exc)
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
         except SystemExit:
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

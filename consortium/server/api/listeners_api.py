@@ -360,7 +360,7 @@ async def delete_listener_by_listener_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.DELETE_LISTENER_BY_LISTENER_ID)),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         _listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
     except consortium_exceptions.ListenerNotFoundError:

@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
@@ -14,7 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class StopGeneratorCommand(BaseCommand):
     name = "stop_generator"
-    description = "Stop a running agent generator, suspending its operation."
+    description = "Stop a running agent generator, suspending its operation"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -30,12 +30,10 @@ class StopGeneratorCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run_command(self, command_context: CommandContext) -> ReturnStatus:
+    async def run(self, context: Context) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            client_rest_api_connection = context.environment["rest_api"]
             # If agent generator does not exist, a RESTAPIError is raised and caught by
             # the outer try-except block
             agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(
@@ -54,5 +52,5 @@ class StopGeneratorCommand(BaseCommand):
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

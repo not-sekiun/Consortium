@@ -48,7 +48,7 @@ class C2TypesService:
             if listener_profile.listener_type not in listener_types:
                 listener_types.append(listener_profile.listener_type)
         self._logger.debug(
-            "Retrieved all listener types ({} listener type(s) retrieved).",
+            "Retrieved all listener types ({} listener type(s) retrieved)",
             len(listener_types),
         )
         return listener_types
@@ -71,7 +71,7 @@ class C2TypesService:
             if agent_profile.agent_type not in agent_types:
                 agent_types.append(agent_profile.agent_type)
         self._logger.debug(
-            "Retrieved all agent types ({} agent type(s) retrieved).",
+            "Retrieved all agent types ({} agent type(s) retrieved)",
             len(agent_types),
         )
         return agent_types
@@ -99,7 +99,7 @@ class C2TypesService:
                         compatible_listener_types.append(listener_type)
         self._logger.debug(
             "Retrieved compatible listener types from agent type '{}'"
-            " ({} compatible listener type(s) retrieved).",
+            " ({} compatible listener type(s) retrieved)",
             agent_type_name,
             len(compatible_listener_types),
         )
@@ -121,7 +121,7 @@ class C2TypesService:
                         compatible_agent_types.append(agent_type)
         self._logger.debug(
             "Retrieved registered compatible agent types from listener type '{}'"
-            " ({} compatible agent type(s) retrieved).",
+            " ({} compatible agent type(s) retrieved)",
             listener_type_name,
             len(compatible_agent_types),
         )
@@ -132,12 +132,12 @@ class C2TypesService:
         for agent_type in self.get_all_agent_types():
             if str(agent_type.name) == agent_type_name:
                 self._logger.debug(
-                    "Checked that agent type '{}' is registered.",
+                    "Checked that agent type '{}' is registered",
                     agent_type_name,
                 )
                 return True
         self._logger.debug(
-            "Checked that agent type '{}' is not registered.",
+            "Checked that agent type '{}' is not registered",
             agent_type_name,
         )
         return False
@@ -147,12 +147,12 @@ class C2TypesService:
         for listener_type in self.get_all_listener_types():
             if str(listener_type.name) == listener_type_name:
                 self._logger.debug(
-                    "Checked that listener type '{}' is registered.",
+                    "Checked that listener type '{}' is registered",
                     listener_type_name,
                 )
                 return True
         self._logger.debug(
-            "Checked that listener type '{}' is not registered.",
+            "Checked that listener type '{}' is not registered",
             listener_type_name,
         )
         return False
@@ -168,14 +168,14 @@ class C2TypesService:
 
         if listener_type in agent_type.compatible_listener_types:
             self._logger.debug(
-                "Checked that agent type '{}' and listener type '{}' are compatible.",
+                "Checked that agent type '{}' and listener type '{}' are compatible",
                 agent_type_name,
                 listener_type_name,
             )
             return True
         else:
             self._logger.debug(
-                "Checked that agent type '{}' and listener type '{}' are not compatible.",
+                "Checked that agent type '{}' and listener type '{}' are not compatible",
                 agent_type_name,
                 listener_type_name,
             )

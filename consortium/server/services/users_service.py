@@ -51,7 +51,7 @@ class UsersService:
         for user in self.get_all_users():
             if str(user.json_web_token.subject) == access_token:
                 self._logger.debug(
-                    "Retrieved user by access token '{}': {!r}", access_token, user
+                    "Retrieved user by access value '{}': {!r}", access_token, user
                 )
                 return user
         raise UserAccessTokenNotFoundError(access_token=access_token)
@@ -60,7 +60,7 @@ class UsersService:
     def get_all_users(self) -> list[User]:
         all_users = list(self._users.values())
         self._logger.debug(
-            "Retrieved all users ({} user(s) retrieved).",
+            "Retrieved all users ({} user(s) retrieved)",
             len(all_users),
         )
         return all_users

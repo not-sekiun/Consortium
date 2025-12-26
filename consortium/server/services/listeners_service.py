@@ -155,7 +155,7 @@ class ListenersService:
         listener_id = str(listener_id)
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
-        # Changed dictionary is used to track what attributes were updated. This data
+        # Changed dictionary is used to track what attributes were updated. This content
         # is sent as part of the `LISTENER_UPDATED` event.
         updated = {}
         # Update parameters first before updating name and description. This is because
@@ -223,7 +223,7 @@ class ListenersService:
                     "old": old_parameters,  # `old_parameters` is already a deep copy
                     "new": copy.deepcopy(listener.parameters),
                 }
-                self._logger.info("Updated parameters for listener {}.", listener)
+                self._logger.info("Updated parameters for listener {}", listener)
                 for parameter_name in updated_fields:
                     self._logger.info(
                         "- Updated parameter '{}' from {!r} to {!r}",
@@ -237,7 +237,7 @@ class ListenersService:
             old_name = listener.name
             listener.name = name
             self._logger.info(
-                "Updated name for listener {} from '{}' to '{}'.",
+                "Updated name for listener {} from '{}' to '{}'",
                 listener,
                 old_name,
                 listener.name,
@@ -252,7 +252,7 @@ class ListenersService:
             old_description = listener.description
             listener.description = description
             self._logger.info(
-                "Updated description for listener {} from '{}' to '{}'.",
+                "Updated description for listener {} from '{}' to '{}'",
                 listener,
                 old_description,
                 listener.description,
@@ -283,7 +283,7 @@ class ListenersService:
         else:
             self._logger.debug(
                 "No updates applied to listener {} as no changes were detected even "
-                "though the update method was called.",
+                "though the update method was called",
                 listener,
             )
 

@@ -22,46 +22,20 @@ def format_argparse_epilog(epilog_str: str) -> str:
     return textwrap.dedent(epilog_str) + " "
 
 
-# Format the color of agent generator status strings to be rendered by rich's console.
-def format_agent_generator_state_string_with_color(
+# Format the color of component life cycle status strings to be rendered by rich's
+# console. This includes listeners, agent generators, and agent generator build steps.
+def format_component_life_cycle_state_string_with_color(
     state_str: str,
 ) -> str:
     state_string_to_colored_state_string_map = {
-        "RUNNING": "[bold yellow]RUNNING[/]",
-        "COMPLETED": "[bold green]COMPLETED[/]",
-        "ERRORED": "[bold red]ERRORED[/]",
-        "FATAL": "[bold white on red]FATAL[/]",
-    }
-
-    if state_str in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[state_str]
-    return state_str
-
-
-# Format the color of listener status strings to be rendered by rich's console.
-def format_listener_state_string_with_color(
-    state_str: str,
-) -> str:
-    state_string_to_colored_state_string_map = {
+        "INITIALIZED": "[bold cyan]INITIALIZED[/]",
+        "STARTED": "[bold yellow]STARTED[/]",
         "RUNNING": "[bold green]RUNNING[/]",
+        "STOPPING": "[bold yellow]STOPPING[/]",
+        "STOPPED": "[bold green]STOPPED[/]",
         "ERRORED": "[bold red]ERRORED[/]",
         "FATAL": "[bold white on red]FATAL[/]",
-    }
-    if state_str in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[state_str]
-    return state_str
-
-
-# Format the color of agent generator build step status strings to be rendered by rich's
-# console.
-def format_agent_generator_build_step_state_string_with_color(
-    state_str: str,
-) -> str:
-    state_string_to_colored_state_string_map = {
-        "RUNNING": "[bold yellow]RUNNING[/]",
         "COMPLETED": "[bold green]COMPLETED[/]",
-        "ERRORED": "[bold red]ERRORED[/]",
-        "FATAL": "[bold white on red]FATAL[/]",
     }
 
     if state_str in state_string_to_colored_state_string_map:
@@ -190,3 +164,43 @@ def format_datetime_as_human_readable_str(
         )
     else:
         return datetime_obj.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def format_set_value_command_epilog(command_name: str) -> str:
+    return format_argparse_epilog(
+        f"""
+        Value Type Specification:
+          Values are strings by default. Specify types using:
+            1. Inline annotation: value:type (e.g., "3:int")
+            2. --value-type flag: applies to all values unless overridden
+            3. Option template default: used if no type specified
+
+          The --value-type flag applies to all elements in lists/dictionaries.
+
+        Examples:
+          # Single values
+          {command_name} <id> param 1              # String "1" (or option's default type)
+          {command_name} <id> param 1:int          # Integer 1
+          {command_name} <id> param 1 -t int       # Integer 1 (equivalent)
+          {command_name} <id> param text:str:str   # String "text:str" (escape colons)
+
+          # Choice values
+          {command_name} <id> param choice1        # Implicit type conversion
+          {command_name} <id> param 1 -t int       # Exact match required (no conversion)
+
+          # Lists
+          {command_name} <id> param 1 2 3:int      # ["1", "2", 3]
+          {command_name} <id> param 1 2 3 -t int   # [1, 2, 3]
+          {command_name} <id> param 1 2 3:str -t int  # [1, 2, "3"]
+
+          # Dictionaries
+          {command_name} <id> param k1 1 k2 2:str -t int  # {{k1: 1, k2: "2"}}
+
+          # Toggleable choices (default: toggle specified to True, rest to False)
+          {command_name} <id> param c1 c2          # c1=True, c2=True, others=False
+          {command_name} <id> param false:bool c1  # c1=False, others=True
+          {command_name} <id> param true:bool      # All choices=True
+          {command_name} <id> param t:bool         # All choices=True (t/f/1/0 accepted)
+          {command_name} <id> param 0 -t bool      # All choices=False
+        """,
+    )

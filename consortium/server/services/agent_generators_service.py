@@ -191,7 +191,7 @@ class AgentGeneratorsService:
             agent_generator_id=agent_generator_id
         )
 
-        # Changed dictionary is used to track what attributes were updated. This data
+        # Changed dictionary is used to track what attributes were updated. This content
         # is sent as part of the `AGENT_GENERATOR_UPDATED` event.
         updated = {}
 
@@ -267,7 +267,7 @@ class AgentGeneratorsService:
                     "new": copy.deepcopy(agent_generator.parameters),
                 }
                 self._logger.info(
-                    "Updated parameters for agent generator {}.",
+                    "Updated parameters for agent generator {}",
                     agent_generator,
                 )
                 for parameter_name in updated_fields:
@@ -283,7 +283,7 @@ class AgentGeneratorsService:
             old_name = agent_generator.name
             agent_generator.name = name
             self._logger.info(
-                "Updated name for agent generator {} from '{}' to '{}'.",
+                "Updated name for agent generator {} from '{}' to '{}'",
                 agent_generator,
                 old_name,
                 name,
@@ -298,7 +298,7 @@ class AgentGeneratorsService:
             old_description = agent_generator.description
             agent_generator.description = description
             self._logger.info(
-                "Updated description for agent generator {} from '{}' to '{}'.",
+                "Updated description for agent generator {} from '{}' to '{}'",
                 agent_generator,
                 old_description,
                 description,
@@ -326,7 +326,7 @@ class AgentGeneratorsService:
         else:
             self._logger.debug(
                 "No updates applied to agent generator {!r} as no changes were detected "
-                "even though the update method was called.",
+                "even though the update method was called",
                 agent_generator,
             )
 

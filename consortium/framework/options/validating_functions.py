@@ -111,7 +111,7 @@ def validate_is_url_path(value: str):
     """
 
     if not value.startswith("/"):
-        raise OptionValueValidationError("The URL path provided must start with '/'.")
+        raise OptionValueValidationError("The URL path provided must start with '/'")
 
     parsed = urlparse(value)
     if parsed.scheme or parsed.netloc:

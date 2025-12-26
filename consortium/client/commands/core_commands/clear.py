@@ -1,13 +1,13 @@
 import platform
 import subprocess
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error
@@ -23,12 +23,12 @@ class ClearCommand(BaseCommand):
         """,
     )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            _ = self.parser.parse_args(command_context.arguments)
+            _ = self.parser.parse_args(context.arguments)
             if platform.system() == "Windows":
                 subprocess.run("cls", shell=True)
             # platform.system() returns "Darwin" for macOS and "Linux" for nix systems.
@@ -36,11 +36,11 @@ class ClearCommand(BaseCommand):
                 subprocess.run("clear", shell=True)
             else:
                 print_error(
-                    "Cannot clear terminal screen on unsupported operating system.",
+                    "Cannot clear terminal screen on unsupported operating system",
                 )
         except SystemExit:
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

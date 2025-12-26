@@ -198,7 +198,7 @@ class UserAccountsFilepathIsDirectoryError(UserAccountsFileError):
 
 class UserAccountsFileIsNotJSONError(UserAccountsFileError):
     """
-    Raised when the user accounts file does not contain valid JSON data.
+    Raised when the user accounts file does not contain valid JSON content.
     """
 
     code = "USER_ACCOUNTS_FILE_IS_NOT_JSON_ERROR"
@@ -211,7 +211,7 @@ class UserAccountsFileIsNotJSONError(UserAccountsFileError):
             message=(
                 "Failed to process the user accounts file "
                 f"'{user_accounts_filepath}'. The provided file does not contain "
-                "valid JSON data."
+                "valid JSON content."
             ),
         )
 

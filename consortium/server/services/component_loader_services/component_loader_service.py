@@ -110,7 +110,7 @@ class ComponentLoaderService[Component]:
                 component_project_folder=str(component_project_folder),
                 json_schema_error_message=(
                     "The 'entry_point' field must be in the format "
-                    "'module_path:SymbolName'."
+                    "'module_path:SymbolName'"
                 ),
             )
         component_module, component_symbol = entry_point.split(":", 1)

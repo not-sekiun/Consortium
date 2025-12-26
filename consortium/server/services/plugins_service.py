@@ -105,7 +105,7 @@ class PluginsService:
         )
         if plugin is None:
             self._logger.debug(
-                "Skipped loading plugin from '{}' because it was disabled.",
+                "Skipped loading plugin from '{}' because it was disabled",
                 str(plugin_project_folder),
             )
         else:
@@ -361,7 +361,7 @@ class PluginsService:
         #         else:
         #             self.logger.warning(
         #                 f"Forcing plugin cancellation for plugin {plugin} because its "
-        #                 f"timeout exceeded the specified duration: {timeout} second(s).",
+        #                 f"timeout exceeded the specified duration: {timeout} second(s)",
         #             )
         #             await plugin.cancel()
         #
@@ -448,7 +448,7 @@ class PluginsService:
         )
         for path in skipped:
             self._logger.info(
-                "- Skipped loading plugin from '{}' because it was disabled.",
+                "- Skipped loading plugin from '{}' because it was disabled",
                 str(path),
             )
         if errored:
@@ -512,7 +512,7 @@ class PluginsService:
 
         self._logger.info(
             "Loaded plugins from '{}' ({} plugin(s) loaded, {} plugin(s) "
-            "skipped, {} plugin(s) failed to load).",
+            "skipped, {} plugin(s) failed to load)",
             str(self._plugins_directory),
             len(resolved_ordered_plugins) - failed_to_load,
             len(skipped),
@@ -553,7 +553,7 @@ class PluginsService:
                 number_of_unloaded_plugins += 1
 
         self._logger.info(
-            "Unloaded framework plugins ({} plugin(s) unloaded).",
+            "Unloaded framework plugins ({} plugin(s) unloaded)",
             number_of_unloaded_plugins,
         )
 
@@ -620,7 +620,7 @@ class PluginsService:
             if isinstance(result, PluginLoadingError):
                 self._logger.error(result)
 
-        self._logger.info("Reloaded framework plugins.")
+        self._logger.info("Reloaded framework plugins")
 
     @log_and_propagate_error_on_service_method
     async def start_plugin_by_plugin_id(
@@ -806,7 +806,7 @@ class PluginsService:
         """
         plugins = self._plugin_registry_service.get_all_components()
         self._logger.debug(
-            "Retrieved all plugins ({} plugin(s) retrieved).",
+            "Retrieved all plugins ({} plugin(s) retrieved)",
             len(plugins),
         )
         return plugins

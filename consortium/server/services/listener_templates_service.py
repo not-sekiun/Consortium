@@ -85,7 +85,7 @@ class ListenerTemplatesService:
             for listener_profile in self._listener_profiles_service.get_all_listener_profiles()
         ]
         self._logger.debug(
-            "Retrieved all listener templates ({} listener template(s) retrieved).",
+            "Retrieved all listener templates ({} listener template(s) retrieved)",
             len(all_listener_templates),
         )
         return all_listener_templates

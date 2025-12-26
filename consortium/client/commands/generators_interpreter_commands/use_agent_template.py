@@ -1,13 +1,13 @@
 from argparse import ArgumentParser
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
+from consortium.client.models.return_status_models import (
     InterpreterType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_info
@@ -31,15 +31,13 @@ class UseAgentTemplateCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            client_rest_api_connection = context.environment["rest_api"]
             agent_template = await client_rest_api_connection.get_agent_template_by_agent_template_id(
                 parsed_args.agent_template_id[0],
             )
@@ -51,7 +49,7 @@ class UseAgentTemplateCommand(BaseCommand):
             )
 
             return ReturnStatus(
-                type=ClientReturnStatusType.SWITCH_INTERPRETER,
+                type=ReturnStatusType.SWITCH_INTERPRETER,
                 data={
                     "interpreter_type": InterpreterType.USE_AGENT_TEMPLATE_INTERPRETER,
                     "agent_template": agent_template,
@@ -61,5 +59,5 @@ class UseAgentTemplateCommand(BaseCommand):
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

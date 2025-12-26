@@ -1,14 +1,14 @@
 import random
 
 from consortium.client.client_config import CLIENT_RELEASE
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.client_rest_api import RestApi
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
@@ -26,7 +26,7 @@ class BannerCommand(BaseCommand):
 
     @staticmethod
     async def _display_banner(
-        client_rest_api_connection: ClientRESTAPIConnection | None,
+        client_rest_api_connection: RestApi | None,
     ) -> None:
         star_banner = (
             "[bold white]        .        x      "
@@ -109,18 +109,18 @@ class BannerCommand(BaseCommand):
         CONSOLE.print(info_banner)
         CONSOLE.print()
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            _ = self.parser.parse_args(command_context.arguments)
+            _ = self.parser.parse_args(context.arguments)
             await self._display_banner(
-                command_context.environment.get("client_rest_api_connection"),
+                context.environment.get("rest_api"),
             )
         except SystemExit:
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

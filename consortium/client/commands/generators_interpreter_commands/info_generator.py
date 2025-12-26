@@ -3,25 +3,24 @@ from argparse import ArgumentParser
 from rich.console import Group
 from rich.table import Table
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import (
-    format_agent_generator_build_step_state_string_with_color,
-    format_agent_generator_state_string_with_color,
     format_argparse_epilog,
+    format_component_life_cycle_state_string_with_color,
 )
 from consortium.client.utils.printer_utils import CONSOLE
 
 
 class InfoGeneratorCommand(BaseCommand):
     name = "info_generator"
-    description = "Display detailed information for a specific agent generator."
+    description = "Display detailed information for a specific agent generator"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -40,15 +39,13 @@ class InfoGeneratorCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            client_rest_api_connection = context.environment["rest_api"]
             agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_args.agent_generator_id[0],
             )
@@ -103,7 +100,7 @@ class InfoGeneratorCommand(BaseCommand):
                 )
                 agent_generator_build_step_table.add_row(
                     "Status",
-                    format_agent_generator_build_step_state_string_with_color(
+                    format_component_life_cycle_state_string_with_color(
                         build_step["status"]["state"],
                     )
                     + (
@@ -139,7 +136,7 @@ class InfoGeneratorCommand(BaseCommand):
             table.add_row("Parameters", parameter_table)
             table.add_row(
                 "Status",
-                format_agent_generator_state_string_with_color(
+                format_component_life_cycle_state_string_with_color(
                     state_str=agent_generator["status"]["state"],
                 )
                 + (
@@ -153,5 +150,5 @@ class InfoGeneratorCommand(BaseCommand):
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

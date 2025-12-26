@@ -3,11 +3,11 @@ from typing import Any
 from pydantic import BaseModel, create_model
 
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
-    BaseAPIError,
+    BaseApiError,
 )
 
 
-class HTTPError(BaseAPIError):
+class HTTPError(BaseApiError):
     status_code = 500
     code = "HTTP_ERROR"
 
@@ -21,7 +21,7 @@ class HTTPError(BaseAPIError):
 #   session expiration) and then makes an API call that requires authentication. So its low
 #   priority to fix this client-side issue.
 # UnauthorizedError is a special error whose `to_json()` method returns None. This is
-# so that the JSON data returned as part of the response body is empty to prevent C2
+# so that the JSON content returned as part of the response body is empty to prevent C2
 # server fingerprinting from unauthorized clients.
 class UnauthorizedError(HTTPError):
     status_code = 401
@@ -135,7 +135,7 @@ class UnprocessableEntityError(HTTPError):
         self,
         message: str = (
             "The request could not be processed due to it containing invalidly "
-            "formatted data."
+            "formatted content."
         ),
         detail: Any | None = None,
     ) -> None:

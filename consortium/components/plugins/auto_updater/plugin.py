@@ -49,8 +49,8 @@ class Plugin(BasePlugin):
                 async with session.get(latest_release_json_file_url) as response:
                     if response.status != 200:
                         self.logger.error(
-                            "Failed to retrieve latest release data. HTTP response status "
-                            "code '{}' returned when querying for new release data.",
+                            "Failed to retrieve latest release content. HTTP response status "
+                            "code '{}' returned when querying for new release content.",
                             response.status,
                         )
                         return None
@@ -58,12 +58,12 @@ class Plugin(BasePlugin):
                     return json.loads(raw_data)
             except aiohttp.ClientError as exc:
                 self.logger.error(
-                    f"Failed to retrieve latest release data: {exc}",
+                    f"Failed to retrieve latest release content: {exc}",
                 )
                 return None
             except json.JSONDecodeError as exc:
                 self.logger.error(
-                    f"Failed to parse latest release data: {exc}",
+                    f"Failed to parse latest release content: {exc}",
                 )
                 return None
 
@@ -82,7 +82,7 @@ class Plugin(BasePlugin):
         current_release = self.server_services.release_service.release
 
         if latest_release_datetime > current_release.datetime:
-            self.logger.info("New release found.")
+            self.logger.info("New release found")
             self.logger.info(
                 f"- Current release: '{current_release.codename}' "
                 f"(v{current_release.version}) released at {current_release.datetime_released}",
@@ -137,4 +137,4 @@ class Plugin(BasePlugin):
                 else:
                     continue
         else:
-            self.logger.info("Already on latest release.")
+            self.logger.info("Already on latest release")

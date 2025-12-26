@@ -1,0 +1,43 @@
+from argparse import ArgumentParser
+
+from consortium.client.models.return_status_models import (
+    ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
+)
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+)
+
+
+class AssetRemoveCommand(BaseCommand):
+    name = "as-rm"
+    description = "Delete an asset by its asset ID"
+    epilog = format_argparse_epilog(
+        """
+        Examples:
+          as-rm 123e4567-e89b-12d3-a456-42661417400
+        """,
+    )
+    group = "Asset Management Commands"
+
+    def configure_parser(self, parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "asset_id",
+            help="ID of the asset to be removed.",
+            nargs=1,
+        )
+
+    async def run(
+        self,
+        context: Context,
+    ) -> ReturnStatus:
+        try:
+            self.parser.parse_args(context.arguments)
+        except SystemExit:
+            pass
+
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

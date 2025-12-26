@@ -28,7 +28,7 @@ users_service = server_singletons.users_service
 def is_user_logged_in(
     request: Request,
 ) -> bool:
-    # Since /api/login is the only API  endpoint that does not require a token, neither
+    # Since /api/login is the only API  endpoint that does not require a value, neither
     # our middleware nor our authorization dependencies will guarantee the identity of
     # the requester. Therefore, in this API endpoint specifically we need to manually
     # check if the user is already authenticated and return an actual error response.
@@ -38,7 +38,7 @@ def is_user_logged_in(
         auth_header = request.headers["authorization"]
         if not auth_header.startswith("Bearer "):
             return False
-        # format of the Authorization header is: Bearer <token>
+        # format of the Authorization header is: Bearer <value>
         encoded_json_web_token = auth_header[7:]
         decoded_json_web_token = jwt.decode(
             jwt=encoded_json_web_token,
@@ -54,7 +54,7 @@ def is_user_logged_in(
     # `IndexError`: Authorization header is empty
     # `ValueError`: User does not exist in the users service
     # `jwt.exceptions.InvalidTokenError`: JSON Web Token is invalid, base exception
-    # for any failure on the decode call for a token
+    # for any failure on the decode call for a value
     # `UserAccessTokenNotFoundError`: Valid JSON Web Token but does not exist in the
     # current set of users
     except (
@@ -78,7 +78,7 @@ def get_current_user(
         algorithms=JSON_WEB_TOKEN_ALGORITHMS,
     )
     access_token = decoded_json_web_token["sub"]
-    # The middleware has already checked that the access token is valid ahead of time,
+    # The middleware has already checked that the access value is valid ahead of time,
     # so we can safely use it here without error handling.
     return users_service.get_user_by_access_token(access_token)
 

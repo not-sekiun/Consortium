@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -19,12 +19,12 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 
 class AgentInfoCommand(BaseCommand):
-    name = "ag-info"
+    name = "info"
     description = "Display information about an agent by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          ag-info 123e4567-e89b-12d3-a456-42661417400
+          info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Agent Management Commands"
@@ -93,20 +93,19 @@ class AgentInfoCommand(BaseCommand):
 
         CONSOLE.print(table, "")
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
-            agent = await client_rest_api_connection.get_agent_by_agent_id(
+            parsed_args = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
+
+            agent = await rest_api.get_agent_by_agent_id(
                 agent_id=parsed_args.agent_id[0]
             )
             self._display_agent_info(agent=agent)
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

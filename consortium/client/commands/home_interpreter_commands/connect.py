@@ -8,13 +8,13 @@ from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_P
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionConnectionError,
 )
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
@@ -26,7 +26,7 @@ class ConnectCommand(BaseCommand):
     name = "connect"
     description = (
         "Create a new client session to a Consortium server using a configuration "
-        "file or by manually specifying connection details."
+        "file or by manually specifying connection details"
     )
     epilog = format_argparse_epilog(
         """
@@ -87,12 +87,12 @@ class ConnectCommand(BaseCommand):
             metavar="PASSWORD",
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
+            parsed_args = self.parser.parse_args(context.arguments)
             # Perform custom checking of arguments to ensure that either a config file
             # or all of the connection details are provided but not both.
             if (
@@ -138,21 +138,21 @@ class ConnectCommand(BaseCommand):
                     jsonschema.validate(config_data, client_config_file_json_schema)
                 except FileNotFoundError as exc:
                     print_error(f"The config filepath supplied does not exist: {exc}")
-                    return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
                 except PermissionError as exc:
                     print_error(
                         f"Insufficient permissions to read the config file: {exc}",
                     )
-                    return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
                 except json.decoder.JSONDecodeError:
-                    print_error("The config file does not contain valid JSON data")
-                    return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                    print_error("The config file does not contain valid JSON content")
+                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
                 except jsonschema.ValidationError as exc:
                     print_error(
-                        f"The config file's JSON data is not of a valid server config "
+                        f"The config file's JSON content is not of a valid server config "
                         f"format: {exc}",
                     )
-                    return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
                 username = config_data["username"]
                 password = config_data["password"]
@@ -176,12 +176,12 @@ class ConnectCommand(BaseCommand):
                 )
                 print_success(
                     f"Successfully logged into server "
-                    f"{remote_host}:{remote_port} as '{username}'.",
+                    f"{remote_host}:{remote_port} as '{username}'",
                 )
             except ClientSessionConnectionError as exc:
                 print_error(exc)
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

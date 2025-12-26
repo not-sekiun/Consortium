@@ -5,13 +5,13 @@ from argparse import ArgumentParser
 
 from rich.progress import Progress
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
@@ -55,17 +55,15 @@ class AssetDownloadCommand(BaseCommand):
             action="store_true",
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
 
-            asset = await client_rest_api_connection.get_asset_by_asset_id(
+            asset = await rest_api.get_asset_by_asset_id(
                 asset_id=parsed_args.asset_id[0],
             )
             # If user supplies a name that takes precedence, else use the asset name
@@ -86,7 +84,7 @@ class AssetDownloadCommand(BaseCommand):
                     f"Cannot download asset to '{output_file_path}' because a file or "
                     "directory already exists at that path.",
                 )
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             print_info(
                 f"Downloading asset {'directory' if asset['is_directory'] else 'file'} "
@@ -99,14 +97,12 @@ class AssetDownloadCommand(BaseCommand):
                     total=asset["size"],
                 )
                 with output_file_path.open("wb") as output_file:
-                    async for (
-                        chunk
-                    ) in client_rest_api_connection.download_asset_by_asset_id(
+                    async for chunk in rest_api.download_asset_by_asset_id(
                         asset_id=parsed_args.asset_id[0],
                     ):
                         progress.update(downloading_task, advance=len(chunk))
                         output_file.write(chunk)
-            print_success("Finished downloading.")
+            print_success("Finished downloading")
 
             if asset["is_directory"] and parsed_args.decompress:
                 print_info(
@@ -116,8 +112,8 @@ class AssetDownloadCommand(BaseCommand):
                     shutil.unpack_archive(output_file_path, temp_dir)
                     output_file_path.unlink()
                     shutil.move(temp_dir, output_file_path)
-                print_success("Finished decompression.")
+                print_success("Finished decompression")
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

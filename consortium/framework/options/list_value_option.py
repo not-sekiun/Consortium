@@ -61,9 +61,9 @@ class ListValueOption(BaseOption[list[Primitive]]):
         default_value: The default value of the option. If `None`, the option has no
             default value.
         value_type: The type of the elements that the option can accept for the list
-            value. If `None`, the list's data type is heterogeneous and each element
-            can be any of `str`, `int`, `float`, or `bool` otherwise its data type is
-            homogeneous and the data type of its elements can only be one of `str`,
+            value. If `None`, the list's content type is heterogeneous and each element
+            can be any of `str`, `int`, `float`, or `bool` otherwise its content type is
+            homogeneous and the content type of its elements can only be one of `str`,
             `int`, `float`, or `bool`.
         minimum_length: If `value_type` is of type `str`, this parameter specifies the
             minimum max_length of each string element that the option can accept.  If
@@ -101,9 +101,9 @@ class ListValueOption(BaseOption[list[Primitive]]):
         default_value: The default value of the option. If `None`, the option has no
             default value.
         value_type: The type of the elements that the option can accept for the list
-            value. If `None`, the list's data type is heterogeneous and each element
-            can be any of `str`, `int`, `float`, or `bool` otherwise its data type is
-            homogeneous and the data type of its elements can only be one of `str`,
+            value. If `None`, the list's content type is heterogeneous and each element
+            can be any of `str`, `int`, `float`, or `bool` otherwise its content type is
+            homogeneous and the content type of its elements can only be one of `str`,
             `int`, `float`, or `bool`.
         minimum_length: If `value_type` is of type `str`, this parameter specifies the
             minimum max_length of each string element that the option can accept.  If
@@ -131,7 +131,7 @@ class ListValueOption(BaseOption[list[Primitive]]):
             option, and raises an exception, `OptionValueValidationError` if the value
             is invalid. If `None`, no additional validation is performed.
 
-    Example: Setting up a `ListValueOption` with a homogeneous data type.
+    Example: Setting up a `ListValueOption` with a homogeneous content type.
         ```python
         backup_hosts = ListValueOption(
             name="backup_hosts",

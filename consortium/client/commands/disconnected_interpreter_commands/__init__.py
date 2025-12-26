@@ -2,7 +2,7 @@ from consortium.client.commands.disconnected_interpreter_commands.disconnect imp
     DisconnectCommand,
 )
 from consortium.client.commands.disconnected_interpreter_commands.info_client_session import (
-    InfoClientSessionCommand,
+    ClientSessionInfoCommand,
 )
 from consortium.client.commands.disconnected_interpreter_commands.redescribe_client_session import (
     RedescribeClientSessionCommand,
@@ -13,7 +13,7 @@ from consortium.client.commands.disconnected_interpreter_commands.rename_client_
 
 DISCONNECTED_INTERPRETER_COMMANDS = [
     DisconnectCommand(),
-    InfoClientSessionCommand(),
+    ClientSessionInfoCommand(),
     RedescribeClientSessionCommand(),
     RenameClientSessionCommand(),
 ]

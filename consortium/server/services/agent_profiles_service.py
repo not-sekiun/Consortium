@@ -65,7 +65,7 @@ class AgentProfilesService:
         )
         if agent_profile is None:
             self._logger.debug(
-                "Skipped loading agent profile from '{}' because it was disabled.",
+                "Skipped loading agent profile from '{}' because it was disabled",
                 str(agent_profile_project_folder),
             )
         else:
@@ -194,7 +194,7 @@ class AgentProfilesService:
         )
         for path in skipped:
             self._logger.info(
-                "- Skipped loading agent profile from '{}' because it was disabled.",
+                "- Skipped loading agent profile from '{}' because it was disabled",
                 str(path),
             )
         if errored:
@@ -221,7 +221,7 @@ class AgentProfilesService:
 
         self._logger.info(
             "Loaded agent profiles from '{}' ({} agent profile(s) loaded, "
-            "{} agent profile(s) skipped, {} agent profile(s) failed to load).",
+            "{} agent profile(s) skipped, {} agent profile(s) failed to load)",
             str(self._agents_directory),
             len(retrieved) - failed_to_load,
             len(skipped),
@@ -239,7 +239,7 @@ class AgentProfilesService:
                 )
                 unloaded_agent_profiles += 1
         self._logger.info(
-            "Unloaded framework agent profiles ({} agent profile(s) unloaded).",
+            "Unloaded framework agent profiles ({} agent profile(s) unloaded)",
             unloaded_agent_profiles,
         )
 
@@ -248,13 +248,13 @@ class AgentProfilesService:
         self._logger.info("Reloading framework agent profiles...")
         await self.unload_framework_agent_profiles()
         await self.load_framework_agent_profiles()
-        self._logger.info("Reloaded framework agent profiles.")
+        self._logger.info("Reloaded framework agent profiles")
 
     @log_and_propagate_error_on_service_method
     def get_all_agent_profiles(self) -> list[AgentProfile]:
         agent_profiles = self._agent_profile_registry_service.get_all_components()
         self._logger.debug(
-            "Retrieved all agent profiles ({} retrieved).",
+            "Retrieved all agent profiles ({} retrieved)",
             len(agent_profiles),
         )
         return agent_profiles

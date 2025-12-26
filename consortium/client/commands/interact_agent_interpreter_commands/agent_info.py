@@ -3,15 +3,16 @@ from argparse import ArgumentParser
 from consortium.client.commands.agents_interpreter_commands import (
     AgentInfoCommand as InfoAgentAgentsInterpreterCommand,
 )
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
+from consortium.client.models.return_status_models import (
+    ReturnStatus,
+    ReturnStatusType,
 )
-from consortium.client.repl_framework.base_command import CommandContext, ReturnStatus
+from consortium.client.repl_interface.base_command import Context
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
 class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
-    name = "ag-info"
+    name = "info"
     description = (
         "Display information about the current agent, or a specific agent by its agent "
         "ID"
@@ -19,8 +20,8 @@ class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-          ag-info
-          ag-info 123e4567-e89b-12d3-a456-42661417400
+          info
+          info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Agent Management Commands"
@@ -35,23 +36,22 @@ class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
             nargs="?",
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
+
             if parsed_args.agent_id is not None:
-                agent = await client_rest_api_connection.get_agent_by_agent_id(
+                agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id[0]
                 )
             else:
-                agent = command_context.environment["agent"]
+                agent = context.environment["agent"]
             self._display_agent_info(agent=agent)
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

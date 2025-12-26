@@ -68,10 +68,10 @@ def _process_file(agent_message: AgentTaskMessageModel):
 def _process_directory(
     agent_message: AgentTaskMessageModel,
 ):
-    if agent_message["data"]["recursive"]:
-        filepath_iterator = Path(agent_message["data"]["source"]).rglob("*")
+    if agent_message["content"]["recursive"]:
+        filepath_iterator = Path(agent_message["content"]["source"]).rglob("*")
     else:
-        filepath_iterator = Path(agent_message["data"]["source"]).iterdir()
+        filepath_iterator = Path(agent_message["content"]["source"]).iterdir()
 
     for filepath in filepath_iterator:
         with open(file=str(filepath), mode="rb") as file:
@@ -84,7 +84,7 @@ def _process_directory(
             )
             if agent_message.data["destination"]:
                 header_message.data["filepath"] = str(
-                    Path(agent_message["data"]["destination"]) / relative_filepath,
+                    Path(agent_message["content"]["destination"]) / relative_filepath,
                 )
             else:
                 header_message.data["filepath"] = str(

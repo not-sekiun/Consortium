@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, get_type_hints
 
 from loguru import logger
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
@@ -64,7 +64,7 @@ class _AgentParametersModel(BaseModel):
     remote_host_address: str | None
     local_host_address: str | None
     hostname: str | None
-    agent_data: dict[str, Any] | None
+    agent_data: dict[str, JsonValue]
 
 
 class Agent:

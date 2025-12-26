@@ -1,13 +1,13 @@
 from rich.table import Table
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
@@ -18,7 +18,7 @@ client_sessions_service = client_singletons.client_sessions_service
 class ListClientSessionsCommand(BaseCommand):
     name = "list_client_sessions"
     description = (
-        "List basic information for all current client sessions to a Consortium server."
+        "List basic information for all current client sessions to a Consortium server"
     )
     epilog = format_argparse_epilog(
         """
@@ -28,12 +28,12 @@ class ListClientSessionsCommand(BaseCommand):
     )
     group = "Client Session Management Commands"
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            _ = self.parser.parse_args(command_context.arguments)
+            _ = self.parser.parse_args(context.arguments)
             all_client_sessions = client_sessions_service.get_all_client_sessions()
 
             table = Table(title="Client Sessions")
@@ -54,4 +54,4 @@ class ListClientSessionsCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

@@ -13,7 +13,7 @@ class AgentTaskMessageModel(BaseModel):
         task_id (uuid.UUID): Unique identifier for the task.
         command (str): The command to be executed by the agent.
         arguments (dict[str, Any]): Arguments required for the command.
-        data (dict[str, Any]): Additional data related to the task.
+        data (dict[str, Any]): Additional content related to the task.
     """
 
     task_id: uuid.UUID
@@ -36,7 +36,7 @@ class AgentTaskMessageModel(BaseModel):
             "task_id": str(self.task_id),
             "command": self.command,
             "arguments": self.arguments,
-            "data": self.data,
+            "content": self.data,
         }
 
 
@@ -48,7 +48,7 @@ class AgentResultMessageModel(BaseModel):
         task_id (uuid.UUID): Unique identifier for the associated task.
         success (bool): Indicates if the task was successful.
         message (str): A message providing additional information about the result.
-        data (dict[str, Any]): Additional data related to the result.
+        data (dict[str, Any]): Additional content related to the result.
     """
 
     task_id: uuid.UUID
@@ -71,5 +71,5 @@ class AgentResultMessageModel(BaseModel):
             "task_id": str(self.task_id),
             "success": self.success,
             "message": self.message,
-            "data": self.data,
+            "content": self.data,
         }

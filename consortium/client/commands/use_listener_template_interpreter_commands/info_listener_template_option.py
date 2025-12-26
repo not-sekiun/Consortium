@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -18,7 +18,7 @@ from consortium.client.utils.printer_utils import CONSOLE, print_error
 
 
 class InfoListenerTemplateOptionsCommand(BaseCommand):
-    name = "info_listener_template_option"
+    name = "info_template_option"
     description = (
         "Display detailed information about a specific listener template option."
     )
@@ -40,13 +40,13 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            listener_template = command_context.environment["listener_template"]
+            parsed_args = self.parser.parse_args(context.arguments)
+            listener_template = context.environment["listener_template"]
             try:
                 option = listener_template["options"][
                     parsed_args.listener_template_option_name[0]
@@ -57,7 +57,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
                     f"{parsed_args.listener_template_option_name[0]} not found.",
                 )
                 return ReturnStatus(
-                    type=ClientReturnStatusType.CONTINUE,
+                    type=ReturnStatusType.CONTINUE,
                 )
 
             table = Table(title="Listener Template Option Information")
@@ -73,5 +73,5 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

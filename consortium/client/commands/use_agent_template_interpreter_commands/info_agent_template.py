@@ -3,10 +3,11 @@ from argparse import ArgumentParser
 from consortium.client.commands.generators_interpreter_commands.info_agent_template import (
     InfoAgentTemplateCommand as GeneratorsInterpreterInfoAgentTemplateCommand,
 )
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
+from consortium.client.models.return_status_models import (
+    ReturnStatus,
+    ReturnStatusType,
 )
-from consortium.client.repl_framework.base_command import CommandContext, ReturnStatus
+from consortium.client.repl_interface.base_command import Context
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
@@ -36,25 +37,23 @@ class InfoAgentTemplateCommand(GeneratorsInterpreterInfoAgentTemplateCommand):
             default=None,
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            client_rest_api_connection = context.environment["rest_api"]
             if parsed_args.agent_template_id is not None:
                 agent_template = await client_rest_api_connection.get_agent_template_by_agent_template_id(
                     agent_template_id=parsed_args.agent_template_id
                 )
             else:
-                agent_template = command_context.environment["agent_template"]
+                agent_template = context.environment["agent_template"]
             self._display_agent_template_info(agent_template=agent_template)
         except SystemExit:
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

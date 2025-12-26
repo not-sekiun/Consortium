@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
@@ -38,15 +38,11 @@ class UnsetGeneratorParameterCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run_command(self, command_context: CommandContext) -> ReturnStatus:
+    async def run(self, context: Context) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
-            agent_template_options = command_context.environment["agent_template"][
-                "options"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            client_rest_api_connection = context.environment["rest_api"]
+            agent_template_options = context.environment["agent_template"]["options"]
             parameter_name = parsed_args.parameter_name[0]
 
             try:
@@ -55,7 +51,7 @@ class UnsetGeneratorParameterCommand(BaseCommand):
                 print_error(
                     f"Parameter '{parameter_name}' does not exist in the agent generator.",
                 )
-                return ReturnStatus(ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(ReturnStatusType.CONTINUE)
 
             if option["option_type"] == "LIST_VALUE_OPTION":
                 await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
@@ -96,4 +92,4 @@ class UnsetGeneratorParameterCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(ReturnStatusType.CONTINUE)

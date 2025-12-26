@@ -65,7 +65,7 @@ class ListenerProfilesService:
         )
         if listener_profile is None:
             self._logger.debug(
-                "Skipped loading listener profile from '{}' because it was disabled.",
+                "Skipped loading listener profile from '{}' because it was disabled",
                 str(listener_profile_project_folder),
             )
         else:
@@ -198,7 +198,7 @@ class ListenerProfilesService:
         )
         for path in skipped:
             self._logger.info(
-                "- Skipped loading listener profile from '{}' because it was disabled.",
+                "- Skipped loading listener profile from '{}' because it was disabled",
                 str(path),
             )
         if errored:
@@ -225,7 +225,7 @@ class ListenerProfilesService:
 
         self._logger.info(
             "Loaded listener profiles from '{}' ({} listener profile(s) loaded, "
-            "{} listener profile(s) skipped, {} listener profile(s) failed to load).",
+            "{} listener profile(s) skipped, {} listener profile(s) failed to load)",
             str(self._listeners_directory),
             len(retrieved) - failed_to_load,
             len(skipped),
@@ -246,7 +246,7 @@ class ListenerProfilesService:
                 )
                 unloaded_listener_profiles += 1
         self._logger.info(
-            "Unloaded framework listener profiles ({} listener profile(s) unloaded).",
+            "Unloaded framework listener profiles ({} listener profile(s) unloaded)",
             unloaded_listener_profiles,
         )
 
@@ -255,13 +255,13 @@ class ListenerProfilesService:
         self._logger.info("Reloading framework listener profiles...")
         await self.unload_framework_listener_profiles()
         await self.load_framework_listener_profiles()
-        self._logger.info("Reloaded framework listener profiles.")
+        self._logger.info("Reloaded framework listener profiles")
 
     @log_and_propagate_error_on_service_method
     def get_all_listener_profiles(self) -> list[ListenerProfile]:
         listener_profiles = self._listener_profile_registry_service.get_all_components()
         self._logger.debug(
-            "Retrieved all listener profiles ({} retrieved).",
+            "Retrieved all listener profiles ({} retrieved)",
             len(listener_profiles),
         )
         return listener_profiles

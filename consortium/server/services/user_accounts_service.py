@@ -76,7 +76,7 @@ class UserAccountsService:
     def get_all_user_accounts(self) -> list[UserAccountModel]:
         all_user_accounts = list(self._user_accounts.values())
         self._logger.debug(
-            "Retrieved all user accounts ({} user account(s) retrieved).",
+            "Retrieved all user accounts ({} user account(s) retrieved)",
             len(all_user_accounts),
         )
         return all_user_accounts
@@ -295,7 +295,7 @@ class UserAccountsService:
             new_user_accounts.append(new_user_account)
 
         self._logger.debug(
-            "Read user accounts from user accounts file ({} user account(s) read).",
+            "Read user accounts from user accounts file ({} user account(s) read)",
             len(new_user_accounts),
         )
         return new_user_accounts
@@ -334,7 +334,7 @@ class UserAccountsService:
             ) from None
 
         self._logger.debug(
-            "Wrote user accounts to user accounts file ({} byte(s) written).",
+            "Wrote user accounts to user accounts file ({} byte(s) written)",
             number_of_bytes_written,
         )
         return number_of_bytes_written
@@ -354,7 +354,7 @@ class UserAccountsService:
         for user_account in loaded_user_accounts:
             self._logger.debug("Loaded user account: {}", user_account)
         self._logger.debug(
-            "Loaded framework user accounts ({} user account(s) loaded).",
+            "Loaded framework user accounts ({} user account(s) loaded)",
             len(loaded_user_accounts),
         )
         return True
@@ -378,7 +378,7 @@ class UserAccountsService:
         for user_account in loaded_user_accounts:
             self._logger.debug("Reloaded user account: {}", user_account)
         self._logger.debug(
-            "Reloaded framework user accounts ({} user account(s) reloaded).",
+            "Reloaded framework user accounts ({} user account(s) reloaded)",
             len(loaded_user_accounts),
         )
         return True
@@ -401,7 +401,7 @@ class UserAccountsService:
                 user_account,
             )
         self._logger.debug(
-            "Wrote framework user accounts ({} byte(s) written).",
+            "Wrote framework user accounts ({} byte(s) written)",
             number_of_bytes_written,
         )
         return True

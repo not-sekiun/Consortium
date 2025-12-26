@@ -352,7 +352,7 @@ class AgentsService:
         else:
             self._logger.debug(
                 "No updates applied to agent {} as no changes were detected even "
-                "though the update method was called.",
+                "though the update method was called",
                 agent,
             )
 

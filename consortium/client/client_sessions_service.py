@@ -83,8 +83,8 @@ class ClientSessionsService:
             # will not attempt to connect to the websockets server. So we only need to
             # check the case where the REST API connection succeeds but the websockets
             # connection fails.
-            if client_session.client_rest_api_connection.logged_in:
-                await client_session.client_rest_api_connection.disconnect()
+            if client_session.rest_api.logged_in:
+                await client_session.rest_api.disconnect()
             raise ClientSessionConnectionError(
                 remote_host=client_session.remote_host,
                 remote_port=client_session.remote_port,

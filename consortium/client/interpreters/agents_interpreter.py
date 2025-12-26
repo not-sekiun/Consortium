@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI
-from prompt_toolkit.completion import NestedCompleter
+from prompt_toolkit.completion import NestedCompleter, PathCompleter
 
 from consortium.client.commands.agents_interpreter_commands import (
     AGENTS_INTERPRETER_COMMANDS,
 )
 from consortium.client.commands.core_commands import CORE_COMMANDS
-from consortium.client.repl_interface.client_interpreter import ClientInterpreter
+from consortium.client.repl_interface.interpreter import Interpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -23,7 +23,7 @@ COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS = [
 ] + AGENTS_INTERPRETER_COMMANDS
 
 
-class AgentsInterpreter(ClientInterpreter):
+class AgentsInterpreter(Interpreter):
     def __init__(self, client_session: ClientSession):
         super().__init__(
             prompt=ANSI(
@@ -36,12 +36,8 @@ class AgentsInterpreter(ClientInterpreter):
         )
 
     async def _initialize_autocompleter(self) -> None:
-        all_agents = await self.environment[
-            "client_rest_api_connection"
-        ].get_all_agents()
-        all_assets = await self.environment[
-            "client_rest_api_connection"
-        ].get_all_assets()
+        all_agents = await self.environment["rest_api"].get_all_agents()
+        all_assets = await self.environment["rest_api"].get_all_assets()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -51,23 +47,19 @@ class AgentsInterpreter(ClientInterpreter):
         # autocomplete with.
         agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
         for command in [
-            "ag-info",
-            "ag-interact",
-            "r-ls",
-            "t-ls",
-            "ag-name",
-            "ag-desc",
+            "info",
+            "interact",
+            "r-list",
+            "t-list",
+            "rename",
+            "describe",
         ]:
             nested_completer_dict[command] = agent_ids_completion
 
         # Register commands that take the task or result ID as a positional argument
-        all_tasks = await self.environment[
-            "client_rest_api_connection"
-        ].get_all_agent_tasks()
+        all_tasks = await self.environment["rest_api"].get_all_agent_tasks()
         nested_completer_dict["t-info"] = {task["task_id"]: None for task in all_tasks}
-        all_results = await self.environment[
-            "client_rest_api_connection"
-        ].get_all_agent_results()
+        all_results = await self.environment["rest_api"].get_all_agent_results()
         nested_completer_dict["r-info"] = {
             result["result_id"]: None for result in all_results
         }
@@ -83,6 +75,9 @@ class AgentsInterpreter(ClientInterpreter):
         # added before this method is called.
         nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
+        # Register the asset upload command to autocomplete with all available files.
+        nested_completer_dict["as-up"] = PathCompleter()
+
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,
         )
@@ -91,7 +86,7 @@ class AgentsInterpreter(ClientInterpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        task = event["data"]["task"]
+        task = event["content"]["task"]
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -105,7 +100,7 @@ class AgentsInterpreter(ClientInterpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        result = event["data"]["result"]
+        result = event["content"]["result"]
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -119,19 +114,19 @@ class AgentsInterpreter(ClientInterpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        agent = (event["data"],)
+        agent = event["content"]
         print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in")
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
         for command in [
-            "ag-info",
-            "ag-interact",
-            "r-ls",
-            "t-ls",
-            "ag-name",
-            "ag-desc",
+            "info",
+            "interact",
+            "r-list",
+            "t-list",
+            "rename",
+            "describe",
         ]:
             nested_completer_dict[command][agent["agent_id"]] = None
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
@@ -139,42 +134,36 @@ class AgentsInterpreter(ClientInterpreter):
         )
 
     async def _setup_event_handlers(self) -> None:
-        await self.environment["client_websockets_api_connection"].subscribe_to_event(
+        await self.environment["websockets_api"].subscribe_to_event(
             event_type="AGENT_REGISTERED",
             event_handler=self._agent_registered_event_handler,
         )
-        await self.environment["client_websockets_api_connection"].subscribe_to_event(
+        await self.environment["websockets_api"].subscribe_to_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
         )
-        await self.environment["client_websockets_api_connection"].subscribe_to_event(
+        await self.environment["websockets_api"].subscribe_to_event(
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
         )
-        await self.environment["client_websockets_api_connection"].start()
+        await self.environment["websockets_api"].start()
 
     async def _teardown_event_handlers(self) -> None:
         # Stop the message consumption loop for the websocket connection just so that
         # the action message being sent next doesn't need to go through the message
         # consumer handler loop. This is not necessary but just makes it cleaner.
-        await self.environment["client_websockets_api_connection"].stop()
+        await self.environment["websockets_api"].stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.environment[
-            "client_websockets_api_connection"
-        ].unsubscribe_from_event(
+        await self.environment["websockets_api"].unsubscribe_from_event(
             event_type="AGENT_REGISTERED",
             event_handler=self._agent_registered_event_handler,
         )
-        await self.environment[
-            "client_websockets_api_connection"
-        ].unsubscribe_from_event(
+        await self.environment["websockets_api"].unsubscribe_from_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
         )
-        await self.environment[
-            "client_websockets_api_connection"
-        ].unsubscribe_from_event(
+        await self.environment["websockets_api"].unsubscribe_from_event(
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
         )
@@ -187,5 +176,5 @@ class AgentsInterpreter(ClientInterpreter):
         # The exit command when executed will disconnect the websocket connection but
         # this method will still run so we need to first check if the client websockets
         # API connection has already been disconnected.
-        if self.environment["client_websockets_api_connection"].connected:
+        if self.environment["websockets_api"].connected:
             await self._teardown_event_handlers()

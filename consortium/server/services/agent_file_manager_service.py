@@ -58,4 +58,4 @@ class AgentFileManagerService:
 
         raise NotImplementedError
         # artifact = self.get_artifact_by_artifact_id(artifact_id)
-        # artifact.write(data)
+        # artifact.write(content)

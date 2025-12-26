@@ -17,24 +17,28 @@ class ConsortiumPathsService:
         self.consortium_root = pathlib.Path(__file__).resolve().parents[3]
 
         # Data file paths
-        self.release_json_file = self.consortium_root / "data" / "release.json"
+        self.release_json_file = self.consortium_root / "content" / "release.json"
         self.server_config_json_file = (
-            self.consortium_root / "data" / "server" / "server_config.json"
+            self.consortium_root / "content" / "server" / "server_config.json"
         )
         self.logging_config_json_file = (
-            self.consortium_root / "data" / "server" / "logging_config.json"
+            self.consortium_root / "content" / "server" / "logging_config.json"
         )
         self.user_accounts_json_file = (
-            self.consortium_root / "data" / "server" / "user_accounts.json"
+            self.consortium_root / "content" / "server" / "user_accounts.json"
         )
 
         # Data directory paths
-        self.server_logs_directory = self.consortium_root / "data" / "server" / "logs"
-        self.assets_directory = self.consortium_root / "data" / "server" / "assets"
-        self.artifacts_directory = (
-            self.consortium_root / "data" / "server" / "artifacts"
+        self.server_logs_directory = (
+            self.consortium_root / "content" / "server" / "logs"
         )
-        self.payloads_directory = self.consortium_root / "data" / "server" / "payloads"
+        self.assets_directory = self.consortium_root / "content" / "server" / "assets"
+        self.artifacts_directory = (
+            self.consortium_root / "content" / "server" / "artifacts"
+        )
+        self.payloads_directory = (
+            self.consortium_root / "content" / "server" / "payloads"
+        )
 
         # Component directory paths
         self.components_directory = self.consortium_root / "consortium" / "components"

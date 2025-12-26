@@ -217,7 +217,7 @@ class Server:
                     plugin,
                 )
 
-        self._logger.info("Server shutdown complete.")
+        self._logger.info("Server shutdown complete")
         # Flush and complete the logger.
         await self._logger.complete()
         self.status = ServerStatus.STOPPED

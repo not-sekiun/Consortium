@@ -43,8 +43,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
                 [
                     command
                     for command in COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS
-                    if command.name
-                    not in ("info_listener_template", "use_listener_template")
+                    if command.name not in ("lt-info", "use")
                 ]
                 + USE_LISTENER_TEMPLATE_INTERPRETER_COMMANDS
                 # Add back in the listeners command since it's removed in the
@@ -53,12 +52,12 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
                 + [ListenersCommand()]
             ),
             client_session=client_session,
-            additional_environment_variables={
+            context={
                 "listener_template": listener_template,
             },
         )
 
-    async def _update_autocomplete(self) -> None:
+    async def _initialize_autocomplete(self) -> None:
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
@@ -67,9 +66,9 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
             command: dict.fromkeys(listener_template["options"])
             for command in [
                 "info_listener_template_option",
-                "set_listener_template_option",
-                "reset_listener_template_option",
-                "unset_listener_template_option",
+                "set",
+                "reset",
+                "unset",
             ]
         }.items():
             nested_completer_dict[key] = value
@@ -81,4 +80,4 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         # interpreter's commands to ensure that when it is called, the autocomplete
         # updating will account for these new commands when autocompleting the help
         # command.
-        await super()._update_autocomplete()
+        await super()._initialize_autocomplete()

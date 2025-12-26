@@ -2,14 +2,14 @@ from argparse import ArgumentParser
 from enum import StrEnum
 from typing import Any
 
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.client_rest_api import RestApi
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import (
@@ -139,7 +139,7 @@ def construct_agent_capability_command(
             for name, option in options.items():
                 # Configure the number of arguments that the parser expects for a
                 # particular agent capability based on the option type in the
-                # options json data.
+                # options json content.
                 if option["option_type"] in (
                     _OptionType.SINGLE_VALUE_OPTION,
                     _OptionType.CHOICE_VALUE_OPTION,
@@ -159,7 +159,7 @@ def construct_agent_capability_command(
                     )
 
                 # Determine the type of the argument based on the value type in the
-                # options json data.
+                # options json content.
                 string_to_type_map = {
                     _OptionValueType.STRING: str,
                     _OptionValueType.INTEGER: int,
@@ -214,7 +214,7 @@ def construct_agent_capability_command(
                     continue
 
                 # Add the arguments to the parser for every other kind of option
-                # specified in the agent capability json data.
+                # specified in the agent capability json content.
                 if number_of_required_options == 1 and option["required"]:
                     parser.add_argument(
                         name,
@@ -326,7 +326,7 @@ def construct_agent_capability_command(
             value_type_flag: str | None,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_rest_api_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: RestApi,
         ) -> None:
             parameter_value, value_type_annotation = (
                 self._check_value_for_value_type_annotation(
@@ -373,7 +373,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_rest_api_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: RestApi,
         ) -> None:
             parameter_value, value_type_annotation = (
                 self._check_value_for_value_type_annotation(
@@ -447,7 +447,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_rest_api_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: RestApi,
         ) -> None:
             new_parameter_values = []
             for parameter_value in parameter_values:
@@ -499,7 +499,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_rest_api_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: RestApi,
         ) -> None:
             new_agent_generator_parameter = {}
             for index in range(0, len(parameter_values), 2):
@@ -572,7 +572,7 @@ def construct_agent_capability_command(
             value_type_flag: str,
             agent_generator_id: str,
             agent_template_option: dict,
-            client_rest_api_connection: ClientRESTAPIConnection,
+            client_rest_api_connection: RestApi,
         ) -> None:
             new_agent_generator_parameter = {}
             toggled_on_values = []
@@ -652,34 +652,32 @@ def construct_agent_capability_command(
                 f"{new_agent_generator_parameter!r}",
             )
 
-        async def run_command(
+        async def run(
             self,
-            command_context: CommandContext,
+            context: Context,
         ) -> ReturnStatus:
             try:
-                parsed_args = self.parser.parse_args(command_context.arguments)
-                client_rest_api_connection = command_context.environment[
-                    "client_rest_api_connection"
-                ]
+                parsed_args = self.parser.parse_args(context.arguments)
+                client_rest_api_connection = context.environment["rest_api"]
                 arguments = vars(parsed_args)
                 if arguments is None:
                     arguments = {}
                 _success_response = (
                     await client_rest_api_connection.task_agent_by_agent_id(
-                        agent_id=command_context.environment["agent"]["agent_id"],
+                        agent_id=context.environment["agent"]["agent_id"],
                         command=self.name,
                         arguments=arguments,
                     )
                 )
                 print_info(
-                    f"Tasked agent '{command_context.environment['agent']['name']}' "
-                    f"({command_context.environment['agent']['agent_id']})",
+                    f"Tasked agent '{context.environment['agent']['name']}' "
+                    f"({context.environment['agent']['agent_id']})",
                 )
             except SystemExit:
                 pass
 
             return ReturnStatus(
-                type=ClientReturnStatusType.CONTINUE,
+                type=ReturnStatusType.CONTINUE,
             )
 
     return AgentCapabilityCommand()

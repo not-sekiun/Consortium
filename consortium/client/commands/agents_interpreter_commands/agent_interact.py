@@ -1,25 +1,25 @@
 from argparse import ArgumentParser
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
+from consortium.client.models.return_status_models import (
     InterpreterType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
 class AgentInteractCommand(BaseCommand):
-    name = "ag-interact"
+    name = "interact"
     description = "Interact with an agent by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          ag-interact 123e4567-e89b-12d3-a456-42661417400
+          interact 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Agent Management Commands"
@@ -32,23 +32,22 @@ class AgentInteractCommand(BaseCommand):
             default=None,
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
-            agent = await client_rest_api_connection.get_agent_by_agent_id(
+            parsed_args = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
+
+            agent = await rest_api.get_agent_by_agent_id(
                 parsed_args.agent_id[0],
             )
             print_success(
-                f"Interacting with agent '{agent['name']}' ({agent['agent_id']}).",
+                f"Interacting with agent '{agent['name']}' ({agent['agent_id']})",
             )
             return ReturnStatus(
-                type=ClientReturnStatusType.SWITCH_INTERPRETER,
+                type=ReturnStatusType.SWITCH_INTERPRETER,
                 data={
                     "interpreter_type": InterpreterType.INTERACT_AGENT_INTERPRETER,
                     "agent": agent,
@@ -57,4 +56,4 @@ class AgentInteractCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

@@ -75,7 +75,7 @@ async def check_if_request_is_authenticated(request: Request, call_next) -> Resp
             auth_header = request.headers["authorization"]
             if not auth_header.startswith("Bearer "):
                 return Response(status_code=401)
-            # format of the Authorization header is: Bearer <token>
+            # format of the Authorization header is: Bearer <value>
             encoded_json_web_token = auth_header[7:]
             decoded_json_web_token = jwt.decode(
                 jwt=encoded_json_web_token,
@@ -91,7 +91,7 @@ async def check_if_request_is_authenticated(request: Request, call_next) -> Resp
         # `IndexError`: Authorization header is empty
         # `UserAccessTokenNotFoundError`: User does not exist in the users service
         # `jwt.exceptions.InvalidTokenError`: JSON Web Token is invalid, base exception
-        # for any failure on the decode call for a token
+        # for any failure on the decode call for a value
         except (
             KeyError,
             IndexError,
@@ -123,7 +123,7 @@ async def check_if_remote_host_is_allowed(request: Request, call_next) -> Respon
 
 # this middleware logs the requests to and responses from the framework's REST API along
 # with any internal server errors to the console and to log files located at
-# data/server/logs. Because it logs errors, this middleware also acts as a catch-all
+# content/server/logs. Because it logs errors, this middleware also acts as a catch-all
 # exception handler for any unhandled exceptions that occur within the server and
 # returns an error response with a 500 Internal Server Error status code when an
 # unhandled exception occurs

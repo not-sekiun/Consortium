@@ -338,7 +338,7 @@ class Plugin(BasePlugin):
                             temporary_function_identifier=random_identifier,
                         )
                 except KeyboardInterrupt:
-                    self.logger.info("Use 'exit' to exit the debug interpreter.")
+                    self.logger.info("Use 'exit' to exit the debug interpreter")
                 except Exception as exc:
                     _print_custom_formatted_exception_message(
                         exc=exc,

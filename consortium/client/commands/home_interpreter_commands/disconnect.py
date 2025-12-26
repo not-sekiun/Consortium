@@ -4,13 +4,13 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
@@ -44,16 +44,16 @@ class DisconnectCommand(BaseCommand):
             default=None,
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
+            parsed_args = self.parser.parse_args(context.arguments)
 
             if parsed_args.client_session_id is None:
                 client_session_id = str(
-                    command_context.environment["client_session"].client_session_id,
+                    context.environment["client_session"].client_session_id,
                 )
             else:
                 client_session_id = parsed_args.client_session_id
@@ -64,7 +64,7 @@ class DisconnectCommand(BaseCommand):
                 )
             except ClientSessionNotFoundError as exc:
                 print_error(str(exc))
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             client_session = (
                 client_sessions_service.get_client_session_by_client_session_id(
@@ -81,9 +81,9 @@ class DisconnectCommand(BaseCommand):
                 client_session_id=client_session_id,
             )
 
-            if client_session == command_context.environment["client_session"]:
-                return ReturnStatus(type=ClientReturnStatusType.EXIT_CLIENT_SESSION)
+            if client_session == context.environment["client_session"]:
+                return ReturnStatus(type=ReturnStatusType.EXIT_CLIENT_SESSION)
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

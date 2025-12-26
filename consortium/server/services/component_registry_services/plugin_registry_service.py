@@ -117,7 +117,7 @@ class PluginRegistryService(
             logger.warning(
                 f"Forcing plugin cancellation for plugin {component} because "
                 f"its timeout exceeded the specified duration: {timeout} "
-                f"second(s).",
+                f"second(s)",
             )
             await component.cancel()
         except Exception as exc:

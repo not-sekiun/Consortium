@@ -2,14 +2,14 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.client_rest_api import RestApi
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_agent_result_status_string_with_color,
@@ -20,14 +20,14 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 
 class ResultListCommand(BaseCommand):
-    name = "r-ls"
+    name = "r-list"
     description = "List all results, or a specific agent's results by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          r-ls  # If no filters are provided, list all results across all agent regardless of status.
-          r-ls --failure --error  # Filters can be combined; this lists all results with status FAILURE and ERROR.
-          r-ls 123e4567-e89b-12d3-a456-42661417400
+          r-list  # If no filters are provided, list all results across all agent regardless of status.
+          r-list --failure --error  # Filters can be combined; this lists all results with status FAILURE and ERROR.
+          r-list 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -63,7 +63,7 @@ class ResultListCommand(BaseCommand):
 
     @staticmethod
     async def _list_results_from_agent_id(
-        client_rest_api_connection: ClientRESTAPIConnection,
+        rest_api: RestApi,
         agent_id: str,
         agent_name: str,
         display_success: bool,
@@ -74,27 +74,25 @@ class ResultListCommand(BaseCommand):
         # If no result status is specified, list all results. If any one of the
         # result states is specified, only list those results.
         if not display_success and not display_failure and not display_error:
-            agent_results = (
-                await client_rest_api_connection.get_all_agent_results_by_agent_id(
-                    agent_id=agent_id,
-                )
+            agent_results = await rest_api.get_all_agent_results_by_agent_id(
+                agent_id=agent_id,
             )
         else:
             if display_success:
                 agent_results.extend(
-                    await client_rest_api_connection.get_all_successful_agent_results_by_agent_id(
+                    await rest_api.get_all_successful_agent_results_by_agent_id(
                         agent_id=agent_id,
                     )
                 )
             if display_failure:
                 agent_results.extend(
-                    await client_rest_api_connection.get_all_failed_agent_results_by_agent_id(
+                    await rest_api.get_all_failed_agent_results_by_agent_id(
                         agent_id=agent_id,
                     )
                 )
             if display_error:
                 agent_results.extend(
-                    await client_rest_api_connection.get_all_errored_agent_results_by_agent_id(
+                    await rest_api.get_all_errored_agent_results_by_agent_id(
                         agent_id=agent_id,
                     )
                 )
@@ -121,21 +119,19 @@ class ResultListCommand(BaseCommand):
             )
         CONSOLE.print(table, "")
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
 
             if parsed_args.agent_id is None:
-                all_agents = await client_rest_api_connection.get_all_agents()
+                all_agents = await rest_api.get_all_agents()
                 for agent in all_agents:
                     await self._list_results_from_agent_id(
-                        client_rest_api_connection=client_rest_api_connection,
+                        rest_api=rest_api,
                         agent_id=agent["agent_id"],
                         agent_name=agent["name"],
                         display_success=parsed_args.success,
@@ -143,11 +139,11 @@ class ResultListCommand(BaseCommand):
                         display_error=parsed_args.error,
                     )
             else:
-                agent = await client_rest_api_connection.get_agent_by_agent_id(
+                agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id,
                 )
                 await self._list_results_from_agent_id(
-                    client_rest_api_connection=client_rest_api_connection,
+                    rest_api=rest_api,
                     agent_id=agent["agent_id"],
                     agent_name=agent["name"],
                     display_success=parsed_args.success,
@@ -157,4 +153,4 @@ class ResultListCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

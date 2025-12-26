@@ -2,7 +2,7 @@ import asyncio
 import json
 import uuid
 from collections.abc import Generator
-from typing import IO, BinaryIO, Literal
+from typing import IO, Any, BinaryIO, Literal
 
 import jsonschema
 from loguru import logger
@@ -165,8 +165,9 @@ class PayloadsService:
     def create_payload_file(
         self,
         agent_template_id: str | uuid.UUID,
-        build_parameters: dict,
-        data: str | bytes | IO | Generator[bytes] | Generator[str],
+        build_parameters: dict[str, Any],
+        content: str | bytes | IO | Generator[bytes] | Generator[str],
+        payload_data: dict[str, Any] | None = None,
         payload_id: str | uuid.UUID | None = None,
         is_binary: bool = True,
         name: str | None = None,
@@ -185,7 +186,7 @@ class PayloadsService:
             parameters=build_parameters,
         )
         resource = self._repository_service.create_repository_file(
-            content=data,
+            content=content,
             binary=is_binary,
             name=name,
             description=description,
@@ -212,6 +213,7 @@ class PayloadsService:
             resource=resource,
             agent_template=agent_template,
             build_parameters=build_parameters,
+            payload_data=payload_data,
         )
         self._payloads[str(payload.payload_id)] = payload
         self.save_payloads_metadata()
@@ -234,8 +236,9 @@ class PayloadsService:
     def create_payload_directory(
         self,
         agent_template_id: str | uuid.UUID,
-        build_parameters: dict,
-        archive_file: bytes | Generator[bytes] | BinaryIO,
+        build_parameters: dict[str, Any],
+        content: bytes | Generator[bytes] | BinaryIO,
+        payload_data: dict[str, Any] | None = None,
         payload_id: str | uuid.UUID | None = None,
         format: Literal["zip", "tar", "gztar", "bztar", "xztar"] = "zip",
         name: str | None = None,
@@ -254,7 +257,7 @@ class PayloadsService:
             parameters=build_parameters,
         )
         resource = self._repository_service.create_repository_directory(
-            content=archive_file,
+            content=content,
             archive_file_format=format,
             name=name,
             description=description,
@@ -280,6 +283,7 @@ class PayloadsService:
             resource=resource,
             agent_template=agent_template,
             build_parameters=build_parameters,
+            payload_data=payload_data,
         )
 
         self._payloads[str(payload.payload_id)] = payload

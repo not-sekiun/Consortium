@@ -1,25 +1,60 @@
 import datetime
 import pathlib
 import uuid
+from typing import Any, get_type_hints
+
+from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
+from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
+    PayloadCreationParameterTypeError,
+)
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
 )
 
 
+class _PayloadParametersModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    agent_template: BaseAgentTemplate
+    build_parameters: dict[str, JsonValue]
+    resource: RepositoryFile | RepositoryDirectory
+    payload_data: dict[str, JsonValue]
+
+
 class Payload:
     def __init__(
         self,
         agent_template: BaseAgentTemplate,
-        build_parameters: dict,
+        build_parameters: dict[str, Any],
         resource: RepositoryFile | RepositoryDirectory,
+        payload_data: dict[str, Any] | None = None,
     ):
+        if payload_data is None:
+            payload_data = {}
+
+        try:
+            _ = _PayloadParametersModel(
+                agent_template=agent_template,
+                build_parameters=build_parameters,
+                resource=resource,
+                payload_data=payload_data,
+            )
+        except ValidationError as exc:
+            raise PayloadCreationParameterTypeError(
+                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_type=get_type_hints(_PayloadParametersModel)[
+                    exc.errors()[0]["loc"][0]
+                ],
+            ) from None
+
         self.resource = resource
         self.agent_type = agent_template.agent_type
         self.agent_template = agent_template
         self.build_parameters = build_parameters
+        self.payload_data = payload_data
 
     @property
     def payload_id(self) -> uuid.UUID:
@@ -78,4 +113,5 @@ class Payload:
             "agent_type": self.agent_type.to_json(),
             "agent_template": self.agent_template.to_json(),
             "build_parameters": self.build_parameters,
+            "payload_data": self.payload_data,
         }

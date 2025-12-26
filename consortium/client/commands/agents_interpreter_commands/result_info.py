@@ -2,14 +2,14 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.client_rest_api import RestApi
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_agent_result_status_string_with_color,
@@ -40,10 +40,10 @@ class ResultInfoCommand(BaseCommand):
 
     @staticmethod
     async def _display_result_info_from_agent_id(
-        client_rest_api_connection: ClientRESTAPIConnection,
+        rest_api: RestApi,
         result_id: str,
     ) -> None:
-        result = await client_rest_api_connection.get_agent_result_by_result_id(
+        result = await rest_api.get_agent_result_by_result_id(
             result_id=result_id,
         )
 
@@ -79,20 +79,19 @@ class ResultInfoCommand(BaseCommand):
         table.add_row("Elapsed Time", f"{result['elapsed_seconds']:.2f}s")
         CONSOLE.print(table)
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
+
             await self._display_result_info_from_agent_id(
-                client_rest_api_connection=client_rest_api_connection,
+                rest_api=rest_api,
                 result_id=parsed_args.result_id,
             )
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

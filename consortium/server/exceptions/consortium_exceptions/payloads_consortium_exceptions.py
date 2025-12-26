@@ -7,6 +7,31 @@ class PayloadsError(BaseConsortiumError):
     code = "PAYLOADS_ERROR"
 
 
+class PayloadsFrameworkError(PayloadsError):
+    code = "PAYLOAD_FRAMEWORK_ERROR"
+
+
+class PayloadCreationError(PayloadsFrameworkError):
+    code = "PAYLOAD_CREATION_ERROR"
+
+
+class PayloadCreationParameterTypeError(PayloadCreationError):
+    code = "PAYLOAD_CREATION_PARAMETER_TYPE_ERROR"
+
+    def __init__(
+        self,
+        parameter_name: str | None = None,
+        parameter_type: str | None = None,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to create the payload. The parameter "
+                f"'{parameter_name}' must be of type '{parameter_type}' in the "
+                f"payload's provided parameters."
+            ),
+        )
+
+
 class PayloadsServiceError(PayloadsError):
     code = "PAYLOADS_SERVICE_ERROR"
 

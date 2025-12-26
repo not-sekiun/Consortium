@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -38,13 +38,13 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            agent_template = command_context.environment["agent_template"]
+            parsed_args = self.parser.parse_args(context.arguments)
+            agent_template = context.environment["agent_template"]
             try:
                 option = agent_template["options"][
                     parsed_args.agent_template_option_name[0]
@@ -55,7 +55,7 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
                     f"{parsed_args.agent_template_option_name[0]} not found.",
                 )
                 return ReturnStatus(
-                    type=ClientReturnStatusType.CONTINUE,
+                    type=ReturnStatusType.CONTINUE,
                 )
 
             table = Table(title="Agent Template Option Information")
@@ -69,5 +69,5 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

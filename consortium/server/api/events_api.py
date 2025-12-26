@@ -153,7 +153,7 @@ class _WebsocketManager:
             "type": "response",
             "success": True,
             "message": message,
-            "data": data,
+            "content": data,
         }
 
     @staticmethod
@@ -381,7 +381,7 @@ async def websocket_endpoint(
     websocket: WebSocket,
 ):
     # We cannot use the user dependency here because the Request object which the
-    # `get_current_use` dependency uses to obtain the JWT token from the Authorization
+    # `get_current_use` dependency uses to obtain the JWT value from the Authorization
     # header is not available in the websocket endpoint. Instead, we access headers
     # from the Websocket object. Hence, we implement authorization and authentication
     # manually here.
@@ -400,7 +400,7 @@ async def websocket_endpoint(
         )
         access_token = decoded_json_web_token["sub"]
         _logger.debug(
-            "Received WebSocket connection request with an access token in the "
+            "Received WebSocket connection request with an access value in the "
             "Authorization header.",
         )
         user = _users_service.get_user_by_access_token(
@@ -424,7 +424,7 @@ async def websocket_endpoint(
     except UserAccessTokenNotFoundError:
         _logger.debug(
             "Failed to authorize the WebSocket connection request. The access "
-            "token provided in the JSON Web Token was not found.",
+            "value provided in the JSON Web Token was not found.",
         )
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
 

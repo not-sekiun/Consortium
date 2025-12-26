@@ -1,12 +1,12 @@
 from rich.table import Table
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
@@ -25,12 +25,12 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
     )
     group = "Agent Template Management Commands"
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            _ = self.parser.parse_args(command_context.arguments)
+            _ = self.parser.parse_args(context.arguments)
 
             table = Table(title="Agent Template Options")
             table.add_column("Option Type")
@@ -38,7 +38,7 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
             table.add_column("Description")
             table.add_column("Required")
             table.add_column("Current Value")
-            for option_name, option in command_context.environment["agent_template"][
+            for option_name, option in context.environment["agent_template"][
                 "options"
             ].items():
                 table.add_row(
@@ -54,5 +54,5 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

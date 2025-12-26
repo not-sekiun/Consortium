@@ -52,12 +52,12 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
                 + [GeneratorsCommand()]
             ),
             client_session=client_session,
-            additional_environment_variables={
+            context={
                 "agent_template": agent_template,
             },
         )
 
-    async def _update_autocomplete(self) -> None:
+    async def _initialize_autocomplete(self) -> None:
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
@@ -81,4 +81,4 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         # interpreter's commands to ensure that when it is called, the autocomplete
         # updating will account for these new commands when autocompleting the help
         # command.
-        await super()._update_autocomplete()
+        await super()._initialize_autocomplete()

@@ -32,7 +32,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         # Use relative pathing from the module to allow directory independent
         # invocation.
         server_config_filepath = (
-            consortium_root / "data" / "server" / "server_config.json"
+            consortium_root / "content" / "server" / "server_config.json"
         )
     else:
         server_config_filepath = arguments.server_config
@@ -69,7 +69,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
     # Configure logging from configuration file.
     if arguments.logging_config is None:
         logging_config_filepath = (
-            consortium_root / "data" / "server" / "logging_config.json"
+            consortium_root / "content" / "server" / "logging_config.json"
         )
     else:
         logging_config_filepath = arguments.logging_config
@@ -82,7 +82,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
                 "log_file",
                 str(
                     consortium_root
-                    / "data"
+                    / "content"
                     / "server"
                     / "logs"
                     / "{time:YYYY-MM-DDTHH-mm-ss}.log"

@@ -12,7 +12,7 @@ from consortium.client.client_config import (
     CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH,
     CONSORTIUM_CLIENT_LOGS_DIRECTORY_PATH,
 )
-from consortium.client.objects.client_objects import ClientConfig
+from consortium.client.models.client_models import ClientConfig
 
 
 async def _start_client(arguments: argparse.Namespace) -> None:
@@ -76,7 +76,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
     logger.level("CRITICAL", color="<white><RED><bold>")
     logger.level("SUCCESS", color="<bold><green>")
 
-    await Client(client_config=client_config).start()
+    await Client(client_config=client_config).run()
 
 
 def main(arguments: argparse.Namespace) -> None:

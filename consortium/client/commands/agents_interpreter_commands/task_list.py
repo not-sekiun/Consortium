@@ -2,14 +2,14 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.client_rest_api import RestApi
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_agent_task_status_string_with_color,
@@ -21,14 +21,14 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 
 class TaskListCommand(BaseCommand):
-    name = "t-ls"
+    name = "t-list"
     description = "List all tasks, or a specific agent's tasks by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          t-ls  # If no filters are provided, list all tasks across all agents regardless of status.
-          t-ls --running --completed  # Filters can be combined; this lists all tasks with status RUNNING and COMPLETED.
-          t-ls 123e4567-e89b-12d3-a456-42661417400
+          t-list  # If no filters are provided, list all tasks across all agents regardless of status.
+          t-list --running --completed  # Filters can be combined; this lists all tasks with status RUNNING and COMPLETED.
+          t-list 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -64,7 +64,7 @@ class TaskListCommand(BaseCommand):
 
     @staticmethod
     async def _list_tasks_from_agent_id(
-        client_rest_api_connection: ClientRESTAPIConnection,
+        rest_api: RestApi,
         agent_id: str,
         agent_name: str,
         display_queued: bool,
@@ -73,27 +73,25 @@ class TaskListCommand(BaseCommand):
     ) -> None:
         agent_tasks = []
         if not display_queued and not display_running and not display_completed:
-            agent_tasks = (
-                await client_rest_api_connection.get_all_agent_tasks_by_agent_id(
-                    agent_id=agent_id,
-                )
+            agent_tasks = await rest_api.get_all_agent_tasks_by_agent_id(
+                agent_id=agent_id,
             )
         else:
             if display_queued:
                 agent_tasks.extend(
-                    await client_rest_api_connection.get_all_queued_tasks_by_agent_id(
+                    await rest_api.get_all_queued_tasks_by_agent_id(
                         agent_id=agent_id,
                     )
                 )
             if display_running:
                 agent_tasks.extend(
-                    await client_rest_api_connection.get_all_running_agent_tasks_by_agent_id(
+                    await rest_api.get_all_running_agent_tasks_by_agent_id(
                         agent_id=agent_id,
                     )
                 )
             if display_completed:
                 agent_tasks.extend(
-                    await client_rest_api_connection.get_all_completed_tasks_by_agent_id(
+                    await rest_api.get_all_completed_tasks_by_agent_id(
                         agent_id=agent_id,
                     )
                 )
@@ -120,21 +118,19 @@ class TaskListCommand(BaseCommand):
             )
         CONSOLE.print(table, "")
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
 
             if parsed_args.agent_id is None:
-                all_agents = await client_rest_api_connection.get_all_agents()
+                all_agents = await rest_api.get_all_agents()
                 for agent in all_agents:
                     await self._list_tasks_from_agent_id(
-                        client_rest_api_connection=client_rest_api_connection,
+                        rest_api=rest_api,
                         agent_id=agent["agent_id"],
                         agent_name=agent["name"],
                         display_queued=parsed_args.queued,
@@ -142,11 +138,11 @@ class TaskListCommand(BaseCommand):
                         display_completed=parsed_args.completed,
                     )
             else:
-                agent = await client_rest_api_connection.get_agent_by_agent_id(
+                agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id
                 )
                 await self._list_tasks_from_agent_id(
-                    client_rest_api_connection=client_rest_api_connection,
+                    rest_api=rest_api,
                     agent_id=agent["agent_id"],
                     agent_name=agent["name"],
                     display_queued=parsed_args.queued,
@@ -156,4 +152,4 @@ class TaskListCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

@@ -70,7 +70,7 @@ class PluginsError(BaseConsortiumError):
         code: A **stable, machine-readable identifier** for the specific type of
             error that occurred.
         message: A human-readable message that describes the error.
-        detail: Any JSON-serializable data structure holding **structured, raw data**
+        detail: Any JSON-serializable content structure holding **structured, raw content**
             relevant to the error.
     """
 

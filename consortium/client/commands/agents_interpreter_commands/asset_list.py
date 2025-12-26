@@ -1,12 +1,12 @@
 from rich.table import Table
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -16,27 +16,25 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 
 class AssetListCommand(BaseCommand):
-    name = "as-ls"
+    name = "as-list"
     description = "List all assets along with their essential information"
     epilog = format_argparse_epilog(
         """
         Examples:
-          list_assets
+          as-list
         """,
     )
     group = "Asset Management Commands"
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            _ = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            _ = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
 
-            assets = await client_rest_api_connection.get_all_assets()
+            assets = await rest_api.get_all_assets()
 
             table = Table(title="Assets", highlight=True)
             table.add_column("Asset ID")
@@ -54,4 +52,4 @@ class AssetListCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

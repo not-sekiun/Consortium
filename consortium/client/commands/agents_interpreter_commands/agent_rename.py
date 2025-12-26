@@ -1,25 +1,25 @@
 from argparse import ArgumentParser
 
-from consortium.client.client_rest_api_connection import ClientRESTAPIConnection
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.client_rest_api import RestApi
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
 class AgentRenameCommand(BaseCommand):
-    name = "ag-name"
+    name = "rename"
     description = "Set the name of an agent by its agent ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          ag-name 123e4567-e89b-12d3-a456-42661417400 "New name"
+          rename 123e4567-e89b-12d3-a456-42661417400 "New name"
         """,
     )
     group = "Agent Management Commands"
@@ -38,14 +38,14 @@ class AgentRenameCommand(BaseCommand):
 
     @staticmethod
     async def _rename_agent_by_agent_id(
-        client_rest_api_connection: ClientRESTAPIConnection,
+        rest_api: RestApi,
         agent_id: str,
         new_name: str,
     ) -> None:
-        agent = await client_rest_api_connection.get_agent_by_agent_id(
+        agent = await rest_api.get_agent_by_agent_id(
             agent_id=agent_id,
         )
-        await client_rest_api_connection.update_agent_by_agent_id(
+        await rest_api.update_agent_by_agent_id(
             agent_id=agent_id,
             new_agent_attributes={"name": new_name},
         )
@@ -53,18 +53,17 @@ class AgentRenameCommand(BaseCommand):
             f"Agent '{agent['name']}' ({agent['agent_id']}) renamed to '{new_name}'",
         )
 
-    async def run_command(self, command_context: CommandContext) -> ReturnStatus:
+    async def run(self, context: Context) -> ReturnStatus:
         try:
-            parsed_commands = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_commands = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
+
             await self._rename_agent_by_agent_id(
-                client_rest_api_connection=client_rest_api_connection,
+                rest_api=rest_api,
                 agent_id=parsed_commands.agent_id[0],
                 new_name=parsed_commands.name[0],
             )
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

@@ -104,7 +104,7 @@ def test_method_not_allowed_error_response(
                 # /api/user-accounts/{user_id}. When we attempt to test GET
                 # /api/user-accounts/all with an invalid DELETE method, the server
                 # is interpreting it as a DELETE request with "all" as the path
-                # parameter. This will result in a 404 error or 422 where data
+                # parameter. This will result in a 404 error or 422 where content
                 # needs to be POSTed in the request body.
                 if response.status_code in (404, 422):
                     continue

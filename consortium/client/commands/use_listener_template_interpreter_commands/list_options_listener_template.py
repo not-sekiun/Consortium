@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import CONSOLE
@@ -30,15 +30,15 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         pass
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            _ = self.parser.parse_args(command_context.arguments)
-            listener_template_options = command_context.environment[
-                "listener_template"
-            ]["options"]
+            _ = self.parser.parse_args(context.arguments)
+            listener_template_options = context.environment["listener_template"][
+                "options"
+            ]
 
             table = Table(title="Listener Template Options")
             table.add_column("Option Type")
@@ -62,5 +62,5 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

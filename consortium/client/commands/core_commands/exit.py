@@ -1,13 +1,13 @@
 import argparse
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
@@ -28,12 +28,12 @@ class ExitCommand(BaseCommand):
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         pass
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            _ = self.parser.parse_args(command_context.arguments)
+            _ = self.parser.parse_args(context.arguments)
 
             print_info("Disconnecting all client sessions...")
             for client_session in client_sessions_service.get_all_client_sessions():
@@ -52,11 +52,11 @@ class ExitCommand(BaseCommand):
 
             print_info("Exiting...")
             return ReturnStatus(
-                type=ClientReturnStatusType.EXIT,
+                type=ReturnStatusType.EXIT_CLIENT,
             )
         except SystemExit:
             pass
 
         return ReturnStatus(
-            type=ClientReturnStatusType.CONTINUE,
+            type=ReturnStatusType.CONTINUE,
         )

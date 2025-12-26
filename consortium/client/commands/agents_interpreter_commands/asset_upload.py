@@ -3,13 +3,13 @@ import shutil
 import tempfile
 from argparse import ArgumentParser
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
@@ -30,7 +30,7 @@ class AssetUploadCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "asset_path",
-            help=("Relative or absolute path to the file or directory to upload."),
+            help="Relative or absolute path to the file or directory to upload.",
             nargs=1,
         )
         parser.add_argument(
@@ -50,20 +50,18 @@ class AssetUploadCommand(BaseCommand):
             default="",
         )
 
-    async def run_command(
+    async def run(
         self,
-        command_context: CommandContext,
+        context: Context,
     ) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            rest_api = context.client_session.rest_api
             asset_path = pathlib.Path(parsed_args.asset_path[0])
 
             if not asset_path.exists():
-                print_error(f"Asset path '{asset_path}' does not exist.")
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                print_error(f"Asset path '{asset_path}' does not exist")
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             if asset_path.is_dir():
                 print_info(f"Uploading asset directory '{asset_path}'...")
@@ -80,7 +78,7 @@ class AssetUploadCommand(BaseCommand):
                     # The actual `temp_archive_file` file path object does not include
                     # the .zip file extension.
                     with temp_archive_file.with_suffix(".zip").open("rb") as asset_file:
-                        asset = await client_rest_api_connection.upload_asset(
+                        asset = await rest_api.upload_asset(
                             file_object=asset_file,
                             is_directory=True,
                             name=parsed_args.name
@@ -91,12 +89,12 @@ class AssetUploadCommand(BaseCommand):
                         )
                 print_success(
                     f"Successfully uploaded asset directory '{asset_path}' as asset "
-                    f"'{asset['name']}' ({asset['resource_id']}).",
+                    f"'{asset['name']}' ({asset['resource_id']})",
                 )
             else:
                 print_info(f"Uploading asset file '{asset_path}'...")
                 with asset_path.open("rb") as asset_file:
-                    asset = await client_rest_api_connection.upload_asset(
+                    asset = await rest_api.upload_asset(
                         file_object=asset_file,
                         is_directory=False,
                         name=parsed_args.name if parsed_args.name else asset_path.name,
@@ -104,9 +102,9 @@ class AssetUploadCommand(BaseCommand):
                     )
                 print_success(
                     f"Successfully uploaded asset file '{asset_path}' as asset "
-                    f"'{asset['name']}' ({asset['resource_id']}).",
+                    f"'{asset['name']}' ({asset['resource_id']})",
                 )
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

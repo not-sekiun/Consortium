@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.objects.client_return_status_objects import (
-    ClientReturnStatusType,
-)
-from consortium.client.repl_framework.base_command import (
-    BaseCommand,
-    CommandContext,
+from consortium.client.models.return_status_models import (
     ReturnStatus,
+    ReturnStatusType,
+)
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.options_utils import (
@@ -96,12 +96,10 @@ class SetGeneratorParameterCommand(BaseCommand):
             metavar="VALUE_TYPE",
         )
 
-    async def run_command(self, command_context: CommandContext) -> ReturnStatus:
+    async def run(self, context: Context) -> ReturnStatus:
         try:
-            parsed_args = self.parser.parse_args(command_context.arguments)
-            client_rest_api_connection = command_context.environment[
-                "client_rest_api_connection"
-            ]
+            parsed_args = self.parser.parse_args(context.arguments)
+            client_rest_api_connection = context.environment["rest_api"]
             agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_args.agent_generator_id[0],
             )
@@ -118,7 +116,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                     f"Agent template for agent generator '{agent_generator['name']}' "
                     f"({agent_generator['agent_generator_id']}) not found",
                 )
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             try:
                 option = agent_template_options[parsed_args.parameter_name[0]]
@@ -127,7 +125,7 @@ class SetGeneratorParameterCommand(BaseCommand):
                     f"Agent generator parameter '{parsed_args.parameter_name[0]}' does not "
                     f"exist",
                 )
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             try:
                 parameter_name, parameter_value = (
@@ -148,8 +146,8 @@ class SetGeneratorParameterCommand(BaseCommand):
                 )
             except ValueError as exc:
                 print_error(exc)
-                return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ClientReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

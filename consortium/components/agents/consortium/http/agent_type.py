@@ -82,13 +82,13 @@ sleep_capability = request_response_capability(
 
 def ping_task_handler(agent, task_message, context):
     context.task_id = task_message.task_id
-    context.start = datetime.now()
+    context.run = datetime.now()
     task_message = remove_task_message_arguments(task_message, ["timeout"])
     return task_message
 
 
 def ping_result_handler(agent, result_message, context):
-    delta = datetime.now() - context.start
+    delta = datetime.now() - context.run
     result_message.message = (
         f"Agent returned ping response. Latency: {delta.total_seconds():.3f} seconds"
     )
@@ -96,7 +96,7 @@ def ping_result_handler(agent, result_message, context):
 
 
 def ping_timeout_handler(agent, context):
-    delta = datetime.now() - context.start
+    delta = datetime.now() - context.run
     result_message = AgentResultMessageModel(
         task_id=context.task_id,
         success=False,

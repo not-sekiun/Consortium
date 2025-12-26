@@ -9,5 +9,16 @@
         "datetime_created": "2025-12-17T06:49:51.339370",
         "datetime_modified": "2025-12-17T06:49:51.338558",
         "is_directory": false
+    },
+    "0accc462-0c3b-453f-beb8-88db53e47fee": {
+        "resource_id": "0accc462-0c3b-453f-beb8-88db53e47fee",
+        "name": "Are you kidding me (feat. mami).mp3",
+        "description": "",
+        "size": 3850221,
+        "exists_on_disk": true,
+        "md5_checksum": "e4c178fbcc8f972c1b54ac58c5529ea9",
+        "datetime_created": "2025-12-26T16:27:09.605877",
+        "datetime_modified": "2025-12-26T16:27:09.604457",
+        "is_directory": false
     }
 }

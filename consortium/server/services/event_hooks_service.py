@@ -242,7 +242,7 @@ class EventHooksService:
         )
         for path in skipped:
             self._logger.info(
-                "- Skipped loading plugin from '{}' because it was disabled.",
+                "- Skipped loading plugin from '{}' because it was disabled",
                 str(path),
             )
         if errored:
@@ -266,7 +266,7 @@ class EventHooksService:
 
         self._logger.info(
             "Loaded event hooks from '{}' ({} event hook(s) loaded, {} event "
-            "hook(s) skipped, {} event hook(s) failed to load).",
+            "hook(s) skipped, {} event hook(s) failed to load)",
             str(self._event_hooks_directory),
             len(retrieved) - failed_to_load,
             len(skipped),
@@ -288,7 +288,7 @@ class EventHooksService:
                 unloaded_event_hooks += 1
 
         self._logger.info(
-            "Unloaded framework event hooks ({} event hook(s) unloaded).",
+            "Unloaded framework event hooks ({} event hook(s) unloaded)",
             unloaded_event_hooks,
         )
 
@@ -299,7 +299,7 @@ class EventHooksService:
         self._logger.info("Reloading framework event hooks...")
         self.unload_framework_event_hooks()
         await self.load_framework_event_hooks()
-        self._logger.info("Reloaded framework event hooks.")
+        self._logger.info("Reloaded framework event hooks")
 
     @log_and_propagate_error_on_service_method
     def get_event_hook_by_event_hook_id(
@@ -315,7 +315,7 @@ class EventHooksService:
     def get_all_event_hooks(self) -> list[BaseEventHook]:
         event_hooks = self._event_hook_registry_service.get_all_components()
         self._logger.debug(
-            "Retrieved all event hooks ({} event hook(s) retrieved).",
+            "Retrieved all event hooks ({} event hook(s) retrieved)",
             len(event_hooks),
         )
         return event_hooks
@@ -324,7 +324,7 @@ class EventHooksService:
     def get_all_event_types(self) -> list[EventType]:
         event_types = list(EventType)
         self._logger.debug(
-            "Retrieved all event types ({} event type(s) retrieved).",
+            "Retrieved all event types ({} event type(s) retrieved)",
             event_types,
         )
         return event_types

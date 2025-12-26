@@ -1,39 +1,39 @@
-from consortium.client.commands.use_listener_template_interpreter_commands.create_listener import (
-    CreateListenerCommand,
-)
-from consortium.client.commands.use_listener_template_interpreter_commands.info_listener_template import (
-    InfoListenerTemplateCommand,
-)
 from consortium.client.commands.use_listener_template_interpreter_commands.info_listener_template_option import (
     InfoListenerTemplateOptionsCommand,
-)
-from consortium.client.commands.use_listener_template_interpreter_commands.launch_listener import (
-    LaunchListenerCommand,
 )
 from consortium.client.commands.use_listener_template_interpreter_commands.list_options_listener_template import (
     ListOptionsListenerTemplateCommand,
 )
-from consortium.client.commands.use_listener_template_interpreter_commands.reset_listener_template_option import (
-    ResetListenerTemplateOptionCommand,
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_create import (
+    ListenerCreateCommand,
 )
-from consortium.client.commands.use_listener_template_interpreter_commands.set_listener_template_option import (
-    SetListenerTemplateOptionCommand,
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_launch import (
+    ListenerLaunchCommand,
 )
-from consortium.client.commands.use_listener_template_interpreter_commands.unset_listener_template_option import (
-    UnsetListenerTemplateOptionCommand,
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_info import (
+    ListenerTemplateInfoCommand,
 )
-from consortium.client.commands.use_listener_template_interpreter_commands.use_listener_template import (
-    UseListenerTemplateCommand,
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_reset_option import (
+    ListenerTemplateResetOptionCommand,
+)
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_set_option import (
+    ListenerTemplateSetOptionCommand,
+)
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_unset_option import (
+    ListenerTemplateUnsetOptionCommand,
+)
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_use import (
+    ListenerTemplateUseCommand,
 )
 
 USE_LISTENER_TEMPLATE_INTERPRETER_COMMANDS = [
-    CreateListenerCommand(),
-    InfoListenerTemplateCommand(),
+    ListenerCreateCommand(),
+    ListenerTemplateInfoCommand(),
     InfoListenerTemplateOptionsCommand(),
-    LaunchListenerCommand(),
+    ListenerLaunchCommand(),
     ListOptionsListenerTemplateCommand(),
-    ResetListenerTemplateOptionCommand(),
-    SetListenerTemplateOptionCommand(),
-    UnsetListenerTemplateOptionCommand(),
-    UseListenerTemplateCommand(),
+    ListenerTemplateResetOptionCommand(),
+    ListenerTemplateSetOptionCommand(),
+    ListenerTemplateUnsetOptionCommand(),
+    ListenerTemplateUseCommand(),
 ]
