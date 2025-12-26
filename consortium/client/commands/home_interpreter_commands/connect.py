@@ -145,11 +145,11 @@ class ConnectCommand(BaseCommand):
                     )
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)
                 except json.decoder.JSONDecodeError:
-                    print_error("The config file does not contain valid JSON content")
+                    print_error("The config file does not contain valid JSON data")
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)
                 except jsonschema.ValidationError as exc:
                     print_error(
-                        f"The config file's JSON content is not of a valid server config "
+                        f"The config file's JSON data is not of a valid server config "
                         f"format: {exc}",
                     )
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)

@@ -153,9 +153,9 @@ class Listener(BaseListener):
                         "properties": {
                             "success": {"type": "boolean"},
                             "message": {"type": "string"},
-                            "content": {"type": "object"},
+                            "data": {"type": "object"},
                         },
-                        "required": ["success", "message", "content"],
+                        "required": ["success", "message", "data"],
                         "additionalProperties": False,
                     },
                 },
@@ -180,10 +180,10 @@ class Listener(BaseListener):
                 task_id = json_request_body["task_id"]
                 success = json_request_body["result"]["success"]
                 message = json_request_body["result"]["message"]
-                data = json_request_body["result"]["content"]
+                data = json_request_body["result"]["data"]
             except (json.JSONDecodeError, jsonschema.ValidationError, KeyError):
                 self.logger.warning(
-                    "Unidentified client {} sent malformed agent result content: {}. "
+                    "Unidentified client {} sent malformed agent result data: {}. "
                     "Responded with 401 Unauthorized.",
                     request.remote,
                     json_request_body,

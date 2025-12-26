@@ -10,7 +10,7 @@ from consortium.client.commands.interact_agent_interpreter_commands import (
 
 # Not imported from the interact_agents_interpreter_commands parent module since this
 # command defines a special factory function that dynamically constructs commands
-# objects based on externally provided content.
+# objects based on externally provided data.
 from consortium.client.commands.interact_agent_interpreter_commands.agent_capability_command import (
     construct_agent_capability_command,
 )
@@ -166,7 +166,7 @@ class InteractAgentInterpreter(Interpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        task = event["content"]["task"]
+        task = event["data"]["task"]
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -182,7 +182,7 @@ class InteractAgentInterpreter(Interpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        result = event["content"]["result"]
+        result = event["data"]["result"]
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -192,7 +192,7 @@ class InteractAgentInterpreter(Interpreter):
             nested_completer_dict,
         )
 
-        if event["content"]["agent_id"] == self.environment["agent"]["agent_id"]:
+        if event["data"]["agent_id"] == self.environment["agent"]["agent_id"]:
             print_info(
                 f"Received result with result ID '{result['result_id']}' for "
                 f"task with task ID '{result['task_id']}':\n{result['message']}",
@@ -202,7 +202,7 @@ class InteractAgentInterpreter(Interpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        agent = (event["content"],)
+        agent = event["data"]
         print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in")
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(

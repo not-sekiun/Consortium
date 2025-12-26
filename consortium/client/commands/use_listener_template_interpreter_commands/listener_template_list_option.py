@@ -15,14 +15,15 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 
 class ListOptionsListenerTemplateCommand(BaseCommand):
-    name = "list_options_listener_template"
+    name = "opt-list"
     description = (
-        "List all options for the currently selected listener template being used."
+        "List all options for the current listener template along with their "
+        "essential information"
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-          list_options_listener_template
+          opt-list
         """,
     )
     group = "Listener Template Management Commands"
@@ -40,13 +41,13 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
                 "options"
             ]
 
-            table = Table(title="Listener Template Options")
+            table = Table(title="Listener Template Options", highlight=True)
             table.add_column("Option Type")
             table.add_column("Name")
             table.add_column("Description")
             table.add_column("Required")
             table.add_column("Current Value")
-            for option_name, option in listener_template_options.items():
+            for option_name, option in sorted(listener_template_options.items()):
                 table.add_row(
                     option["option_type"],
                     option_name,

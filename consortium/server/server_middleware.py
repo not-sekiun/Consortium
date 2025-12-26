@@ -123,7 +123,7 @@ async def check_if_remote_host_is_allowed(request: Request, call_next) -> Respon
 
 # this middleware logs the requests to and responses from the framework's REST API along
 # with any internal server errors to the console and to log files located at
-# content/server/logs. Because it logs errors, this middleware also acts as a catch-all
+# data/server/logs. Because it logs errors, this middleware also acts as a catch-all
 # exception handler for any unhandled exceptions that occur within the server and
 # returns an error response with a 500 Internal Server Error status code when an
 # unhandled exception occurs

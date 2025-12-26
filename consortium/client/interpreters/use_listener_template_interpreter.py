@@ -65,7 +65,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         for key, value in {
             command: dict.fromkeys(listener_template["options"])
             for command in [
-                "info_listener_template_option",
+                "opt-info",
                 "set",
                 "reset",
                 "unset",

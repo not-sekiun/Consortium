@@ -110,7 +110,7 @@ logs.
 ```json title="logging_config.json"
 {
     "level": "INFO",
-    "log_file": "content/server/logs/{time}.log",
+    "log_file": "data/server/logs/{time}.log",
     "rotation": null,
     "retention": 1,
     "colorize": true
@@ -196,7 +196,7 @@ custom client configuration file.
 
 ```shell
 Consortium > connect -c path/to/custom_client_config.json
-Consortium > connect -c  # Connect using the default client configuration file at `content/client/client_config.json`.
+Consortium > connect -c  # Connect using the default client configuration file at `data/client/client_config.json`.
 ```
 
 Here we can just attempt to connect to a server using the default client configuration

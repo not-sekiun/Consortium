@@ -258,7 +258,7 @@ def update_own_user_account(
             consortium_exception=exc,
         ) from None
 
-    # Write the updated user accounts content to disk.
+    # Write the updated user accounts data to disk.
     try:
         _user_accounts_service.write_framework_user_accounts()
     except consortium_excs.UserAccountsFileError:
@@ -324,7 +324,7 @@ def update_user_account_by_user_account_id(
             user_account_id=user_account_id,
         ) from None
 
-    # Write the updated user accounts content to disk.
+    # Write the updated user accounts data to disk.
     try:
         _user_accounts_service.write_framework_user_accounts()
     except consortium_excs.UserAccountsFileError:
@@ -365,7 +365,7 @@ async def delete_user_account_by_user_account_id(
             user_account_id=user_account_id,
         ) from None
 
-    # Write the updated user accounts content to disk.
+    # Write the updated user accounts data to disk.
     try:
         _user_accounts_service.write_framework_user_accounts()
     except consortium_excs.UserAccountsFileError:

@@ -70,7 +70,7 @@ def register_server_exception_handlers(app: FastAPI) -> None:
             content=UnprocessableEntityError(detail=exc.errors()).to_json(),
         )
 
-    # All the custom exceptions that contain the error content to return to the client
+    # All the custom exceptions that contain the error data to return to the client
     # inherit from BaseApiError, so we can use this exception handler to handle all
     # of them at once
     @app.exception_handler(BaseApiError)

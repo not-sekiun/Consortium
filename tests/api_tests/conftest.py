@@ -45,7 +45,7 @@ def validate_user_accounts_json_file_before_tests():
 
     # Pytest should be run at project root, so we can assume this when constructing the
     # path to the config file.
-    with open("content/server/user_accounts.json") as file:
+    with open("data/server/user_accounts.json") as file:
         user_accounts_json_data = json.load(file)
 
     # The order of the user accounts in the JSON file does not matter
@@ -65,7 +65,7 @@ def validate_server_config_json_file_before_tests():
         "server_header": None,
     }
 
-    with open("content/server/server_config.json") as file:
+    with open("data/server/server_config.json") as file:
         server_config_json_data = json.load(file)
 
     # The order of the server configurations in the JSON file does not matter
@@ -75,7 +75,7 @@ def validate_server_config_json_file_before_tests():
 
 @pytest.fixture(scope="package")
 def admin_session():
-    # login as an admin using form content to get a JSON web value, then create a session
+    # login as an admin using form data to get a JSON web value, then create a session
     # that automatically adds the JSON web value to all requests
     session = requests.Session()
     response = validate_response(
@@ -94,7 +94,7 @@ def admin_session():
 
 @pytest.fixture(scope="package")
 def operator_session():
-    # login as an operator using form content to get a JSON web value, then create a
+    # login as an operator using form data to get a JSON web value, then create a
     # session that automatically adds the JSON web value to all requests
     session = requests.Session()
     response = validate_response(
@@ -113,7 +113,7 @@ def operator_session():
 
 @pytest.fixture(scope="package")
 def spectator_session():
-    # login as an operator using form content to get a JSON web value, then create a
+    # login as an operator using form data to get a JSON web value, then create a
     # session that automatically adds the JSON web value to all requests
     session = requests.Session()
     response = validate_response(
@@ -256,5 +256,5 @@ def restore_user_accounts_file_after_tests():
         {"username": "spectator", "password": "spectator", "role": "SPECTATOR"},
     ]
     # The order of the user accounts in the JSON file does not matter
-    with open("content/server/user_accounts.json", "w") as file:
+    with open("data/server/user_accounts.json", "w") as file:
         json.dump(default_user_accounts, file, indent=4)

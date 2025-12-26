@@ -277,7 +277,7 @@ class Plugin(BasePlugin):
                         exec(expression, globals_dict)
                 # When this is raised, this indicates that the user has started a
                 # statement that requires an indent. We enter a loop where we allow
-                # the user to arbitrarily provide multiline content.
+                # the user to arbitrarily provide multiline data.
                 except IndentationError as exc:
                     # Kinda hacky way to differentiate between different types of
                     # indentation errors. We only want to catch the one that indicates

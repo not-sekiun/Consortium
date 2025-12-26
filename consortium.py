@@ -40,7 +40,7 @@ def main():
         help=(
             "The filepath of the server configuration file to use when starting the "
             "server. By default the server configuration file from "
-            "`content/server/server_config.json` is used."
+            "`data/server/server_config.json` is used."
         ),
         nargs="?",
         default=None,
@@ -51,7 +51,7 @@ def main():
         help=(
             "The filepath of the logging configuration file to use when starting the "
             "server. By default the logging configuration file from "
-            "`content/server/logging_config.json` is used."
+            "`data/server/logging_config.json` is used."
         ),
         nargs="?",
         default=None,
@@ -99,7 +99,7 @@ def main():
         help=(
             "The filepath of the client configuration file to use when starting the "
             "server. By default the client configuration file from "
-            "`content/client/client_config.json` is used."
+            "`data/client/client_config.json` is used."
         ),
         nargs="?",
         default=None,

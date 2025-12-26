@@ -11,7 +11,7 @@ class ErrorModel(BaseModel):
     detail: Any
 
 
-# These models are defined for api endpoints that do not respond with any content for an
+# These models are defined for api endpoints that do not respond with any data for an
 # operation. For example, sending a DELETE or PUT to /api/listeners/{listener_id}. Here
 # the response is binary, either the operation succeeded or it failed
 class SuccessResponseModel(BaseModel):

@@ -49,8 +49,8 @@ class Plugin(BasePlugin):
                 async with session.get(latest_release_json_file_url) as response:
                     if response.status != 200:
                         self.logger.error(
-                            "Failed to retrieve latest release content. HTTP response status "
-                            "code '{}' returned when querying for new release content.",
+                            "Failed to retrieve latest release data. HTTP response status "
+                            "code '{}' returned when querying for new release data.",
                             response.status,
                         )
                         return None
@@ -58,12 +58,12 @@ class Plugin(BasePlugin):
                     return json.loads(raw_data)
             except aiohttp.ClientError as exc:
                 self.logger.error(
-                    f"Failed to retrieve latest release content: {exc}",
+                    f"Failed to retrieve latest release data: {exc}",
                 )
                 return None
             except json.JSONDecodeError as exc:
                 self.logger.error(
-                    f"Failed to parse latest release content: {exc}",
+                    f"Failed to parse latest release data: {exc}",
                 )
                 return None
 

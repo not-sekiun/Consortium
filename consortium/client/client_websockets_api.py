@@ -31,7 +31,7 @@ _websockets_api_action_response_json_schema = {
         "type": {"type": "string", "enum": ["response"]},
         "success": {"type": "boolean"},
         "message": {"type": "string"},
-        "content": {"type": "object"},
+        "data": {"type": "object"},
     },
 }
 _websockets_api_event_response_json_schema = {
@@ -39,7 +39,7 @@ _websockets_api_event_response_json_schema = {
     "properties": {
         "type": {"type": "string", "enum": ["event"]},
         "event_type": {"type": "string"},
-        "content": {"type": "object"},
+        "data": {"type": "object"},
     },
 }
 
@@ -140,16 +140,16 @@ class WebsocketsApi:
         self._event_handlers[event_type].remove(event_handler)
 
     async def get_all_events(self):
-        return (await self._send_and_recv_message(action="get_all_events"))["content"]
+        return (await self._send_and_recv_message(action="get_all_events"))["data"]
 
     async def get_subscribed_events(self):
         return (await self._send_and_recv_message(action="get_subscribed_events"))[
-            "content"
+            "data"
         ]
 
     async def get_unsubscribed_events(self):
         return (await self._send_and_recv_message(action="get_unsubscribed_events"))[
-            "content"
+            "data"
         ]
 
     async def get_all_event_handlers(

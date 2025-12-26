@@ -21,7 +21,7 @@ class ListenerTemplate(BaseListenerTemplate):
     options = {
         SingleValueOption(
             name="name",
-            description="The name of the listener being created.",
+            description="Name of the listener being created.",
             required=True,
             default_value="",
             value_type=str,
@@ -29,8 +29,8 @@ class ListenerTemplate(BaseListenerTemplate):
         SingleValueOption(
             name="local_host",
             description=(
-                "The local host interface for the listener to bind to when "
-                "listening for agents."
+                "Local host interface for the listener to bind to when listening for "
+                "agents."
             ),
             required=True,
             default_value="0.0.0.0",
@@ -40,7 +40,7 @@ class ListenerTemplate(BaseListenerTemplate):
         SingleValueOption(
             name="local_port",
             description=(
-                "The local port for the listener to bind to when listening for agents."
+                "Local port for the listener to bind on when listening for agents."
             ),
             required=True,
             default_value=1337,

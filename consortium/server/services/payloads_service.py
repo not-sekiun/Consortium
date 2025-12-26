@@ -79,8 +79,10 @@ class PayloadsService:
                     "properties": {
                         "agent_template": {"type": "string"},
                         "build_parameters": {"type": "object"},
+                        "payload_data": {"type": "object"},
                     },
-                    "required": ["agent_template", "build_parameters"],
+                    "required": ["agent_template", "build_parameters", "payload_data"],
+                    "additionalProperties": False,
                 },
             },
         }
@@ -114,6 +116,7 @@ class PayloadsService:
                             resource=resource,
                             agent_template=agent_template,
                             build_parameters=payload_metadata["build_parameters"],
+                            payload_data=payload_metadata["payload_data"],
                         )
                     except RepositoryResourceNotFoundError:
                         self._logger.warning(
@@ -142,6 +145,7 @@ class PayloadsService:
                 "agent_type": payload.agent_type.name,
                 "agent_template": payload.agent_template.agent_template_id,
                 "build_parameters": payload.build_parameters,
+                "payload_data": payload.payload_data,
             }
             for payload_id, payload in self._payloads.items()
         }

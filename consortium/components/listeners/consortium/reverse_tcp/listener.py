@@ -83,9 +83,9 @@ class _AgentHandler:
         #     "properties": {
         #         "success": {"type": "boolean"},
         #         "message": {"type": "string"},
-        #         "content": {"type": "object"},
+        #         "data": {"type": "object"},
         #     },
-        #     "required": ["success", "message", "content"],
+        #     "required": ["success", "message", "data"],
         #     "additionalProperties": False,
         # }
         # binary_header_payload_json_schema = {

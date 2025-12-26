@@ -139,7 +139,7 @@ def construct_agent_capability_command(
             for name, option in options.items():
                 # Configure the number of arguments that the parser expects for a
                 # particular agent capability based on the option type in the
-                # options json content.
+                # options json data.
                 if option["option_type"] in (
                     _OptionType.SINGLE_VALUE_OPTION,
                     _OptionType.CHOICE_VALUE_OPTION,
@@ -159,7 +159,7 @@ def construct_agent_capability_command(
                     )
 
                 # Determine the type of the argument based on the value type in the
-                # options json content.
+                # options json data.
                 string_to_type_map = {
                     _OptionValueType.STRING: str,
                     _OptionValueType.INTEGER: int,
@@ -214,7 +214,7 @@ def construct_agent_capability_command(
                     continue
 
                 # Add the arguments to the parser for every other kind of option
-                # specified in the agent capability json content.
+                # specified in the agent capability json data.
                 if number_of_required_options == 1 and option["required"]:
                     parser.add_argument(
                         name,

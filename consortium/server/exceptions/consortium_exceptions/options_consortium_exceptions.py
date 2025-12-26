@@ -39,7 +39,7 @@ class OptionsFrameworkError(OptionsError):
 
 class OptionValueValidationError(OptionsFrameworkError):
     """
-    Raised when a provided value for an option fails content validation when setting the
+    Raised when a provided value for an option fails data validation when setting the
     value through the option's `set_option_value()` method or when explicitly validating
     the value through the option's `validate_option_value()` method.
     """
@@ -97,7 +97,7 @@ class EmptyOptionNameError(OptionConfigurationError):
 class InvalidDefaultValueError(OptionConfigurationError):
     """
     Raised when the default value provided to an option through its `default_value`
-    parameter fails content validation through the option's `validate_value()` method
+    parameter fails data validation through the option's `validate_value()` method
     during option configuration.
     """
 

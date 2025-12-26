@@ -74,7 +74,7 @@ class ConnectedAgentsService:
             local_host_address (str | None): The local host address of the agent.
             hostname (str | None): The hostname of the system that the agent is running
                 on.
-            agent_data (dict[str, Any] | None): A dictionary of any additional content that
+            agent_data (dict[str, Any] | None): A dictionary of any additional data that
                 the agent may send to the listener.
 
         Returns:

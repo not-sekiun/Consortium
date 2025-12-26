@@ -86,7 +86,7 @@ class AgentsInterpreter(Interpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        task = event["content"]["task"]
+        task = event["data"]["task"]
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -100,7 +100,7 @@ class AgentsInterpreter(Interpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        result = event["content"]["result"]
+        result = event["data"]["result"]
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -114,7 +114,7 @@ class AgentsInterpreter(Interpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        agent = event["content"]
+        agent = event["data"]
         print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in")
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(

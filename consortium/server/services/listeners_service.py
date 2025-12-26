@@ -155,7 +155,7 @@ class ListenersService:
         listener_id = str(listener_id)
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
-        # Changed dictionary is used to track what attributes were updated. This content
+        # Changed dictionary is used to track what attributes were updated. This data
         # is sent as part of the `LISTENER_UPDATED` event.
         updated = {}
         # Update parameters first before updating name and description. This is because

@@ -11,9 +11,9 @@ class EventHook(BaseEventHook):
     label = "consortium.event_hooks.webhook_sender"
     name = "Webhook sender"
     description = (
-        "This event hook forwards event content for any set of specific events to any set "
+        "This event hook forwards event data for any set of specific events to any set "
         "of arbitrarily specified webhooks. The particular events it listens for and "
-        "webhooks it sends content to are configured through the `config.json` file in "
+        "webhooks it sends data to are configured through the `config.json` file in "
         "the event hook's project folder. Currently supports Discord, Slack, and "
         "generic HTTP POST webhooks."
     )
@@ -39,7 +39,7 @@ class EventHook(BaseEventHook):
             self.logger.error(
                 "Failed to load webhook sender event hook configuration "
                 "file. The configuration file does not contain valid JSON "
-                "content.",
+                "data.",
             )
             return
 
@@ -114,7 +114,7 @@ class EventHook(BaseEventHook):
                         return
                     else:
                         self.logger.warning(
-                            "Failed to send event content to webhook at '{}'. "
+                            "Failed to send event data to webhook at '{}'. "
                             "Received unexpected status code {}. "
                             "Retrying... (Attempt {}/{})",
                             webhook_url,
@@ -124,7 +124,7 @@ class EventHook(BaseEventHook):
                         )
             except aiohttp.ClientError as exc:
                 self.logger.warning(
-                    "Failed to send event content to webhook at '{}'. "
+                    "Failed to send event data to webhook at '{}'. "
                     "Error: {}. Retrying... (Attempt {}/{})",
                     webhook_url,
                     str(exc),
@@ -139,7 +139,7 @@ class EventHook(BaseEventHook):
                 event_dict = event.to_json()
                 stringified_event_dict = {
                     "event_type": str(event_dict["event_type"]),
-                    "content": event_dict["content"],
+                    "data": event_dict["data"],
                 }  # convert `event_type` enum to str
                 if webhook["platform"] == "discord":
                     data = {"content": str(stringified_event_dict)}

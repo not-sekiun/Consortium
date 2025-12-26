@@ -153,7 +153,7 @@ class _WebsocketManager:
             "type": "response",
             "success": True,
             "message": message,
-            "content": data,
+            "data": data,
         }
 
     @staticmethod

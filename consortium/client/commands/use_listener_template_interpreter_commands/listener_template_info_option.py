@@ -18,14 +18,14 @@ from consortium.client.utils.printer_utils import CONSOLE, print_error
 
 
 class InfoListenerTemplateOptionsCommand(BaseCommand):
-    name = "info_template_option"
+    name = "opt-info"
     description = (
-        "Display detailed information about a specific listener template option."
+        "Display information about a specific listener template option by its name"
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-          info_listener_template_option local_host
+          opt-info local_host
         """,
     )
     group = "Listener Template Management Commands"
@@ -33,10 +33,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "listener_template_option_name",
-            help=(
-                "The name of the listener template option to display detailed "
-                "information for."
-            ),
+            help=("Name of the listener template option to display information for."),
             nargs=1,
         )
 
@@ -47,6 +44,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             listener_template = context.environment["listener_template"]
+
             try:
                 option = listener_template["options"][
                     parsed_args.listener_template_option_name[0]
@@ -59,16 +57,12 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
                 return ReturnStatus(
                     type=ReturnStatusType.CONTINUE,
                 )
-
-            table = Table(title="Listener Template Option Information")
+            table = Table(title="Listener Template Option Information", highlight=True)
             table.add_column("Information")
             table.add_column("Data")
             for key, value in option.items():
                 table.add_row(format_snake_case_to_title(key), str(value))
-
-            CONSOLE.print(
-                table,
-            )
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

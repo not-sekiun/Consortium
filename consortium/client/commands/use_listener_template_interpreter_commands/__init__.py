@@ -1,9 +1,3 @@
-from consortium.client.commands.use_listener_template_interpreter_commands.info_listener_template_option import (
-    InfoListenerTemplateOptionsCommand,
-)
-from consortium.client.commands.use_listener_template_interpreter_commands.list_options_listener_template import (
-    ListOptionsListenerTemplateCommand,
-)
 from consortium.client.commands.use_listener_template_interpreter_commands.listener_create import (
     ListenerCreateCommand,
 )
@@ -12,6 +6,12 @@ from consortium.client.commands.use_listener_template_interpreter_commands.liste
 )
 from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_info import (
     ListenerTemplateInfoCommand,
+)
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_info_option import (
+    InfoListenerTemplateOptionsCommand,
+)
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_list_option import (
+    ListOptionsListenerTemplateCommand,
 )
 from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_reset_option import (
     ListenerTemplateResetOptionCommand,

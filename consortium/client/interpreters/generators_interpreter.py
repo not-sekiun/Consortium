@@ -102,7 +102,7 @@ class GeneratorsInterpreter(Interpreter):
             nested_completer_dict,
         )
 
-    # We don't actually care about the event content so we just ignore it. We just need to
+    # We don't actually care about the event data so we just ignore it. We just need to
     # know a change happened so that we can update the autocompleter.
     async def _agent_generator_created_or_removed_event_handler(
         self,

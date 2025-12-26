@@ -18,7 +18,7 @@ def _validate_all_url_endpoints_unique(
     parameters: JSONObject,
 ) -> None:
     """
-    Validates that the sets of the tasks, results and registration URL paths are
+    Validates that the sets of the tasks, results, and registration URL paths are
     mutually disjoint.
     """
     all_url_paths = (
@@ -30,8 +30,8 @@ def _validate_all_url_endpoints_unique(
     for element in all_url_paths:
         if element in unique_elements:
             raise OptionValueValidationError(
-                f"The provided URL path '{element}' is not unique among the the tasks, "
-                f"results and registration URL paths.",
+                f"The provided URL path '{element}' is not unique among the tasks, "
+                f"results, and registration URL paths.",
             )
         unique_elements.add(element)
 
@@ -51,7 +51,7 @@ class ListenerTemplate(BaseListenerTemplate):
     options = {
         SingleValueOption(
             name="name",
-            description="The name of the listener being created.",
+            description="Name of the listener being created.",
             required=True,
             default_value="",
             value_type=str,
@@ -59,7 +59,7 @@ class ListenerTemplate(BaseListenerTemplate):
         SingleValueOption(
             name="local_host",
             description=(
-                "The local host interface for the listener to bind to when "
+                "Local host interface for the listener to bind to when "
                 "listening for agents."
             ),
             required=True,
@@ -70,7 +70,7 @@ class ListenerTemplate(BaseListenerTemplate):
         SingleValueOption(
             name="local_port",
             description=(
-                "The local port for the listener to bind to when listening for agents."
+                "Local port for the listener to bind on when listening for agents."
             ),
             required=True,
             default_value=1337,
@@ -80,10 +80,7 @@ class ListenerTemplate(BaseListenerTemplate):
         ),
         ListValueOption(
             name="tasks_url_paths",
-            description=(
-                "A list of available URL paths for agents to randomly query when "
-                "obtaining tasks to run."
-            ),
+            description=("List of available URL paths for agents to query tasks from."),
             required=True,
             default_value=["/tasks"],
             allow_duplicates=False,
@@ -93,8 +90,7 @@ class ListenerTemplate(BaseListenerTemplate):
         ListValueOption(
             name="results_url_paths",
             description=(
-                "A list of available URL paths for agents to randomly submit to "
-                "when returning the results of finished tasks."
+                "List of available URL paths for agents to submit results to."
             ),
             required=True,
             default_value=["/results"],
@@ -105,8 +101,8 @@ class ListenerTemplate(BaseListenerTemplate):
         ListValueOption(
             name="registration_url_paths",
             description=(
-                "A list of available URL paths for the agent to randomly query "
-                "when registering with the listener."
+                "List of available URL paths for agents to submit data to when "
+                "registering with the listener."
             ),
             required=True,
             default_value=["/register"],

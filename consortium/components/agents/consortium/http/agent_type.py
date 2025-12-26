@@ -190,7 +190,7 @@ shell_capability = request_response_capability(
 
 
 class AgentType(BaseAgentType):
-    name = "eula"
+    name = "eula_multi"
     agent_capabilities = {
         disconnect_capability,
         kill_capability,

@@ -191,7 +191,7 @@ class AgentGeneratorsService:
             agent_generator_id=agent_generator_id
         )
 
-        # Changed dictionary is used to track what attributes were updated. This content
+        # Changed dictionary is used to track what attributes were updated. This data
         # is sent as part of the `AGENT_GENERATOR_UPDATED` event.
         updated = {}
 
