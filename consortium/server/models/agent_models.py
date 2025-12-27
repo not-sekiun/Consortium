@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, computed_field
 
-from consortium.server.models.c2_types_models import AgentTypeModel
+from consortium.server.models.c2_type_models import AgentTypeModel
 
 
 class AgentTaskStatus(StrEnum):

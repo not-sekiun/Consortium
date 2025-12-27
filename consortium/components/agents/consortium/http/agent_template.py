@@ -63,25 +63,20 @@ class AgentTemplate(BaseAgentTemplate):
     options = {
         SingleValueOption(
             name="name",
-            description="The name of the agent generator being created.",
+            description="Name of the agent generator.",
             required=False,
             default_value="",
             value_type=str,
         ),
         SingleValueOption(
             name="remote_host",
-            description=(
-                "The remote host address of the listener for the agent to connect "
-                "back to."
-            ),
+            description="Remote listener host address for the agent to connect back to.",
             default_value="127.0.0.1",
             value_type=str,
         ),
         SingleValueOption(
             name="remote_port",
-            description=(
-                "The remote port of the listener for the agent to connect back to."
-            ),
+            description="Remote listener port for the agent to connect back through.",
             default_value=1337,
             value_type=int,
             greater_than_or_equal_to=0,
@@ -90,8 +85,8 @@ class AgentTemplate(BaseAgentTemplate):
         ListValueOption(
             name="tasks_url_paths",
             description=(
-                "A list of available URL paths for the agent to randomly query "
-                "when obtaining tasks to run."
+                "List of available URL paths the agent randomly selects from when "
+                "requesting tasks."
             ),
             default_value=["/tasks"],
             allow_duplicates=False,
@@ -101,8 +96,8 @@ class AgentTemplate(BaseAgentTemplate):
         ListValueOption(
             name="results_url_paths",
             description=(
-                "A list of available URL paths for the agent to randomly POST results "
-                "to when returning the results of finished tasks."
+                "List of available URL paths the agent randomly selects from when "
+                "posting task results."
             ),
             default_value=["/results"],
             allow_duplicates=False,
@@ -112,8 +107,8 @@ class AgentTemplate(BaseAgentTemplate):
         ListValueOption(
             name="registration_url_paths",
             description=(
-                "A list of available URL paths for the agent to randomly query "
-                "when registering with the listener."
+                "List of available URL paths the agent randomly selects from when "
+                "registering with a listener."
             ),
             default_value=["/register"],
             value_type=str,
@@ -121,20 +116,15 @@ class AgentTemplate(BaseAgentTemplate):
         ),
         SingleValueOption(
             name="sleep_time",
-            description=(
-                "The amount of time in seconds to sleep for between each HTTP request "
-                "made to the listener."
-            ),
+            description="Time in seconds to sleep between HTTP requests to the listener.",
             default_value=1.0,
             value_type=float,
         ),
         SingleValueOption(
             name="sleep_time_jitter",
             description=(
-                "The percentage of the duration of the sleep time to randomly vary "
-                "sleeping by expressed as a decimal. A random value between 0 and "
-                "the value of the jitter percentage option is chosen to randomly "
-                "increase or decrease the duration of the sleep time by."
+                "Random delay variance as a percentage of sleep time. Example: 0.5 "
+                "adds +-50% randomness to sleep timing."
             ),
             default_value=0.5,
             value_type=float,
@@ -143,9 +133,8 @@ class AgentTemplate(BaseAgentTemplate):
         ChoiceValueOption(
             name="format",
             description=(
-                "The format of the agent to be generated. It can be a single "
-                "python script (script), a frozen pyinstaller executable "
-                "(executable) or a oneliner python command (oneliner)."
+                "Output format of agent: 'script' (Python file), 'executable' "
+                "(PyInstaller), or 'oneliner' (single Python command)."
             ),
             default_value="script",
             available_values={"script", "executable", "oneliner"},
@@ -153,9 +142,8 @@ class AgentTemplate(BaseAgentTemplate):
         SingleValueOption(
             name="file_name",
             description=(
-                "The file name of the agent to be generated. The appropriate file "
-                "extension is appended depending on the value of the 'format' "
-                "option of the generated agent."
+                "Output filename of agent without extension. Extension is "
+                "automatically appended based on format."
             ),
             default_value="agent",
             validating_function=_check_filename_does_not_traverse_directories,
@@ -163,8 +151,8 @@ class AgentTemplate(BaseAgentTemplate):
         DictionaryValueOption(
             name="extra_headers",
             description=(
-                "A dictionary of extra HTTP headers to include in each request made "
-                "by the agent to the listener."
+                "Dictionary of additional HTTP headers to include in each request to "
+                "the listener."
             ),
             default_value={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)",
@@ -172,7 +160,7 @@ class AgentTemplate(BaseAgentTemplate):
             value_type=str,
         ),
     }
-    compatible_listener_types = {"consortium_http"}
+    compatible_listener_types = {"http_consortium"}
     validating_function = _check_all_url_endpoints_unique
 
     def resolve_agent_generator_name(self, parameters: JSONObject) -> str:

@@ -1,6 +1,6 @@
-from typing import Any
-
 from pydantic import BaseModel
+
+from consortium.server.models.option_models import OptionModel
 
 
 class ListenerTypeModel(BaseModel):
@@ -15,7 +15,7 @@ class AgentCapabilityModel(BaseModel):
     requires_admin: bool
     is_atomic: bool
     supported_oses: list[str]
-    options: dict[str, Any]
+    options: dict[str, OptionModel]
 
 
 class AgentTypeModel(BaseModel):

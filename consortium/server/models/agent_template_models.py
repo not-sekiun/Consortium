@@ -1,8 +1,7 @@
-from typing import Any
-
 from pydantic import BaseModel
 
-from consortium.server.models.c2_types_models import AgentTypeModel
+from consortium.server.models.c2_type_models import AgentTypeModel
+from consortium.server.models.option_models import OptionModel
 
 
 class AgentTemplateModel(BaseModel):
@@ -15,5 +14,5 @@ class AgentTemplateModel(BaseModel):
     authors: list[str]
     agent_type: AgentTypeModel
     compatible_listener_types: list[str]
-    options: dict[str, Any]
+    options: dict[str, OptionModel]
     validating_function: None | str

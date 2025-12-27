@@ -173,7 +173,7 @@ def _handle_choice_value_option_parameter(
     ):
         for choice in option_json_data["available_values"]:
             if value == str(choice):
-                return option_json_data["name"], value
+                return option_json_data["name"], choice
         raise ValueError(
             f"Failed to set option '{option_json_data['name']}' to value '{value}'. "
             f"The provided value is not a valid choice. Valid choices are: "
@@ -189,6 +189,8 @@ def _handle_choice_value_option_parameter(
             f"The provided value is not a valid choice. Valid choices are: "
             f"{', '.join(f"'{option_json_data['available_values']}'")}",
         )
+
+    return option_json_data["name"], value
 
 
 def _handle_dictionary_value_option_parameter(

@@ -1,8 +1,7 @@
-from typing import Any
-
 from pydantic import BaseModel
 
-from consortium.server.models.c2_types_models import ListenerTypeModel
+from consortium.server.models.c2_type_models import ListenerTypeModel
+from consortium.server.models.option_models import OptionModel
 
 
 class ListenerTemplateModel(BaseModel):
@@ -14,5 +13,5 @@ class ListenerTemplateModel(BaseModel):
     compatible_framework_version: str
     authors: list[str]
     listener_type: ListenerTypeModel
-    options: dict[str, Any]
+    options: dict[str, OptionModel]
     validating_function: None | str

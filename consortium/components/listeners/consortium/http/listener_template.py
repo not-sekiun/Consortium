@@ -80,7 +80,7 @@ class ListenerTemplate(BaseListenerTemplate):
         ),
         ListValueOption(
             name="tasks_url_paths",
-            description=("List of available URL paths for agents to query tasks from."),
+            description="List of available URL paths for agents to query tasks from.",
             required=True,
             default_value=["/tasks"],
             allow_duplicates=False,

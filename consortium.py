@@ -24,7 +24,7 @@ def main():
 
     server_parser = subparsers.add_parser(
         name="server",
-        help="Start the consortium server",
+        help="Start the Consortium server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=format_argparse_epilog(
             """
@@ -38,7 +38,7 @@ def main():
         "-s",
         "--server-config",
         help=(
-            "The filepath of the server configuration file to use when starting the "
+            "Filepath of the server configuration file to use when starting the "
             "server. By default the server configuration file from "
             "`data/server/server_config.json` is used."
         ),
@@ -49,7 +49,7 @@ def main():
         "-l",
         "--logging-config",
         help=(
-            "The filepath of the logging configuration file to use when starting the "
+            "Filepath of the logging configuration file to use when starting the "
             "server. By default the logging configuration file from "
             "`data/server/logging_config.json` is used."
         ),
@@ -60,9 +60,9 @@ def main():
         "-d",
         "--debug",
         help=(
-            "Start the server in debug mode. This will log messages with severity "
-            "'DEBUG' and higher. Note that this flag overrides whatever log level was "
-            "set in the supplied logging configuration file."
+            "Start the Consortium server in debug mode. This will log messages with "
+            "severity DEBUG and higher. This flag overrides the log level that was set "
+            "in the supplied logging configuration file."
         ),
         action="store_true",
     )
@@ -83,7 +83,7 @@ def main():
 
     client_parser = subparsers.add_parser(
         name="client",
-        help="Start the consortium client",
+        help="Start the Consortium client",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=format_argparse_epilog(
             """
@@ -97,7 +97,7 @@ def main():
         "-c",
         "--config",
         help=(
-            "The filepath of the client configuration file to use when starting the "
+            "Filepath of the client configuration file to use when starting the "
             "server. By default the client configuration file from "
             "`data/client/client_config.json` is used."
         ),
@@ -107,7 +107,7 @@ def main():
     client_parser.add_argument(
         "-d",
         "--debug",
-        help="Start the client in debug mode",
+        help="Start the Consortium client in debug mode",
         action="store_true",
     )
 

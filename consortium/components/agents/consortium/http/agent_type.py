@@ -12,13 +12,13 @@ authors = {"Sekiun (github.com/not-sekiun)"}
 
 disconnect_capability = request_response_capability(
     name="disconnect",
-    description="Disconnect the agent.",
+    description="Disconnect the agent from the server",
     options={
         SingleValueOption(
             name="duration",
             description=(
-                "The amount of time the agent should wait for in seconds before "
-                "attempting to reconnect."
+                "Time in seconds to wait before attempting to reconnect. "
+                "Set to 0 for immediate reconnection."
             ),
             value_type=float,
             required=False,
@@ -30,19 +30,16 @@ disconnect_capability = request_response_capability(
 )
 
 kill_capability = request_response_capability(
-    name="kill", description="Terminate the agent process.", authors=authors
+    name="kill", description="Terminate the agent process immediately.", authors=authors
 )
 
 delay_capability = request_response_capability(
     name="delay",
-    description="Adjust the delay between agent check-ins.",
+    description="Configure the delay between agent check-ins",
     options={
         SingleValueOption(
             name="duration",
-            description=(
-                "The duration in seconds that the agent should delay itself by between "
-                "check-ins."
-            ),
+            description="Time in seconds between check-ins.",
             required=True,
             value_type=float,
             default_value=1.0,
@@ -51,12 +48,12 @@ delay_capability = request_response_capability(
         SingleValueOption(
             name="jitter",
             description=(
-                "The jitter as a percentage of the duration that the agent should "
-                "randomly delay itself by between check-ins."
+                "Random delay variance as a percentage of duration. "
+                "Example: 0.5 adds +-50% randomness to timing."
             ),
             required=False,
             value_type=float,
-            default_value=0.0,
+            default_value=0.5,
             greater_than_or_equal_to=0,
         ),
     },
@@ -65,11 +62,11 @@ delay_capability = request_response_capability(
 
 sleep_capability = request_response_capability(
     name="sleep",
-    description="Put the agent to sleep for a specified duration.",
+    description="Put the agent to sleep for a specified duration",
     options={
         SingleValueOption(
             name="duration",
-            description="The amount of time in seconds for the agent to sleep.",
+            description="Time in seconds for the agent to sleep.",
             required=True,
             value_type=float,
             default_value=1.0,
@@ -111,15 +108,12 @@ def ping_timeout_handler(agent, context):
 
 ping_capability = request_response_capability(
     name="ping",
-    description="Ping the agent to check its responsiveness.",
+    description="Ping the agent to check responsiveness and measure latency",
     authors=authors,
     options={
         SingleValueOption(
             name="timeout",
-            description=(
-                "The duration of time in seconds to wait before considering the ping "
-                "to have timed out."
-            ),
+            description="Time in seconds to wait for a response before timing out.",
             required=False,
             default_value=5.0,
             value_type=float,
@@ -136,19 +130,18 @@ ping_capability = request_response_capability(
 
 shell_capability = request_response_capability(
     name="shell",
-    description="Execute a command using the system shell on the agent.",
+    description="Execute a shell command on the agent",
     options={
         SingleValueOption(
             name="command",
-            description="The command to execute on the agent.",
+            description="Shell command to execute.",
             required=True,
             value_type=str,
         ),
         SingleValueOption(
             name="timeout",
             description=(
-                "The amount of time to wait for the command to complete before timing "
-                "out."
+                "Time in seconds to wait for command completion before timing out."
             ),
             required=False,
             value_type=int,
@@ -157,9 +150,9 @@ shell_capability = request_response_capability(
         SingleValueOption(
             name="blind",
             description=(
-                "Execute the command blind without checking the output. This allows "
-                "the launching of long running executables without blocking the agent."
-                "The timeout option will not apply when this option is set."
+                "Execute a command without waiting for output. Allows launching "
+                "long-running processes without blocking the agent. Timeout option "
+                "will be ignored."
             ),
             required=False,
             value_type=bool,
@@ -168,8 +161,8 @@ shell_capability = request_response_capability(
         SingleValueOption(
             name="shell",
             description=(
-                "The filepath to the binary executable of the shell to use to execute "
-                "the provided command."
+                "Path to the shell executable binary. Uses system default if not "
+                "specified."
             ),
             required=False,
             value_type=str,
@@ -177,8 +170,8 @@ shell_capability = request_response_capability(
         SingleValueOption(
             name="expand",
             description=(
-                "Attempt to expand environment variables when provided while changing "
-                "directories. By default, this is disabled."
+                "Expand environment variables in paths. Applies when changing "
+                "directories."
             ),
             required=False,
             value_type=bool,

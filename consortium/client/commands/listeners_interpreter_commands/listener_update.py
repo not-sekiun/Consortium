@@ -8,7 +8,10 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
     Context,
 )
-from consortium.client.utils.formatter_utils import format_set_value_command_epilog
+from consortium.client.utils.formatter_utils import (
+    format_value_type_specification_epilog,
+    format_value_type_specification_with_examples_epilog,
+)
 from consortium.client.utils.options_utils import (
     convert_option_value_strings_to_option_value,
 )
@@ -20,7 +23,7 @@ class ListenerUpdateCommand(BaseCommand):
     description = (
         "Update the configuration parameters of an existing non-running listener"
     )
-    epilog = format_set_value_command_epilog(command_name="update")
+    epilog = format_value_type_specification_epilog()
     group = "Listener Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
@@ -36,26 +39,40 @@ class ListenerUpdateCommand(BaseCommand):
         )
         parser.add_argument(
             "parameter_values",
-            help="Value to set the listener parameter to. The number of provided "
-            "values must match the expected number of values for the parameter "
-            "based on the parameter's option type.",
+            help="Value to set listener parameter to.",
             nargs="+",
         )
         parser.add_argument(
             "--value-type",
             "-t",
-            help="Type of the listener template option to set. When set for a list or "
-            "dictionary value type option, all the elements of the list or values "
-            "of the dictionary will be set to that same type unless explicitly "
-            "specified as otherwise by their individual typing.",
+            help="Value type to use for a listener parameter. Applies to all values.",
             choices={"str", "int", "float", "bool"},
             nargs="?",
             default=None,
             metavar="VALUE_TYPE",
         )
+        parser.add_argument(
+            "--help-full",
+            help=(
+                "Show this help message and include detailed examples "
+                "for specifying option value types."
+            ),
+            action="store_true",
+            default=False,
+        )
 
     async def run(self, context: Context) -> ReturnStatus:
         try:
+            if "--help-full" in context.arguments:
+                self.parser.epilog = (
+                    format_value_type_specification_with_examples_epilog(
+                        example_prefix="update <listener_id> <parameter_name>"
+                    )
+                )
+                self.parser.print_help()
+                self.parser.epilog = self.epilog
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 

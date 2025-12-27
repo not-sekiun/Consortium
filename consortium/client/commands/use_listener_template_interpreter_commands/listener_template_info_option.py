@@ -57,11 +57,19 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
                 return ReturnStatus(
                     type=ReturnStatusType.CONTINUE,
                 )
-            table = Table(title="Listener Template Option Information", highlight=True)
-            table.add_column("Information")
-            table.add_column("Data")
+            table = Table(
+                title="Listener Template Option Information",
+                highlight=True,
+                show_footer=True,
+            )
+            table.add_column("Information", footer="[bold yellow]Current Value[/]")
+            table.add_column(
+                "Data",
+                footer=str(option["value"]) if option["value"] is not None else "",
+            )
             for key, value in option.items():
-                table.add_row(format_snake_case_to_title(key), str(value))
+                if key != "value":
+                    table.add_row(format_snake_case_to_title(key), str(value))
             CONSOLE.print(table, "")
         except SystemExit:
             pass

@@ -1,15 +1,24 @@
 import textwrap
 from datetime import UTC, datetime
+from typing import Any
 
 from rich.console import Console
-from rich.text import Text
 
 
 # Exports rich formatted text with color markup codes as ANSI escape sequences.
-def format_rich_text_as_ansi(text: Text | str) -> str:
+def format_rich_text_as_ansi(text: str) -> str:
     console = Console()
     with console.capture() as capture:
         console.print(text, end="")
+    return capture.get()
+
+
+# Applies rich's default highlight styling, used everywhere in the client, to the given
+# text and exports it as ANSI escape sequences.
+def format_object_as_rich_ansi_highlight_str(value: Any) -> str:
+    console = Console()
+    with console.capture() as capture:
+        console.print(value, end="", highlight=True)
     return capture.get()
 
 
@@ -166,41 +175,47 @@ def format_datetime_as_human_readable_str(
         return datetime_obj.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def format_set_value_command_epilog(command_name: str) -> str:
+def format_value_type_specification_epilog() -> str:
     return format_argparse_epilog(
-        f"""
+        """
         Value Type Specification:
           Values are strings by default. Specify types using:
-            1. Inline annotation: value:type (e.g., "3:int")
-            2. --value-type flag: applies to all values unless overridden
-            3. Option template default: used if no type specified
+            1. Inline annotation: <value>:<type> (e.g., "3:int", "t:bool")
+            2. --value-type flag: applies to all values, unless overridden by inline annotations
+            3. Argument's default type: used when no type is specified
 
-          The --value-type flag applies to all elements in lists/dictionaries.
+          Use --help-full for detailed usage examples.
+        """,
+    )
 
+
+def format_value_type_specification_with_examples_epilog(example_prefix: str) -> str:
+    return format_value_type_specification_epilog() + format_argparse_epilog(
+        f"""
         Examples:
           # Single values
-          {command_name} <id> <param> 1              # String "1" (or option's default type)
-          {command_name} <id> <param> 1:int          # Integer 1
-          {command_name} <id> <param> 1 -t int       # Integer 1 (equivalent)
-          {command_name} <id> <param> text:str:str   # String "text:str" (escape colons)
+          {example_prefix} 1              # String "1" (or option's default type)
+          {example_prefix} 1:int          # Integer 1
+          {example_prefix} 1 -t int       # Integer 1 (equivalent)
+          {example_prefix} text:str:str   # String "text:str" (escape colons)
 
           # Choice values
-          {command_name} <id> <param> choice1        # Implicit type conversion
-          {command_name} <id> <param> 1 -t int       # Exact match required (no conversion)
+          {example_prefix} choice1        # Implicit type conversion
+          {example_prefix} 1 -t int       # Exact match required (no conversion)
 
           # Lists
-          {command_name} <id> <param> 1 2 3:int      # ["1", "2", 3]
-          {command_name} <id> <param> 1 2 3 -t int   # [1, 2, 3]
-          {command_name} <id> <param> 1 2 3:str -t int  # [1, 2, "3"]
+          {example_prefix} 1 2 3:int      # ["1", "2", 3]
+          {example_prefix} 1 2 3 -t int   # [1, 2, 3]
+          {example_prefix} 1 2 3:str -t int  # [1, 2, "3"]
 
           # Dictionaries
-          {command_name} <id> <param> k1 1 k2 2:str -t int  # {{k1: 1, k2: "2"}}
+          {example_prefix} k1 1 k2 2:str -t int  # {{k1: 1, k2: "2"}}
 
           # Toggleable choices (default: toggle specified to True, rest to False)
-          {command_name} <id> <param> c1 c2          # c1=True, c2=True, others=False
-          {command_name} <id> <param> false:bool c1  # c1=False, others=True
-          {command_name} <id> <param> true:bool      # All choices=True
-          {command_name} <id> <param> t:bool         # All choices=True (t/f/1/0 accepted)
-          {command_name} <id> <param> 0 -t bool      # All choices=False
+          {example_prefix} c1 c2          # c1=True, c2=True, others=False
+          {example_prefix} false:bool c1  # c1=False, others=True
+          {example_prefix} true:bool      # All choices=True
+          {example_prefix} t:bool         # All choices=True (t/f/1/0 accepted)
+          {example_prefix} 0 -t bool      # All choices=False
         """,
     )
