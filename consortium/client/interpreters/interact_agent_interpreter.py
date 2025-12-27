@@ -72,7 +72,7 @@ class InteractAgentInterpreter(Interpreter):
         for agent_capability_name, agent_capability in agent_capabilities.items():
             # Register each agent capability as a command that can be run.
             agent_capability_command = construct_agent_capability_command(
-                agent_capability_json_data=agent_capability,
+                agent_capability=agent_capability,
             )
 
             # If the agent capability command name is already in the interpreter

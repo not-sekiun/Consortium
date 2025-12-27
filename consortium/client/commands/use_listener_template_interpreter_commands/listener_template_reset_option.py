@@ -43,14 +43,13 @@ class ListenerTemplateResetOptionCommand(BaseCommand):
                 option = listener_template_options[option_name]
             except KeyError:
                 print_error(
-                    f"Option '{option_name}' does not exist in the listener template.",
+                    f"Listener template option with name '{option_name}' was not found",
                 )
                 return ReturnStatus(ReturnStatusType.CONTINUE)
 
             option["value"] = copy.deepcopy(option["default_value"])
             print_success(
-                f'Option "{option_name}" has been reset to its default value '
-                f'"{option["value"]}".',
+                f"Reset listener template option '{option_name}' to its default value '{option['value']}'",
             )
         except SystemExit:
             pass

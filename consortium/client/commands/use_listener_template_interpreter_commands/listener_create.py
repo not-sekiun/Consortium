@@ -40,7 +40,7 @@ class ListenerCreateCommand(BaseCommand):
                 listener_template_option_values=listener_template_option_values,
             )
             print_success(
-                f'Created listener: "{listener["name"]}" ({listener["listener_id"]})',
+                f"Created listener '{listener['name']}' ({listener['listener_id']})",
             )
         except SystemExit:
             pass

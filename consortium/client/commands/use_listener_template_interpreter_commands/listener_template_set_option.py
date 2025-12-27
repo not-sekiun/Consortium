@@ -147,15 +147,15 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
             and value_type != listener_template_option["value_type"]
         ):
             print_warning(
-                f'Value "{option_value}" of type "{value_type}" is not of the expected '
-                f'type "{listener_template_option["value_type"]}" for option '
-                f'"{option_name}". However, the value was still set as the user '
-                f'supplied type "{value_type}".',
+                f"Value '{option_value}' of type '{value_type}' is not of the expected "
+                f"type '{listener_template_option['value_type']}' for option "
+                f"'{option_name}'. However, the value was still set as the user "
+                f"supplied type '{value_type}'.",
             )
         listener_template_option["value"] = option_value
         print_success(
-            f'Set listener template option "{option_name}" to '
-            f'"{listener_template_option["value"]}" with type "{value_type}".',
+            f"Set listener template option '{option_name}' to "
+            f"'{listener_template_option['value']}' with type '{value_type}'",
         )
 
     def _handle_choice_value_option(
@@ -191,14 +191,14 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 if option_value == str(choice):
                     listener_template_option["value"] = choice
                     print_success(
-                        f'Set listener template option "{option_name}" to '
-                        f'"{listener_template_option["value"]}"',
+                        f"Set listener template option '{option_name}' to "
+                        f"'{listener_template_option['value']}'",
                     )
                     return
             print_error(
-                f'Value "{option_value}" is not a valid choice for option '
-                f'"{option_name}". Valid choices are: '
-                f"{', '.join(listener_template_option['available_values'])}",
+                f"Value '{option_value}' is not a valid choice for option "
+                f"'{option_name}'. Valid choices are: "
+                f"{', '.join(str(choice) for choice in listener_template_option['available_values'])}.",
             )
             return
 
@@ -207,15 +207,15 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
         # conversions.
         if option_value not in listener_template_option["available_values"]:
             print_error(
-                f'Value "{option_value}" is not a valid choice for option '
-                f'"{option_name}". Valid choices are: '
-                f"{', '.join(listener_template_option['available_values'])}",
+                f"Value '{option_value}' is not a valid choice for option "
+                f"'{option_name}'. Valid choices are: "
+                f"{', '.join(str(choice) for choice in listener_template_option['available_values'])}.",
             )
             return
         listener_template_option["value"] = option_value
         print_success(
-            f'Set listener template option "{option_name}" to '
-            f'"{listener_template_option["value"]}"',
+            f"Set listener template option '{option_name}' to "
+            f"'{listener_template_option['value']}'",
         )
 
     def _handle_list_value_option(
@@ -247,17 +247,17 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 and value_type != listener_template_option["value_type"]
             ):
                 print_warning(
-                    f'Value "{option_value}" of type "{value_type}" is not of the '
-                    f'expected type "{listener_template_option["value_type"]}" for '
-                    f'option "{option_name}". However, the value was still set as the '
-                    f'user supplied type "{value_type}"',
+                    f"Value '{option_value}' of type '{value_type}' is not of the "
+                    f"expected type '{listener_template_option['value_type']}' for "
+                    f"option '{option_name}'. However, the value was still set as the "
+                    f"user supplied type '{value_type}'.",
                 )
 
             new_option_values.append(option_value)
 
         listener_template_option["value"] = new_option_values
         print_success(
-            f'Set listener template option "{option_name}" to '
+            f"Set listener template option '{option_name}' to "
             f"{listener_template_option['value']!r}",
         )
 
@@ -289,8 +289,8 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
             )
             if key_value_type != "str":
                 print_error(
-                    f'Key "{key}" of type "{key_value_type}" is not of the expected '
-                    f'type "str" for option "{option_name}".',
+                    f"Key '{key}' of type '{key_value_type}' is not of the expected "
+                    f"type 'str' for option '{option_name}'",
                 )
                 # Changes to the listener template options should be atomic.
                 listener_template_option["value"] = copy.deepcopy(previous_value)
@@ -316,11 +316,11 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 and value_value_type != listener_template_option["value_type"]
             ):
                 print_warning(
-                    f'Value "{value}" of type "{value_value_type}" for key "{key}" is '
+                    f"Value '{value}' of type '{value_value_type}' for key '{key}' is "
                     f"not of the expected type "
-                    f'"{listener_template_option["value_type"]}" for option '
-                    f'"{option_name}". However, the value was still set as the user '
-                    f'supplied type "{value_value_type}"',
+                    f"'{listener_template_option['value_type']}' for option "
+                    f"'{option_name}'. However, the value was still set as the user "
+                    f"supplied type '{value_value_type}'.",
                 )
 
             listener_template_option["value"][key] = value
@@ -373,8 +373,8 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
             )
             if value_type != "str":
                 print_error(
-                    f'Value "{option_value}" of type "{value_type}" is not of the '
-                    f'expected type "str" for option "{option_name}".',
+                    f"Value '{option_value}' of type '{value_type}' is not of the "
+                    f"expected type 'str' for option '{option_name}'",
                 )
                 # Changes to the listener template options should be atomic.
                 listener_template_option["value"] = copy.deepcopy(previous_value)
@@ -385,9 +385,9 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
             )
             if option_value not in listener_template_option["available_values"]:
                 print_error(
-                    f'Value "{option_value}" is not a valid choice for option '
-                    f'"{option_name}". Valid choices are: '
-                    f"{', '.join(listener_template_option['available_values'])}",
+                    f"Value '{option_value}' is not a valid choice for option "
+                    f"'{option_name}'. Valid choices are: "
+                    f"{', '.join(str(c) for c in listener_template_option['available_values'])}.",
                 )
                 # Changes to the listener template options should be atomic.
                 listener_template_option["value"] = copy.deepcopy(previous_value)
@@ -401,7 +401,7 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 listener_template_option["value"][choice] = not toggle_value
 
         print_success(
-            f'Set listener template option "{option_name}" to '
+            f"Set listener template option '{option_name}' to "
             f"{listener_template_option['value']!r}",
         )
 
@@ -411,9 +411,9 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            listener_template_options = context.environment["listener_template"][
+            listener_template_options = context.environment["listener_template"](
                 "options"
-            ]
+            )
 
             option_name = parsed_args.option_name[0]
             option_values = parsed_args.option_values
@@ -422,7 +422,7 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 option = listener_template_options[option_name]
             except KeyError:
                 print_error(
-                    f'Listener template option "{option_name}" does not exist.',
+                    f"Listener template option with name '{option_name}' was not found",
                 )
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
@@ -431,8 +431,8 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                     if len(option_values) != 1:
                         print_error(
                             f"Expected 1 value for listener template option "
-                            f'"{option_name}" of option type "{option["option_type"]}" '
-                            f"but got {len(option_values)} values instead.",
+                            f"'{option_name}' of option type '{option['option_type']}' "
+                            f"but got {len(option_values)} values instead",
                         )
                         return ReturnStatus(type=ReturnStatusType.CONTINUE)
                     self._handle_single_value_option(
@@ -445,8 +445,8 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                     if len(option_values) != 1:
                         print_error(
                             f"Expected 1 value for listener template option "
-                            f'"{option_name}" of option type "{option["option_type"]}" '
-                            f"but got {len(option_values)} values instead.",
+                            f"'{option_name}' of option type '{option['option_type']}' "
+                            f"but got {len(option_values)} values instead",
                         )
                         return ReturnStatus(type=ReturnStatusType.CONTINUE)
                     self._handle_choice_value_option(
@@ -466,9 +466,9 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                     if len(option_values) % 2 != 0:
                         print_error(
                             f"Expected an even number of values for listener template "
-                            f'option "{option_name}" of option type '
-                            f'"{option["option_type"]}" but got {len(option_values)} '
-                            f"values instead.",
+                            f"option '{option_name}' of option type "
+                            f"'{option['option_type']}' but got {len(option_values)} "
+                            f"values instead",
                         )
                         return ReturnStatus(type=ReturnStatusType.CONTINUE)
                     self._handle_dictionary_value_option(
@@ -481,8 +481,8 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                     if len(option_values) != 1:
                         print_error(
                             f"Expected 1 value for listener template option "
-                            f'"{option_name}" of option type "{option["option_type"]}" '
-                            f"but got {len(option_values)} values instead.",
+                            f"'{option_name}' of option type '{option['option_type']}' "
+                            f"but got {len(option_values)} values instead",
                         )
                         return ReturnStatus(type=ReturnStatusType.CONTINUE)
                     self._handle_toggleable_choice_value_option(

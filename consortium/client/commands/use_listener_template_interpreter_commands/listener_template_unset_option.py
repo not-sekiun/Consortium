@@ -42,30 +42,30 @@ class ListenerTemplateUnsetOptionCommand(BaseCommand):
                 option = listener_template_options[option_name]
             except KeyError:
                 print_error(
-                    f"Option '{option_name}' does not exist in the listener template",
+                    f"Listener template option with name '{option_name}' was not found",
                 )
                 return ReturnStatus(ReturnStatusType.CONTINUE)
 
             if option["option_type"] == "LIST_VALUE_OPTION":
                 option["value"] = []
                 print_success(
-                    f'Option "{option_name}" has been unset',
+                    f"Unset listener template option '{option_name}'",
                 )
             elif option["option_type"] == "DICTIONARY_VALUE_OPTION":
                 option["value"] = {}
                 print_success(
-                    f'Option "{option_name}" has been unset.',
+                    f"Unset listener template option '{option_name}'",
                 )
             elif option["option_type"] == "TOGGLEABLE_CHOICES_VALUE_OPTION":
                 print_error(
-                    f'Option "{option_name}" is of option type '
-                    f'"{option["option_type"]}" and cannot be unset',
+                    f"Listener template option '{option_name}' is of option type "
+                    f"'{option['option_type']}' and cannot be unset",
                 )
             # SINGLE_VALUE_OPTION and CHOICE_VALUE_OPTION
             else:
                 option["value"] = None
                 print_success(
-                    f'Option "{option_name}" has been unset',
+                    f"Unset listener template option '{option_name}'",
                 )
         except SystemExit:
             pass

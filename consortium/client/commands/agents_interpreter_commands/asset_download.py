@@ -82,14 +82,13 @@ class AssetDownloadCommand(BaseCommand):
             if output_file_path.exists():
                 print_error(
                     f"Cannot download asset to '{output_file_path}' because a file or "
-                    "directory already exists at that path.",
+                    f"directory already exists at that path"
                 )
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             print_info(
                 f"Downloading asset {'directory' if asset['is_directory'] else 'file'} "
-                f"'{asset['name']}' ({asset['resource_id']}) to "
-                f"'{output_file_path}'...",
+                f"'{asset['name']}' ({asset['resource_id']}) to '{output_file_path}'..."
             )
             with Progress() as progress:
                 downloading_task = progress.add_task(
@@ -102,17 +101,15 @@ class AssetDownloadCommand(BaseCommand):
                     ):
                         progress.update(downloading_task, advance=len(chunk))
                         output_file.write(chunk)
-            print_success("Finished downloading")
+            print_success("Finished downloading asset")
 
             if asset["is_directory"] and parsed_args.decompress:
-                print_info(
-                    f"Decompressing asset directory '{output_file_path}'...",
-                )
+                print_info(f"Decompressing asset directory '{output_file_path}'...")
                 with tempfile.TemporaryDirectory() as temp_dir:
                     shutil.unpack_archive(output_file_path, temp_dir)
                     output_file_path.unlink()
                     shutil.move(temp_dir, output_file_path)
-                print_success("Finished decompression")
+                print_success("Finished decompressing asset")
         except SystemExit:
             pass
 

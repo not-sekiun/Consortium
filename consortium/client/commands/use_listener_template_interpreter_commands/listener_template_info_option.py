@@ -33,7 +33,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "listener_template_option_name",
-            help=("Name of the listener template option to display information for."),
+            help="Name of the listener template option to display information for.",
             nargs=1,
         )
 
@@ -52,7 +52,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
             except KeyError:
                 print_error(
                     f"Listener template option with name "
-                    f"{parsed_args.listener_template_option_name[0]} not found.",
+                    f"'{parsed_args.listener_template_option_name[0]}' was not found",
                 )
                 return ReturnStatus(
                     type=ReturnStatusType.CONTINUE,

@@ -50,8 +50,8 @@ class AgentDescribeCommand(BaseCommand):
             new_agent_attributes={"description": description},
         )
         print_success(
-            f"Agent '{agent['name']}' ({agent['agent_id']}) description "
-            f"updated to '{description}'",
+            f"Updated description of agent '{agent['name']}' ({agent['agent_id']}) "
+            f"to '{description}'",
         )
 
     async def run(self, context: Context) -> ReturnStatus:

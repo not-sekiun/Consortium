@@ -50,7 +50,7 @@ class AgentRenameCommand(BaseCommand):
             new_agent_attributes={"name": new_name},
         )
         print_success(
-            f"Agent '{agent['name']}' ({agent['agent_id']}) renamed to '{new_name}'",
+            f"Renamed agent '{agent['name']}' ({agent['agent_id']}) to '{new_name}'"
         )
 
     async def run(self, context: Context) -> ReturnStatus:

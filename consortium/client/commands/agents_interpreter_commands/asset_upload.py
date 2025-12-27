@@ -60,7 +60,7 @@ class AssetUploadCommand(BaseCommand):
             asset_path = pathlib.Path(parsed_args.asset_path[0])
 
             if not asset_path.exists():
-                print_error(f"Asset path '{asset_path}' does not exist")
+                print_error(f"Asset path '{asset_path}' was not found")
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             if asset_path.is_dir():
@@ -88,8 +88,8 @@ class AssetUploadCommand(BaseCommand):
                             asset_directory_archive_file_format=".zip",
                         )
                 print_success(
-                    f"Successfully uploaded asset directory '{asset_path}' as asset "
-                    f"'{asset['name']}' ({asset['resource_id']})",
+                    f"Uploaded asset directory '{asset_path}' as "
+                    f"'{asset['name']}' ({asset['resource_id']})"
                 )
             else:
                 print_info(f"Uploading asset file '{asset_path}'...")
@@ -101,8 +101,8 @@ class AssetUploadCommand(BaseCommand):
                         description=parsed_args.description,
                     )
                 print_success(
-                    f"Successfully uploaded asset file '{asset_path}' as asset "
-                    f"'{asset['name']}' ({asset['resource_id']})",
+                    f"Uploaded asset file '{asset_path}' as "
+                    f"'{asset['name']}' ({asset['resource_id']})"
                 )
         except SystemExit:
             pass

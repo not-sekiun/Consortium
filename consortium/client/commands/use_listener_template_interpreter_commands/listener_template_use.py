@@ -47,8 +47,7 @@ class ListenerTemplateUseCommand(BaseCommand):
                 == current_listener_template["listener_template_id"]
             ):
                 print_error(
-                    "Already using listener template: "
-                    f"{current_listener_template['name']} "
+                    f"Already using listener template '{current_listener_template['name']}' "
                     f"({current_listener_template['listener_template_id']})",
                 )
                 return ReturnStatus(
@@ -61,7 +60,7 @@ class ListenerTemplateUseCommand(BaseCommand):
                 )
             )
             print_info(
-                f"Using listener template: '{listener_template['name']}' "
+                f"Using listener template '{listener_template['name']}' "
                 f"({listener_template['listener_template_id']})",
             )
             return ReturnStatus(

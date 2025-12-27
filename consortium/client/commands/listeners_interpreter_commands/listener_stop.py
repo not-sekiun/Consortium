@@ -44,7 +44,7 @@ class ListenerStopCommand(BaseCommand):
                 listener_id=parsed_args.listener_id[0],
             )
             print_success(
-                f'Stopped listener: "{listener["name"]}" ({listener["listener_id"]})',
+                f"Stopped listener '{listener['name']}' ({listener['listener_id']})",
             )
         except SystemExit:
             pass

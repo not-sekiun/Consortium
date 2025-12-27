@@ -63,59 +63,52 @@ def _generate_abbreviated_flags_from_option_name_list(
 # Command objects need to be constructed dynamically based on the agent capabilities
 # that are present.
 def construct_agent_capability_command(
-    agent_capability_json_data: dict[str, Any],
+    agent_capability: dict[str, Any],
 ) -> BaseCommand:
     class AgentCapabilityCommand(BaseCommand):
-        name = agent_capability_json_data["name"]
-        description = agent_capability_json_data["description"]
+        name = agent_capability["name"]
+        description = agent_capability["description"]
         epilog = format_argparse_epilog(
             f"""
-            Note:
-              By default the type of the values provided is a string. There are several
-              ways to specify types for the values:
+            Value Type Specification:
+              Option values are strings by default. Specify types using:
+                1. Inline annotation: value:type (e.g., "3:int")
+                2. --value-type flag: applies to all values unless overridden
+                3. Option default: used if no type specified
 
-              1. The value can be explicitly annotated with a type by appending a colon
-              followed by the type to the value. For example, "3:int" will be
-              interpreted as the integer 3.
-              2. The --value-type flag can be used to specify the type of the values.
-              This will set the type of all the values to the specified type unless
-              explicitly specified otherwise by their individual typing.
-              3. The listener template option itself may specify the type of the values.
-              This will be the default type for the values unless explicitly specified
-              otherwise by their individual typing.
-
-              The --value-type flag is set for all values of a list or dictionary value.
+              The --value-type flag applies to all elements in lists/dictionaries.
 
             Examples:
-              {agent_capability_json_data["name"]} --single_value_param 1  # No type was specified, if the option specified a type, the value will adopt that type, else it will be a string.
-              {agent_capability_json_data["name"]} --single_value_param some:str:str  # If you want to include the substring :str in the value itself append :str behind it.
-              {agent_capability_json_data["name"]} --single_value_param 1:int # Set the option to an integer value. This ignores the option"s specified type.
-              {agent_capability_json_data["name"]} --single_value_param 1 -t int # Does the same thing as the above command.
+              # Single values
+              {agent_capability["name"]} --<param> 1                    # String "1" (or option's default type)
+              {agent_capability["name"]} --<param> 1:int                # Integer 1
+              {agent_capability["name"]} --<param> 1 -t int             # Integer 1 (equivalent)
+              {agent_capability["name"]} --<param> text:str:str         # String "text:str" (escape colons)
 
-              {agent_capability_json_data["name"]} --choice_value_param 1 # If no type is specified, implicit type conversion is done for each choice. This choice will therefore match an integer 1 even if its value is a string.
-              {agent_capability_json_data["name"]} --choice_value_param 1 -t int # If a type is specified, implicit type conversion is not done for each choice. Hence, the the choice contains a string "1" instead of an integer 1 it will not match.
+              # Choice values
+              {agent_capability["name"]} --<param> choice1              # Implicit type conversion
+              {agent_capability["name"]} --<param> 1 -t int             # Exact match required (no conversion)
 
-              {agent_capability_json_data["name"]} --list_value_param 1 2 3:int  # If the list value option specifies a string type or no type at all, set the option to a list the strings 1 and 2 and an integer, 3.
-              {agent_capability_json_data["name"]} --list_value_param 1 2 3 -t int   # Set the option to a list of integers 1, 2, and 3.
-              {agent_capability_json_data["name"]} --list_value_param 1 2 3:str -t int   # Set the option to a list of integers 1, 2, and a string, 3. Individual type annotations will override the type set by the --value-type flag.
+              # Lists
+              {agent_capability["name"]} --<param> 1 2 3:int            # ["1", "2", 3]
+              {agent_capability["name"]} --<param> 1 2 3 -t int         # [1, 2, 3]
+              {agent_capability["name"]} --<param> 1 2 3:str -t int     # [1, 2, "3"]
 
-              {agent_capability_json_data["name"]} --dictionary_value_param key1 1 key2 2 key3 3:str -t int   # Set the option to a dictionary containing integers 1, 2, and a string, 3 to their respective keys. The keys must be strings.
+              # Dictionaries
+              {agent_capability["name"]} --<param> k1 1 k2 2:str -t int # {{k1: 1, k2: "2"}}
 
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param choice1 choice2 choice4  # Toggle choice1 choice2, and choice4 to True, every other choice is toggled to False. The default behaviour is to toggle choices to True.
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param true:bool choice2 choice4  # Does the same thing as the above command.
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param false:bool choice1 choice2 choice4  # Providing a boolean as the very first value wil toggle choice1 choice2, and choice4 to False, every other choice is toggled to True.
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param true:bool  # If a single boolean is provided as the value every choice will be toggled to that value.
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param t:bool  # Does the same thing as the above command.
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param 1:bool  # Does the same thing as the above command.
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param false -t bool  # Toggle every choice to False.
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param f -t bool  # Does the same thing as the above command.
-              {agent_capability_json_data["name"]} --toggleable_choices_value_param 0 -t bool  # Does the same thing as the above command.
+              # Toggleable choices (default: toggle specified to True, rest to False)
+              {agent_capability["name"]} --<param> c1 c2                # c1=True, c2=True, others=False
+              {agent_capability["name"]} --<param> false:bool c1        # c1=False, others=True
+              {agent_capability["name"]} --<param> true:bool            # All choices=True
+              {agent_capability["name"]} --<param> t:bool               # All choices=True (t/f/1/0 accepted)
+              {agent_capability["name"]} --<param> 0 -t bool            # All choices=False
             """,
         )
         group = "Agent Capability Commands"
 
         def configure_parser(self, parser: ArgumentParser) -> None:
-            options = agent_capability_json_data["options"]
+            options = agent_capability["options"]
 
             # The parser checks to see if there is only one required option for an
             # agent capability. If there is, that one required option is registered to
@@ -155,7 +148,7 @@ def construct_agent_capability_command(
                     raise AssertionError(
                         f"Unknown option type {option['option_type']} was present "
                         f"for the option '{option['name']}' in the list of options "
-                        f"for the agent capability '{agent_capability_json_data['name']}'."
+                        f"for the agent capability '{agent_capability['name']}'."
                     )
 
                 # Determine the type of the argument based on the value type in the
@@ -181,7 +174,7 @@ def construct_agent_capability_command(
                     raise AssertionError(
                         f"Unknown value type {option['value_type']} was present "
                         f"for the option '{option['name']}' in the list of options "
-                        f"for the agent capability '{agent_capability_json_data['name']}'."
+                        f"for the agent capability '{agent_capability['name']}'."
                     )
 
                 # For the special case of a single value option with a boolean value

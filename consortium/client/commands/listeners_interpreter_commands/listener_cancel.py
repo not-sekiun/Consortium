@@ -46,7 +46,7 @@ class ListenerCancelCommand(BaseCommand):
                 listener_id=parsed_args.listener_id[0],
             )
             print_success(
-                f'Cancelled listener: "{listener["name"]}" ({listener["listener_id"]})',
+                f"Cancelled listener '{listener['name']}' ({listener['listener_id']})",
             )
         except SystemExit:
             pass

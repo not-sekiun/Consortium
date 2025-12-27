@@ -74,7 +74,7 @@ class ListenerUpdateCommand(BaseCommand):
             except KeyError:
                 print_error(
                     f"Listener template for listener '{listener['name']}' "
-                    f"({listener['listener_id']}) not found",
+                    f"({listener['listener_id']}) was not found",
                 )
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
@@ -82,8 +82,7 @@ class ListenerUpdateCommand(BaseCommand):
                 option = listener_template_options[parsed_args.parameter_name[0]]
             except KeyError:
                 print_error(
-                    f"Listener parameter '{parsed_args.parameter_name[0]}' does not "
-                    f"exist",
+                    f"Listener parameter with name '{parsed_args.parameter_name[0]}' was not found",
                 )
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
@@ -102,7 +101,7 @@ class ListenerUpdateCommand(BaseCommand):
                     },
                 )
                 print_success(
-                    f"Set listener parameter '{parameter_name}' to {parameter_value!r}",
+                    f"Updated listener parameter '{parameter_name}' to '{parameter_value}'",
                 )
             except ValueError as exc:
                 print_error(exc)

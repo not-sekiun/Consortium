@@ -44,7 +44,7 @@ class ListenerDeleteCommand(BaseCommand):
                 listener_id=parsed_args.listener_id[0],
             )
             print_success(
-                f'Deleted listener: "{listener["name"]}" ({listener["listener_id"]})',
+                f"Deleted listener '{listener['name']}' ({listener['listener_id']})",
             )
         except SystemExit:
             pass

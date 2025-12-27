@@ -59,7 +59,7 @@ class ListGeneratorsCommand(BaseCommand):
                         f"{agent_generator_build_step['name']} "
                         f"({
                             format_component_life_cycle_state_string_with_color(
-                                state_str=agent_generator_build_step['status']['status']
+                                state_str=agent_generator_build_step['status']['state']
                             )
                         })",
                     )

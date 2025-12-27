@@ -62,17 +62,17 @@ class ResultListCommand(ResultListAgentsInterpreterCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
+            rest_api = context.client_session.rest_api
 
             if parsed_args.agent_id:
-                agent = await client_rest_api_connection.get_agent_by_agent_id(
+                agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id,
                 )
             else:
                 agent = context.environment["agent"]
 
             await self._list_results_from_agent_id(
-                client_rest_api_connection=client_rest_api_connection,
+                rest_api=rest_api,
                 agent_id=agent["agent_id"],
                 agent_name=agent["name"],
                 display_success=parsed_args.success,

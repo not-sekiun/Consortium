@@ -44,7 +44,7 @@ class ListenerStartCommand(BaseCommand):
                 listener_id=parsed_args.listener_id[0],
             )
             print_success(
-                f'Started listener: "{listener["name"]}" ({listener["listener_id"]})',
+                f"Started listener '{listener['name']}' ({listener['listener_id']})",
             )
         except SystemExit:
             pass

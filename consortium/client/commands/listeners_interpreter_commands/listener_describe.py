@@ -50,8 +50,8 @@ class ListenerDescribeCommand(BaseCommand):
                 },
             )
             print_success(
-                f"Listener '{listener['name']}' ({listener['listener_id']}) description "
-                f"updated to: '{parsed_commands.new_description[0]}'",
+                f"Updated description of listener '{listener['name']}' ({listener['listener_id']}) "
+                f"to '{parsed_commands.new_description[0]}'",
             )
         except SystemExit:
             pass

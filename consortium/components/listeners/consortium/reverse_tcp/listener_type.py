@@ -2,4 +2,4 @@ from consortium.framework.listeners import BaseListenerType
 
 
 class ListenerType(BaseListenerType):
-    name = "consortium_reverse_tcp"
+    name = "reverse_tcp_consortium"
