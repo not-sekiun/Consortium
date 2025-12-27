@@ -14,8 +14,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 class ResultListCommand(ResultListAgentsInterpreterCommand):
     name = "r-list"
     description = (
-        "List all results for the current agent, or for a specific agent by its agent "
-        "ID"
+        "List all results for the current agent, or for a specific agent by its ID"
     )
     epilog = format_argparse_epilog(
         """

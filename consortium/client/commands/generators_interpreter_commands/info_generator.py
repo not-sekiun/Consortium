@@ -145,7 +145,7 @@ class InfoGeneratorCommand(BaseCommand):
                     else ""
                 ),
             )
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

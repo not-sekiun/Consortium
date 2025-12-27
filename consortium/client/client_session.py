@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime
 
-# from typing import TYPE_CHECKING
-from consortium.client.client_rest_api import RestApi
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.client_websockets_api import (
-    WebsocketsApi,
+    WebsocketsAPI,
 )
 from consortium.client.exceptions.client_session_exceptions import (
     ClientSessionAlreadyConnectedException,
@@ -30,19 +29,19 @@ class ClientSession:
         self.connected = False
         self.datetime_connected = None
 
-        self.rest_api = RestApi(
+        self.rest_api = RestAPI(
             username=self.username,
             password=self.password,
             remote_host=self.remote_host,
             remote_port=self.remote_port,
         )
-        self.websockets_api = WebsocketsApi(
+        self.websockets_api = WebsocketsAPI(
             remote_host=self.remote_host,
             remote_port=self.remote_port,
         )
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.client_session_id})"
+        return f"'{self.name}' ({self.client_session_id})"
 
     async def connect(self):
         if self.connected:

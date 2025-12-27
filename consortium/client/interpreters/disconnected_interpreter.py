@@ -7,26 +7,11 @@ from consortium.client.commands.disconnected_interpreter_commands import (
     DISCONNECTED_INTERPRETER_COMMANDS,
 )
 from consortium.client.commands.home_interpreter_commands import (
+    ClientSessionListCommand,
     ConnectCommand,
     InteractClientSessionCommand,
-    ListClientSessionsCommand,
 )
-
-# from consortium.client.utils.printer_utils import CONSOLE, print_error, print_info
 from consortium.client.repl_interface.interpreter import Interpreter
-
-# from consortium.client.exceptions.client_interpreter_exceptions import (
-#     UnclosedQuotesError,
-# )
-# from consortium.client.exceptions.client_rest_api_connection_exceptions import (
-#     RestApiOperationError,
-# )
-# from consortium.client.models.client_return_status_models import ReturnStatusType
-# from consortium.client.repl_framework.base_interpreter import BaseInterpreter
-# from consortium.client.repl_interface.parser import ParsedCommand
-# from consortium.client.repl_interface.lexer import (
-#     Lexer,
-# )
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -46,12 +31,12 @@ class DisconnectedInterpreter(Interpreter):
             + DISCONNECTED_INTERPRETER_COMMANDS
             + [
                 ConnectCommand(),
-                ListClientSessionsCommand(),
+                ClientSessionListCommand(),
                 InteractClientSessionCommand(),
             ]
         )
         super().__init__(
-            prompt=ANSI(format_rich_text_as_ansi("[bold white]Consortium > ")),
+            prompt=ANSI(format_rich_text_as_ansi("[bold white]Consortium\n> ")),
             commands=[
                 *combined_disconnected_interpreter_core_commands,
             ],
@@ -88,7 +73,7 @@ class DisconnectedInterpreter(Interpreter):
     # # In general, when an error is raised on the REST API side we simply print the error
     # # message to the console and interrupt whichever operation we were attempting to do.
     # async def on_error(self, exc: Exception) -> None:
-    #     if isinstance(exc, RestApiOperationError):
+    #     if isinstance(exc, RestAPIOperationError):
     #         print_error(f"Error: {exc}")
     #     else:
     #         print_error(f"Fatal error occurred: {exc}")
@@ -110,9 +95,9 @@ class DisconnectedInterpreter(Interpreter):
             for command in [
                 "disconnect",
                 "info",
-                "interact_client_session",
-                "rename_client_session",
-                "redescribe_client_session",
+                "interact",
+                "rename",
+                "describe",
             ]
         }.items():
             nested_completer_dict[key] = value

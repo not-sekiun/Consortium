@@ -14,7 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class ListenerDescribeCommand(BaseCommand):
     name = "describe"
-    description = "Set the description of a listener by its listener ID"
+    description = "Set the description of a listener by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -30,7 +30,7 @@ class ListenerDescribeCommand(BaseCommand):
             nargs=1,
         )
         parser.add_argument(
-            "new_description",
+            "description",
             help="New description for the listener.",
             nargs=1,
         )
@@ -46,12 +46,12 @@ class ListenerDescribeCommand(BaseCommand):
             await rest_api.update_listener_by_listener_id(
                 listener_id=parsed_commands.listener_id[0],
                 new_listener_attributes={
-                    "description": parsed_commands.new_description[0],
+                    "description": parsed_commands.description[0],
                 },
             )
             print_success(
                 f"Updated description of listener '{listener['name']}' ({listener['listener_id']}) "
-                f"to '{parsed_commands.new_description[0]}'",
+                f"to '{parsed_commands.description[0]}'",
             )
         except SystemExit:
             pass

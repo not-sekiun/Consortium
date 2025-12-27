@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.client_rest_api import RestApi
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -22,7 +22,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class TaskListCommand(BaseCommand):
     name = "t-list"
-    description = "List all tasks, or a specific agent's tasks by its agent ID"
+    description = "List all tasks, or a specific agent's tasks by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -64,7 +64,7 @@ class TaskListCommand(BaseCommand):
 
     @staticmethod
     async def _list_tasks_from_agent_id(
-        rest_api: RestApi,
+        rest_api: RestAPI,
         agent_id: str,
         agent_name: str,
         display_queued: bool,

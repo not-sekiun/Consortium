@@ -41,7 +41,7 @@ class InteractAgentInterpreter(Interpreter):
             prompt=HTML(
                 f"<b>Consortium (<ansired>Agents</ansired>: "
                 f"<ansired>'{agent['name']}' "
-                f"({agent['agent_id']})</ansired>) > </b>",
+                f"({agent['agent_id']})</ansired>)\n> </b>",
             ),
             commands=(
                 [

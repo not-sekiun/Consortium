@@ -37,7 +37,7 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
             prompt=HTML(
                 f"<b>Consortium (<ansigreen>Generators</ansigreen>: "
                 f"<ansigreen>'{agent_template['name']}' "
-                f"({agent_template['agent_template_id']})</ansigreen>) > </b>",
+                f"({agent_template['agent_template_id']})</ansigreen>)\n> </b>",
             ),
             commands=(
                 [

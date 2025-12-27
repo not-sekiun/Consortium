@@ -49,7 +49,7 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
                     str(option["value"]) if option["value"] is not None else "",
                 )
 
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

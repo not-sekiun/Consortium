@@ -1,6 +1,15 @@
+from enum import StrEnum
 from typing import Any
 
 from consortium.client.utils.printer_utils import print_warning
+
+
+class OptionType(StrEnum):
+    SINGLE_VALUE_OPTION = "SINGLE_VALUE_OPTION"
+    LIST_VALUE_OPTION = "LIST_VALUE_OPTION"
+    CHOICE_VALUE_OPTION = "CHOICE_VALUE_OPTION"
+    TOGGLEABLE_CHOICES_VALUE_OPTION = "TOGGLEABLE_CHOICES_VALUE_OPTION"
+    DICTIONARY_VALUE_OPTION = "DICTIONARY_VALUE_OPTION"
 
 
 def _parse_value_string_for_value_type_annotation(
@@ -344,7 +353,7 @@ def convert_option_value_strings_to_option_value(
     value_strings: list[str],
     value_type_flag: str,
 ) -> tuple[str, Any]:
-    if option_json_data["option_type"] == "SINGLE_VALUE_OPTION":
+    if option_json_data["option_type"] == OptionType.SINGLE_VALUE_OPTION:
         if len(value_strings) != 1:
             raise ValueError(
                 f"Expected 1 value for option '{option_json_data['name']}' of option "
@@ -356,13 +365,13 @@ def convert_option_value_strings_to_option_value(
             value_type_flag=value_type_flag,
             option_json_data=option_json_data,
         )
-    elif option_json_data["option_type"] == "LIST_VALUE_OPTION":
+    elif option_json_data["option_type"] == OptionType.LIST_VALUE_OPTION:
         return _handle_list_value_option_parameter(
             value_strings=value_strings,
             value_type_flag=value_type_flag,
             option_json_data=option_json_data,
         )
-    elif option_json_data["option_type"] == "CHOICE_VALUE_OPTION":
+    elif option_json_data["option_type"] == OptionType.CHOICE_VALUE_OPTION:
         if len(value_strings) != 1:
             raise ValueError(
                 f"Expected 1 value for option '{option_json_data['name']}' of option "
@@ -374,7 +383,7 @@ def convert_option_value_strings_to_option_value(
             value_type_flag=value_type_flag,
             option_json_data=option_json_data,
         )
-    elif option_json_data["option_type"] == "DICTIONARY_VALUE_OPTION":
+    elif option_json_data["option_type"] == OptionType.DICTIONARY_VALUE_OPTION:
         if len(value_strings) % 2 != 0:
             raise ValueError(
                 f"Expected an even number of values for "
@@ -387,7 +396,7 @@ def convert_option_value_strings_to_option_value(
             value_type_flag=value_type_flag,
             option_json_data=option_json_data,
         )
-    elif option_json_data["option_type"] == "TOGGLEABLE_CHOICES_VALUE_OPTION":
+    elif option_json_data["option_type"] == OptionType.TOGGLEABLE_CHOICES_VALUE_OPTION:
         if len(value_strings) < 1:
             raise ValueError(
                 f"Expected at least 1 value for option "

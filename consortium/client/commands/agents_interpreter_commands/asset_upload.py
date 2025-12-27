@@ -16,13 +16,13 @@ from consortium.client.utils.printer_utils import print_error, print_info, print
 
 
 class AssetUploadCommand(BaseCommand):
-    name = "as-up"
+    name = "up"
     description = "Upload an asset file or directory from its file or directory path"
     epilog = format_argparse_epilog(
         """
         Examples:
-          as-up relative/path/to/asset_file.txt
-          as-up /absolute/path/to/asset_directory
+          up relative/path/to/asset_file.txt
+          up /absolute/path/to/asset_directory
         """,
     )
     group = "Asset Management Commands"

@@ -14,9 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class ListenerCancelCommand(BaseCommand):
     name = "cancel"
-    description = (
-        "Forcefully cancel the execution of a running listener by its listener ID"
-    )
+    description = "Forcefully cancel the execution of a running listener by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

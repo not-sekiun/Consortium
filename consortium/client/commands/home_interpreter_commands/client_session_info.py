@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from rich.table import Table
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.client_rest_api import RestApi
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
@@ -16,7 +16,11 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
     Context,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_datetime_as_human_readable_str,
+    format_role_str,
+)
 from consortium.client.utils.printer_utils import CONSOLE, print_error
 
 if TYPE_CHECKING:
@@ -28,13 +32,13 @@ client_sessions_service = client_singletons.client_sessions_service
 class ClientSessionInfoCommand(BaseCommand):
     name = "info"
     description = (
-        "Display information for the current client session or for a "
-        "specific client session by its client session ID"
+        "Display information for the current client session, or for a "
+        "specific client session by its ID"
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-          info -p  # Does not hide password
+          info -p  # Displays password
           info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
@@ -61,11 +65,11 @@ class ClientSessionInfoCommand(BaseCommand):
     @staticmethod
     async def _display_client_session_info(
         client_session: ClientSession,
-        client_rest_api_connection: RestApi,
+        rest_api: RestAPI,
         show_password: bool,
     ) -> None:
-        own_user_info = await client_rest_api_connection.get_own_user_info()
-        server_release = await client_rest_api_connection.get_server_release()
+        own_user_info = await rest_api.get_own_user_info()
+        server_release = await rest_api.get_server_release()
 
         table = Table(title="Client Session Information", highlight=True)
         table.add_column("Information")
@@ -82,18 +86,21 @@ class ClientSessionInfoCommand(BaseCommand):
         )
         table.add_row("Remote Host", client_session.remote_host)
         table.add_row("Remote Port", str(client_session.remote_port))
-        table.add_row("Role", own_user_info["role"])
+        table.add_row("Role", format_role_str(role=own_user_info["role"]))
         table.add_row("Connected", str(client_session.connected))
         table.add_row(
             "Datetime Connected",
-            str(client_session.datetime_connected.isoformat()),
+            format_datetime_as_human_readable_str(
+                datetime_str=client_session.datetime_connected,
+                include_elapsed_time=True,
+            ),
         )
         table.add_row(
             "Server Release",
             f"v{server_release['version']} ({server_release['codename']}) released "
-            f"{server_release['datetime_released']}",
+            f"{format_datetime_as_human_readable_str(datetime_str=server_release['datetime_released'])}",
         )
-        CONSOLE.print(table)
+        CONSOLE.print(table, "")
 
     async def run(
         self,
@@ -105,7 +112,7 @@ class ClientSessionInfoCommand(BaseCommand):
             if parsed_args.client_session_id is None:
                 await self._display_client_session_info(
                     client_session=context.client_session,
-                    client_rest_api_connection=context.client_session.rest_api,
+                    rest_api=context.client_session.rest_api,
                     show_password=parsed_args.password,
                 )
             else:
@@ -117,7 +124,7 @@ class ClientSessionInfoCommand(BaseCommand):
                     )
                     await self._display_client_session_info(
                         client_session=client_session,
-                        client_rest_api_connection=client_session.rest_api,
+                        rest_api=client_session.rest_api,
                         show_password=parsed_args.password,
                     )
                 except ClientSessionNotFoundError as exc:

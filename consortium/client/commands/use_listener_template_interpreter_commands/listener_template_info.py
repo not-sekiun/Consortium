@@ -15,7 +15,7 @@ class ListenerTemplateInfoCommand(ListenersInterpreterListenerTemplateInfoComman
     name = "lt-info"
     description = (
         "Display information about the current listener template, or a specific "
-        "listener template by its listener template ID."
+        "listener template by its ID."
     )
     epilog = format_argparse_epilog(
         """

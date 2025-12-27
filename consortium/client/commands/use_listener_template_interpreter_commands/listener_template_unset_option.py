@@ -9,6 +9,7 @@ from consortium.client.repl_interface.base_command import (
     Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.options_utils import OptionType
 from consortium.client.utils.printer_utils import print_error, print_success
 
 
@@ -46,26 +47,33 @@ class ListenerTemplateUnsetOptionCommand(BaseCommand):
                 )
                 return ReturnStatus(ReturnStatusType.CONTINUE)
 
-            if option["option_type"] == "LIST_VALUE_OPTION":
+            if option["option_type"] == OptionType.LIST_VALUE_OPTION:
                 option["value"] = []
                 print_success(
                     f"Unset listener template option '{option_name}'",
                 )
-            elif option["option_type"] == "DICTIONARY_VALUE_OPTION":
+            elif option["option_type"] == OptionType.DICTIONARY_VALUE_OPTION:
                 option["value"] = {}
                 print_success(
                     f"Unset listener template option '{option_name}'",
                 )
-            elif option["option_type"] == "TOGGLEABLE_CHOICES_VALUE_OPTION":
+            elif option["option_type"] == OptionType.TOGGLEABLE_CHOICES_VALUE_OPTION:
                 print_error(
                     f"Listener template option '{option_name}' is of option type "
                     f"'{option['option_type']}' and cannot be unset",
                 )
-            # SINGLE_VALUE_OPTION and CHOICE_VALUE_OPTION
-            else:
+            elif option["option_type"] in (
+                OptionType.SINGLE_VALUE_OPTION,
+                OptionType.CHOICE_VALUE_OPTION,
+            ):
                 option["value"] = None
                 print_success(
                     f"Unset listener template option '{option_name}'",
+                )
+            else:
+                raise AssertionError(
+                    f"Unhandled option type '{option['option_type']}' "
+                    f"for listener template option unset",
                 )
         except SystemExit:
             pass

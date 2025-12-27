@@ -31,7 +31,7 @@ class GeneratorsInterpreter(Interpreter):
     ):
         if prompt is None:
             prompt = HTML(
-                "<b>Consortium (<ansigreen>Generators</ansigreen>) > </b>",
+                "<b>Consortium (<ansigreen>Generators</ansigreen>)\n> </b>",
             )
         if commands is None:
             commands = COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS

@@ -3,11 +3,11 @@ from typing import Any
 from pydantic import BaseModel, create_model
 
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
-    BaseApiError,
+    BaseAPIError,
 )
 
 
-class HTTPError(BaseApiError):
+class HTTPError(BaseAPIError):
     status_code = 500
     code = "HTTP_ERROR"
 

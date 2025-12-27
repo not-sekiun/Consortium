@@ -64,7 +64,7 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
             for key, value in option.items():
                 table.add_row(format_snake_case_to_title(key), str(value))
 
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

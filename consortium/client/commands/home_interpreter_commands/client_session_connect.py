@@ -24,10 +24,7 @@ client_sessions_service = client_singletons.client_sessions_service
 
 class ConnectCommand(BaseCommand):
     name = "connect"
-    description = (
-        "Create a new client session to a Consortium server using a configuration "
-        "file or by manually specifying connection details"
-    )
+    description = "Connect to a Consortium server, creating a new client session"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -41,50 +38,30 @@ class ConnectCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "-c",
-            "--config",
+            "--config-filepath",
             help=(
-                "The filepath to a configuration JSON file containing the client "
-                "settings specifying the remote host, remote port, username, and "
-                "password to use when connecting to the Consortium server. If not "
-                "provided, the default filepath to the configuration file is used."
+                "Path to client config JSON file (host, port, username, password). "
+                "(Default: %(const)s)"
             ),
             nargs="?",
             const=str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH),
-            metavar="CONFIG_FILEPATH",
         )
         parser.add_argument(
             "-rh",
             "--remote-host",
-            help=(
-                "The remote hostname or IP address of the Consortium server to connect "
-                "to."
-            ),
-            metavar="HOSTNAME/IP",
+            help="Remote host of the Consortium server to connect to.",
         )
         parser.add_argument(
             "-rp",
             "--remote-port",
-            help="The port of the Consortium server to connect to.",
-            metavar="PORT",
+            help="Remote port of the Consortium server to connect to.",
             type=int,
         )
         parser.add_argument(
-            "-u",
-            "--username",
-            help=(
-                "The username of the account to login to when connecting to the "
-                "Consortium server."
-            ),
-            metavar="USERNAME",
+            "-u", "--username", help="Username of the account to login as."
         )
         parser.add_argument(
-            "-p",
-            "--password",
-            help=(
-                "The password of the account to login to when connecting to the "
-                "Consortium server."
-            ),
-            metavar="PASSWORD",
+            "-p", "--password", help="Password of the account to login with."
         )
 
     async def run(
@@ -175,8 +152,7 @@ class ConnectCommand(BaseCommand):
                     client_session_id=str(client_session.client_session_id),
                 )
                 print_success(
-                    f"Successfully logged into server "
-                    f"{remote_host}:{remote_port} as '{username}'",
+                    f"Connected to server {remote_host}:{remote_port} as '{username}'"
                 )
             except ClientSessionConnectionError as exc:
                 print_error(exc)

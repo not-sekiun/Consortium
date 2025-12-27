@@ -159,10 +159,13 @@ def format_seconds_as_human_readable_str(seconds: float) -> str:
 
 
 def format_datetime_as_human_readable_str(
-    datetime_str: str, include_elapsed_time: bool = False
+    datetime_str: str | datetime, include_elapsed_time: bool = False
 ) -> str:
-    datetime_obj = datetime.fromisoformat(datetime_str)
-    datetime_obj = datetime_obj.astimezone(UTC)
+    if isinstance(datetime_str, datetime):
+        datetime_obj = datetime_str.astimezone(UTC)
+    else:
+        datetime_obj = datetime.fromisoformat(datetime_str)
+        datetime_obj = datetime_obj.astimezone(UTC)
     elapsed_seconds = (datetime.now(UTC) - datetime_obj).total_seconds()
 
     if include_elapsed_time:
@@ -219,3 +222,15 @@ def format_value_type_specification_with_examples_epilog(example_prefix: str) ->
           {example_prefix} 0 -t bool      # All choices=False
         """,
     )
+
+
+def format_role_str(role: str) -> str:
+    role_str_to_colored_role_str_map = {
+        "ADMIN": "[bold red]ADMIN[/]",
+        "OPERATOR": "[bold green]OPERATOR[/]",
+        "SPECTATOR": "[bold cyan]SPECTATOR[/]",
+    }
+
+    if role in role_str_to_colored_role_str_map:
+        return role_str_to_colored_role_str_map[role]
+    return role

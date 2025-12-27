@@ -4,21 +4,21 @@ from rich.console import Console
 CONSOLE = Console(highlight=True)
 
 
-def print_success(*args, highlight: bool | None = False, **kwargs):
+def print_success(*args, **kwargs):
     CONSOLE.print("[bold green][+][/bold green]", end=" ")
-    CONSOLE.print(*args, highlight=highlight, **kwargs)
+    CONSOLE.print(*args, **kwargs)
 
 
-def print_error(*args, highlight: bool | None = False, **kwargs):
+def print_error(*args, **kwargs):
     CONSOLE.print("[bold red][-][/bold red]", end=" ")
-    CONSOLE.print(*args, highlight=highlight, **kwargs)
+    CONSOLE.print(*args, **kwargs)
 
 
-def print_info(*args, highlight: bool | None = False, **kwargs):
+def print_info(*args, **kwargs):
     CONSOLE.print("[bold blue][*][/bold blue]", end=" ")
-    CONSOLE.print(*args, highlight=highlight, **kwargs)
+    CONSOLE.print(*args, **kwargs)
 
 
-def print_warning(*args, highlight: bool | None = False, **kwargs):
+def print_warning(*args, **kwargs):
     CONSOLE.print("[bold yellow][!][/bold yellow]", end=" ")
-    CONSOLE.print(*args, highlight=highlight, **kwargs)
+    CONSOLE.print(*args, **kwargs)

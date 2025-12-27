@@ -1,7 +1,7 @@
 import random
 
 from consortium.client.client_config import CLIENT_RELEASE
-from consortium.client.client_rest_api import RestApi
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -10,7 +10,10 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
     Context,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_role_str,
+)
 from consortium.client.utils.printer_utils import CONSOLE
 
 
@@ -26,7 +29,7 @@ class BannerCommand(BaseCommand):
 
     @staticmethod
     async def _display_banner(
-        client_rest_api_connection: RestApi | None,
+        client_rest_api_connection: RestAPI | None,
     ) -> None:
         star_banner = (
             "[bold white]        .        x      "
@@ -70,16 +73,11 @@ class BannerCommand(BaseCommand):
                 f"[bold white]({server_release['codename']})"
             )
 
-            role = own_user["role"]
-            if role in ("OPERATOR", "SPECTATOR"):
-                role_color = "white"
-            else:  # Display the role in red for accounts with the ADMIN role.
-                role_color = "red"
             connection_status_banner = (
                 "    Connection Status  : "
                 f"[bold green]Connected[bold white] as "
                 f"'{client_rest_api_connection.username}' "
-                f"([{role_color}]{role}[bold white])"
+                f"({format_role_str(role=own_user['role'])}[bold white])"
             )
 
         random_banner_art = random.choice(banner_art)

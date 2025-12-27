@@ -15,7 +15,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class AgentInteractCommand(BaseCommand):
     name = "interact"
-    description = "Interact with an agent by its agent ID"
+    description = "Interact with an agent by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

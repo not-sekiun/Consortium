@@ -1,6 +1,5 @@
 import re
 from argparse import ArgumentParser
-from enum import StrEnum
 from typing import Any
 
 from consortium.client.models.return_status_models import (
@@ -18,6 +17,7 @@ from consortium.client.utils.formatter_utils import (
     format_value_type_specification_with_examples_epilog,
 )
 from consortium.client.utils.options_utils import (
+    OptionType,
     convert_option_value_strings_to_option_value,
 )
 from consortium.client.utils.printer_utils import (
@@ -26,12 +26,10 @@ from consortium.client.utils.printer_utils import (
 )
 
 
-class _OptionType(StrEnum):
-    SINGLE_VALUE_OPTION = "SINGLE_VALUE_OPTION"
-    LIST_VALUE_OPTION = "LIST_VALUE_OPTION"
-    CHOICE_VALUE_OPTION = "CHOICE_VALUE_OPTION"
-    TOGGLEABLE_CHOICES_VALUE_OPTION = "TOGGLEABLE_CHOICES_VALUE_OPTION"
-    DICTIONARY_VALUE_OPTION = "DICTIONARY_VALUE_OPTION"
+def _escape_percent_signs(text: str) -> str:
+    # Escape percent signs for argparse help text, internally argparse uses
+    # percent signs for string formatting. Add a double percent sign to escape.
+    return text.replace("%", "%%")
 
 
 def _construct_help_default_str(value: Any) -> str:
@@ -109,53 +107,56 @@ def _generate_abbreviated_flags_from_option_name_list(
 def _is_single_value_option(option: dict[str, Any]) -> bool:
     # Check if an option accepts a single value
     return option["option_type"] in (
-        _OptionType.SINGLE_VALUE_OPTION,
-        _OptionType.CHOICE_VALUE_OPTION,
+        OptionType.SINGLE_VALUE_OPTION,
+        OptionType.CHOICE_VALUE_OPTION,
     )
 
 
 def _is_multi_value_option(option: dict[str, Any]) -> bool:
     # Check if an option accepts multiple values
     return option["option_type"] in (
-        _OptionType.LIST_VALUE_OPTION,
-        _OptionType.TOGGLEABLE_CHOICES_VALUE_OPTION,
-        _OptionType.DICTIONARY_VALUE_OPTION,
+        OptionType.LIST_VALUE_OPTION,
+        OptionType.TOGGLEABLE_CHOICES_VALUE_OPTION,
+        OptionType.DICTIONARY_VALUE_OPTION,
     )
 
 
 def _determine_positional_options(
     options: dict[str, dict[str, Any]],
 ) -> list[str]:
-    # Determine which options should be positional arguments.
-    # Returns a list of original option names that should be positional,
-    # ordered such that any multi-value option comes last.
+    # Returns a list of original option names that should be positional, in order by
+    # determining if they accept single or multiple values and if they are required
+    # with no default value.
     #
     # Rules:
-    # 1. Single required single/list value option: positional
-    # 2. Multiple required single value options: all positional
-    # 3. Multiple required single value + ONE required list value: all positional,
-    #    list value last
-    # 4. Multiple required list values: none positional (all flags)
+    # 1. Only arguments that are required AND have no default value can be positional.
+    # 2. All required single-value options with NO default value can unconditionally be
+    # positional.
+    # 3. There can only ever be one required multi-value option with NO default value
+    # as a positional, and it must always come last. This option can be bounded or
+    # unbounded, and have variable or exact length.
+
     required_single_value_options: list[str] = []
     required_multi_value_options: list[str] = []
 
     for original_name, option in options.items():
-        if not option["required"]:
+        if not option["required"] or option["default_value"] is not None:
             continue
         if _is_single_value_option(option):
             required_single_value_options.append(original_name)
         elif _is_multi_value_option(option):
             required_multi_value_options.append(original_name)
 
-    # Case 4: Multiple required multi-value options, none positional
+    # Multiple required multi-value options, omit all from positional list only return
+    # single-value options
     if len(required_multi_value_options) > 1:
-        return []
+        return required_single_value_options
 
-    # Case 1, 2, 3: Build positional list with single values first,
-    # then the single multi-value option (if any) last
+    # Build positional list with single values first, then the single multi-value
+    # option last. Due to the earlier checks, there can only be one or no multi-value
+    # options here.
     positional_options = required_single_value_options.copy()
-    if len(required_multi_value_options) == 1:
-        positional_options.append(required_multi_value_options[0])
+    positional_options.extend(required_multi_value_options)
 
     return positional_options
 
@@ -173,6 +174,8 @@ def construct_agent_capability_command(
 
         # Mapping from original option names to normalized option names
         _original_to_normalized_name_map: dict[str, str] = {}
+        # Set of original option names that are positional arguments
+        _positional_option_names: set[str] = set()
 
         def configure_parser(self, parser: ArgumentParser) -> None:
             options = agent_capability["options"]
@@ -197,6 +200,9 @@ def construct_agent_capability_command(
             # Determine which options should be positional
             positional_option_names = _determine_positional_options(options)
 
+            # Store positional option names for use in run()
+            self._positional_option_names = set(positional_option_names)
+
             # Generate abbreviated flags for non-positional options only
             non_positional_normalized_names = [
                 norm_name
@@ -215,30 +221,15 @@ def construct_agent_capability_command(
 
                 # Configure nargs based on option type
                 if _is_single_value_option(option):
-                    nargs = 1 if option["default_value"] is None else "?"
-                    # Only options that can have a single value (SINGLE_VALUE_OPTION,
-                    # CHOICE_VALUE_OPTION) can meaningfully have a default value
-                    # represented in argparse.
-                    default = option["default_value"]
-                    # Required and no default: Do not display default to demonstrate
-                    #   the argument is required.
-                    # Required and has default: Display default
-                    # Not required: Always display default to show that the option is
-                    #   required
-                    help_default = (
-                        ""
-                        if default is None and option["required"]
-                        else _construct_help_default_str(value=default)
-                    )
+                    nargs = 1
                 else:
                     # Multi-value option (list/toggleable/dictionary)
-                    nargs = "+" if option["default_value"] is None else "*"
-                    # Non-single value options (LIST_VALUE_OPTION,
-                    # TOGGLEABLE_CHOICES_VALUE_OPTION, DICTIONARY_VALUE_OPTION) cannot
-                    # have meaningful defaults represented in argparse so we just send
-                    # None and let the server handle the defaults.
-                    default = None
-                    help_default = ""
+                    # When a multi-value option is required and has no default value, it
+                    # is reasonable to send an empty list or dictionary as the value.
+                    # Hence we allow nargs="*" here for 0 or more values. Range
+                    # specifications are not supported by argparse so this is as much
+                    # as we can reasonably do, we let the server handle more validation.
+                    nargs = "*"
 
                 # Determine argparse type
                 argparse_type = str
@@ -248,13 +239,13 @@ def construct_agent_capability_command(
                     elif option.get("value_type") == "float":
                         argparse_type = float
 
+                # Positionals have no default values
                 parser.add_argument(
                     normalized_name,
-                    help=option["description"] + help_default,
+                    help=_escape_percent_signs(text=option["description"]),
                     nargs=nargs,
                     type=argparse_type,
                     metavar=original_name.upper(),
-                    default=default,
                 )
 
             # Then, add non-positional arguments as flags
@@ -289,7 +280,8 @@ def construct_agent_capability_command(
                 parser.add_argument(
                     abbreviated_flags[normalized_name],
                     f"--{normalized_name}",
-                    help=option["description"] + help_default,
+                    help=_escape_percent_signs(text=option["description"])
+                    + help_default,
                     nargs=nargs,
                     type=argparse_type,
                     required=option["required"],
@@ -349,17 +341,27 @@ def construct_agent_capability_command(
                     if normalized_name is None:
                         continue
 
-                    # Get the value(s) from parsed args using normalized name
+                    # Get the value(s) from parsed args using normalized (`parsed_args`
+                    # attribute) name
                     option_value = getattr(parsed_args, normalized_name, None)
 
-                    # Skip if no value was provided (None or empty list)
+                    # Skip if no value was provided (None means flag wasn't used)
                     if option_value is None:
                         continue
+
+                    # Handle empty list case
                     if isinstance(option_value, list) and len(option_value) == 0:
-                        # Use default if available, otherwise skip
-                        if option.get("default_value") is not None:
-                            arguments[original_name] = option["default_value"]
-                        continue
+                        # For positional multi-value arguments, an empty list is valid
+                        # (it means no values were provided, which is allowed for nargs="*")
+                        if original_name in self._positional_option_names:
+                            # Pass empty list for positional multi-value options
+                            arguments[original_name] = []
+                            continue
+                        else:
+                            # For flagged arguments with empty list, use default if available
+                            if option.get("default_value") is not None:
+                                arguments[original_name] = option["default_value"]
+                            continue
 
                     # For single value options where argparse already converted the type
                     # and no value-type flag was specified, use the value directly

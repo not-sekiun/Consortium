@@ -5,11 +5,11 @@ import aiohttp
 from loguru import logger
 
 from consortium.client.exceptions.rest_api_exceptions import (
-    InvalidRestApiCredentialsError,
-    InvalidServerRestApiLoginResponseError,
-    RestApiAlreadyLoggedInError,
-    RestApiNotLoggedInError,
-    RestApiOperationError,
+    InvalidRestAPICredentialsError,
+    InvalidServerRestAPILoginResponseError,
+    RestAPIAlreadyLoggedInError,
+    RestAPINotLoggedInError,
+    RestAPIOperationError,
 )
 
 
@@ -18,7 +18,7 @@ def _requires_authentication(
 ) -> Callable[..., Awaitable[Any]]:
     async def wrapper(self, *args, **kwargs) -> Any:
         if not self.logged_in:
-            raise RestApiNotLoggedInError(
+            raise RestAPINotLoggedInError(
                 remote_host=self.remote_host,
                 remote_port=self.remote_port,
             )
@@ -31,7 +31,7 @@ def _requires_authentication(
 # TODO: Consider transitioning to auto generation of client code using OpenAPI
 #    specifications once the API stabilizes. Figure out how to not have the API be name
 #    mangled.
-class RestApi:
+class RestAPI:
     def __init__(
         self,
         username: str,
@@ -55,7 +55,7 @@ class RestApi:
 
     async def connect(self) -> None:
         if self.logged_in:
-            raise RestApiAlreadyLoggedInError(
+            raise RestAPIAlreadyLoggedInError(
                 remote_host=self.remote_host,
                 remote_port=self.remote_port,
                 username=self.username,
@@ -78,7 +78,7 @@ class RestApi:
 
         # The server returns a generic 401 response for failed logins.
         if response.status == 401:
-            raise InvalidRestApiCredentialsError(
+            raise InvalidRestAPICredentialsError(
                 remote_host=self.remote_host,
                 remote_port=self.remote_port,
                 username=self.username,
@@ -90,7 +90,7 @@ class RestApi:
             response_json["token_type"] != "bearer"
             or "access_token" not in response_json
         ) or response.status != 200:
-            raise InvalidServerRestApiLoginResponseError(
+            raise InvalidServerRestAPILoginResponseError(
                 remote_host=self.remote_host,
                 remote_port=self.remote_port,
                 username=self.username,
@@ -104,7 +104,7 @@ class RestApi:
 
     async def disconnect(self) -> None:
         if not self.logged_in:
-            raise RestApiNotLoggedInError(
+            raise RestAPINotLoggedInError(
                 remote_host=self.remote_host, remote_port=self.remote_port
             )
 
@@ -595,7 +595,7 @@ class RestApi:
     @staticmethod
     def _check_for_api_error_response(response_json: dict[str, Any]) -> None:
         if "error" in response_json:
-            raise RestApiOperationError(
+            raise RestAPIOperationError(
                 code=response_json["error"]["code"],
                 message=response_json["error"]["message"],
                 detail=response_json["error"]["detail"],

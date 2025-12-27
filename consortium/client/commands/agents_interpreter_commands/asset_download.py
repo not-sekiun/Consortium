@@ -19,7 +19,7 @@ from consortium.client.utils.printer_utils import print_error, print_info, print
 
 class AssetDownloadCommand(BaseCommand):
     name = "as-dl"
-    description = "Download an asset by its asset ID"
+    description = "Download an asset by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.client_rest_api import RestApi
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -15,7 +15,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class AgentDescribeCommand(BaseCommand):
     name = "describe"
-    description = "Set the description of an agent by its agent ID"
+    description = "Set the description of an agent by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -38,7 +38,7 @@ class AgentDescribeCommand(BaseCommand):
 
     @staticmethod
     async def _redescribe_agent_by_agent_id(
-        rest_api: RestApi,
+        rest_api: RestAPI,
         agent_id: str,
         description: str,
     ) -> None:

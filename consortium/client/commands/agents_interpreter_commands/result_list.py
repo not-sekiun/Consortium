@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.client_rest_api import RestApi
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -21,7 +21,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ResultListCommand(BaseCommand):
     name = "r-list"
-    description = "List all results, or a specific agent's results by its agent ID"
+    description = "List all results, or a specific agent's results by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -63,7 +63,7 @@ class ResultListCommand(BaseCommand):
 
     @staticmethod
     async def _list_results_from_agent_id(
-        rest_api: RestApi,
+        rest_api: RestAPI,
         agent_id: str,
         agent_name: str,
         display_success: bool,

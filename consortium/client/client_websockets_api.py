@@ -12,10 +12,10 @@ from consortium.client.exceptions.websockets_api_exceptions import (
     EventTypeNotSubscribedError,
     InvalidEventTypeError,
     InvalidServerWebsocketAPIResponseError,
-    SeverWebsocketsApiErrorResponseError,
-    WebsocketsApiAlreadyConnectedError,
-    WebsocketsApiHandlerAlreadyRunningError,
-    WebsocketsApiHandlerNotRunningError,
+    SeverWebsocketsAPIErrorResponseError,
+    WebsocketsAPIAlreadyConnectedError,
+    WebsocketsAPIHandlerAlreadyRunningError,
+    WebsocketsAPIHandlerNotRunningError,
     WebsocketsAPINotConnectedError,
 )
 
@@ -44,7 +44,7 @@ _websockets_api_event_response_json_schema = {
 }
 
 
-class WebsocketsApi:
+class WebsocketsAPI:
     def __init__(self, remote_host: str, remote_port: int):
         self.remote_host = remote_host
         self.remote_port = remote_port
@@ -63,7 +63,7 @@ class WebsocketsApi:
 
     async def connect(self, json_web_token: str) -> None:
         if self.connected:
-            raise WebsocketsApiAlreadyConnectedError
+            raise WebsocketsAPIAlreadyConnectedError
 
         self._websocket = await websockets.connect(
             f"ws://{self.remote_host}:{self.remote_port}/api/events",
@@ -84,7 +84,7 @@ class WebsocketsApi:
 
     async def start(self) -> None:
         if self.running:
-            raise WebsocketsApiHandlerAlreadyRunningError
+            raise WebsocketsAPIHandlerAlreadyRunningError
 
         self._websocket_message_handler_task = asyncio.create_task(
             self._websocket_message_handler_loop(),
@@ -94,7 +94,7 @@ class WebsocketsApi:
 
     async def stop(self) -> None:
         if not self.running:
-            raise WebsocketsApiHandlerNotRunningError
+            raise WebsocketsAPIHandlerNotRunningError
 
         self._websocket_message_handler_task.cancel()
         # There is a non-negligible amount of time that passes between the time the
@@ -204,7 +204,7 @@ class WebsocketsApi:
         )
 
         if not message_json["success"]:
-            raise SeverWebsocketsApiErrorResponseError(
+            raise SeverWebsocketsAPIErrorResponseError(
                 error_message=(
                     f"{message_json['error']['code']}: "
                     f"{message_json['error']['message']}"

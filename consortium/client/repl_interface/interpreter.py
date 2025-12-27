@@ -1,4 +1,3 @@
-import traceback
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI, HTML, PromptSession
@@ -10,7 +9,7 @@ from consortium.client.exceptions.client_interpreter_exceptions import (
     UnclosedQuotesError,
 )
 from consortium.client.exceptions.rest_api_exceptions import (
-    RestApiOperationError,
+    RestAPIOperationError,
 )
 from consortium.client.models.return_status_models import (
     ReturnStatus,
@@ -115,7 +114,7 @@ class Interpreter:
                     previous_prompt = self.prompt_session.message
                     while True:
                         input_string += "\n" + await self.prompt_session.prompt_async(
-                            message="... ",
+                            message=". ",
                         )
                         try:
                             tokenized_string = tokenize(input_string=input_string)
@@ -154,10 +153,11 @@ class Interpreter:
                     "Keyboard interrupt ignored. Use 'exit' to exit the interpreter.",
                 )
             except Exception as exc:
-                if isinstance(exc, RestApiOperationError):
-                    print_error(f"Error: {exc}")
+                if isinstance(exc, RestAPIOperationError):
+                    print_error(f"{exc}")
                     continue
 
-                print_error(f"Fatal error occurred: {exc}")
-                CONSOLE.print(f"[bold red]{traceback.format_exc()}")
-                raise exc
+                print_error(
+                    f"Unhandled exception occurred. {exc.__class__.__name__} {exc}"
+                )
+                CONSOLE.print_exception()

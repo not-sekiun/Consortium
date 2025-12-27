@@ -14,8 +14,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
     name = "info"
     description = (
-        "Display information about the current agent, or a specific agent by its agent "
-        "ID"
+        "Display information about the current agent, or a specific agent by its ID"
     )
     epilog = format_argparse_epilog(
         """
@@ -46,7 +45,7 @@ class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
 
             if parsed_args.agent_id is not None:
                 agent = await rest_api.get_agent_by_agent_id(
-                    agent_id=parsed_args.agent_id[0]
+                    agent_id=parsed_args.agent_id
                 )
             else:
                 agent = context.environment["agent"]

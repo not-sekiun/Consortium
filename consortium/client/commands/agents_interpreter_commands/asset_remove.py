@@ -15,7 +15,7 @@ from consortium.client.utils.formatter_utils import (
 
 class AssetRemoveCommand(BaseCommand):
     name = "as-rm"
-    description = "Delete an asset by its asset ID"
+    description = "Delete an asset by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

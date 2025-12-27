@@ -15,15 +15,13 @@ from consortium.client.utils.printer_utils import CONSOLE
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class ListClientSessionsCommand(BaseCommand):
-    name = "list_client_sessions"
-    description = (
-        "List basic information for all current client sessions to a Consortium server"
-    )
+class ClientSessionListCommand(BaseCommand):
+    name = "list"
+    description = "List all client sessions along with their essential information"
     epilog = format_argparse_epilog(
         """
         Examples:
-          list_client_sessions
+          list
         """,
     )
     group = "Client Session Management Commands"
@@ -36,7 +34,7 @@ class ListClientSessionsCommand(BaseCommand):
             _ = self.parser.parse_args(context.arguments)
             all_client_sessions = client_sessions_service.get_all_client_sessions()
 
-            table = Table(title="Client Sessions")
+            table = Table(title="Client Sessions", highlight=True)
             table.add_column("Client Session ID")
             table.add_column("Name")
             table.add_column("Username")
@@ -45,12 +43,12 @@ class ListClientSessionsCommand(BaseCommand):
             for client_session in all_client_sessions:
                 table.add_row(
                     str(client_session.client_session_id),
-                    client_session.name,
-                    client_session.username,
-                    client_session.remote_host,
+                    str(client_session.name),
+                    str(client_session.username),
+                    str(client_session.remote_host),
                     str(client_session.remote_port),
                 )
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

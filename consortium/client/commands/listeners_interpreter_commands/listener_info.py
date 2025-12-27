@@ -22,7 +22,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListenerInfoCommand(BaseCommand):
     name = "info"
-    description = "Display information about a listener by its listener ID"
+    description = "Display information about a listener by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

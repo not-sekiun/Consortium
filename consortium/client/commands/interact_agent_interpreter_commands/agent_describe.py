@@ -14,7 +14,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 class AgentDescribeCommand(AgentDescribeAgentsInterpreterCommand):
     name = "describe"
     description = (
-        "Set the description of the current agent, or a specific agent by its agent ID"
+        "Set the description of the current agent, or a specific agent by its ID"
     )
     epilog = format_argparse_epilog(
         """

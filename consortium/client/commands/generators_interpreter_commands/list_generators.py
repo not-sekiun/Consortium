@@ -80,7 +80,7 @@ class ListGeneratorsCommand(BaseCommand):
                         agent_generator["status"]["state"],
                     ),
                 )
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

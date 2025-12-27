@@ -1,10 +1,10 @@
 from typing import Any
 
 
-class RestApiAuthenticationError(Exception): ...
+class RestAPIAuthenticationError(Exception): ...
 
 
-class RestApiAlreadyLoggedInError(RestApiAuthenticationError):
+class RestAPIAlreadyLoggedInError(RestAPIAuthenticationError):
     def __init__(self, remote_host: str, remote_port: int, username: str):
         super().__init__(
             f"Failed to login to the server over its REST API at "
@@ -12,7 +12,7 @@ class RestApiAlreadyLoggedInError(RestApiAuthenticationError):
         )
 
 
-class RestApiNotLoggedInError(RestApiAuthenticationError):
+class RestAPINotLoggedInError(RestAPIAuthenticationError):
     def __init__(self, remote_host: str, remote_port: int):
         super().__init__(
             "Failed to perform the requested operation over the server's REST API "
@@ -20,7 +20,7 @@ class RestApiNotLoggedInError(RestApiAuthenticationError):
         )
 
 
-class InvalidRestApiCredentialsError(RestApiAuthenticationError):
+class InvalidRestAPICredentialsError(RestAPIAuthenticationError):
     def __init__(self, remote_host: str, remote_port: int, username: str):
         super().__init__(
             f"Failed to login to the server over its REST API at "
@@ -29,7 +29,7 @@ class InvalidRestApiCredentialsError(RestApiAuthenticationError):
         )
 
 
-class InvalidServerRestApiLoginResponseError(RestApiAuthenticationError):
+class InvalidServerRestAPILoginResponseError(RestAPIAuthenticationError):
     def __init__(self, remote_host: str, remote_port: int, username: str):
         super().__init__(
             f"Failed to login to the server over its REST API at "
@@ -41,7 +41,7 @@ class InvalidServerRestApiLoginResponseError(RestApiAuthenticationError):
 
 # TODO: Add more granular exception handling in the future for each particular error
 #  response that may return for each API endpoint. <- hell no lol
-class RestApiOperationError(Exception):
+class RestAPIOperationError(Exception):
     def __init__(self, code: str, message: str, detail: Any):
         if detail:
             super().__init__(

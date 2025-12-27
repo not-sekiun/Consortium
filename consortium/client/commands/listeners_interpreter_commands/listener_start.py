@@ -14,7 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class ListenerStartCommand(BaseCommand):
     name = "start"
-    description = "Start a non-running listener by its listener ID"
+    description = "Start a non-running listener by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

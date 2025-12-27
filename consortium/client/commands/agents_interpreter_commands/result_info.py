@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.client_rest_api import RestApi
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -22,7 +22,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ResultInfoCommand(BaseCommand):
     name = "r-info"
-    description = "Display information about an agent's result by its result ID"
+    description = "Display information about an agent's result by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -40,7 +40,7 @@ class ResultInfoCommand(BaseCommand):
 
     @staticmethod
     async def _display_result_info_from_agent_id(
-        rest_api: RestApi,
+        rest_api: RestAPI,
         result_id: str,
     ) -> None:
         result = await rest_api.get_agent_result_by_result_id(
@@ -77,7 +77,7 @@ class ResultInfoCommand(BaseCommand):
             ),
         )
         table.add_row("Elapsed Time", f"{result['elapsed_seconds']:.2f}s")
-        CONSOLE.print(table)
+        CONSOLE.print(table, "")
 
     async def run(
         self,

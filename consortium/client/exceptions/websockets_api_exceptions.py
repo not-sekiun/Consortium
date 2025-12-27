@@ -1,7 +1,7 @@
-class WebsocketsApiConnectionError(Exception): ...
+class WebsocketsAPIConnectionError(Exception): ...
 
 
-class WebsocketsApiAlreadyConnectedError(WebsocketsApiConnectionError):
+class WebsocketsAPIAlreadyConnectedError(WebsocketsAPIConnectionError):
     def __init__(self):
         super().__init__(
             "Failed to connect to the server's websockets API. Client is already "
@@ -10,7 +10,7 @@ class WebsocketsApiAlreadyConnectedError(WebsocketsApiConnectionError):
         )
 
 
-class WebsocketsAPINotConnectedError(WebsocketsApiConnectionError):
+class WebsocketsAPINotConnectedError(WebsocketsAPIConnectionError):
     def __init__(self):
         super().__init__(
             "Failed to perform the requested operation over the server's websockets API. "
@@ -18,7 +18,7 @@ class WebsocketsAPINotConnectedError(WebsocketsApiConnectionError):
         )
 
 
-class WebsocketsAPIFailedToConnectError(WebsocketsApiConnectionError):
+class WebsocketsAPIFailedToConnectError(WebsocketsAPIConnectionError):
     def __init__(self):
         super().__init__(
             "Failed to connect to the server over its websockets API. Either invalid "
@@ -36,7 +36,7 @@ class InvalidServerWebsocketAPIResponseError(Exception):
         )
 
 
-class SeverWebsocketsApiErrorResponseError(Exception):
+class SeverWebsocketsAPIErrorResponseError(Exception):
     def __init__(self, error_message: str):
         super().__init__(
             "Failed to perform the requested operation over the server's websockets "
@@ -44,14 +44,14 @@ class SeverWebsocketsApiErrorResponseError(Exception):
         )
 
 
-class WebsocketsApiHandlerAlreadyRunningError(Exception):
+class WebsocketsAPIHandlerAlreadyRunningError(Exception):
     def __init__(self):
         super().__init__(
             "Failed to start the websockets API handler. The handler is already running.",
         )
 
 
-class WebsocketsApiHandlerNotRunningError(Exception):
+class WebsocketsAPIHandlerNotRunningError(Exception):
     def __init__(self):
         super().__init__(
             "Failed to stop the websockets API handler. The handler is not running.",

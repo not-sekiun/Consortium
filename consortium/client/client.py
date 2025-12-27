@@ -5,10 +5,10 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.core_commands.banner import BannerCommand
 from consortium.client.exceptions.rest_api_exceptions import (
-    RestApiAuthenticationError,
+    RestAPIAuthenticationError,
 )
 from consortium.client.exceptions.websockets_api_exceptions import (
-    WebsocketsApiConnectionError,
+    WebsocketsAPIConnectionError,
 )
 from consortium.client.interpreters import (
     AgentsInterpreter,
@@ -95,16 +95,16 @@ class Client:
             rest_api = client_session.rest_api
             websockets_api = client_session.websockets_api
             print_success(
-                f"Successfully logged into server: "
+                f"Connected to server "
                 f"{self._client_config.remote_host}:{self._client_config.remote_port} "
                 f"as '{self._client_config.username}'.",
             )
         except (
             # Exceptions raised when failing to log in to the REST API.
-            RestApiAuthenticationError,
+            RestAPIAuthenticationError,
             ClientConnectionError,
             # Exceptions raised when failing to connect to the Websockets API.
-            WebsocketsApiConnectionError,
+            WebsocketsAPIConnectionError,
             WebSocketException,
             # Generic exceptions that can occur during network communication.
             TimeoutError,
@@ -114,8 +114,9 @@ class Client:
             rest_api = None
             websockets_api = None
             print_error(
-                f"Failed to login to server. An error occurred while attempting to "
-                f"login to the server: {exc}",
+                f"Failed to connect to server "
+                f"{self._client_config.remote_host}:{self._client_config.remote_port}. "
+                f"An error occurred while attempting to login: {exc}",
             )
 
         # Display banner once at client startup.

@@ -66,8 +66,7 @@ class HelpCommand(BaseCommand):
             # Sort each group's commands by name before adding to the table
             for command in sorted(group_commands, key=lambda command: command.name):
                 table.add_row(command.name, command.description)
-            CONSOLE.print(table)
-            print()
+            CONSOLE.print(table, "")
 
     async def run(
         self,

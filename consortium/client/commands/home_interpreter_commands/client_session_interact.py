@@ -19,15 +19,12 @@ client_sessions_service = client_singletons.client_sessions_service
 
 
 class InteractClientSessionCommand(BaseCommand):
-    name = "interact_client_session"
-    description = (
-        "Choose a specific client session to interact with that is associated with "
-        "a specific user account logged into a specific Consortium server"
-    )
+    name = "interact"
+    description = "Interact with a client session by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          interact_client_session 123e4567-e89b-12d3-a456-42661417400
+          interact 123e4567-e89b-12d3-a456-42661417400
         """,
     )
     group = "Client Session Management Commands"
@@ -35,7 +32,7 @@ class InteractClientSessionCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "client_session_id",
-            help="The client session ID of the client session to interact with.",
+            help="ID of the client session to interact with.",
             nargs=1,
             default=None,
         )
@@ -58,14 +55,10 @@ class InteractClientSessionCommand(BaseCommand):
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             if client_session == context.environment["client_session"]:
-                print_error(
-                    f"Already interacting with client session {client_session}.",
-                )
+                print_error(f"Already interacting with client session {client_session}")
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
-            print_success(
-                f"Interacting with client session {client_session}",
-            )
+            print_success(f"Interacting with client session {client_session}")
 
             return ReturnStatus(
                 type=ReturnStatusType.SWITCH_CLIENT_SESSION,

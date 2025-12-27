@@ -14,7 +14,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 class TaskListCommand(TaskListAgentsInterpreterCommand):
     name = "t-list"
     description = (
-        "List all tasks for the current agent, or for a specific agent by its agent ID"
+        "List all tasks for the current agent, or for a specific agent by its ID"
     )
     epilog = format_argparse_epilog(
         """

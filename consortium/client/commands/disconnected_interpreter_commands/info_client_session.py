@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.commands.home_interpreter_commands.client_session_info import (
-    ClientSessionInfoCommand as HomeInterpreterClientSessionCommand,
+    ClientSessionInfoCommand as HomeInterpreterClientSessionInfoCommand,
 )
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
@@ -20,8 +20,8 @@ from consortium.client.utils.printer_utils import print_error
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class ClientSessionInfoCommand(HomeInterpreterClientSessionCommand):
-    description = "Display detailed information for a specific client session."
+class ClientSessionInfoCommand(HomeInterpreterClientSessionInfoCommand):
+    description = "Display information for a client session by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

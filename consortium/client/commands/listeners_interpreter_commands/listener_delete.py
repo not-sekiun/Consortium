@@ -14,7 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class ListenerDeleteCommand(BaseCommand):
     name = "delete"
-    description = "Delete a non-running listener by its listener ID"
+    description = "Delete a non-running listener by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

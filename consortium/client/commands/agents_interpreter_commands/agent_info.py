@@ -20,7 +20,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class AgentInfoCommand(BaseCommand):
     name = "info"
-    description = "Display information about an agent by its agent ID"
+    description = "Display information about an agent by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:

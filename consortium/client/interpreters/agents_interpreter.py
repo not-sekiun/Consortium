@@ -28,7 +28,7 @@ class AgentsInterpreter(Interpreter):
         super().__init__(
             prompt=ANSI(
                 format_rich_text_as_ansi(
-                    "[bold white]Consortium ([bold red]Agents[bold white]) > ",
+                    "[bold white]Consortium ([bold red]Agents[bold white])\n> ",
                 ),
             ),
             commands=COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS,
@@ -76,7 +76,7 @@ class AgentsInterpreter(Interpreter):
         nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         # Register the asset upload command to autocomplete with all available files.
-        nested_completer_dict["as-up"] = PathCompleter()
+        nested_completer_dict["up"] = PathCompleter()
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,

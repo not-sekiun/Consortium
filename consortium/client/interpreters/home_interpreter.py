@@ -23,7 +23,7 @@ client_sessions_service = client_singletons.client_sessions_service
 class HomeInterpreter(Interpreter):
     def __init__(self, client_session: ClientSession):
         super().__init__(
-            prompt=ANSI(format_rich_text_as_ansi("[bold white]Consortium (Home) > ")),
+            prompt=ANSI(format_rich_text_as_ansi("[bold white]Consortium (Home)\n> ")),
             commands=[
                 command
                 for command in HOME_INTERPRETER_COMMANDS
@@ -49,9 +49,9 @@ class HomeInterpreter(Interpreter):
             for command in [
                 "disconnect",
                 "info",
-                "interact_client_session",
-                "rename_client_session",
-                "redescribe_client_session",
+                "interact",
+                "rename",
+                "describe",
             ]
         }.items():
             nested_completer_dict[key] = value

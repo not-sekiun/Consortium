@@ -32,7 +32,7 @@ class ListenersInterpreter(Interpreter):
     ):
         if prompt is None:
             prompt = HTML(
-                "<b>Consortium (<ansiblue>Listeners</ansiblue>) > </b>",
+                "<b>Consortium (<ansiblue>Listeners</ansiblue>)\n> </b>",
             )
         if commands is None:
             commands = COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS

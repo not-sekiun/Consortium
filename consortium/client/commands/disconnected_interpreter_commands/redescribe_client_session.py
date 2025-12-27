@@ -19,12 +19,12 @@ client_sessions_service = client_singletons.client_sessions_service
 
 
 class RedescribeClientSessionCommand(BaseCommand):
-    name = "redescribe_client_session"
+    name = "describe"
     description = "Change the description of a specific client session."
     epilog = format_argparse_epilog(
         """
         Examples:
-          redescribe_client_session 123e4567-e89b-12d3-a456-42661417400 "New description"
+          describe 123e4567-e89b-12d3-a456-42661417400 "New description"
         """,
     )
     group = "Client Session Management Commands"

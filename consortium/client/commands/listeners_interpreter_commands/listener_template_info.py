@@ -19,9 +19,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class ListenerTemplateInfoCommand(BaseCommand):
     name = "lt-info"
-    description = (
-        "Display information about a listener template by its listener template ID"
-    )
+    description = "Display information about a listener template by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -77,7 +75,7 @@ class ListenerTemplateInfoCommand(BaseCommand):
                 ]
             ),
         )
-        CONSOLE.print(table)
+        CONSOLE.print(table, "")
 
     async def run(
         self,

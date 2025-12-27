@@ -40,7 +40,7 @@ delay_capability = request_response_capability(
         SingleValueOption(
             name="duration",
             description="Time in seconds between check-ins.",
-            required=True,
+            required=False,
             value_type=float,
             default_value=1.0,
             greater_than_or_equal_to=0,
@@ -69,7 +69,6 @@ sleep_capability = request_response_capability(
             description="Time in seconds for the agent to sleep.",
             required=True,
             value_type=float,
-            default_value=1.0,
             greater_than_or_equal_to=0,
         ),
     },

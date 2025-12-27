@@ -21,8 +21,7 @@ client_sessions_service = client_singletons.client_sessions_service
 class DisconnectCommand(BaseCommand):
     name = "disconnect"
     description = (
-        "Disconnect the current client session or a specific client session from "
-        "a Consortium server"
+        "Disconnect the current client session or a specific client session by its ID"
     )
     epilog = format_argparse_epilog(
         """
@@ -37,8 +36,8 @@ class DisconnectCommand(BaseCommand):
         parser.add_argument(
             "client_session_id",
             help=(
-                "The client session ID of the client to disconnect. If not "
-                "provided, the current client session is disconnected."
+                "ID of the client to disconnect (defaults to the current client "
+                "session if not provided)."
             ),
             nargs="?",
             default=None,
@@ -73,8 +72,8 @@ class DisconnectCommand(BaseCommand):
             )
 
             print_success(
-                f"Disconnected client session {client_session} from server "
-                f"{client_session.remote_host}:{client_session.remote_port} ",
+                f"Disconnected {client_session} from server "
+                f"{client_session.remote_host}:{client_session.remote_port}"
             )
 
             client_sessions_service.remove_client_session_by_client_session_id(

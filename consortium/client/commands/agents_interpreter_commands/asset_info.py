@@ -20,7 +20,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class AssetInfoCommand(BaseCommand):
     name = "as-info"
-    description = "Display information about an asset by its asset ID"
+    description = "Display information about an asset by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -72,7 +72,7 @@ class AssetInfoCommand(BaseCommand):
                 ),
             )
             table.add_row("Type", "DIRECTORY" if asset["is_directory"] else "FILE")
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

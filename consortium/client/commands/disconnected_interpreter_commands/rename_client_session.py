@@ -18,13 +18,13 @@ from consortium.client.utils.printer_utils import print_error, print_success
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class RenameClientSessionCommand(BaseCommand):
-    name = "rename_client_session"
-    description = "Rename the a specific client session."
+class ClientSessionRenameCommand(BaseCommand):
+    name = "rename"
+    description = "Set the name of a specific client session by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          rename_client_session 123e4567-e89b-12d3-a456-42661417400 "New name"
+          rename 123e4567-e89b-12d3-a456-42661417400 "New name"
         """,
     )
     group = "Client Session Management Commands"
@@ -32,13 +32,13 @@ class RenameClientSessionCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "client_session_id",
-            help="Client session ID of the client session to rename.",
+            help="ID of the client session to rename.",
             nargs=1,
             default=None,
         )
         parser.add_argument(
-            "new_name",
-            help="New name to assign to the specified client session.",
+            "name",
+            help="New name to assign to the client session.",
             nargs=1,
         )
 
@@ -62,7 +62,7 @@ class RenameClientSessionCommand(BaseCommand):
             # Store the previous client session string for the success
             # message to demonstrate the change in name.
             previous_client_session_str = str(client_session)
-            client_session.name = parsed_args.new_name[0]
+            client_session.name = parsed_args.name[0]
             print_success(
                 f"Renamed client session {previous_client_session_str} to: "
                 f'"{client_session.name}"',

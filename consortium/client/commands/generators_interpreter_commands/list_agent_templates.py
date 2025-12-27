@@ -43,7 +43,7 @@ class ListAgentTemplatesCommand(BaseCommand):
                     agent_template["name"],
                 )
 
-            CONSOLE.print(table)
+            CONSOLE.print(table, "")
         except SystemExit:
             pass
 

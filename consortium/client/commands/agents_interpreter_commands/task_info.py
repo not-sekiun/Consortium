@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.client_rest_api import RestApi
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -22,7 +22,7 @@ from consortium.client.utils.printer_utils import CONSOLE
 
 class TaskInfoCommand(BaseCommand):
     name = "t-info"
-    description = "Display information about an agent's task by its task ID"
+    description = "Display information about an agent's task by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -40,7 +40,7 @@ class TaskInfoCommand(BaseCommand):
 
     @staticmethod
     async def _display_task_info_from_agent_id_and_task_id(
-        rest_api: RestApi,
+        rest_api: RestAPI,
         task_id: str,
     ) -> None:
         task = await rest_api.get_agent_task_by_task_id(
@@ -66,7 +66,7 @@ class TaskInfoCommand(BaseCommand):
             ),
         )
 
-        CONSOLE.print(table)
+        CONSOLE.print(table, "")
 
     async def run(
         self,

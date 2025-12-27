@@ -37,7 +37,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
             prompt=HTML(
                 f"<b>Consortium (<ansiblue>Listeners</ansiblue>: "
                 f"<ansiblue>{listener_template['name']} "
-                f"({listener_template['listener_template_id']})</ansiblue>) > </b>",
+                f"({listener_template['listener_template_id']})</ansiblue>)\n> </b>",
             ),
             commands=(
                 [

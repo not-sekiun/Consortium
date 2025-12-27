@@ -65,7 +65,7 @@ class InfoAgentTemplateCommand(BaseCommand):
                 list(agent_template["compatible_listener_types"]),
             ),
         )
-        CONSOLE.print(table)
+        CONSOLE.print(table, "")
 
     async def run(
         self,
