@@ -17,10 +17,7 @@ class Context(BaseModel):
     arguments: list[str]
     raw_input: str
     client_session: ClientSession | None
-    interpreter_context: Any
-
-    # FIXME: Deprecate environment in favor of interpreter_context + remove client session related data from environment
-    environment: dict
+    interpreter_context: dict[str, Any]
 
 
 class BaseCommand(ABC):

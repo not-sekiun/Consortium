@@ -12,7 +12,6 @@ from consortium.framework.agent_message_models import (
 )
 from consortium.framework.agents import BaseAgentCapability
 from consortium.framework.event_hooks import EventType
-from consortium.framework.event_hooks._event import Event
 from consortium.server import server_singletons as server_singletons
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentCapabilityNotFoundError,
@@ -544,13 +543,15 @@ class Agent:
             # Finally we fire the event to notify all event handlers that a result
             # has been received.
             await self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_RESULT_RECEIVED,
-                    data={
-                        "agent_id": str(self.agent_id),
-                        "result": result.model_dump(mode="json"),
-                    },
+                event_type=EventType.AGENT_RESULT_RECEIVED,
+                message=(
+                    f"Agent {self} received result with result ID {result.result_id} "
+                    f"for task with task ID {task_message.task_id}"
                 ),
+                data={
+                    "agent_id": str(self.agent_id),
+                    "result": result.model_dump(mode="json"),
+                },
             )
 
         running_agent_capability = agent_capability(

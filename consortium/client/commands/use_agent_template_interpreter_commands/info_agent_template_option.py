@@ -44,7 +44,7 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            agent_template = context.environment["agent_template"]
+            agent_template = context.interpreter_context["agent_template"]
             try:
                 option = agent_template["options"][
                     parsed_args.agent_template_option_name[0]

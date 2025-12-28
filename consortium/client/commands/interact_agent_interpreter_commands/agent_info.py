@@ -47,7 +47,7 @@ class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
                 rest_api=rest_api,
                 agent_id=parsed_args.agent_id
                 if parsed_args.agent_id is not None
-                else context.environment["agent"]["agent_id"],
+                else context.interpreter_context["agent"]["agent_id"],
             )
         except SystemExit:
             pass

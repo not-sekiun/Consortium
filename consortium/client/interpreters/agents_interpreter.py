@@ -36,8 +36,8 @@ class AgentsInterpreter(Interpreter):
         )
 
     async def _initialize_autocompleter(self) -> None:
-        all_agents = await self.environment["rest_api"].get_all_agents()
-        all_assets = await self.environment["rest_api"].get_all_assets()
+        all_agents = await self.client_session.rest_api.get_all_agents()
+        all_assets = await self.client_session.rest_api.get_all_assets()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -57,9 +57,9 @@ class AgentsInterpreter(Interpreter):
             nested_completer_dict[command] = agent_ids_completion
 
         # Register commands that take the task or result ID as a positional argument
-        all_tasks = await self.environment["rest_api"].get_all_agent_tasks()
+        all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
         nested_completer_dict["t-info"] = {task["task_id"]: None for task in all_tasks}
-        all_results = await self.environment["rest_api"].get_all_agent_results()
+        all_results = await self.client_session.rest_api.get_all_agent_results()
         nested_completer_dict["r-info"] = {
             result["result_id"]: None for result in all_results
         }
@@ -134,36 +134,36 @@ class AgentsInterpreter(Interpreter):
         )
 
     async def _setup_event_handlers(self) -> None:
-        await self.environment["websockets_api"].subscribe_to_event(
+        await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_REGISTERED",
             event_handler=self._agent_registered_event_handler,
         )
-        await self.environment["websockets_api"].subscribe_to_event(
+        await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
         )
-        await self.environment["websockets_api"].subscribe_to_event(
+        await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
         )
-        await self.environment["websockets_api"].start()
+        await self.client_session.websockets_api.start()
 
     async def _teardown_event_handlers(self) -> None:
         # Stop the message consumption loop for the websocket connection just so that
         # the action message being sent next doesn't need to go through the message
         # consumer handler loop. This is not necessary but just makes it cleaner.
-        await self.environment["websockets_api"].stop()
+        await self.client_session.websockets_api.stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.environment["websockets_api"].unsubscribe_from_event(
+        await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_REGISTERED",
             event_handler=self._agent_registered_event_handler,
         )
-        await self.environment["websockets_api"].unsubscribe_from_event(
+        await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
         )
-        await self.environment["websockets_api"].unsubscribe_from_event(
+        await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
         )
@@ -176,5 +176,5 @@ class AgentsInterpreter(Interpreter):
         # The exit command when executed will disconnect the websocket connection but
         # this method will still run so we need to first check if the client websockets
         # API connection has already been disconnected.
-        if self.environment["websockets_api"].connected:
+        if self.client_session.websockets_api.connected:
             await self._teardown_event_handlers()

@@ -38,10 +38,11 @@ class ConnectCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "-c",
-            "--config-filepath",
+            "--config",
             help=(
-                "Path to client config JSON file (host, port, username, password). "
-                "(Default: %(const)s)"
+                "Filepath of the client configuration file to use when connecting to a "
+                "server. By default the configuration file from "
+                "`data/client/client_config.json` is used."
             ),
             nargs="?",
             const=str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH),
@@ -70,33 +71,22 @@ class ConnectCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            # Perform custom checking of arguments to ensure that either a config file
-            # or all of the connection details are provided but not both.
-            if (
-                not parsed_args.config
-                and not all(
-                    [
-                        parsed_args.remote_host,
-                        parsed_args.remote_port,
-                        parsed_args.username,
-                        parsed_args.password,
-                    ],
-                )
-                or parsed_args.config
-                and all(
-                    [
-                        parsed_args.remote_host,
-                        parsed_args.remote_port,
-                        parsed_args.username,
-                        parsed_args.password,
-                    ],
-                )
+            # Perform custom checking of arguments to ensure that if a config file is
+            # not passed or of the connection details must be provided.
+            if not parsed_args.config and not all(
+                [
+                    parsed_args.remote_host,
+                    parsed_args.remote_port,
+                    parsed_args.username,
+                    parsed_args.password,
+                ],
             ):
                 self.parser.error(
-                    "Either -c/--config or all of -rh/--remote-host, "
-                    "-rp/--remote-port, -u/--username, and -p/--password must be "
-                    "provided but not both simultaneously.",
+                    "All of -rh/--remote-host, -rp/--remote-port, -u/--username, and "
+                    "-p/--password must be provided if the client configuration file is"
+                    "not provided.",
                 )
+
             if parsed_args.config:
                 client_config_file_json_schema = {
                     "type": "object",
@@ -107,6 +97,7 @@ class ConnectCommand(BaseCommand):
                         "remote_port": {"type": "number"},
                     },
                     "required": ["remote_host", "remote_port", "username", "password"],
+                    "additionalProperties": False,
                 }
 
                 try:
@@ -131,10 +122,10 @@ class ConnectCommand(BaseCommand):
                     )
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
-                username = config_data["username"]
-                password = config_data["password"]
-                remote_host = config_data["remote_host"]
-                remote_port = config_data["remote_port"]
+                username = parsed_args.username or config_data["username"]
+                password = parsed_args.password or config_data["password"]
+                remote_host = parsed_args.remote_host or config_data["remote_host"]
+                remote_port = parsed_args.remote_port or config_data["remote_port"]
             else:
                 username = parsed_args.username
                 password = parsed_args.password
@@ -148,15 +139,16 @@ class ConnectCommand(BaseCommand):
                     remote_host=remote_host,
                     remote_port=remote_port,
                 )
-                await client_sessions_service.connect_client_session(
-                    client_session_id=str(client_session.client_session_id),
+                await (
+                    client_sessions_service.connect_client_session_by_client_session_id(
+                        client_session_id=str(client_session.client_session_id),
+                    )
                 )
                 print_success(
                     f"Connected to server {remote_host}:{remote_port} as '{username}'"
                 )
             except ClientSessionConnectionError as exc:
                 print_error(exc)
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
         except SystemExit:
             pass
 

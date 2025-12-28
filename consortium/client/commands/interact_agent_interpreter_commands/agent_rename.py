@@ -47,8 +47,8 @@ class AgentRenameCommand(AgentRenameAgentsInterpreterCommand):
                 rest_api=rest_api,
                 agent_id=parsed_commands.agent_id
                 if parsed_commands.agent_id
-                else context.environment["agent"]["agent_id"],
-                new_name=parsed_commands.name[0],
+                else context.interpreter_context["agent"]["agent_id"],
+                name=parsed_commands.name[0],
             )
         except SystemExit:
             pass

@@ -40,7 +40,7 @@ class ListenerTemplateUseCommand(BaseCommand):
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
-            current_listener_template = context.environment["listener_template"]
+            current_listener_template = context.interpreter_context["listener_template"]
 
             if (
                 parsed_args.listener_template_id[0]

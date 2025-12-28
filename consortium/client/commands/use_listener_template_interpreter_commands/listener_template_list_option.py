@@ -32,9 +32,9 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(context.arguments)
-            listener_template_options = context.environment["listener_template"][
-                "options"
-            ]
+            listener_template_options = context.interpreter_context[
+                "listener_template"
+            ]["options"]
 
             table = Table(title="Listener Template Options", highlight=True)
             table.add_column("Option Type")

@@ -41,8 +41,10 @@ class UnsetGeneratorParameterCommand(BaseCommand):
     async def run(self, context: Context) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
-            agent_template_options = context.environment["agent_template"]["options"]
+            client_rest_api_connection = context.client_session.rest_api
+            agent_template_options = context.interpreter_context["agent_template"][
+                "options"
+            ]
             parameter_name = parsed_args.parameter_name[0]
 
             try:

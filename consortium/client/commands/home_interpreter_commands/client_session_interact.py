@@ -54,7 +54,7 @@ class InteractClientSessionCommand(BaseCommand):
                 print_error(str(exc))
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
-            if client_session == context.environment["client_session"]:
+            if client_session is context.client_session:
                 print_error(
                     f"Already interacting with client session: {client_session}"
                 )

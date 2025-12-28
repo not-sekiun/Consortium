@@ -46,12 +46,12 @@ class GeneratorsInterpreter(Interpreter):
         )
 
     async def _initialize_autocomplete(self) -> None:
-        all_agent_templates = await self.environment[
-            "rest_api"
-        ].get_all_agent_templates()
-        all_agent_generators = await self.environment[
-            "rest_api"
-        ].get_all_agent_generators()
+        all_agent_templates = (
+            await self.client_session.rest_api.get_all_agent_templates()
+        )
+        all_agent_generators = (
+            await self.client_session.rest_api.get_all_agent_generators()
+        )
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -111,28 +111,28 @@ class GeneratorsInterpreter(Interpreter):
         await self._initialize_autocomplete()
 
     async def _setup_event_handlers(self) -> None:
-        await self.environment["websockets_api"].subscribe_to_event(
+        await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_GENERATOR_CREATED",
             event_handler=self._agent_generator_created_or_removed_event_handler,
         )
-        await self.environment["websockets_api"].subscribe_to_event(
+        await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_GENERATOR_REMOVED",
             event_handler=self._agent_generator_created_or_removed_event_handler,
         )
-        await self.environment["websockets_api"].start()
+        await self.client_session.websockets_api.start()
 
     async def _teardown_event_handlers(self) -> None:
         # Stop the message consumption loop for the websocket connection just so that
         # the action message being sent next doesn't need to go through the message
         # consumer handler loop. This is not necessary but just makes it cleaner.
-        await self.environment["websockets_api"].stop()
+        await self.client_session.websockets_api.stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.environment["websockets_api"].unsubscribe_from_event(
+        await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_GENERATOR_CREATED",
             event_handler=self._agent_generator_created_or_removed_event_handler,
         )
-        await self.environment["websockets_api"].unsubscribe_from_event(
+        await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_GENERATOR_REMOVED",
             event_handler=self._agent_generator_created_or_removed_event_handler,
         )
@@ -145,5 +145,5 @@ class GeneratorsInterpreter(Interpreter):
         # The exit command when executed will disconnect the websocket connection but
         # this method will still run so we need to first check if the client websockets
         # API connection has already been disconnected.
-        if self.environment["websockets_api"].connected:
+        if self.client_session.websockets_api.connected:
             await self._teardown_event_handlers()

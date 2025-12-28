@@ -44,22 +44,6 @@ class Interpreter:
         if context is None:
             context = {}
 
-        # # TODO: Add resource commands and aliases to the environment variables at some
-        # #  point
-        # if context is None:
-        #     context = {}
-
-        # for key in context:
-        #     if key in (
-        #         "client_session",
-        #         "rest_api",
-        #         "websockets_api",
-        #         "commands",
-        #     ):
-        #         raise AssertionError(
-        #             f"Environment variable name '{key}' is reserved and cannot be used."
-        #         )
-
         self.prompt_session = PromptSession(
             message=prompt,
             completer=NestedCompleter.from_nested_dict(
@@ -72,25 +56,29 @@ class Interpreter:
         self.client_session = client_session
         self.context = context
 
-        # TODO: Deprecate
-        self.environment = {
-            "client_session": client_session,
-            "rest_api": client_session.rest_api,
-            "websockets_api": client_session.websockets_api,
-            "commands": {command.name: command for command in commands},
-            **context,
-        }
+        # Add current interpreter commands to the interpreter context for the help
+        # command to access
+        self.context["commands"] = self.commands
+        # TODO: Add aliases and resource commands to the interpreter context at some
+        #  point
+        # self.context["aliases"] = {}
+        # self.context["resource_commands"] = {}
 
     # We provide a function because it needs to be called on every prompt update. The
     # name of the session can be renamed at any moment. Just passing in `HTML` object
     # to the `bottom_toolbar` parameter does not cause that `HTML` object to be updated
     # on every prompt.
     def _get_bottom_toolbar_string(self) -> HTML:
-        client_session = self.environment["client_session"]
+        if not self.client_session:
+            return HTML(
+                "<b><ansired> DISCONNECTED </ansired></b><b> Use the 'connect' "
+                "command to connect to a server</b>"
+            )
         return HTML(
-            f"<bold>Current client session: {client_session} | Server: "
-            f"{client_session.remote_host}:{client_session.remote_port} | "
-            f"Logged in as: {client_session.username}</bold>",
+            f"<b><ansigreen> CONNECTED </ansigreen></b><b> Current client session: "
+            f"{self.client_session} | Server: "
+            f"{self.client_session.remote_host}:{self.client_session.remote_port} | "
+            f"Logged in as: {self.client_session.username}</b>",
         )
 
     async def on_loop(self) -> None: ...
@@ -138,7 +126,6 @@ class Interpreter:
                         raw_input=parsed_command.raw_input,
                         client_session=self.client_session,
                         interpreter_context=self.context,
-                        environment=self.environment,
                     )
                     command_return_status = await self.commands[
                         parsed_command.command

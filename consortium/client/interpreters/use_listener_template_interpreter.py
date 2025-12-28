@@ -61,7 +61,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-        listener_template = self.environment["listener_template"]
+        listener_template = self.context["listener_template"]
         for key, value in {
             command: dict.fromkeys(listener_template["options"])
             for command in [

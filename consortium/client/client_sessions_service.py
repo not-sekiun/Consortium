@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 class ClientSessionsService:
     def __init__(self):
         self._client_sessions = {}
-        self._client_sessions_service_logger = logger.bind(
+        self._logger = logger.bind(
             logger_name=str(self),
         )
 
@@ -29,15 +30,17 @@ class ClientSessionsService:
 
     def get_all_client_sessions(self) -> list[ClientSession]:
         all_client_sessions = list(self._client_sessions.values())
-        self._client_sessions_service_logger.debug(
+        self._logger.debug(
             f"Retrieved all client sessions ({len(all_client_sessions)} retrieved).",
         )
         return all_client_sessions
 
     def get_client_session_by_client_session_id(
         self,
-        client_session_id: str,
+        client_session_id: str | uuid.UUID,
     ) -> ClientSession:
+        client_session_id = str(client_session_id)
+
         try:
             client_session = self._client_sessions[client_session_id]
         except KeyError:
@@ -45,7 +48,7 @@ class ClientSessionsService:
                 client_session_id=client_session_id
             ) from None
 
-        self._client_sessions_service_logger.debug(
+        self._logger.debug(
             f"Retrieved client session: {repr(client_session)}",
         )
         return client_session
@@ -66,12 +69,14 @@ class ClientSessionsService:
             remote_host=remote_host,
             remote_port=remote_port,
         )
-        self._client_sessions_service_logger.debug(
+        self._logger.debug(
             f"Created client session: {client_session!r}",
         )
         return client_session
 
-    async def connect_client_session(self, client_session_id: str) -> None:
+    async def connect_client_session_by_client_session_id(
+        self, client_session_id: str | uuid.UUID
+    ) -> None:
         client_session = self.get_client_session_by_client_session_id(
             client_session_id=client_session_id,
         )
@@ -90,16 +95,18 @@ class ClientSessionsService:
                 remote_port=client_session.remote_port,
                 error_message=str(exc),
             ) from None
-        self._client_sessions_service_logger.debug(
+        self._logger.debug(
             f"Connected client session: {client_session!r}",
         )
 
-    async def disconnect_client_session(self, client_session_id: str) -> None:
+    async def disconnect_client_session_by_client_session_id(
+        self, client_session_id: str | uuid.UUID
+    ) -> None:
         client_session = self.get_client_session_by_client_session_id(
             client_session_id=client_session_id,
         )
         await client_session.disconnect()
-        self._client_sessions_service_logger.debug(
+        self._logger.debug(
             f"Disconnected client session: {client_session!r}",
         )
 
@@ -108,7 +115,7 @@ class ClientSessionsService:
             raise ClientSessionAlreadyExistsError from None
 
         self._client_sessions[str(client_session.client_session_id)] = client_session
-        self._client_sessions_service_logger.debug(
+        self._logger.debug(
             f"Added client session: {client_session!r}",
         )
 
@@ -130,15 +137,15 @@ class ClientSessionsService:
 
     def remove_client_session_by_client_session_id(
         self,
-        client_session_id: str,
+        client_session_id: str | uuid.UUID,
     ) -> None:
-        if client_session_id not in self._client_sessions:
-            raise ClientSessionNotFoundError(
-                client_session_id=client_session_id
-            ) from None
+        client_session = self.get_client_session_by_client_session_id(
+            client_session_id=client_session_id,
+        )
 
-        removed_client_session = self._client_sessions.pop(client_session_id)
-
-        self._client_sessions_service_logger.debug(
+        removed_client_session = self._client_sessions.pop(
+            str(client_session.client_session_id)
+        )
+        self._logger.debug(
             f"Removed client session: {removed_client_session!r}",
         )

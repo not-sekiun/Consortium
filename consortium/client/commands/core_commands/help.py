@@ -97,20 +97,15 @@ class HelpCommand(BaseCommand):
             parsed_args = self.parser.parse_args(
                 context.arguments,
             )
+            commands = context.interpreter_context["commands"]
 
             if parsed_args.command_name:
-                if parsed_args.command_name in context.environment["commands"]:
-                    print(
-                        context.environment["commands"][
-                            parsed_args.command_name
-                        ].summary,
-                    )
+                if parsed_args.command_name in commands:
+                    print(commands[parsed_args.command_name].summary)
                 else:
                     print_error(f"Invalid command: {parsed_args.command_name}")
             else:
-                self._print_summarized_help_menu(
-                    context.environment["commands"],
-                )
+                self._print_summarized_help_menu(commands)
         except SystemExit:
             pass
 

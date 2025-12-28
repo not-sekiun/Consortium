@@ -45,7 +45,7 @@ class InfoGeneratorCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
+            client_rest_api_connection = context.client_session.rest_api
             agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_args.agent_generator_id[0],
             )

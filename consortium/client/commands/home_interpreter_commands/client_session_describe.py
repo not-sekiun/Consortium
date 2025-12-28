@@ -45,21 +45,27 @@ class ClientSessionDescribeCommand(BaseCommand):
         )
         parser.add_argument(
             "description",
-            help="New description to assign to the specified client session.",
+            help="New description for the client session.",
             nargs=1,
         )
 
     @staticmethod
-    async def _describe_client_session(
+    def _describe_client_session(
         client_session_id: str,
         description: str,
     ) -> None:
-        client_session = (
-            client_sessions_service.get_client_session_by_client_session_id(
-                client_session_id=client_session_id,
+        try:
+            client_session = (
+                client_sessions_service.get_client_session_by_client_session_id(
+                    client_session_id=client_session_id,
+                )
             )
-        )
-        client_session.description = description
+            client_session.description = description
+            print_success(
+                f"Updated {client_session} description to '{client_session.description}'"
+            )
+        except ClientSessionNotFoundError as exc:
+            print_error(str(exc))
 
     async def run(
         self,
@@ -67,22 +73,14 @@ class ClientSessionDescribeCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            if parsed_args.client_session_id is None:
-                client_session = context.environment["client_session"]
-            else:
-                try:
-                    client_session = (
-                        client_sessions_service.get_client_session_by_client_session_id(
-                            client_session_id=parsed_args.client_session_id,
-                        )
-                    )
-                except ClientSessionNotFoundError as exc:
-                    print_error(str(exc))
-                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
-            client_session.description = parsed_args.description[0]
-            print_success(
-                f"Updated {client_session} description to '{client_session.description}'"
+            if parsed_args.client_session_id is None:
+                client_session_id = context.client_session.client_session_id
+            else:
+                client_session_id = parsed_args.client_session_id[0]
+            self._describe_client_session(
+                client_session_id=client_session_id,
+                description=parsed_args.description[0],
             )
         except SystemExit:
             pass

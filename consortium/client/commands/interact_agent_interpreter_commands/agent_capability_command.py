@@ -327,7 +327,7 @@ def construct_agent_capability_command(
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
                 parsed_args = self.parser.parse_args(context.arguments)
-                client_rest_api_connection = context.environment["rest_api"]
+                client_rest_api_connection = context.client_session.rest_api
 
                 options = agent_capability["options"]
                 arguments = {}
@@ -408,14 +408,14 @@ def construct_agent_capability_command(
 
                 _success_response = (
                     await client_rest_api_connection.task_agent_by_agent_id(
-                        agent_id=context.environment["agent"]["agent_id"],
+                        agent_id=context.interpreter_context["agent"]["agent_id"],
                         command=self.name,
                         arguments=arguments,
                     )
                 )
                 print_info(
-                    f"Tasked agent '{context.environment['agent']['name']}' "
-                    f"({context.environment['agent']['agent_id']})",
+                    f"Tasked agent '{context.interpreter_context['agent']['name']}' "
+                    f"({context.interpreter_context['agent']['agent_id']})",
                 )
             except SystemExit:
                 pass

@@ -29,7 +29,7 @@ class BannerCommand(BaseCommand):
 
     @staticmethod
     async def _display_banner(
-        client_rest_api_connection: RestAPI | None,
+        rest_api: RestAPI | None,
     ) -> None:
         star_banner = (
             "[bold white]        .        x      "
@@ -49,7 +49,7 @@ class BannerCommand(BaseCommand):
         )
         banner_art = [star_banner]
 
-        if client_rest_api_connection is None:
+        if rest_api is None:
             number_of_active_listeners = "N/A"
             number_of_online_agents = "N/A"
             server_release_formatted_string = "N/A"
@@ -57,14 +57,14 @@ class BannerCommand(BaseCommand):
                 "[bold white]    Connection Status  : [bold red]Disconnected"
             )
         else:
-            server_release = await client_rest_api_connection.get_server_release()
+            server_release = await rest_api.get_server_release()
             listeners = [
                 listener
-                for listener in await client_rest_api_connection.get_all_listeners()
+                for listener in await rest_api.get_all_listeners()
                 if listener["status"]["state"] == "RUNNING"
             ]
-            own_user = await client_rest_api_connection.get_own_user_info()
-            agents = await client_rest_api_connection.get_all_agents()
+            own_user = await rest_api.get_own_user_info()
+            agents = await rest_api.get_all_agents()
 
             number_of_active_listeners = str(len(listeners))
             number_of_online_agents = str(len(agents))
@@ -76,7 +76,7 @@ class BannerCommand(BaseCommand):
             connection_status_banner = (
                 "    Connection Status  : "
                 f"[bold green]Connected[bold white] as "
-                f"'{client_rest_api_connection.username}' "
+                f"'{rest_api.username}' "
                 f"({format_role_str(role=own_user['role'])}[bold white])"
             )
 
@@ -113,9 +113,7 @@ class BannerCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(context.arguments)
-            await self._display_banner(
-                context.environment.get("rest_api"),
-            )
+            await self._display_banner(context.client_session.rest_api)
         except SystemExit:
             pass
 

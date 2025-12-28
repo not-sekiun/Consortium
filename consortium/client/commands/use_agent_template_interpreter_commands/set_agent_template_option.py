@@ -448,7 +448,9 @@ class SetAgentTemplateOptionCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            agent_template_options = context.environment["agent_template"]["options"]
+            agent_template_options = context.interpreter_context["agent_template"][
+                "options"
+            ]
 
             option_name = parsed_args.option_name[0]
             option_values = parsed_args.option_values

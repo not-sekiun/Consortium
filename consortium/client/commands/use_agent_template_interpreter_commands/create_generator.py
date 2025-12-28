@@ -26,11 +26,13 @@ class CreateGeneratorCommand(BaseCommand):
     async def run(self, context: Context) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
-            agent_template_id = context.environment["agent_template"][
+            client_rest_api_connection = context.client_session.rest_api
+            agent_template_id = context.interpreter_context["agent_template"][
                 "agent_template_id"
             ]
-            agent_template_options = context.environment["agent_template"]["options"]
+            agent_template_options = context.interpreter_context["agent_template"][
+                "options"
+            ]
 
             agent_template_option_values = {}
             for option_name, option in agent_template_options.items():

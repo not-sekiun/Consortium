@@ -49,29 +49,35 @@ class ClientSessionRenameCommand(BaseCommand):
             nargs=1,
         )
 
+    @staticmethod
+    def _rename_client_session(client_session_id: str, name: str) -> None:
+        try:
+            client_session = (
+                client_sessions_service.get_client_session_by_client_session_id(
+                    client_session_id=client_session_id,
+                )
+            )
+            # Store the previous client session string for the success
+            # message to demonstrate the change in name.
+            previous_client_session_str = str(client_session)
+            client_session.name = name
+            print_success(
+                f"Renamed client session {previous_client_session_str} to '{client_session.name}'"
+            )
+        except ClientSessionNotFoundError as exc:
+            print_error(str(exc))
+
     async def run(self, context: Context) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
 
             if parsed_args.client_session_id is None:
-                client_session = context.environment["client_session"]
+                client_session_id = context.client_session.client_session_id
             else:
-                try:
-                    client_session = (
-                        client_sessions_service.get_client_session_by_client_session_id(
-                            client_session_id=parsed_args.client_session_id,
-                        )
-                    )
-                except ClientSessionNotFoundError as exc:
-                    print_error(str(exc))
-                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
-
-            # Store the previous client session string for the success
-            # message to demonstrate the change in name.
-            previous_client_session_str = str(client_session)
-            client_session.name = parsed_args.name[0]
-            print_success(
-                f"Renamed client session {previous_client_session_str} to '{client_session.name}'"
+                client_session_id = parsed_args.client_session_id[0]
+            self._rename_client_session(
+                client_session_id=client_session_id,
+                name=parsed_args.name[0],
             )
         except SystemExit:
             pass

@@ -92,8 +92,6 @@ class Client:
                 remote_port=self._client_config.remote_port,
             )
             await client_session.connect()
-            rest_api = client_session.rest_api
-            websockets_api = client_session.websockets_api
             print_success(
                 f"Connected to server "
                 f"{self._client_config.remote_host}:{self._client_config.remote_port} "
@@ -111,8 +109,6 @@ class Client:
             OSError,
         ) as exc:
             client_session = None
-            rest_api = None
-            websockets_api = None
             print_error(
                 f"Failed to connect to server "
                 f"{self._client_config.remote_host}:{self._client_config.remote_port}. "
@@ -126,17 +122,7 @@ class Client:
                 arguments=[],
                 raw_input="banner",
                 client_session=client_session,
-                interpreter_context=None,
-                # The banner command needs the client session, client REST API
-                # connection and client websockets API connections as part of its
-                # environment to display relevant information. If those values are
-                # passed as `None` to it, the banner command recognizes that it is
-                # (or will be) running in the context of a disconnected interpreter.
-                environment={
-                    "client_session": client_session,
-                    "rest_api": rest_api,
-                    "websockets_api": websockets_api,
-                },
+                interpreter_context={},
             ),
         )
 

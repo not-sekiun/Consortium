@@ -33,7 +33,7 @@ class StopGeneratorCommand(BaseCommand):
     async def run(self, context: Context) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
+            client_rest_api_connection = context.client_session.rest_api
             # If agent generator does not exist, a RESTAPIError is raised and caught by
             # the outer try-except block
             agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(

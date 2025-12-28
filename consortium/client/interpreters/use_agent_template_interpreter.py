@@ -61,7 +61,7 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-        agent_template = self.environment["agent_template"]
+        agent_template = self.context["agent_template"]
         for key, value in {
             command: dict.fromkeys(agent_template["options"])
             for command in [

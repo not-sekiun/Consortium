@@ -43,7 +43,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            listener_template = context.environment["listener_template"]
+            listener_template = context.interpreter_context["listener_template"]
 
             try:
                 option = listener_template["options"][

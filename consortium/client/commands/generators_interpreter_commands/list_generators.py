@@ -36,7 +36,7 @@ class ListGeneratorsCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
+            client_rest_api_connection = context.client_session.rest_api
             all_agent_generators = (
                 await client_rest_api_connection.get_all_agent_generators()
             )

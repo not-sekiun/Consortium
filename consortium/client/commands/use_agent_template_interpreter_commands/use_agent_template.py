@@ -37,8 +37,10 @@ class UseAgentTemplateCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
-            currently_used_agent_template = context.environment["agent_template"]
+            client_rest_api_connection = context.client_session.rest_api
+            currently_used_agent_template = context.interpreter_context[
+                "agent_template"
+            ]
 
             if (
                 currently_used_agent_template["agent_template_id"]

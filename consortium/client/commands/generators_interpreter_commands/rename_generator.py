@@ -33,7 +33,7 @@ class RenameGeneratorCommand(BaseCommand):
             nargs=1,
         )
         parser.add_argument(
-            "new_name",
+            "name",
             help="New name to assign to the agent generator.",
             nargs=1,
         )
@@ -41,7 +41,7 @@ class RenameGeneratorCommand(BaseCommand):
     async def run(self, context: Context) -> ReturnStatus:
         try:
             parsed_commands = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
+            client_rest_api_connection = context.client_session.rest_api
             agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_commands.agent_generator_id[0],
             )
@@ -50,7 +50,7 @@ class RenameGeneratorCommand(BaseCommand):
                 client_rest_api_connection.update_agent_generator_by_agent_generator_id(
                     agent_generator_id=parsed_commands.agent_generator_id[0],
                     new_agent_generator_attributes={
-                        "name": parsed_commands.new_name[0],
+                        "name": parsed_commands.name[0],
                     },
                 )
             )
@@ -58,7 +58,7 @@ class RenameGeneratorCommand(BaseCommand):
             print_success(
                 f'Agent generator "{agent_generator["name"]}" '
                 f"({agent_generator['agent_generator_id']}) renamed to "
-                f'"{parsed_commands.new_name[0]}"',
+                f'"{parsed_commands.name[0]}"',
             )
         except SystemExit:
             pass

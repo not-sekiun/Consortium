@@ -59,15 +59,11 @@ class InteractAgentInterpreter(Interpreter):
                 + [AgentsCommand()]
             ),
             client_session=client_session,
-            context={
-                "agent": agent,
-            },
+            context={"agent": agent},
         )
 
     async def _register_agent_capability_commands(self) -> None:
-        agent_capabilities = self.environment["agent"]["agent_type"][
-            "agent_capabilities"
-        ]
+        agent_capabilities = self.context["agent"]["agent_type"]["agent_capabilities"]
 
         for agent_capability_name, agent_capability in agent_capabilities.items():
             # Register each agent capability as a command that can be run.
@@ -103,15 +99,16 @@ class InteractAgentInterpreter(Interpreter):
                         break
                     deconfliction_number += 1
 
+            # Note that `_register_agent_capability_commands` is called in `on_enter`
+            # which in turn is called only after the interpreter has been constructed.
+            # Register each agent capability command for the autocompleter.
             self.commands[agent_capability_name] = agent_capability_command
-            # Register each agent capability command in the autocompleter.
-            self.environment["commands"][agent_capability_name] = (
-                agent_capability_command
-            )
+            # Also register in the context for the help command to display properly.
+            self.context["commands"][agent_capability_name] = agent_capability_command
 
     async def _initialize_autocompleter(self) -> None:
-        all_agents = await self.environment["rest_api"].get_all_agents()
-        all_assets = await self.environment["rest_api"].get_all_assets()
+        all_agents = await self.client_session.rest_api.get_all_agents()
+        all_assets = await self.client_session.rest_api.get_all_assets()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
@@ -131,10 +128,10 @@ class InteractAgentInterpreter(Interpreter):
             nested_completer_dict[command] = agent_ids_completion
 
         # Register commands that take the task or result ID as a positional argument
-        all_tasks = await self.environment["rest_api"].get_all_agent_tasks()
+        all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
         nested_completer_dict["t-info"] = {task["task_id"]: None for task in all_tasks}
 
-        all_results = await self.environment["rest_api"].get_all_agent_results()
+        all_results = await self.client_session.rest_api.get_all_agent_results()
         nested_completer_dict["r-info"] = {
             result["result_id"]: None for result in all_results
         }
@@ -152,9 +149,7 @@ class InteractAgentInterpreter(Interpreter):
 
         # Register each agent capability command to the autocompleter without any
         # argument completions.
-        agent_capabilities = self.environment["agent"]["agent_type"][
-            "agent_capabilities"
-        ]
+        agent_capabilities = self.context["agent"]["agent_type"]["agent_capabilities"]
         for agent_capability_name in agent_capabilities:
             nested_completer_dict[agent_capability_name] = dict.fromkeys(self.commands)
 
@@ -192,10 +187,10 @@ class InteractAgentInterpreter(Interpreter):
             nested_completer_dict,
         )
 
-        if event["data"]["agent_id"] == self.environment["agent"]["agent_id"]:
+        if event["data"]["agent_id"] == self.context["agent"]["agent_id"]:
             print_info(
-                f"Received result with result ID '{result['result_id']}' for "
-                f"task with task ID '{result['task_id']}':\n{result['message']}",
+                f"Received result with result ID {result['result_id']} for "
+                f"task with task ID {result['task_id']}:\n{result['message']}",
             )
 
     async def _agent_registered_event_handler(
@@ -223,29 +218,29 @@ class InteractAgentInterpreter(Interpreter):
 
     async def _setup_event_handlers(self) -> None:
         # Register all relevant event handlers first
-        await self.environment["websockets_api"].subscribe_to_event(
+        await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
         )
-        await self.environment["websockets_api"].subscribe_to_event(
+        await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
         )
         # Start the websocket connection to listen for all registered events.
-        await self.environment["websockets_api"].start()
+        await self.client_session.websockets_api.start()
 
     async def _teardown_event_handlers(self) -> None:
         # Stop the message consumption loop for the websocket connection just so that
         # the action message being sent next doesn't need to go through the message
         # consumer handler loop. This is not necessary but just makes it cleaner.
-        await self.environment["websockets_api"].stop()
+        await self.client_session.websockets_api.stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.environment["websockets_api"].unsubscribe_from_event(
+        await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_RESULT_RECEIVED",
             event_handler=self._agent_result_received_event_handler,
         )
-        await self.environment["websockets_api"].unsubscribe_from_event(
+        await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
         )
@@ -259,5 +254,5 @@ class InteractAgentInterpreter(Interpreter):
         # The exit command when executed will disconnect the websocket connection but
         # this method will still run so we need to first check if the client websockets
         # API connection has already been disconnected.
-        if self.environment["websockets_api"].connected:
+        if self.client_session.websockets_api.connected:
             await self._teardown_event_handlers()

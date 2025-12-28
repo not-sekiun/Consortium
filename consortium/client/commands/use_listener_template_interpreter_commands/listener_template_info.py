@@ -50,7 +50,9 @@ class ListenerTemplateInfoCommand(ListenersInterpreterListenerTemplateInfoComman
                 rest_api=rest_api,
                 listener_template_id=parsed_args.listener_template_id
                 if parsed_args.listener_template_id is not None
-                else context.environment["listener_template"]["listener_template_id"],
+                else context.interpreter_context["listener_template"][
+                    "listener_template_id"
+                ],
             )
         except SystemExit:
             pass

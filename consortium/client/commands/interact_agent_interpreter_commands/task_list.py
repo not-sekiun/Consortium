@@ -68,7 +68,7 @@ class TaskListCommand(TaskListAgentsInterpreterCommand):
                     agent_id=parsed_args.agent_id,
                 )
             else:
-                agent = context.environment["agent"]
+                agent = context.interpreter_context["agent"]
 
             agent_tasks = await self._get_tasks_to_list(
                 rest_api=rest_api,

@@ -18,7 +18,7 @@ from consortium.client.utils.printer_utils import print_error, print_success
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class DisconnectCommand(BaseCommand):
+class ClientSessionDisconnectCommand(BaseCommand):
     name = "disconnect"
     description = (
         "Disconnect the current client session or a specific client session by its ID"
@@ -43,6 +43,31 @@ class DisconnectCommand(BaseCommand):
             default=None,
         )
 
+    @staticmethod
+    async def _disconnect_client_session(
+        client_session_id: str,
+    ) -> None:
+        try:
+            client_session = (
+                client_sessions_service.get_client_session_by_client_session_id(
+                    client_session_id=client_session_id,
+                )
+            )
+            await (
+                client_sessions_service.disconnect_client_session_by_client_session_id(
+                    client_session_id=client_session_id,
+                )
+            )
+            print_success(
+                f"Disconnected {client_session} from server "
+                f"{client_session.remote_host}:{client_session.remote_port}"
+            )
+            client_sessions_service.remove_client_session_by_client_session_id(
+                client_session_id=client_session_id,
+            )
+        except ClientSessionNotFoundError as exc:
+            print_error(str(exc))
+
     async def run(
         self,
         context: Context,
@@ -51,36 +76,13 @@ class DisconnectCommand(BaseCommand):
             parsed_args = self.parser.parse_args(context.arguments)
 
             if parsed_args.client_session_id is None:
-                client_session_id = str(
-                    context.environment["client_session"].client_session_id,
-                )
+                client_session_id = str(context.client_session.client_session_id)
             else:
                 client_session_id = parsed_args.client_session_id
 
-            try:
-                await client_sessions_service.disconnect_client_session(
-                    client_session_id=client_session_id,
-                )
-            except ClientSessionNotFoundError as exc:
-                print_error(str(exc))
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+            await self._disconnect_client_session(client_session_id=client_session_id)
 
-            client_session = (
-                client_sessions_service.get_client_session_by_client_session_id(
-                    client_session_id=client_session_id,
-                )
-            )
-
-            print_success(
-                f"Disconnected {client_session} from server "
-                f"{client_session.remote_host}:{client_session.remote_port}"
-            )
-
-            client_sessions_service.remove_client_session_by_client_session_id(
-                client_session_id=client_session_id,
-            )
-
-            if client_session == context.environment["client_session"]:
+            if client_session_id == str(context.client_session.client_session_id):
                 return ReturnStatus(type=ReturnStatusType.EXIT_CLIENT_SESSION)
         except SystemExit:
             pass

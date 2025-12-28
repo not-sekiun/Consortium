@@ -33,7 +33,7 @@ class RedescribeGeneratorCommand(BaseCommand):
             nargs=1,
         )
         parser.add_argument(
-            "new_description",
+            "description",
             help="New description to assign to the agent generator.",
             nargs=1,
         )
@@ -41,7 +41,7 @@ class RedescribeGeneratorCommand(BaseCommand):
     async def run(self, context: Context) -> ReturnStatus:
         try:
             parsed_commands = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
+            client_rest_api_connection = context.client_session.rest_api
             agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_commands.agent_generator_id[0],
             )
@@ -50,7 +50,7 @@ class RedescribeGeneratorCommand(BaseCommand):
                 client_rest_api_connection.update_agent_generator_by_agent_generator_id(
                     agent_generator_id=parsed_commands.agent_generator_id[0],
                     new_agent_generator_attributes={
-                        "description": parsed_commands.new_description[0],
+                        "description": parsed_commands.description[0],
                     },
                 )
             )
@@ -58,7 +58,7 @@ class RedescribeGeneratorCommand(BaseCommand):
             print_success(
                 f'Agent generator "{agent_generator["name"]}" '
                 f"({agent_generator['agent_generator_id']}) description "
-                f'updated to: "{parsed_commands.new_description[0]}"',
+                f'updated to: "{parsed_commands.description[0]}"',
             )
         except SystemExit:
             pass

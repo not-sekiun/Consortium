@@ -5,7 +5,7 @@ from consortium.client.commands.home_interpreter_commands.client_session_describ
     ClientSessionDescribeCommand,
 )
 from consortium.client.commands.home_interpreter_commands.client_session_disconnect import (
-    DisconnectCommand,
+    ClientSessionDisconnectCommand,
 )
 from consortium.client.commands.home_interpreter_commands.client_session_info import (
     ClientSessionInfoCommand,
@@ -22,7 +22,7 @@ from consortium.client.commands.home_interpreter_commands.client_session_rename 
 
 HOME_INTERPRETER_COMMANDS = [
     ConnectCommand(),
-    DisconnectCommand(),
+    ClientSessionDisconnectCommand(),
     ClientSessionInfoCommand(),
     InteractClientSessionCommand(),
     ClientSessionListCommand(),

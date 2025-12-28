@@ -43,13 +43,13 @@ class InfoAgentTemplateCommand(GeneratorsInterpreterInfoAgentTemplateCommand):
     ) -> ReturnStatus:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.environment["rest_api"]
+            client_rest_api_connection = context.client_session.rest_api
             if parsed_args.agent_template_id is not None:
                 agent_template = await client_rest_api_connection.get_agent_template_by_agent_template_id(
                     agent_template_id=parsed_args.agent_template_id
                 )
             else:
-                agent_template = context.environment["agent_template"]
+                agent_template = context.interpreter_context["agent_template"]
             self._display_agent_template_info(agent_template=agent_template)
         except SystemExit:
             pass

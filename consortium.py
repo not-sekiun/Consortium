@@ -39,7 +39,7 @@ def main():
         "--server-config",
         help=(
             "Filepath of the server configuration file to use when starting the "
-            "server. By default the server configuration file from "
+            "server. By default the configuration file from "
             "`data/server/server_config.json` is used."
         ),
         nargs="?",
@@ -50,7 +50,7 @@ def main():
         "--logging-config",
         help=(
             "Filepath of the logging configuration file to use when starting the "
-            "server. By default the logging configuration file from "
+            "server. By default the configuration file from "
             "`data/server/logging_config.json` is used."
         ),
         nargs="?",
@@ -71,12 +71,9 @@ def main():
         "--reload",
         help=(
             "Start the server with framework reloading enabled. This will reload the "
-            "server on file changes made to the listener "
-            "(consortium/components/listeners), agents (consortium/components/agents), "
-            "plugins (consortium/components/plugins), and event hooks "
-            "(consortium/components/event_hooks) framework component directories where "
-            "custom framework components are loaded from. This is helpful for "
-            "developing custom components."
+            "server on file changes made to the listener, agents, plugins, and event "
+            "hooks framework component directories (consortium/components/*) where "
+            "custom framework components are loaded from."
         ),
         action="store_true",
     )
@@ -98,7 +95,7 @@ def main():
         "--config",
         help=(
             "Filepath of the client configuration file to use when starting the "
-            "server. By default the client configuration file from "
+            "client. By default the configuration file from "
             "`data/client/client_config.json` is used."
         ),
         nargs="?",

@@ -68,15 +68,19 @@ class ResultListCommand(ResultListAgentsInterpreterCommand):
                     agent_id=parsed_args.agent_id,
                 )
             else:
-                agent = context.environment["agent"]
+                agent = context.interpreter_context["agent"]
 
-            await self._list_results(
+            agent_results = await self._get_results_to_list(
                 rest_api=rest_api,
                 agent_id=agent["agent_id"],
-                agent_name=agent["name"],
                 display_success=parsed_args.success,
                 display_failure=parsed_args.failure,
                 display_error=parsed_args.error,
+            )
+            self._list_results(
+                agent_id=agent["agent_id"],
+                agent_name=agent["name"],
+                agent_results=agent_results,
             )
         except SystemExit:
             pass

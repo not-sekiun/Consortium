@@ -70,9 +70,9 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             parsed_args = self.parser.parse_args(context.arguments)
-            listener_template_options = context.environment["listener_template"](
-                "options"
-            )
+            listener_template_options = context.interpreter_context[
+                "listener_template"
+            ]("options")
 
             option_name = parsed_args.option_name[0]
             option_values = parsed_args.option_values

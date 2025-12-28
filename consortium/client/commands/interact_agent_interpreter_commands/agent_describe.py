@@ -49,7 +49,7 @@ class AgentDescribeCommand(AgentDescribeAgentsInterpreterCommand):
                 rest_api=rest_api,
                 agent_id=parsed_commands.agent_id
                 if parsed_commands.agent_id
-                else context.environment["agent"]["agent_id"],
+                else context.interpreter_context["agent"]["agent_id"],
                 description=parsed_commands.description[0],
             )
         except SystemExit:

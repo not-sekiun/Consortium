@@ -27,12 +27,12 @@ class ListenerLaunchCommand(BaseCommand):
         try:
             _ = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
-            listener_template_id = context.environment["listener_template"][
+            listener_template_id = context.interpreter_context["listener_template"][
                 "listener_template_id"
             ]
-            listener_template_options = context.environment["listener_template"][
-                "options"
-            ]
+            listener_template_options = context.interpreter_context[
+                "listener_template"
+            ]["options"]
 
             listener_template_option_values = {}
             for option_name, option in listener_template_options.items():

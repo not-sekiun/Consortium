@@ -38,7 +38,7 @@ class ListOptionsAgentTemplateCommand(BaseCommand):
             table.add_column("Description")
             table.add_column("Required")
             table.add_column("Current Value")
-            for option_name, option in context.environment["agent_template"][
+            for option_name, option in context.interpreter_context["agent_template"][
                 "options"
             ].items():
                 table.add_row(
