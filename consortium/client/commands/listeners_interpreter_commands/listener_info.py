@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
     format_dict_as_multi_line_key_value_string,
     format_list_as_multi_line_bulleted_string,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class ListenerInfoCommand(BaseCommand):
@@ -110,7 +110,7 @@ class ListenerInfoCommand(BaseCommand):
                 f"{listener['creating_listener_template']['name']} "
                 f"({listener['creating_listener_template']['listener_template_id']})",
             )
-            CONSOLE.print(table, "")
+            console.print(table, "")
         except SystemExit:
             pass
 

@@ -21,7 +21,7 @@ from consortium.client.utils.formatter_utils import (
     format_datetime_as_human_readable_str,
     format_role_str,
 )
-from consortium.client.utils.printer_utils import CONSOLE, print_error
+from consortium.client.utils.printer_utils import console, print_error
 
 if TYPE_CHECKING:
     from consortium.client.client_session import ClientSession
@@ -100,7 +100,7 @@ class ClientSessionInfoCommand(BaseCommand):
             f"v{server_release['version']} ({server_release['codename']}) released "
             f"{format_datetime_as_human_readable_str(datetime_str=server_release['datetime_released'])}",
         )
-        CONSOLE.print(table, "")
+        console.print(table, "")
 
     async def run(
         self,

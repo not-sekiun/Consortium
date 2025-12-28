@@ -15,7 +15,7 @@ from consortium.client.utils.formatter_utils import (
     format_datetime_as_human_readable_str,
     format_size_bytes_as_human_readable_str,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class AssetInfoCommand(BaseCommand):
@@ -72,7 +72,7 @@ class AssetInfoCommand(BaseCommand):
                 ),
             )
             table.add_row("Type", "DIRECTORY" if asset["is_directory"] else "FILE")
-            CONSOLE.print(table, "")
+            console.print(table, "")
         except SystemExit:
             pass
 

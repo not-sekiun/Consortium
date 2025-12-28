@@ -16,7 +16,7 @@ from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class ResultListCommand(BaseCommand):
@@ -62,7 +62,7 @@ class ResultListCommand(BaseCommand):
         )
 
     @staticmethod
-    async def _list_results_from_agent_id(
+    async def _list_results(
         rest_api: RestAPI,
         agent_id: str,
         agent_name: str,
@@ -117,7 +117,7 @@ class ResultListCommand(BaseCommand):
                 ),
                 f"{agent_result['elapsed_seconds']:.2f}s",
             )
-        CONSOLE.print(table, "")
+        console.print(table, "")
 
     async def run(
         self,
@@ -130,7 +130,7 @@ class ResultListCommand(BaseCommand):
             if parsed_args.agent_id is None:
                 all_agents = await rest_api.get_all_agents()
                 for agent in all_agents:
-                    await self._list_results_from_agent_id(
+                    await self._list_results(
                         rest_api=rest_api,
                         agent_id=agent["agent_id"],
                         agent_name=agent["name"],
@@ -142,7 +142,7 @@ class ResultListCommand(BaseCommand):
                 agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id,
                 )
-                await self._list_results_from_agent_id(
+                await self._list_results(
                     rest_api=rest_api,
                     agent_id=agent["agent_id"],
                     agent_name=agent["name"],

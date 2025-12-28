@@ -11,7 +11,7 @@ from consortium.client.repl_interface.base_command import (
     Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import CONSOLE, print_error
+from consortium.client.utils.printer_utils import console, print_error
 
 
 class HelpCommand(BaseCommand):
@@ -46,7 +46,7 @@ class HelpCommand(BaseCommand):
         # border on right.
         padding_width = 7
         description_col_width = min(
-            max_description_length, CONSOLE.width - command_col_width - padding_width
+            max_description_length, console.width - command_col_width - padding_width
         )
 
         # Group commands by their specified group or default to "General Commands"
@@ -58,6 +58,13 @@ class HelpCommand(BaseCommand):
             else:
                 command_groups[group].append(command)
 
+        # If agent capability commands exist, remove them from the set of command
+        # groups. We want to print them in a separate section at the end with its own
+        # style
+        agent_capability_commands = command_groups.get("Agent Capability Commands")
+        if agent_capability_commands is not None:
+            del command_groups["Agent Capability Commands"]
+
         # Sort the command groups and iterate over them to print each group table
         for group_name, group_commands in dict(sorted(command_groups.items())).items():
             table = Table(title=group_name)
@@ -66,7 +73,21 @@ class HelpCommand(BaseCommand):
             # Sort each group's commands by name before adding to the table
             for command in sorted(group_commands, key=lambda command: command.name):
                 table.add_row(command.name, command.description)
-            CONSOLE.print(table, "")
+            console.print(table, "")
+
+        # If agent capability commands exist, print them in a separate section with
+        # their own style
+        if agent_capability_commands is not None:
+            table = Table(
+                title="Agent Capability Commands", title_style="italic bold magenta"
+            )
+            table.add_column("Command", width=command_col_width, style="bold magenta")
+            table.add_column("Description", width=description_col_width)
+            for command in sorted(
+                agent_capability_commands, key=lambda command: command.name
+            ):
+                table.add_row(command.name, command.description)
+            console.print(table, "")
 
     async def run(
         self,

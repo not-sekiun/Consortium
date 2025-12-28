@@ -152,7 +152,6 @@ class ListenersService:
         description: str | None = None,
         parameters: dict[str, Any] | None = None,
     ):
-        listener_id = str(listener_id)
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         # Changed dictionary is used to track what attributes were updated. This data

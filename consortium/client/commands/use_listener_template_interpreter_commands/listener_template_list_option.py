@@ -11,7 +11,7 @@ from consortium.client.repl_interface.base_command import (
     Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class ListOptionsListenerTemplateCommand(BaseCommand):
@@ -56,7 +56,7 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
                     str(option["value"]) if option["value"] is not None else "",
                 )
 
-            CONSOLE.print(
+            console.print(
                 table,
             )
         except SystemExit:

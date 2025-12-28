@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
     format_datetime_as_human_readable_str,
     format_dict_as_single_line_key_value_string,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class TaskListCommand(BaseCommand):
@@ -63,7 +63,7 @@ class TaskListCommand(BaseCommand):
         )
 
     @staticmethod
-    async def _list_tasks_from_agent_id(
+    async def _list_tasks(
         rest_api: RestAPI,
         agent_id: str,
         agent_name: str,
@@ -116,7 +116,7 @@ class TaskListCommand(BaseCommand):
                     datetime_str=agent_task["datetime_started"]
                 ),
             )
-        CONSOLE.print(table, "")
+        console.print(table, "")
 
     async def run(
         self,
@@ -129,7 +129,7 @@ class TaskListCommand(BaseCommand):
             if parsed_args.agent_id is None:
                 all_agents = await rest_api.get_all_agents()
                 for agent in all_agents:
-                    await self._list_tasks_from_agent_id(
+                    await self._list_tasks(
                         rest_api=rest_api,
                         agent_id=agent["agent_id"],
                         agent_name=agent["name"],
@@ -141,7 +141,7 @@ class TaskListCommand(BaseCommand):
                 agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id
                 )
-                await self._list_tasks_from_agent_id(
+                await self._list_tasks(
                     rest_api=rest_api,
                     agent_id=agent["agent_id"],
                     agent_name=agent["name"],

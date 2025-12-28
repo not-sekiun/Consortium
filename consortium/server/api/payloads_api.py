@@ -17,6 +17,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
 )
+from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
+    InvalidUUIDError,
+)
 from consortium.server.exceptions.consortium_exceptions import (
     repository_consortium_exceptions as consortium_excs,
 )
@@ -44,6 +47,9 @@ _resource_not_found_error = (
         ),
     )
 )
+_invalid_uuid_error = InvalidUUIDError(
+    resource_name="resource", uuid_value="<uuid_value>"
+)
 
 router.add_api_route(
     path="/all",
@@ -69,6 +75,9 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model(),
+        },
     },
     name="Get Payload By Resource ID",
 )
@@ -84,6 +93,9 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model(),
+        },
     },
     name="Delete Payload By Resource ID",
 )
@@ -98,6 +110,9 @@ router.add_api_route(
     responses={
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
+        },
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model(),
         },
     },
     name="Download Payload By Resource ID",

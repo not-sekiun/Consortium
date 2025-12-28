@@ -14,6 +14,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
+from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
+    InvalidUUIDError,
+)
 from consortium.server.exceptions.consortium_exceptions import (
     agents_consortium_exceptions as consortium_excs,
 )
@@ -95,6 +98,15 @@ _agent_capability_not_found_error = (
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
 )
+_invalid_agent_uuid_error = InvalidUUIDError(
+    resource_name="agent", uuid_value="<uuid_value>"
+)
+_invalid_task_uuid_error = InvalidUUIDError(
+    resource_name="task", uuid_value="<uuid_value>"
+)
+_invalid_result_uuid_error = InvalidUUIDError(
+    resource_name="result", uuid_value="<uuid_value>"
+)
 
 
 @router.get(
@@ -129,7 +141,10 @@ def get_all_agent_tasks(
     responses={
         200: {"model": AgentTaskModel},
         404: {"model": _agent_task_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_task_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 def get_agent_task_by_task_id(
@@ -150,7 +165,6 @@ def get_agent_task_by_task_id(
     "/results",
     responses={
         200: {"model": list[AgentResultModel]},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
     },
 )
 def get_all_agent_results(
@@ -167,7 +181,10 @@ def get_all_agent_results(
     responses={
         200: {"model": AgentResultModel},
         404: {"model": _agent_result_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_result_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 def get_agent_result_by_result_id(
@@ -185,33 +202,14 @@ def get_agent_result_by_result_id(
 
 
 @router.get(
-    "/{agent_id}",
-    responses={
-        200: {"model": AgentModel},
-        404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
-    },
-)
-def get_agent_by_agent_id(
-    agent_id: UUID4,
-    _: Annotated[
-        None, Depends(AuthorizeUserRequest(UserPermissions.READ_AGENT_BY_AGENT_ID))
-    ],
-):
-    try:
-        return AgentModel(**_agents_service.get_agent_by_agent_id(agent_id).to_json())
-    except consortium_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-
-
-@router.get(
     "/{agent_id}/tasks",
     responses={
         200: {"model": list[AgentTaskModel]},
         404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_agent_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 def get_all_agent_tasks_by_agent_id(
@@ -233,6 +231,31 @@ def get_all_agent_tasks_by_agent_id(
 
 
 @router.get(
+    "/{agent_id}",
+    responses={
+        200: {"model": AgentModel},
+        404: {"model": _agent_not_found_error.to_pydantic_model()},
+        422: {
+            "model": _unprocessable_entity_error.to_pydantic_model()
+            | _invalid_agent_uuid_error.to_pydantic_model()
+        },
+    },
+)
+def get_agent_by_agent_id(
+    agent_id: UUID4,
+    _: Annotated[
+        None, Depends(AuthorizeUserRequest(UserPermissions.READ_AGENT_BY_AGENT_ID))
+    ],
+):
+    try:
+        return AgentModel(**_agents_service.get_agent_by_agent_id(agent_id).to_json())
+    except consortium_excs.AgentNotFoundError as exc:
+        raise api_excs.AgentNotFoundError.from_consortium_exception(
+            consortium_exception=exc
+        ) from None
+
+
+@router.get(
     "/{agent_id}/tasks/{task_id}",
     responses={
         200: {"model": AgentTaskModel},
@@ -240,7 +263,11 @@ def get_all_agent_tasks_by_agent_id(
             "model": _agent_not_found_error.to_pydantic_model()
             | _agent_task_not_found_error.to_pydantic_model(),
         },
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_agent_uuid_error.to_pydantic_model()
+            | _invalid_task_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 def get_agent_tasks_by_agent_id_and_task_id(
@@ -270,7 +297,10 @@ def get_agent_tasks_by_agent_id_and_task_id(
     responses={
         200: {"model": list[AgentResultModel]},
         404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_agent_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 def get_all_agent_results_by_agent_id(
@@ -300,7 +330,11 @@ def get_all_agent_results_by_agent_id(
             "model": _agent_not_found_error.to_pydantic_model()
             | _agent_result_not_found_error.to_pydantic_model(),
         },
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_agent_uuid_error.to_pydantic_model()
+            | _invalid_result_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 def get_agent_result_by_agent_id_and_result_id(
@@ -333,10 +367,12 @@ def get_agent_result_by_agent_id_and_result_id(
         200: {"model": AgentTaskModel},
         404: {"model": _agent_not_found_error.to_pydantic_model()},
         422: {
-            "model": _agent_capability_option_value_validation_error.to_pydantic_model()
+            "model": _invalid_agent_uuid_error.to_pydantic_model()
+            | _agent_capability_option_value_validation_error.to_pydantic_model()
             | _missing_required_agent_capability_option_error.to_pydantic_model()
             | _agent_capability_option_not_found_error.to_pydantic_model()
-            | _agent_capability_not_found_error.to_pydantic_model(),
+            | _agent_capability_not_found_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
 )
@@ -381,7 +417,10 @@ async def task_agent_by_agent_id(
     responses={
         200: {"model": AgentModel},
         404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_agent_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 async def update_agent_by_agent_id(
@@ -412,7 +451,11 @@ async def update_agent_by_agent_id(
             "model": _agent_task_not_found_error.to_pydantic_model()
             | _agent_not_found_error.to_pydantic_model(),
         },
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_agent_uuid_error.to_pydantic_model()
+            | _invalid_task_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 async def delete_queued_agent_task_by_agent_id_and_task_id(

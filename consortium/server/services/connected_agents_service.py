@@ -9,7 +9,10 @@ from consortium.server.exceptions.consortium_exceptions.agents_consortium_except
 )
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.server_logging import LoggerType
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 class ConnectedAgentsService:
@@ -179,7 +182,7 @@ class ConnectedAgentsService:
         Returns:
             Agent: The agent with the specified agent ID.
         """
-        agent_id = str(agent_id)
+        agent_id = normalize_uuid(agent_id)
 
         try:
             return self._agents[agent_id]

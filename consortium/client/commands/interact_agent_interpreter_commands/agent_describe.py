@@ -45,7 +45,7 @@ class AgentDescribeCommand(AgentDescribeAgentsInterpreterCommand):
             parsed_commands = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await self._redescribe_agent_by_agent_id(
+            await self._describe_agent(
                 rest_api=rest_api,
                 agent_id=parsed_commands.agent_id
                 if parsed_commands.agent_id

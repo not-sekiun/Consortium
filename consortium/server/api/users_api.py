@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
+from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions import users_api_exceptions as api_excs
@@ -10,6 +11,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
+)
+from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
+    InvalidUUIDError,
 )
 from consortium.server.exceptions.consortium_exceptions import (
     users_consortium_exceptions as consortium_excs,
@@ -35,6 +39,7 @@ _user_not_found_error = api_excs.UserNotFoundError(user_id="<user_id>")
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
 )
+_invalid_uuid_error = InvalidUUIDError(resource_name="user", uuid_value="<uuid_value>")
 
 
 @router.get("/me", responses={200: {"model": UserModel}})
@@ -68,21 +73,24 @@ async def get_all_users(
     responses={
         200: {"model": UserModel},
         404: {"model": _user_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model(),
+        },
     },
 )
 async def get_user_by_user_id(
-    user_id: str,
+    user_id: UUID4,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_USER_BY_USER_ID)),
     ],
 ) -> UserModel:
     try:
-        user = _users_service.get_user_by_user_id(user_id)
+        user = _users_service.get_user_by_user_id(str(user_id))
     except consortium_excs.UserIDNotFoundError:
         raise api_excs.UserNotFoundError(
-            user_id=user_id,
+            user_id=str(user_id),
         ) from None
 
     return UserModel(**user.to_json())
@@ -122,10 +130,14 @@ async def update_own_display_name(
     responses={
         200: {"model": UserModel},
         404: {"model": _user_not_found_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model(),
+        },
     },
 )
 async def update_user_display_name_by_user_id(
-    user_id: str,
+    user_id: UUID4,
     display_name: Annotated[str, Body(embed=True)],
     _: Annotated[
         None,
@@ -134,12 +146,12 @@ async def update_user_display_name_by_user_id(
 ) -> UserModel:
     try:
         user = _users_service.update_user_display_name_by_user_id(
-            user_id=user_id,
+            user_id=str(user_id),
             display_name=display_name,
         )
     except consortium_excs.UserIDNotFoundError:
         raise api_excs.UserNotFoundError(
-            user_id=user_id,
+            user_id=str(user_id),
         ) from None
 
     return UserModel(**user.to_json())

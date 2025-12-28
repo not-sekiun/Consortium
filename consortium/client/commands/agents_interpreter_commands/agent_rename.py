@@ -37,7 +37,7 @@ class AgentRenameCommand(BaseCommand):
         )
 
     @staticmethod
-    async def _rename_agent_by_agent_id(
+    async def _rename_agent(
         rest_api: RestAPI,
         agent_id: str,
         new_name: str,
@@ -58,7 +58,7 @@ class AgentRenameCommand(BaseCommand):
             parsed_commands = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await self._rename_agent_by_agent_id(
+            await self._rename_agent(
                 rest_api=rest_api,
                 agent_id=parsed_commands.agent_id[0],
                 new_name=parsed_commands.name[0],

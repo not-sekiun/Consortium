@@ -20,7 +20,9 @@ from consortium.server.services.component_registry_services.event_hook_registry_
 )
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.release_service import ReleaseService
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+)
 
 
 class EventHooksService:

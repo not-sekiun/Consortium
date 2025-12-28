@@ -6,8 +6,6 @@ import uuid
 from loguru import logger
 
 from consortium.framework._utils import remap_exception
-
-# from consortium.framework.plugins._plugin_status import PluginState
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     PluginLoadingError,
@@ -760,13 +758,13 @@ class PluginsService:
         self._logger.debug("Cancelled plugin: {!r}", plugin)
 
     @log_and_propagate_error_on_service_method
-    def get_plugin_by_plugin_id(self, plugin_id: str) -> BasePlugin:
+    def get_plugin_by_plugin_id(self, plugin_id: str | uuid.UUID) -> BasePlugin:
         """
         Returns a plugin object by its plugin id. The plugin must be registered to the
         service.
 
         Args:
-            plugin_id (str): The plugin id to search for.
+            plugin_id (str | uuid.UUID): The plugin id to search for.
 
         Returns:
             BasePlugin: The plugin object if found.

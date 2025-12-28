@@ -14,6 +14,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     UnauthorizedError,
     UnprocessableEntityError,
 )
+from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
+    InvalidUUIDError,
+)
 from consortium.server.exceptions.consortium_exceptions import (
     listeners_consortium_exceptions as consortium_exceptions,
 )
@@ -92,6 +95,9 @@ _listener_template_resolution_error = api_excs.ListenerTemplateResolutionError(
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
 )
+_invalid_uuid_error = InvalidUUIDError(
+    resource_name="listener", uuid_value="<uuid_value>"
+)
 
 
 @router.get(
@@ -120,7 +126,8 @@ def get_all_listeners(
             "model": _listener_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model(),
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
 )
@@ -155,7 +162,8 @@ def get_listener_by_listener_id(
             | _listener_start_error.to_pydantic_model(),
         },
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model(),
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
 )
@@ -203,7 +211,8 @@ async def start_listener_by_listener_id(
             | _listener_stop_error.to_pydantic_model(),
         },
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model(),
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
 )
@@ -250,7 +259,8 @@ async def stop_listener_by_listener_id(
             "model": _listener_not_running_error.to_pydantic_model(),
         },
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model(),
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
 )
@@ -291,9 +301,10 @@ async def cancel_listener_by_listener_id(
         },
         409: {"model": _listener_already_running_error.to_pydantic_model()},
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model()
+            "model": _invalid_uuid_error.to_pydantic_model()
             | _invalid_listener_parameter_name_error.to_pydantic_model()
-            | _invalid_listener_parameter_value_error.to_pydantic_model(),
+            | _invalid_listener_parameter_value_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
         500: {
             "model": _listener_template_resolution_error.to_pydantic_model(),
@@ -350,7 +361,8 @@ async def update_listener_by_listener_id(
         },
         409: {"model": _listener_already_running_error.to_pydantic_model()},
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model(),
+            "model": _unprocessable_entity_error.to_pydantic_model()
+            | _invalid_uuid_error.to_pydantic_model(),
         },
     },
 )

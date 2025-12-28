@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -15,7 +16,7 @@ from consortium.client.utils.formatter_utils import (
     format_datetime_as_human_readable_str,
     format_dict_as_multi_line_key_value_string,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class AgentInfoCommand(BaseCommand):
@@ -37,9 +38,13 @@ class AgentInfoCommand(BaseCommand):
         )
 
     @staticmethod
-    def _display_agent_info(
-        agent: dict,
+    async def _display_agent_info(
+        rest_api: RestAPI,
+        agent_id: str,
     ) -> None:
+        agent = await rest_api.get_agent_by_agent_id(
+            agent_id=agent_id,
+        )
         table = Table(title="Agent Information", highlight=True)
         table.add_column("Information")
         table.add_column("Data")
@@ -91,7 +96,7 @@ class AgentInfoCommand(BaseCommand):
             format_dict_as_multi_line_key_value_string(agent["agent_data"]),
         )
 
-        CONSOLE.print(table, "")
+        console.print(table, "")
 
     async def run(
         self,
@@ -101,10 +106,9 @@ class AgentInfoCommand(BaseCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            agent = await rest_api.get_agent_by_agent_id(
-                agent_id=parsed_args.agent_id[0]
+            await self._display_agent_info(
+                rest_api=rest_api, agent_id=parsed_args.agent_id[0]
             )
-            self._display_agent_info(agent=agent)
         except SystemExit:
             pass
 

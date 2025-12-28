@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
     format_datetime_as_human_readable_str,
     format_dict_as_multi_line_key_value_string,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class TaskInfoCommand(BaseCommand):
@@ -39,7 +39,7 @@ class TaskInfoCommand(BaseCommand):
         )
 
     @staticmethod
-    async def _display_task_info_from_agent_id_and_task_id(
+    async def _display_task_info(
         rest_api: RestAPI,
         task_id: str,
     ) -> None:
@@ -66,7 +66,7 @@ class TaskInfoCommand(BaseCommand):
             ),
         )
 
-        CONSOLE.print(table, "")
+        console.print(table, "")
 
     async def run(
         self,
@@ -76,7 +76,7 @@ class TaskInfoCommand(BaseCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await self._display_task_info_from_agent_id_and_task_id(
+            await self._display_task_info(
                 rest_api=rest_api,
                 task_id=parsed_args.task_id,
             )

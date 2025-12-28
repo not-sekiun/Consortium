@@ -14,7 +14,7 @@ from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_snake_case_to_title,
 )
-from consortium.client.utils.printer_utils import CONSOLE, print_error
+from consortium.client.utils.printer_utils import console, print_error
 
 
 class InfoListenerTemplateOptionsCommand(BaseCommand):
@@ -70,7 +70,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
             for key, value in option.items():
                 if key != "value":
                     table.add_row(format_snake_case_to_title(key), str(value))
-            CONSOLE.print(table, "")
+            console.print(table, "")
         except SystemExit:
             pass
 

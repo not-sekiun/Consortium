@@ -177,8 +177,6 @@ class PayloadsService:
         name: str | None = None,
         description: str = "",
     ) -> Payload:
-        payload_id = normalize_uuid(payload_id)
-
         # Validate payload build parameters against the agent template and check that
         # the agent template exists
         agent_template = (
@@ -199,6 +197,7 @@ class PayloadsService:
         # If a reserved payload ID was provided, use it and rename the generated
         # resource to that payload ID
         if payload_id is not None:
+            payload_id = normalize_uuid(payload_id)
             # `_reserved_payload_ids` contains the string representation of the reserved
             # payload IDs
             if payload_id not in self._reserved_payload_ids:
@@ -248,8 +247,6 @@ class PayloadsService:
         name: str | None = None,
         description: str = "",
     ) -> Payload:
-        payload_id = normalize_uuid(payload_id)
-
         # Validate payload build parameters against the agent template and check that
         # the agent template exists
         agent_template = (
@@ -270,6 +267,7 @@ class PayloadsService:
         # If a reserved payload ID was provided, use it and rename the generated
         # resource to that payload ID
         if payload_id is not None:
+            payload_id = normalize_uuid(payload_id)
             # `_reserved_payload_ids` contains the string representation of the reserved
             # payload IDs
             if payload_id not in self._reserved_payload_ids:

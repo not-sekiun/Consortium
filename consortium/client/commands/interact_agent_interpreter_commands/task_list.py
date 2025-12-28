@@ -70,7 +70,7 @@ class TaskListCommand(TaskListAgentsInterpreterCommand):
             else:
                 agent = context.environment["agent"]
 
-            await self._list_tasks_from_agent_id(
+            await self._list_tasks(
                 rest_api=rest_api,
                 agent_id=agent["agent_id"],
                 agent_name=agent["name"],

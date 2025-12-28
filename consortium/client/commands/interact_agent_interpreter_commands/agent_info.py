@@ -43,13 +43,12 @@ class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            if parsed_args.agent_id is not None:
-                agent = await rest_api.get_agent_by_agent_id(
-                    agent_id=parsed_args.agent_id
-                )
-            else:
-                agent = context.environment["agent"]
-            self._display_agent_info(agent=agent)
+            await self._display_agent_info(
+                rest_api=rest_api,
+                agent_id=parsed_args.agent_id
+                if parsed_args.agent_id is not None
+                else context.environment["agent"]["agent_id"],
+            )
         except SystemExit:
             pass
 

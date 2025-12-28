@@ -12,7 +12,7 @@ from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_size_bytes_as_human_readable_str,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class AssetListCommand(BaseCommand):
@@ -48,7 +48,7 @@ class AssetListCommand(BaseCommand):
                     "DIRECTORY" if asset["is_directory"] else "FILE",
                     format_size_bytes_as_human_readable_str(size_bytes=asset["size"]),
                 )
-            CONSOLE.print(table, "")
+            console.print(table, "")
         except SystemExit:
             pass
 

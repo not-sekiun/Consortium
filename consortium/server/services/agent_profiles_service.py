@@ -20,7 +20,10 @@ from consortium.server.services.component_registry_services.agent_profile_regist
     AgentProfileRegistryService,
 )
 from consortium.server.services.release_service import ReleaseService
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    normalize_uuid,
+)
 
 
 # The agent profiles service is an internal service that is meant to only be
@@ -263,6 +266,8 @@ class AgentProfilesService:
     def get_agent_profile_by_agent_profile_id(
         self, agent_profile_id: str | uuid.UUID
     ) -> AgentProfile:
+        agent_profile_id = normalize_uuid(agent_profile_id)
+
         agent_profile = (
             self._agent_profile_registry_service.get_component_by_component_id(
                 component_id=agent_profile_id,

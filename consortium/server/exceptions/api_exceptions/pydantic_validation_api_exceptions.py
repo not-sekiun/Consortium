@@ -9,8 +9,7 @@ class InvalidUUIDError(UnprocessableEntityError):
     def __init__(self, resource_name: str, uuid_value: str):
         super().__init__(
             message=(
-                f"Failed to perform the requested operation on the {resource_name}. "
-                f"The provided {resource_name} ID value '{uuid_value}' is not a valid "
-                f"UUID4 string."
+                f"Failed to find the requested {resource_name}. The provided "
+                f"{resource_name} ID value '{uuid_value}' is not a valid UUID4 string."
             ),
         )

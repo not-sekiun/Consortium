@@ -14,7 +14,7 @@ from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_role_str,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class BannerCommand(BaseCommand):
@@ -99,13 +99,13 @@ class BannerCommand(BaseCommand):
             f"[bold cyan]{number_of_online_agents} [bold white]online [bold magenta]agent[bold white](s)"
         )
 
-        CONSOLE.print(random_banner_art)
-        CONSOLE.print(author_banner)
-        CONSOLE.print(client_version_banner)
-        CONSOLE.print(server_version_banner)
-        CONSOLE.print(connection_status_banner)
-        CONSOLE.print(info_banner)
-        CONSOLE.print()
+        console.print(random_banner_art)
+        console.print(author_banner)
+        console.print(client_version_banner)
+        console.print(server_version_banner)
+        console.print(connection_status_banner)
+        console.print(info_banner)
+        console.print()
 
     async def run(
         self,

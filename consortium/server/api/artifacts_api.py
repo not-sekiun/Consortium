@@ -16,6 +16,10 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerError,
     MethodNotAllowedError,
     UnauthorizedError,
+    UnprocessableEntityError,
+)
+from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
+    InvalidUUIDError,
 )
 from consortium.server.exceptions.consortium_exceptions import (
     repository_consortium_exceptions as consortium_excs,
@@ -44,6 +48,12 @@ _resource_not_found_error = (
         ),
     )
 )
+_invalid_uuid_error = InvalidUUIDError(
+    resource_name="resource", uuid_value="<uuid_value>"
+)
+_unprocessable_entity_error = UnprocessableEntityError(
+    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
+)
 
 router.add_api_route(
     path="/all",
@@ -59,21 +69,6 @@ router.add_api_route(
 )
 router.add_api_route(
     path="/{resource_id}",
-    endpoint=create_get_repository_resource_by_resource_id_endpoint(
-        repository_service=_artifacts_service,
-        get_repository_resource_by_resource_id_permission=UserPermissions.READ_ARTIFACT_BY_ARTIFACT_ID,
-    ),
-    methods=["GET"],
-    responses={
-        200: {"model": RepositoryResourceModel},
-        404: {
-            "model": _resource_not_found_error.to_pydantic_model(),
-        },
-    },
-    name="Get Artifact By Resource ID",
-)
-router.add_api_route(
-    path="/{resource_id}",
     endpoint=create_delete_repository_resource_by_resource_id_endpoint(
         repository_service=_artifacts_service,
         delete_repository_resource_by_resource_id_permission=UserPermissions.DELETE_ARTIFACT_BY_ARTIFACT_ID,
@@ -84,8 +79,31 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
     name="Delete Artifact By Resource ID",
+)
+router.add_api_route(
+    path="/{resource_id}",
+    endpoint=create_get_repository_resource_by_resource_id_endpoint(
+        repository_service=_artifacts_service,
+        get_repository_resource_by_resource_id_permission=UserPermissions.READ_ARTIFACT_BY_ARTIFACT_ID,
+    ),
+    methods=["GET"],
+    responses={
+        200: {"model": RepositoryResourceModel},
+        404: {
+            "model": _resource_not_found_error.to_pydantic_model(),
+        },
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
+    },
+    name="Get Artifact By Resource ID",
 )
 router.add_api_route(
     path="/download/{resource_id}",
@@ -98,6 +116,10 @@ router.add_api_route(
     responses={
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
+        },
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
     name="Download Artifact By Resource ID",

@@ -15,7 +15,7 @@ from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_component_life_cycle_state_string_with_color,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class InfoGeneratorCommand(BaseCommand):
@@ -145,7 +145,7 @@ class InfoGeneratorCommand(BaseCommand):
                     else ""
                 ),
             )
-            CONSOLE.print(table, "")
+            console.print(table, "")
         except SystemExit:
             pass
 

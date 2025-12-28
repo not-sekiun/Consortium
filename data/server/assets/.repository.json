@@ -20,5 +20,16 @@
         "datetime_created": "2025-12-26T16:27:09.605877",
         "datetime_modified": "2025-12-26T16:27:09.604457",
         "is_directory": false
+    },
+    "95ee756c-6d19-4072-a68f-07cba345e95d": {
+        "resource_id": "95ee756c-6d19-4072-a68f-07cba345e95d",
+        "name": "argshit.py",
+        "description": "",
+        "size": 433,
+        "exists_on_disk": true,
+        "md5_checksum": "7fb7af1dcde5b8413f634bd17fd02ffb",
+        "datetime_created": "2025-12-28T03:01:30.325171",
+        "datetime_modified": "2025-12-28T03:01:30.324381",
+        "is_directory": false
     }
 }

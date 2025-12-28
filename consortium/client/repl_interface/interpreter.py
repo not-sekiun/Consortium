@@ -23,7 +23,7 @@ from consortium.client.repl_interface.base_command import (
 # from consortium.client.repl_framework.base_interpreter import BaseInterpreter
 from consortium.client.repl_interface.lexer import tokenize
 from consortium.client.repl_interface.parser import parse
-from consortium.client.utils.printer_utils import CONSOLE, print_error
+from consortium.client.utils.printer_utils import console, print_error
 
 if TYPE_CHECKING:
     from consortium.client.client_session import ClientSession
@@ -127,7 +127,6 @@ class Interpreter:
                         except UnclosedQuotesError:
                             continue
                 parsed_command = parse(tokenized_string=tokenized_string)
-
                 if parsed_command.command in self.commands:
                     context = Context(
                         command=parsed_command.command,
@@ -158,6 +157,6 @@ class Interpreter:
                     continue
 
                 print_error(
-                    f"Unhandled exception occurred. {exc.__class__.__name__} {exc}"
+                    f"Unhandled exception occurred. {exc.__class__.__name__}: {exc}"
                 )
-                CONSOLE.print_exception()
+                console.print_exception(show_locals=True)

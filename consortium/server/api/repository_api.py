@@ -15,6 +15,7 @@ from typing import Annotated, Literal
 
 from fastapi import Depends, Form, UploadFile
 from fastapi.responses import FileResponse
+from pydantic import UUID4
 from starlette.background import BackgroundTask
 
 from consortium.server.exceptions.api_exceptions import (
@@ -61,7 +62,7 @@ def create_get_repository_resource_by_resource_id_endpoint(
     get_repository_resource_by_resource_id_permission: UserPermissions,
 ) -> Callable:
     async def get_repository_resource_by_resource_id(
-        resource_id: str,
+        resource_id: UUID4,
         _: Annotated[
             None,
             Depends(
@@ -72,7 +73,7 @@ def create_get_repository_resource_by_resource_id_endpoint(
         try:
             repository_resource = (
                 repository_service.get_repository_resource_by_resource_id(
-                    resource_id=resource_id,
+                    resource_id=str(resource_id),
                 )
             )
         except consortium_excs.RepositoryResourceNotFoundError as exc:
@@ -93,7 +94,7 @@ def create_download_repository_resource_by_resource_id_endpoint(
     # async function causes event loop issues. This will signal to FastAPI that this
     # endpoint should be run in a threadpool.
     def download_repository_resource_by_resource_id(
-        resource_id: str,
+        resource_id: UUID4,
         _: Annotated[
             None,
             Depends(
@@ -106,7 +107,7 @@ def create_download_repository_resource_by_resource_id_endpoint(
         try:
             repository_resource = (
                 repository_service.get_repository_resource_by_resource_id(
-                    resource_id=resource_id,
+                    resource_id=str(resource_id),
                 )
             )
         except consortium_excs.RepositoryResourceNotFoundError as exc:
@@ -233,7 +234,7 @@ def create_delete_repository_resource_by_resource_id_endpoint(
     delete_repository_resource_by_resource_id_permission: UserPermissions,
 ) -> Callable:
     async def delete_repository_resource_by_resource_id(
-        resource_id: str,
+        resource_id: UUID4,
         _: Annotated[
             None,
             Depends(
@@ -245,7 +246,7 @@ def create_delete_repository_resource_by_resource_id_endpoint(
     ):
         try:
             repository_service.delete_repository_resource_by_resource_id(
-                resource_id=resource_id,
+                resource_id=str(resource_id),
             )
         except consortium_excs.RepositoryResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(

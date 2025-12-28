@@ -1,6 +1,7 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
+from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions import (
@@ -12,6 +13,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
+)
+from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
+    InvalidUUIDError,
 )
 from consortium.server.exceptions.consortium_exceptions import (
     agent_templates_consortium_exceptions as consortium_excs,
@@ -69,6 +73,9 @@ _missing_required_agent_template_option_error = (
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
 )
+_invalid_uuid_error = InvalidUUIDError(
+    resource_name="agent template", uuid_value="<uuid_value>"
+)
 
 
 @router.post(
@@ -77,16 +84,17 @@ _unprocessable_entity_error = UnprocessableEntityError(
         201: {"model": AgentGeneratorModel},
         404: {"model": _agent_template_not_found_error.to_pydantic_model()},
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model()
+            "model": _invalid_uuid_error.to_pydantic_model()
             | _agent_template_option_value_error.to_pydantic_model()
             | _agent_template_option_not_found_error.to_pydantic_model()
             | _missing_required_agent_template_option_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
     status_code=201,
 )
 async def create_agent_generator_through_agent_template_by_agent_template_id(
-    agent_template_id: str,
+    agent_template_id: UUID4,
     options: dict[str, Any],
     _: Annotated[
         None,
@@ -143,11 +151,14 @@ def get_all_agent_templates(
     responses={
         200: {"model": AgentTemplateModel},
         404: {"model": _agent_template_not_found_error.to_pydantic_model()},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
+        },
     },
 )
 def get_agent_template_by_agent_template_id(
-    agent_template_id: str,
+    agent_template_id: UUID4,
     _: Annotated[
         None,
         Depends(

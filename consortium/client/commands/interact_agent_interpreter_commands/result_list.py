@@ -70,7 +70,7 @@ class ResultListCommand(ResultListAgentsInterpreterCommand):
             else:
                 agent = context.environment["agent"]
 
-            await self._list_results_from_agent_id(
+            await self._list_results(
                 rest_api=rest_api,
                 agent_id=agent["agent_id"],
                 agent_name=agent["name"],

@@ -12,7 +12,7 @@ from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class AgentListCommand(BaseCommand):
@@ -51,7 +51,7 @@ class AgentListCommand(BaseCommand):
                         agent["datetime_last_checked_in"], include_elapsed_time=True
                     ),
                 )
-            CONSOLE.print(table, "")
+            console.print(table, "")
         except SystemExit:
             pass
 

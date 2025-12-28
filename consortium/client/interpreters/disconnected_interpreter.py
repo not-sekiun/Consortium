@@ -77,7 +77,7 @@ class DisconnectedInterpreter(Interpreter):
     #         print_error(f"Error: {exc}")
     #     else:
     #         print_error(f"Fatal error occurred: {exc}")
-    #         CONSOLE.print(f"[bold red]{traceback.format_exc()}")
+    #         console.print(f"[bold red]{traceback.format_exc()}")
 
     # TODO: Find a way for interpreters to "inherit" command completions or share
     #  common command completions. Probably could just make it a parameter

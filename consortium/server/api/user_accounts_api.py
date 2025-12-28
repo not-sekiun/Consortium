@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
+from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions import (
@@ -12,6 +13,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
+)
+from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
+    InvalidUUIDError,
 )
 from consortium.server.exceptions.consortium_exceptions import (
     user_accounts_consortium_exceptions as consortium_excs,
@@ -84,6 +88,9 @@ _invalid_user_account_role_error_during_modification = api_excs.InvalidUserAccou
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
 )
+_invalid_uuid_error = InvalidUUIDError(
+    resource_name="user account", uuid_value="<uuid_value>"
+)
 
 
 @router.get(
@@ -124,10 +131,13 @@ async def get_own_user_account(
         404: {
             "model": _user_account_not_found_error.to_pydantic_model(),
         },
+        422: {
+            "model": _invalid_uuid_error.to_pydantic_model(),
+        },
     },
 )
 async def get_user_account_by_user_account_id(
-    user_account_id: str,
+    user_account_id: UUID4,
     _: Annotated[
         None,
         Depends(
@@ -137,11 +147,11 @@ async def get_user_account_by_user_account_id(
 ) -> UserAccountModel:
     try:
         return _user_accounts_service.get_user_account_by_user_account_id(
-            user_account_id=user_account_id,
+            user_account_id=str(user_account_id),
         )
     except consortium_excs.UserAccountIDNotFoundError:
         raise api_excs.UserAccountNotFoundError(
-            user_account_id=user_account_id,
+            user_account_id=str(user_account_id),
         ) from None
 
 
@@ -153,7 +163,8 @@ async def get_user_account_by_user_account_id(
             "model": _user_account_username_already_exists_error_during_creation.to_pydantic_model()
             | _empty_user_account_username_error_during_creation.to_pydantic_model()
             | _empty_user_account_password_error_during_creation.to_pydantic_model()
-            | _invalid_user_account_role_error_during_creation.to_pydantic_model(),
+            | _invalid_user_account_role_error_during_creation.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model(),
         },
     },
     status_code=201,
@@ -209,6 +220,7 @@ async def create_user_account(
             "model": _user_account_username_already_exists_error_during_modification.to_pydantic_model()
             | _empty_user_account_username_error_during_modification.to_pydantic_model()
             | _empty_user_account_password_error_during_modification.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -279,11 +291,13 @@ def update_own_user_account(
             | _empty_user_account_username_error_during_modification.to_pydantic_model()
             | _empty_user_account_password_error_during_modification.to_pydantic_model()
             | _invalid_user_account_role_error_during_modification.to_pydantic_model()
+            | _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
 def update_user_account_by_user_account_id(
-    user_account_id: str,
+    user_account_id: UUID4,
     request_data: UpdateUserAccountByUserAccountIDRequestDataModel,
     _: Annotated[
         None,
@@ -297,7 +311,7 @@ def update_user_account_by_user_account_id(
     try:
         updated_user_account = (
             _user_accounts_service.update_user_account_by_user_account_id(
-                user_account_id=user_account_id,
+                user_account_id=str(user_account_id),
                 username=request_data.username,
                 password=request_data.password,
                 role=request_data.role,
@@ -321,7 +335,7 @@ def update_user_account_by_user_account_id(
         ) from None
     except consortium_excs.UserAccountNotFoundError:
         raise api_excs.UserAccountNotFoundError(
-            user_account_id=user_account_id,
+            user_account_id=str(user_account_id),
         ) from None
 
     # Write the updated user accounts data to disk.
@@ -341,12 +355,13 @@ def update_user_account_by_user_account_id(
             "model": _user_account_not_found_error.to_pydantic_model(),
         },
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model(),
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
 async def delete_user_account_by_user_account_id(
-    user_account_id: str,
+    user_account_id: UUID4,
     _: Annotated[
         None,
         Depends(
@@ -358,11 +373,11 @@ async def delete_user_account_by_user_account_id(
 ) -> SuccessResponseModel:
     try:
         _user_accounts_service.delete_user_account_by_user_account_id(
-            user_account_id=user_account_id,
+            user_account_id=str(user_account_id),
         )
     except consortium_excs.UserAccountIDNotFoundError:
         raise api_excs.UserAccountNotFoundError(
-            user_account_id=user_account_id,
+            user_account_id=str(user_account_id),
         ) from None
 
     # Write the updated user accounts data to disk.

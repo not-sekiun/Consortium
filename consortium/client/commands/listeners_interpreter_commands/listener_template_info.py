@@ -14,7 +14,7 @@ from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_list_as_multi_line_bulleted_string,
 )
-from consortium.client.utils.printer_utils import CONSOLE
+from consortium.client.utils.printer_utils import console
 
 
 class ListenerTemplateInfoCommand(BaseCommand):
@@ -75,7 +75,7 @@ class ListenerTemplateInfoCommand(BaseCommand):
                 ]
             ),
         )
-        CONSOLE.print(table, "")
+        console.print(table, "")
 
     async def run(
         self,

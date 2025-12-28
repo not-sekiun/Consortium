@@ -1,6 +1,7 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
+from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions import (
@@ -12,6 +13,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
     UnprocessableEntityError,
+)
+from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
+    InvalidUUIDError,
 )
 from consortium.server.exceptions.consortium_exceptions import (
     listener_templates_consortium_exceptions as consortium_excs,
@@ -69,6 +73,61 @@ _missing_required_listener_template_option_error = (
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
 )
+_invalid_uuid_error = InvalidUUIDError(
+    resource_name="listener template", uuid_value="<uuid_value>"
+)
+
+
+@router.get(
+    "/all",
+    responses={200: {"model": list[ListenerTemplateModel]}},
+)
+def get_all_listener_templates(
+    _: Annotated[
+        None,
+        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENER_TEMPLATES)),
+    ],
+):
+    return [
+        ListenerTemplateModel(**listener_template.to_json())
+        for listener_template in _listener_templates_service.get_all_listener_templates()
+    ]
+
+
+@router.get(
+    "/{listener_template_id}",
+    responses={
+        200: {"model": ListenerTemplateModel},
+        404: {"model": _listener_template_not_found_error.to_pydantic_model()},
+        422: {
+            "model": _unprocessable_entity_error.to_pydantic_model()
+            | _invalid_uuid_error.to_pydantic_model()
+        },
+    },
+)
+def get_listener_template_by_listener_template_id(
+    listener_template_id: UUID4,
+    _: Annotated[
+        None,
+        Depends(
+            AuthorizeUserRequest(
+                UserPermissions.READ_LISTENER_TEMPLATE_BY_LISTENER_TEMPLATE_ID,
+            ),
+        ),
+    ],
+):
+    try:
+        listener_template = (
+            _listener_templates_service.get_listener_template_by_listener_template_id(
+                listener_template_id=listener_template_id,
+            )
+        )
+    except consortium_excs.ListenerTemplateNotFoundError as exc:
+        raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
+
+    return ListenerTemplateModel(**listener_template.to_json())
 
 
 @router.post(
@@ -78,6 +137,7 @@ _unprocessable_entity_error = UnprocessableEntityError(
         404: {"model": _listener_template_not_found_error.to_pydantic_model()},
         422: {
             "model": _unprocessable_entity_error.to_pydantic_model()
+            | _invalid_uuid_error.to_pydantic_model()
             | _listener_template_option_value_validation_error.to_pydantic_model()
             | _listener_template_option_not_found_error.to_pydantic_model()
             | _missing_required_listener_template_option_error.to_pydantic_model()
@@ -86,7 +146,7 @@ _unprocessable_entity_error = UnprocessableEntityError(
     status_code=201,
 )
 async def create_listener_through_listener_template_by_listener_template_id(
-    listener_template_id: str,
+    listener_template_id: UUID4,
     options: dict[str, Any],
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.CREATE_LISTENER))],
 ) -> ListenerModel:
@@ -113,52 +173,3 @@ async def create_listener_through_listener_template_by_listener_template_id(
         ) from None
 
     return ListenerModel(**listener.to_json())
-
-
-@router.get(
-    "/all",
-    responses={200: {"model": list[ListenerTemplateModel]}},
-)
-def get_all_listener_templates(
-    _: Annotated[
-        None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENER_TEMPLATES)),
-    ],
-):
-    return [
-        ListenerTemplateModel(**listener_template.to_json())
-        for listener_template in _listener_templates_service.get_all_listener_templates()
-    ]
-
-
-@router.get(
-    "/{listener_template_id}",
-    responses={
-        200: {"model": ListenerTemplateModel},
-        422: {"model": _unprocessable_entity_error.to_pydantic_model()},
-        404: {"model": _listener_template_not_found_error.to_pydantic_model()},
-    },
-)
-def get_listener_template_by_listener_template_id(
-    listener_template_id: str,
-    _: Annotated[
-        None,
-        Depends(
-            AuthorizeUserRequest(
-                UserPermissions.READ_LISTENER_TEMPLATE_BY_LISTENER_TEMPLATE_ID,
-            ),
-        ),
-    ],
-):
-    try:
-        listener_template = (
-            _listener_templates_service.get_listener_template_by_listener_template_id(
-                listener_template_id=listener_template_id,
-            )
-        )
-    except consortium_excs.ListenerTemplateNotFoundError as exc:
-        raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
-            consortium_exception=exc,
-        ) from None
-
-    return ListenerTemplateModel(**listener_template.to_json())
