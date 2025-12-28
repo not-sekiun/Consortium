@@ -60,11 +60,11 @@ class AssetUploadCommand(BaseCommand):
             asset_path = pathlib.Path(parsed_args.asset_path[0])
 
             if not asset_path.exists():
-                print_error(f"Asset path '{asset_path}' was not found")
+                print_error(f"Asset path not found: '{asset_path}'")
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             if asset_path.is_dir():
-                print_info(f"Uploading asset directory '{asset_path}'...")
+                print_info(f"Uploading asset directory: '{asset_path}'")
                 with tempfile.TemporaryDirectory() as temp_dir_path:
                     # When the archive file is created by `shutil.make_archive`, the
                     # .zip file extension is appended automatically as inferred from the
@@ -88,11 +88,11 @@ class AssetUploadCommand(BaseCommand):
                             asset_directory_archive_file_format=".zip",
                         )
                 print_success(
-                    f"Uploaded asset directory '{asset_path}' as "
+                    f"Uploaded asset directory '{asset_path}' as: "
                     f"'{asset['name']}' ({asset['resource_id']})"
                 )
             else:
-                print_info(f"Uploading asset file '{asset_path}'...")
+                print_info(f"Uploading asset file: '{asset_path}'")
                 with asset_path.open("rb") as asset_file:
                     asset = await rest_api.upload_asset(
                         file_object=asset_file,
@@ -101,7 +101,7 @@ class AssetUploadCommand(BaseCommand):
                         description=parsed_args.description,
                     )
                 print_success(
-                    f"Uploaded asset file '{asset_path}' as "
+                    f"Uploaded asset file '{asset_path}' as: "
                     f"'{asset['name']}' ({asset['resource_id']})"
                 )
         except SystemExit:

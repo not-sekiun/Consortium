@@ -43,7 +43,7 @@ class ListenerTemplateResetOptionCommand(BaseCommand):
                 option = listener_template_options[option_name]
             except KeyError:
                 print_error(
-                    f"Listener template option with name '{option_name}' was not found",
+                    f"Listener template option not found: '{option_name}'",
                 )
                 return ReturnStatus(ReturnStatusType.CONTINUE)
 

@@ -70,13 +70,17 @@ class TaskListCommand(TaskListAgentsInterpreterCommand):
             else:
                 agent = context.environment["agent"]
 
-            await self._list_tasks(
+            agent_tasks = await self._get_tasks_to_list(
                 rest_api=rest_api,
                 agent_id=agent["agent_id"],
-                agent_name=agent["name"],
                 display_queued=parsed_args.queued,
                 display_running=parsed_args.running,
                 display_completed=parsed_args.completed,
+            )
+            self._list_tasks(
+                agent_id=agent["agent_id"],
+                agent_name=agent["name"],
+                agent_tasks=agent_tasks,
             )
         except SystemExit:
             pass

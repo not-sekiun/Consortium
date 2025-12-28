@@ -1,4 +1,6 @@
+import textwrap
 from argparse import ArgumentParser
+from typing import Any
 
 from rich.table import Table
 
@@ -16,8 +18,9 @@ from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
     format_dict_as_single_line_key_value_string,
+    format_list_as_multi_line_bulleted_string,
 )
-from consortium.client.utils.printer_utils import console
+from consortium.client.utils.printer_utils import console, print_info
 
 
 class TaskListCommand(BaseCommand):
@@ -63,14 +66,13 @@ class TaskListCommand(BaseCommand):
         )
 
     @staticmethod
-    async def _list_tasks(
+    async def _get_tasks_to_list(
         rest_api: RestAPI,
         agent_id: str,
-        agent_name: str,
         display_queued: bool,
         display_running: bool,
         display_completed: bool,
-    ) -> None:
+    ) -> list[dict[str, Any]]:
         agent_tasks = []
         if not display_queued and not display_running and not display_completed:
             agent_tasks = await rest_api.get_all_agent_tasks_by_agent_id(
@@ -95,7 +97,14 @@ class TaskListCommand(BaseCommand):
                         agent_id=agent_id,
                     )
                 )
+        return agent_tasks
 
+    @staticmethod
+    def _list_tasks(
+        agent_id: str,
+        agent_name: str,
+        agent_tasks: list[dict[str, Any]],
+    ) -> None:
         table = Table(title=f"Tasks For '{agent_name}' ({agent_id})", highlight=True)
         table.add_column("Task ID")
         table.add_column("Command")
@@ -128,26 +137,51 @@ class TaskListCommand(BaseCommand):
 
             if parsed_args.agent_id is None:
                 all_agents = await rest_api.get_all_agents()
+                agents_with_no_tasks = []
                 for agent in all_agents:
-                    await self._list_tasks(
+                    agent_tasks = await self._get_tasks_to_list(
                         rest_api=rest_api,
                         agent_id=agent["agent_id"],
-                        agent_name=agent["name"],
                         display_queued=parsed_args.queued,
                         display_running=parsed_args.running,
                         display_completed=parsed_args.completed,
+                    )
+                    if not agent_tasks:
+                        agents_with_no_tasks.append(
+                            f"'{agent['name']}' ({agent['agent_id']})"
+                        )
+                    else:
+                        self._list_tasks(
+                            agent_id=agent["agent_id"],
+                            agent_name=agent["name"],
+                            agent_tasks=agent_tasks,
+                        )
+                if agents_with_no_tasks:
+                    print_info(
+                        "No tasks found for the following agents with the specified "
+                        "filters:\n"
+                        + textwrap.indent(
+                            format_list_as_multi_line_bulleted_string(
+                                input_list=agents_with_no_tasks
+                            ),
+                            "    ",
+                        )
                     )
             else:
                 agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id
                 )
-                await self._list_tasks(
+                agent_tasks = await self._get_tasks_to_list(
                     rest_api=rest_api,
                     agent_id=agent["agent_id"],
-                    agent_name=agent["name"],
                     display_queued=parsed_args.queued,
                     display_running=parsed_args.running,
                     display_completed=parsed_args.completed,
+                )
+                self._list_tasks(
+                    agent_id=agent["agent_id"],
+                    agent_name=agent["name"],
+                    agent_tasks=agent_tasks,
                 )
         except SystemExit:
             pass

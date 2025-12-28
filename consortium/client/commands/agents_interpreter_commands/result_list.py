@@ -1,4 +1,6 @@
+import textwrap
 from argparse import ArgumentParser
+from typing import Any
 
 from rich.table import Table
 
@@ -15,8 +17,9 @@ from consortium.client.utils.formatter_utils import (
     format_agent_result_status_string_with_color,
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
+    format_list_as_multi_line_bulleted_string,
 )
-from consortium.client.utils.printer_utils import console
+from consortium.client.utils.printer_utils import console, print_info
 
 
 class ResultListCommand(BaseCommand):
@@ -62,14 +65,13 @@ class ResultListCommand(BaseCommand):
         )
 
     @staticmethod
-    async def _list_results(
+    async def _get_results_to_list(
         rest_api: RestAPI,
         agent_id: str,
-        agent_name: str,
         display_success: bool,
         display_failure: bool,
         display_error: bool,
-    ) -> None:
+    ) -> list[dict[str, Any]]:
         agent_results = []
         # If no result status is specified, list all results. If any one of the
         # result states is specified, only list those results.
@@ -96,7 +98,14 @@ class ResultListCommand(BaseCommand):
                         agent_id=agent_id,
                     )
                 )
+        return agent_results
 
+    @staticmethod
+    def _list_results(
+        agent_id: str,
+        agent_name: str,
+        agent_results: list[dict[str, Any]],
+    ) -> None:
         table = Table(title=f"Results For '{agent_name}' ({agent_id})", highlight=True)
         table.add_column("Result ID")
         table.add_column("Task ID", style="bold yellow", highlight=False, max_width=9)
@@ -129,26 +138,51 @@ class ResultListCommand(BaseCommand):
 
             if parsed_args.agent_id is None:
                 all_agents = await rest_api.get_all_agents()
+                agents_with_no_results = []
                 for agent in all_agents:
-                    await self._list_results(
+                    agent_results = await self._get_results_to_list(
                         rest_api=rest_api,
                         agent_id=agent["agent_id"],
-                        agent_name=agent["name"],
                         display_success=parsed_args.success,
                         display_failure=parsed_args.failure,
                         display_error=parsed_args.error,
+                    )
+                    if not agent_results:
+                        agents_with_no_results.append(
+                            f"'{agent['name']}' ({agent['agent_id']})"
+                        )
+                    else:
+                        self._list_results(
+                            agent_id=agent["agent_id"],
+                            agent_name=agent["name"],
+                            agent_results=agent_results,
+                        )
+                if agents_with_no_results:
+                    print_info(
+                        "No results found for the following agents with the specified "
+                        "filters:\n"
+                        + textwrap.indent(
+                            format_list_as_multi_line_bulleted_string(
+                                input_list=agents_with_no_results
+                            ),
+                            prefix="    ",
+                        )
                     )
             else:
                 agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id,
                 )
-                await self._list_results(
+                agent_results = await self._get_results_to_list(
                     rest_api=rest_api,
-                    agent_id=agent["agent_id"],
-                    agent_name=agent["name"],
+                    agent_id=parsed_args.agent_id,
                     display_success=parsed_args.success,
                     display_failure=parsed_args.failure,
                     display_error=parsed_args.error,
+                )
+                self._list_results(
+                    agent_id=agent["agent_id"],
+                    agent_name=agent["name"],
+                    agent_results=agent_results,
                 )
         except SystemExit:
             pass

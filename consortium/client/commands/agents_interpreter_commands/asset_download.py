@@ -104,7 +104,7 @@ class AssetDownloadCommand(BaseCommand):
             print_success("Finished downloading asset")
 
             if asset["is_directory"] and parsed_args.decompress:
-                print_info(f"Decompressing asset directory '{output_file_path}'...")
+                print_info(f"Decompressing asset directory: '{output_file_path}'")
                 with tempfile.TemporaryDirectory() as temp_dir:
                     shutil.unpack_archive(output_file_path, temp_dir)
                     output_file_path.unlink()

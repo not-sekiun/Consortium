@@ -44,7 +44,7 @@ class AgentInteractCommand(BaseCommand):
                 parsed_args.agent_id[0],
             )
             print_success(
-                f"Interacting with agent '{agent['name']}' ({agent['agent_id']})"
+                f"Interacting with agent: '{agent['name']}' ({agent['agent_id']})"
             )
             return ReturnStatus(
                 type=ReturnStatusType.SWITCH_INTERPRETER,

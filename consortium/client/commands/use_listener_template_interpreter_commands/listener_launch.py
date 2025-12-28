@@ -45,7 +45,7 @@ class ListenerLaunchCommand(BaseCommand):
                 listener_id=listener["listener_id"],
             )
             print_success(
-                f"Created and started listener '{listener['name']}' ({listener['listener_id']})",
+                f"Created and started listener: '{listener['name']}' ({listener['listener_id']})",
             )
         except SystemExit:
             pass

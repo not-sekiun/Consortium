@@ -47,7 +47,7 @@ class ListenerTemplateUseCommand(BaseCommand):
                 )
             )
             print_info(
-                f"Using listener template '{listener_template['name']}' "
+                f"Using listener template: '{listener_template['name']}' "
                 f"({listener_template['listener_template_id']})",
             )
             return ReturnStatus(

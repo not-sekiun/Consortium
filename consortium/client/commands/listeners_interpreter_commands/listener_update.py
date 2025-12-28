@@ -79,27 +79,19 @@ class ListenerUpdateCommand(BaseCommand):
             listener = await rest_api.get_listener_by_listener_id(
                 listener_id=parsed_args.listener_id[0],
             )
-
-            try:
-                listener_template_options = (
-                    await rest_api.get_listener_template_by_listener_template_id(
-                        listener_template_id=listener["creating_listener_template"][
-                            "listener_template_id"
-                        ],
-                    )
-                )["options"]
-            except KeyError:
-                print_error(
-                    f"Listener template for listener '{listener['name']}' "
-                    f"({listener['listener_id']}) was not found",
+            listener_template_options = (
+                await rest_api.get_listener_template_by_listener_template_id(
+                    listener_template_id=listener["creating_listener_template"][
+                        "listener_template_id"
+                    ],
                 )
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+            )["options"]
 
             try:
                 option = listener_template_options[parsed_args.parameter_name[0]]
             except KeyError:
                 print_error(
-                    f"Listener parameter with name '{parsed_args.parameter_name[0]}' was not found",
+                    f"Listener parameter not found: '{parsed_args.parameter_name[0]}'",
                 )
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 

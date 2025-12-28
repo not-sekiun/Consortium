@@ -51,8 +51,8 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
                 ]
             except KeyError:
                 print_error(
-                    f"Listener template option with name "
-                    f"'{parsed_args.listener_template_option_name[0]}' was not found",
+                    f"Listener template option not found: "
+                    f"'{parsed_args.listener_template_option_name[0]}'",
                 )
                 return ReturnStatus(
                     type=ReturnStatusType.CONTINUE,
