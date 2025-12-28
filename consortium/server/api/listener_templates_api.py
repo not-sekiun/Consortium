@@ -100,8 +100,8 @@ def get_all_listener_templates(
         200: {"model": ListenerTemplateModel},
         404: {"model": _listener_template_not_found_error.to_pydantic_model()},
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model()
-            | _invalid_uuid_error.to_pydantic_model()
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
 )
@@ -136,11 +136,11 @@ def get_listener_template_by_listener_template_id(
         201: {"model": ListenerModel},
         404: {"model": _listener_template_not_found_error.to_pydantic_model()},
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model()
-            | _invalid_uuid_error.to_pydantic_model()
+            "model": _invalid_uuid_error.to_pydantic_model()
             | _listener_template_option_value_validation_error.to_pydantic_model()
             | _listener_template_option_not_found_error.to_pydantic_model()
             | _missing_required_listener_template_option_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
     status_code=201,

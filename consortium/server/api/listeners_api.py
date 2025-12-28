@@ -361,8 +361,8 @@ async def update_listener_by_listener_id(
         },
         409: {"model": _listener_already_running_error.to_pydantic_model()},
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model()
-            | _invalid_uuid_error.to_pydantic_model(),
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model(),
         },
     },
 )
@@ -372,7 +372,7 @@ async def delete_listener_by_listener_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.DELETE_LISTENER_BY_LISTENER_ID)),
     ],
-) -> None:
+) -> SuccessResponseModel:
     try:
         _listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
     except consortium_exceptions.ListenerNotFoundError:

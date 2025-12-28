@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
+from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -38,7 +39,15 @@ class ListenerTemplateInfoCommand(BaseCommand):
             nargs=1,
         )
 
-    def _display_listener_template_info(self, listener_template: dict) -> None:
+    @staticmethod
+    async def _display_listener_template_info(
+        rest_api: RestAPI, listener_template_id: str
+    ) -> None:
+        listener_template = (
+            await rest_api.get_listener_template_by_listener_template_id(
+                listener_template_id=listener_template_id,
+            )
+        )
         table = Table(title="Listener Template Information", highlight=True)
         table.add_column("Information")
         table.add_column("Data")
@@ -85,12 +94,10 @@ class ListenerTemplateInfoCommand(BaseCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            listener_template = (
-                await rest_api.get_listener_template_by_listener_template_id(
-                    listener_template_id=parsed_args.listener_template_id[0],
-                )
+            await self._display_listener_template_info(
+                rest_api=rest_api,
+                listener_template_id=parsed_args.listener_template_id[0],
             )
-            self._display_listener_template_info(listener_template=listener_template)
         except SystemExit:
             pass
 

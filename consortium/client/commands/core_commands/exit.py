@@ -47,7 +47,8 @@ class ExitCommand(BaseCommand):
                     )
                 except Exception as exc:
                     print_error(
-                        f"Error disconnecting client session {client_session}: {exc}",
+                        f"Error disconnecting client session {client_session}. "
+                        f"{exc.__class__.__name__}: {exc}",
                     )
 
             print_info("Exiting...")

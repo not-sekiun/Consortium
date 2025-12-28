@@ -10,7 +10,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._components._component_status import State
-from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.api.agent_generators_api import (
     router as agent_generators_api_router,
@@ -134,7 +133,8 @@ class Server:
 
         # Signal to event hooks that the server is stopping first.
         await server_singletons.events_service.trigger_event(
-            event=Event(event_type=EventType.STOP_SERVER),
+            event_type=EventType.STOP_SERVER,
+            message="Stopping server",
         )
 
         # TODO: Add `timeout` to prevent hanging during shutdown. Do not replace
@@ -252,7 +252,8 @@ class Server:
         await server_singletons.plugins_service.load_framework_plugins()
         # Trigger the server start event after all services have been started.
         await server_singletons.events_service.trigger_event(
-            event=Event(event_type=EventType.START_SERVER),
+            event_type=EventType.START_SERVER,
+            message="Started Server",
         )
 
     async def start_server(self) -> None:

@@ -4,6 +4,10 @@ from prompt_toolkit import ANSI, HTML, PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.patch_stdout import patch_stdout
+from rich.columns import Columns
+from rich.panel import Panel
+from rich.pretty import Pretty
+from rich.text import Text
 
 from consortium.client.exceptions.client_interpreter_exceptions import (
     UnclosedQuotesError,
@@ -151,12 +155,29 @@ class Interpreter:
                 print_error(
                     "Keyboard interrupt ignored. Use 'exit' to exit the interpreter.",
                 )
+            except RestAPIOperationError as exc:
+                print_error(f"{exc}")
+                if exc.detail:
+                    console.print(
+                        Columns(
+                            [
+                                Text("╰─", style="bold cyan"),
+                                Panel(
+                                    Pretty(exc.detail),
+                                    title="Error Detail",
+                                    style="bold cyan",
+                                    expand=False,
+                                    title_align="left",
+                                ),
+                            ],
+                            expand=False,
+                            padding=(0, 0),
+                        )
+                    )
+                continue
             except Exception as exc:
-                if isinstance(exc, RestAPIOperationError):
-                    print_error(f"{exc}")
-                    continue
-
                 print_error(
                     f"Unhandled exception occurred. {exc.__class__.__name__}: {exc}"
                 )
                 console.print_exception(show_locals=True)
+                continue

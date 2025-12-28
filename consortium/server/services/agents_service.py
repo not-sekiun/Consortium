@@ -5,7 +5,6 @@ from typing import Any
 
 from loguru import logger
 
-from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
@@ -48,10 +47,9 @@ class AgentsService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_REGISTERED,
-                    data=agent.to_json(),
-                ),
+                event_type=EventType.AGENT_REGISTERED,
+                message=f"Registered agent: {agent}",
+                data=agent.to_json(),
             )
         )
         self._logger.info("Registered agent: {}", agent)
@@ -66,10 +64,9 @@ class AgentsService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_DEREGISTERED,
-                    data=agent.to_json(),
-                ),
+                event_type=EventType.AGENT_DEREGISTERED,
+                message=f"Deregistered agent: {agent}",
+                data=agent.to_json(),
             )
         )
         self._logger.info("Deregistered agent: {}", agent)
@@ -273,13 +270,12 @@ class AgentsService:
         await agent.submit_task(task=task)
 
         await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_TASKED,
-                data={
-                    "agent_id": str(agent.agent_id),
-                    "task": task.model_dump(mode="json"),
-                },
-            ),
+            event_type=EventType.AGENT_TASKED,
+            message=f"Tasked agent: {agent}",
+            data={
+                "agent_id": str(agent.agent_id),
+                "task": task.model_dump(mode="json"),
+            },
         )
         self._logger.info("Tasked agent {} with task {}", agent, task)
         self._logger.debug("Tasked agent {!r} with task {!r}", agent, task)
@@ -290,10 +286,9 @@ class AgentsService:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_CHECKED_IN,
-                    data=agent.to_json(),
-                ),
+                event_type=EventType.AGENT_CHECKED_IN,
+                message=f"Checked in agent: {agent}",
+                data=agent.to_json(),
             )
         )
         agent.datetime_last_checked_in = datetime.now()
@@ -343,10 +338,9 @@ class AgentsService:
         if updated:
             asyncio.create_task(
                 self._events_service.trigger_event(
-                    event=Event(
-                        event_type=EventType.AGENT_UPDATED,
-                        data=agent.to_json(),
-                    ),
+                    event_type=EventType.AGENT_UPDATED,
+                    message=f"Updated agent: {agent}",
+                    data=agent.to_json(),
                 )
             )
         else:

@@ -4,7 +4,6 @@ import uuid
 from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions import (
     UserAccessTokenNotFoundError,
@@ -94,7 +93,9 @@ class UsersService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(event_type=EventType.USER_LOGGED_IN, data=user.to_json())
+                event_type=EventType.USER_LOGGED_IN,
+                message=f"User logged in: {user}",
+                data=user.to_json(),
             )
         )
         self._logger.info("User logged in: {}", user)
@@ -110,10 +111,9 @@ class UsersService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.USER_LOGGED_OUT,
-                    data={"user_id": str(user.user_id)},
-                )
+                event_type=EventType.USER_LOGGED_OUT,
+                message=f"User logged out: {deleted_user}",
+                data={"user_id": str(user.user_id)},
             )
         )
         self._logger.info("User logged out: {}", deleted_user)

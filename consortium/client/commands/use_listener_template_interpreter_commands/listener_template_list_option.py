@@ -1,5 +1,3 @@
-from argparse import ArgumentParser
-
 from rich.table import Table
 
 from consortium.client.models.return_status_models import (
@@ -27,9 +25,6 @@ class ListOptionsListenerTemplateCommand(BaseCommand):
         """,
     )
     group = "Listener Template Management Commands"
-
-    def configure_parser(self, parser: ArgumentParser) -> None:
-        pass
 
     async def run(
         self,

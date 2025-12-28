@@ -7,7 +7,6 @@ from loguru import logger
 from pydantic import validate_call
 
 from consortium.framework._components._component_status import State
-from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
@@ -96,10 +95,9 @@ class ListenersService:
         self._listeners[str(listener.listener_id)] = listener
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.LISTENER_CREATED,
-                    data=listener.to_json(),
-                ),
+                event_type=EventType.LISTENER_CREATED,
+                message=f"Created listener: {listener}",
+                data=listener.to_json(),
             )
         )
         self._logger.info("Created listener: {}", listener)
@@ -116,10 +114,9 @@ class ListenersService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.LISTENER_ADDED,
-                    data=listener.to_json(),
-                ),
+                event_type=EventType.LISTENER_ADDED,
+                message=f"Added listener: {listener}",
+                data=listener.to_json(),
             )
         )
         self._listeners[str(listener.listener_id)] = listener
@@ -135,10 +132,9 @@ class ListenersService:
         removed_listener = self._listeners.pop(str(listener.listener_id))
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.LISTENER_REMOVED,
-                    data=removed_listener.to_json(),
-                ),
+                event_type=EventType.LISTENER_REMOVED,
+                message=f"Removed listener: {removed_listener}",
+                data=removed_listener.to_json(),
             )
         )
         self._logger.info("Removed listener: {}", removed_listener)
@@ -270,13 +266,12 @@ class ListenersService:
         if updated:
             asyncio.create_task(
                 self._events_service.trigger_event(
-                    event=Event(
-                        event_type=EventType.LISTENER_UPDATED,
-                        data={
-                            "listener": listener.to_json(),
-                            "updated": updated,
-                        },
-                    ),
+                    event_type=EventType.LISTENER_UPDATED,
+                    message=f"Updated listener: {listener}",
+                    data={
+                        "listener": listener.to_json(),
+                        "updated": updated,
+                    },
                 )
             )
         else:
@@ -299,10 +294,9 @@ class ListenersService:
             await listener.wait_until_started()
 
         await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.LISTENER_STARTED,
-                data=listener.to_json(),
-            ),
+            event_type=EventType.LISTENER_STARTED,
+            message=f"Started listener: {listener}",
+            data=listener.to_json(),
         )
         self._logger.info("Started listener: {}", listener)
         self._logger.debug("- {!r}", listener)
@@ -318,10 +312,9 @@ class ListenersService:
             await listener.wait_until_stopped()
 
         await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.LISTENER_STOPPED,
-                data=listener.to_json(),
-            ),
+            event_type=EventType.LISTENER_STOPPED,
+            message=f"Stopped listener: {listener}",
+            data=listener.to_json(),
         )
         self._logger.info("Stopped listener: {}", listener)
         self._logger.debug("- {!r}", listener)
@@ -337,10 +330,9 @@ class ListenersService:
             await listener.wait_until_stopped()
 
         await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.LISTENER_CANCELLED,
-                data=listener.to_json(),
-            ),
+            event_type=EventType.LISTENER_CANCELLED,
+            message=f"Cancelled listener: {listener}",
+            data=listener.to_json(),
         )
         self._logger.info("Cancelled listener: {}", listener)
         self._logger.debug("- {!r}", listener)

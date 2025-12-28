@@ -39,15 +39,12 @@ class InvalidServerRestAPILoginResponseError(RestAPIAuthenticationError):
         )
 
 
-# TODO: Add more granular exception handling in the future for each particular error
-#  response that may return for each API endpoint. <- hell no lol
 class RestAPIOperationError(Exception):
     def __init__(self, code: str, message: str, detail: Any):
-        if detail:
-            super().__init__(
-                f"{code}: {message} (Detail: {detail})",
-            )  # TODO: Consider formatting this more nicely
-        else:
-            super().__init__(
-                f"{code}: {message}",
-            )
+        self.code = code
+        self.message = message
+        self.detail = detail
+
+        super().__init__(
+            f"{code}: {message}",
+        )

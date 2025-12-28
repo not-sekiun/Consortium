@@ -236,8 +236,8 @@ def get_all_agent_tasks_by_agent_id(
         200: {"model": AgentModel},
         404: {"model": _agent_not_found_error.to_pydantic_model()},
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model()
-            | _invalid_agent_uuid_error.to_pydantic_model()
+            "model": _invalid_agent_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
 )

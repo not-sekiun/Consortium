@@ -33,14 +33,19 @@ _websockets_api_action_response_json_schema = {
         "message": {"type": "string"},
         "data": {"type": "object"},
     },
+    "required": ["type", "success", "message", "data"],
+    "additionalProperties": False,
 }
 _websockets_api_event_response_json_schema = {
     "type": "object",
     "properties": {
         "type": {"type": "string", "enum": ["event"]},
         "event_type": {"type": "string"},
+        "message": {"type": "string"},
         "data": {"type": "object"},
     },
+    "required": ["type", "event_type", "message", "data"],
+    "additionalProperties": False,
 }
 
 

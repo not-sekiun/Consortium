@@ -274,8 +274,8 @@ async def stop_agent_generator_by_agent_generator_id(
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {"model": _agent_generator_not_running_error.to_pydantic_model()},
         422: {
-            "model": _unprocessable_entity_error.to_pydantic_model()
-            | _invalid_uuid_error.to_pydantic_model()
+            "model": _invalid_uuid_error.to_pydantic_model()
+            | _unprocessable_entity_error.to_pydantic_model()
         },
     },
 )

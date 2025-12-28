@@ -5,6 +5,7 @@ from loguru import logger
 
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.framework.framework_types import JSON
 from consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions import (
     EventHandlerAlreadyRegisteredError,
     EventHandlerNotRegisteredError,
@@ -87,15 +88,27 @@ class EventsService:
         return list(EventType)
 
     @log_and_propagate_error_on_service_method
-    async def trigger_event(self, event: Event):
-        if str(event.event_type) not in self._event_handlers:
+    # async def trigger_event(self, event: Event):
+    async def trigger_event(
+        self, event_type: EventType, message: str = "", data: JSON | None = None
+    ) -> None:
+        if str(event_type) not in self._event_handlers:
             return
+        if data is None:
+            data = {}
 
+        event = Event(
+            event_type=event_type,
+            message=message,
+            data=data,
+        )
         for event_handler in self._event_handlers[str(event.event_type)]:
             try:
                 await event_handler(event)
             except Exception as exc:
                 self._logger.error(
-                    "Fatal error occurred while triggering event handler: {}",
+                    "Unhandled exception occurred while triggering event handler. "
+                    "{}: {}",
+                    exc.__class__.__name__,
                     exc,
                 )

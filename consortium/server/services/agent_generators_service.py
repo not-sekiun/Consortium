@@ -8,7 +8,6 @@ from loguru import logger
 # from consortium.framework.agents.agent_generator_objects import AgentGeneratorState
 from consortium.framework._components._component_status import State
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
-from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
     AgentGeneratorAlreadyExistsError,
@@ -107,10 +106,9 @@ class AgentGeneratorsService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_GENERATOR_CREATED,
-                    data=agent_generator.to_json(),
-                ),
+                event_type=EventType.AGENT_GENERATOR_CREATED,
+                message=f"Created agent generator: {agent_generator}",
+                data=agent_generator.to_json(),
             )
         )
         self._logger.info(
@@ -136,10 +134,9 @@ class AgentGeneratorsService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_GENERATOR_ADDED,
-                    data=agent_generator.to_json(),
-                ),
+                event_type=EventType.AGENT_GENERATOR_ADDED,
+                message=f"Added agent generator: {agent_generator}",
+                data=agent_generator.to_json(),
             )
         )
         self._logger.info(
@@ -170,10 +167,9 @@ class AgentGeneratorsService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.AGENT_GENERATOR_REMOVED,
-                    data=removed_agent_generator.to_json(),
-                ),
+                event_type=EventType.AGENT_GENERATOR_REMOVED,
+                message=f"Removed agent generator: {removed_agent_generator}",
+                data=removed_agent_generator.to_json(),
             )
         )
         self._logger.info("Removed agent generator: {}", removed_agent_generator)
@@ -314,13 +310,12 @@ class AgentGeneratorsService:
         if updated:
             asyncio.create_task(
                 self._events_service.trigger_event(
-                    event=Event(
-                        event_type=EventType.AGENT_GENERATOR_UPDATED,
-                        data={
-                            "agent_generator": agent_generator.to_json(),
-                            "updated": updated,
-                        },
-                    ),
+                    event_type=EventType.AGENT_GENERATOR_UPDATED,
+                    message=f"Updated agent generator: {agent_generator}",
+                    data={
+                        "agent_generator": agent_generator.to_json(),
+                        "updated": updated,
+                    },
                 )
             )
         else:
@@ -347,10 +342,9 @@ class AgentGeneratorsService:
             await agent_generator.wait_until_started()
 
         await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_GENERATOR_STARTED,
-                data=agent_generator.to_json(),
-            ),
+            event_type=EventType.AGENT_GENERATOR_STARTED,
+            message=f"Started agent generator: {agent_generator}",
+            data=agent_generator.to_json(),
         )
         self._logger.info("Started agent generator: {}", agent_generator)
         self._logger.debug("- {!r}", agent_generator)
@@ -370,10 +364,9 @@ class AgentGeneratorsService:
             await agent_generator.wait_until_stopped()
 
         await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_GENERATOR_STOPPED,
-                data=agent_generator.to_json(),
-            ),
+            event_type=EventType.AGENT_GENERATOR_STOPPED,
+            message=f"Stopped agent generator: {agent_generator}",
+            data=agent_generator.to_json(),
         )
         self._logger.info("Stopped agent generator: {}", agent_generator)
         self._logger.debug("- {!r}", agent_generator)
@@ -393,10 +386,9 @@ class AgentGeneratorsService:
             await agent_generator.wait_until_stopped()
 
         await self._events_service.trigger_event(
-            event=Event(
-                event_type=EventType.AGENT_GENERATOR_CANCELLED,
-                data=agent_generator.to_json(),
-            ),
+            event_type=EventType.AGENT_GENERATOR_CANCELLED,
+            message=f"Cancelled agent generator: {agent_generator}",
+            data=agent_generator.to_json(),
         )
         self._logger.info("Cancelled agent generator: {}", agent_generator)
         self._logger.debug("- {!r}", agent_generator)

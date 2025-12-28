@@ -8,7 +8,6 @@ import jsonschema
 from loguru import logger
 
 from consortium.framework.event_hooks import EventType
-from consortium.framework.event_hooks._event import Event
 from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplateNotFoundError,
 )
@@ -223,10 +222,9 @@ class PayloadsService:
 
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.PAYLOAD_CREATED,
-                    data=payload.to_json(),
-                )
+                event_type=EventType.PAYLOAD_CREATED,
+                message=f"Created payload: {payload.payload_id}",
+                data=payload.to_json(),
             )
         )
         self._logger.debug(
@@ -292,10 +290,9 @@ class PayloadsService:
         self.save_payloads_metadata()
         asyncio.create_task(
             self._events_service.trigger_event(
-                event=Event(
-                    event_type=EventType.PAYLOAD_CREATED,
-                    data=payload.to_json(),
-                )
+                event_type=EventType.PAYLOAD_CREATED,
+                message=f"Created payload: {payload.payload_id}",
+                data=payload.to_json(),
             )
         )
         self._logger.debug(
@@ -359,10 +356,9 @@ class PayloadsService:
             if resource_exists:
                 asyncio.create_task(
                     self._events_service.trigger_event(
-                        event=Event(
-                            event_type=EventType.PAYLOAD_DELETED,
-                            data=payload.to_json(),
-                        )
+                        event_type=EventType.PAYLOAD_DELETED,
+                        message=f"Deleted payload: {payload_id}",
+                        data=payload.to_json(),
                     )
                 )
 

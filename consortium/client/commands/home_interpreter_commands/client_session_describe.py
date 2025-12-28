@@ -50,7 +50,7 @@ class ClientSessionDescribeCommand(BaseCommand):
         )
 
     @staticmethod
-    async def _redescribe_client_session(
+    async def _describe_client_session(
         client_session_id: str,
         description: str,
     ) -> None:

@@ -20,7 +20,7 @@ class EventHook(BaseEventHook):
     version = "0.1.0"
     compatible_framework_version = ">=0.1.0"
     authors = {"Sekiun (github.com/not-sekiun)"}
-    event_types = {"STOP_SERVER", "START_SERVER"}
+    event_types = {"STOP_SERVER", "START_SERVER", "AGENT_REGISTERED"}
 
     async def on_event_hook_setup(self) -> None:
         try:
@@ -137,16 +137,29 @@ class EventHook(BaseEventHook):
         async with aiohttp.ClientSession() as client_session:
             for webhook in self.environment.config["webhooks"]:
                 event_dict = event.to_json()
-                stringified_event_dict = {
-                    "event_type": str(event_dict["event_type"]),
-                    "data": event_dict["data"],
-                }  # convert `event_type` enum to str
+                # TODO: Consider having per-webhook event type data formatting options
+                #  for better compatibility with different webhook platforms
                 if webhook["platform"] == "discord":
-                    data = {"content": str(stringified_event_dict)}
+                    embed = {
+                        "title": f"Event: {event_dict['event_type']}",
+                        "description": event_dict["message"],
+                    }
+                    data = {"embeds": [embed]}
                 elif webhook["platform"] == "slack":
-                    data = {"text": str(stringified_event_dict)}
+                    data = {
+                        "attachments": [
+                            {
+                                "title": event_dict["event_type"],
+                                "text": event_dict["message"],
+                            }
+                        ]
+                    }
                 else:
-                    data = stringified_event_dict
+                    data = {
+                        "event_type": str(event_dict["event_type"]),
+                        "message": event_dict["message"],
+                        "data": event_dict["data"],
+                    }
                 await self._post_to_webhook_with_retries(
                     client_session=client_session,
                     webhook_url=webhook["url"],

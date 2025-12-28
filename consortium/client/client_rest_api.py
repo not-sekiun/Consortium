@@ -609,9 +609,9 @@ class RestAPI:
         response_json: dict[str, Any],
     ):
         _http_response_code_to_color_string_map = {
-            1: "<bold><blue>",
+            1: "<bold><cyan>",
             2: "<bold><green>",
-            3: "<bold><blue>",
+            3: "<bold><cyan>",
             4: "<bold><yellow>",
             5: "<bold><red>",
         }

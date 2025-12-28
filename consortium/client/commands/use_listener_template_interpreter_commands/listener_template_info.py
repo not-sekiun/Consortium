@@ -42,15 +42,16 @@ class ListenerTemplateInfoCommand(ListenersInterpreterListenerTemplateInfoComman
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            if parsed_args.listener_template_id is not None:
-                listener_template = (
-                    await rest_api.get_listener_template_by_listener_template_id(
-                        listener_template_id=parsed_args.listener_template_id
-                    )
-                )
-            else:
-                listener_template = context.environment["listener_template"]
-            self._display_listener_template_info(listener_template=listener_template)
+            # Retrieve information about the current listener template from the server
+            # rather than using the cached info because a new agent profile may have
+            # been loaded or removed, causing the registered compatible agent types
+            # information to be stale
+            await self._display_listener_template_info(
+                rest_api=rest_api,
+                listener_template_id=parsed_args.listener_template_id
+                if parsed_args.listener_template_id is not None
+                else context.environment["listener_template"]["listener_template_id"],
+            )
         except SystemExit:
             pass
 
