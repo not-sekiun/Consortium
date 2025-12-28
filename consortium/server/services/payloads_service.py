@@ -241,7 +241,7 @@ class PayloadsService:
         content: bytes | Generator[bytes] | BinaryIO,
         payload_data: dict[str, Any] | None = None,
         payload_id: str | uuid.UUID | None = None,
-        format: Literal["zip", "tar", "gztar", "bztar", "xztar"] = "zip",
+        archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"] = "zip",
         name: str | None = None,
         description: str = "",
     ) -> Payload:
@@ -257,7 +257,7 @@ class PayloadsService:
         )
         resource = self._repository_service.create_repository_directory(
             content=content,
-            archive_file_format=format,
+            archive_file_format=archive_file_format,
             name=name,
             description=description,
         )

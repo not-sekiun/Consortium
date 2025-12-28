@@ -69,6 +69,13 @@ class RestAPI:
                     "password": self.password,
                 },
             )
+            # The server returns a generic 401 response for failed logins.
+            if response.status == 401:
+                raise InvalidRestAPICredentialsError(
+                    remote_host=self.remote_host,
+                    remote_port=self.remote_port,
+                    username=self.username,
+                )
             response_json = await response.json()
         except Exception as exc:
             # Close the client session if an exception is raised while attempting to log
@@ -76,13 +83,6 @@ class RestAPI:
             await self._aiohttp_client_session.close()
             raise exc
 
-        # The server returns a generic 401 response for failed logins.
-        if response.status == 401:
-            raise InvalidRestAPICredentialsError(
-                remote_host=self.remote_host,
-                remote_port=self.remote_port,
-                username=self.username,
-            )
         # If any other status code is returned other than 200, or if the response does
         # not contain the expected fields, conclude that the server returned an invalid
         # response.
@@ -636,6 +636,22 @@ class RestAPI:
             *args,
             **kwargs,
         )
+
+        # If we are logged in we should always expect a JSON response. The only time we
+        # dont get a valid JSON response while logged in is when the server returns a
+        # 401 Unauthorized due to invalid credentials during login or an expired user
+        # session. Because the interpreters only expect RestAPIOperationError
+        # exceptions for API errors, we construct and raise that exception here
+        if response.status == 401:
+            raise RestAPIOperationError(
+                code="UNAUTHORIZED_ERROR",
+                message=(
+                    "Failed to perform the requested operation. The current client "
+                    "session was unexpectedly logged out. Log in again to continue."
+                ),
+                detail=None,
+            ) from None
+
         response_json = await response.json()
         self._log_request_and_response(
             method=method,

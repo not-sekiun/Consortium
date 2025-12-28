@@ -5,10 +5,11 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.core_commands.banner import BannerCommand
 from consortium.client.exceptions.rest_api_exceptions import (
-    RestAPIAuthenticationError,
+    RestAPIError,
+    RestAPIOperationError,
 )
 from consortium.client.exceptions.websockets_api_exceptions import (
-    WebsocketsAPIConnectionError,
+    WebsocketsAPIError,
 )
 from consortium.client.interpreters import (
     AgentsInterpreter,
@@ -28,7 +29,7 @@ from consortium.client.models.return_status_models import (
     ReturnStatusType,
 )
 from consortium.client.repl_interface.base_command import Context
-from consortium.client.utils.printer_utils import print_error, print_success
+from consortium.client.utils.printer_utils import print_error, print_info, print_success
 
 
 class Client:
@@ -85,13 +86,12 @@ class Client:
 
     async def run(self):
         try:
-            client_session = ClientSession(
+            client_session = await self._client_sessions_service.create_client_session(
                 username=self._client_config.username,
                 password=self._client_config.password,
                 remote_host=self._client_config.remote_host,
                 remote_port=self._client_config.remote_port,
             )
-            await client_session.connect()
             print_success(
                 f"Connected to server "
                 f"{self._client_config.remote_host}:{self._client_config.remote_port} "
@@ -99,12 +99,12 @@ class Client:
             )
         except (
             # Exceptions raised when failing to log in to the REST API.
-            RestAPIAuthenticationError,
-            ClientConnectionError,
+            RestAPIError,
             # Exceptions raised when failing to connect to the Websockets API.
-            WebsocketsAPIConnectionError,
+            WebsocketsAPIError,
+            # Generic network exceptions.
             WebSocketException,
-            # Generic exceptions that can occur during network communication.
+            ClientConnectionError,
             TimeoutError,
             OSError,
         ) as exc:
@@ -112,7 +112,8 @@ class Client:
             print_error(
                 f"Failed to connect to server "
                 f"{self._client_config.remote_host}:{self._client_config.remote_port}. "
-                f"An error occurred while attempting to login: {exc}",
+                f"An error occurred while attempting to login. "
+                f"{exc.__class__.__name__}: {exc}",
             )
 
         # Display banner once at client startup.
@@ -133,9 +134,6 @@ class Client:
         if client_session is None:
             return_status = await DisconnectedInterpreter().run()
         else:
-            self._client_sessions_service.add_client_session(
-                client_session=client_session
-            )
             return_status = await self._handle_client_session_interpreters(
                 client_session=client_session,
             )
@@ -155,16 +153,33 @@ class Client:
                     return_status = await self._handle_client_session_interpreters(
                         client_session=return_status.data["client_session"]
                     )
-                # Catch any fatal errors raised by the client session. If a fatal error
-                # occurs in any of the interpreters it is already printed and the error
-                # reraised. We catch it here and kill the session.
-                except Exception:
-                    self._client_sessions_service.client_sessions_service.remove_client_session_by_client_session_id(
-                        client_session_id=return_status.data[
-                            "client_session"
-                        ].client_session_id,
+                except RestAPIOperationError as exc:
+                    print_error(
+                        f"Failed to switch to client session "
+                        f"{return_status.data['client_session']}. {exc}",
+                    )
+                    print_info(
+                        "Switching to disconnected interpreter due to error raised "
+                        + "while switching client sessions..."
                     )
                     return_status = await DisconnectedInterpreter().run()
+                # # Catch any fatal errors raised by the client session. If a fatal error
+                # # occurs in any of the interpreters it is already printed. We catch it
+                # # here and kill the session.
+                # except Exception as exc:
+                #     print_error(
+                #         f"Unhandled exception occurred while switching to client "
+                #         f"session {return_status.data['client_session']}. "
+                #         f"{exc.__class__.__name__}: {exc}"
+                #     )
+                #     console.print_exception(show_locals=True)
+                #     print_info("Removing the faulty client session...")
+                #     self._client_sessions_service.remove_client_session_by_client_session_id(
+                #         client_session_id=return_status.data[
+                #             "client_session"
+                #         ].client_session_id,
+                #     )
+                #     return_status = await DisconnectedInterpreter().run()
             else:
                 raise AssertionError(
                     "Failed to handle return status from interpreter. The return "

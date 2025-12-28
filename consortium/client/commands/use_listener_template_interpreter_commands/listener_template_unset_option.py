@@ -45,7 +45,7 @@ class ListenerTemplateUnsetOptionCommand(BaseCommand):
                 print_error(
                     f"Listener template option not found: '{option_name}'",
                 )
-                return ReturnStatus(ReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             if option["option_type"] == OptionType.LIST_VALUE_OPTION:
                 option["value"] = []
@@ -78,4 +78,4 @@ class ListenerTemplateUnsetOptionCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(ReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

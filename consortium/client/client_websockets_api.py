@@ -133,7 +133,7 @@ class WebsocketsAPI:
         if event_type not in self._event_handlers:
             raise EventTypeNotSubscribedError(event_type=event_type)
         # If no event handler is provided, all event handlers for the event type are
-        # removed and we unsubscribe from the event over the server's websockets API
+        # removed, and we unsubscribe from the event over the server's websockets API
         # because we no longer have any event handlers for the event type.
         if event_handler is None or len(self._event_handlers[event_type]) == 1:
             await self._send_and_recv_message(action="unsubscribe", events=[event_type])

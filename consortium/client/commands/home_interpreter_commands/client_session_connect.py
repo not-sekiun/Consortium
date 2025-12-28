@@ -8,6 +8,9 @@ from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_P
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionConnectionError,
 )
+from consortium.client.exceptions.rest_api_exceptions import (
+    RestAPIAuthenticationError,
+)
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -17,7 +20,7 @@ from consortium.client.repl_interface.base_command import (
     Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_error, print_success
+from consortium.client.utils.printer_utils import print_error, print_info, print_success
 
 client_sessions_service = client_singletons.client_sessions_service
 
@@ -45,7 +48,7 @@ class ConnectCommand(BaseCommand):
                 "`data/client/client_config.json` is used."
             ),
             nargs="?",
-            const=str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH),
+            default=str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH),
         )
         parser.add_argument(
             "-rh",
@@ -83,8 +86,8 @@ class ConnectCommand(BaseCommand):
             ):
                 self.parser.error(
                     "All of -rh/--remote-host, -rp/--remote-port, -u/--username, and "
-                    "-p/--password must be provided if the client configuration file is"
-                    "not provided.",
+                    "-p/--password must be provided if the client configuration file "
+                    "is not provided.",
                 )
 
             if parsed_args.config:
@@ -133,21 +136,17 @@ class ConnectCommand(BaseCommand):
                 remote_port = parsed_args.remote_port
 
             try:
-                client_session = client_sessions_service.create_and_add_client_session(
+                client_session = await client_sessions_service.create_client_session(
                     username=username,
                     password=password,
                     remote_host=remote_host,
                     remote_port=remote_port,
                 )
-                await (
-                    client_sessions_service.connect_client_session_by_client_session_id(
-                        client_session_id=str(client_session.client_session_id),
-                    )
-                )
                 print_success(
                     f"Connected to server {remote_host}:{remote_port} as '{username}'"
                 )
-            except ClientSessionConnectionError as exc:
+                print_info(f"New client session created: {client_session}")
+            except (ClientSessionConnectionError, RestAPIAuthenticationError) as exc:
                 print_error(exc)
         except SystemExit:
             pass

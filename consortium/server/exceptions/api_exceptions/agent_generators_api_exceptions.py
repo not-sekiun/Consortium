@@ -20,7 +20,7 @@ class AgentTemplateResolutionError(InternalServerError):
         super().__init__(
             message=(
                 "Failed to resolve the agent's agent template for the given agent type "
-                f'with agent type ID "{agent_type.agent_type_id}".'
+                f"{agent_type}."
             ),
             detail={"agent_type": agent_type.to_json()},
         )

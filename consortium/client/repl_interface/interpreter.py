@@ -162,9 +162,9 @@ class Interpreter:
                         )
                     )
                 continue
-            except Exception as exc:
-                print_error(
-                    f"Unhandled exception occurred. {exc.__class__.__name__}: {exc}"
-                )
-                console.print_exception(show_locals=True)
-                continue
+            # except Exception as exc:
+            #     print_error(
+            #         f"Unhandled exception occurred. {exc.__class__.__name__}: {exc}"
+            #     )
+            #     console.print_exception(show_locals=True)
+            #     continue

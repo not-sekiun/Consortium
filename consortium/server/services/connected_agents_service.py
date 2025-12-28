@@ -64,6 +64,7 @@ class ConnectedAgentsService:
             endpoint (str): A human-readable representation of the network endpoint that
                 uniquely identifies the agent. This is typically the socket address of
                 the agent.
+            user (str): The name of the user account that the agent is running on.
             is_admin (bool | None): A boolean that indicates whether the agent is
                 running with administrator/superuser privileges.
             os (str | None): The operating system of the agent.

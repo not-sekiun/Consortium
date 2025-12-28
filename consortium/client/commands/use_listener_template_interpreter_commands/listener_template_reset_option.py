@@ -45,7 +45,7 @@ class ListenerTemplateResetOptionCommand(BaseCommand):
                 print_error(
                     f"Listener template option not found: '{option_name}'",
                 )
-                return ReturnStatus(ReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             option["value"] = copy.deepcopy(option["default_value"])
             print_success(
@@ -54,4 +54,4 @@ class ListenerTemplateResetOptionCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(ReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

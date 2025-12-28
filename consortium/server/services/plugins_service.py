@@ -5,7 +5,6 @@ import uuid
 
 from loguru import logger
 
-from consortium.framework._utils import remap_exception
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     PluginLoadingError,
@@ -474,17 +473,7 @@ class PluginsService:
             )
             return
         for plugin in unresolved_plugins:
-            self._logger.error(
-                "- {}",
-                str(
-                    remap_exception(
-                        original_exception=plugin[1],
-                        original_kwargs=plugin[1]._kwargs,
-                        exception_map=self._EXCEPTION_MAP,
-                        exception_kwargs_map=self._EXCEPTION_KWARGS_MAP,
-                    ),
-                ),
-            )
+            self._logger.error("- {}", plugin[1])
 
         # Register and start each plugin according to the topological sort order
         # determined.

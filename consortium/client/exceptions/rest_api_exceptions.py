@@ -1,7 +1,10 @@
 from typing import Any
 
 
-class RestAPIAuthenticationError(Exception): ...
+class RestAPIError(Exception): ...
+
+
+class RestAPIAuthenticationError(RestAPIError): ...
 
 
 class RestAPIAlreadyLoggedInError(RestAPIAuthenticationError):
@@ -39,7 +42,7 @@ class InvalidServerRestAPILoginResponseError(RestAPIAuthenticationError):
         )
 
 
-class RestAPIOperationError(Exception):
+class RestAPIOperationError(RestAPIError):
     def __init__(self, code: str, message: str, detail: Any):
         self.code = code
         self.message = message

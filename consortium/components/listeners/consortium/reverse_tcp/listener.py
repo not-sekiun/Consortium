@@ -262,6 +262,7 @@ class Listener(BaseListener):
                 connected_agents_service=self.connected_agents_service,
                 reader=reader,
                 writer=writer,
+                stop_event=self.stop_event,
             )
             await agent_handler.run_agent_handler()
 

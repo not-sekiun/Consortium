@@ -1,4 +1,7 @@
-class WebsocketsAPIConnectionError(Exception): ...
+class WebsocketsAPIError(Exception): ...
+
+
+class WebsocketsAPIConnectionError(WebsocketsAPIError): ...
 
 
 class WebsocketsAPIAlreadyConnectedError(WebsocketsAPIConnectionError):
@@ -27,7 +30,7 @@ class WebsocketsAPIFailedToConnectError(WebsocketsAPIConnectionError):
         )
 
 
-class InvalidServerWebsocketAPIResponseError(Exception):
+class InvalidServerWebsocketAPIResponseError(WebsocketsAPIError):
     def __init__(self):
         super().__init__(
             "Failed to perform the requested operation over the server's websockets "
@@ -36,7 +39,7 @@ class InvalidServerWebsocketAPIResponseError(Exception):
         )
 
 
-class SeverWebsocketsAPIErrorResponseError(Exception):
+class SeverWebsocketsAPIErrorResponseError(WebsocketsAPIError):
     def __init__(self, error_message: str):
         super().__init__(
             "Failed to perform the requested operation over the server's websockets "
@@ -44,14 +47,14 @@ class SeverWebsocketsAPIErrorResponseError(Exception):
         )
 
 
-class WebsocketsAPIHandlerAlreadyRunningError(Exception):
+class WebsocketsAPIHandlerAlreadyRunningError(WebsocketsAPIError):
     def __init__(self):
         super().__init__(
             "Failed to start the websockets API handler. The handler is already running.",
         )
 
 
-class WebsocketsAPIHandlerNotRunningError(Exception):
+class WebsocketsAPIHandlerNotRunningError(WebsocketsAPIError):
     def __init__(self):
         super().__init__(
             "Failed to stop the websockets API handler. The handler is not running.",

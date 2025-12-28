@@ -30,7 +30,7 @@ class ClientSessionDescribeCommand(HomeInterpreterClientSessionDescribeCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "client_session_id",
-            help=("ID of the client session whose description should be changed."),
+            help="ID of the client session whose description should be changed.",
             nargs=1,
             default=None,
         )

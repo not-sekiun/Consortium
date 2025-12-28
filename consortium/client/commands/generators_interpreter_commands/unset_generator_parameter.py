@@ -53,7 +53,7 @@ class UnsetGeneratorParameterCommand(BaseCommand):
                 print_error(
                     f"Parameter '{parameter_name}' does not exist in the agent generator.",
                 )
-                return ReturnStatus(ReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             if option["option_type"] == "LIST_VALUE_OPTION":
                 await client_rest_api_connection.update_agent_generator_by_agent_generator_id(
@@ -94,4 +94,4 @@ class UnsetGeneratorParameterCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(ReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)

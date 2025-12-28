@@ -35,7 +35,8 @@ class InfoAgentTemplateCommand(BaseCommand):
             nargs=1,
         )
 
-    def _display_agent_template_info(self, agent_template: dict) -> None:
+    @staticmethod
+    def _display_agent_template_info(agent_template: dict) -> None:
         table = Table(title="Agent Template Information")
         table.add_column("Information")
         table.add_column("Data")

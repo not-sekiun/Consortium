@@ -32,8 +32,7 @@ class ListenerTemplateResolutionError(InternalServerError):
         super().__init__(
             message=(
                 "Failed to resolve the listener's listener template for the given "
-                "listener type with listener type ID "
-                f'"{listener_type.listener_type_id}".'
+                f"listener type {listener_type}."
             ),
             detail={"listener_type": listener_type.to_json()},
         )

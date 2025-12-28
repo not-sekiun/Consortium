@@ -244,7 +244,8 @@ class BaseAgentCapability:
             "supported_oses": [str(os) for os in cls.supported_oses],
             "is_atomic": cls.is_atomic,
             "options": {
-                option.name: option.to_json() for option in cls.options.values()
+                option_name: option.to_json()
+                for option_name, option in cls.options.items()
             },
             "validating_function": format_docstring_to_single_line(
                 cls.validating_function.__doc__,

@@ -48,7 +48,7 @@ class ResetAgentTemplateOptionCommand(BaseCommand):
                 print_error(
                     f"Option '{option_name}' does not exist in the agent template.",
                 )
-                return ReturnStatus(ReturnStatusType.CONTINUE)
+                return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             option["value"] = copy.deepcopy(option["default_value"])
             print_success(
@@ -58,4 +58,4 @@ class ResetAgentTemplateOptionCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(ReturnStatusType.CONTINUE)
+        return ReturnStatus(type=ReturnStatusType.CONTINUE)
