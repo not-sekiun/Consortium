@@ -106,7 +106,7 @@ class EventsService:
             try:
                 await event_handler(event)
             except Exception as exc:
-                self._logger.error(
+                self._logger.opt(ansi=True, exception=exc).error(
                     "Unhandled exception occurred while triggering event handler. "
                     "{}: {}",
                     exc.__class__.__name__,

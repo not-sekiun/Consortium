@@ -1,35 +1,39 @@
-from consortium.client.commands.use_agent_template_interpreter_commands.create_generator import (
-    CreateGeneratorCommand,
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_info import (
+    AgentTemplateInfoCommand,
 )
-from consortium.client.commands.use_agent_template_interpreter_commands.info_agent_template import (
-    InfoAgentTemplateCommand,
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_info_option import (
+    AgentTemplateInfoOptionCommand,
 )
-from consortium.client.commands.use_agent_template_interpreter_commands.info_agent_template_option import (
-    InfoAgentTemplateOptionsCommand,
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_list_option import (
+    AgentTemplateListOptionCommand,
 )
-from consortium.client.commands.use_agent_template_interpreter_commands.list_options_agent_template import (
-    ListOptionsAgentTemplateCommand,
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_reset_option import (
+    AgentTemplateResetOptionCommand,
 )
-from consortium.client.commands.use_agent_template_interpreter_commands.reset_agent_template_option import (
-    ResetAgentTemplateOptionCommand,
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_set_option import (
+    AgentTemplateSetOptionCommand,
 )
-from consortium.client.commands.use_agent_template_interpreter_commands.set_agent_template_option import (
-    SetAgentTemplateOptionCommand,
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_unset_option import (
+    AgentTemplateUnsetOptionCommand,
 )
-from consortium.client.commands.use_agent_template_interpreter_commands.unset_agent_template_option import (
-    UnsetAgentTemplateOptionCommand,
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_use import (
+    AgentTemplateUseCommand,
 )
-from consortium.client.commands.use_agent_template_interpreter_commands.use_agent_template import (
-    UseAgentTemplateCommand,
+from consortium.client.commands.use_agent_template_interpreter_commands.generator_create import (
+    GeneratorCreateCommand,
+)
+from consortium.client.commands.use_agent_template_interpreter_commands.generator_launch import (
+    GeneratorLaunchCommand,
 )
 
 USE_AGENT_TEMPLATE_INTERPRETER_COMMANDS = [
-    CreateGeneratorCommand(),
-    InfoAgentTemplateCommand(),
-    InfoAgentTemplateOptionsCommand(),
-    ListOptionsAgentTemplateCommand(),
-    ResetAgentTemplateOptionCommand(),
-    SetAgentTemplateOptionCommand(),
-    UnsetAgentTemplateOptionCommand(),
-    UseAgentTemplateCommand(),
+    GeneratorCreateCommand(),
+    GeneratorLaunchCommand(),
+    AgentTemplateInfoCommand(),
+    AgentTemplateInfoOptionCommand(),
+    AgentTemplateListOptionCommand(),
+    AgentTemplateResetOptionCommand(),
+    AgentTemplateSetOptionCommand(),
+    AgentTemplateUnsetOptionCommand(),
+    AgentTemplateUseCommand(),
 ]

@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console, print_error
 
 
-class InfoListenerTemplateOptionsCommand(BaseCommand):
+class ListenerTemplateInfoOptionCommand(BaseCommand):
     name = "opt-info"
     description = (
         "Display information about a specific listener template option by its name"
@@ -32,7 +32,7 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "listener_template_option_name",
+            "option_name",
             help="Name of the listener template option to display information for.",
             nargs=1,
         )
@@ -46,13 +46,11 @@ class InfoListenerTemplateOptionsCommand(BaseCommand):
             listener_template = context.interpreter_context["listener_template"]
 
             try:
-                option = listener_template["options"][
-                    parsed_args.listener_template_option_name[0]
-                ]
+                option = listener_template["options"][parsed_args.option_name[0]]
             except KeyError:
                 print_error(
                     f"Listener template option not found: "
-                    f"'{parsed_args.listener_template_option_name[0]}'",
+                    f"'{parsed_args.option_name[0]}'",
                 )
                 return ReturnStatus(
                     type=ReturnStatusType.CONTINUE,

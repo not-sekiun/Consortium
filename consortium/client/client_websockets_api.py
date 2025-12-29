@@ -253,28 +253,11 @@ class WebsocketsAPI:
                     event_type = message["event_type"]
                     if event_type in self._event_handlers:
                         for event_handler in self._event_handlers[event_type]:
-                            try:
-                                await event_handler(message)
-                            except Exception as exc:
-                                # This should never happen unless there is a bug in the
-                                # event handler itself that the developer did not catch.
-                                self._logger.error(
-                                    "Failed to process the received websocket message. "
-                                    "The event handler for the event of event type "
-                                    f"'{event_type}' raised an exception: {exc}. If "
-                                    f"you are seeing this message, something very "
-                                    "wrong has happened. Please report it to the "
-                                    "developer at github.com/not-sekiun.",
-                                )
+                            await event_handler(message)
                 else:
-                    # This should never happen unless there is a mismatch between the
-                    # source code of the events API on the server side and the
-                    # websockets api connection abstraction object on the client side.
-                    self._logger.error(
+                    raise AssertionError(
                         "Failed to process the received websocket message. The message "
-                        f"type '{message['type']}' is not supported. If you are seeing "
-                        "this message, something very wrong has happened. Please "
-                        "report it to the developer at github.com/not-sekiun.",
+                        f"type '{message['type']}' is not supported."
                     )
         except (
             websockets.exceptions.ConnectionClosedError,

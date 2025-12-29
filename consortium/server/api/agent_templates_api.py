@@ -91,7 +91,6 @@ _invalid_uuid_error = InvalidUUIDError(
             | _unprocessable_entity_error.to_pydantic_model()
         },
     },
-    status_code=201,
 )
 async def create_agent_generator_through_agent_template_by_agent_template_id(
     agent_template_id: UUID4,

@@ -1,4 +1,3 @@
-import asyncio
 import inspect
 import pathlib
 import sys
@@ -14,6 +13,10 @@ from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 from consortium.framework._components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
+    State,
+)
+from consortium.framework.exceptions import (
+    _component_framework_exceptions as framework_excs,
 )
 from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
     AgentGeneratorAlreadyRunningError,
@@ -153,24 +156,27 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
 
     async def run(
         self,
-        stop_event: asyncio.Event,
         parameters: dict,
         environment: types.SimpleNamespace,
     ) -> None:
-        # Override the `stop_event` and `environment` set during initialization to the
-        # ones provided by the AgentGenerator.
-        self.stop_event = stop_event
+        # Override `environment` set during initialization to the ones provided by the
+        # AgentGenerator.
         self.environment = environment
         self.parameters = parameters
         await super().start()
         await self.wait_until_stopped()
+
+    def reset(self) -> None:
+        self.datetime_started = None
+        self.datetime_stopped = None
+        self.parameters = {}
+        super().reset()
 
     def to_json(self) -> dict[str, Any]:
         return {
             "agent_generator_build_step_id": str(self.agent_generator_build_step_id),
             "name": self.name,
             "description": self.description,
-            # "ignore_failure": self.ignore_failure,
             "datetime_started": self.datetime_started.isoformat()
             if self.datetime_started
             else None,
@@ -217,11 +223,11 @@ class _BaseAgentGeneratorParametersModel(BaseModel):
 class _BaseAgentGeneratorModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    agent_generator_build_steps: list[BaseAgentGeneratorBuildStep]
+    agent_generator_build_steps: list[type[BaseAgentGeneratorBuildStep]]
 
 
 class BaseAgentGenerator(ComponentLifeCycle):
-    agent_generator_build_steps: list[BaseAgentGeneratorBuildStep] = None
+    agent_generator_build_steps: list[type[BaseAgentGeneratorBuildStep]] = None
 
     def __init__(
         self,
@@ -261,6 +267,10 @@ class BaseAgentGenerator(ComponentLifeCycle):
         self.parameters = parameters
 
         self.agent_generator_id = uuid.uuid4()
+        self.agent_generator_build_steps: list[BaseAgentGeneratorBuildStep] = [
+            agent_generator_build_step()
+            for agent_generator_build_step in self.__class__.agent_generator_build_steps
+        ]
         self.datetime_created = datetime.now()
         self.environment = types.SimpleNamespace()
 
@@ -268,6 +278,8 @@ class BaseAgentGenerator(ComponentLifeCycle):
             logger_name=f"Agent Generator {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
         )
+
+        self._current_agent_generator_build_step = None
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
@@ -313,12 +325,38 @@ class BaseAgentGenerator(ComponentLifeCycle):
     # TODO: Maybe think of a stricter way to prevent overriding this method.
     @final
     async def on_running(self) -> None:
+        # Reset each build step before running them in case the agent generator is
+        # started more than once.
         for agent_generator_build_step in self.agent_generator_build_steps:
+            agent_generator_build_step.reset()
+
+        for agent_generator_build_step in self.agent_generator_build_steps:
+            self._current_agent_generator_build_step = agent_generator_build_step
             await agent_generator_build_step.run(
-                stop_event=self.stop_event,
                 parameters=self.parameters,
                 environment=self.environment,
             )
+
+            # Since we are in the agent generator's on_running() method to communicate
+            # upwards that the agent generator failed we must throw a
+            # ComponentRuntimeError signalling error from consortium.framework.exceptions
+            # module. We can throw the generic ComponentRuntimeError because it will be
+            # caught and translated by the _construct_component_runtime_error_* methods
+            # in this class to the appropriate AgentGeneratorRuntimeError.
+            if agent_generator_build_step.status.state in (State.ERRORED, State.FATAL):
+                raise framework_excs.ComponentRuntimeError(
+                    message=(
+                        f"Agent generator build step "
+                        f"{agent_generator_build_step} "
+                        f"failed while running."
+                    ),
+                    detail={
+                        "agent_generator_build_step_status": (
+                            agent_generator_build_step.status.to_json()
+                        ),
+                    },
+                )
+
             if self.stop_event.is_set():
                 break
 
@@ -376,6 +414,15 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 detail=exc.detail,
             ) from None
 
+        if self._current_agent_generator_build_step is not None:
+            try:
+                await self._current_agent_generator_build_step.stop()
+            # If the build step is not running, we can ignore it since we are stopping
+            # the agent generator. Also since on_stopped() is supposed to be
+            # non-overridable we should not have a *StopError raised from there.
+            except ComponentNotRunningError:
+                pass
+
     async def cancel(self) -> None:
         try:
             await super().cancel()
@@ -397,6 +444,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 for agent_generator_build_step in self.agent_generator_build_steps
             ],
             "agent_type": self.agent_type.to_json(),
+            # Compatible listener types is assigned to the agent generator class by the
+            # agent profile loader at load time and referenced from the agent template.
+            "compatible_listener_types": list(self.compatible_listener_types),
             # `creating_agent_template` is assigned to the agent generator class by the
             # agent profile loader at load time.
             "creating_agent_template": {

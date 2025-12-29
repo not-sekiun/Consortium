@@ -55,6 +55,7 @@ class ListenersInterpreter(Interpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
+
         for key, value in {
             command: {listener["listener_id"]: None for listener in all_listeners}
             for command in [
@@ -68,6 +69,12 @@ class ListenersInterpreter(Interpreter):
             ]
         }.items():
             nested_completer_dict[key] = value
+
+        nested_completer_dict["update"] = {
+            listener["listener_id"]: dict.fromkeys(listener["parameters"])
+            for listener in all_listeners
+        }
+
         for key, value in {
             command: {
                 listener_template["listener_template_id"]: None
@@ -79,16 +86,7 @@ class ListenersInterpreter(Interpreter):
             ]
         }.items():
             nested_completer_dict[key] = value
-        for key, value in {
-            command: {
-                listener["listener_id"]: dict.fromkeys(listener["parameters"])
-                for listener in all_listeners
-            }
-            for command in [
-                "update",
-            ]
-        }.items():
-            nested_completer_dict[key] = value
+
         nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(

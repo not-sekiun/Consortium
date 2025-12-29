@@ -255,7 +255,7 @@ class AgentGeneratorNotRunningError(
 
 
 class AgentGeneratorAlreadyRunningError(
-    comp_excs.ComponentNotRunningError, AgentGeneratorStateError
+    comp_excs.ComponentAlreadyRunningError, AgentGeneratorStateError
 ):
     code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
 
@@ -264,42 +264,6 @@ class AgentGeneratorAlreadyRunningError(
         agent_generator_str: str,
     ):
         super().__init__(component_str=agent_generator_str)
-
-
-# class AgentGeneratorBuildError(AgentGeneratorsFrameworkError):
-#     code = "AGENT_GENERATOR_BUILD_ERROR"
-#
-#     def __init__(
-#         self,
-#         agent_generator_str: str,
-#         error_message: str,
-#         detail: Any,
-#     ):
-#         super().__init__(
-#             message=(
-#                 f"Failed to build an agent with the agent generator "
-#                 f"'{agent_generator_str}'. {error_message}"
-#             ),
-#             detail=detail,
-#         )
-#
-#
-# class AgentGeneratorBuildStepError(AgentGeneratorsFrameworkError):
-#     code = "AGENT_GENERATOR_BUILD_STEP_ERROR"
-#
-#     def __init__(
-#         self,
-#         agent_generator_build_step_str: str,
-#         error_message: str,
-#         detail: Any,
-#     ):
-#         super().__init__(
-#             message=(
-#                 f"An error occurred during the agent generator build step "
-#                 f"'{agent_generator_build_step_str}'. {error_message}"
-#             ),
-#             detail=detail,
-#         )
 
 
 class AgentGeneratorsServiceError(AgentGeneratorsError):

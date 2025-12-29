@@ -1,15 +1,22 @@
+import asyncio
 import shutil
 
 from consortium.framework.agents import (
     BaseAgentGenerator,
     BaseAgentGeneratorBuildStep,
 )
-from consortium.framework.agents.agent_generator_utils.string_utils import (
-    multiple_string_replace,
-)
 from consortium.framework.exceptions import (
+    AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorStartError,
 )
+
+
+class Oopsie(BaseAgentGeneratorBuildStep):
+    name = "Oopsie"
+    description = "An agent generator build step that always fails."
+
+    async def build(self, parameters: dict) -> None:
+        raise AgentGeneratorBuildStepRuntimeError("Oopsie! This is a forced error.")
 
 
 class BuildAgent(BaseAgentGeneratorBuildStep):
@@ -21,26 +28,26 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
     )
 
     async def build(self, parameters: dict) -> None:
-        with open(
-            self.working_directory / "agent_source" / "_agent.py",
-        ) as file:
-            template_source_code = file.read()
-            source_code = multiple_string_replace(
-                template_source_code,
-                {
-                    "REMOTE_HOST": repr(parameters["remote_host"]),
-                    "REMOTE_PORT": repr(parameters["remote_port"]),
-                    "SLEEP_TIME": repr(parameters["sleep_time"]),
-                    "SLEEP_TIME_JITTER": repr(parameters["sleep_time_jitter"]),
-                    "TASKS_URL_PATHS": repr(parameters["tasks_url_paths"]),
-                    "RESULTS_URL_PATHS": repr(parameters["results_url_paths"]),
-                    "REGISTRATION_URL_PATHS": repr(
-                        parameters["registration_url_paths"]
-                    ),
-                    "EXTRA_HEADERS": repr(parameters["extra_headers"]),
-                },
-            )
-        print(source_code)
+        # with open(
+        #     self.working_directory / "agent_source" / "_agent.py",
+        # ) as file:
+        #     template_source_code = file.read()
+        #     source_code = multiple_string_replace(
+        #         template_source_code,
+        #         {
+        #             "REMOTE_HOST": repr(parameters["remote_host"]),
+        #             "REMOTE_PORT": repr(parameters["remote_port"]),
+        #             "SLEEP_TIME": repr(parameters["sleep_time"]),
+        #             "SLEEP_TIME_JITTER": repr(parameters["sleep_time_jitter"]),
+        #             "TASKS_URL_PATHS": repr(parameters["tasks_url_paths"]),
+        #             "RESULTS_URL_PATHS": repr(parameters["results_url_paths"]),
+        #             "REGISTRATION_URL_PATHS": repr(
+        #                 parameters["registration_url_paths"]
+        #             ),
+        #             "EXTRA_HEADERS": repr(parameters["extra_headers"]),
+        #         },
+        #     )
+        await asyncio.sleep(5)
 
         # if parameters["format"] == "script":
         #     with open(
@@ -88,7 +95,17 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
 
 class AgentGenerator(BaseAgentGenerator):
     agent_generator_build_steps = [
-        BuildAgent(),
+        BuildAgent,
+        BuildAgent,
+        BuildAgent,
+        BuildAgent,
+        Oopsie,
+        BuildAgent,
+        BuildAgent,
+        BuildAgent,
+        BuildAgent,
+        BuildAgent,
+        BuildAgent,
     ]
 
     async def on_started(self) -> None:

@@ -172,7 +172,7 @@ class Server:
         ) in server_singletons.agent_generators_service.get_all_agent_generators():
             if agent_generator.status.state == State.RUNNING:
                 try:
-                    await server_singletons.agent_generators_service.stop_agent_generator_by_id(
+                    await server_singletons.agent_generators_service.stop_agent_generator_by_agent_generator_id(
                         agent_generator_id=agent_generator.agent_generator_id,
                         blocking=True,
                     )

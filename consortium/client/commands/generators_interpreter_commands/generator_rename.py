@@ -12,16 +12,13 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class RenameGeneratorCommand(BaseCommand):
-    name = "rename_generator"
-    description = (
-        "Change the name of an agent generator instance without altering its "
-        "configured parameters."
-    )
+class GeneratorRenameCommand(BaseCommand):
+    name = "rename"
+    description = "Set the name of an agent generator by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          rename_generator 123e4567-e89b-12d3-a456-42661417400 "New name"
+          rename 123e4567-e89b-12d3-a456-42661417400 "New name"
         """,
     )
     group = "Agent Generator Management Commands"
@@ -29,7 +26,7 @@ class RenameGeneratorCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_generator_id",
-            help="Agent generator ID of the agent generator to rename.",
+            help="ID of the agent generator to rename.",
             nargs=1,
         )
         parser.add_argument(
@@ -41,24 +38,18 @@ class RenameGeneratorCommand(BaseCommand):
     async def run(self, context: Context) -> ReturnStatus:
         try:
             parsed_commands = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.client_session.rest_api
-            agent_generator = await client_rest_api_connection.get_agent_generator_by_agent_generator_id(
+            rest_api = context.client_session.rest_api
+
+            agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_commands.agent_generator_id[0],
             )
-
-            await (
-                client_rest_api_connection.update_agent_generator_by_agent_generator_id(
-                    agent_generator_id=parsed_commands.agent_generator_id[0],
-                    new_agent_generator_attributes={
-                        "name": parsed_commands.name[0],
-                    },
-                )
+            await rest_api.update_agent_generator_by_agent_generator_id(
+                agent_generator_id=parsed_commands.agent_generator_id[0],
+                new_agent_generator_attributes={"name": parsed_commands.name[0]},
             )
-
             print_success(
-                f'Agent generator "{agent_generator["name"]}" '
-                f"({agent_generator['agent_generator_id']}) renamed to "
-                f'"{parsed_commands.name[0]}"',
+                f"Renamed agent generator '{agent_generator['name']}' ({agent_generator['agent_generator_id']}) "
+                f"to '{parsed_commands.name[0]}'",
             )
         except SystemExit:
             pass

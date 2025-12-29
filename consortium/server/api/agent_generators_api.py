@@ -112,7 +112,6 @@ _invalid_uuid_error = InvalidUUIDError(
     responses={
         200: {"model": AgentGeneratorModel},
     },
-    status_code=201,
 )
 def get_all_agent_generators(
     _: Annotated[
@@ -136,7 +135,6 @@ def get_all_agent_generators(
             | _unprocessable_entity_error.to_pydantic_model()
         },
     },
-    status_code=201,
 )
 def get_agent_generator_by_agent_generator_id(
     agent_generator_id: UUID4,

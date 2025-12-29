@@ -10,7 +10,7 @@ from consortium.client.repl_interface.base_command import (
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
-    format_component_life_cycle_state_string_with_color,
+    format_listener_state_string_with_color,
 )
 from consortium.client.utils.printer_utils import console
 
@@ -47,7 +47,7 @@ class ListenerListCommand(BaseCommand):
                     listener["listener_type"]["name"],
                     listener["name"],
                     listener["endpoint"],
-                    format_component_life_cycle_state_string_with_color(
+                    format_listener_state_string_with_color(
                         listener["status"]["state"],
                     ),
                 )

@@ -143,7 +143,6 @@ def get_listener_template_by_listener_template_id(
             | _unprocessable_entity_error.to_pydantic_model()
         },
     },
-    status_code=201,
 )
 async def create_listener_through_listener_template_by_listener_template_id(
     listener_template_id: UUID4,

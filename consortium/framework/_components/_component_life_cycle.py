@@ -97,7 +97,9 @@ class ComponentLifeCycle(abc.ABC):
             )
 
         try:
+            self.status._transition_to_stopping()
             await self.on_stopped()
+            self.status._transition_to_stopped()
         except framework_excs.ComponentStopError as exc:
             raise consortium_excs.ComponentStopError(
                 component_str=str(self),
@@ -160,6 +162,11 @@ class ComponentLifeCycle(abc.ABC):
             except asyncio.CancelledError:
                 pass
 
+    def reset(self) -> None:
+        self.status._transition_to_initialized()
+        self.stop_event.clear()
+        self._runtime_loop_task = None
+
     def _construct_component_runtime_error_from_framework_runtime_error(
         self,
         error: framework_excs.ComponentRuntimeError,
@@ -190,6 +197,13 @@ class ComponentLifeCycle(abc.ABC):
         try:
             self.status._transition_to_running()
             await self.on_running()
+
+            if self.stop_event.is_set():
+                # `stop()` was called during `on_running()` so we should skip the
+                # completed state transition and hook method because we did not run all
+                # the way to completion
+                return
+
             self.status._transition_to_completed()
             await self.on_completed()
         except asyncio.CancelledError:

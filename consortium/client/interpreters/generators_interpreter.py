@@ -56,54 +56,56 @@ class GeneratorsInterpreter(Interpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
+
+        # Register commands that take the agent generator ID as the first positional
+        # argument to autocomplete with.
         for key, value in {
             command: {
                 agent_generator["agent_generator_id"]: None
                 for agent_generator in all_agent_generators
             }
             for command in [
-                "cancel_generator",
-                "delete_generator",
-                "info_generator",
-                "redescribe_generator",
-                "rename_generator",
-                "start_generator",
-                "stop_generator",
+                "start",
+                "stop",
+                "cancel",
+                "delete",
+                "info",
+                "rename",
+                "describe",
             ]
         }.items():
             nested_completer_dict[key] = value
+
+        # Register the "update" command to autocomplete with the agent generator ID as
+        # the first positional argument and the parameters of the agent generator as
+        # the second positional argument.
+        nested_completer_dict["update"] = {
+            agent_generator["agent_generator_id"]: dict.fromkeys(
+                agent_generator["parameters"]
+            )
+            for agent_generator in all_agent_generators
+        }
+
+        # Register commands that take the agent template ID as the first positional
+        # argument to autocomplete with.
         for key, value in {
             command: {
                 agent_template["agent_template_id"]: None
                 for agent_template in all_agent_templates
             }
             for command in [
-                "info_agent_template",
-                "use_agent_template",
+                "at-info",
+                "use",
             ]
         }.items():
             nested_completer_dict[key] = value
-        for key, value in {
-            command: {
-                agent_generator["agent_generator_id"]: dict.fromkeys(
-                    agent_generator["parameters"]
-                )
-                for agent_generator in all_agent_generators
-            }
-            for command in [
-                "set_generator_parameter",
-                "unset_generator_parameter",
-            ]
-        }.items():
-            nested_completer_dict[key] = value
+
         nested_completer_dict["help"] = dict.fromkeys(self.commands)
 
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,
         )
 
-    # We don't actually care about the event data so we just ignore it. We just need to
-    # know a change happened so that we can update the autocompleter.
     async def _agent_generator_created_or_removed_event_handler(
         self,
         _event: dict[str, Any],

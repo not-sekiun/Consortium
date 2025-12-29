@@ -1,6 +1,6 @@
 from typing import Any
 
-from prompt_toolkit.completion import NestedCompleter
+from prompt_toolkit.completion import Completer, NestedCompleter
 
 
 # `prompt_toolkit` creates a `NestedCompleter` object from the `.from_nested_dict()`
@@ -11,7 +11,12 @@ from prompt_toolkit.completion import NestedCompleter
 # object.
 def extract_nested_completer_dict_from_nested_completer(
     nested_completer: NestedCompleter,
-) -> dict[str, Any]:
+) -> dict[str, Any] | Completer:
+    # Some other types of Completer might be present like PathCompleter for commands
+    # that operate on file paths
+    if not isinstance(nested_completer, NestedCompleter):
+        return nested_completer
+
     completion_dict = {}
     for key, value in nested_completer.options.items():
         if value is None:

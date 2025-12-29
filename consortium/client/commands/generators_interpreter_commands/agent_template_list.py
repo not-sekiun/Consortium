@@ -12,13 +12,13 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console
 
 
-class ListAgentTemplatesCommand(BaseCommand):
-    name = "list_agent_templates"
-    description = "List all available agent templates for reference and selection."
+class AgentTemplateListCommand(BaseCommand):
+    name = "at-list"
+    description = "List all agent templates along with their essential information"
     epilog = format_argparse_epilog(
         """
         Examples:
-          list_agent_templates
+          at-list
         """,
     )
     group = "Agent Template Management Commands"
@@ -29,20 +29,19 @@ class ListAgentTemplatesCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(context.arguments)
-            client_rest_api_connection = context.client_session.rest_api
-            all_agent_templates = (
-                await client_rest_api_connection.get_all_agent_templates()
-            )
+            rest_api = context.client_session.rest_api
 
-            table = Table(title="Agent Templates")
+            all_agent_templates = await rest_api.get_all_agent_templates()
+            table = Table(title="Agent Templates", highlight=True)
             table.add_column("Agent Template ID")
+            table.add_column("Agent Type")
             table.add_column("Name")
             for agent_template in all_agent_templates:
                 table.add_row(
                     agent_template["agent_template_id"],
+                    agent_template["agent_type"]["name"],
                     agent_template["name"],
                 )
-
             console.print(table, "")
         except SystemExit:
             pass

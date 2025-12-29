@@ -17,24 +17,23 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console, print_error
 
 
-class InfoAgentTemplateOptionsCommand(BaseCommand):
-    name = "info_agent_template_option"
-    description = "Display detailed information about a specific agent template option."
+class AgentTemplateInfoOptionCommand(BaseCommand):
+    name = "opt-info"
+    description = (
+        "Display information about a specific agent template option by its name"
+    )
     epilog = format_argparse_epilog(
         """
         Examples:
-          info_agent_template_option remote_host
+          opt-info remote_host
         """,
     )
     group = "Agent Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "agent_template_option_name",
-            help=(
-                "The name of the agent template option to display detailed information "
-                "for."
-            ),
+            "option_name",
+            help="Name of the agent template option to display information for.",
             nargs=1,
         )
 
@@ -45,24 +44,30 @@ class InfoAgentTemplateOptionsCommand(BaseCommand):
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             agent_template = context.interpreter_context["agent_template"]
+
             try:
-                option = agent_template["options"][
-                    parsed_args.agent_template_option_name[0]
-                ]
+                option = agent_template["options"][parsed_args.option_name[0]]
             except KeyError:
                 print_error(
-                    f"Agent template option with name "
-                    f"{parsed_args.agent_template_option_name[0]} not found.",
+                    f"Agent template option not found: '{parsed_args.option_name[0]}'",
                 )
                 return ReturnStatus(
                     type=ReturnStatusType.CONTINUE,
                 )
 
-            table = Table(title="Agent Template Option Information")
-            table.add_column("Information")
-            table.add_column("Data")
+            table = Table(
+                title="Agent Template Option Information",
+                highlight=True,
+                show_footer=True,
+            )
+            table.add_column("Information", footer="[bold yellow]Current Value[/]")
+            table.add_column(
+                "Data",
+                footer=str(option["value"]) if option["value"] is not None else "",
+            )
             for key, value in option.items():
-                table.add_row(format_snake_case_to_title(key), str(value))
+                if key != "value":
+                    table.add_row(format_snake_case_to_title(key), str(value))
 
             console.print(table, "")
         except SystemExit:

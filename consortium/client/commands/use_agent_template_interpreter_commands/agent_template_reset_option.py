@@ -13,24 +13,21 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
 
 
-class ResetAgentTemplateOptionCommand(BaseCommand):
-    name = "reset_agent_template_option"
-    description = (
-        "Reset an agent template option to its default value for the currently "
-        "selected agent template being used."
-    )
+class AgentTemplateResetOptionCommand(BaseCommand):
+    name = "reset"
+    description = "Reset the current agent template's option to its default value"
     epilog = format_argparse_epilog(
         """
         Examples:
-          reset_agent_template_option option_str
+          reset option_name
         """,
     )
     group = "Agent Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "option_str",
-            help="Name of the agent template option to reset the value of.",
+            "option_name",
+            help="Name of the agent template option to reset.",
             nargs=1,
         )
 
@@ -46,14 +43,13 @@ class ResetAgentTemplateOptionCommand(BaseCommand):
                 option = agent_template_options[option_name]
             except KeyError:
                 print_error(
-                    f"Option '{option_name}' does not exist in the agent template.",
+                    f"Agent template option not found: '{option_name}'",
                 )
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             option["value"] = copy.deepcopy(option["default_value"])
             print_success(
-                f'Option "{option_name}" has been reset to its default value '
-                f'"{option["value"]}".',
+                f"Reset agent template option '{option_name}' to its default value '{option['value']}'",
             )
         except SystemExit:
             pass

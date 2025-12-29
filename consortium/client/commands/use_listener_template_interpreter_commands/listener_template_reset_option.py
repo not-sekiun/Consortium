@@ -27,7 +27,7 @@ class ListenerTemplateResetOptionCommand(BaseCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "option_name",
-            help="Name of the agent template option to reset.",
+            help="Name of the listener template option to reset.",
             nargs=1,
         )
 

@@ -20,10 +20,9 @@ class AgentGeneratorBuildStepModel(BaseModel):
     agent_generator_build_step_id: str
     name: str
     description: str
-    ignore_failure: bool
     datetime_started: str | None
     datetime_stopped: str | None
-    time_elapsed_in_seconds: int | None
+    time_elapsed_in_seconds: float | None
     status: AgentGeneratorBuildStepStatusModel
 
 
@@ -37,6 +36,7 @@ class AgentGeneratorModel(BaseModel):
     name: str
     description: str
     agent_type: AgentTypeModel
+    compatible_listener_types: list[str]
     parameters: dict[str, Any]
     status: StatusModel
     datetime_created: str

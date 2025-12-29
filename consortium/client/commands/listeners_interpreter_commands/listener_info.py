@@ -12,10 +12,10 @@ from consortium.client.repl_interface.base_command import (
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
-    format_component_life_cycle_state_string_with_color,
     format_datetime_as_human_readable_str,
     format_dict_as_multi_line_key_value_string,
     format_list_as_multi_line_bulleted_string,
+    format_listener_state_string_with_color,
 )
 from consortium.client.utils.printer_utils import console
 
@@ -75,9 +75,7 @@ class ListenerInfoCommand(BaseCommand):
             )
             table.add_row(
                 "Status",
-                format_component_life_cycle_state_string_with_color(
-                    listener["status"]["state"]
-                )
+                format_listener_state_string_with_color(listener["status"]["state"])
                 + (
                     "(" + listener["status"]["error"]["message"] + ")"
                     if listener["status"]["error"]

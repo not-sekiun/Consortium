@@ -21,27 +21,27 @@ from consortium.client.utils.printer_utils import (
 )
 
 
-class ListenerTemplateSetOptionCommand(BaseCommand):
+class AgentTemplateSetOptionCommand(BaseCommand):
     name = "set"
-    description = "Set the current listener template's option to a specific value"
+    description = "Set the current agent template's option to a specific value"
     epilog = format_value_type_specification_epilog()
-    group = "Listener Template Management Commands"
+    group = "Agent Template Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "option_name",
-            help="Name of the listener template option to set the value of.",
+            help="Name of the agent template option to set the value of.",
             nargs=1,
         )
         parser.add_argument(
             "option_values",
-            help="Value to set listener template option to.",
+            help="Value to set agent template option to.",
             nargs="+",
         )
         parser.add_argument(
             "--value-type",
             "-t",
-            help="Value type to use for a listener template option. Applies to all values.",
+            help="Value type to use for an agent template option. Applies to all values.",
             choices={"str", "int", "float", "bool"},
             nargs="?",
             default=None,
@@ -70,19 +70,19 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
             parsed_args = self.parser.parse_args(context.arguments)
-            listener_template_options = context.interpreter_context[
-                "listener_template"
-            ]["options"]
+            agent_template_options = context.interpreter_context["agent_template"][
+                "options"
+            ]
 
             option_name = parsed_args.option_name[0]
             option_values = parsed_args.option_values
             value_type = parsed_args.value_type
 
             try:
-                option = listener_template_options[option_name]
+                option = agent_template_options[option_name]
             except KeyError:
                 print_error(
-                    f"Listener template option not found: '{option_name}'",
+                    f"Agent template option not found: '{option_name}'",
                 )
                 return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
@@ -96,7 +96,7 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 )
                 option["value"] = option_value
                 print_success(
-                    f"Set listener template option '{option_name}' to '{option_value}'",
+                    f"Set agent template option '{option_name}' to '{option_value}'",
                 )
             except ValueError as exc:
                 print_error(exc)

@@ -4,6 +4,9 @@ from websockets.exceptions import WebSocketException
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.core_commands.banner import BannerCommand
+from consortium.client.exceptions.client_sessions_service_exceptions import (
+    ClientSessionConnectionError,
+)
 from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIError,
     RestAPIOperationError,
@@ -103,6 +106,7 @@ class Client:
             # Exceptions raised when failing to connect to the Websockets API.
             WebsocketsAPIError,
             # Generic network exceptions.
+            ClientSessionConnectionError,
             WebSocketException,
             ClientConnectionError,
             TimeoutError,

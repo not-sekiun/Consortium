@@ -9,6 +9,7 @@ class State(enum.StrEnum):
     INITIALIZED = "INITIALIZED"
     STARTED = "STARTED"
     RUNNING = "RUNNING"
+    STOPPING = "STOPPING"
     COMPLETED = "COMPLETED"
     STOPPED = "STOPPED"
     CANCELLED = "CANCELLED"
@@ -18,7 +19,10 @@ class State(enum.StrEnum):
 
 class Status:
     _VALID_STATE_TRANSITIONS = {
-        State.INITIALIZED: {State.STARTED},
+        # `reset()` can be called on an INITIALIZED component to re-initialize it.
+        # `reset()` should be idempotent so we allow transitioning from INITIALIZED to
+        # INITIALIZED.
+        State.INITIALIZED: {State.INITIALIZED, State.STARTED},
         State.STARTED: {
             State.INITIALIZED,
             State.RUNNING,
@@ -26,28 +30,38 @@ class Status:
         },
         State.RUNNING: {
             State.COMPLETED,
+            State.STOPPING,
             State.STOPPED,
             State.CANCELLED,
             State.ERRORED,
             State.FATAL,
         },
         State.COMPLETED: {
+            State.INITIALIZED,
             State.STARTED,
             State.FATAL,
         },
+        State.STOPPING: {
+            State.STOPPED,
+            State.FATAL,
+        },
         State.STOPPED: {
+            State.INITIALIZED,
             State.STARTED,
             State.FATAL,
         },
         State.CANCELLED: {
+            State.INITIALIZED,
             State.STARTED,
             State.FATAL,
         },
         State.ERRORED: {
+            State.INITIALIZED,
             State.STARTED,
             State.FATAL,
         },
         State.FATAL: {
+            State.INITIALIZED,
             State.STARTED,
         },
     }
@@ -58,7 +72,7 @@ class Status:
 
     def to_json(self):
         return {
-            "state": self.state,
+            "state": str(self.state),
             "error": {
                 "code": self.error.code,
                 "message": self.error.message,
@@ -102,6 +116,9 @@ class Status:
 
     def _transition_to_completed(self) -> None:
         self._transition_to_state(new_state=State.COMPLETED)
+
+    def _transition_to_stopping(self) -> None:
+        self._transition_to_state(new_state=State.STOPPING)
 
     def _transition_to_stopped(self) -> None:
         self._transition_to_state(new_state=State.STOPPED)

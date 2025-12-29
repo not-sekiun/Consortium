@@ -30,9 +30,8 @@ class ListenerTemplateInfoCommand(ListenersInterpreterListenerTemplateInfoComman
         parser.add_argument(
             "listener_template_id",
             help=(
-                "The listener template ID of the listener template to display detailed "
-                "information for. If not provided, detailed information for the "
-                "currently selected listener template is displayed."
+                "ID of the listener template to display information for (defaults to "
+                "the current listener template if not specified)."
             ),
             nargs="?",
         )

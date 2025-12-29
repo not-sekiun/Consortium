@@ -71,8 +71,9 @@ class AgentTemplate(BaseAgentTemplate):
         SingleValueOption(
             name="remote_host",
             description="Remote listener host address for the agent to connect back to.",
-            default_value="127.0.0.1",
             value_type=str,
+            default_value="127.0.0.1",
+            required=False,
         ),
         SingleValueOption(
             name="remote_port",
@@ -81,6 +82,7 @@ class AgentTemplate(BaseAgentTemplate):
             value_type=int,
             greater_than_or_equal_to=0,
             less_than_or_equal_to=65535,
+            required=False,
         ),
         ListValueOption(
             name="tasks_url_paths",
@@ -91,6 +93,7 @@ class AgentTemplate(BaseAgentTemplate):
             default_value=["/tasks"],
             allow_duplicates=False,
             value_type=str,
+            required=False,
             validating_regex=r"^\/[\w-]+(\.[\w-]+)*$",
         ),
         ListValueOption(
@@ -102,6 +105,7 @@ class AgentTemplate(BaseAgentTemplate):
             default_value=["/results"],
             allow_duplicates=False,
             value_type=str,
+            required=False,
             validating_regex=r"^\/[\w-]+(\.[\w-]+)*$",
         ),
         ListValueOption(
@@ -112,6 +116,7 @@ class AgentTemplate(BaseAgentTemplate):
             ),
             default_value=["/register"],
             value_type=str,
+            required=False,
             validating_regex=r"^\/[\w-]+(\.[\w-]+)*$",
         ),
         SingleValueOption(
@@ -119,6 +124,7 @@ class AgentTemplate(BaseAgentTemplate):
             description="Time in seconds to sleep between HTTP requests to the listener.",
             default_value=1.0,
             value_type=float,
+            required=False,
         ),
         SingleValueOption(
             name="sleep_time_jitter",
@@ -129,6 +135,7 @@ class AgentTemplate(BaseAgentTemplate):
             default_value=0.5,
             value_type=float,
             greater_than_or_equal_to=0.0,
+            required=False,
         ),
         ChoiceValueOption(
             name="format",
@@ -138,6 +145,7 @@ class AgentTemplate(BaseAgentTemplate):
             ),
             default_value="script",
             available_values={"script", "executable", "oneliner"},
+            required=False,
         ),
         SingleValueOption(
             name="file_name",
@@ -147,6 +155,7 @@ class AgentTemplate(BaseAgentTemplate):
             ),
             default_value="agent",
             validating_function=_check_filename_does_not_traverse_directories,
+            required=False,
         ),
         DictionaryValueOption(
             name="extra_headers",
@@ -158,6 +167,7 @@ class AgentTemplate(BaseAgentTemplate):
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)",
             },
             value_type=str,
+            required=False,
         ),
     }
     compatible_listener_types = {"http_consortium"}

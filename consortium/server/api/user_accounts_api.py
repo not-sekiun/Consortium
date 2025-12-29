@@ -167,7 +167,6 @@ async def get_user_account_by_user_account_id(
             | _unprocessable_entity_error.to_pydantic_model(),
         },
     },
-    status_code=201,
 )
 async def create_user_account(
     username: Annotated[str, Body()],

@@ -107,21 +107,32 @@ class ConnectCommand(BaseCommand):
                     with open(parsed_args.config) as file:
                         config_data = json.load(fp=file)
                     jsonschema.validate(config_data, client_config_file_json_schema)
-                except FileNotFoundError as exc:
-                    print_error(f"The config filepath supplied does not exist: {exc}")
+                except FileNotFoundError:
+                    print_error(
+                        f"Failed to read the provided client configuration file "
+                        f"'{parsed_args.config}'. The file path supplied was not "
+                        f"found.",
+                    )
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)
                 except PermissionError as exc:
                     print_error(
-                        f"Insufficient permissions to read the config file: {exc}",
+                        f"Failed to read the provided client configuration file "
+                        f"'{parsed_args.config}'. Insufficient permissions to read the "
+                        f"file: {exc}",
                     )
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)
                 except json.decoder.JSONDecodeError:
-                    print_error("The config file does not contain valid JSON data")
+                    print_error(
+                        f"Failed to read the provided client configuration file "
+                        f"'{parsed_args.config}'. The configuration file does not "
+                        f"contain valid JSON data"
+                    )
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)
                 except jsonschema.ValidationError as exc:
                     print_error(
-                        f"The config file's JSON data is not of a valid server config "
-                        f"format: {exc}",
+                        f"Failed to read the provided client configuration file "
+                        f"'{parsed_args.config}'. The configuration file's JSON data "
+                        f"does not conform to the expected JSON schema: {exc}",
                     )
                     return ReturnStatus(type=ReturnStatusType.CONTINUE)
 

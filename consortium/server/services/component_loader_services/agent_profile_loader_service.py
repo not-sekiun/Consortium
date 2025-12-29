@@ -37,6 +37,9 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
         # Framework user passes in the agent type class, instantiate the agent type
         component_object.agent_type = component_object.agent_type()
         component_object.agent_generator.agent_type = component_object.agent_type
+        component_object.agent_generator.compatible_listener_types = (
+            component_object.compatible_listener_types
+        )
         return AgentProfile(
             agent_generator=component_object.agent_generator,
             agent_template=component_object,

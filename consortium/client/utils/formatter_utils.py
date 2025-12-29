@@ -31,9 +31,8 @@ def format_argparse_epilog(epilog_str: str) -> str:
     return textwrap.dedent(epilog_str) + " "
 
 
-# Format the color of component life cycle status strings to be rendered by rich's
-# console. This includes listeners, agent generators, and agent generator build steps.
-def format_component_life_cycle_state_string_with_color(
+# Format the color of listener status strings to be rendered by rich's console.
+def format_listener_state_string_with_color(
     state_str: str,
 ) -> str:
     state_string_to_colored_state_string_map = {
@@ -41,7 +40,28 @@ def format_component_life_cycle_state_string_with_color(
         "STARTED": "[bold yellow]STARTED[/]",
         "RUNNING": "[bold green]RUNNING[/]",
         "STOPPING": "[bold yellow]STOPPING[/]",
-        "STOPPED": "[bold green]STOPPED[/]",
+        "STOPPED": "[bold cyan]STOPPED[/]",
+        "ERRORED": "[bold red]ERRORED[/]",
+        "FATAL": "[bold white on red]FATAL[/]",
+        "COMPLETED": "[bold cyan]COMPLETED[/]",
+    }
+
+    if state_str in state_string_to_colored_state_string_map:
+        return state_string_to_colored_state_string_map[state_str]
+    return state_str
+
+
+# Format the color of agent generator component status strings to be rendered by rich's
+# console. This includes agent generators, and agent generator build steps.
+def format_agent_generator_state_string_with_color(
+    state_str: str,
+) -> str:
+    state_string_to_colored_state_string_map = {
+        "INITIALIZED": "[bold cyan]INITIALIZED[/]",
+        "STARTED": "[bold yellow]STARTED[/]",
+        "RUNNING": "[bold yellow]RUNNING[/]",
+        "STOPPING": "[bold yellow]STOPPING[/]",
+        "STOPPED": "[bold yellow]STOPPED[/]",
         "ERRORED": "[bold red]ERRORED[/]",
         "FATAL": "[bold white on red]FATAL[/]",
         "COMPLETED": "[bold green]COMPLETED[/]",

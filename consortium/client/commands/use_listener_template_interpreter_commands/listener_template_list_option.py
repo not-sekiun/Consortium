@@ -12,7 +12,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console
 
 
-class ListOptionsListenerTemplateCommand(BaseCommand):
+class ListenerTemplateListOptionCommand(BaseCommand):
     name = "opt-list"
     description = (
         "List all options for the current listener template along with their "

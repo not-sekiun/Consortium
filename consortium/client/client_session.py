@@ -29,13 +29,14 @@ class ClientSession:
         self.connected = False
         self.datetime_connected = None
 
-        self.rest_api = RestAPI(
+        # Add type annotations because pycharm can't seem to infer them here.
+        self.rest_api: RestAPI = RestAPI(
             username=self.username,
             password=self.password,
             remote_host=self.remote_host,
             remote_port=self.remote_port,
         )
-        self.websockets_api = WebsocketsAPI(
+        self.websockets_api: WebsocketsAPI = WebsocketsAPI(
             remote_host=self.remote_host,
             remote_port=self.remote_port,
         )

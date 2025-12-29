@@ -65,10 +65,10 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         for key, value in {
             command: dict.fromkeys(agent_template["options"])
             for command in [
-                "info_agent_template_option",
-                "set_agent_template_option",
-                "reset_agent_template_option",
-                "unset_agent_template_option",
+                "opt-info",
+                "set",
+                "reset",
+                "unset",
             ]
         }.items():
             nested_completer_dict[key] = value

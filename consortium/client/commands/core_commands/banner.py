@@ -113,7 +113,11 @@ class BannerCommand(BaseCommand):
     ) -> ReturnStatus:
         try:
             _ = self.parser.parse_args(context.arguments)
-            await self._display_banner(context.client_session.rest_api)
+            await self._display_banner(
+                rest_api=context.client_session.rest_api
+                if context.client_session
+                else None
+            )
         except SystemExit:
             pass
 
