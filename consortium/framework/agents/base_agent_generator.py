@@ -453,6 +453,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 "agent_template_id": str(
                     self.creating_agent_template.agent_template_id,
                 ),
+                "label": self.creating_agent_template.label,
                 "name": self.creating_agent_template.name,
             },
         }

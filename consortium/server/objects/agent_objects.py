@@ -450,7 +450,7 @@ class Agent:
     async def _start_agent_capability(
         self,
         agent_capability: type[BaseAgentCapability],
-        task: AgentTaskMessageModel,
+        task: AgentTaskModel,
     ) -> None:
         async def _agent_capability_task_handler(
             agent_capability: BaseAgentCapability,

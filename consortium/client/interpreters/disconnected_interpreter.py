@@ -43,6 +43,12 @@ class DisconnectedInterpreter(Interpreter):
             client_session=None,
         )
 
+    async def on_enter(self) -> None:
+        all_client_sessions = client_sessions_service.get_all_client_sessions()
+        ClientSessionListCommand._list_all_client_sessions(
+            all_client_sessions=all_client_sessions
+        )
+
     async def on_loop(self) -> None:
         all_client_sessions = client_sessions_service.get_all_client_sessions()
 

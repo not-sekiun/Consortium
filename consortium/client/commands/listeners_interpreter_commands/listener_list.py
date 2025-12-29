@@ -26,6 +26,28 @@ class ListenerListCommand(BaseCommand):
     )
     group = "Listener Management Commands"
 
+    @staticmethod
+    def _list_all_listeners(
+        all_listeners: list[dict],
+    ):
+        table = Table(title="Listeners", highlight=True)
+        table.add_column("Listener ID")
+        table.add_column("Listener Type")
+        table.add_column("Name")
+        table.add_column("Endpoint")
+        table.add_column("Status")
+        for listener in all_listeners:
+            table.add_row(
+                listener["listener_id"],
+                listener["listener_type"]["name"],
+                listener["name"],
+                listener["endpoint"],
+                format_listener_state_string_with_color(
+                    listener["status"]["state"],
+                ),
+            )
+        console.print(table, "")
+
     async def run(
         self,
         context: Context,
@@ -34,24 +56,7 @@ class ListenerListCommand(BaseCommand):
             _ = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            all_listeners = await rest_api.get_all_listeners()
-            table = Table(title="Listeners", highlight=True)
-            table.add_column("Listener ID")
-            table.add_column("Listener Type")
-            table.add_column("Name")
-            table.add_column("Endpoint")
-            table.add_column("Status")
-            for listener in all_listeners:
-                table.add_row(
-                    listener["listener_id"],
-                    listener["listener_type"]["name"],
-                    listener["name"],
-                    listener["endpoint"],
-                    format_listener_state_string_with_color(
-                        listener["status"]["state"],
-                    ),
-                )
-            console.print(table, "")
+            self._list_all_listeners(all_listeners=await rest_api.get_all_listeners())
         except SystemExit:
             pass
 

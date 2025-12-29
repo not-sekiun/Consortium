@@ -252,6 +252,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
                 "listener_template_id": str(
                     self.creating_listener_template.listener_template_id,
                 ),
+                "label": self.creating_listener_template.label,
                 "name": self.creating_listener_template.name,
             },
         }

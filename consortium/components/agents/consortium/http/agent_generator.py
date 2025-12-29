@@ -28,8 +28,10 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
     )
 
     async def build(self, parameters: dict) -> None:
+        await asyncio.sleep(5)
+
         # with open(
-        #     self.working_directory / "agent_source" / "_agent.py",
+        #     self.working_directory / "agent_source" / "agent.py",
         # ) as file:
         #     template_source_code = file.read()
         #     source_code = multiple_string_replace(
@@ -47,7 +49,6 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         #             "EXTRA_HEADERS": repr(parameters["extra_headers"]),
         #         },
         #     )
-        await asyncio.sleep(5)
 
         # if parameters["format"] == "script":
         #     with open(
@@ -97,15 +98,7 @@ class AgentGenerator(BaseAgentGenerator):
     agent_generator_build_steps = [
         BuildAgent,
         BuildAgent,
-        BuildAgent,
-        BuildAgent,
         Oopsie,
-        BuildAgent,
-        BuildAgent,
-        BuildAgent,
-        BuildAgent,
-        BuildAgent,
-        BuildAgent,
     ]
 
     async def on_started(self) -> None:

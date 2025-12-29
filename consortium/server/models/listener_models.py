@@ -13,6 +13,7 @@ class ConnectedAgentReferenceModel(BaseModel):
 
 class CreatingListenerTemplateReferenceModel(BaseModel):
     listener_template_id: str
+    label: str
     name: str
 
 

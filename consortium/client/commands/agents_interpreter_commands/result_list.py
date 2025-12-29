@@ -168,6 +168,8 @@ class ResultListCommand(BaseCommand):
                             prefix="    ",
                         )
                     )
+                if not all_agents:
+                    print_info("No results to list. No agents found.")
             else:
                 agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id,

@@ -6,6 +6,8 @@ from prompt_toolkit.completion import NestedCompleter
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.generators_interpreter_commands import (
     GENERATORS_INTERPRETER_COMMANDS,
+    AgentTemplateListCommand,
+    GeneratorListCommand,
 )
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.interpreter import Interpreter
@@ -45,14 +47,20 @@ class GeneratorsInterpreter(Interpreter):
             context=context,
         )
 
-    async def _initialize_autocomplete(self) -> None:
-        all_agent_templates = (
-            await self.client_session.rest_api.get_all_agent_templates()
-        )
+    async def _get_all_agent_generators_and_agent_templates(self):
         all_agent_generators = (
             await self.client_session.rest_api.get_all_agent_generators()
         )
+        all_agent_templates = (
+            await self.client_session.rest_api.get_all_agent_templates()
+        )
+        return all_agent_generators, all_agent_templates
 
+    async def _initialize_autocomplete(
+        self,
+        all_agent_generators: list[dict[str, Any]],
+        all_agent_templates: list[dict[str, Any]],
+    ) -> None:
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
@@ -110,7 +118,14 @@ class GeneratorsInterpreter(Interpreter):
         self,
         _event: dict[str, Any],
     ) -> None:
-        await self._initialize_autocomplete()
+        (
+            all_agent_generators,
+            all_agent_templates,
+        ) = await self._get_all_agent_generators_and_agent_templates()
+        await self._initialize_autocomplete(
+            all_agent_generators=all_agent_generators,
+            all_agent_templates=all_agent_templates,
+        )
 
     async def _setup_event_handlers(self) -> None:
         await self.client_session.websockets_api.subscribe_to_event(
@@ -140,8 +155,21 @@ class GeneratorsInterpreter(Interpreter):
         )
 
     async def on_enter(self) -> None:
-        await self._initialize_autocomplete()
+        (
+            all_agent_generators,
+            all_agent_templates,
+        ) = await self._get_all_agent_generators_and_agent_templates()
+        await self._initialize_autocomplete(
+            all_agent_generators=all_agent_generators,
+            all_agent_templates=all_agent_templates,
+        )
         await self._setup_event_handlers()
+        GeneratorListCommand._list_all_agent_generators(
+            all_agent_generators=all_agent_generators,
+        )
+        AgentTemplateListCommand._list_all_agent_templates(
+            all_agent_templates=all_agent_templates,
+        )
 
     async def on_exit(self) -> None:
         # The exit command when executed will disconnect the websocket connection but

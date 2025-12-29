@@ -28,6 +28,7 @@ class AgentGeneratorBuildStepModel(BaseModel):
 
 class CreatingAgentTemplateReferenceModel(BaseModel):
     agent_template_id: str
+    label: str
     name: str
 
 

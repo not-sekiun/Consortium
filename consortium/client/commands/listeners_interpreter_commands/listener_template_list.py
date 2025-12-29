@@ -23,6 +23,22 @@ class ListenerTemplateListCommand(BaseCommand):
     )
     group = "Listener Template Management Commands"
 
+    @staticmethod
+    def _list_all_listener_templates(
+        all_listener_templates: list[dict[str, str]],
+    ) -> None:
+        table = Table(title="Listener Templates", highlight=True)
+        table.add_column("Listener Template ID")
+        table.add_column("Listener Type")
+        table.add_column("Name")
+        for listener_template in all_listener_templates:
+            table.add_row(
+                listener_template["listener_template_id"],
+                listener_template["listener_type"]["name"],
+                listener_template["name"],
+            )
+        console.print(table, "")
+
     async def run(
         self,
         context: Context,
@@ -31,18 +47,9 @@ class ListenerTemplateListCommand(BaseCommand):
             _ = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            all_listener_templates = await rest_api.get_all_listener_templates()
-            table = Table(title="Listener Templates", highlight=True)
-            table.add_column("Listener Template ID")
-            table.add_column("Listener Type")
-            table.add_column("Name")
-            for listener_template in all_listener_templates:
-                table.add_row(
-                    listener_template["listener_template_id"],
-                    listener_template["listener_type"]["name"],
-                    listener_template["name"],
-                )
-            console.print(table, "")
+            self._list_all_listener_templates(
+                all_listener_templates=await rest_api.get_all_listener_templates()
+            )
         except SystemExit:
             pass
 

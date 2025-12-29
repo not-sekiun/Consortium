@@ -1,6 +1,7 @@
 from rich.table import Table
 
 import consortium.client.client_singletons as client_singletons
+from consortium.client.client_session import ClientSession
 from consortium.client.models.return_status_models import (
     ReturnStatus,
     ReturnStatusType,
@@ -26,6 +27,26 @@ class ClientSessionListCommand(BaseCommand):
     )
     group = "Client Session Management Commands"
 
+    @staticmethod
+    def _list_all_client_sessions(
+        all_client_sessions: list[ClientSession],
+    ) -> None:
+        table = Table(title="Client Sessions", highlight=True)
+        table.add_column("Client Session ID")
+        table.add_column("Name")
+        table.add_column("Username")
+        table.add_column("Remote Host")
+        table.add_column("Remote Port")
+        for client_session in all_client_sessions:
+            table.add_row(
+                str(client_session.client_session_id),
+                str(client_session.name),
+                str(client_session.username),
+                str(client_session.remote_host),
+                str(client_session.remote_port),
+            )
+        console.print(table, "")
+
     async def run(
         self,
         context: Context,
@@ -34,21 +55,7 @@ class ClientSessionListCommand(BaseCommand):
             _ = self.parser.parse_args(context.arguments)
             all_client_sessions = client_sessions_service.get_all_client_sessions()
 
-            table = Table(title="Client Sessions", highlight=True)
-            table.add_column("Client Session ID")
-            table.add_column("Name")
-            table.add_column("Username")
-            table.add_column("Remote Host")
-            table.add_column("Remote Port")
-            for client_session in all_client_sessions:
-                table.add_row(
-                    str(client_session.client_session_id),
-                    str(client_session.name),
-                    str(client_session.username),
-                    str(client_session.remote_host),
-                    str(client_session.remote_port),
-                )
-            console.print(table, "")
+            self._list_all_client_sessions(all_client_sessions=all_client_sessions)
         except SystemExit:
             pass
 

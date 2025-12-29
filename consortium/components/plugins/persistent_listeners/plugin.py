@@ -37,31 +37,38 @@ class Plugin(BasePlugin):
             "Loading persistent listeners from: {}", persistent_listeners_json_file
         )
         with persistent_listeners_json_file.open("r") as file:
-            json_data = json.loads(file.read())
+            content = file.read().strip()
+            # Handle empty file
+            if not content:
+                self.logger.warning(
+                    "Persistent listeners JSON file is empty. "
+                    "Treating as no persistent listeners."
+                )
+                json_data = {}
+            else:
+                json_data = json.loads(content)
 
-        # We refer to each listener template by its name (assume names are unique)
-        # TODO: Provide a persistent way of referring to different listener templates
-        #  across reboot.
+        # We refer to each listener template by its label
         listener_templates = (
             self.server_services.listener_templates_service.get_all_listener_templates()
         )
-        name_to_listener_template_map = {
-            listener_template.name: listener_template
+        label_to_listener_template_map = {
+            listener_template.label: listener_template
             for listener_template in listener_templates
         }
-        for listener_template_name, listeners in json_data.items():
+        for listener_template_label, listeners in json_data.items():
             for listener_data in listeners:
-                if listener_template_name not in name_to_listener_template_map:
+                if listener_template_label not in label_to_listener_template_map:
                     self.logger.warning(
-                        "No listener template was found with the name "
+                        "No listener template was found with the label "
                         "'{}' from the persistent listeners "
                         "file. The corresponding listener profile may have been "
-                        "renamed or removed. Skipping...",
-                        listener_template_name,
+                        "relabelled or removed. Skipping...",
+                        listener_template_label,
                     )
                     continue
-                listener_template = name_to_listener_template_map[
-                    listener_template_name
+                listener_template = label_to_listener_template_map[
+                    listener_template_label
                 ]
                 listener_name = listener_data["name"]
                 if listener_data["previously_running"]:
@@ -98,14 +105,14 @@ class Plugin(BasePlugin):
         persistent_listeners_json_data = {}
         for listener in self.server_services.listeners_service.get_all_listeners():
             if (
-                str(listener.creating_listener_template.name)
+                str(listener.creating_listener_template.label)
                 not in persistent_listeners_json_data
             ):
                 persistent_listeners_json_data[
-                    str(listener.creating_listener_template.name)
+                    str(listener.creating_listener_template.label)
                 ] = []
             persistent_listeners_json_data[
-                str(listener.creating_listener_template.name)
+                str(listener.creating_listener_template.label)
             ].append(
                 {
                     "previously_running": listener.status.state == "RUNNING",

@@ -1,5 +1,3 @@
-import argparse
-
 import consortium.client.client_singletons as client_singletons
 from consortium.client.models.return_status_models import (
     ReturnStatus,
@@ -24,9 +22,6 @@ class ExitCommand(BaseCommand):
           exit
         """,
     )
-
-    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
-        pass
 
     async def run(
         self,

@@ -5,6 +5,7 @@ from prompt_toolkit.completion import NestedCompleter, PathCompleter
 
 from consortium.client.commands.agents_interpreter_commands import (
     AGENTS_INTERPRETER_COMMANDS,
+    AgentListCommand,
 )
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.repl_interface.interpreter import Interpreter
@@ -35,8 +36,10 @@ class AgentsInterpreter(Interpreter):
             client_session=client_session,
         )
 
-    async def _initialize_autocompleter(self) -> None:
-        all_agents = await self.client_session.rest_api.get_all_agents()
+    async def _initialize_autocompleter(
+        self,
+        all_agents: list[dict[str, Any]],
+    ) -> None:
         all_assets = await self.client_session.rest_api.get_all_assets()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
@@ -169,8 +172,10 @@ class AgentsInterpreter(Interpreter):
         )
 
     async def on_enter(self) -> None:
-        await self._initialize_autocompleter()
+        all_agents = await self.client_session.rest_api.get_all_agents()
+        await self._initialize_autocompleter(all_agents=all_agents)
         await self._setup_event_handlers()
+        AgentListCommand._list_all_agents(all_agents=all_agents)
 
     async def on_exit(self) -> None:
         # The exit command when executed will disconnect the websocket connection but

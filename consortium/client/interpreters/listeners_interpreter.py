@@ -6,6 +6,8 @@ from prompt_toolkit.completion import NestedCompleter
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.listeners_interpreter_commands import (
     LISTENERS_INTERPRETER_COMMANDS,
+    ListenerListCommand,
+    ListenerTemplateListCommand,
 )
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.interpreter import Interpreter
@@ -46,12 +48,18 @@ class ListenersInterpreter(Interpreter):
             context=context,
         )
 
-    async def _initialize_autocomplete(self) -> None:
+    async def _get_all_listeners_and_listener_templates(self):
         all_listeners = await self.client_session.rest_api.get_all_listeners()
         all_listener_templates = (
             await self.client_session.rest_api.get_all_listener_templates()
         )
+        return all_listeners, all_listener_templates
 
+    async def _initialize_autocomplete(
+        self,
+        all_listeners: list[dict[str, Any]],
+        all_listener_templates: list[dict[str, Any]],
+    ) -> None:
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
@@ -99,7 +107,14 @@ class ListenersInterpreter(Interpreter):
         self,
         _event: dict[str, Any],
     ) -> None:
-        await self._initialize_autocomplete()
+        (
+            all_listeners,
+            all_listener_templates,
+        ) = await self._get_all_listeners_and_listener_templates()
+        await self._initialize_autocomplete(
+            all_listeners=all_listeners,
+            all_listener_templates=all_listener_templates,
+        )
 
     async def _setup_event_handlers(self) -> None:
         await self.client_session.websockets_api.subscribe_to_event(
@@ -129,8 +144,21 @@ class ListenersInterpreter(Interpreter):
         )
 
     async def on_enter(self) -> None:
-        await self._initialize_autocomplete()
+        (
+            all_listeners,
+            all_listener_templates,
+        ) = await self._get_all_listeners_and_listener_templates()
+        await self._initialize_autocomplete(
+            all_listeners=all_listeners,
+            all_listener_templates=all_listener_templates,
+        )
         await self._setup_event_handlers()
+        ListenerListCommand._list_all_listeners(
+            all_listeners=all_listeners,
+        )
+        ListenerTemplateListCommand._list_all_listener_templates(
+            all_listener_templates=all_listener_templates,
+        )
 
     async def on_exit(self) -> None:
         # The exit command when executed will disconnect the websocket connection but

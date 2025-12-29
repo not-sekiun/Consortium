@@ -40,29 +40,36 @@ class Plugin(BasePlugin):
             persistent_agent_generators_json_file,
         )
         with persistent_agent_generators_json_file.open("r") as file:
-            json_data = json.loads(file.read())
+            content = file.read().strip()
+            # Handle empty file
+            if not content:
+                self.logger.warning(
+                    "Persistent agent generators JSON file is empty. "
+                    "Treating as no persistent generators."
+                )
+                json_data = {}
+            else:
+                json_data = json.loads(content)
 
-        # We refer to each agent template by its name (assume names are unique)
-        # TODO: Provide a persistent way of referring to different agent templates
-        #  across reboot.
+        # We refer to each agent template by its label
         agent_templates = (
             self.server_services.agent_templates_service.get_all_agent_templates()
         )
-        name_to_agent_template_map = {
-            agent_template.name: agent_template for agent_template in agent_templates
+        label_to_agent_template_map = {
+            agent_template.label: agent_template for agent_template in agent_templates
         }
-        for agent_template_name, agent_generators in json_data.items():
+        for agent_template_label, agent_generators in json_data.items():
             for agent_generator_data in agent_generators:
-                if agent_template_name not in name_to_agent_template_map:
+                if agent_template_label not in label_to_agent_template_map:
                     self.logger.warning(
-                        "No agent template was found with the name "
+                        "No agent template was found with the label "
                         "'{}' from the persistent agent generators "
-                        "file. The corresponding agent profile may have been renamed "
+                        "file. The corresponding agent profile may have been relabelled "
                         "or removed. Skipping...",
-                        agent_template_name,
+                        agent_template_label,
                     )
                     continue
-                agent_template = name_to_agent_template_map[agent_template_name]
+                agent_template = label_to_agent_template_map[agent_template_label]
                 agent_generator_name = agent_generator_data["name"]
                 self.logger.success(
                     "Creating agent generator '{}'...", agent_generator_name
@@ -91,14 +98,14 @@ class Plugin(BasePlugin):
             agent_generator
         ) in self.server_services.agent_generators_service.get_all_agent_generators():
             if (
-                str(agent_generator.creating_agent_template.name)
+                str(agent_generator.creating_agent_template.label)
                 not in persistent_agent_generators_json_data
             ):
                 persistent_agent_generators_json_data[
-                    str(agent_generator.creating_agent_template.name)
+                    str(agent_generator.creating_agent_template.label)
                 ] = []
             persistent_agent_generators_json_data[
-                str(agent_generator.creating_agent_template.name)
+                str(agent_generator.creating_agent_template.label)
             ].append(
                 {
                     "name": agent_generator.name,
