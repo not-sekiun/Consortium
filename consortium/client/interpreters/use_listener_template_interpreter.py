@@ -57,7 +57,11 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
             },
         )
 
-    async def _initialize_autocomplete(self) -> None:
+    async def _initialize_autocomplete(
+        self,
+        all_listeners: list[dict[str, Any]],
+        all_listener_templates: list[dict[str, Any]],
+    ) -> None:
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
@@ -80,4 +84,17 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         # interpreter's commands to ensure that when it is called, the autocomplete
         # updating will account for these new commands when autocompleting the help
         # command.
-        await super()._initialize_autocomplete()
+        await super()._initialize_autocomplete(
+            all_listeners=all_listeners,
+            all_listener_templates=all_listener_templates,
+        )
+
+    # When switching into the UseListenerTemplateInterpreter, we dont want to list all
+    # listeners and listener templates, this was done in the parent listener
+    # interpreter once when the user entered it.
+    @staticmethod
+    def _list_all_listeners_and_listener_templates(
+        all_listeners: list[dict[str, Any]],
+        all_listener_templates: list[dict[str, Any]],
+    ) -> None:
+        pass

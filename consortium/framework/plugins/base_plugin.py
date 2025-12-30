@@ -188,6 +188,13 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             "status": self.status.to_json(),
         }
 
+    def to_json_reference(self) -> dict[str, str]:
+        return {
+            "plugin_id": str(self.plugin_id),
+            "label": self.label,
+            "name": self.name,
+        }
+
     def _construct_component_runtime_error_from_framework_runtime_error(
         self,
         error: comp_excs.ComponentRuntimeError,

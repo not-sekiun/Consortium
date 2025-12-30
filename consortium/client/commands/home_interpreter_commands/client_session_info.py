@@ -19,7 +19,7 @@ from consortium.client.repl_interface.base_command import (
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
-    format_role_str,
+    format_role_str_with_color,
 )
 from consortium.client.utils.printer_utils import console, print_error
 
@@ -86,7 +86,7 @@ class ClientSessionInfoCommand(BaseCommand):
         )
         table.add_row("Remote Host", client_session.remote_host)
         table.add_row("Remote Port", str(client_session.remote_port))
-        table.add_row("Role", format_role_str(role=own_user_info["role"]))
+        table.add_row("Role", format_role_str_with_color(role=own_user_info["role"]))
         table.add_row("Connected", str(client_session.connected))
         table.add_row(
             "Datetime Connected",

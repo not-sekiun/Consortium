@@ -168,3 +168,14 @@ class BaseEventHook(ComponentMetadata):
             "event_types": list(map(str, self.event_types)),
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
         }
+
+    def to_json_reference(self) -> dict[str, str]:
+        """
+        Return a JSON-serializable reference representation of the event hook's
+        metadata.
+        """
+        return {
+            "event_hook_id": str(self.event_hook_id),
+            "label": self.label,
+            "name": self.name,
+        }

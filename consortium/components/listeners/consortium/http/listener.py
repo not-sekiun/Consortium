@@ -3,10 +3,9 @@ import socket
 
 import jsonschema
 from aiohttp import web
-from pydantic import ValidationError
 
 from consortium.framework.exceptions import ListenerStartError
-from consortium.framework.listeners import AgentResultMessageModel, BaseListener
+from consortium.framework.listeners import BaseListener
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
     AgentTaskNotFoundError,
@@ -46,6 +45,7 @@ class Listener(BaseListener):
         )
 
         async def handle_agent_registration(request):
+            # Validate the agent registration message schema
             agent_registration_json_schema = {
                 "type": "object",
                 "properties": {
@@ -71,6 +71,7 @@ class Listener(BaseListener):
             except (json.JSONDecodeError, jsonschema.ValidationError):
                 return web.Response(status=401)
 
+            # Register the agent and create an agent record
             payload_id = json_request_body.pop("payload_id", None)
             agent_type = json_request_body.pop("agent_type", None)
             try:
@@ -89,7 +90,6 @@ class Listener(BaseListener):
                         request.remote,
                         agent_type,
                     )
-                    return web.Response(status=401)
                 else:
                     self.logger.warning(
                         "Agent from {} attempted to register with an invalid payload "
@@ -97,7 +97,7 @@ class Listener(BaseListener):
                         request.remote,
                         payload_id,
                     )
-                    return web.Response(status=401)
+                return web.Response(status=401)
             self.logger.info(
                 "Agent {} checked in from: {}",
                 str(agent),
@@ -106,10 +106,26 @@ class Listener(BaseListener):
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
         async def handle_agent_getting_tasks(request):
+            # Validate the agent task message schema
             try:
                 agent_id = request.headers["Cookie"]
-                agent = self.connected_agents_service.get_agent_by_agent_id(
-                    agent_id=agent_id,
+            except KeyError:
+                self.logger.warning(
+                    "Unidentified client {} attempted to retrieve tasks without "
+                    "providing an agent ID in the Cookie header. Responded with 401 "
+                    "Unauthorized.",
+                    request.remote,
+                )
+                return web.Response(status=401)
+
+            # Retrieve all pending tasks for the agent (non-blocking)
+            try:
+                task_messages = (
+                    await self.connected_agents_service.get_pending_tasks_for_agent(
+                        agent_id=agent_id,
+                        count=None,  # Get all available tasks
+                        block=False,  # Don't block, return immediately
+                    )
                 )
             except AgentNotFoundError:
                 self.logger.warning(
@@ -119,31 +135,13 @@ class Listener(BaseListener):
                     agent_id,
                 )
                 return web.Response(status=401)
-            except KeyError:  # No Cookie header provided
-                self.logger.warning(
-                    "Unidentified client {} attempted to retrieve tasks without "
-                    "providing an agent ID in the Cookie header. Responded with 401 "
-                    "Unauthorized.",
-                    request.remote,
-                )
-                return web.Response(status=401)
 
-            self.connected_agents_service.check_in_agent_by_agent_id(
-                agent_id=agent_id,
-            )
-
-            agent_messages = []
-            while True:
-                agent_message = await agent.get_next_task_message(timeout=0)
-
-                if agent_message is None:
-                    break
-
-                agent_messages.append(agent_message.to_json())
-            return web.json_response(agent_messages, status=200)
+            # Serialize task messages to JSON for the wire protocol
+            task_messages_json = [msg.to_json() for msg in task_messages]
+            return web.json_response(task_messages_json, status=200)
 
         async def handle_agent_posting_results(request):
-            # Validate JSON structure result from agent.
+            # Validate the agent result message schema
             agent_result_json_schema = {
                 "type": "object",
                 "properties": {
@@ -165,7 +163,7 @@ class Listener(BaseListener):
 
             try:
                 agent_id = request.headers["Cookie"]
-            except KeyError:  # No Cookie header provided
+            except KeyError:
                 self.logger.warning(
                     "Unidentified client {} attempted to send results without "
                     "providing an agent ID in the Cookie header. Responded with 401 "
@@ -183,17 +181,20 @@ class Listener(BaseListener):
                 data = json_request_body["result"]["data"]
             except (json.JSONDecodeError, jsonschema.ValidationError, KeyError):
                 self.logger.warning(
-                    "Unidentified client {} sent malformed agent result data: {}. "
+                    "Unidentified client {} sent malformed agent result data. "
                     "Responded with 401 Unauthorized.",
                     request.remote,
-                    json_request_body,
                 )
                 return web.Response(status=401)
 
-            # Check if the agent ID is valid.
+            # Submit the agent result after validation
             try:
-                agent = self.connected_agents_service.get_agent_by_agent_id(
+                await self.connected_agents_service.submit_result_by_agent_id(
                     agent_id=agent_id,
+                    task_id=task_id,
+                    success=success,
+                    message=message,
+                    data=data,
                 )
             except AgentNotFoundError:
                 self.logger.warning(
@@ -203,39 +204,15 @@ class Listener(BaseListener):
                     agent_id,
                 )
                 return web.Response(status=401)
-
-            # Check if the task ID is for a valid task that is currently marked as
-            # running.
-            try:
-                _ = agent.get_running_task_by_task_id(task_id=task_id)
             except AgentTaskNotFoundError:
                 self.logger.warning(
-                    "Agent {} from {} checked in and posted a result with an invalid "
-                    "task ID: {}. Responded with 401 Unauthorized.",
+                    "Agent from {} posted a result with an invalid task ID: {}. "
+                    "Responded with 401 Unauthorized.",
                     request.remote,
-                    str(agent),
                     task_id,
                 )
                 return web.Response(status=401)
 
-            # Only if the task ID is valid do we consider it a valid agent that has
-            # checked in.
-            self.connected_agents_service.check_in_agent_by_agent_id(
-                agent_id=agent_id,
-            )
-
-            # Validate the values.
-            try:
-                result_message = AgentResultMessageModel(
-                    task_id=task_id,
-                    success=success,
-                    message=message,
-                    data=data,
-                )
-            except ValidationError:
-                return web.Response(status=401)
-
-            await agent.submit_result_message(result_message=result_message)
             return web.Response(status=200)
 
         for url_path in registration_url_paths:

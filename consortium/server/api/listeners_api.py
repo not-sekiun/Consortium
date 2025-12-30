@@ -375,11 +375,9 @@ async def delete_listener_by_listener_id(
 ) -> SuccessResponseModel:
     try:
         _listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
-    except consortium_exceptions.ListenerNotFoundError:
+    except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
-            consortium_exception=consortium_exceptions.ListenerNotFoundError(
-                listener_id="string",
-            ),
+            consortium_exception=exc,
         ) from None
     except consortium_exceptions.ListenerAlreadyRunningError as exc:
         raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(

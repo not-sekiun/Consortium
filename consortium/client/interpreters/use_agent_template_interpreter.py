@@ -57,7 +57,11 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
             },
         )
 
-    async def _initialize_autocomplete(self) -> None:
+    async def _initialize_autocomplete(
+        self,
+        all_agent_generators: list[dict[str, Any]],
+        all_agent_templates: list[dict[str, Any]],
+    ) -> None:
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
@@ -81,4 +85,17 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         # interpreter's commands to ensure that when it is called, the autocomplete
         # updating will account for these new commands when autocompleting the help
         # command.
-        await super()._initialize_autocomplete()
+        await super()._initialize_autocomplete(
+            all_agent_generators=all_agent_generators,
+            all_agent_templates=all_agent_templates,
+        )
+
+    # When switching into the UseAgentTemplateInterpreter, we don't want to list all
+    # agent generators and agent templates, this was done in the parent generators
+    # interpreter once when the user entered it.
+    @staticmethod
+    def _list_all_agent_generators_and_agent_templates(
+        all_agent_generators: list[dict[str, Any]],
+        all_agent_templates: list[dict[str, Any]],
+    ) -> None:
+        pass

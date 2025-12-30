@@ -260,3 +260,13 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             if self.validating_function and self.validating_function.__doc__
             else None,
         }
+
+    def to_json_reference(self) -> dict[str, str]:
+        """
+        Convert the agent template to a JSON serializable reference dictionary.
+        """
+        return {
+            "agent_template_id": str(self.agent_template_id),
+            "label": self.label,
+            "name": self.name,
+        }

@@ -244,7 +244,7 @@ def format_value_type_specification_with_examples_epilog(example_prefix: str) ->
     )
 
 
-def format_role_str(role: str) -> str:
+def format_role_str_with_color(role: str) -> str:
     role_str_to_colored_role_str_map = {
         "ADMIN": "[bold red]ADMIN[/]",
         "OPERATOR": "[bold green]OPERATOR[/]",
@@ -254,3 +254,18 @@ def format_role_str(role: str) -> str:
     if role in role_str_to_colored_role_str_map:
         return role_str_to_colored_role_str_map[role]
     return role
+
+
+def format_agent_status_string_with_color(
+    status_str: str,
+) -> str:
+    status_string_to_colored_status_string_map = {
+        "ACTIVE": "[bold green]ACTIVE[/]",
+        "INACTIVE": "[bold yellow]INACTIVE[/]",
+        "ORPHANED": "[bold magenta]ORPHANED[/]",
+        "UNREACHABLE": "[bold red]UNREACHABLE[/]",
+    }
+
+    if status_str in status_string_to_colored_status_string_map:
+        return status_string_to_colored_status_string_map[status_str]
+    return status_str

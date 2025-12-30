@@ -12,6 +12,7 @@ from consortium.client.repl_interface.base_command import (
     Context,
 )
 from consortium.client.utils.formatter_utils import (
+    format_agent_status_string_with_color,
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
     format_dict_as_multi_line_key_value_string,
@@ -90,6 +91,25 @@ class AgentInfoCommand(BaseCommand):
                 datetime_str=agent["datetime_last_checked_in"],
                 include_elapsed_time=True,
             ),
+        )
+        if agent["status"] == "ORPHANED":
+            hint = " [bold magenta](This agent's listener is not currently running. It may reconnect when the listener becomes available)."
+        elif agent["status"] == "UNREACHABLE":
+            hint = " [bold red](This agent's listener has been deleted. It will no longer be able to check in)."
+        else:
+            hint = ""
+        table.add_row(
+            "Status",
+            format_agent_status_string_with_color(
+                status_str=agent["status"],
+            )
+            + hint,
+        )
+        table.add_row(
+            "Connected Listener",
+            f"'{agent['connected_listener']['name']}' ({agent['connected_listener']['listener_id']})"
+            if agent["connected_listener"] is not None
+            else None,
         )
         table.add_row(
             "Agent Data",

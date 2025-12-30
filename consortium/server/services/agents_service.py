@@ -5,13 +5,18 @@ from typing import Any
 
 from loguru import logger
 
+from consortium.framework.agent_message_models import (
+    AgentResultMessageModel,
+    AgentTaskMessageModel,
+)
+from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
     AgentResultIDNotFoundError,
     AgentTaskNotFoundError,
 )
-from consortium.server.models.agent_models import (
+from consortium.server.models.agent_task_and_result_models import (
     AgentResultModel,
     AgentResultStatus,
     AgentTaskModel,
@@ -41,8 +46,45 @@ class AgentsService:
         return "AgentsService()"
 
     @log_and_propagate_error_on_service_method
-    def register_agent(self, *args, **kwargs) -> Agent:
-        agent = Agent(*args, **kwargs)
+    def register_agent(
+        self,
+        listener_id: str | uuid.UUID,
+        payload_id: str | uuid.UUID | None = None,
+        agent_type: BaseAgentType | None = None,
+        name: str | None = None,
+        description: str = "",
+        endpoint: str = "",
+        user: str | None = None,
+        is_admin: bool | None = None,
+        os: str | None = None,
+        version: str | None = None,
+        arch: str | None = None,
+        pid: int | None = None,
+        locale: str | None = None,
+        remote_host_address: str | None = None,
+        local_host_address: str | None = None,
+        hostname: str | None = None,
+        agent_data: dict[str, Any] | None = None,
+    ) -> Agent:
+        agent = Agent(
+            listener_id=listener_id,
+            payload_id=payload_id,
+            agent_type=agent_type,
+            name=name,
+            description=description,
+            endpoint=endpoint,
+            user=user,
+            is_admin=is_admin,
+            os=os,
+            version=version,
+            arch=arch,
+            pid=pid,
+            locale=locale,
+            remote_host_address=remote_host_address,
+            local_host_address=local_host_address,
+            hostname=hostname,
+            agent_data=agent_data,
+        )
         self._agents[str(agent.agent_id)] = agent
 
         asyncio.create_task(
@@ -71,6 +113,128 @@ class AgentsService:
         )
         self._logger.info("Deregistered agent: {}", agent)
         self._logger.debug("- {!r}", agent)
+
+    @log_and_propagate_error_on_service_method
+    def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event_type=EventType.AGENT_CHECKED_IN,
+                message=f"Checked in agent: {agent}",
+                data=agent.to_json(),
+            )
+        )
+        agent.datetime_last_checked_in = datetime.now()
+        agent.mark_as_active()
+        self._logger.debug("Checked in agent {!r}", agent)
+
+    @log_and_propagate_error_on_service_method
+    async def get_pending_tasks_for_agent(
+        self,
+        agent_id: str | uuid.UUID,
+        count: int | None = None,
+        block: bool = False,
+        timeout: float | None = None,
+    ) -> list[AgentTaskMessageModel]:
+        """
+        Get pending tasks for an agent. This method retrieves task messages that are
+        queued for the agent and returns them as a list of AgentTaskMessageModel
+        objects.
+
+        Args:
+            agent_id (str | uuid.UUID): The agent ID of the agent to get tasks for.
+            count (int | None): The number of tasks to retrieve. If None, retrieves
+                all available tasks. If 1, retrieves a single task. If > 1, retrieves
+                up to that many tasks.
+            block (bool): If True, blocks until at least one task is available.
+                If False, returns immediately with whatever tasks are available
+                (may be empty). Defaults to False.
+            timeout (float | None): Maximum time in seconds to block waiting for tasks.
+                Only applies when block=True. If None, blocks indefinitely.
+                If 0, equivalent to block=False.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
+
+        Returns:
+            list[AgentTaskMessageModel]: A list of task messages. Returns an empty list
+                if no tasks are available and block=False.
+        """
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+
+        # Normalize timeout=0 to non-blocking
+        if timeout == 0:
+            block = False
+
+        task_messages: list[AgentTaskMessageModel] = []
+
+        # Determine max tasks to collect
+        max_tasks = count if count is not None else float("inf")
+
+        if block and len(task_messages) == 0:
+            # Block for at least one task
+            first_task = await agent.get_next_task_message(timeout=timeout)
+            if first_task is not None:
+                task_messages.append(first_task)
+
+        # Collect remaining tasks (non-blocking)
+        while len(task_messages) < max_tasks:
+            task_message = await agent.get_next_task_message(timeout=0)
+            if task_message is None:
+                break
+            task_messages.append(task_message)
+
+        self._logger.debug(
+            "Retrieved {} pending task(s) for agent {!r}",
+            len(task_messages),
+            agent,
+        )
+
+        return task_messages
+
+    @log_and_propagate_error_on_service_method
+    async def submit_result_by_agent_id(
+        self,
+        agent_id: str | uuid.UUID,
+        task_id: str | uuid.UUID,
+        success: bool,
+        message: str,
+        data: dict[str, Any],
+    ) -> None:
+        """
+        Submit a result for a running task on an agent.
+
+        Args:
+            agent_id (str | uuid.UUID): The agent ID of the agent to submit the result
+                for.
+            task_id (str | uuid.UUID): The task ID of the task to submit the result for.
+            success (bool): Whether the task was successful.
+            message (str): A message describing the result.
+            data (dict[str, Any]): The result data.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
+            AgentResultHasNoCorrespondingTaskError: Raised if the task ID does not
+                correspond to a running task for this agent.
+
+        Returns:
+            None
+        """
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        result_message = AgentResultMessageModel(
+            task_id=task_id,
+            success=success,
+            message=message,
+            data=data,
+        )
+        await agent.submit_result_message(result_message=result_message)
+        self._logger.debug(
+            "Submitted result for task ID {} to agent {!r}",
+            task_id,
+            agent,
+        )
 
     @log_and_propagate_error_on_service_method
     def get_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> Agent:
@@ -280,19 +444,6 @@ class AgentsService:
         self._logger.info("Tasked agent {} with task {}", agent, task)
         self._logger.debug("Tasked agent {!r} with task {!r}", agent, task)
         return task
-
-    @log_and_propagate_error_on_service_method
-    def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        asyncio.create_task(
-            self._events_service.trigger_event(
-                event_type=EventType.AGENT_CHECKED_IN,
-                message=f"Checked in agent: {agent}",
-                data=agent.to_json(),
-            )
-        )
-        agent.datetime_last_checked_in = datetime.now()
-        self._logger.debug("Checked in agent {!r}", agent)
 
     @log_and_propagate_error_on_service_method
     def update_agent_by_agent_id(

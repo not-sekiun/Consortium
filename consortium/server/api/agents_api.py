@@ -22,6 +22,8 @@ from consortium.server.exceptions.consortium_exceptions import (
 )
 from consortium.server.models.agent_models import (
     AgentModel,
+)
+from consortium.server.models.agent_task_and_result_models import (
     AgentResultModel,
     AgentResultStatus,
     AgentTaskModel,

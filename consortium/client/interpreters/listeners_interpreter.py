@@ -101,6 +101,18 @@ class ListenersInterpreter(Interpreter):
             nested_completer_dict,
         )
 
+    @staticmethod
+    def _list_all_listeners_and_listener_templates(
+        all_listeners: list[dict[str, Any]],
+        all_listener_templates: list[dict[str, Any]],
+    ) -> None:
+        ListenerListCommand._list_all_listeners(
+            all_listeners=all_listeners,
+        )
+        ListenerTemplateListCommand._list_all_listener_templates(
+            all_listener_templates=all_listener_templates,
+        )
+
     # We don't actually care about the event data so we just ignore it. We just need to
     # know a change happened so that we can update the autocompleter.
     async def _listener_created_or_removed_event_handler(
@@ -153,10 +165,8 @@ class ListenersInterpreter(Interpreter):
             all_listener_templates=all_listener_templates,
         )
         await self._setup_event_handlers()
-        ListenerListCommand._list_all_listeners(
+        self._list_all_listeners_and_listener_templates(
             all_listeners=all_listeners,
-        )
-        ListenerTemplateListCommand._list_all_listener_templates(
             all_listener_templates=all_listener_templates,
         )
 

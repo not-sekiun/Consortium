@@ -272,3 +272,13 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             if self.validating_function and self.validating_function.__doc__
             else None,
         }
+
+    def to_json_reference(self) -> dict[str, str]:
+        """
+        Convert the listener template to a JSON serializable reference dictionary.
+        """
+        return {
+            "listener_template_id": str(self.listener_template_id),
+            "label": self.label,
+            "name": self.name,
+        }

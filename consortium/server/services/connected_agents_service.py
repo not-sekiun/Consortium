@@ -1,27 +1,41 @@
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
+from consortium.framework.agent_message_models import AgentTaskMessageModel
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
 )
-from consortium.server.objects.agent_objects import Agent
 from consortium.server.server_logging import LoggerType
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
-    normalize_uuid,
 )
+
+if TYPE_CHECKING:
+    from consortium.server.objects.agent_objects import Agent
 
 
 class ConnectedAgentsService:
-    def __init__(self):
+    """
+    A thin service wrapper around AgentsService that provides listener-scoped agent
+    operations. This service ensures that all agent operations are validated against
+    the listener that owns this service instance, and automatically handles agent
+    check-ins where appropriate.
+
+    This service is intended to be used by listeners to interact with agents that are
+    connected to them. It provides a higher-level abstraction over the AgentsService
+    that simplifies common listener operations like retrieving tasks and submitting
+    results.
+    """
+
+    def __init__(self, listener_id: uuid.UUID):
         # Importing here to avoid circular imports.
         from consortium.server import server_singletons as server_singletons
 
+        self._listener_id = listener_id
         self._agents_service = server_singletons.agents_service
-        self._agents = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
@@ -31,6 +45,29 @@ class ConnectedAgentsService:
 
     def __repr__(self) -> str:
         return "ConnectedAgentsService()"
+
+    def _validate_agent_connected_to_listener(self, agent_id: str | uuid.UUID) -> Agent:
+        """
+        Validate that an agent exists and is connected to this listener.
+
+        Args:
+            agent_id (str | uuid.UUID): The agent ID to validate.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent does not exist or is not connected
+                to this listener.
+
+        Returns:
+            Agent: The validated agent object.
+        """
+        agent = self._agents_service.get_agent_by_agent_id(agent_id=agent_id)
+        connected_listener = agent.connected_listener
+        if (
+            connected_listener is None
+            or connected_listener.listener_id != self._listener_id
+        ):
+            raise AgentNotFoundError(agent_id=agent.agent_id)
+        return agent
 
     @log_and_propagate_error_on_service_method
     def register_agent(
@@ -53,39 +90,41 @@ class ConnectedAgentsService:
         agent_data: dict[str, Any] | None = None,
     ) -> Agent:
         """
-        Register a new connected agent with the listener.
+        Register a new agent with this listener.
 
         Args:
-            payload_id (str | None): The payload ID of the payload that the agent is
-                using to connect to the listener.
-            agent_type (BaseAgentType): The agent type of the agent to be registered.
-            name (str): The human-readable name of the agent.
+            payload_id (str | uuid.UUID | None): The payload ID of the payload that
+                the agent is using to connect to the listener.
+            agent_type (BaseAgentType | None): The agent type of the agent to be
+                registered.
+            name (str | None): The human-readable name of the agent.
             description (str): A description of the agent.
-            endpoint (str): A human-readable representation of the network endpoint that
-                uniquely identifies the agent. This is typically the socket address of
-                the agent.
-            user (str): The name of the user account that the agent is running on.
-            is_admin (bool | None): A boolean that indicates whether the agent is
-                running with administrator/superuser privileges.
-            os (str | None): The operating system of the agent.
-            version (str | None): The version of the operating system that the agent is
-                running on.
-            arch (str | None): The architecture of the system that the agent is running
+            endpoint (str): A human-readable representation of the network endpoint
+                that uniquely identifies the agent.
+            user (str | None): The name of the user account that the agent is running
                 on.
+            is_admin (bool | None): Whether the agent is running with administrator
+                privileges.
+            os (str | None): The operating system of the agent.
+            version (str | None): The version of the operating system.
+            arch (str | None): The architecture of the system.
             pid (int | None): The process ID of the agent.
-            locale (str | None): The locale of the system that the agent is running on.
+            locale (str | None): The locale of the system.
             remote_host_address (str | None): The remote host address of the agent.
             local_host_address (str | None): The local host address of the agent.
-            hostname (str | None): The hostname of the system that the agent is running
-                on.
-            agent_data (dict[str, Any] | None): A dictionary of any additional data that
-                the agent may send to the listener.
+            hostname (str | None): The hostname of the system.
+            agent_data (dict[str, Any] | None): Additional data from the agent.
+
+        Raises:
+            AgentTypeResolutionError: Raised if the agent type cannot be resolved from
+                the provided payload_id or agent_type.
+            AgentCreationParameterTypeError: Raised if a parameter has an invalid type.
 
         Returns:
-            Agent: An object representing the agent that was registered.
+            Agent: The registered agent object.
         """
-
-        agent = self._agents_service.register_agent(
+        return self._agents_service.register_agent(
+            listener_id=self._listener_id,
             payload_id=payload_id,
             agent_type=agent_type,
             name=name,
@@ -103,89 +142,162 @@ class ConnectedAgentsService:
             hostname=hostname,
             agent_data=agent_data,
         )
-        self._agents[str(agent.agent_id)] = agent
-        return agent
-
-    @log_and_propagate_error_on_service_method
-    def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
-        """
-        Check in a connected agent by its agent ID. This method simply updates the last
-        check-in time of the agent to indicate that the agent is still connected and
-        has called back.
-
-        Args:
-            agent_id (str): The agent ID of the agent to check in. This should be a
-                UUID4 string.
-
-        Raises:
-            AgentNotFoundError: Raised if the agent with the specified agent ID is not
-                found.
-
-        Returns:
-            None
-        """
-
-        if agent_id not in self._agents:
-            raise AgentNotFoundError(agent_id=agent_id)
-        self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
 
     @log_and_propagate_error_on_service_method
     def deregister_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         """
-        Deregister a connected agent by its agent ID. This method removes the agent from
-        the listener's list of connected agents and also removes the agent from the
-        database. This effectively marks an agent as disconnected.
+        Deregister an agent connected to this listener. This removes the agent from
+        the system entirely.
 
         Args:
-            agent_id (str): The agent ID of the agent to deregister. This should be a
-                UUID4 string.
+            agent_id (str | uuid.UUID): The agent ID of the agent to deregister.
 
         Raises:
-            AgentNotFoundError: Raised if the agent with the specified agent ID is not
-                found.
+            AgentNotFoundError: Raised if the agent does not exist or is not connected
+                to this listener.
 
         Returns:
             None
         """
-
-        if agent_id not in self._agents:
-            raise AgentNotFoundError(agent_id=agent_id)
+        self._validate_agent_connected_to_listener(agent_id=agent_id)
         self._agents_service.deregister_agent_by_agent_id(agent_id=agent_id)
-        self._agents.pop(str(agent_id))
+
+    @log_and_propagate_error_on_service_method
+    def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
+        """
+        Check in an agent connected to this listener. This updates the agent's last
+        check-in time and marks it as active.
+
+        Args:
+            agent_id (str | uuid.UUID): The agent ID of the agent to check in.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent does not exist or is not connected
+                to this listener.
+
+        Returns:
+            None
+        """
+        self._validate_agent_connected_to_listener(agent_id=agent_id)
+        self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
+
+    @log_and_propagate_error_on_service_method
+    async def get_pending_tasks_for_agent(
+        self,
+        agent_id: str | uuid.UUID,
+        count: int | None = None,
+        block: bool = False,
+        timeout: float | None = None,
+    ) -> list[AgentTaskMessageModel]:
+        """
+        Get pending tasks for an agent connected to this listener. This method also
+        performs an automatic check-in for the agent.
+
+        Args:
+            agent_id (str | uuid.UUID): The agent ID of the agent to get tasks for.
+            count (int | None): The number of tasks to retrieve. If None, retrieves
+                all available tasks. If 1, retrieves a single task. If > 1, retrieves
+                up to that many tasks.
+            block (bool): If True, blocks until at least one task is available.
+                If False, returns immediately with whatever tasks are available
+                (may be empty). Defaults to False.
+            timeout (float | None): Maximum time in seconds to block waiting for tasks.
+                Only applies when block=True. If None, blocks indefinitely.
+                If 0, equivalent to block=False.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent does not exist or is not connected
+                to this listener.
+
+        Returns:
+            list[AgentTaskMessageModel]: A list of task message objects. Returns an
+                empty list if no tasks are available and block=False.
+        """
+        self._validate_agent_connected_to_listener(agent_id=agent_id)
+        self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
+        return await self._agents_service.get_pending_tasks_for_agent(
+            agent_id=agent_id,
+            count=count,
+            block=block,
+            timeout=timeout,
+        )
+
+    @log_and_propagate_error_on_service_method
+    async def submit_result_by_agent_id(
+        self,
+        agent_id: str | uuid.UUID,
+        task_id: str | uuid.UUID,
+        success: bool,
+        message: str,
+        data: dict[str, Any],
+    ) -> None:
+        """
+        Submit a result from an agent connected to this listener. This method validates
+        that the task exists and is running, performs an automatic check-in, and
+        submits the result.
+
+        Args:
+            agent_id (str | uuid.UUID): The agent ID of the agent submitting the result.
+            task_id (str | uuid.UUID): The task ID that this result corresponds to.
+            success (bool): Whether the task was successful.
+            message (str): A message describing the result.
+            data (dict[str, Any]): The result data.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent does not exist or is not connected
+                to this listener.
+            AgentTaskNotFoundError: Raised if the task ID does not correspond to a
+                running task for this agent.
+            AgentResultHasNoCorrespondingTaskError: Raised if the result cannot be
+                matched to a running task.
+
+        Returns:
+            None
+        """
+        agent = self._validate_agent_connected_to_listener(agent_id=agent_id)
+        # Validate the task ID corresponds to a running task before submitting
+        _ = agent.get_running_task_by_task_id(task_id=task_id)
+        self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
+        await self._agents_service.submit_result_by_agent_id(
+            agent_id=agent_id,
+            task_id=task_id,
+            success=success,
+            message=message,
+            data=data,
+        )
 
     @log_and_propagate_error_on_service_method
     def get_all_agents(self) -> list[Agent]:
         """
-        Get all connected agents that are registered with the specific listener that is
-        using this agent manager.
+        Get all agents connected to this listener.
 
         Returns:
-            list[Agent]: A list of all connected agents that are registered with the
-                specific listener that is using this agent manager.
+            list[Agent]: A list of all agents connected to this listener.
         """
-
-        return list(self._agents.values())
+        all_agents = self._agents_service.get_all_agents()
+        connected_agents = []
+        for agent in all_agents:
+            connected_listener = agent.connected_listener
+            if (
+                connected_listener is not None
+                and connected_listener.listener_id == self._listener_id
+            ):
+                connected_agents.append(agent)
+        return connected_agents
 
     @log_and_propagate_error_on_service_method
     def get_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> Agent:
         """
-        Get a connected agent by its agent ID for the specific listener that is using
-        this agent manager.
+        Get an agent by its agent ID, validating it is connected to this listener.
 
         Args:
-            agent_id (str): The agent ID of the agent to get. This should be a UUID4
-                string.
+            agent_id (str | uuid.UUID): The agent ID of the agent to retrieve.
 
         Raises:
-            AgentNotFoundError: Raised if the agent with the specified agent ID is not
-                found
+            AgentNotFoundError: Raised if the agent does not exist or is not connected
+                to this listener.
 
         Returns:
             Agent: The agent with the specified agent ID.
         """
-        agent_id = normalize_uuid(agent_id)
-
-        try:
-            return self._agents[agent_id]
-        except KeyError:
-            raise AgentNotFoundError(agent_id=agent_id) from None
+        return self._validate_agent_connected_to_listener(agent_id=agent_id)

@@ -187,6 +187,12 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             "status": self.status.to_json(),
         }
 
+    def to_json_reference(self) -> dict[str, str]:
+        return {
+            "agent_generator_build_step_id": str(self.agent_generator_build_step_id),
+            "name": self.name,
+        }
+
     def _construct_component_runtime_error_from_framework_runtime_error(
         self,
         error: ComponentRuntimeError,
@@ -431,7 +437,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 agent_generator_str=str(self),
             ) from None
 
-    def to_json(self):
+    def to_json(self) -> dict[str, Any]:
         return {
             "agent_generator_id": str(self.agent_generator_id),
             "name": self.name,
@@ -456,6 +462,12 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 "label": self.creating_agent_template.label,
                 "name": self.creating_agent_template.name,
             },
+        }
+
+    def to_json_reference(self) -> dict[str, str]:
+        return {
+            "agent_generator_id": str(self.agent_generator_id),
+            "name": self.name,
         }
 
     def _construct_component_runtime_error_from_framework_runtime_error(

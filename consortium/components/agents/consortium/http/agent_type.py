@@ -27,10 +27,20 @@ disconnect_capability = request_response_capability(
         ),
     },
     authors=authors,
+    result_handler=lambda agent, result_message, context: (
+        agent.mark_as_inactive(),
+        result_message,
+    )[1],
 )
 
 kill_capability = request_response_capability(
-    name="kill", description="Terminate the agent process immediately.", authors=authors
+    name="kill",
+    description="Terminate the agent process immediately.",
+    authors=authors,
+    result_handler=lambda agent, result_message, context: (
+        agent.mark_as_inactive(),
+        result_message,
+    )[1],
 )
 
 delay_capability = request_response_capability(
@@ -73,6 +83,10 @@ sleep_capability = request_response_capability(
         ),
     },
     authors=authors,
+    result_handler=lambda agent, result_message, context: (
+        agent.mark_as_inactive(),
+        result_message,
+    )[1],
 )
 
 

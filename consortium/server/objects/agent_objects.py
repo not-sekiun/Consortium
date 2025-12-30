@@ -1,17 +1,20 @@
 import asyncio
 import uuid
 from datetime import datetime
+from enum import StrEnum
 from typing import Any, get_type_hints
 
 from loguru import logger
-from pydantic import BaseModel, JsonValue, ValidationError
+from pydantic import UUID4, BaseModel, JsonValue, ValidationError
 
+from consortium.framework._components import State
 from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
 )
 from consortium.framework.agents import BaseAgentCapability
 from consortium.framework.event_hooks import EventType
+from consortium.framework.listeners import BaseListener
 from consortium.server import server_singletons as server_singletons
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentCapabilityNotFoundError,
@@ -28,13 +31,16 @@ from consortium.server.exceptions.consortium_exceptions.agents_consortium_except
 from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
     AgentTypeNotFoundError,
 )
+from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
+    ListenerNotFoundError,
+)
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
 )
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
     PayloadNotFoundError,
 )
-from consortium.server.models.agent_models import (
+from consortium.server.models.agent_task_and_result_models import (
     AgentResultModel,
     AgentResultStatus,
     AgentTaskModel,
@@ -47,8 +53,22 @@ from consortium.server.services.agent_file_manager_service import (
 from consortium.server.utils import generate_random_human_readable_name, normalize_uuid
 
 
+class AgentStatus(StrEnum):
+    # Listeners are responsible for marking agents as ACTIVE or INACTIVE based on
+    # whether the agent is connected or not. An agent can only be marked as ACTIVE or
+    # INACTIVE for a listener that is currently running.
+    ACTIVE = "ACTIVE"  # Running normally, attached to running listener
+    INACTIVE = "INACTIVE"  # Agent was told explicitly to go inactive or lost connection
+
+    # ORPHANED and UNREACHABLE are states inferred from the state of the attached
+    # listener of an agent, the framework manages these states.
+    ORPHANED = "ORPHANED"  # Attached listener temporarily not running but not deleted. For example, ERRORED or STOPPED
+    UNREACHABLE = "UNREACHABLE"  # Attached listener was explicitly deleted, even if a new listener is created with the same parameters it will not recognize that agent
+
+
 class _AgentParametersModel(BaseModel):
-    payload_id: str | uuid.UUID | None
+    listener_id: UUID4
+    payload_id: UUID4 | None
     agent_type: str | None
     name: str | None
     description: str
@@ -69,6 +89,7 @@ class _AgentParametersModel(BaseModel):
 class Agent:
     def __init__(
         self,
+        listener_id: uuid.UUID,
         payload_id: str | uuid.UUID | None = None,
         agent_type: str | None = None,
         name: str | None = None,
@@ -91,6 +112,7 @@ class Agent:
 
         try:
             _AgentParametersModel(
+                listener_id=listener_id,
                 payload_id=payload_id,
                 agent_type=agent_type,
                 name=name,
@@ -115,6 +137,15 @@ class Agent:
                     exc.errors()[0]["loc"]
                 ],
             ) from None
+
+        # Check if the provided listener ID corresponds to an existing listener. This
+        # will raise `ListenerNotFoundError` if it does not.
+        server_singletons.listeners_service.get_listener_by_listener_id(
+            listener_id=listener_id
+        )
+        # Store the listener ID privately we reference the listener via a property to
+        # always get the latest state of the listener.
+        self._listener_id = listener_id
 
         self.agent_id = uuid.uuid4()
 
@@ -174,6 +205,14 @@ class Agent:
         self.datetime_first_checked_in = datetime.now()
         self.datetime_last_checked_in = datetime.now()
 
+        # By default agents are considered ACTIVE when created. `self._status` is used
+        # to track the reported status of the agent while the framework may
+        # automatically infer other statuses such as ORPHANED or UNREACHABLE based on
+        # the state of the attached listener. Even if an agent was marked as ACTIVE or
+        # INACTIVE by the listener, the moment it is not running or deleted, the agent
+        # state will be ORPHANED or UNREACHABLE respectively.
+        self._status = AgentStatus.ACTIVE
+
         # TODO: Move all the tasks and results to a database instead of storing them
         #  all in memory.
         self._queued_tasks = {}
@@ -181,7 +220,6 @@ class Agent:
         self._completed_tasks = {}
         self._results = {}
 
-        self._events_service = server_singletons.events_service
         self._task_messages_queue = asyncio.Queue()
         self._task_messages_queue_lock = asyncio.Lock()
         # Each agent capability is mapped to a task by the task ID. This lets us
@@ -214,6 +252,47 @@ class Agent:
 
     def __str__(self) -> str:
         return f"'{self.name}' ({self.agent_id})"
+
+    @property
+    def connected_listener(self) -> BaseListener | None:
+        if self._listener_id is None:
+            return None
+
+        try:
+            return server_singletons.listeners_service.get_listener_by_listener_id(
+                listener_id=self._listener_id
+            )
+        except ListenerNotFoundError:
+            # Listener was deleted, clear the reference to prevent repeated querying
+            # of the non-existent listener.
+            self._listener_id = None
+            return None
+
+    @property
+    def status(self) -> AgentStatus:
+        if self._listener_id is None:
+            return AgentStatus.UNREACHABLE
+
+        try:
+            listener = server_singletons.listeners_service.get_listener_by_listener_id(
+                listener_id=self._listener_id
+            )
+        except ListenerNotFoundError:
+            # Listener was deleted, clear the reference to prevent repeated querying
+            # of the non-existent listener.
+            self._listener_id = None
+            return AgentStatus.UNREACHABLE
+
+        if listener.status.state != State.RUNNING:
+            # When the listener is not running we consider the agent to be ORPHANED.
+            # When the listener comes back online the agent is considered INACTIVE until
+            # the listener explicitly marks it as ACTIVE again OR the agent checks in
+            # again at which point the `agents_service.check_in_agent_by_agent_id`
+            # method will mark the agent as ACTIVE again.
+            self._status = AgentStatus.INACTIVE
+            return AgentStatus.ORPHANED
+
+        return self._status
 
     async def submit_task(self, task: AgentTaskModel) -> None:
         if task.command not in self.agent_type.agent_capabilities:
@@ -403,7 +482,19 @@ class Agent:
         except KeyError:
             raise AgentResultIDNotFoundError(result_id=result_id) from None
 
+    def mark_as_active(self) -> None:
+        self._status = AgentStatus.ACTIVE
+
+    def mark_as_inactive(self) -> None:
+        self._status = AgentStatus.INACTIVE
+
     def to_json(self) -> dict:
+        connected_listener = self.connected_listener
+        if connected_listener:
+            connected_listener_json = connected_listener.to_json_reference()
+        else:
+            connected_listener_json = None
+
         return {
             "agent_id": str(self.agent_id),
             "name": self.name,
@@ -422,7 +513,15 @@ class Agent:
             "hostname": self.hostname,
             "datetime_first_checked_in": self.datetime_first_checked_in.isoformat(),
             "datetime_last_checked_in": self.datetime_last_checked_in.isoformat(),
+            "status": self.status,
+            "connected_listener": connected_listener_json,
             "agent_data": self.agent_data,
+        }
+
+    def to_json_reference(self) -> dict[str, str]:
+        return {
+            "agent_id": str(self.agent_id),
+            "name": self.name,
         }
 
     def _move_queued_task_to_running(self, task_id: str) -> None:
@@ -542,7 +641,7 @@ class Agent:
 
             # Finally we fire the event to notify all event handlers that a result
             # has been received.
-            await self._events_service.trigger_event(
+            await server_singletons.events_service.trigger_event(
                 event_type=EventType.AGENT_RESULT_RECEIVED,
                 message=(
                     f"Agent {self} received result with result ID {result.result_id} "

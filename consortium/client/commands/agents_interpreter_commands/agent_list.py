@@ -9,6 +9,7 @@ from consortium.client.repl_interface.base_command import (
     Context,
 )
 from consortium.client.utils.formatter_utils import (
+    format_agent_status_string_with_color,
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
 )
@@ -36,6 +37,7 @@ class AgentListCommand(BaseCommand):
         table.add_column("Name")
         table.add_column("Endpoint")
         table.add_column("Last Checked In")
+        table.add_column("Status")
         for agent in all_agents:
             table.add_row(
                 str(agent["agent_id"]),
@@ -44,6 +46,9 @@ class AgentListCommand(BaseCommand):
                 str(agent["endpoint"]),
                 format_datetime_as_human_readable_str(
                     agent["datetime_last_checked_in"], include_elapsed_time=True
+                ),
+                format_agent_status_string_with_color(
+                    status_str=agent["status"],
                 ),
             )
         console.print(table, "")

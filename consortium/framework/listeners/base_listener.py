@@ -2,7 +2,7 @@ import traceback
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
-from typing import Any, get_type_hints
+from typing import TYPE_CHECKING, Any, get_type_hints
 
 from loguru import logger
 from pydantic import BaseModel, JsonValue, ValidationError
@@ -28,6 +28,9 @@ from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exc
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.connected_agents_service import ConnectedAgentsService
+
+if TYPE_CHECKING:
+    from consortium.server.objects.agent_objects import Agent
 
 
 class _BaseListenerParametersModel(BaseModel):
@@ -140,7 +143,9 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         self.datetime_created = datetime.now()
         self.listener_id = uuid.uuid4()
         self.environment = SimpleNamespace()
-        self.connected_agents_service = ConnectedAgentsService()
+        self.connected_agents_service = ConnectedAgentsService(
+            listener_id=self.listener_id,
+        )
         self.logger = logger.bind(
             logger_name=f"Listener - {self}",
             logger_type=LoggerType.LISTENER_LOGGER,
@@ -163,6 +168,10 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             f"parameters={self.parameters!r}"
             f")"
         )
+
+    @property
+    def connected_agents(self) -> list[Agent]:
+        return self.connected_agents_service.get_all_agents()
 
     async def on_started(self) -> None: ...
 
@@ -243,18 +252,17 @@ class BaseListener(ComponentLifeCycle):  # ABC):
             "status": self.status.to_json(),
             "datetime_created": self.datetime_created.isoformat(),
             "connected_agents": [
-                {"agent_id": str(agent.agent_id), "name": str(agent.name)}
-                for agent in self.connected_agents_service.get_all_agents()
+                agent.to_json_reference() for agent in self.connected_agents
             ],
             # `creating_listener_template` is assigned to the listener class by the
             # listener profile loader at load time.
-            "creating_listener_template": {
-                "listener_template_id": str(
-                    self.creating_listener_template.listener_template_id,
-                ),
-                "label": self.creating_listener_template.label,
-                "name": self.creating_listener_template.name,
-            },
+            "creating_listener_template": self.creating_listener_template.to_json_reference(),
+        }
+
+    def to_json_reference(self) -> dict[str, str]:
+        return {
+            "listener_id": str(self.listener_id),
+            "name": self.name,
         }
 
     def _construct_component_runtime_error_from_framework_runtime_error(

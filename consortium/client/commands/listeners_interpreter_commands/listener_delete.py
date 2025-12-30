@@ -1,4 +1,7 @@
+import textwrap
 from argparse import ArgumentParser
+
+from prompt_toolkit import HTML, PromptSession
 
 from consortium.client.models.return_status_models import (
     ReturnStatus,
@@ -8,8 +11,11 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
     Context,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_success
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_list_as_multi_line_bulleted_string,
+)
+from consortium.client.utils.printer_utils import print_success, print_warning
 
 
 class ListenerDeleteCommand(BaseCommand):
@@ -40,6 +46,38 @@ class ListenerDeleteCommand(BaseCommand):
             listener = await rest_api.get_listener_by_listener_id(
                 parsed_args.listener_id[0],
             )
+
+            if (
+                listener["connected_agents"]
+                and listener["status"]["state"] != "RUNNING"
+            ):  # You can't delete a running listener
+                print_warning(
+                    f"Listener '{listener['name']}' ({listener['listener_id']}) has the following connected agents:",
+                )
+                print(
+                    textwrap.indent(
+                        format_list_as_multi_line_bulleted_string(
+                            [
+                                f"'{agent['name']}' ({agent['agent_id']})"
+                                for agent in listener["connected_agents"]
+                            ],
+                        ),
+                        "    ",
+                    )
+                    + "\n"
+                )
+                confirmation = await PromptSession().prompt_async(
+                    HTML(
+                        "Are you sure you want to delete this listener? This will cause "
+                        "those agents to be <b><ansired>permanently "
+                        "unreachable</ansired></b> (y/N): ",
+                    )
+                )
+                if confirmation.lower() != "y":
+                    return ReturnStatus(
+                        type=ReturnStatusType.CONTINUE,
+                    )
+
             _ = await rest_api.delete_listener_by_listener_id(
                 listener_id=parsed_args.listener_id[0],
             )

@@ -12,7 +12,7 @@ from consortium.client.repl_interface.base_command import (
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
-    format_role_str,
+    format_role_str_with_color,
 )
 from consortium.client.utils.printer_utils import console
 
@@ -77,7 +77,7 @@ class BannerCommand(BaseCommand):
                 "    Connection Status  : "
                 f"[bold green]Connected[bold white] as "
                 f"'{rest_api.username}' "
-                f"({format_role_str(role=own_user['role'])}[bold white])"
+                f"({format_role_str_with_color(role=own_user['role'])}[bold white])"
             )
 
         random_banner_art = random.choice(banner_art)

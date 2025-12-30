@@ -154,6 +154,18 @@ class GeneratorsInterpreter(Interpreter):
             event_handler=self._agent_generator_created_or_removed_event_handler,
         )
 
+    @staticmethod
+    def _list_all_agent_generators_and_agent_templates(
+        all_agent_generators: list[dict[str, Any]],
+        all_agent_templates: list[dict[str, Any]],
+    ) -> None:
+        GeneratorListCommand._list_all_agent_generators(
+            all_agent_generators=all_agent_generators,
+        )
+        AgentTemplateListCommand._list_all_agent_templates(
+            all_agent_templates=all_agent_templates,
+        )
+
     async def on_enter(self) -> None:
         (
             all_agent_generators,
@@ -164,10 +176,8 @@ class GeneratorsInterpreter(Interpreter):
             all_agent_templates=all_agent_templates,
         )
         await self._setup_event_handlers()
-        GeneratorListCommand._list_all_agent_generators(
+        self._list_all_agent_generators_and_agent_templates(
             all_agent_generators=all_agent_generators,
-        )
-        AgentTemplateListCommand._list_all_agent_templates(
             all_agent_templates=all_agent_templates,
         )
 
