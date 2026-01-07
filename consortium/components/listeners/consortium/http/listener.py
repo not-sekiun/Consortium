@@ -138,18 +138,11 @@ class Listener(BaseListener):
                 "type": "object",
                 "properties": {
                     "task_id": {"type": "string"},
-                    "result": {
-                        "type": "object",
-                        "properties": {
-                            "success": {"type": "boolean"},
-                            "message": {"type": "string"},
-                            "data": {"type": "object"},
-                        },
-                        "required": ["success", "message", "data"],
-                        "additionalProperties": False,
-                    },
+                    "success": {"type": "boolean"},
+                    "message": {"type": "string"},
+                    "data": {"type": "object"},
                 },
-                "required": ["task_id", "result"],
+                "required": ["task_id", "success", "message", "data"],
                 "additionalProperties": False,
             }
 
@@ -167,54 +160,62 @@ class Listener(BaseListener):
             # Handle results that do not include multipart payloads and only have JSON
             if request.content_type == "application/json":
                 try:
-                    json_request_body = await request.json()
-                    jsonschema.validate(json_request_body, agent_result_json_schema)
-                    task_id = json_request_body["task_id"]
-                    success = json_request_body["result"]["success"]
-                    message = json_request_body["result"]["message"]
-                    data = json_request_body["result"]["data"]
-                    payload = None
-                except (json.JSONDecodeError, jsonschema.ValidationError, KeyError):
+                    result_json = await request.json()
+                    jsonschema.validate(result_json, agent_result_json_schema)
+                except (json.JSONDecodeError, jsonschema.ValidationError):
                     self.logger.warning(
                         "Unidentified client {} sent malformed agent result data. "
-                        "Responded with 401 Unauthorized.",
+                        "JSON data was not valid result JSON. Responded with 401 "
+                        "Unauthorized.",
                         request.remote,
                     )
                     return web.Response(status=401)
+
+                task_id = result_json["task_id"]
+                success = result_json["success"]
+                message = result_json["message"]
+                data = result_json["data"]
+                payload = None
             # Handle results that include multipart payloads
             elif request.content_type == "multipart/form-data":
                 reader = await request.multipart()
-                try:
-                    # Extract and validate the JSON part
-                    json_part = await reader.next()
-                    if json_part.name != "json":
-                        raise ValueError
-                    json_bytes = await json_part.read()
-                    json_request_body = json.loads(json_bytes.decode("utf-8"))
-                    jsonschema.validate(json_request_body, agent_result_json_schema)
-                    task_id = json_request_body["task_id"]
-                    success = json_request_body["result"]["success"]
-                    message = json_request_body["result"]["message"]
-                    data = json_request_body["result"]["data"]
+                result_json = None
+                payload = None
 
-                    # Extract the payload part
-                    payload_part = await reader.next()
-                    if payload_part and payload_part.name == "payload":
-                        payload = await payload_part.read()
-                    else:
-                        payload = None
-                except (
-                    json.JSONDecodeError,
-                    jsonschema.ValidationError,
-                    KeyError,
-                    ValueError,
-                ):
+                # Extract parts from the multipart data, expecting "json" and "payload"
+                async for part in reader:
+                    if part.name == "json":
+                        try:
+                            json_bytes = await part.read()
+                            result_json = json.loads(json_bytes.decode("utf-8"))
+                            jsonschema.validate(result_json, agent_result_json_schema)
+                        except (
+                            json.JSONDecodeError,
+                            jsonschema.ValidationError,
+                        ):
+                            self.logger.warning(
+                                "Unidentified client {} sent malformed agent result "
+                                "data. JSON data was not valid result JSON. Responded "
+                                "with 401 Unauthorized.",
+                                request.remote,
+                            )
+                            return web.Response(status=401)
+                    elif part.name == "payload":
+                        payload = await part.read()
+
+                if result_json is None or payload is None:
                     self.logger.warning(
                         "Unidentified client {} sent malformed agent result data. "
-                        "Responded with 401 Unauthorized.",
+                        "Multipart result response did not contain both 'json' and "
+                        "'payload'. Responded with 401 Unauthorized.",
                         request.remote,
                     )
                     return web.Response(status=401)
+
+                task_id = result_json["task_id"]
+                success = result_json["success"]
+                message = result_json["message"]
+                data = result_json["data"]
             else:
                 self.logger.warning(
                     "Unidentified client {} sent agent result data with unsupported "

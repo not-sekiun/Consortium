@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Protocol
 
@@ -55,7 +55,6 @@ class _SequentialTimeoutHandlerProtocol(Protocol):
 class _ResolveIterationsProtocol(Protocol):
     def __call__(
         self,
-        agent: Agent,
         task_message: AgentTaskMessageModel,
         context: SimpleNamespace,
     ) -> int: ...
@@ -74,6 +73,8 @@ def sequential_request_response_capability(
     authors: set[str] = None,
     requires_admin: bool = False,
     supported_oses: set[SupportedOS] = None,
+    mitre_attack_techniques: set[str] = None,
+    validating_function: Callable | None = None,
     timeout: int | float | None = None,
     resolve_timeout: _ResolveTimeoutProtocol | None = None,
     iterations: int | None = None,
@@ -83,7 +84,7 @@ def sequential_request_response_capability(
     timeout_handler: _SequentialTimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
     async def _execute(
-        self, agent: Agent, task_message: AgentTaskMessageModel
+        self, task_message: AgentTaskMessageModel
     ) -> AgentResultMessageModel:
         context = SimpleNamespace()
 
@@ -92,7 +93,7 @@ def sequential_request_response_capability(
             max_iterations = iterations
         elif resolve_iterations:
             max_iterations = resolve_iterations(
-                agent=agent, task_message=task_message, context=context
+                task_message=task_message, context=context
             )
         else:
             max_iterations = None
@@ -100,14 +101,14 @@ def sequential_request_response_capability(
         while max_iterations is None or index < max_iterations:
             if resolve_timeout:
                 send_and_recv_timeout = resolve_timeout(
-                    agent=agent, task_message=task_message, context=context
+                    task_message=task_message, context=context
                 )
             else:
                 send_and_recv_timeout = timeout
 
             if task_handler:
                 task_message = task_handler(
-                    agent=agent, task_message=task_message, context=context
+                    agent=self.agent, task_message=task_message, context=context
                 )
                 if asyncio.iscoroutine(task_message):
                     task_message = await task_message
@@ -119,7 +120,7 @@ def sequential_request_response_capability(
                 )
             except TimeoutError:
                 if timeout_handler:
-                    timeout_tuple = timeout_handler(agent=agent, context=context)
+                    timeout_tuple = timeout_handler(agent=self.agent, context=context)
                     if asyncio.iscoroutine(timeout_tuple):
                         timeout_tuple = await timeout_tuple
 
@@ -135,7 +136,7 @@ def sequential_request_response_capability(
 
             if result_handler:
                 result_tuple = result_handler(
-                    agent=agent, result_message=result_message, context=context
+                    agent=self.agent, result_message=result_message, context=context
                 )
                 if asyncio.iscoroutine(result_tuple):
                     result_tuple = await result_tuple
@@ -160,6 +161,8 @@ def sequential_request_response_capability(
             "authors": authors,
             "requires_admin": requires_admin,
             "supported_oses": supported_oses,
+            "mitre_attack_techniques": mitre_attack_techniques,
+            "validating_function": validating_function,
             "execute": _execute,
         },
     )

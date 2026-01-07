@@ -4,9 +4,6 @@ from consortium.framework.agents.agent_capabilities.request_response_capability 
 from consortium.framework.agents.agent_capabilities.sequential_request_response_capability import (
     sequential_request_response_capability,
 )
-from consortium.framework.agents.agent_capability_utils import (
-    remove_task_message_arguments,
-)
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
     SupportedOS,
@@ -26,6 +23,5 @@ __all__ = [
     "BaseAgentType",
     "request_response_capability",
     "sequential_request_response_capability",
-    "remove_task_message_arguments",
     "SupportedOS",
 ]

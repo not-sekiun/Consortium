@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Protocol
 
@@ -65,6 +65,8 @@ def request_response_capability(
     authors: set[str] = None,
     requires_admin: bool = False,
     supported_oses: set[SupportedOS] = None,
+    mitre_attack_techniques: set[str] = None,
+    validating_function: Callable | None = None,
     timeout: int | None = None,
     resolve_timeout: _ResolveTimeoutProtocol | None = None,
     task_handler: _TaskMessageHandlerProtocol | None = None,
@@ -72,20 +74,20 @@ def request_response_capability(
     timeout_handler: _TimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
     async def _execute(
-        self, agent: Agent, task_message: AgentTaskMessageModel
+        self, task_message: AgentTaskMessageModel
     ) -> AgentResultMessageModel:
         context = SimpleNamespace()
 
         if resolve_timeout:
             send_and_recv_timeout = resolve_timeout(
-                agent=agent, task_message=task_message, context=context
+                task_message=task_message, context=context
             )
         else:
             send_and_recv_timeout = timeout
 
         if task_handler:
             task_message = task_handler(
-                agent=agent, task_message=task_message, context=context
+                agent=self.agent, task_message=task_message, context=context
             )
             if asyncio.iscoroutine(task_message):
                 task_message = await task_message
@@ -96,7 +98,7 @@ def request_response_capability(
             )
         except TimeoutError:
             if timeout_handler:
-                result_message = timeout_handler(agent=agent, context=context)
+                result_message = timeout_handler(agent=self.agent, context=context)
                 if asyncio.iscoroutine(result_message):
                     result_message = await result_message
                 print(result_message)
@@ -106,7 +108,7 @@ def request_response_capability(
 
         if result_handler:
             result_message = result_handler(
-                agent=agent,
+                agent=self.agent,
                 result_message=result_message,
                 context=context,
             )
@@ -129,7 +131,9 @@ def request_response_capability(
             "options": options,
             "authors": authors,
             "requires_admin": requires_admin,
+            "mitre_attack_techniques": mitre_attack_techniques,
             "supported_oses": supported_oses,
+            "validating_function": validating_function,
             "execute": _execute,
         },
     )

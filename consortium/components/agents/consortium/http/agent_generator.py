@@ -22,9 +22,8 @@ class Oopsie(BaseAgentGeneratorBuildStep):
 class BuildAgent(BaseAgentGeneratorBuildStep):
     name = "Build Agent"
     description = (
-        "Build and export the agent to the server's payloads service. Will optionally "
-        "freeze the agent into a bundled self-extracting executable with PyInstaller "
-        "if specified by the 'format' option."
+        "Build and export the agent. Optionally freeze as a self-extracting "
+        "executable via PyInstaller."
     )
 
     async def build(self, parameters: dict) -> None:
@@ -96,7 +95,6 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
 
 class AgentGenerator(BaseAgentGenerator):
     agent_generator_build_steps = [
-        BuildAgent,
         BuildAgent,
         Oopsie,
     ]

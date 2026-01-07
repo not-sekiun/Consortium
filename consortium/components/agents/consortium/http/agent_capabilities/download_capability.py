@@ -1,6 +1,5 @@
 import pathlib
 import zlib
-from typing import TYPE_CHECKING
 
 from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
@@ -10,9 +9,6 @@ from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
 )
 from consortium.framework.options import SingleValueOption
-
-if TYPE_CHECKING:
-    from consortium.server.objects.agent_objects import Agent
 
 
 class DownloadCapability(BaseAgentCapability):
@@ -72,66 +68,113 @@ class DownloadCapability(BaseAgentCapability):
             default_value=False,
         ),
     }
+    mitre_attack_techniques = {"T1041"}
 
     async def execute(
         self,
-        agent: Agent,
         task_message: AgentTaskMessageModel,
     ) -> AgentResultMessageModel:
         # Remove `destination` argument before sending task because it is not needed by
         # the agent
-        task_message.arguments.pop("destination")
-        header = await self.send_and_recv_from_agent(
-            task_message=task_message,
-        )
+        task_message.arguments.pop("destination", None)
 
-        print(header)
-
-        # Return the failure message if the download could not be initiated
+        header = await self.send_and_recv_from_agent(task_message=task_message)
         if not header.success:
             return header
 
-        if header.data["type"] == "file":  # Handle file download
-            filename = pathlib.Path(header.data["path"]).name
-            while True:
-                result = await self.recv_from_agent()
-                print(result)
-                if not result.success:
-                    # Return failure message and stop download prematurely
-                    return result
+        is_dir = header.data["type"] == "directory"
+        target_name = pathlib.Path(header.data["path"]).name
+        # `header.data['type']` can be 'file' or 'directory' here for the initial header
+        self.update_task_progress(
+            message=f"Starting download of {header.data['type']} '{target_name}'",
+            percent_complete=0,
+        )
 
-                if result.data["type"] == "end_of_file":
-                    # Finished downloading file, return single message indicating
-                    # success
+        # State for the current file being processed
+        current_file = pathlib.Path(header.data["path"]) if not is_dir else None
+        current_file_size = header.data["size"] if not is_dir else 0
+        downloaded_bytes = 0
+
+        response = header
+        while True:
+            if not response.success:  # Error response from agent, abort download
+                return response
+
+            msg_type = response.data.get("type")
+
+            # New file download starting within a directory
+            if msg_type == "file":
+                current_file = pathlib.Path(response.data["path"])
+                current_file_size = response.data.get("size", 0)
+                downloaded_bytes = 0
+                # Ephemerally update the status of the task with the start of a new
+                # file/directory download
+                self.update_task_progress(
+                    message=f"Starting download of file '{response.data['path']}'",
+                    percent_complete=0,
+                )
+            elif msg_type == "chunk":
+                try:
+                    chunk = zlib.decompress(response.payload.data)
+                except zlib.error as exc:
                     return AgentResultMessageModel(
                         task_id=task_message.task_id,
-                        success=True,
-                        message=f"Finished downloading file {filename}",
+                        success=False,
+                        message=f"Failed to decompress file chunk: {exc}",
                     )
-                # `result.data["type"] == "file"` Process chunks
-                chunk = zlib.decompress(result.payload.data)
-                print(chunk)
-        else:  # `header.data["type"] == "directory"`. Handle directory download
-            directory_path = pathlib.Path(header.data["path"]).name
-            while True:
-                result = await self.recv_from_agent()
-                print(result)
-                if not result.success:
-                    # Return failure message and stop download prematurely
-                    return result
+                downloaded_bytes += len(chunk)
+                # Ephemeral update (Overwrites previous status but does not log to
+                # progress log to avoid flooding it)
+                percent_complete = (
+                    round(downloaded_bytes / current_file_size * 100, 2)
+                    if current_file_size
+                    else 0
+                )
+                self.update_task_progress(
+                    message=f"Downloading {current_file}: {downloaded_bytes}/{current_file_size} bytes",
+                    percent_complete=percent_complete,
+                )
+            elif msg_type == "directory":
+                # Ephemerally update the status of the task with the start of a new
+                # file/directory download
+                self.update_task_progress(
+                    message=f"Created new directory '{response.data['path']}'",
+                    percent_complete=100,
+                )
+            elif msg_type == "end_of_file":
+                self.update_task_progress(
+                    message=f"Downloaded file '{current_file}'",
+                    percent_complete=100,
+                    log_progress=True,
+                )  # Log completion of file download in progress log for task
+                current_file = None
+                current_file_size = 0
+                downloaded_bytes = 0
+            elif msg_type == "end_of_transfer":
+                # Entire file or directory download is finished, log to progress log of
+                # task and break loop if a directory was being downloaded, avoid logging
+                # since we already log file download completion on 'end_of_file'
+                if is_dir:
+                    self.update_task_progress(
+                        message=f"Downloaded directory '{target_name}'",
+                        percent_complete=100,
+                        log_progress=True,
+                    )
+                break
+            else:
+                return AgentResultMessageModel(
+                    task_id=task_message.task_id,
+                    success=False,
+                    message=(
+                        f"Unknown message type received during download: {msg_type}"
+                    ),
+                )
 
-                if result.data["type"] == "end_of_directory":
-                    # Finished downloading directory, return single message indicating
-                    # success
-                    return AgentResultMessageModel(
-                        task_id=task_message.task_id,
-                        success=True,
-                        message=f"Finished downloading directory {directory_path}",
-                    )
-                elif result.data["type"] == "directory":  # Create new directory
-                    continue
-                elif result.data["type"] == "end_of_file":  # Finished a file
-                    continue
-                # `result.data["type"] == "file"` Process chunks
-                chunk = zlib.decompress(result.payload.data)
-                print(chunk)
+            response = await self.recv_from_agent()
+
+        # Return response to indicate successful download
+        return AgentResultMessageModel(
+            task_id=task_message.task_id,
+            success=True,
+            message=f"Downloaded {'directory' if is_dir else 'file'} '{target_name}'",
+        )

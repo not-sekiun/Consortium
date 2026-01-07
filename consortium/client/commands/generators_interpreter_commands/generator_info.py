@@ -61,6 +61,7 @@ class GeneratorInfoCommand(BaseCommand):
             build_steps_table.add_column("#", justify="right")
             build_steps_table.add_column("Build Step ID", no_wrap=True)
             build_steps_table.add_column("Name")
+            build_steps_table.add_column("Description")
             build_steps_table.add_column("Status")
             build_steps_table.add_column("Datetime Started")
             build_steps_table.add_column("Elapsed")
@@ -77,6 +78,7 @@ class GeneratorInfoCommand(BaseCommand):
                     str(index),
                     build_step["agent_generator_build_step_id"],
                     build_step["name"],
+                    build_step["description"],
                     format_agent_generator_state_string_with_color(
                         build_step["status"]["state"]
                     ),
@@ -151,6 +153,11 @@ class GeneratorInfoCommand(BaseCommand):
                 format_dict_as_multi_line_key_value_string(
                     input_dict=agent_generator["parameters"]
                 ),
+            )
+            table.add_row(
+                "Creating Agent Template",
+                f"'{agent_generator['creating_agent_template']['name']}' "
+                f"{agent_generator['creating_agent_template']['agent_template_id']}",
             )
 
             console.print(table, "")

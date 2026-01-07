@@ -7,6 +7,7 @@ repos:
       - id: check-yaml
         args: ["--unsafe"]
       - id: check-added-large-files
+        args: ['--maxkb=1000']  # Increase limit to 1MB to accomodate the distilled MITRE ATT&CK data JSON file
       - id: pretty-format-json
         args: ["--autofix", "--no-sort-keys", "--indent=4"]
   - repo: https://github.com/astral-sh/ruff-pre-commit

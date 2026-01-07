@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from consortium.server.models.option_models import OptionModel
+from consortium.server.objects.mitre_attack_objects import MitreAttackTechnique
 
 
 class ListenerTypeModel(BaseModel):
@@ -15,7 +16,9 @@ class AgentCapabilityModel(BaseModel):
     requires_admin: bool
     is_atomic: bool
     supported_oses: list[str]
+    mitre_attack_techniques: list[MitreAttackTechnique]
     options: dict[str, OptionModel]
+    validating_function: str | None
 
 
 class AgentTypeModel(BaseModel):

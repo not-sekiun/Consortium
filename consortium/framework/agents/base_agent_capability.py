@@ -27,6 +27,14 @@ from consortium.server.exceptions.consortium_exceptions.agent_capabilities_conso
     InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
+from consortium.server.models.agent_task_and_result_models import (
+    AgentTaskModel,
+    AgentTaskProgressModel,
+)
+from consortium.server.objects.mitre_attack_objects import (
+    MitreAttackTechniqueID,
+    resolve_mitre_attack_technique_id,
+)
 
 if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
@@ -60,7 +68,7 @@ class _BaseAgentCapabilityModel(BaseModel):
     authors: set[str]
     requires_admin: bool
     supported_oses: set[SupportedOS]
-    is_atomic: bool = False
+    is_atomic: bool
     options: set[
         SingleValueOption
         | ListValueOption
@@ -68,9 +76,10 @@ class _BaseAgentCapabilityModel(BaseModel):
         | ChoiceValueOption
         | ToggleableChoicesValueOption
     ]
+    mitre_attack_techniques: set[MitreAttackTechniqueID]
     validating_function: (
         Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
-    ) = None
+    )
 
 
 class BaseAgentCapability:
@@ -87,11 +96,19 @@ class BaseAgentCapability:
         | ChoiceValueOption
         | ToggleableChoicesValueOption
     ] = None
+    mitre_attack_techniques: set[MitreAttackTechniqueID] | None = None
     validating_function: (
         Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
     ) = None
 
-    def __init__(self, task_messages_queue: asyncio.Queue):
+    # TODO: Deprecate global task messages queue in favor of per capability queues.
+    def __init__(
+        self, agent: Agent, task: AgentTaskModel, task_messages_queue: asyncio.Queue
+    ):
+        self.agent = agent
+        # The agent task associated with this capability execution. Used for partial
+        # task updates
+        self._task = task
         # The task messages queue is the overall agent task messages aggregating queue
         # that comes from the framework to be pulled by listeners and sent out to the
         # wire. All agent capabilities share this queue.
@@ -113,6 +130,7 @@ class BaseAgentCapability:
         cls.options = cls.options or set()
         cls.supported_oses = cls.supported_oses or {SupportedOS.ANY}
         cls.authors = cls.authors or set()
+        cls.mitre_attack_techniques = cls.mitre_attack_techniques or set()
 
         try:
             _BaseAgentCapabilityModel(
@@ -122,6 +140,9 @@ class BaseAgentCapability:
                 authors=cls.authors,
                 requires_admin=cls.requires_admin,
                 supported_oses=cls.supported_oses,
+                is_atomic=cls.is_atomic,
+                mitre_attack_techniques=cls.mitre_attack_techniques,
+                validating_function=cls.validating_function,
             )
         except ValidationError as exc:
             for err in exc.errors():
@@ -168,6 +189,13 @@ class BaseAgentCapability:
         for option in cls.options:
             options[option.name] = option
         cls.options = options
+
+        # Convert Mitre attack techniques to a list of resolved MitreAttackTechnique
+        # objects
+        cls.mitre_attack_techniques = [
+            resolve_mitre_attack_technique_id(mitre_attack_technique_id=technique_id)
+            for technique_id in cls.mitre_attack_techniques
+        ]
 
         super().__init_subclass__(**kwargs)
 
@@ -225,9 +253,24 @@ class BaseAgentCapability:
                 await self.send_to_agent(task_message)
                 return await self.recv_from_agent()
 
+    def update_task_progress(
+        self,
+        message: str,
+        percent_complete: int | float = 0,
+        data: dict[str, Any] | None = None,
+        log_progress: bool = False,
+    ) -> None:
+        agent_task_progress = AgentTaskProgressModel(
+            message=message,
+            percent_complete=percent_complete,
+            data=data or {},
+        )
+        self._task.current_progress = agent_task_progress
+        if log_progress:
+            self._task.progress_log.append(agent_task_progress)
+
     async def execute(
         self,
-        agent: Agent,
         task_message: AgentTaskMessageModel,
     ) -> AgentResultMessageModel:
         return await self.send_and_recv_from_agent(
@@ -243,6 +286,10 @@ class BaseAgentCapability:
             "requires_admin": cls.requires_admin,
             "supported_oses": [str(os) for os in cls.supported_oses],
             "is_atomic": cls.is_atomic,
+            "mitre_attack_techniques": [
+                technique.model_dump(mode="json")
+                for technique in cls.mitre_attack_techniques
+            ],
             "options": {
                 option_name: option.to_json()
                 for option_name, option in cls.options.items()

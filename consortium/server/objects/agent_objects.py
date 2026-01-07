@@ -215,9 +215,7 @@ class Agent:
 
         # TODO: Move all the tasks and results to a database instead of storing them
         #  all in memory.
-        self._queued_tasks = {}
-        self._running_tasks = {}
-        self._completed_tasks = {}
+        self._tasks = {}
         self._results = {}
 
         self._task_messages_queue = asyncio.Queue()
@@ -348,7 +346,7 @@ class Agent:
         if agent_capability.validating_function:
             agent_capability.validating_function(task.arguments)
 
-        self._queued_tasks[str(task.task_id)] = task
+        self._tasks[str(task.task_id)] = task
 
         await self._start_agent_capability(
             agent_capability=agent_capability,
@@ -368,8 +366,15 @@ class Agent:
                     self._task_messages_queue.get(), timeout
                 )
 
-            if str(message.task_id) in self._queued_tasks:
-                self._move_queued_task_to_running(task_id=str(message.task_id))
+            # A task may emit one or more task messages. The first time a task message
+            # is fetched for a task we mark the task as running if it is not already
+            # running.
+            task = self.get_task_by_task_id(task_id=message.task_id)
+            if task.status != AgentTaskStatus.RUNNING:
+                self._update_task_status(
+                    task_id=message.task_id,
+                    status=AgentTaskStatus.RUNNING,
+                )
             return message
         except asyncio.QueueEmpty:
             return None
@@ -380,18 +385,9 @@ class Agent:
         self,
         status: AgentTaskStatus | None = None,
     ) -> list[AgentTaskModel]:
-        if status == AgentTaskStatus.QUEUED:
-            return list(self._queued_tasks.values())
-        elif status == AgentTaskStatus.RUNNING:
-            return list(self._running_tasks.values())
-        elif status == AgentTaskStatus.COMPLETED:
-            return list(self._completed_tasks.values())
-        else:
-            return [
-                *self._queued_tasks.values(),
-                *self._running_tasks.values(),
-                *self._completed_tasks.values(),
-            ]
+        if status is not None:
+            return [task for task in self._tasks.values() if task.status == status]
+        return list(self._tasks.values())
 
     def get_all_queued_tasks(self) -> list[AgentTaskModel]:
         return self.get_all_tasks(status=AgentTaskStatus.QUEUED)
@@ -426,10 +422,11 @@ class Agent:
         )
 
     def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
-        task_id = normalize_uuid(value=task_id)
-
         try:
-            self._queued_tasks.pop(task_id)
+            task = self.get_queued_task_by_task_id(task_id=task_id)
+            if task.status != AgentTaskStatus.QUEUED:
+                raise AgentTaskNotFoundError(task_id=task_id)
+            del self._tasks[str(task.task_id)]
         except KeyError:
             raise AgentTaskNotFoundError(task_id=task_id) from None
 
@@ -438,7 +435,15 @@ class Agent:
     async def submit_result_message(
         self, result_message: AgentResultMessageModel
     ) -> None:
-        if str(result_message.task_id) not in self._running_tasks:
+        try:
+            task = self.get_task_by_task_id(task_id=result_message.task_id)
+        except AgentTaskNotFoundError:
+            raise AgentResultHasNoCorrespondingTaskError(
+                corresponding_task_id=str(result_message.task_id),
+                agent_str=str(self),
+            ) from None
+
+        if task.status != AgentTaskStatus.RUNNING:
             raise AgentResultHasNoCorrespondingTaskError(
                 corresponding_task_id=str(result_message.task_id),
                 agent_str=str(self),
@@ -524,27 +529,15 @@ class Agent:
             "name": self.name,
         }
 
-    def _move_queued_task_to_running(self, task_id: str) -> None:
-        task = self._queued_tasks.pop(task_id)
-        task.status = AgentTaskStatus.RUNNING
-        self._running_tasks[str(task.task_id)] = task
-
-    def _move_task_to_completed(self, task_id: str) -> None:
-        # The task can still be queued if the agent didn't fetch the task message
-        # before the capability timed out (if it specified a finite timeout). In this
-        # case we move it from queued to completed.
-        if task_id in self._queued_tasks:
-            task = self._queued_tasks.pop(task_id)
-        # This is the normal case where the task is running and is now completed.
-        elif task_id in self._running_tasks:
-            task = self._running_tasks.pop(task_id)
-        else:
-            raise AssertionError(
-                f"Task with task ID '{task_id}' not found when moving from the queued "
-                f"or running dictionary to completed."
-            )
-        task.status = AgentTaskStatus.COMPLETED
-        self._completed_tasks[str(task.task_id)] = task
+    def _update_task_status(
+        self,
+        task_id: str | uuid.UUID,
+        status: AgentTaskStatus,
+    ) -> None:
+        task = self.get_task_by_task_id(task_id=task_id)
+        if task is None:
+            raise AgentTaskNotFoundError(task_id=task_id)
+        task.status = status
 
     async def _start_agent_capability(
         self,
@@ -559,7 +552,6 @@ class Agent:
                 if agent_capability.is_atomic:
                     async with self._task_messages_queue_lock:
                         result_message = await agent_capability.execute(
-                            agent=self,
                             task_message=task_message,
                         )
                 else:
@@ -570,7 +562,6 @@ class Agent:
                     async with self._task_messages_queue_lock:
                         pass
                     result_message = await agent_capability.execute(
-                        agent=self,
                         task_message=task_message,
                     )
 
@@ -633,10 +624,10 @@ class Agent:
 
             self._results[str(result.result_id)] = result
 
-            # Adding the result implies that the task is completed so we can now
-            # move the task from the running tasks to the completed tasks.
-            self._move_task_to_completed(
-                task_id=str(result.task_id),
+            # Adding the result implies that the task is completed
+            self._update_task_status(
+                task_id=result.task_id,
+                status=AgentTaskStatus.COMPLETED,
             )
 
             # Finally we fire the event to notify all event handlers that a result
@@ -650,10 +641,13 @@ class Agent:
                 data={
                     "agent_id": str(self.agent_id),
                     "result": result.model_dump(mode="json"),
+                    "task": task.model_dump(mode="json"),
                 },
             )
 
         running_agent_capability = agent_capability(
+            agent=self,
+            task=task,
             task_messages_queue=self._task_messages_queue,
         )
         self._running_agent_capabilities[str(task.task_id)] = running_agent_capability

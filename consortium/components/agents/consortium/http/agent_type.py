@@ -3,7 +3,6 @@ from datetime import datetime
 from consortium.framework.agent_message_models import AgentResultMessageModel
 from consortium.framework.agents import (
     BaseAgentType,
-    remove_task_message_arguments,
     request_response_capability,
 )
 from consortium.framework.options import SingleValueOption
@@ -96,7 +95,7 @@ sleep_capability = request_response_capability(
 def ping_task_handler(agent, task_message, context):
     context.task_id = task_message.task_id
     context.run = datetime.now()
-    task_message = remove_task_message_arguments(task_message, ["timeout"])
+    task_message.arguments.pop("timeout")
     return task_message
 
 
@@ -136,9 +135,7 @@ ping_capability = request_response_capability(
             greater_than=0,
         )
     },
-    resolve_timeout=lambda agent, task_message, context: task_message.arguments[
-        "timeout"
-    ],
+    resolve_timeout=lambda task_message, context: task_message.arguments["timeout"],
     task_handler=ping_task_handler,
     result_handler=ping_result_handler,
     timeout_handler=ping_timeout_handler,
@@ -195,6 +192,7 @@ shell_capability = request_response_capability(
         ),
     },
     authors=authors,
+    mitre_attack_techniques={"T1059.003", "T1059.004"},
 )
 
 

@@ -15,16 +15,17 @@ class AgentTaskStatus(StrEnum):
 
 class AgentTaskProgressModel(BaseModel):
     message: str | None = None
-    percent_complete: float = Field(ge=0.0, le=100.0)
-    datetime_reported: datetime = Field(default_factory=datetime.now)
+    percent_complete: int | float = Field(ge=0.0, le=100.0)
     data: dict[str, JsonValue] = {}
+    datetime_reported: datetime = Field(default_factory=datetime.now)
 
 
 class AgentTaskModel(BaseModel):
     task_id: uuid.UUID = Field(default_factory=uuid.uuid4)
     command: str
     arguments: dict[str, Any]
-    progress: list[AgentTaskProgressModel] = []
+    current_progress: AgentTaskProgressModel | None = None
+    progress_log: list[AgentTaskProgressModel] = []
     status: AgentTaskStatus = AgentTaskStatus.QUEUED
     datetime_started: datetime = Field(default_factory=datetime.now)
 

@@ -103,7 +103,7 @@ def main():
     )
     print("Next steps:")
     print(f"    cd {plugin_project_directory}")
-    print("    poetry install .  # (optional, for development)")
+    print("    uv install .  # (optional, for development)")
     print("    # Start your Consortium server, the plugin will be auto-discovered\n")
 
 

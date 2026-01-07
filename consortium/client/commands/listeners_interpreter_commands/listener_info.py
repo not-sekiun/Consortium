@@ -105,7 +105,7 @@ class ListenerInfoCommand(BaseCommand):
             )
             table.add_row(
                 "Creating Listener Template",
-                f"{listener['creating_listener_template']['name']} "
+                f"'{listener['creating_listener_template']['name']}' "
                 f"({listener['creating_listener_template']['listener_template_id']})",
             )
             console.print(table, "")

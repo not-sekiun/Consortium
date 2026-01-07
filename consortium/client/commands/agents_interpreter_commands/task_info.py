@@ -47,26 +47,55 @@ class TaskInfoCommand(BaseCommand):
             task_id=task_id,
         )
 
-        table = Table(title="Task Information", highlight=True)
-        table.add_column("Information")
-        table.add_column("Data")
-        table.add_row("Task ID", task["task_id"])
-        table.add_row("Command", task["command"])
-        table.add_row(
+        task_info_table = Table(title="Task Information", highlight=True)
+        task_info_table.add_column("Information")
+        task_info_table.add_column("Data")
+        task_info_table.add_row("Task ID", task["task_id"])
+        task_info_table.add_row("Command", task["command"])
+        task_info_table.add_row(
             "Arguments",
             format_dict_as_multi_line_key_value_string(input_dict=task["arguments"]),
         )
-        table.add_row(
+        task_info_table.add_row(
             "Status", format_agent_task_status_string_with_color(task["status"])
         )
-        table.add_row(
+        task_info_table.add_row(
+            "Current Progress",
+            f"{task['current_progress']['message']} "
+            f"({task['current_progress']['percent_complete']}% complete)"
+            if task["current_progress"]
+            else "N/A",
+        )
+        task_info_table.add_row(
             "Datetime Started",
             format_datetime_as_human_readable_str(
                 datetime_str=task["datetime_started"], include_elapsed_time=True
             ),
         )
 
-        console.print(table, "")
+        task_progress_log_table = Table(
+            title="Task Progress Log Information",
+            highlight=True,
+        )
+        task_progress_log_table.add_column("#")
+        task_progress_log_table.add_column("Message")
+        task_progress_log_table.add_column("% Complete")
+        task_progress_log_table.add_column("Datetime Reported")
+        task_progress_log_table.add_column("Data")
+        for index, progress in enumerate(task["progress_log"]):
+            task_progress_log_table.add_row(
+                str(index + 1),
+                progress["message"],
+                f"{progress['percent_complete']}%",
+                format_datetime_as_human_readable_str(
+                    datetime_str=progress["datetime_reported"],
+                    include_elapsed_time=True,
+                ),
+                format_dict_as_multi_line_key_value_string(input_dict=progress["data"]),
+            )
+
+        console.print(task_info_table, "")
+        console.print(task_progress_log_table, "")
 
     async def run(
         self,

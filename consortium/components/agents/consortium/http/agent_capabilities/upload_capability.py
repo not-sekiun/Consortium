@@ -13,7 +13,7 @@ from consortium.framework.agents.base_agent_capability import (
 from consortium.framework.options import SingleValueOption
 
 if TYPE_CHECKING:
-    from consortium.server.objects.agent_objects import Agent
+    pass
 
 
 class UploadCapability(BaseAgentCapability):
@@ -80,10 +80,10 @@ class UploadCapability(BaseAgentCapability):
             default_value=False,
         ),
     }
+    mitre_attack_techniques = {"T1105"}
 
     async def execute(
         self,
-        agent: Agent,
         task_message: AgentTaskMessageModel,
     ) -> AgentResultMessageModel:
         source = Path(task_message.arguments["source"])
