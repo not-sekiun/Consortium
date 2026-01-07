@@ -1,9 +1,7 @@
 import base64
-from collections.abc import AsyncGenerator
-from copy import deepcopy
-from enum import StrEnum
+import zlib
 from pathlib import Path
-from typing import BinaryIO
+from typing import TYPE_CHECKING
 
 from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
@@ -11,190 +9,165 @@ from consortium.framework.agent_message_models import (
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
-    SupportedOS,
-)
-from consortium.framework.exceptions.agent_capabilties_framework_exception import (
-    AgentCapabilityTaskingError,
 )
 from consortium.framework.options import SingleValueOption
 
-
-class _UploadAgentCapabilityMessageType(StrEnum):
-    HEADER = "HEADER"
-    FILE_CHUNK = "FILE_CHUNK"
-    END_OF_FILE = "END_OF_FILE"
-
-
-def _file_chunking_generator(file: BinaryIO, chunk_size: int):
-    while True:
-        chunk = file.read(chunk_size)
-        if not chunk:
-            break
-        yield chunk
-
-
-def _process_file(agent_message: AgentTaskMessageModel):
-    with open(file=str(agent_message.arguments["source"]), mode="rb") as file:
-        header_message = deepcopy(agent_message)
-        header_message.data["message_type"] = str(
-            _UploadAgentCapabilityMessageType.HEADER,
-        )
-        if agent_message.arguments["destination"]:
-            header_message.data["filepath"] = agent_message.arguments["destination"]
-        else:
-            header_message.data["filepath"] = str(
-                Path(agent_message.arguments["source"]).absolute().name,
-            )
-        yield header_message
-
-        for chunk in _file_chunking_generator(
-            file=file,
-            chunk_size=agent_message.arguments["chunk_size"],
-        ):
-            chunk_message = deepcopy(agent_message)
-            chunk_message.data["message_type"] = str(
-                _UploadAgentCapabilityMessageType.FILE_CHUNK,
-            )
-            chunk_message.data["file_chunk"] = base64.b64encode(chunk)
-            yield chunk_message
-
-        eof_message = deepcopy(agent_message)
-        eof_message.data["message_type"] = str(
-            _UploadAgentCapabilityMessageType.END_OF_FILE,
-        )
-        yield eof_message
-
-
-def _process_directory(
-    agent_message: AgentTaskMessageModel,
-):
-    if agent_message["data"]["recursive"]:
-        filepath_iterator = Path(agent_message["data"]["source"]).rglob("*")
-    else:
-        filepath_iterator = Path(agent_message["data"]["source"]).iterdir()
-
-    for filepath in filepath_iterator:
-        with open(file=str(filepath), mode="rb") as file:
-            header_message = deepcopy(agent_message)
-            header_message.data["message_type"] = str(
-                _UploadAgentCapabilityMessageType.HEADER,
-            )
-            relative_filepath = filepath.absolute().relative_to(
-                Path(agent_message.data["source"]),
-            )
-            if agent_message.data["destination"]:
-                header_message.data["filepath"] = str(
-                    Path(agent_message["data"]["destination"]) / relative_filepath,
-                )
-            else:
-                header_message.data["filepath"] = str(
-                    relative_filepath.parents[0].relative_to(filepath),
-                )
-            yield header_message
-
-            for chunk in _file_chunking_generator(
-                file=file,
-                chunk_size=agent_message.data["chunk_size"],
-            ):
-                chunk_message = deepcopy(agent_message)
-                chunk_message.data["message_type"] = str(
-                    _UploadAgentCapabilityMessageType.FILE_CHUNK,
-                )
-                chunk_message.data["file_chunk"] = base64.b64encode(chunk)
-                yield chunk_message
-
-            eof_message = deepcopy(agent_message)
-            eof_message.data["message_type"] = str(
-                _UploadAgentCapabilityMessageType.END_OF_FILE,
-            )
-            yield eof_message
+if TYPE_CHECKING:
+    from consortium.server.objects.agent_objects import Agent
 
 
 class UploadCapability(BaseAgentCapability):
     name = "upload"
-    description = (
-        "Upload a file or directory, either recursively or non-recursively, to the "
-        "agent."
-    )
-    requires_admin = False
-    supported_oses = {SupportedOS.ANY}
+    description = "Upload a file or directory to the agent."
+    authors = {"Sekiun (github.com/not-sekiun)"}
+    is_atomic = True
     options = {
         SingleValueOption(
             name="source",
-            description=(
-                "The filepath of the file or directory to upload to the agent."
-            ),
+            description="Path to the file or directory to upload.",
             required=True,
             value_type=str,
         ),
         SingleValueOption(
             name="destination",
-            description=(
-                "The full filepath to write the uploaded file or directory to on the "
-                "agent. If not provided, the file or directory will be saved in the "
-                "current working directory."
-            ),
+            description="Remote path to save the upload. Defaults to current directory.",
             required=False,
             value_type=str,
         ),
         SingleValueOption(
             name="recursive",
-            description=(
-                "Whether to upload the source directory and its contents recursively. "
-                "If uploading is not recursive, only the files within the directory "
-                "will be uploaded. This option cannot be set to true if the source is "
-                "a file."
-            ),
+            description="Upload directory contents recursively. Ignored for files.",
             required=False,
             value_type=bool,
             default_value=False,
         ),
         SingleValueOption(
             name="chunk_size",
-            description=(
-                "Size of the chunks to use in bytes when uploading files to the agent."
-            ),
+            description="Chunk size in bytes. Larger values improve speed but use more memory.",
             required=False,
             value_type=int,
-            default_value=1024,
+            default_value=1000000,
+            greater_than_or_equal_to=1,
+        ),
+        SingleValueOption(
+            name="ignore_empty_dirs",
+            description="Skip empty directories during upload.",
+            required=False,
+            value_type=bool,
+            default_value=False,
+        ),
+        SingleValueOption(
+            name="compression_level",
+            description="Zlib compression level (0-9). Higher values compress more.",
+            required=False,
+            value_type=int,
+            default_value=5,
+            greater_than_or_equal_to=0,
+            less_than_or_equal_to=9,
+        ),
+        SingleValueOption(
+            name="expand",
+            description="Expand environment variables in destination path.",
+            required=False,
+            value_type=bool,
+            default_value=False,
+        ),
+        SingleValueOption(
+            name="overwrite",
+            description="Overwrite existing files at destination.",
+            required=False,
+            value_type=bool,
+            default_value=False,
         ),
     }
-    authors = {"Sekiun (github.com/not-sekiun)"}
 
-    async def handle_sending_agent_task_messages(
+    async def execute(
         self,
-        agent_message: AgentTaskMessageModel,
-    ) -> AsyncGenerator[AgentTaskMessageModel]:
-        path = Path(agent_message.arguments["source"])
+        agent: Agent,
+        task_message: AgentTaskMessageModel,
+    ) -> AgentResultMessageModel:
+        source = Path(task_message.arguments["source"])
+        chunk_size = task_message.arguments["chunk_size"]
+        recursive = task_message.arguments["recursive"]
+        ignore_empty_dirs = task_message.arguments["ignore_empty_dirs"]
+        compression_level = task_message.arguments["compression_level"]
 
-        if not path.exists():
-            raise AgentCapabilityTaskingError(
-                message=(
-                    f"Failed to upload file or directory {agent_message.arguments['source']}. "
-                    "The source file or directory does not exist."
-                ),
-            )
-        if not path.is_file() and agent_message.arguments["recursive"]:
-            raise AgentCapabilityTaskingError(
-                message=(
-                    f"Failed to upload file or directory {agent_message.arguments['source']}. "
-                    "Recursive uploading is only supported for files."
-                ),
+        if not source.exists():
+            return AgentResultMessageModel(
+                task_id=task_message.task_id,
+                success=False,
+                message=f"Failed to start upload. Path '{source}' does not exist.",
             )
 
-        if path.is_file():
-            for message in _process_file(
-                agent_message=agent_message,
-            ):
-                yield message
+        # Remove source from arguments before sending, agent doesn't need it
+        task_args = {
+            "destination": task_message.arguments["destination"],
+            "expand": task_message.arguments["expand"],
+            "overwrite": task_message.arguments["overwrite"],
+        }
+        task_message.arguments = task_args
+
+        # Wait for agent to signal ready
+        ready_response = await self.send_and_recv_from_agent(task_message=task_message)
+        if not ready_response.success:
+            return ready_response
+
+        if ready_response.data.get("type") != "ready":
+            return AgentResultMessageModel(
+                task_id=task_message.task_id,
+                success=False,
+                message="Agent did not signal ready for upload.",
+            )
+
+        def send_chunk(chunk_type, **kwargs):
+            return self.send_upload_chunk_to_agent(
+                task_id=task_message.task_id,
+                chunk_data={"type": chunk_type, **kwargs},
+            )
+
+        def stream_file_chunks(file_path):
+            with open(file_path, mode="rb") as file:
+                while chunk := file.read(chunk_size):
+                    if compression_level:
+                        chunk = zlib.compress(chunk, level=compression_level)
+                        send_chunk(
+                            "chunk",
+                            chunk=base64.b64encode(chunk).decode(),
+                            compressed=True,
+                        )
+                    else:
+                        send_chunk("chunk", chunk=base64.b64encode(chunk).decode())
+
+        if source.is_file():
+            # Single file upload
+            await send_chunk("file", path=source.name, size=source.stat().st_size)
+            stream_file_chunks(source)
+            await send_chunk("end_of_file")
+            await send_chunk("end_of_upload")
         else:
-            for message in _process_directory(
-                agent_message=agent_message,
-            ):
-                yield message
+            # Directory upload
+            await send_chunk("directory", path=source.name)
 
-    async def handle_receiving_agent_response_messages(
-        self,
-        agent_response: AgentResultMessageModel,
-    ) -> AsyncGenerator[AgentResultMessageModel]:
-        yield agent_response
+            for item in source.rglob("*") if recursive else source.iterdir():
+                relative_path = str(item.relative_to(source))
+
+                if item.is_dir():
+                    if ignore_empty_dirs and not any(item.iterdir()):
+                        continue
+                    await send_chunk("directory_entry", path=relative_path)
+                elif item.is_file():
+                    await send_chunk(
+                        "file_in_directory",
+                        path=relative_path,
+                        size=item.stat().st_size,
+                    )
+                    stream_file_chunks(item)
+                    await send_chunk("end_of_file")
+
+                if not recursive and item.is_dir():
+                    continue
+
+            await send_chunk("end_of_directory")
+
+        # Wait for final confirmation from agent
+        return await self.recv_from_agent()

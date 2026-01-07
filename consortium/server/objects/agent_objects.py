@@ -636,7 +636,7 @@ class Agent:
             # Adding the result implies that the task is completed so we can now
             # move the task from the running tasks to the completed tasks.
             self._move_task_to_completed(
-                task_id=str(result_message.task_id),
+                task_id=str(result.task_id),
             )
 
             # Finally we fire the event to notify all event handlers that a result

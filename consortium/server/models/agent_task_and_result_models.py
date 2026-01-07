@@ -4,7 +4,7 @@ from enum import StrEnum
 from functools import cached_property
 from typing import Any
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, JsonValue, computed_field
 
 
 class AgentTaskStatus(StrEnum):
@@ -13,10 +13,18 @@ class AgentTaskStatus(StrEnum):
     COMPLETED = "COMPLETED"
 
 
+class AgentTaskProgressModel(BaseModel):
+    message: str | None = None
+    percent_complete: float = Field(ge=0.0, le=100.0)
+    datetime_reported: datetime = Field(default_factory=datetime.now)
+    data: dict[str, JsonValue] = {}
+
+
 class AgentTaskModel(BaseModel):
     task_id: uuid.UUID = Field(default_factory=uuid.uuid4)
     command: str
     arguments: dict[str, Any]
+    progress: list[AgentTaskProgressModel] = []
     status: AgentTaskStatus = AgentTaskStatus.QUEUED
     datetime_started: datetime = Field(default_factory=datetime.now)
 

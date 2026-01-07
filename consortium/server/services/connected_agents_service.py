@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import AsyncIterable
 from typing import TYPE_CHECKING, Any
 
 from loguru import logger
@@ -182,7 +183,7 @@ class ConnectedAgentsService:
         self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
 
     @log_and_propagate_error_on_service_method
-    async def get_pending_tasks_for_agent(
+    async def get_next_agent_task_messages_by_agent_id(
         self,
         agent_id: str | uuid.UUID,
         count: int | None = None,
@@ -215,7 +216,7 @@ class ConnectedAgentsService:
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
         self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
-        return await self._agents_service.get_pending_tasks_for_agent(
+        return await self._agents_service.get_next_agent_task_messages_by_agent_id(
             agent_id=agent_id,
             count=count,
             block=block,
@@ -228,8 +229,9 @@ class ConnectedAgentsService:
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
         success: bool,
-        message: str,
-        data: dict[str, Any],
+        message: str = "",
+        data: dict[str, Any] | None = None,
+        payload: AsyncIterable[bytes] | bytes | None = None,
     ) -> None:
         """
         Submit a result from an agent connected to this listener. This method validates
@@ -242,6 +244,8 @@ class ConnectedAgentsService:
             success (bool): Whether the task was successful.
             message (str): A message describing the result.
             data (dict[str, Any]): The result data.
+            payload (AsyncIterable[bytes] | bytes | None): An optional binary payload
+                associated with the result.
 
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
@@ -264,6 +268,7 @@ class ConnectedAgentsService:
             success=success,
             message=message,
             data=data,
+            payload=payload,
         )
 
     @log_and_propagate_error_on_service_method

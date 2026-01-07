@@ -8,6 +8,9 @@ from consortium.framework.agents import (
 )
 from consortium.framework.options import SingleValueOption
 
+from .agent_capabilities.download_capability import DownloadCapability
+from .agent_capabilities.upload_capability import UploadCapability
+
 authors = {"Sekiun (github.com/not-sekiun)"}
 
 disconnect_capability = request_response_capability(
@@ -204,4 +207,6 @@ class AgentType(BaseAgentType):
         sleep_capability,
         ping_capability,
         shell_capability,
+        DownloadCapability,
+        UploadCapability,
     }

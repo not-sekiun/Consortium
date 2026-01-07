@@ -22,11 +22,10 @@ class Listener(BaseListener):
             test_socket = socket.socket()
             test_socket.bind((local_host, local_port))
             test_socket.close()
-        except OSError as exc:
+        except Exception as exc:
             raise ListenerStartError(
-                f"An error occurred while attempting to start the listener. Listener "
-                f"was unable to bind to the provided host and port due to the "
-                f"following socket error: {exc}",
+                f"Listener was unable to bind to {local_host}:{local_port} due to the "
+                f"following error: {exc}",
             ) from None
 
     async def on_running(self) -> None:
@@ -36,13 +35,7 @@ class Listener(BaseListener):
         results_url_paths = self.parameters["results_url_paths"]
         registration_url_paths = self.parameters["registration_url_paths"]
 
-        app = web.Application(
-            # Max size of 50MB for the request body. File chunks when running
-            # download/upload tasking are limited to 25MB unencoded. Base64 encoding
-            # adds roughly 33% overhead. When we additionally account for the headers,
-            # we can expect the total size of the request to be less than 50MB.
-            client_max_size=52428800,
-        )
+        app = web.Application()
 
         async def handle_agent_registration(request):
             # Validate the agent registration message schema
@@ -118,14 +111,12 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
-            # Retrieve all pending tasks for the agent (non-blocking)
+            # Retrieve all pending task messages for the agent (non-blocking)
             try:
-                task_messages = (
-                    await self.connected_agents_service.get_pending_tasks_for_agent(
-                        agent_id=agent_id,
-                        count=None,  # Get all available tasks
-                        block=False,  # Don't block, return immediately
-                    )
+                task_messages = await self.connected_agents_service.get_next_agent_task_messages_by_agent_id(
+                    agent_id=agent_id,
+                    count=None,  # Get all available task messages
+                    block=False,  # Don't block, return immediately
                 )
             except AgentNotFoundError:
                 self.logger.warning(
@@ -136,7 +127,8 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
-            # Serialize task messages to JSON for the wire protocol
+            # Serialize task messages to JSON for the wire protocol, if binary payloads
+            # were provided attach them as multipart data
             task_messages_json = [msg.to_json() for msg in task_messages]
             return web.json_response(task_messages_json, status=200)
 
@@ -172,18 +164,63 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
-            try:
-                json_request_body = await request.json()
-                jsonschema.validate(json_request_body, agent_result_json_schema)
-                task_id = json_request_body["task_id"]
-                success = json_request_body["result"]["success"]
-                message = json_request_body["result"]["message"]
-                data = json_request_body["result"]["data"]
-            except (json.JSONDecodeError, jsonschema.ValidationError, KeyError):
+            # Handle results that do not include multipart payloads and only have JSON
+            if request.content_type == "application/json":
+                try:
+                    json_request_body = await request.json()
+                    jsonschema.validate(json_request_body, agent_result_json_schema)
+                    task_id = json_request_body["task_id"]
+                    success = json_request_body["result"]["success"]
+                    message = json_request_body["result"]["message"]
+                    data = json_request_body["result"]["data"]
+                    payload = None
+                except (json.JSONDecodeError, jsonschema.ValidationError, KeyError):
+                    self.logger.warning(
+                        "Unidentified client {} sent malformed agent result data. "
+                        "Responded with 401 Unauthorized.",
+                        request.remote,
+                    )
+                    return web.Response(status=401)
+            # Handle results that include multipart payloads
+            elif request.content_type == "multipart/form-data":
+                reader = await request.multipart()
+                try:
+                    # Extract and validate the JSON part
+                    json_part = await reader.next()
+                    if json_part.name != "json":
+                        raise ValueError
+                    json_bytes = await json_part.read()
+                    json_request_body = json.loads(json_bytes.decode("utf-8"))
+                    jsonschema.validate(json_request_body, agent_result_json_schema)
+                    task_id = json_request_body["task_id"]
+                    success = json_request_body["result"]["success"]
+                    message = json_request_body["result"]["message"]
+                    data = json_request_body["result"]["data"]
+
+                    # Extract the payload part
+                    payload_part = await reader.next()
+                    if payload_part and payload_part.name == "payload":
+                        payload = await payload_part.read()
+                    else:
+                        payload = None
+                except (
+                    json.JSONDecodeError,
+                    jsonschema.ValidationError,
+                    KeyError,
+                    ValueError,
+                ):
+                    self.logger.warning(
+                        "Unidentified client {} sent malformed agent result data. "
+                        "Responded with 401 Unauthorized.",
+                        request.remote,
+                    )
+                    return web.Response(status=401)
+            else:
                 self.logger.warning(
-                    "Unidentified client {} sent malformed agent result data. "
-                    "Responded with 401 Unauthorized.",
+                    "Unidentified client {} sent agent result data with unsupported "
+                    "Content-Type: {}. Responded with 401 Unauthorized.",
                     request.remote,
+                    request.content_type,
                 )
                 return web.Response(status=401)
 
@@ -195,6 +232,7 @@ class Listener(BaseListener):
                     success=success,
                     message=message,
                     data=data,
+                    payload=payload,
                 )
             except AgentNotFoundError:
                 self.logger.warning(

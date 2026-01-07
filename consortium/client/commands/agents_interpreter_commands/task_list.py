@@ -66,6 +66,19 @@ class TaskListCommand(BaseCommand):
         )
 
     @staticmethod
+    async def _compute_agent_commands_to_required_arguments_map(
+        agent: dict[str, Any],
+    ) -> dict[str, list[str]]:
+        return {
+            agent_capability["name"]: [
+                option_name
+                for option_name, option in agent_capability["options"].items()
+                if option.get("required", False)
+            ]
+            for agent_capability in agent["agent_type"]["agent_capabilities"].values()
+        }
+
+    @staticmethod
     async def _get_tasks_to_list(
         rest_api: RestAPI,
         agent_id: str,
@@ -104,11 +117,12 @@ class TaskListCommand(BaseCommand):
         agent_id: str,
         agent_name: str,
         agent_tasks: list[dict[str, Any]],
+        commands_to_required_arguments_map: dict[str, list[str]],
     ) -> None:
         table = Table(title=f"Tasks For '{agent_name}' ({agent_id})", highlight=True)
         table.add_column("Task ID")
         table.add_column("Command")
-        table.add_column("Arguments")
+        table.add_column("Required Arguments")
         table.add_column("Status")
         table.add_column("Datetime Started")
         for agent_task in agent_tasks:
@@ -116,7 +130,14 @@ class TaskListCommand(BaseCommand):
                 agent_task["task_id"],
                 str(agent_task["command"]),
                 format_dict_as_single_line_key_value_string(
-                    input_dict=agent_task["arguments"],
+                    input_dict={
+                        name: value
+                        for name, value in agent_task["arguments"].items()
+                        if name
+                        in commands_to_required_arguments_map.get(
+                            agent_task["command"], []
+                        )
+                    }
                 ),
                 format_agent_task_status_string_with_color(
                     status_str=agent_task["status"],
@@ -146,6 +167,11 @@ class TaskListCommand(BaseCommand):
                         display_running=parsed_args.running,
                         display_completed=parsed_args.completed,
                     )
+                    commands_to_required_arguments_map = (
+                        await self._compute_agent_commands_to_required_arguments_map(
+                            agent=agent,
+                        )
+                    )
                     if not agent_tasks:
                         agents_with_no_tasks.append(
                             f"'{agent['name']}' ({agent['agent_id']})"
@@ -155,6 +181,7 @@ class TaskListCommand(BaseCommand):
                             agent_id=agent["agent_id"],
                             agent_name=agent["name"],
                             agent_tasks=agent_tasks,
+                            commands_to_required_arguments_map=commands_to_required_arguments_map,
                         )
                 if agents_with_no_tasks:
                     print_info(
@@ -173,6 +200,11 @@ class TaskListCommand(BaseCommand):
                 agent = await rest_api.get_agent_by_agent_id(
                     agent_id=parsed_args.agent_id
                 )
+                commands_to_required_arguments_map = (
+                    await self._compute_agent_commands_to_required_arguments_map(
+                        agent=agent,
+                    )
+                )
                 agent_tasks = await self._get_tasks_to_list(
                     rest_api=rest_api,
                     agent_id=agent["agent_id"],
@@ -184,6 +216,7 @@ class TaskListCommand(BaseCommand):
                     agent_id=agent["agent_id"],
                     agent_name=agent["name"],
                     agent_tasks=agent_tasks,
+                    commands_to_required_arguments_map=commands_to_required_arguments_map,
                 )
         except SystemExit:
             pass

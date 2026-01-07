@@ -77,10 +77,16 @@ class TaskListCommand(TaskListAgentsInterpreterCommand):
                 display_running=parsed_args.running,
                 display_completed=parsed_args.completed,
             )
+            commands_to_required_arguments_map = (
+                await self._compute_agent_commands_to_required_arguments_map(
+                    agent=agent,
+                )
+            )
             self._list_tasks(
                 agent_id=agent["agent_id"],
                 agent_name=agent["name"],
                 agent_tasks=agent_tasks,
+                commands_to_required_arguments_map=commands_to_required_arguments_map,
             )
         except SystemExit:
             pass

@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from collections.abc import AsyncIterable
 from datetime import datetime
 from typing import Any
 
@@ -129,7 +130,7 @@ class AgentsService:
         self._logger.debug("Checked in agent {!r}", agent)
 
     @log_and_propagate_error_on_service_method
-    async def get_pending_tasks_for_agent(
+    async def get_next_agent_task_messages_by_agent_id(
         self,
         agent_id: str | uuid.UUID,
         count: int | None = None,
@@ -137,9 +138,9 @@ class AgentsService:
         timeout: float | None = None,
     ) -> list[AgentTaskMessageModel]:
         """
-        Get pending tasks for an agent. This method retrieves task messages that are
-        queued for the agent and returns them as a list of AgentTaskMessageModel
-        objects.
+        Get pending task messages for an agent. This method retrieves task messages
+        that are queued for the agent and returns them as a list of
+        `AgentTaskMessageModel` objects.
 
         Args:
             agent_id (str | uuid.UUID): The agent ID of the agent to get tasks for.
@@ -199,8 +200,9 @@ class AgentsService:
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
         success: bool,
-        message: str,
-        data: dict[str, Any],
+        message: str = "",
+        data: dict[str, Any] | None = None,
+        payload: AsyncIterable[bytes] | bytes | None = None,
     ) -> None:
         """
         Submit a result for a running task on an agent.
@@ -212,6 +214,8 @@ class AgentsService:
             success (bool): Whether the task was successful.
             message (str): A message describing the result.
             data (dict[str, Any]): The result data.
+            payload (AsyncIterable[bytes] | bytes | None): Optional binary payload
+                associated with the result.
 
         Raises:
             AgentNotFoundError: Raised if the agent with the specified agent ID is not
@@ -222,12 +226,16 @@ class AgentsService:
         Returns:
             None
         """
+        if data is None:
+            data = {}
+
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         result_message = AgentResultMessageModel(
             task_id=task_id,
             success=success,
             message=message,
             data=data,
+            payload=payload,
         )
         await agent.submit_result_message(result_message=result_message)
         self._logger.debug(

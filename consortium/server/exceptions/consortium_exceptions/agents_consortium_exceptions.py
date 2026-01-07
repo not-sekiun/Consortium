@@ -124,7 +124,7 @@ class AgentCapabilityOptionValueValidationError(AgentTaskingError):
     ):
         super().__init__(
             message=(
-                f"Failed to task the agent '{agent_str}'. The provided value "
+                f"Failed to task the agent {agent_str}. The provided value "
                 f"'{option_value}' for the option '{option_name}' is invalid. "
                 f"{error_message}"
             ),

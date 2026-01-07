@@ -15,6 +15,7 @@ dependencies = [
     "rich>=14.2.0",
     "watchdog>=6.0.0",
     "websockets>=15.0.1",
+    "pydantic>=2.0",
 ]
 
 [dependency-groups]
