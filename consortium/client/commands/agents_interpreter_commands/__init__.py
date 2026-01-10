@@ -37,6 +37,9 @@ from consortium.client.commands.agents_interpreter_commands.task_info import (
 from consortium.client.commands.agents_interpreter_commands.task_list import (
     TaskListCommand,
 )
+from consortium.client.commands.agents_interpreter_commands.watch import (
+    WatchCommand,
+)
 
 AGENTS_INTERPRETER_COMMANDS = [
     AssetDownloadCommand(),
@@ -52,4 +55,5 @@ AGENTS_INTERPRETER_COMMANDS = [
     AgentDescribeCommand(),
     AgentRenameCommand(),
     AssetUploadCommand(),
+    WatchCommand(),
 ]

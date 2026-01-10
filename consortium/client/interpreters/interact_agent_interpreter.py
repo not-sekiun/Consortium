@@ -129,7 +129,10 @@ class InteractAgentInterpreter(Interpreter):
 
         # Register commands that take the task or result ID as a positional argument
         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
-        nested_completer_dict["t-info"] = {task["task_id"]: None for task in all_tasks}
+        for command in ["t-info", "watch"]:
+            nested_completer_dict[command] = {
+                task["task_id"]: None for task in all_tasks
+            }
 
         all_results = await self.client_session.rest_api.get_all_agent_results()
         nested_completer_dict["r-info"] = {
@@ -167,6 +170,7 @@ class InteractAgentInterpreter(Interpreter):
             self.prompt_session.completer,
         )
         nested_completer_dict["t-info"][task["task_id"]] = None
+        nested_completer_dict["watch"][task["task_id"]] = None
         self.prompt_session.completer = NestedCompleter.from_nested_dict(
             nested_completer_dict,
         )

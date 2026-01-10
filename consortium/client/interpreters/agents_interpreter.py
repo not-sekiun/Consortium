@@ -59,9 +59,13 @@ class AgentsInterpreter(Interpreter):
         ]:
             nested_completer_dict[command] = agent_ids_completion
 
-        # Register commands that take the task or result ID as a positional argument
+        # Register commands that take the task or result ID as the first positional
+        # argument to autocomplete with.
         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
-        nested_completer_dict["t-info"] = {task["task_id"]: None for task in all_tasks}
+        for command in ["t-info", "watch"]:
+            nested_completer_dict[command] = {
+                task["task_id"]: None for task in all_tasks
+            }
         all_results = await self.client_session.rest_api.get_all_agent_results()
         nested_completer_dict["r-info"] = {
             result["result_id"]: None for result in all_results

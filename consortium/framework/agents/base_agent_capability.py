@@ -28,8 +28,10 @@ from consortium.server.exceptions.consortium_exceptions.agent_capabilities_conso
     MissingAgentCapabilityConfigurationParameterError,
 )
 from consortium.server.models.agent_task_and_result_models import (
+    AgentTaskCurrentProgressModel,
     AgentTaskModel,
-    AgentTaskProgressModel,
+    AgentTaskProgressLogModel,
+    AgentTaskProgressStatus,
 )
 from consortium.server.objects.mitre_attack_objects import (
     MitreAttackTechniqueID,
@@ -109,6 +111,8 @@ class BaseAgentCapability:
         # The agent task associated with this capability execution. Used for partial
         # task updates
         self._task = task
+        # Sequence number to keep track of task progress updates
+        self._task_progress_sequence_number = 1
         # The task messages queue is the overall agent task messages aggregating queue
         # that comes from the framework to be pulled by listeners and sent out to the
         # wire. All agent capabilities share this queue.
@@ -190,8 +194,8 @@ class BaseAgentCapability:
             options[option.name] = option
         cls.options = options
 
-        # Convert Mitre attack techniques to a list of resolved MitreAttackTechnique
-        # objects
+        # Convert mitre attack technique IDs to a list of resolved
+        # `MitreAttackTechnique` objects
         cls.mitre_attack_techniques = [
             resolve_mitre_attack_technique_id(mitre_attack_technique_id=technique_id)
             for technique_id in cls.mitre_attack_techniques
@@ -200,7 +204,7 @@ class BaseAgentCapability:
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f"{self.name}"
+        return self.name
 
     def __repr__(self) -> str:
         return (
@@ -210,6 +214,7 @@ class BaseAgentCapability:
             f"authors={self.authors!r}, "
             f"requires_admin={self.requires_admin!r}, "
             f"supported_oses={self.supported_oses!r}, "
+            f"mitre_attack_techniques={self.mitre_attack_techniques!r}, "
             f"is_atomic={self.is_atomic!r}, "
             f"options={self.options!r}, "
             f"validating_function={self.validating_function!r}"
@@ -255,19 +260,38 @@ class BaseAgentCapability:
 
     def update_task_progress(
         self,
-        message: str,
-        percent_complete: int | float = 0,
+        success: bool = True,
+        message: str = "",
         data: dict[str, Any] | None = None,
+        percent_complete: int | float = 0,
         log_progress: bool = False,
     ) -> None:
-        agent_task_progress = AgentTaskProgressModel(
+        agent_task_progress = AgentTaskCurrentProgressModel(
             message=message,
-            percent_complete=percent_complete,
             data=data or {},
+            status=(
+                AgentTaskProgressStatus.SUCCESS
+                if success
+                else AgentTaskProgressStatus.FAILURE
+            ),
+            percent_complete=percent_complete,
         )
         self._task.current_progress = agent_task_progress
+
         if log_progress:
-            self._task.progress_log.append(agent_task_progress)
+            agent_task_progress_log = AgentTaskProgressLogModel(
+                sequence=self._task_progress_sequence_number,
+                message=message,
+                data=data or {},
+                status=(
+                    AgentTaskProgressStatus.SUCCESS
+                    if success
+                    else AgentTaskProgressStatus.FAILURE
+                ),
+                percent_complete=percent_complete,
+            )
+            self._task.progress_log.append(agent_task_progress_log)
+            self._task_progress_sequence_number += 1
 
     async def execute(
         self,

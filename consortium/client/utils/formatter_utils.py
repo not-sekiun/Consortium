@@ -86,6 +86,19 @@ def format_agent_result_status_string_with_color(
     return status_str
 
 
+def format_agent_task_progress_status_string_with_color(
+    status_str: str,
+) -> str:
+    state_string_to_colored_state_string_map = {
+        "SUCCESS": "[bold green]SUCCESS[/]",
+        "FAILURE": "[bold red]FAILURE[/]",
+    }
+
+    if status_str in state_string_to_colored_state_string_map:
+        return state_string_to_colored_state_string_map[status_str]
+    return status_str
+
+
 def format_agent_task_status_string_with_color(
     status_str: str,
 ) -> str:

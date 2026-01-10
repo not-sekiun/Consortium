@@ -178,7 +178,7 @@ def construct_agent_capability_command(
         _positional_option_names: set[str] = set()
 
         def configure_parser(self, parser: ArgumentParser) -> None:
-            options = agent_capability["options"]
+            options = dict(sorted(agent_capability["options"].items()))
 
             # Build the normalized name mapping and handle potential collisions
             normalized_names: dict[str, str] = {}  # normalized -> original
@@ -406,16 +406,15 @@ def construct_agent_capability_command(
                         print_error(str(exc))
                         return ReturnStatus(type=ReturnStatusType.CONTINUE)
 
-                _success_response = (
-                    await client_rest_api_connection.task_agent_by_agent_id(
-                        agent_id=context.interpreter_context["agent"]["agent_id"],
-                        command=self.name,
-                        arguments=arguments,
-                    )
+                task = await client_rest_api_connection.task_agent_by_agent_id(
+                    agent_id=context.interpreter_context["agent"]["agent_id"],
+                    command=self.name,
+                    arguments=arguments,
                 )
                 print_info(
                     f"Tasked agent '{context.interpreter_context['agent']['name']}' "
-                    f"({context.interpreter_context['agent']['agent_id']})",
+                    f"({context.interpreter_context['agent']['agent_id']}) with task "
+                    f"with task ID {task['task_id']}.",
                 )
             except SystemExit:
                 pass

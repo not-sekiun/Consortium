@@ -94,26 +94,30 @@ class GeneratorInfoCommand(BaseCommand):
                     else "",
                 )
 
-            table = Table(title="Agent Generator Information", highlight=True)
-            table.add_column("Information")
-            table.add_column("Data")
-            table.add_row(
+            agent_generator_info_table = Table(
+                title="Agent Generator Information", highlight=True
+            )
+            agent_generator_info_table.add_column("Information")
+            agent_generator_info_table.add_column("Data")
+            agent_generator_info_table.add_row(
                 "Agent Generator ID",
                 agent_generator["agent_generator_id"],
             )
-            table.add_row("Name", agent_generator["name"])
-            table.add_row("Description", agent_generator["description"])
-            table.add_row(
+            agent_generator_info_table.add_row("Name", agent_generator["name"])
+            agent_generator_info_table.add_row(
+                "Description", agent_generator["description"]
+            )
+            agent_generator_info_table.add_row(
                 "Agent Type",
                 agent_generator["agent_type"]["name"],
             )
-            table.add_row(
+            agent_generator_info_table.add_row(
                 "Compatible Listener Types",
                 format_list_as_multi_line_bulleted_string(
                     input_list=list(agent_generator["compatible_listener_types"]),
                 ),
             )
-            table.add_row(
+            agent_generator_info_table.add_row(
                 "Status",
                 format_agent_generator_state_string_with_color(
                     state_str=agent_generator["status"]["state"],
@@ -124,14 +128,14 @@ class GeneratorInfoCommand(BaseCommand):
                     else ""
                 ),
             )
-            table.add_row(
+            agent_generator_info_table.add_row(
                 "Datetime Created",
                 format_datetime_as_human_readable_str(
                     datetime_str=agent_generator["datetime_created"],
                     include_elapsed_time=True,
                 ),
             )
-            table.add_row(
+            agent_generator_info_table.add_row(
                 "Datetime Started",
                 format_datetime_as_human_readable_str(
                     datetime_str=agent_generator["agent_generator_build_steps"][0][
@@ -142,25 +146,25 @@ class GeneratorInfoCommand(BaseCommand):
                 if agent_generator["agent_generator_build_steps"][0]["datetime_started"]
                 else "",
             )
-            table.add_row(
+            agent_generator_info_table.add_row(
                 "Total Build Time Elapsed",
                 format_seconds_as_human_readable_str(
                     seconds=total_time_elapsed,
                 ),
             )
-            table.add_row(
+            agent_generator_info_table.add_row(
                 "Parameters",
                 format_dict_as_multi_line_key_value_string(
                     input_dict=agent_generator["parameters"]
                 ),
             )
-            table.add_row(
+            agent_generator_info_table.add_row(
                 "Creating Agent Template",
                 f"'{agent_generator['creating_agent_template']['name']}' "
                 f"{agent_generator['creating_agent_template']['agent_template_id']}",
             )
 
-            console.print(table, "")
+            console.print(agent_generator_info_table, "")
             console.print(build_steps_table, "")
         except SystemExit:
             pass

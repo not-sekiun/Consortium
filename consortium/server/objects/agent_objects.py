@@ -371,10 +371,8 @@ class Agent:
             # running.
             task = self.get_task_by_task_id(task_id=message.task_id)
             if task.status != AgentTaskStatus.RUNNING:
-                self._update_task_status(
-                    task_id=message.task_id,
-                    status=AgentTaskStatus.RUNNING,
-                )
+                task.status = AgentTaskStatus.RUNNING
+                task.datetime_started = datetime.now()
             return message
         except asyncio.QueueEmpty:
             return None
@@ -529,16 +527,6 @@ class Agent:
             "name": self.name,
         }
 
-    def _update_task_status(
-        self,
-        task_id: str | uuid.UUID,
-        status: AgentTaskStatus,
-    ) -> None:
-        task = self.get_task_by_task_id(task_id=task_id)
-        if task is None:
-            raise AgentTaskNotFoundError(task_id=task_id)
-        task.status = status
-
     async def _start_agent_capability(
         self,
         agent_capability: type[BaseAgentCapability],
@@ -546,8 +534,15 @@ class Agent:
     ) -> None:
         async def _agent_capability_task_handler(
             agent_capability: BaseAgentCapability,
-            task_message: AgentTaskMessageModel,
+            task: AgentTaskModel,
         ):
+            # Strip redundant information from the task to create the initial task
+            # message
+            task_message = AgentTaskMessageModel(
+                task_id=task.task_id,
+                command=task.command,
+                arguments=task.arguments,
+            )
             try:
                 if agent_capability.is_atomic:
                     async with self._task_messages_queue_lock:
@@ -580,9 +575,9 @@ class Agent:
                             f"invalid type '{type(result_message)}'. "
                             f"Expected `AgentResultMessageModel` to be returned."
                         ),
-                        task_id=task_message.task_id,
-                        command=task_message.command,
-                        arguments=task_message.arguments,
+                        task_id=task.task_id,
+                        command=task.command,
+                        arguments=task.arguments,
                         datetime_started=task.datetime_started,
                     )
                 else:
@@ -592,16 +587,16 @@ class Agent:
                         else AgentResultStatus.FAILURE,
                         message=result_message.message,
                         data=result_message.data,
-                        task_id=task_message.task_id,
-                        command=task_message.command,
-                        arguments=task_message.arguments,
+                        task_id=task.task_id,
+                        command=task.command,
+                        arguments=task.arguments,
                         datetime_started=task.datetime_started,
                     )
             except Exception as exc:
                 self.logger.error(
                     "Failed to execute agent capability '{}' due to an unhandled "
                     "exception raised during execution. {}: {}",
-                    agent_capability.name,
+                    str(agent_capability),
                     exc.__class__.__name__,
                     str(exc),
                 )
@@ -612,9 +607,9 @@ class Agent:
                         f"due to an unhandled exception raised during execution. "
                         f"{exc.__class__.__name__}: {str(exc)}"
                     ),
-                    task_id=task_message.task_id,
-                    command=task_message.command,
-                    arguments=task_message.arguments,
+                    task_id=task.task_id,
+                    command=task.command,
+                    arguments=task.arguments,
                     datetime_started=task.datetime_started,
                 )
 
@@ -625,10 +620,7 @@ class Agent:
             self._results[str(result.result_id)] = result
 
             # Adding the result implies that the task is completed
-            self._update_task_status(
-                task_id=result.task_id,
-                status=AgentTaskStatus.COMPLETED,
-            )
+            task.status = AgentTaskStatus.COMPLETED
 
             # Finally we fire the event to notify all event handlers that a result
             # has been received.
@@ -652,16 +644,10 @@ class Agent:
         )
         self._running_agent_capabilities[str(task.task_id)] = running_agent_capability
 
-        # Strip redundant information from the task to create the initial task message
-        task_message = AgentTaskMessageModel(
-            task_id=task.task_id,
-            command=task.command,
-            arguments=task.arguments,
-        )
         agent_capability_task = asyncio.create_task(
             _agent_capability_task_handler(
                 agent_capability=running_agent_capability,
-                task_message=task_message,
+                task=task,
             ),
         )
         self._agent_capability_tasks.add(agent_capability_task)

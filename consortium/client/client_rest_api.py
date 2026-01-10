@@ -354,68 +354,104 @@ class RestAPI:
         )
 
     @_requires_authentication
-    async def get_all_agent_tasks(self) -> list[dict[str, Any]]:
+    async def get_all_agent_tasks(
+        self,
+        progress_limit: int | None = None,
+        progress_offset: int | None = None,
+    ) -> list[dict[str, Any]]:
+        params = self._build_progress_params(progress_limit, progress_offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/tasks",
+            params=params if params else None,
         )
 
     @_requires_authentication
-    async def get_agent_task_by_task_id(self, task_id: str):
+    async def get_agent_task_by_task_id(
+        self,
+        task_id: str,
+        progress_limit: int | None = None,
+        progress_offset: int | None = None,
+    ):
+        params = self._build_progress_params(progress_limit, progress_offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/tasks/{task_id}",
+            params=params if params else None,
         )
 
     @_requires_authentication
     async def get_all_agent_tasks_by_agent_id(
         self,
         agent_id: str,
+        progress_limit: int | None = None,
+        progress_offset: int | None = None,
     ) -> list[dict[str, Any]]:
+        params = self._build_progress_params(progress_limit, progress_offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            params=params if params else None,
         )
 
     @_requires_authentication
     async def get_all_queued_tasks_by_agent_id(
         self,
         agent_id: str,
+        progress_limit: int | None = None,
+        progress_offset: int | None = None,
     ) -> list[dict[str, Any]]:
+        params = {"status": "QUEUED"}
+        params.update(self._build_progress_params(progress_limit, progress_offset))
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks?status=QUEUED",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            params=params,
         )
 
     @_requires_authentication
     async def get_all_running_agent_tasks_by_agent_id(
         self,
         agent_id: str,
+        progress_limit: int | None = None,
+        progress_offset: int | None = None,
     ) -> list[dict[str, Any]]:
+        params = {"status": "RUNNING"}
+        params.update(self._build_progress_params(progress_limit, progress_offset))
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks?status=RUNNING",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            params=params,
         )
 
     @_requires_authentication
     async def get_all_completed_tasks_by_agent_id(
         self,
         agent_id: str,
+        progress_limit: int | None = None,
+        progress_offset: int | None = None,
     ) -> list[dict[str, Any]]:
+        params = {"status": "COMPLETED"}
+        params.update(self._build_progress_params(progress_limit, progress_offset))
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks?status=COMPLETED",
+            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            params=params,
         )
 
     @_requires_authentication
-    def get_agent_task_by_agent_id_and_task_id(
+    async def get_agent_task_by_agent_id_and_task_id(
         self,
         agent_id: str,
         task_id: str,
+        progress_limit: int | None = None,
+        progress_offset: int | None = None,
     ):
-        return self._make_api_request(
+        params = self._build_progress_params(progress_limit, progress_offset)
+        return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks/{task_id}",
+            params=params if params else None,
         )
 
     @_requires_authentication
@@ -473,12 +509,12 @@ class RestAPI:
         )
 
     @_requires_authentication
-    def get_agent_result_by_agent_id_and_result_id(
+    async def get_agent_result_by_agent_id_and_result_id(
         self,
         agent_id: str,
         result_id: str,
     ):
-        return self._make_api_request(
+        return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/results/{result_id}",
         )
@@ -591,6 +627,19 @@ class RestAPI:
             },
         )
         return await response.json()
+
+    @staticmethod
+    def _build_progress_params(
+        progress_limit: int | None,
+        progress_offset: int | None,
+    ) -> dict[str, Any]:
+        """Build query parameters for progress log pagination."""
+        params = {}
+        if progress_limit is not None:
+            params["progress_limit"] = progress_limit
+        if progress_offset is not None:
+            params["progress_offset"] = progress_offset
+        return params
 
     @staticmethod
     def _check_for_api_error_response(response_json: dict[str, Any]) -> None:

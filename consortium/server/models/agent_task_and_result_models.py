@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 from enum import StrEnum
 from functools import cached_property
-from typing import Any
 
 from pydantic import BaseModel, Field, JsonValue, computed_field
 
@@ -13,21 +12,53 @@ class AgentTaskStatus(StrEnum):
     COMPLETED = "COMPLETED"
 
 
-class AgentTaskProgressModel(BaseModel):
+class AgentTaskProgressStatus(StrEnum):
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
+
+
+class AgentTaskProgressLogModel(BaseModel):
+    sequence: int
     message: str | None = None
-    percent_complete: int | float = Field(ge=0.0, le=100.0)
     data: dict[str, JsonValue] = {}
+    status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
+    percent_complete: int | float = Field(ge=0.0, le=100.0)
+    datetime_reported: datetime = Field(default_factory=datetime.now)
+
+
+class AgentTaskProgressLogAPIResponseModel(BaseModel):
+    total_count: int
+    entries: list[AgentTaskProgressLogModel]
+
+
+class AgentTaskCurrentProgressModel(BaseModel):
+    message: str | None = None
+    data: dict[str, JsonValue] = {}
+    status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
+    percent_complete: int | float = Field(ge=0.0, le=100.0)
     datetime_reported: datetime = Field(default_factory=datetime.now)
 
 
 class AgentTaskModel(BaseModel):
     task_id: uuid.UUID = Field(default_factory=uuid.uuid4)
     command: str
-    arguments: dict[str, Any]
-    current_progress: AgentTaskProgressModel | None = None
-    progress_log: list[AgentTaskProgressModel] = []
+    arguments: dict[str, JsonValue]
     status: AgentTaskStatus = AgentTaskStatus.QUEUED
-    datetime_started: datetime = Field(default_factory=datetime.now)
+    current_progress: AgentTaskCurrentProgressModel | None = None
+    progress_log: list[AgentTaskProgressLogModel] = []
+    datetime_created: datetime = Field(default_factory=datetime.now)
+    datetime_started: datetime | None = None
+
+
+class AgentTaskAPIResponseModel(BaseModel):
+    task_id: uuid.UUID
+    command: str
+    arguments: dict[str, JsonValue]
+    status: AgentTaskStatus
+    current_progress: AgentTaskCurrentProgressModel | None = None
+    progress_log: AgentTaskProgressLogAPIResponseModel
+    datetime_created: datetime
+    datetime_started: datetime | None = None
 
 
 class AgentResultStatus(StrEnum):
@@ -38,14 +69,16 @@ class AgentResultStatus(StrEnum):
 
 class AgentResultModel(BaseModel):
     result_id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    task_id: uuid.UUID  # Derived from corresponding `AgentTaskModel`
-    command: str  # Derived from corresponding `AgentTaskModel`
-    arguments: dict[str, Any]  # Derived from corresponding `AgentTaskModel`
     status: AgentResultStatus
     message: str
-    data: dict[str, Any] | list[Any] | None = None
-    datetime_started: datetime  # Derived from corresponding `AgentTaskModel`
+    data: dict[str, JsonValue]
     datetime_finished: datetime = Field(default_factory=datetime.now)
+
+    # Derived from corresponding `AgentTaskModel`
+    task_id: uuid.UUID
+    command: str
+    arguments: dict[str, JsonValue]
+    datetime_started: datetime
 
     @computed_field
     @cached_property
