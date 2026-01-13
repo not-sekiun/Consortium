@@ -53,7 +53,7 @@ class Plugin(BasePlugin):
 
         # We refer to each agent template by its label
         agent_templates = (
-            self.server_services.agent_templates_service.get_all_agent_templates()
+            self.services.agent_templates_service.get_all_agent_templates()
         )
         label_to_agent_template_map = {
             agent_template.label: agent_template for agent_template in agent_templates
@@ -74,7 +74,7 @@ class Plugin(BasePlugin):
                 self.logger.success(
                     "Creating agent generator '{}'...", agent_generator_name
                 )
-                self.server_services.agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
+                self.services.agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
                     agent_template_id=str(agent_template.agent_template_id),
                     parameters=agent_generator_data["parameters"],
                     name=agent_generator_data["name"],
@@ -96,7 +96,7 @@ class Plugin(BasePlugin):
         persistent_agent_generators_json_data = {}
         for (
             agent_generator
-        ) in self.server_services.agent_generators_service.get_all_agent_generators():
+        ) in self.services.agent_generators_service.get_all_agent_generators():
             if (
                 str(agent_generator.creating_agent_template.label)
                 not in persistent_agent_generators_json_data

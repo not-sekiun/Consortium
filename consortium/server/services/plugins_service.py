@@ -517,7 +517,9 @@ class PluginsService:
         number_of_unloaded_plugins = 0
         unload_plugin_tasks = []
         for plugin in self.get_all_plugins():
-            if plugin.plugin_project_folder.parent == self._plugins_directory:
+            if plugin.plugin_project_folder.resolve().relative_to(
+                self._plugins_directory.resolve()
+            ):
                 unload_plugin_tasks.append(
                     asyncio.create_task(
                         self.unload_plugin_by_plugin_id(

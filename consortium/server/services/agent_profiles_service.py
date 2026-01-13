@@ -236,7 +236,9 @@ class AgentProfilesService:
         self._logger.info("Unloading framework agent profiles...")
         unloaded_agent_profiles = 0
         for agent_profile in self.get_all_agent_profiles():
-            if agent_profile.agent_project_folder.parent == self._agents_directory:
+            if agent_profile.agent_project_folder.resolve().relative_to(
+                self._agents_directory.resolve()
+            ):
                 await self.unload_agent_profile_by_agent_profile_id(
                     agent_profile_id=str(agent_profile.agent_profile_id),
                 )

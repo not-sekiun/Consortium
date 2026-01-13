@@ -22,7 +22,7 @@ from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_e
     InvalidFrameworkVersionSpecifierError,
     MissingEventHookConfigurationParameterError,
 )
-from consortium.server.utils import construct_server_services_namespace_object
+from consortium.server.utils import construct_services_namespace_object
 
 
 class _EventHookModel(ComponentMetadataModel):
@@ -59,7 +59,7 @@ class BaseEventHook(ComponentMetadata):
             containing this event hook's source code.
         environment (SimpleNamespace): Namespace for storing hook-specific status shared
             across event invocations without naming conflicts.
-        server_services (SimpleNamespace): Namespace providing programmatic access to
+        services (SimpleNamespace): Namespace providing programmatic access to
             server-level framework services.
         logger (loguru.Logger): Event-hook-specific logger instance, automatically
             tagged with the hook's name and ID for traceability in logs.
@@ -96,7 +96,7 @@ class BaseEventHook(ComponentMetadata):
         cls.event_hook_project_folder = pathlib.Path(
             sys.modules[cls.__module__].__file__,
         ).parents[0]
-        cls.server_services = construct_server_services_namespace_object(
+        cls.services = construct_services_namespace_object(
             server_singletons=server_singletons
         )
 

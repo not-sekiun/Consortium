@@ -58,8 +58,6 @@ class AgentProfileRegistryService(
     }
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "agent_profile_project_folder",
-        "component_file": "agent_profile_file",
-        "component_symbol": "agent_profile_symbol",
         "component_str": "agent_profile_str",
         "component_id": "agent_profile_id",
     }

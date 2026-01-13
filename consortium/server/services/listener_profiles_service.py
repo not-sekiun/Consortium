@@ -237,9 +237,8 @@ class ListenerProfilesService:
         self._logger.info("Unloading framework listener profiles...")
         unloaded_listener_profiles = 0
         for listener_profile in self.get_all_listener_profiles():
-            if (
-                listener_profile.listener_project_folder.parent
-                == self._listeners_directory
+            if listener_profile.listener_project_folder.resolve().relative_to(
+                self._listeners_directory.resolve()
             ):
                 await self.unload_listener_profile_by_listener_profile_id(
                     listener_profile_id=str(listener_profile.listener_profile_id),

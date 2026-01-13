@@ -55,7 +55,7 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
         return sync_wrapper
 
 
-def construct_server_services_namespace_object(
+def construct_services_namespace_object(
     server_singletons: types.ModuleType,
 ) -> types.SimpleNamespace:
     return types.SimpleNamespace(

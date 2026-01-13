@@ -150,6 +150,18 @@ def format_list_as_multi_line_bulleted_string(input_list: list) -> str:
     return "\n".join(formatted_strings)
 
 
+def format_list_as_single_line_comma_separated_string(input_list: list) -> str:
+    return ", ".join(str(item) for item in input_list)
+
+
+def format_mitre_attack_technique(mitre_attack_technique: dict[str, Any]) -> str:
+    return (
+        f"[bold blue]({format_list_as_single_line_comma_separated_string([tactic.upper() for tactic in mitre_attack_technique['tactics']])})[/] "
+        f"[bold yellow]{mitre_attack_technique['mitre_attack_technique_id']}:[/] "
+        f"[bold green]{mitre_attack_technique['name']}[/]"
+    )
+
+
 def format_size_bytes_as_human_readable_str(size_bytes: int):
     if size_bytes == 0:
         return "0 B"

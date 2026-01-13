@@ -21,7 +21,7 @@ MitreAttackTechniqueID = StrEnum(
 
 
 class MitreAttackTechnique(BaseModel):
-    id: MitreAttackTechniqueID
+    mitre_attack_technique_id: MitreAttackTechniqueID
     name: str
     description: str
     tactics: list[str]
@@ -34,7 +34,7 @@ def resolve_mitre_attack_technique_id(
 ) -> MitreAttackTechnique:
     data = mitre_attack_data[mitre_attack_technique_id]
     return MitreAttackTechnique(
-        id=mitre_attack_technique_id,
+        mitre_attack_technique_id=mitre_attack_technique_id,
         name=data["name"],
         description=data["description"],
         tactics=data["tactics"],

@@ -50,7 +50,7 @@ class Plugin(BasePlugin):
 
         # We refer to each listener template by its label
         listener_templates = (
-            self.server_services.listener_templates_service.get_all_listener_templates()
+            self.services.listener_templates_service.get_all_listener_templates()
         )
         label_to_listener_template_map = {
             listener_template.label: listener_template
@@ -75,7 +75,7 @@ class Plugin(BasePlugin):
                     self.logger.success(
                         "Creating and starting listener '{}'...", listener_name
                     )
-                    listener = self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
+                    listener = self.services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
                         ),
@@ -83,12 +83,12 @@ class Plugin(BasePlugin):
                         name=listener_data["name"],
                         description=listener_data["description"],
                     )
-                    await self.server_services.listeners_service.start_listener_by_listener_id(
+                    await self.services.listeners_service.start_listener_by_listener_id(
                         listener_id=str(listener.listener_id),
                     )
                 else:
                     self.logger.success("Creating listener '{}'...", listener_name)
-                    self.server_services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
+                    self.services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
                         ),
@@ -103,7 +103,7 @@ class Plugin(BasePlugin):
     async def on_stopped(self) -> None:
         persistent_listeners_json_file = self.environment.persistent_listeners_json_file
         persistent_listeners_json_data = {}
-        for listener in self.server_services.listeners_service.get_all_listeners():
+        for listener in self.services.listeners_service.get_all_listeners():
             if (
                 str(listener.creating_listener_template.label)
                 not in persistent_listeners_json_data

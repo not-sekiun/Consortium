@@ -2,6 +2,7 @@ import graphlib
 import importlib.metadata
 import json
 import pathlib
+import sys
 import tomllib
 from typing import Any, TypeVar
 
@@ -212,7 +213,14 @@ class ComponentLoaderService[Component]:
 
         # Check for exceptions that occur during import
         try:
-            component_module = importlib.import_module(component_module_path)
+            # Check to see if the module was already imported, if so reload it to get
+            # latest changes.
+            if component_module_path in sys.modules:
+                component_module = importlib.reload(
+                    sys.modules[component_module_path],
+                )
+            else:
+                component_module = importlib.import_module(component_module_path)
         except self._component_framework_error as exc:
             raise exc from None
         # This should only catch errors that are not related to the component project.

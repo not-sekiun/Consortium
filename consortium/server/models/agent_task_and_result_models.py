@@ -61,6 +61,23 @@ class AgentTaskAPIResponseModel(BaseModel):
     datetime_started: datetime | None = None
 
 
+# class AgentResultState(StrEnum):
+#     SUCCESS = "SUCCESS"
+#     FAILURE = "FAILURE"
+#     ERROR = "ERROR"
+#
+#
+# class AgentCapabilityRuntimeErrorModel(BaseModel):
+#     code: str = "AGENT_CAPABILITY_RUNTIME_ERROR"
+#     message: str = ""
+#     details: dict[str, JsonValue] = {}
+#
+#
+# class AgentResultStatusModel(BaseModel):
+#     state: AgentResultState
+#     error: AgentCapabilityRuntimeErrorModel | None = None
+
+
 class AgentResultStatus(StrEnum):
     SUCCESS = "SUCCESS"
     FAILURE = "FAILURE"
@@ -69,9 +86,9 @@ class AgentResultStatus(StrEnum):
 
 class AgentResultModel(BaseModel):
     result_id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    status: AgentResultStatus
     message: str
     data: dict[str, JsonValue]
+    status: AgentResultStatus
     datetime_finished: datetime = Field(default_factory=datetime.now)
 
     # Derived from corresponding `AgentTaskModel`

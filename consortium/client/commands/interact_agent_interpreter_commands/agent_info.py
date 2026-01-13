@@ -19,7 +19,7 @@ class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-          info
+          info -v
           info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
@@ -33,6 +33,15 @@ class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
                 "agent being interacted with if not provided)."
             ),
             nargs="?",
+        )
+        parser.add_argument(
+            "-v",
+            "--verbose",
+            help=(
+                "Display verbose information about the agent, including detailed "
+                "agent capability information."
+            ),
+            action="store_true",
         )
 
     async def run(
@@ -48,6 +57,7 @@ class AgentInfoCommand(InfoAgentAgentsInterpreterCommand):
                 agent_id=parsed_args.agent_id
                 if parsed_args.agent_id is not None
                 else context.interpreter_context["agent"]["agent_id"],
+                verbose=parsed_args.verbose,
             )
         except SystemExit:
             pass

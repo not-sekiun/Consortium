@@ -13,7 +13,7 @@ from consortium.framework.options import SingleValueOption
 
 class DownloadCapability(BaseAgentCapability):
     name = "download"
-    description = "Download a file or directory from the agent."
+    description = "Download a file or directory from the agent"
     authors = {"Sekiun (github.com/not-sekiun)"}
     is_atomic = True
     options = {
@@ -68,7 +68,7 @@ class DownloadCapability(BaseAgentCapability):
             default_value=False,
         ),
     }
-    mitre_attack_techniques = {"T1041"}
+    mitre_attack_techniques = {"T1041", "T1005", "T1560.002"}
 
     async def execute(
         self,

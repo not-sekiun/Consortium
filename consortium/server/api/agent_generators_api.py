@@ -22,7 +22,6 @@ from consortium.server.exceptions.consortium_exceptions import (
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.models.common_models import SuccessResponseModel
-from consortium.server.objects.example_objects import example_agent_type
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
@@ -95,9 +94,6 @@ _invalid_agent_generator_parameter_value_error = (
             error_message="<error_message>",
         )
     )
-)
-_agent_template_resolution_error = api_excs.AgentTemplateResolutionError(
-    agent_type=example_agent_type
 )
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
@@ -323,7 +319,6 @@ async def cancel_agent_generator_by_agent_generator_id(
             | _invalid_agent_generator_parameter_value_error.to_pydantic_model()
             | _unprocessable_entity_error.to_pydantic_model()
         },
-        500: {"model": _agent_template_resolution_error.to_pydantic_model()},
     },
 )
 async def update_agent_generator_by_agent_generator_id(

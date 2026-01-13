@@ -280,9 +280,8 @@ class EventHooksService:
         self._logger.info("Unloading framework event hooks...")
         unloaded_event_hooks = 0
         for event_hook in self.get_all_event_hooks():
-            if (
-                event_hook.event_hook_project_folder.parent
-                == self._event_hooks_directory
+            if event_hook.event_hook_project_folder.resolve().relative_to(
+                self._event_hooks_directory.resolve()
             ):
                 self.unload_event_hook_by_event_hook_id(
                     event_hook_id=str(event_hook.event_hook_id),

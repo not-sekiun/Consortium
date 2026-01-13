@@ -19,10 +19,10 @@ class _ServicesMethodsCompleter(Completer):
     def __init__(
         self,
         services_methods_completion_dict: dict[str, dict[str, None] | None],
-        server_services,
+        services,
     ):
         self._services_methods_completions_dict = services_methods_completion_dict
-        self._server_services = server_services
+        self._services = services
 
     # Checks to see if a key list exists in a dictionary. The key list is a list of
     # keys that are traversed recursively in the dictionary. So if the key list is
@@ -63,7 +63,7 @@ class _ServicesMethodsCompleter(Completer):
             return True, [
                 (
                     member,
-                    callable(getattr(vars(self._server_services)[key_list[0]], member)),
+                    callable(getattr(vars(self._services)[key_list[0]], member)),
                 )
                 for member in valid_completions
             ]
@@ -158,7 +158,7 @@ class Plugin(BasePlugin):
         logger.remove(2)
         # FIXME: Weird bug: logger.remove(2) removes the stdout logger so when logger.add
         #  errors out we see no output.
-        logging_config = self.server_services.logging_service.logging_config
+        logging_config = self.services.logging_service.logging_config
         logger.add(
             StdoutProxy(raw=True),
             format=log_formatter,
@@ -168,14 +168,14 @@ class Plugin(BasePlugin):
 
     async def on_running(self) -> None:
         # Construct completions dict. The keys are the symbols of every service in
-        # `self.server_services`. The values are dictionaries with keys that are the
+        # `self.services`. The values are dictionaries with keys that are the
         # public methods and attributes of each service and whose values are `None` to
         # indicate termination of auto-completion.
         services_methods_completions_dict = {
             service_name: {
                 member: None for member in dir(service) if not member.startswith("_")
             }
-            for service_name, service in vars(self.server_services).items()
+            for service_name, service in vars(self.services).items()
         }
         services_methods_completions_dict["exit"] = None
         style = Style.from_dict(
@@ -200,7 +200,7 @@ class Plugin(BasePlugin):
         single_line_input_session = PromptSession(
             completer=_ServicesMethodsCompleter(
                 services_methods_completion_dict=services_methods_completions_dict,
-                server_services=self.server_services,
+                services=self.services,
             ),
             style=style,
             history=history,
@@ -208,7 +208,7 @@ class Plugin(BasePlugin):
         multi_line_input_session = PromptSession(
             completer=_ServicesMethodsCompleter(
                 services_methods_completion_dict=services_methods_completions_dict,
-                server_services=self.server_services,
+                services=self.services,
             ),
             style=style,
             multiline=True,
@@ -219,7 +219,7 @@ class Plugin(BasePlugin):
                 "</bold>",
             ),
         )
-        globals_dict = vars(self.server_services)
+        globals_dict = vars(self.services)
 
         with patch_stdout(raw=True):
             while True:

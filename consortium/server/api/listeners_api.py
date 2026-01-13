@@ -22,7 +22,6 @@ from consortium.server.exceptions.consortium_exceptions import (
 )
 from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.listener_models import ListenerModel
-from consortium.server.objects.example_objects import example_listener_type
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
@@ -88,9 +87,6 @@ _invalid_listener_parameter_value_error = (
             error_message="<error_message>",
         ),
     )
-)
-_listener_template_resolution_error = api_excs.ListenerTemplateResolutionError(
-    listener_type=example_listener_type,
 )
 _unprocessable_entity_error = UnprocessableEntityError(
     detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
@@ -305,9 +301,6 @@ async def cancel_listener_by_listener_id(
             | _invalid_listener_parameter_name_error.to_pydantic_model()
             | _invalid_listener_parameter_value_error.to_pydantic_model()
             | _unprocessable_entity_error.to_pydantic_model()
-        },
-        500: {
-            "model": _listener_template_resolution_error.to_pydantic_model(),
         },
     },
 )

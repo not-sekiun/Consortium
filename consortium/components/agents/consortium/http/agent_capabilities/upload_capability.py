@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 class UploadCapability(BaseAgentCapability):
     name = "upload"
-    description = "Upload a file or directory to the agent."
+    description = "Upload a file or directory to the agent"
     authors = {"Sekiun (github.com/not-sekiun)"}
     is_atomic = True
     options = {

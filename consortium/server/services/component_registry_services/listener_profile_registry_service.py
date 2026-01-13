@@ -61,8 +61,6 @@ class ListenerProfileRegistryService(
     }
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "listener_profile_project_folder",
-        "component_file": "listener_profile_file",
-        "component_symbol": "listener_profile_symbol",
         "component_str": "listener_profile_str",
         "component_id": "listener_profile_id",
     }

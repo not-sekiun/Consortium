@@ -79,7 +79,7 @@ class Plugin(BasePlugin):
         if json_data is None:
             return
         latest_release_datetime = datetime.fromisoformat(json_data["datetime_released"])
-        current_release = self.server_services.release_service.release
+        current_release = self.services.release_service.release
 
         if latest_release_datetime > current_release.datetime:
             self.logger.info("New release found")
@@ -103,7 +103,7 @@ class Plugin(BasePlugin):
                     self.logger.info("[1/3] Changing to project root...")
                     os.chdir(
                         str(
-                            self.server_services.consortium_paths_service.consortium_root.resolve()
+                            self.services.consortium_paths_service.consortium_root.resolve()
                         )
                     )
                     self.logger.info("[2/3] Pulling new release...")

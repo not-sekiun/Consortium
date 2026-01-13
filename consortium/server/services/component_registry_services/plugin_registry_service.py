@@ -61,8 +61,6 @@ class PluginRegistryService(
     }
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
         "component_project_folder": "plugin_project_folder",
-        "component_file": "plugin_file",
-        "component_symbol": "plugin_symbol",
         "component_str": "plugin_str",
         "component_id": "plugin_id",
     }
