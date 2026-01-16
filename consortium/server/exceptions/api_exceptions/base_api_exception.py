@@ -48,7 +48,9 @@ class BaseAPIError(Exception):
 
         super().__init__(message)
 
-    def to_json(self) -> dict[str, Any]:
+    # `to_json` may return `None` only for 401 Unauthorized errors where no body is
+    # returned
+    def to_json(self) -> dict[str, Any] | None:
         return {
             "error": {
                 "code": self.code,

@@ -1,7 +1,12 @@
 import uuid
 from pathlib import Path
 
-from packaging import specifiers, version
+# Rename packaging.version import to prevent type hint conflict with .version property
+# on `ListenerProfile` and `AgentProfile`
+from packaging import (
+    specifiers,
+    version as packaging_version,
+)
 
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
@@ -48,7 +53,7 @@ class ListenerProfile:
         return self.listener_template.description
 
     @property
-    def version(self) -> version.Version | None:
+    def version(self) -> packaging_version.Version | None:
         return self.listener_template.version
 
     @property
@@ -105,7 +110,7 @@ class AgentProfile:
         return self.agent_template.description
 
     @property
-    def version(self) -> version.Version | None:
+    def version(self) -> packaging_version.Version | None:
         return self.agent_template.version
 
     @property

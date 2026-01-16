@@ -3,6 +3,7 @@ from datetime import datetime
 from consortium.framework.agent_message_models import AgentResultMessageModel
 from consortium.framework.agents import (
     BaseAgentType,
+    SupportedOS,
     request_response_capability,
 )
 from consortium.framework.options import SingleValueOption
@@ -144,6 +145,7 @@ ping_capability = request_response_capability(
 shell_capability = request_response_capability(
     name="shell",
     description="Execute a shell command on the agent",
+    supported_oses=SupportedOS.DESKTOP,
     options={
         SingleValueOption(
             name="command",

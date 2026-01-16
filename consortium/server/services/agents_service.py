@@ -237,7 +237,7 @@ class AgentsService:
             data=data,
             payload=payload,
         )
-        await agent.submit_result_message(result_message=result_message)
+        await agent.recv_result_message(result_message=result_message)
         self._logger.debug(
             "Submitted result for task ID {} to agent {!r}",
             task_id,

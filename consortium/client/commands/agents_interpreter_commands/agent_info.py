@@ -17,6 +17,7 @@ from consortium.client.utils.formatter_utils import (
     format_datetime_as_human_readable_str,
     format_dict_as_multi_line_key_value_string,
     format_list_as_multi_line_bulleted_string,
+    format_list_as_single_line_comma_separated_string,
     format_mitre_attack_technique,
 )
 from consortium.client.utils.printer_utils import console
@@ -139,6 +140,7 @@ class AgentInfoCommand(BaseCommand):
             agent_capabilities_info_table.add_column("Name")
             agent_capabilities_info_table.add_column("Description")
             agent_capabilities_info_table.add_column("Admin")
+            agent_capabilities_info_table.add_column("Supported OSes")
             agent_capabilities_info_table.add_column("MITRE ATT&CK Techniques")
             sorted_agent_capabilities = dict(
                 sorted(
@@ -150,6 +152,9 @@ class AgentInfoCommand(BaseCommand):
                     capability_name,
                     capability["description"],
                     str(capability["requires_admin"]),
+                    format_list_as_single_line_comma_separated_string(
+                        capability["supported_oses"]
+                    ),
                     format_list_as_multi_line_bulleted_string(
                         list(
                             map(

@@ -44,7 +44,7 @@ class Payload:
             )
         except ValidationError as exc:
             raise PayloadCreationParameterTypeError(
-                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_name=str(exc.errors()[0]["loc"][0]),
                 parameter_type=get_type_hints(_PayloadParametersModel)[
                     exc.errors()[0]["loc"][0]
                 ],

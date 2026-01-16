@@ -731,7 +731,7 @@ class PluginStartError(comp_excs.ComponentStartError, PluginOperationError):
     ):
         super().__init__(
             detail=detail,
-            plugin_str=plugin_str,
+            component_str=plugin_str,
             error_message=error_message,
         )
 
@@ -775,7 +775,7 @@ class PluginStopError(comp_excs.ComponentStopError, PluginOperationError):
     ):
         super().__init__(
             detail=detail,
-            plugin_str=plugin_str,
+            component_str=plugin_str,
             error_message=error_message,
         )
 

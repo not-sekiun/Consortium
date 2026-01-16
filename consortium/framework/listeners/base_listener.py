@@ -127,7 +127,7 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         except ValidationError as exc:
             raise ListenerCreationParameterTypeError(
                 listener_str=name,
-                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_name=str(exc.errors()[0]["loc"][0]),
                 parameter_type=str(
                     get_type_hints(_BaseListenerParametersModel)[
                         exc.errors()[0]["loc"][0]

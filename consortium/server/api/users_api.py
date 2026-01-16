@@ -20,6 +20,7 @@ from consortium.server.exceptions.consortium_exceptions import (
 )
 from consortium.server.models.user_models import UserModel
 from consortium.server.objects.user_account_objects import UserPermissions
+from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
 
 router = APIRouter(
@@ -44,7 +45,7 @@ _invalid_uuid_error = InvalidUUIDError(resource_name="user", uuid_value="<uuid_v
 
 @router.get("/me", responses={200: {"model": UserModel}})
 async def get_own_user(
-    user: Annotated[UserModel, Depends(get_current_user)],
+    user: Annotated[User, Depends(get_current_user)],
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_OWN_USER)),
@@ -105,7 +106,7 @@ async def get_user_by_user_id(
 )
 async def update_own_display_name(
     display_name: Annotated[str, Body(embed=True)],
-    user: Annotated[UserModel, Depends(get_current_user)],
+    user: Annotated[User, Depends(get_current_user)],
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.UPDATE_OWN_USER)),

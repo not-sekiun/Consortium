@@ -304,7 +304,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
         except ValidationError as exc:
             raise AgentGeneratorConfigurationParameterTypeError(
                 agent_generator_filepath=sys.modules[cls.__module__].__file__,
-                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_name=str(exc.errors()[0]["loc"][0]),
                 parameter_type=get_type_hints(_BaseAgentGeneratorModel)[
                     exc.errors()[0]["loc"][0]
                 ],

@@ -14,7 +14,6 @@ class AgentCapabilityModel(BaseModel):
     description: str
     authors: list[str]
     requires_admin: bool
-    is_atomic: bool
     supported_oses: list[str]
     mitre_attack_techniques: list[MitreAttackTechnique]
     options: dict[str, OptionModel]

@@ -573,8 +573,8 @@ async def update_agent_by_agent_id(
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.UPDATE_AGENT_BY_AGENT_ID))
     ],
-    name: Annotated[str, Body(embed=True)] = None,
-    description: Annotated[str, Body(embed=True)] = None,
+    name: Annotated[str | None, Body(embed=True)] = None,
+    description: Annotated[str | None, Body(embed=True)] = None,
 ) -> AgentModel:
     try:
         agent = _agents_service.update_agent_by_agent_id(

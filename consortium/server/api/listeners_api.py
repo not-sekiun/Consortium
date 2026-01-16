@@ -314,9 +314,9 @@ async def update_listener_by_listener_id(
             ),
         ),
     ],
-    name: Annotated[str, Body(embed=True)] = None,
-    description: Annotated[str, Body(embed=True)] = None,
-    parameters: Annotated[dict[str, JsonValue], Body(embed=True)] = None,
+    name: Annotated[str | None, Body(embed=True)] = None,
+    description: Annotated[str | None, Body(embed=True)] = None,
+    parameters: Annotated[dict[str, JsonValue] | None, Body(embed=True)] = None,
 ) -> ListenerModel:
     try:
         listener = _listeners_service.update_listener_by_listener_id(

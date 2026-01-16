@@ -29,6 +29,7 @@ from consortium.client.interpreters.disconnected_interpreter import (
 from consortium.client.models.client_models import ClientConfig
 from consortium.client.models.return_status_models import (
     InterpreterType,
+    ReturnStatus,
     ReturnStatusType,
 )
 from consortium.client.repl_interface.base_command import Context
@@ -41,7 +42,9 @@ class Client:
         self._client_config = client_config
 
     @staticmethod
-    async def _handle_client_session_interpreters(client_session: ClientSession):
+    async def _handle_client_session_interpreters(
+        client_session: ClientSession,
+    ) -> ReturnStatus:
         interpreter = HomeInterpreter(client_session=client_session)
 
         while True:
@@ -86,8 +89,13 @@ class Client:
                         f"'{interpreter_type}'. Invalid interpreter type was returned "
                         "as part of the return status."
                     )
+            else:
+                raise AssertionError(
+                    "Failed to handle return status from interpreter. The return "
+                    f"status type '{return_status.type}' is not supported."
+                )
 
-    async def run(self):
+    async def run(self) -> None:
         try:
             client_session = await self._client_sessions_service.create_client_session(
                 username=self._client_config.username,

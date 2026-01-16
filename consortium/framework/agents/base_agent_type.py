@@ -34,7 +34,7 @@ class BaseAgentType:
         except ValidationError as exc:
             raise AgentTypeConfigurationParameterTypeError(
                 agent_type_filepath=sys.modules[cls.__module__].__file__,
-                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_name=str(exc.errors()[0]["loc"][0]),
                 parameter_type=get_type_hints(_BaseAgentTypeModel)[
                     exc.errors()[0]["loc"][0]
                 ],

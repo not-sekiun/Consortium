@@ -26,9 +26,9 @@ class BaseListenerType:
         except ValidationError as exc:
             raise ListenerTypeConfigurationParameterTypeError(
                 listener_type_filepath=sys.modules[cls.__module__].__file__,
-                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_name=str(exc.errors()[0]["loc"][0]),
                 parameter_type=get_type_hints(_BaseListenerTypeModel)[
-                    exc.errors()[0]["loc"]
+                    exc.errors()[0]["loc"][0]
                 ],
             ) from None
 

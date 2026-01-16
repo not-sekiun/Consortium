@@ -54,7 +54,7 @@ from consortium.server.utils import generate_random_human_readable_name, normali
 
 
 class AgentStatus(StrEnum):
-    # Listeners are responsible for marking agents as ACTIVE or INACTIVE based on
+    # Capabilities are responsible for marking agents as ACTIVE or INACTIVE based on
     # whether the agent is connected or not. An agent can only be marked as ACTIVE or
     # INACTIVE for a listener that is currently running.
     ACTIVE = "ACTIVE"  # Running normally, attached to running listener
@@ -132,9 +132,9 @@ class Agent:
             )
         except ValidationError as exc:
             raise AgentCreationParameterTypeError(
-                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_name=str(exc.errors()[0]["loc"][0]),
                 parameter_type=get_type_hints(_AgentParametersModel)[
-                    exc.errors()[0]["loc"]
+                    exc.errors()[0]["loc"][0]
                 ],
             ) from None
 
@@ -219,7 +219,7 @@ class Agent:
         self._results = {}
 
         self._task_messages_queue = asyncio.Queue()
-        self._task_messages_queue_lock = asyncio.Lock()
+        self._agent_capability_execution_lock = asyncio.Lock()
         # Each agent capability is mapped to a task by the task ID. This lets us
         # distinguish which capability a response should be sent to even if the same
         # type of agent capability is running.
@@ -353,6 +353,17 @@ class Agent:
             task=task,
         )
 
+    async def send_task_message(
+        self, task_message: AgentTaskMessageModel, timeout: float | None = None
+    ) -> None:
+        if timeout is None:
+            await self._task_messages_queue.put(task_message)
+        else:
+            await asyncio.wait_for(
+                self._task_messages_queue.put(task_message),
+                timeout=timeout,
+            )
+
     async def get_next_task_message(
         self, timeout: float | None = None
     ) -> AgentTaskMessageModel | None:
@@ -423,14 +434,12 @@ class Agent:
         try:
             task = self.get_queued_task_by_task_id(task_id=task_id)
             if task.status != AgentTaskStatus.QUEUED:
-                raise AgentTaskNotFoundError(task_id=task_id)
+                raise AgentTaskNotFoundError(task_id=str(task_id))
             del self._tasks[str(task.task_id)]
         except KeyError:
-            raise AgentTaskNotFoundError(task_id=task_id) from None
+            raise AgentTaskNotFoundError(task_id=str(task_id)) from None
 
-    # TODO: Make the service submit result messages so users dont call low level
-    #  framework methods
-    async def submit_result_message(
+    async def recv_result_message(
         self, result_message: AgentResultMessageModel
     ) -> None:
         try:
@@ -545,7 +554,7 @@ class Agent:
             )
             try:
                 if agent_capability.is_atomic:
-                    async with self._task_messages_queue_lock:
+                    async with self._agent_capability_execution_lock:
                         result_message = await agent_capability.execute(
                             task_message=task_message,
                         )
@@ -554,7 +563,7 @@ class Agent:
                     # executing the agent capability. This allows non-atomic agent
                     # capabilities to interleave their task messages with other agent
                     # capabilities.
-                    async with self._task_messages_queue_lock:
+                    async with self._agent_capability_execution_lock:
                         pass
                     result_message = await agent_capability.execute(
                         task_message=task_message,
@@ -607,6 +616,7 @@ class Agent:
                         f"due to an unhandled exception raised during execution. "
                         f"{exc.__class__.__name__}: {str(exc)}"
                     ),
+                    data={},
                     task_id=task.task_id,
                     command=task.command,
                     arguments=task.arguments,

@@ -331,9 +331,9 @@ async def update_agent_generator_by_agent_generator_id(
             ),
         ),
     ],
-    name: Annotated[str, Body(embed=True)] = None,
-    description: Annotated[str, Body(embed=True)] = None,
-    parameters: Annotated[dict[str, Any], Body(embed=True)] = None,
+    name: Annotated[str | None, Body(embed=True)] = None,
+    description: Annotated[str | None, Body(embed=True)] = None,
+    parameters: Annotated[dict[str, Any] | None, Body(embed=True)] = None,
 ) -> AgentGeneratorModel:
     try:
         agent_generator = (

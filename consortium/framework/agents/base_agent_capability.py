@@ -1,7 +1,7 @@
 import asyncio
 import sys
-from collections.abc import Callable
-from enum import Enum, StrEnum
+from collections.abc import AsyncIterable, Callable
+from enum import StrEnum
 from inspect import signature
 from typing import TYPE_CHECKING, Any, get_type_hints
 
@@ -21,7 +21,6 @@ from consortium.framework.options import (
     ToggleableChoicesValueOption,
 )
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
-    CustomOSStringAlreadyRegisteredError,
     DuplicateAgentCapabilityOptionNameError,
     EmptyAgentCapabilityNameError,
     InvalidAgentCapabilityConfigurationParameterTypeError,
@@ -43,23 +42,26 @@ if TYPE_CHECKING:
 
 
 class SupportedOS(StrEnum):
-    WINDOWS = "WINDOWS"
-    LINUX = "LINUX"
-    DARWIN = "DARWIN"
-    ANY = "ANY"
+    WINDOWS = "windows"
+    LINUX = "linux"
+    MACOS = "macos"
+    ANDROID = "android"
+    IOS = "ios"
+    ANY = "any"
 
-    @classmethod
-    def custom_os(cls, custom_os_string: str) -> Enum:
-        if custom_os_string.upper() in list(SupportedOS):
-            raise CustomOSStringAlreadyRegisteredError(
-                custom_os_str=custom_os_string,
-            )
+    # Add type hinting here for IDE autocompletion support.
+    DESKTOP: set[SupportedOS]
+    MOBILE: set[SupportedOS]
 
-        return Enum(
-            "SupportedOS",
-            {custom_os_string.upper(): custom_os_string.upper()},
-            type=str,
-        )[custom_os_string.upper()]
+
+# Add convenience groupings of supported OSes as class attributes after enum creation.
+SupportedOS.DESKTOP = {SupportedOS.WINDOWS, SupportedOS.LINUX, SupportedOS.MACOS}
+SupportedOS.MOBILE = {SupportedOS.ANDROID, SupportedOS.IOS}
+
+
+class AgentLifecycle(StrEnum):
+    ON_REGISTERED = "ON_REGISTERED"
+    ON_CHECKED_IN = "ON_CHECKED_IN"
 
 
 class _BaseAgentCapabilityModel(BaseModel):
@@ -69,7 +71,10 @@ class _BaseAgentCapabilityModel(BaseModel):
     description: str
     authors: set[str]
     requires_admin: bool
-    supported_oses: set[SupportedOS]
+    supported_oses: set[SupportedOS | str]
+    # Note: `is_atomic` is deliberately excluded from the output of `to_json()` because
+    # it's an internal implementation detail that while part of the developer framework
+    # API is not of concern to REST API consumers.
     is_atomic: bool
     options: set[
         SingleValueOption
@@ -104,19 +109,14 @@ class BaseAgentCapability:
     ) = None
 
     # TODO: Deprecate global task messages queue in favor of per capability queues.
-    def __init__(
-        self, agent: Agent, task: AgentTaskModel, task_messages_queue: asyncio.Queue
-    ):
+    def __init__(self, agent: Agent, task: AgentTaskModel):
         self.agent = agent
         # The agent task associated with this capability execution. Used for partial
-        # task updates
-        self._task = task
+        # task updates or for inspecting task metadata for this particular capability
+        # execution context.
+        self.task = task
         # Sequence number to keep track of task progress updates
         self._task_progress_sequence_number = 1
-        # The task messages queue is the overall agent task messages aggregating queue
-        # that comes from the framework to be pulled by listeners and sent out to the
-        # wire. All agent capabilities share this queue.
-        self._task_messages_queue = task_messages_queue
         # The agent result messages queue is per agent capability and serves
         # essentially to allow us to demultiplex messages coming in over the wire from
         # the listener.
@@ -149,17 +149,26 @@ class BaseAgentCapability:
                 validating_function=cls.validating_function,
             )
         except ValidationError as exc:
-            for err in exc.errors():
-                raise InvalidAgentCapabilityConfigurationParameterTypeError(
-                    agent_capability_str=sys.modules[cls.__module__].__file__,
-                    parameter_name=err["loc"][0],
-                    parameter_type="list[BaseAgentGeneratorBuildStep]",
-                ) from None
+            raise InvalidAgentCapabilityConfigurationParameterTypeError(
+                agent_capability_str=sys.modules[cls.__module__].__file__,
+                parameter_name=exc.errors()[0]["loc"][0],
+                parameter_type=get_type_hints(_BaseAgentCapabilityModel)[
+                    exc.errors()[0]["loc"][0]
+                ],
+            ) from None
 
         if not cls.name:
             raise EmptyAgentCapabilityNameError(
                 agent_capability_filepath=sys.modules[cls.__module__].__file__,
             )
+        # Normalize supported OSes to enum values if any valid supported OSes are
+        # provided as strings. Otherwise, leave as is to allow for declaration of
+        # custom/niche OSes.
+        for os in cls.supported_oses:
+            if isinstance(os, str):
+                if os.lower() in SupportedOS:
+                    cls.supported_oses.remove(os)
+                    cls.supported_oses.add(SupportedOS(os.lower()))
         option_names = []
         for option in cls.options:
             if option.name in option_names:
@@ -223,14 +232,34 @@ class BaseAgentCapability:
 
     async def send_to_agent(
         self,
-        task_message: AgentTaskMessageModel,
+        task_message: AgentTaskMessageModel | None = None,
+        command: str | None = None,
+        arguments: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
         timeout: int | float | None = None,
     ) -> None:
-        if timeout is None:
-            await self._task_messages_queue.put(task_message)
+        if task_message is not None:
+            await self.agent.send_task_message(
+                task_message=task_message,
+                timeout=timeout,
+            )
         else:
-            await asyncio.wait_for(
-                self._task_messages_queue.put(task_message),
+            if command is None:
+                command = self.task.command
+            if arguments is None:
+                arguments = {}
+            if data is None:
+                data = {}
+            task_message = AgentTaskMessageModel(
+                task_id=self.task.task_id,
+                command=command,
+                arguments=arguments,
+                data=data,
+                payload=payload,
+            )
+            await self.agent.send_task_message(
+                task_message=task_message,
                 timeout=timeout,
             )
 
@@ -247,15 +276,31 @@ class BaseAgentCapability:
 
     async def send_and_recv_from_agent(
         self,
-        task_message: AgentTaskMessageModel,
+        task_message: AgentTaskMessageModel | None = None,
+        command: str | None = None,
+        arguments: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
         timeout: int | float | None = None,
     ) -> AgentResultMessageModel:
         if timeout is None:
-            await self.send_to_agent(task_message)
+            await self.send_to_agent(
+                task_message=task_message,
+                command=command,
+                arguments=arguments,
+                data=data,
+                payload=payload,
+            )
             return await self.recv_from_agent()
         else:
             async with asyncio.timeout(timeout):
-                await self.send_to_agent(task_message)
+                await self.send_to_agent(
+                    task_message=task_message,
+                    command=command,
+                    arguments=arguments,
+                    data=data,
+                    payload=payload,
+                )
                 return await self.recv_from_agent()
 
     def update_task_progress(
@@ -276,7 +321,7 @@ class BaseAgentCapability:
             ),
             percent_complete=percent_complete,
         )
-        self._task.current_progress = agent_task_progress
+        self.task.current_progress = agent_task_progress
 
         if log_progress:
             agent_task_progress_log = AgentTaskProgressLogModel(
@@ -290,7 +335,7 @@ class BaseAgentCapability:
                 ),
                 percent_complete=percent_complete,
             )
-            self._task.progress_log.append(agent_task_progress_log)
+            self.task.progress_log.append(agent_task_progress_log)
             self._task_progress_sequence_number += 1
 
     async def execute(
@@ -309,7 +354,6 @@ class BaseAgentCapability:
             "authors": list(cls.authors),
             "requires_admin": cls.requires_admin,
             "supported_oses": [str(os) for os in cls.supported_oses],
-            "is_atomic": cls.is_atomic,
             "mitre_attack_techniques": [
                 technique.model_dump(mode="json")
                 for technique in cls.mitre_attack_techniques
