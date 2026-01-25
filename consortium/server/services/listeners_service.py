@@ -147,7 +147,7 @@ class ListenersService:
         name: str | None = None,
         description: str | None = None,
         parameters: dict[str, Any] | None = None,
-    ):
+    ) -> BaseListener:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         # Changed dictionary is used to track what attributes were updated. This data
@@ -205,7 +205,7 @@ class ListenersService:
                 # Create a temporary listener whose attributes we copy over to the
                 # existing listener. This allows us to perform the `name` and
                 # `endpoint` resolution required to update the attribute without
-                # inadvertently overwriting any existing status within the existing
+                # inadvertently overwriting any existing state within the existing
                 # listener.
                 temp_listener = listener.creating_listener_template.create_listener(
                     parameters=parameters,
@@ -286,7 +286,7 @@ class ListenersService:
     @log_and_propagate_error_on_service_method
     async def start_listener_by_listener_id(
         self, listener_id: str | uuid.UUID, blocking: bool = False
-    ) -> None:
+    ) -> BaseListener:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.start()
@@ -301,10 +301,12 @@ class ListenersService:
         self._logger.info("Started listener: {}", listener)
         self._logger.debug("- {!r}", listener)
 
+        return listener
+
     @log_and_propagate_error_on_service_method
     async def stop_listener_by_listener_id(
         self, listener_id: str | uuid.UUID, blocking: bool = False
-    ) -> None:
+    ) -> BaseListener:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.stop()
@@ -319,10 +321,12 @@ class ListenersService:
         self._logger.info("Stopped listener: {}", listener)
         self._logger.debug("- {!r}", listener)
 
+        return listener
+
     @log_and_propagate_error_on_service_method
     async def cancel_listener_by_listener_id(
         self, listener_id: str | uuid.UUID, blocking: bool = False
-    ) -> None:
+    ) -> BaseListener:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.cancel()
@@ -336,3 +340,5 @@ class ListenersService:
         )
         self._logger.info("Cancelled listener: {}", listener)
         self._logger.debug("- {!r}", listener)
+
+        return listener

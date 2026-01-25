@@ -647,11 +647,7 @@ class Agent:
                 },
             )
 
-        running_agent_capability = agent_capability(
-            agent=self,
-            task=task,
-            task_messages_queue=self._task_messages_queue,
-        )
+        running_agent_capability = agent_capability(agent=self, task=task)
         self._running_agent_capabilities[str(task.task_id)] = running_agent_capability
 
         agent_capability_task = asyncio.create_task(

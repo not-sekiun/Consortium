@@ -1,6 +1,5 @@
-import asyncio
 import sys
-from collections.abc import AsyncIterable, Callable
+from collections.abc import Callable
 from enum import StrEnum
 from inspect import signature
 from typing import TYPE_CHECKING, Any, get_type_hints
@@ -12,6 +11,7 @@ from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
 )
+from consortium.framework.agents._agent_communicator import _AgentCommunicator
 from consortium.framework.framework_types import Primitive, PrimitiveCollection
 from consortium.framework.options import (
     ChoiceValueOption,
@@ -89,7 +89,7 @@ class _BaseAgentCapabilityModel(BaseModel):
     )
 
 
-class BaseAgentCapability:
+class BaseAgentCapability(_AgentCommunicator):
     name: str
     description: str = ""
     authors: set[str] = None
@@ -110,17 +110,10 @@ class BaseAgentCapability:
 
     # TODO: Deprecate global task messages queue in favor of per capability queues.
     def __init__(self, agent: Agent, task: AgentTaskModel):
-        self.agent = agent
-        # The agent task associated with this capability execution. Used for partial
-        # task updates or for inspecting task metadata for this particular capability
-        # execution context.
-        self.task = task
+        super().__init__(agent=agent, task=task)
+
         # Sequence number to keep track of task progress updates
         self._task_progress_sequence_number = 1
-        # The agent result messages queue is per agent capability and serves
-        # essentially to allow us to demultiplex messages coming in over the wire from
-        # the listener.
-        self.result_messages_queue = asyncio.Queue()
 
     def __init_subclass__(cls, **kwargs):
         if not hasattr(cls, "name"):
@@ -229,79 +222,6 @@ class BaseAgentCapability:
             f"validating_function={self.validating_function!r}"
             f")"
         )
-
-    async def send_to_agent(
-        self,
-        task_message: AgentTaskMessageModel | None = None,
-        command: str | None = None,
-        arguments: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
-        payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
-        timeout: int | float | None = None,
-    ) -> None:
-        if task_message is not None:
-            await self.agent.send_task_message(
-                task_message=task_message,
-                timeout=timeout,
-            )
-        else:
-            if command is None:
-                command = self.task.command
-            if arguments is None:
-                arguments = {}
-            if data is None:
-                data = {}
-            task_message = AgentTaskMessageModel(
-                task_id=self.task.task_id,
-                command=command,
-                arguments=arguments,
-                data=data,
-                payload=payload,
-            )
-            await self.agent.send_task_message(
-                task_message=task_message,
-                timeout=timeout,
-            )
-
-    async def recv_from_agent(
-        self,
-        timeout: int | float | None = None,
-    ) -> AgentResultMessageModel:
-        if timeout is None:
-            return await self.result_messages_queue.get()
-        return await asyncio.wait_for(
-            self.result_messages_queue.get(),
-            timeout=timeout,
-        )
-
-    async def send_and_recv_from_agent(
-        self,
-        task_message: AgentTaskMessageModel | None = None,
-        command: str | None = None,
-        arguments: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
-        payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
-        timeout: int | float | None = None,
-    ) -> AgentResultMessageModel:
-        if timeout is None:
-            await self.send_to_agent(
-                task_message=task_message,
-                command=command,
-                arguments=arguments,
-                data=data,
-                payload=payload,
-            )
-            return await self.recv_from_agent()
-        else:
-            async with asyncio.timeout(timeout):
-                await self.send_to_agent(
-                    task_message=task_message,
-                    command=command,
-                    arguments=arguments,
-                    data=data,
-                    payload=payload,
-                )
-                return await self.recv_from_agent()
 
     def update_task_progress(
         self,

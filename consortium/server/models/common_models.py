@@ -16,8 +16,3 @@ class ErrorModel(BaseModel):
 # the response is binary, either the operation succeeded or it failed
 class SuccessResponseModel(BaseModel):
     success: bool = True
-
-
-class ErrorResponseModel(BaseModel):
-    success: bool = False
-    error: ErrorModel

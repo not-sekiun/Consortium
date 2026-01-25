@@ -20,7 +20,6 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 from consortium.server.exceptions.consortium_exceptions import (
     listeners_consortium_exceptions as consortium_exceptions,
 )
-from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
@@ -149,7 +148,7 @@ def get_listener_by_listener_id(
 @router.post(
     "/{listener_id}/start",
     responses={
-        200: {"model": SuccessResponseModel},
+        202: {"model": ListenerModel},
         404: {
             "model": _listener_not_found_error.to_pydantic_model(),
         },
@@ -169,9 +168,11 @@ async def start_listener_by_listener_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.START_LISTENER_BY_LISTENER_ID)),
     ],
-) -> SuccessResponseModel:
+) -> ListenerModel:
     try:
-        await _listeners_service.start_listener_by_listener_id(listener_id=listener_id)
+        listener = await _listeners_service.start_listener_by_listener_id(
+            listener_id=listener_id
+        )
     except consortium_exceptions.ListenerStartError as exc:
         raise api_excs.ListenerStartError.from_consortium_exception(
             consortium_exception=exc,
@@ -192,13 +193,13 @@ async def start_listener_by_listener_id(
             },
         ) from None
 
-    return SuccessResponseModel()
+    return ListenerModel(**listener.to_json())
 
 
 @router.post(
     "/{listener_id}/stop",
     responses={
-        200: {"model": SuccessResponseModel},
+        202: {"model": ListenerModel},
         404: {
             "model": _listener_not_found_error.to_pydantic_model(),
         },
@@ -218,9 +219,11 @@ async def stop_listener_by_listener_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.STOP_LISTENER_BY_LISTENER_ID)),
     ],
-) -> SuccessResponseModel:
+) -> ListenerModel:
     try:
-        await _listeners_service.stop_listener_by_listener_id(listener_id=listener_id)
+        listener = await _listeners_service.stop_listener_by_listener_id(
+            listener_id=listener_id
+        )
     except consortium_exceptions.ListenerStopError as exc:
         raise api_excs.ListenerStopError(
             message=exc.message, detail=exc.detail
@@ -241,13 +244,13 @@ async def stop_listener_by_listener_id(
             },
         ) from None
 
-    return SuccessResponseModel()
+    return ListenerModel(**listener.to_json())
 
 
 @router.post(
     "/{listener_id}/cancel",
     responses={
-        200: {"model": SuccessResponseModel},
+        202: {"model": ListenerModel},
         404: {
             "model": _listener_not_found_error.to_pydantic_model(),
         },
@@ -266,9 +269,11 @@ async def cancel_listener_by_listener_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.CANCEL_LISTENER_BY_LISTENER_ID)),
     ],
-) -> SuccessResponseModel:
+) -> ListenerModel:
     try:
-        await _listeners_service.cancel_listener_by_listener_id(listener_id=listener_id)
+        listener = await _listeners_service.cancel_listener_by_listener_id(
+            listener_id=listener_id
+        )
     except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
@@ -285,7 +290,7 @@ async def cancel_listener_by_listener_id(
             },
         ) from None
 
-    return SuccessResponseModel()
+    return ListenerModel(**listener.to_json())
 
 
 @router.patch(
@@ -348,7 +353,7 @@ async def update_listener_by_listener_id(
 @router.delete(
     "/{listener_id}",
     responses={
-        200: {"model": SuccessResponseModel},
+        204: {},
         404: {
             "model": _listener_not_found_error.to_pydantic_model(),
         },
@@ -365,7 +370,7 @@ async def delete_listener_by_listener_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.DELETE_LISTENER_BY_LISTENER_ID)),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         _listeners_service.remove_listener_by_listener_id(listener_id=listener_id)
     except consortium_exceptions.ListenerNotFoundError as exc:
@@ -376,5 +381,3 @@ async def delete_listener_by_listener_id(
         raise api_excs.ListenerAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-
-    return SuccessResponseModel()
