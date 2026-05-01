@@ -12,7 +12,6 @@ class Payload:
 
     Attributes:
         is_stream (bool): Indicates whether the payload is an asynchronous stream.
-
     """
 
     def __init__(self, payload: AsyncIterable[bytes] | bytes | bytearray):

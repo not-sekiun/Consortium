@@ -11,13 +11,13 @@ from consortium.client.exceptions.client_sessions_service_exceptions import (
 from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIAuthenticationError,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
@@ -71,7 +71,7 @@ class ConnectCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             # Perform custom checking of arguments to ensure that if a config file is
@@ -113,28 +113,28 @@ class ConnectCommand(BaseCommand):
                         f"'{parsed_args.config}'. The file path supplied was not "
                         f"found.",
                     )
-                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                    return ContinueSignal()
                 except PermissionError as exc:
                     print_error(
                         f"Failed to read the provided client configuration file "
                         f"'{parsed_args.config}'. Insufficient permissions to read the "
                         f"file: {exc}",
                     )
-                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                    return ContinueSignal()
                 except json.decoder.JSONDecodeError:
                     print_error(
                         f"Failed to read the provided client configuration file "
                         f"'{parsed_args.config}'. The configuration file does not "
                         f"contain valid JSON data"
                     )
-                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                    return ContinueSignal()
                 except jsonschema.ValidationError as exc:
                     print_error(
                         f"Failed to read the provided client configuration file "
                         f"'{parsed_args.config}'. The configuration file's JSON data "
                         f"does not conform to the expected JSON schema: {exc}",
                     )
-                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                    return ContinueSignal()
 
                 username = parsed_args.username or config_data["username"]
                 password = parsed_args.password or config_data["password"]
@@ -162,4 +162,4 @@ class ConnectCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

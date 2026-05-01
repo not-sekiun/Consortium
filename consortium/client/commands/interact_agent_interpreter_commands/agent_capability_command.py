@@ -2,13 +2,13 @@ import re
 from argparse import ArgumentParser
 from typing import Any
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_object_as_rich_ansi_highlight_str,
@@ -311,7 +311,7 @@ def construct_agent_capability_command(
         async def run(
             self,
             context: Context,
-        ) -> ReturnStatus:
+        ) -> InterpreterSignal:
             try:
                 # Bypass allowing argparse to parse for the --help-full flag
                 # because if a required argument is not provided, argparse
@@ -324,7 +324,7 @@ def construct_agent_capability_command(
                     )
                     self.parser.print_help()
                     self.parser.epilog = self.epilog  # Reset epilog
-                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                    return ContinueSignal()
 
                 parsed_args = self.parser.parse_args(context.arguments)
                 client_rest_api_connection = context.client_session.rest_api
@@ -404,7 +404,7 @@ def construct_agent_capability_command(
                         arguments[original_name] = parameter_value
                     except ValueError as exc:
                         print_error(str(exc))
-                        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                        return ContinueSignal()
 
                 task = await client_rest_api_connection.task_agent_by_agent_id(
                     agent_id=context.interpreter_context["agent"]["agent_id"],
@@ -419,8 +419,6 @@ def construct_agent_capability_command(
             except SystemExit:
                 pass
 
-            return ReturnStatus(
-                type=ReturnStatusType.CONTINUE,
-            )
+            return ContinueSignal()
 
     return AgentCapabilityCommand()

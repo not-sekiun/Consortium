@@ -4,13 +4,14 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    ExitClientSessionSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
@@ -66,7 +67,7 @@ class ClientSessionDisconnectCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
 
@@ -78,8 +79,8 @@ class ClientSessionDisconnectCommand(BaseCommand):
             await self._disconnect_client_session(client_session_id=client_session_id)
 
             if client_session_id == str(context.client_session.client_session_id):
-                return ReturnStatus(type=ReturnStatusType.EXIT_CLIENT_SESSION)
+                return ExitClientSessionSignal()
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

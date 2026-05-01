@@ -10,7 +10,7 @@ from consortium.client.commands.generators_interpreter_commands import (
     GeneratorListCommand,
 )
 from consortium.client.repl_interface.base_command import BaseCommand
-from consortium.client.repl_interface.interpreter import Interpreter
+from consortium.client.repl_interface.base_interpreter import BaseInterpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -23,7 +23,7 @@ COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS = [
 ] + GENERATORS_INTERPRETER_COMMANDS
 
 
-class GeneratorsInterpreter(Interpreter):
+class GeneratorsInterpreter(BaseInterpreter):
     def __init__(
         self,
         client_session: ClientSession,

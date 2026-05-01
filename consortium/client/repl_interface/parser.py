@@ -10,14 +10,11 @@ class ParsedCommand(BaseModel):
 
 
 def parse(tokenized_string: TokenizedString) -> ParsedCommand:
-    if tokenized_string.raw_input.strip() != "":
-        if tokenized_string.tokens:
-            return ParsedCommand(
-                command=tokenized_string.tokens[0],
-                arguments=tokenized_string.tokens[1:],
-                raw_input=tokenized_string.raw_input,
-            )
-        else:
-            return ParsedCommand(command="", arguments=[], raw_input="")
+    if tokenized_string.raw_input.strip() != "" and tokenized_string.tokens:
+        return ParsedCommand(
+            command=tokenized_string.tokens[0],
+            arguments=tokenized_string.tokens[1:],
+            raw_input=tokenized_string.raw_input,
+        )
     else:
         return ParsedCommand(command="", arguments=[], raw_input="")

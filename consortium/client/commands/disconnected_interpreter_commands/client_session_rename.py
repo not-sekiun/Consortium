@@ -4,12 +4,10 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.commands.home_interpreter_commands.client_session_rename import (
     ClientSessionRenameCommand as HomeInterpreterClientSessionRenameCommand,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
-)
-from consortium.client.repl_interface.base_command import (
-    Context,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
@@ -43,7 +41,7 @@ class ClientSessionRenameCommand(HomeInterpreterClientSessionRenameCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             self._rename_client_session(
@@ -53,4 +51,4 @@ class ClientSessionRenameCommand(HomeInterpreterClientSessionRenameCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

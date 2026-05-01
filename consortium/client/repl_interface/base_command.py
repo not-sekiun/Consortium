@@ -1,23 +1,8 @@
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from typing import Any
 
-from pydantic import BaseModel, ConfigDict
-
-from consortium.client.client_session import ClientSession
-from consortium.client.models.return_status_models import ReturnStatus
-
-
-class Context(BaseModel):
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-    )
-
-    command: str
-    arguments: list[str]
-    raw_input: str
-    client_session: ClientSession | None
-    interpreter_context: dict[str, Any]
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import InterpreterSignal
 
 
 class BaseCommand(ABC):
@@ -50,4 +35,4 @@ class BaseCommand(ABC):
         return None
 
     @abstractmethod
-    async def run(self, context: Context) -> ReturnStatus: ...
+    async def run(self, context: Context) -> InterpreterSignal: ...

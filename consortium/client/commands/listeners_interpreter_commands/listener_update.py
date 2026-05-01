@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_value_type_specification_epilog,
@@ -61,7 +61,7 @@ class ListenerUpdateCommand(BaseCommand):
             default=False,
         )
 
-    async def run(self, context: Context) -> ReturnStatus:
+    async def run(self, context: Context) -> InterpreterSignal:
         try:
             if "--help-full" in context.arguments:
                 self.parser.epilog = (
@@ -71,7 +71,7 @@ class ListenerUpdateCommand(BaseCommand):
                 )
                 self.parser.print_help()
                 self.parser.epilog = self.epilog
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -93,7 +93,7 @@ class ListenerUpdateCommand(BaseCommand):
                 print_error(
                     f"Listener parameter not found: '{parsed_args.parameter_name[0]}'",
                 )
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             try:
                 parameter_name, parameter_value = (
@@ -114,8 +114,8 @@ class ListenerUpdateCommand(BaseCommand):
                 )
             except ValueError as exc:
                 print_error(exc)
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

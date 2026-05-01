@@ -2,13 +2,13 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -40,7 +40,7 @@ class ListenerTemplateInfoOptionCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             listener_template = context.interpreter_context["listener_template"]
@@ -52,9 +52,7 @@ class ListenerTemplateInfoOptionCommand(BaseCommand):
                     f"Listener template option not found: "
                     f"'{parsed_args.option_name[0]}'",
                 )
-                return ReturnStatus(
-                    type=ReturnStatusType.CONTINUE,
-                )
+                return ContinueSignal()
             table = Table(
                 title="Listener Template Option Information",
                 highlight=True,
@@ -72,6 +70,4 @@ class ListenerTemplateInfoOptionCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(
-            type=ReturnStatusType.CONTINUE,
-        )
+        return ContinueSignal()

@@ -8,7 +8,7 @@ from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.home_interpreter_commands import (
     HOME_INTERPRETER_COMMANDS,
 )
-from consortium.client.repl_interface.interpreter import Interpreter
+from consortium.client.repl_interface.base_interpreter import BaseInterpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class HomeInterpreter(Interpreter):
+class HomeInterpreter(BaseInterpreter):
     def __init__(self, client_session: ClientSession):
         super().__init__(
             prompt=ANSI(format_rich_text_as_ansi("[bold white]Consortium (Home)\n> ")),

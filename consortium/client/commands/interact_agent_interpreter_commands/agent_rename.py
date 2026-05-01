@@ -3,11 +3,11 @@ from argparse import ArgumentParser
 from consortium.client.commands.agents_interpreter_commands import (
     AgentRenameCommand as AgentRenameAgentsInterpreterCommand,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import Context
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
@@ -38,19 +38,19 @@ class AgentRenameCommand(AgentRenameAgentsInterpreterCommand):
             nargs=1,
         )
 
-    async def run(self, context: Context) -> ReturnStatus:
+    async def run(self, context: Context) -> InterpreterSignal:
         try:
-            parsed_commands = self.parser.parse_args(context.arguments)
+            parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
             await self._rename_agent(
                 rest_api=rest_api,
-                agent_id=parsed_commands.agent_id
-                if parsed_commands.agent_id
+                agent_id=parsed_args.agent_id
+                if parsed_args.agent_id
                 else context.interpreter_context["agent"]["agent_id"],
-                name=parsed_commands.name[0],
+                name=parsed_args.name[0],
             )
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

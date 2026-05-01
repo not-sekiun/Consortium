@@ -5,13 +5,13 @@ from argparse import ArgumentParser
 
 from rich.progress import Progress
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
@@ -58,7 +58,7 @@ class AssetDownloadCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -84,7 +84,7 @@ class AssetDownloadCommand(BaseCommand):
                     f"Cannot download asset to '{output_file_path}' because a file or "
                     f"directory already exists at that path"
                 )
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             print_info(
                 f"Downloading asset {'directory' if asset['is_directory'] else 'file'} "
@@ -113,4 +113,4 @@ class AssetDownloadCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

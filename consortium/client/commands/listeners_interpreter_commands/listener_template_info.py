@@ -3,13 +3,13 @@ from argparse import ArgumentParser
 from rich.table import Table
 
 from consortium.client.client_rest_api import RestAPI
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -89,7 +89,7 @@ class ListenerTemplateInfoCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -101,6 +101,4 @@ class ListenerTemplateInfoCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(
-            type=ReturnStatusType.CONTINUE,
-        )
+        return ContinueSignal()

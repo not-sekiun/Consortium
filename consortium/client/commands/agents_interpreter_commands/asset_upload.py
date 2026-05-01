@@ -3,13 +3,13 @@ import shutil
 import tempfile
 from argparse import ArgumentParser
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
@@ -53,7 +53,7 @@ class AssetUploadCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -61,7 +61,7 @@ class AssetUploadCommand(BaseCommand):
 
             if not asset_path.exists():
                 print_error(f"Asset path not found: '{asset_path}'")
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             if asset_path.is_dir():
                 print_info(f"Uploading asset directory: '{asset_path}'")
@@ -107,4 +107,4 @@ class AssetUploadCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

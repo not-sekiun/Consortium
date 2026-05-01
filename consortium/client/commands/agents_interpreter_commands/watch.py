@@ -8,13 +8,13 @@ from consortium.client.client_rest_api import RestAPI
 from consortium.client.commands.agents_interpreter_commands.task_info import (
     TaskInfoCommand,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console, print_info, print_warning
@@ -94,7 +94,7 @@ class WatchCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -111,7 +111,10 @@ class WatchCommand(BaseCommand):
                 response = input("Continue anyway? [y/N]: ").strip().lower()
                 if response not in ("y", "yes"):
                     print_info("Watch cancelled.")
-                    return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                    return ContinueSignal()
+            else:
+                # Ensure progress_limit has a default value even if not explicitly set
+                progress_limit = progress_limit or 10
 
             if interval <= 0:
                 print_warning(
@@ -164,4 +167,4 @@ class WatchCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
@@ -35,25 +35,25 @@ class ListenerDescribeCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run(self, context: Context) -> ReturnStatus:
+    async def run(self, context: Context) -> InterpreterSignal:
         try:
-            parsed_commands = self.parser.parse_args(context.arguments)
+            parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
             listener = await rest_api.get_listener_by_listener_id(
-                listener_id=parsed_commands.listener_id[0],
+                listener_id=parsed_args.listener_id[0],
             )
             await rest_api.update_listener_by_listener_id(
-                listener_id=parsed_commands.listener_id[0],
+                listener_id=parsed_args.listener_id[0],
                 new_listener_attributes={
-                    "description": parsed_commands.description[0],
+                    "description": parsed_args.description[0],
                 },
             )
             print_success(
                 f"Updated description of listener '{listener['name']}' ({listener['listener_id']}) "
-                f"to '{parsed_commands.description[0]}'",
+                f"to '{parsed_args.description[0]}'",
             )
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

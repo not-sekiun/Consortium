@@ -7,12 +7,10 @@ from consortium.client.commands.home_interpreter_commands.client_session_info im
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
-)
-from consortium.client.repl_interface.base_command import (
-    Context,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error
@@ -52,7 +50,7 @@ class ClientSessionInfoCommand(HomeInterpreterClientSessionInfoCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
 
@@ -72,6 +70,4 @@ class ClientSessionInfoCommand(HomeInterpreterClientSessionInfoCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(
-            type=ReturnStatusType.CONTINUE,
-        )
+        return ContinueSignal()

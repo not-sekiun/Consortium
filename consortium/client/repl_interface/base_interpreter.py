@@ -15,16 +15,14 @@ from consortium.client.exceptions.client_interpreter_exceptions import (
 from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIOperationError,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
-
-# from consortium.client.repl_framework.base_interpreter import BaseInterpreter
 from consortium.client.repl_interface.lexer import tokenize
 from consortium.client.repl_interface.parser import parse
 from consortium.client.utils.printer_utils import console, print_error
@@ -33,7 +31,7 @@ if TYPE_CHECKING:
     from consortium.client.client_session import ClientSession
 
 
-class Interpreter:
+class BaseInterpreter:
     def __init__(
         self,
         prompt: str | ANSI | HTML | list[tuple[str, str]],
@@ -87,7 +85,7 @@ class Interpreter:
 
     async def on_exit(self) -> None: ...
 
-    async def run(self) -> ReturnStatus:
+    async def run(self) -> InterpreterSignal:
         await self.on_enter()
 
         while True:
@@ -127,15 +125,23 @@ class Interpreter:
                         client_session=self.client_session,
                         interpreter_context=self.context,
                     )
-                    command_return_status = await self.commands[
+                    interpreter_signal = await self.commands[
                         parsed_command.command
                     ].run(context)
 
-                    if command_return_status.type == ReturnStatusType.CONTINUE:
-                        continue
-                    else:
-                        await self.on_exit()
-                        return command_return_status
+                    match interpreter_signal:
+                        case ContinueSignal():
+                            continue
+                        case InterpreterSignal():
+                            await self.on_exit()
+                            return interpreter_signal
+                        case _:
+                            raise AssertionError(
+                                "Unsupported interpreter signal returned from command. "
+                                f"Received signal of type "
+                                f"'{interpreter_signal.__class__.__name__}' with value "
+                                f"{interpreter_signal}",
+                            )
                 else:
                     print_error(f"Command '{parsed_command.command}' not found")
             except KeyboardInterrupt:
@@ -168,3 +174,8 @@ class Interpreter:
             #     )
             #     console.print_exception(show_locals=True)
             #     continue
+
+        raise AssertionError(
+            "Interpreter REPL loop broke out without returning a valid interpreter "
+            "signal."
+        )

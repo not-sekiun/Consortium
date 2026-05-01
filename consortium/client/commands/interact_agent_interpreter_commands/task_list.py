@@ -3,11 +3,11 @@ from argparse import ArgumentParser
 from consortium.client.commands.agents_interpreter_commands import (
     TaskListCommand as TaskListAgentsInterpreterCommand,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import Context
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
@@ -58,7 +58,7 @@ class TaskListCommand(TaskListAgentsInterpreterCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -91,4 +91,4 @@ class TaskListCommand(TaskListAgentsInterpreterCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

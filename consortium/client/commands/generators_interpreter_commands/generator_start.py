@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
@@ -30,7 +30,7 @@ class GeneratorStartCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run(self, context: Context) -> ReturnStatus:
+    async def run(self, context: Context) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -50,6 +50,4 @@ class GeneratorStartCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(
-            type=ReturnStatusType.CONTINUE,
-        )
+        return ContinueSignal()

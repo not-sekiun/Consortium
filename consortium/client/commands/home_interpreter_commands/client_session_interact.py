@@ -4,13 +4,14 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
+    SwitchClientSessionSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
@@ -40,7 +41,7 @@ class InteractClientSessionCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
 
@@ -52,23 +53,18 @@ class InteractClientSessionCommand(BaseCommand):
                 )
             except ClientSessionNotFoundError as exc:
                 print_error(str(exc))
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             if client_session is context.client_session:
                 print_error(
                     f"Already interacting with client session: {client_session}"
                 )
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             print_success(f"Interacting with client session: {client_session}")
 
-            return ReturnStatus(
-                type=ReturnStatusType.SWITCH_CLIENT_SESSION,
-                data={
-                    "client_session": client_session,
-                },
-            )
+            return SwitchClientSessionSignal(client_session=client_session)
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

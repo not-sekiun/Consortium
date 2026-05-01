@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import (
     format_value_type_specification_epilog,
@@ -57,7 +57,7 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             if "--help-full" in context.arguments:
                 self.parser.epilog = (
@@ -67,7 +67,7 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 )
                 self.parser.print_help()
                 self.parser.epilog = self.epilog
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             parsed_args = self.parser.parse_args(context.arguments)
             listener_template_options = context.interpreter_context[
@@ -84,7 +84,7 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 print_error(
                     f"Listener template option not found: '{option_name}'",
                 )
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             try:
                 option_name, option_value = (
@@ -100,10 +100,8 @@ class ListenerTemplateSetOptionCommand(BaseCommand):
                 )
             except ValueError as exc:
                 print_error(exc)
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
         except SystemExit:
             pass
 
-        return ReturnStatus(
-            type=ReturnStatusType.CONTINUE,
-        )
+        return ContinueSignal()

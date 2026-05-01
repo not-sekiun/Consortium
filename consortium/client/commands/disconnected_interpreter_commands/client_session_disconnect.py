@@ -3,12 +3,11 @@ from argparse import ArgumentParser
 from consortium.client.commands.home_interpreter_commands.client_session_disconnect import (
     ClientSessionDisconnectCommand as HomeInterpreterClientSessionDisconnectCommand,
 )
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
-)
-from consortium.client.repl_interface.base_command import (
-    Context,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    ExitClientSessionSignal,
+    InterpreterSignal,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
@@ -35,7 +34,7 @@ class ClientSessionDisconnectCommand(HomeInterpreterClientSessionDisconnectComma
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             client_session_id = parsed_args.client_session_id[0]
@@ -44,8 +43,8 @@ class ClientSessionDisconnectCommand(HomeInterpreterClientSessionDisconnectComma
             )
 
             if client_session_id == str(context.client_session.client_session_id):
-                return ReturnStatus(type=ReturnStatusType.EXIT_CLIENT_SESSION)
+                return ExitClientSessionSignal()
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

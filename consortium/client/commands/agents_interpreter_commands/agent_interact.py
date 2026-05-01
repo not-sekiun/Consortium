@@ -1,13 +1,13 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.return_status_models import (
-    InterpreterType,
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
+    SwitchInteractAgentInterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
@@ -35,7 +35,7 @@ class AgentInteractCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -46,14 +46,10 @@ class AgentInteractCommand(BaseCommand):
             print_success(
                 f"Interacting with agent: '{agent['name']}' ({agent['agent_id']})"
             )
-            return ReturnStatus(
-                type=ReturnStatusType.SWITCH_INTERPRETER,
-                data={
-                    "interpreter_type": InterpreterType.INTERACT_AGENT_INTERPRETER,
-                    "agent": agent,
-                },
+            return SwitchInteractAgentInterpreterSignal(
+                agent=agent,
             )
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()

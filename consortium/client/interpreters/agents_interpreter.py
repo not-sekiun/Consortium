@@ -8,7 +8,7 @@ from consortium.client.commands.agents_interpreter_commands import (
     AgentListCommand,
 )
 from consortium.client.commands.core_commands import CORE_COMMANDS
-from consortium.client.repl_interface.interpreter import Interpreter
+from consortium.client.repl_interface.base_interpreter import BaseInterpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -24,7 +24,7 @@ COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS = [
 ] + AGENTS_INTERPRETER_COMMANDS
 
 
-class AgentsInterpreter(Interpreter):
+class AgentsInterpreter(BaseInterpreter):
     def __init__(self, client_session: ClientSession):
         super().__init__(
             prompt=ANSI(

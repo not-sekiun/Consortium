@@ -1,13 +1,13 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.return_status_models import (
-    InterpreterType,
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
+    SwitchUseListenerTemplateInterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_info
@@ -36,7 +36,7 @@ class ListenerTemplateUseCommand(BaseCommand):
     async def run(
         self,
         context: Context,
-    ) -> ReturnStatus:
+    ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -50,16 +50,10 @@ class ListenerTemplateUseCommand(BaseCommand):
                 f"Using listener template: '{listener_template['name']}' "
                 f"({listener_template['listener_template_id']})",
             )
-            return ReturnStatus(
-                type=ReturnStatusType.SWITCH_INTERPRETER,
-                data={
-                    "interpreter_type": InterpreterType.USE_LISTENER_TEMPLATE_INTERPRETER,
-                    "listener_template": listener_template,
-                },
+            return SwitchUseListenerTemplateInterpreterSignal(
+                listener_template=listener_template,
             )
         except SystemExit:
             pass
 
-        return ReturnStatus(
-            type=ReturnStatusType.CONTINUE,
-        )
+        return ContinueSignal()

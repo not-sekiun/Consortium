@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.return_status_models import (
-    ReturnStatus,
-    ReturnStatusType,
+from consortium.client.models.context import Context
+from consortium.client.models.interpreter_signal_models import (
+    ContinueSignal,
+    InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
-    Context,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.options_utils import OptionType
@@ -31,7 +31,7 @@ class ListenerTemplateUnsetOptionCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run(self, context: Context) -> ReturnStatus:
+    async def run(self, context: Context) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             listener_template_options = context.interpreter_context[
@@ -45,7 +45,7 @@ class ListenerTemplateUnsetOptionCommand(BaseCommand):
                 print_error(
                     f"Listener template option not found: '{option_name}'",
                 )
-                return ReturnStatus(type=ReturnStatusType.CONTINUE)
+                return ContinueSignal()
 
             if option["option_type"] == OptionType.LIST_VALUE_OPTION:
                 option["value"] = []
@@ -78,4 +78,4 @@ class ListenerTemplateUnsetOptionCommand(BaseCommand):
         except SystemExit:
             pass
 
-        return ReturnStatus(type=ReturnStatusType.CONTINUE)
+        return ContinueSignal()
