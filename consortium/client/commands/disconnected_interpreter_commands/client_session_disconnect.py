@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from consortium.client.commands.home_interpreter_commands.client_session_disconnect import (
     ClientSessionDisconnectCommand as HomeInterpreterClientSessionDisconnectCommand,
 )
-from consortium.client.models.context import Context
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     ExitClientSessionSignal,

@@ -1,6 +1,7 @@
+from collections import deque
 from typing import TYPE_CHECKING, Any
 
-from prompt_toolkit import ANSI, HTML, PromptSession
+from prompt_toolkit import ANSI, HTML, PromptSession, print_formatted_text
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -15,11 +16,13 @@ from consortium.client.exceptions.client_interpreter_exceptions import (
 from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIOperationError,
 )
-from consortium.client.models.context import Context
+from consortium.client.models.alias_model import Alias
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.alias_expander import expand_aliases
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
@@ -36,11 +39,13 @@ class BaseInterpreter:
         self,
         prompt: str | ANSI | HTML | list[tuple[str, str]],
         commands: list[BaseCommand],
+        aliases: dict[str, Alias],
+        resource_commands: deque[str],
         client_session: ClientSession | None,
-        context: dict[str, Any] = None,
+        interpreter_context: dict[str, Any] = None,
     ):
-        if context is None:
-            context = {}
+        if interpreter_context is None:
+            interpreter_context = {}
 
         self.prompt_session = PromptSession(
             message=prompt,
@@ -52,15 +57,16 @@ class BaseInterpreter:
         )
         self.commands = {command.name: command for command in commands}
         self.client_session = client_session
-        self.context = context
+        self.interpreter_context = interpreter_context
 
-        # Add current interpreter commands to the interpreter context for the help
+        # Add current interpreter commands to the interpreter context for the `help`
         # command to access
-        self.context["commands"] = self.commands
-        # TODO: Add aliases and resource commands to the interpreter context at some
-        #  point
-        # self.context["aliases"] = {}
-        # self.context["resource_commands"] = {}
+        self.interpreter_context["commands"] = self.commands
+        # Add aliases to the interpreter context for the `alias` command to access
+        self.interpreter_context["aliases"] = aliases
+        # Add the resource commands queue to the interpreter context for the `rc`
+        # command to access
+        self.interpreter_context["resource_commands"] = resource_commands
 
     # We provide a function because it needs to be called on every prompt update. The
     # name of the session can be renamed at any moment. Just passing in `HTML` object
@@ -92,8 +98,19 @@ class BaseInterpreter:
             try:
                 await self.on_loop()
 
-                with patch_stdout(raw=True):
-                    input_string = await self.prompt_session.prompt_async()
+                if self.interpreter_context["resource_commands"]:
+                    input_string = self.interpreter_context[
+                        "resource_commands"
+                    ].popleft()
+                    print_formatted_text(
+                        HTML("<b><ansimagenta>[RC]</ansimagenta></b>"),
+                        self.prompt_session.message,
+                        end="",
+                    )
+                    print_formatted_text(input_string)
+                else:
+                    with patch_stdout(raw=True):
+                        input_string = await self.prompt_session.prompt_async()
                 if not input_string:
                     continue
 
@@ -116,6 +133,13 @@ class BaseInterpreter:
                             break
                         except UnclosedQuotesError:
                             continue
+
+                expanded_tokens = expand_aliases(
+                    tokens=tokenized_string.tokens,
+                    aliases=self.interpreter_context["aliases"],
+                )
+                tokenized_string.tokens = expanded_tokens
+
                 parsed_command = parse(tokenized_string=tokenized_string)
                 if parsed_command.command in self.commands:
                     context = Context(
@@ -123,7 +147,7 @@ class BaseInterpreter:
                         arguments=parsed_command.arguments,
                         raw_input=parsed_command.raw_input,
                         client_session=self.client_session,
-                        interpreter_context=self.context,
+                        interpreter_context=self.interpreter_context,
                     )
                     interpreter_signal = await self.commands[
                         parsed_command.command
@@ -138,9 +162,7 @@ class BaseInterpreter:
                         case _:
                             raise AssertionError(
                                 "Unsupported interpreter signal returned from command. "
-                                f"Received signal of type "
-                                f"'{interpreter_signal.__class__.__name__}' with value "
-                                f"{interpreter_signal}",
+                                f"Received signal '{interpreter_signal}'",
                             )
                 else:
                     print_error(f"Command '{parsed_command.command}' not found")

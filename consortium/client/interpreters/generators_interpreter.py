@@ -1,3 +1,4 @@
+from collections import deque
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI, HTML
@@ -9,6 +10,7 @@ from consortium.client.commands.generators_interpreter_commands import (
     AgentTemplateListCommand,
     GeneratorListCommand,
 )
+from consortium.client.models.alias_model import Alias
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.base_interpreter import BaseInterpreter
 from consortium.client.utils.data_structure_utils import (
@@ -27,9 +29,11 @@ class GeneratorsInterpreter(BaseInterpreter):
     def __init__(
         self,
         client_session: ClientSession,
+        aliases: dict[str, Alias],
+        resource_commands: deque[str],
         prompt: str | ANSI | HTML | list[tuple[str, str]] | None = None,
         commands: list[BaseCommand] | None = None,
-        context: dict[str, Any] | None = None,
+        interpreter_context: dict[str, Any] | None = None,
     ):
         if prompt is None:
             prompt = HTML(
@@ -37,14 +41,16 @@ class GeneratorsInterpreter(BaseInterpreter):
             )
         if commands is None:
             commands = COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS
-        if context is None:
-            context = {}
+        if interpreter_context is None:
+            interpreter_context = {}
 
         super().__init__(
             prompt=prompt,
             commands=commands,
             client_session=client_session,
-            context=context,
+            aliases=aliases,
+            resource_commands=resource_commands,
+            interpreter_context=interpreter_context,
         )
 
     async def _get_all_agent_generators_and_agent_templates(self):

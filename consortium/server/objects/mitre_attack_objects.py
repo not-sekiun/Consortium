@@ -1,6 +1,5 @@
 import json
 import pathlib
-from enum import StrEnum
 
 from pydantic import BaseModel
 
@@ -13,15 +12,15 @@ with open(
     mitre_attack_data = json.load(file)
 
 
-# Dynamically create StrEnum
-MitreAttackTechniqueID = StrEnum(
-    "MitreAttackTechniqueID",
-    {tid.replace(".", "_"): tid for tid in mitre_attack_data.keys()},
-)
+# # Dynamically create StrEnum
+# MitreAttackTechniqueID = StrEnum(
+#     "MitreAttackTechniqueID",
+#     {tid.replace(".", "_"): tid for tid in mitre_attack_data.keys()},
+# )
 
 
 class MitreAttackTechnique(BaseModel):
-    mitre_attack_technique_id: MitreAttackTechniqueID
+    mitre_attack_technique_id: str  # MitreAttackTechniqueID
     name: str
     description: str
     tactics: list[str]
@@ -32,9 +31,10 @@ class MitreAttackTechnique(BaseModel):
 def resolve_mitre_attack_technique_id(
     mitre_attack_technique_id: str,
 ) -> MitreAttackTechnique:
-    data = mitre_attack_data[mitre_attack_technique_id]
+    data = mitre_attack_data[mitre_attack_technique_id]  # TODO: Consider a custom error
+
     return MitreAttackTechnique(
-        mitre_attack_technique_id=mitre_attack_technique_id,
+        mitre_attack_technique_id=mitre_attack_technique_id.replace(".", "_"),
         name=data["name"],
         description=data["description"],
         tactics=data["tactics"],

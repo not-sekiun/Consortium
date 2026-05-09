@@ -1,3 +1,5 @@
+from collections import deque
+
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import NestedCompleter
 
@@ -11,6 +13,7 @@ from consortium.client.commands.home_interpreter_commands import (
     ConnectCommand,
     InteractClientSessionCommand,
 )
+from consortium.client.models.alias_model import Alias
 from consortium.client.repl_interface.base_interpreter import BaseInterpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
@@ -21,7 +24,11 @@ client_sessions_service = client_singletons.client_sessions_service
 
 
 class DisconnectedInterpreter(BaseInterpreter):
-    def __init__(self):
+    def __init__(
+        self,
+        aliases: dict[str, Alias],
+        resource_commands: deque[str],
+    ):
         combined_disconnected_interpreter_core_commands = (
             [
                 command
@@ -41,6 +48,8 @@ class DisconnectedInterpreter(BaseInterpreter):
                 *combined_disconnected_interpreter_core_commands,
             ],
             client_session=None,
+            aliases=aliases,
+            resource_commands=resource_commands,
         )
 
     async def on_enter(self) -> None:

@@ -1,3 +1,4 @@
+from collections import deque
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import HTML
@@ -17,6 +18,7 @@ from consortium.client.commands.interact_agent_interpreter_commands.agent_capabi
 from consortium.client.interpreters.agents_interpreter import (
     COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS,
 )
+from consortium.client.models.alias_model import Alias
 from consortium.client.repl_interface.base_interpreter import BaseInterpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
@@ -35,6 +37,8 @@ class InteractAgentInterpreter(BaseInterpreter):
     def __init__(
         self,
         client_session: ClientSession,
+        aliases: dict[str, Alias],
+        resource_commands: deque[str],
         agent: dict[str, Any],
     ):
         super().__init__(
@@ -59,11 +63,15 @@ class InteractAgentInterpreter(BaseInterpreter):
                 + [AgentsCommand()]
             ),
             client_session=client_session,
-            context={"agent": agent},
+            aliases=aliases,
+            resource_commands=resource_commands,
+            interpreter_context={"agent": agent},
         )
 
     async def _register_agent_capability_commands(self) -> None:
-        agent_capabilities = self.context["agent"]["agent_type"]["agent_capabilities"]
+        agent_capabilities = self.interpreter_context["agent"]["agent_type"][
+            "agent_capabilities"
+        ]
 
         for agent_capability_name, agent_capability in agent_capabilities.items():
             # Register each agent capability as a command that can be run.
@@ -104,7 +112,9 @@ class InteractAgentInterpreter(BaseInterpreter):
             # Register each agent capability command for the autocompleter.
             self.commands[agent_capability_name] = agent_capability_command
             # Also register in the context for the help command to display properly.
-            self.context["commands"][agent_capability_name] = agent_capability_command
+            self.interpreter_context["commands"][agent_capability_name] = (
+                agent_capability_command
+            )
 
     async def _initialize_autocompleter(self) -> None:
         all_agents = await self.client_session.rest_api.get_all_agents()
@@ -152,7 +162,9 @@ class InteractAgentInterpreter(BaseInterpreter):
 
         # Register each agent capability command to the autocompleter without any
         # argument completions.
-        agent_capabilities = self.context["agent"]["agent_type"]["agent_capabilities"]
+        agent_capabilities = self.interpreter_context["agent"]["agent_type"][
+            "agent_capabilities"
+        ]
         for agent_capability_name in agent_capabilities:
             nested_completer_dict[agent_capability_name] = dict.fromkeys(self.commands)
 
@@ -191,7 +203,7 @@ class InteractAgentInterpreter(BaseInterpreter):
             nested_completer_dict,
         )
 
-        if event["data"]["agent_id"] == self.context["agent"]["agent_id"]:
+        if event["data"]["agent_id"] == self.interpreter_context["agent"]["agent_id"]:
             print_info(
                 f"Received result with result ID {result['result_id']} for "
                 f"task with task ID {result['task_id']}:\n{result['message']}",

@@ -4,7 +4,7 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.commands.home_interpreter_commands.client_session_rename import (
     ClientSessionRenameCommand as HomeInterpreterClientSessionRenameCommand,
 )
-from consortium.client.models.context import Context
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,

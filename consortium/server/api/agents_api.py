@@ -24,8 +24,6 @@ from consortium.server.models.agent_models import (
     AgentModel,
 )
 from consortium.server.models.agent_task_and_result_models import (
-    AgentResultModel,
-    AgentResultStatus,
     AgentTaskAPIResponseModel,
     AgentTaskModel,
     AgentTaskProgressLogAPIResponseModel,
@@ -268,44 +266,45 @@ def get_agent_task_by_task_id(
     )
 
 
-@router.get(
-    "/results",
-    responses={
-        200: {"model": list[AgentResultModel]},
-    },
-)
-def get_all_agent_results(
-    _: Annotated[
-        None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
-    ],
-    status: AgentResultStatus | None = None,
-) -> list[AgentResultModel]:
-    return _agents_service.get_all_agent_results(status=status)
-
-
-@router.get(
-    "/results/{result_id}",
-    responses={
-        200: {"model": AgentResultModel},
-        404: {"model": _agent_result_not_found_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_result_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
-    },
-)
-def get_agent_result_by_result_id(
-    _: Annotated[
-        None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
-    ],
-    result_id: UUID4,
-) -> AgentResultModel:
-    try:
-        return _agents_service.get_agent_result_by_result_id(result_id=result_id)
-    except consortium_excs.AgentResultIDNotFoundError as exc:
-        raise api_excs.AgentResultNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
+#
+# @router.get(
+#     "/results",
+#     responses={
+#         200: {"model": list[AgentResultModel]},
+#     },
+# )
+# def get_all_agent_results(
+#     _: Annotated[
+#         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
+#     ],
+#     status: AgentResultStatus | None = None,
+# ) -> list[AgentResultModel]:
+#     return _agents_service.get_all_agent_results(status=status)
+#
+#
+# @router.get(
+#     "/results/{result_id}",
+#     responses={
+#         200: {"model": AgentResultModel},
+#         404: {"model": _agent_result_not_found_error.to_pydantic_model()},
+#         422: {
+#             "model": _invalid_result_uuid_error.to_pydantic_model()
+#             | _unprocessable_entity_error.to_pydantic_model()
+#         },
+#     },
+# )
+# def get_agent_result_by_result_id(
+#     _: Annotated[
+#         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
+#     ],
+#     result_id: UUID4,
+# ) -> AgentResultModel:
+#     try:
+#         return _agents_service.get_agent_result_by_result_id(result_id=result_id)
+#     except consortium_excs.AgentResultIDNotFoundError as exc:
+#         raise api_excs.AgentResultNotFoundError.from_consortium_exception(
+#             consortium_exception=exc
+#         ) from None
 
 
 @router.get(
@@ -426,73 +425,73 @@ def get_agent_tasks_by_agent_id_and_task_id(
         ) from None
 
 
-@router.get(
-    "/{agent_id}/results",
-    responses={
-        200: {"model": list[AgentResultModel]},
-        404: {"model": _agent_not_found_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_agent_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
-    },
-)
-def get_all_agent_results_by_agent_id(
-    agent_id: UUID4,
-    _: Annotated[
-        None,
-        Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
-    ],
-    status: AgentResultStatus | None = None,
-) -> list[AgentResultModel]:
-    try:
-        return _agents_service.get_all_agent_results_by_agent_id(
-            agent_id=agent_id, status=status
-        )
-    except consortium_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-
-
-# TODO: Consider adding a get result by task ID too
-@router.get(
-    "/{agent_id}/results/{result_id}",
-    responses={
-        200: {"model": AgentResultModel},
-        404: {
-            "model": _agent_not_found_error.to_pydantic_model()
-            | _agent_result_not_found_error.to_pydantic_model(),
-        },
-        422: {
-            "model": _invalid_agent_uuid_error.to_pydantic_model()
-            | _invalid_result_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
-    },
-)
-def get_agent_result_by_agent_id_and_result_id(
-    agent_id: UUID4,
-    result_id: UUID4,
-    _: Annotated[
-        None,
-        Depends(
-            AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID)
-        ),
-    ],
-) -> AgentResultModel:
-    try:
-        return _agents_service.get_agent_result_by_agent_id_and_result_id(
-            agent_id=agent_id, result_id=result_id
-        )
-    except consortium_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-    except consortium_excs.AgentResultIDNotFoundError as exc:
-        raise api_excs.AgentResultNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
+# @router.get(
+#     "/{agent_id}/results",
+#     responses={
+#         200: {"model": list[AgentResultModel]},
+#         404: {"model": _agent_not_found_error.to_pydantic_model()},
+#         422: {
+#             "model": _invalid_agent_uuid_error.to_pydantic_model()
+#             | _unprocessable_entity_error.to_pydantic_model()
+#         },
+#     },
+# )
+# def get_all_agent_results_by_agent_id(
+#     agent_id: UUID4,
+#     _: Annotated[
+#         None,
+#         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
+#     ],
+#     status: AgentResultStatus | None = None,
+# ) -> list[AgentResultModel]:
+#     try:
+#         return _agents_service.get_all_agent_results_by_agent_id(
+#             agent_id=agent_id, status=status
+#         )
+#     except consortium_excs.AgentNotFoundError as exc:
+#         raise api_excs.AgentNotFoundError.from_consortium_exception(
+#             consortium_exception=exc
+#         ) from None
+#
+#
+# # TODO: Consider adding a get result by task ID too
+# @router.get(
+#     "/{agent_id}/results/{result_id}",
+#     responses={
+#         200: {"model": AgentResultModel},
+#         404: {
+#             "model": _agent_not_found_error.to_pydantic_model()
+#             | _agent_result_not_found_error.to_pydantic_model(),
+#         },
+#         422: {
+#             "model": _invalid_agent_uuid_error.to_pydantic_model()
+#             | _invalid_result_uuid_error.to_pydantic_model()
+#             | _unprocessable_entity_error.to_pydantic_model()
+#         },
+#     },
+# )
+# def get_agent_result_by_agent_id_and_result_id(
+#     agent_id: UUID4,
+#     result_id: UUID4,
+#     _: Annotated[
+#         None,
+#         Depends(
+#             AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID)
+#         ),
+#     ],
+# ) -> AgentResultModel:
+#     try:
+#         return _agents_service.get_agent_result_by_agent_id_and_result_id(
+#             agent_id=agent_id, result_id=result_id
+#         )
+#     except consortium_excs.AgentNotFoundError as exc:
+#         raise api_excs.AgentNotFoundError.from_consortium_exception(
+#             consortium_exception=exc
+#         ) from None
+#     except consortium_excs.AgentResultIDNotFoundError as exc:
+#         raise api_excs.AgentResultNotFoundError.from_consortium_exception(
+#             consortium_exception=exc
+#         ) from None
 
 
 @router.post(

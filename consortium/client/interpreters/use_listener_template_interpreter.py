@@ -1,3 +1,4 @@
+from collections import deque
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +13,7 @@ from consortium.client.interpreters.listeners_interpreter import (
     COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS,
     ListenersInterpreter,
 )
+from consortium.client.models.alias_model import Alias
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -24,6 +26,8 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
     def __init__(
         self,
         client_session: ClientSession,
+        aliases: dict[str, Alias],
+        resource_commands: deque[str],
         listener_template: dict[str, Any],
     ):
         # Add a "value" key to the options to store the current value of the
@@ -52,7 +56,9 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
                 + [ListenersCommand()]
             ),
             client_session=client_session,
-            context={
+            aliases=aliases,
+            resource_commands=resource_commands,
+            interpreter_context={
                 "listener_template": listener_template,
             },
         )
@@ -65,7 +71,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-        listener_template = self.context["listener_template"]
+        listener_template = self.interpreter_context["listener_template"]
         for key, value in {
             command: dict.fromkeys(listener_template["options"])
             for command in [

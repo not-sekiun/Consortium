@@ -2,7 +2,7 @@ import random
 
 from consortium.client.client_config import CLIENT_RELEASE
 from consortium.client.client_rest_api import RestAPI
-from consortium.client.models.context import Context
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,

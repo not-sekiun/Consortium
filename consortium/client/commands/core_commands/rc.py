@@ -1,6 +1,6 @@
 import argparse
 
-from consortium.client.models.context import Context
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -12,7 +12,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_info
 
 
-class RCCommand(BaseCommand):
+class RcCommand(BaseCommand):
     name = "rc"
     description = (
         "Run commands from a provided resource file in the current interpreter"
@@ -25,6 +25,9 @@ class RCCommand(BaseCommand):
         Note:
           Resource files should contain one command per line. Lines starting with '#'
           are treated as comments and ignored.
+
+          Commands ran from a resource file will have the prompt prefixed with `[RC]`
+          to indicate them appropriately.
         """,
     )
 
@@ -41,17 +44,20 @@ class RCCommand(BaseCommand):
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
+            resource_file = parsed_args.resource_file
 
             try:
-                with open(parsed_args.resource_file) as f:
-                    commands = [  # noqa
+                with open(resource_file) as f:
+                    commands = [
                         line
                         for line in f.read().splitlines()
                         if line and not line.startswith("#")
                     ]
-                    print_info(f"Loaded resource file: {parsed_args.resource_file}")
+                    for command in commands:
+                        context.interpreter_context["resource_commands"].append(command)
+                    print_info(f"Loaded resource file: {resource_file}")
             except Exception as exc:
-                print_info(f"Failed to read resource file: {exc}")
+                print_info(f"Failed to read resource file '{resource_file}' : {exc}")
         except SystemExit:
             pass
 

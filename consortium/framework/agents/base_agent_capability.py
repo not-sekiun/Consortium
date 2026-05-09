@@ -33,7 +33,7 @@ from consortium.server.models.agent_task_and_result_models import (
     AgentTaskProgressStatus,
 )
 from consortium.server.objects.mitre_attack_objects import (
-    MitreAttackTechniqueID,
+    # MitreAttackTechniqueID,
     resolve_mitre_attack_technique_id,
 )
 
@@ -83,7 +83,7 @@ class _BaseAgentCapabilityModel(BaseModel):
         | ChoiceValueOption
         | ToggleableChoicesValueOption
     ]
-    mitre_attack_techniques: set[MitreAttackTechniqueID]
+    mitre_attack_techniques: set[str]  # set[MitreAttackTechniqueID]
     validating_function: (
         Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
     )
@@ -103,7 +103,7 @@ class BaseAgentCapability(_AgentCommunicator):
         | ChoiceValueOption
         | ToggleableChoicesValueOption
     ] = None
-    mitre_attack_techniques: set[MitreAttackTechniqueID] | None = None
+    mitre_attack_techniques: set[str] | None = None  # set[MitreAttackTechniqueID]
     validating_function: (
         Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
     ) = None

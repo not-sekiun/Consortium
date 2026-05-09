@@ -1,3 +1,4 @@
+from collections import deque
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI
@@ -8,6 +9,7 @@ from consortium.client.commands.agents_interpreter_commands import (
     AgentListCommand,
 )
 from consortium.client.commands.core_commands import CORE_COMMANDS
+from consortium.client.models.alias_model import Alias
 from consortium.client.repl_interface.base_interpreter import BaseInterpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
@@ -25,7 +27,12 @@ COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS = [
 
 
 class AgentsInterpreter(BaseInterpreter):
-    def __init__(self, client_session: ClientSession):
+    def __init__(
+        self,
+        client_session: ClientSession,
+        aliases: dict[str, Alias],
+        resource_commands: deque[str],
+    ):
         super().__init__(
             prompt=ANSI(
                 format_rich_text_as_ansi(
@@ -33,6 +40,8 @@ class AgentsInterpreter(BaseInterpreter):
                 ),
             ),
             commands=COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS,
+            aliases=aliases,
+            resource_commands=resource_commands,
             client_session=client_session,
         )
 
