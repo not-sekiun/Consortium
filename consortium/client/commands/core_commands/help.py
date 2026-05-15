@@ -2,7 +2,7 @@ import argparse
 
 from rich.table import Table
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -91,7 +91,7 @@ class HelpCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: AnyContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(

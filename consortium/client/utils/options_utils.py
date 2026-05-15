@@ -37,7 +37,7 @@ def _parse_value_string_for_value_type_annotation(
 def _convert_value_string_from_string_representation_based_on_value_type(
     value_string: str,
     value_type: str,
-) -> str | int | float | bool | list:
+) -> str | int | float | bool:
     try:
         if value_type == "str":
             return value_string
@@ -55,6 +55,10 @@ def _convert_value_string_from_string_representation_based_on_value_type(
                 raise ValueError(
                     f"Invalid value '{value_string}' provided for a value type of bool",
                 ) from None
+        else:
+            raise ValueError(
+                f"Invalid value string '{value_string}' was provided.",
+            )
     except ValueError:
         raise ValueError(
             f"Failed to convert value '{value_string}' to type '{value_type}'",
@@ -90,7 +94,7 @@ def _handle_single_value_option_parameter(
     value_type_flag: str | None,
     option_json_data: dict[str, Any],
 ) -> tuple[str, str | int | float | bool]:
-    value_string, value_type_annotation = _parse_value_string_for_value_type_annotation(
+    raw_string, value_type_annotation = _parse_value_string_for_value_type_annotation(
         value_string=value_string,
     )
     value_type = _resolve_value_type_from_overriding_factors(
@@ -98,9 +102,11 @@ def _handle_single_value_option_parameter(
         value_type_annotation=value_type_annotation,
         option_specified_value_type=option_json_data["value_type"],
     )
-    value_string = _convert_value_string_from_string_representation_based_on_value_type(
-        value_string=value_string,
-        value_type=value_type,
+    converted_value = (
+        _convert_value_string_from_string_representation_based_on_value_type(
+            value_string=raw_string,
+            value_type=value_type,
+        )
     )
 
     if (
@@ -108,18 +114,18 @@ def _handle_single_value_option_parameter(
         and value_type != option_json_data["value_type"]
     ):
         print_warning(
-            f'Value "{value_string}" of type "{value_type}" is not of the '
+            f'Value "{converted_value}" of type "{value_type}" is not of the '
             f'expected type "{option_json_data["value_type"]}" for option '
             f'"{option_json_data["name"]}". However, the value was still set as the '
             f'user supplied type "{value_type}".',
         )
 
-    return option_json_data["name"], value_string
+    return option_json_data["name"], converted_value
 
 
 def _handle_list_value_option_parameter(
     value_strings: list[str],
-    value_type_flag: str,
+    value_type_flag: str | None,
     option_json_data: dict[str, Any],
 ) -> tuple[str, list[str | int | float | bool]]:
     new_values = []
@@ -157,7 +163,7 @@ def _handle_list_value_option_parameter(
 
 def _handle_choice_value_option_parameter(
     value_string: str,
-    value_type_flag: str,
+    value_type_flag: str | None,
     option_json_data: dict,
 ) -> tuple[str, str | int | float | bool]:
     value_string, value_type_annotation = _parse_value_string_for_value_type_annotation(
@@ -203,8 +209,8 @@ def _handle_choice_value_option_parameter(
 
 
 def _handle_dictionary_value_option_parameter(
-    value_strings: list[str | int | float | bool],
-    value_type_flag: str,
+    value_strings: list[str],
+    value_type_flag: str | None,
     option_json_data: dict,
 ) -> tuple[str, dict[str, str | int | float | bool]]:
     new_agent_generator_parameter = {}
@@ -269,8 +275,8 @@ def _handle_dictionary_value_option_parameter(
 
 
 def _handle_toggleable_choice_value_option_parameter(
-    value_strings: list[str | int | float | bool],
-    value_type_flag: str,
+    value_strings: list[str],
+    value_type_flag: str | None,
     option_json_data: dict[str, Any],
 ) -> tuple[str, dict[str, bool]]:
     new_agent_generator_parameter = {}
@@ -351,7 +357,7 @@ def _handle_toggleable_choice_value_option_parameter(
 def convert_option_value_strings_to_option_value(
     option_json_data: dict[str, Any],
     value_strings: list[str],
-    value_type_flag: str,
+    value_type_flag: str | None,
 ) -> tuple[str, Any]:
     if option_json_data["option_type"] == OptionType.SINGLE_VALUE_OPTION:
         if len(value_strings) != 1:

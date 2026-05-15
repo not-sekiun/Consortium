@@ -1,11 +1,18 @@
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import (
+    ConnectedContext,
+    DisconnectedContext,
+)
 from consortium.client.models.interpreter_signal_models import InterpreterSignal
 
 
-class BaseCommand(ABC):
+# BaseCommand is parameterized by the type of context it receives. It defaults to
+# ConnectedContext since this is the case for most Commands, but it can be set to
+# DisconnectedContext for Commands that should be available in the disconnected
+# interpreter.
+class BaseCommand[T: (ConnectedContext, DisconnectedContext) = ConnectedContext](ABC):
     name: str
     description: str = ""
     epilog: str = ""
@@ -35,4 +42,4 @@ class BaseCommand(ABC):
         return None
 
     @abstractmethod
-    async def run(self, context: Context) -> InterpreterSignal: ...
+    async def run(self, context: T) -> InterpreterSignal: ...

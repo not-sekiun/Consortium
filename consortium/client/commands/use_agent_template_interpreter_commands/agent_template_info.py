@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from consortium.client.commands.generators_interpreter_commands.agent_template_info import (
     AgentTemplateInfoCommand as GeneratorsInterpreterAgentTemplateInfoCommand,
 )
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -38,7 +38,7 @@ class AgentTemplateInfoCommand(GeneratorsInterpreterAgentTemplateInfoCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

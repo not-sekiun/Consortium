@@ -48,10 +48,12 @@ class RestAPI:
         self.json_web_token = None
 
         self._logger = logger.bind(
-            logger_name=(str(self)),
+            logger_name=(
+                str(self)
+            ),  # TODO: Proper logging support add a __str__ or __repr__
         )
         self._api_base_url = f"http://{self.remote_host}:{self.remote_port}/api"
-        self._aiohttp_client_session = None
+        self._aiohttp_client_session = aiohttp.ClientSession()
 
     async def connect(self) -> None:
         if self.logged_in:
@@ -61,7 +63,6 @@ class RestAPI:
                 username=self.username,
             )
         try:
-            self._aiohttp_client_session = aiohttp.ClientSession()
             response = await self._aiohttp_client_session.post(
                 f"{self._api_base_url}/login",
                 data={
@@ -582,7 +583,7 @@ class RestAPI:
     async def get_asset_by_asset_id(
         self,
         asset_id: str,
-    ) -> list[dict[str, Any]]:
+    ) -> dict[str, Any]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/assets/{asset_id}",
@@ -592,7 +593,7 @@ class RestAPI:
         self,
         asset_id: str,
         maximum_chunk_size: int = 1024,
-    ) -> AsyncGenerator[bytes, None, None]:
+    ) -> AsyncGenerator[bytes, None]:
         response = await self._aiohttp_client_session.get(
             f"{self._api_base_url}/assets/download/{asset_id}",
         )

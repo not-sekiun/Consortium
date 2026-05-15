@@ -7,7 +7,7 @@ from consortium.framework.agent_message_models import (
     AgentResultMessageModel,
     AgentTaskMessageModel,
 )
-from consortium.server.models.agent_task_and_result_models import AgentTaskModel
+from consortium.server.models.agent_task_models import AgentTaskModel
 
 if typing.TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent

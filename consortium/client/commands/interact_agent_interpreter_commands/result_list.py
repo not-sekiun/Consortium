@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from consortium.client.commands.agents_interpreter_commands import (
     ResultListCommand as ResultListAgentsInterpreterCommand,
 )
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -57,7 +57,7 @@ class ResultListCommand(ResultListAgentsInterpreterCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

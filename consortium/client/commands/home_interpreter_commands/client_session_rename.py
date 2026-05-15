@@ -1,10 +1,6 @@
 from argparse import ArgumentParser
 
-import consortium.client.client_singletons as client_singletons
-from consortium.client.exceptions.client_sessions_service_exceptions import (
-    ClientSessionNotFoundError,
-)
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -13,9 +9,7 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_error, print_success
-
-client_sessions_service = client_singletons.client_sessions_service
+from consortium.client.utils.client_session_command_utils import rename_client_session
 
 
 class ClientSessionRenameCommand(BaseCommand):
@@ -49,25 +43,7 @@ class ClientSessionRenameCommand(BaseCommand):
             nargs=1,
         )
 
-    @staticmethod
-    def _rename_client_session(client_session_id: str, name: str) -> None:
-        try:
-            client_session = (
-                client_sessions_service.get_client_session_by_client_session_id(
-                    client_session_id=client_session_id,
-                )
-            )
-            # Store the previous client session string for the success
-            # message to demonstrate the change in name.
-            previous_client_session_str = str(client_session)
-            client_session.name = name
-            print_success(
-                f"Renamed client session {previous_client_session_str} to '{client_session.name}'"
-            )
-        except ClientSessionNotFoundError as exc:
-            print_error(str(exc))
-
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
 
@@ -75,7 +51,7 @@ class ClientSessionRenameCommand(BaseCommand):
                 client_session_id = context.client_session.client_session_id
             else:
                 client_session_id = parsed_args.client_session_id[0]
-            self._rename_client_session(
+            rename_client_session(
                 client_session_id=client_session_id,
                 name=parsed_args.name[0],
             )

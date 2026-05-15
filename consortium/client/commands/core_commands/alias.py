@@ -5,7 +5,7 @@ from rich.table import Table
 
 import consortium.client.client_config as client_config
 from consortium.client.models.alias_model import Alias
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -143,7 +143,7 @@ class AliasCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: AnyContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

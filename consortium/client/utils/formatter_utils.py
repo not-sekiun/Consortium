@@ -165,12 +165,18 @@ def format_mitre_attack_technique(mitre_attack_technique: dict[str, Any]) -> str
 def format_size_bytes_as_human_readable_str(size_bytes: int):
     if size_bytes == 0:
         return "0 B"
+
     # IEC Standard (Binary)
     units = ("B", "KiB", "MiB", "GiB", "TiB")
     i = 0
-    while size_bytes >= 1024 and i < len(units) - 1:
-        size_bytes /= 1024
+
+    # "Cast" to float here so the variable is consistently a float, this is done mainly
+    # to satisfy the type checker
+    size_bytes_float = float(size_bytes)
+    while size_bytes_float >= 1024 and i < len(units) - 1:
+        size_bytes_float /= 1024
         i += 1
+
     return f"{size_bytes:.2f} {units[i]}"
 
 

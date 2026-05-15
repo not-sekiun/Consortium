@@ -33,7 +33,10 @@ from consortium.client.interpreters.disconnected_interpreter import (
 )
 from consortium.client.models.alias_model import Alias
 from consortium.client.models.client_models import ClientConfig
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import (
+    ConnectedContext,
+    DisconnectedContext,
+)
 from consortium.client.models.interpreter_signal_models import (
     ExitClientSessionSignal,
     ExitClientSignal,
@@ -182,27 +185,35 @@ class Client:
                 f"{exc.__class__.__name__}: {exc}",
             )
 
-        # Display banner once at client startup.
-        await BannerCommand().run(
-            context=Context(
-                command="banner",
-                arguments=[],
-                raw_input="banner",
-                client_session=client_session,
-                interpreter_context={},
-            ),
-        )
-
         # Run the initial interpreter. Either we run a special disconnected interpreter
         # that can run independently of any client session in the case where a
         # connection failed, or we run the client session's own interpreter loop for a
         # successful initial connection.
         if client_session is None:
+            # Display banner once at client startup.
+            await BannerCommand().run(
+                context=DisconnectedContext(
+                    command="banner",
+                    arguments=[],
+                    raw_input="banner",
+                    interpreter_context={},
+                ),
+            )
             interpreter_signal = await DisconnectedInterpreter(
                 aliases=self._aliases,
                 resource_commands=self._resource_commands,
             ).run()
         else:
+            # Display banner once at client startup.
+            await BannerCommand().run(
+                context=ConnectedContext(
+                    command="banner",
+                    arguments=[],
+                    raw_input="banner",
+                    client_session=client_session,
+                    interpreter_context={},
+                ),
+            )
             interpreter_signal = await self._handle_client_session_interpreters(
                 client_session=client_session,
             )
@@ -218,24 +229,25 @@ class Client:
                         aliases=self._aliases,
                         resource_commands=self._resource_commands,
                     ).run()
-                case SwitchClientSessionSignal():
+                case SwitchClientSessionSignal() as previous_interpreter_signal:
                     try:
                         # The client connection switched to has no guarantee of being valid
-                        interpreter_signal = (
-                            await self._handle_client_session_interpreters(
-                                client_session=interpreter_signal.client_session
-                            )
+                        interpreter_signal = await self._handle_client_session_interpreters(
+                            client_session=previous_interpreter_signal.client_session
                         )
                     except RestAPIOperationError as exc:
                         print_error(
                             f"Failed to switch to client session "
-                            f"{interpreter_signal.client_session}. {exc}",
+                            f"{previous_interpreter_signal.client_session}. {exc}",
                         )
                         print_info(
                             "Switching to disconnected interpreter due to error raised "
                             + "while switching client sessions..."
                         )
-                        interpreter_signal = await DisconnectedInterpreter().run()
+                        interpreter_signal = await DisconnectedInterpreter(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                        ).run()
                     # # Catch any fatal errors raised by the client session. If a fatal error
                     # # occurs in any of the interpreters it is already printed. We catch it
                     # # here and kill the session.

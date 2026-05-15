@@ -1,20 +1,18 @@
 from argparse import ArgumentParser
 
-import consortium.client.client_singletons as client_singletons
-from consortium.client.commands.home_interpreter_commands.client_session_describe import (
-    ClientSessionDescribeCommand as HomeInterpreterClientSessionDescribeCommand,
-)
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import DisconnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.client_session_command_utils import describe_client_session
+from consortium.client.repl_interface.base_command import (
+    BaseCommand,
+)
 
-client_sessions_service = client_singletons.client_sessions_service
 
-
-class ClientSessionDescribeCommand(HomeInterpreterClientSessionDescribeCommand):
+class ClientSessionDescribeCommand(BaseCommand[DisconnectedContext]):
     name = "describe"
     description = "Set the description of a client session by its ID"
     epilog = format_argparse_epilog(
@@ -40,11 +38,11 @@ class ClientSessionDescribeCommand(HomeInterpreterClientSessionDescribeCommand):
 
     async def run(
         self,
-        context: Context,
+        context: DisconnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            self._describe_client_session(
+            describe_client_session(
                 client_session_id=parsed_args.client_session_id[0],
                 description=parsed_args.description[0],
             )

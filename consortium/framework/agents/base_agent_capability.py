@@ -26,10 +26,10 @@ from consortium.server.exceptions.consortium_exceptions.agent_capabilities_conso
     InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
-from consortium.server.models.agent_task_and_result_models import (
+from consortium.server.models.agent_task_models import (
     AgentTaskCurrentProgressModel,
     AgentTaskModel,
-    AgentTaskProgressLogModel,
+    AgentTaskProgressLogEntryModel,
     AgentTaskProgressStatus,
 )
 from consortium.server.objects.mitre_attack_objects import (
@@ -244,7 +244,7 @@ class BaseAgentCapability(_AgentCommunicator):
         self.task.current_progress = agent_task_progress
 
         if log_progress:
-            agent_task_progress_log = AgentTaskProgressLogModel(
+            agent_task_progress_log = AgentTaskProgressLogEntryModel(
                 sequence=self._task_progress_sequence_number,
                 message=message,
                 data=data or {},

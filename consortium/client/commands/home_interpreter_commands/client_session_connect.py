@@ -11,7 +11,7 @@ from consortium.client.exceptions.client_sessions_service_exceptions import (
 from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIAuthenticationError,
 )
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -70,7 +70,7 @@ class ConnectCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

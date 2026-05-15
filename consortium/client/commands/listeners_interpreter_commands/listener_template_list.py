@@ -1,6 +1,8 @@
+from typing import Any
+
 from rich.table import Table
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -25,7 +27,7 @@ class ListenerTemplateListCommand(BaseCommand):
 
     @staticmethod
     def _list_all_listener_templates(
-        all_listener_templates: list[dict[str, str]],
+        all_listener_templates: list[dict[str, Any]],
     ) -> None:
         table = Table(title="Listener Templates", highlight=True)
         table.add_column("Listener Template ID")
@@ -41,7 +43,7 @@ class ListenerTemplateListCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

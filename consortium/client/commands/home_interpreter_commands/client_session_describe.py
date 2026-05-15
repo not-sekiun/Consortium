@@ -1,10 +1,6 @@
 from argparse import ArgumentParser
 
-import consortium.client.client_singletons as client_singletons
-from consortium.client.exceptions.client_sessions_service_exceptions import (
-    ClientSessionNotFoundError,
-)
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -13,9 +9,7 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_error, print_success
-
-client_sessions_service = client_singletons.client_sessions_service
+from consortium.client.utils.client_session_command_utils import describe_client_session
 
 
 class ClientSessionDescribeCommand(BaseCommand):
@@ -49,27 +43,9 @@ class ClientSessionDescribeCommand(BaseCommand):
             nargs=1,
         )
 
-    @staticmethod
-    def _describe_client_session(
-        client_session_id: str,
-        description: str,
-    ) -> None:
-        try:
-            client_session = (
-                client_sessions_service.get_client_session_by_client_session_id(
-                    client_session_id=client_session_id,
-                )
-            )
-            client_session.description = description
-            print_success(
-                f"Updated {client_session} description to '{client_session.description}'"
-            )
-        except ClientSessionNotFoundError as exc:
-            print_error(str(exc))
-
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
@@ -78,7 +54,7 @@ class ClientSessionDescribeCommand(BaseCommand):
                 client_session_id = context.client_session.client_session_id
             else:
                 client_session_id = parsed_args.client_session_id[0]
-            self._describe_client_session(
+            describe_client_session(
                 client_session_id=client_session_id,
                 description=parsed_args.description[0],
             )

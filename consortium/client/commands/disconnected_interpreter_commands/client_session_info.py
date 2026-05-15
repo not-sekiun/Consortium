@@ -1,24 +1,18 @@
 from argparse import ArgumentParser
 
-import consortium.client.client_singletons as client_singletons
-from consortium.client.commands.home_interpreter_commands.client_session_info import (
-    ClientSessionInfoCommand as HomeInterpreterClientSessionInfoCommand,
-)
-from consortium.client.exceptions.client_sessions_service_exceptions import (
-    ClientSessionNotFoundError,
-)
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import DisconnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_error
+from consortium.client.utils.client_session_command_utils import (
+    display_client_session_info,
+)
 
-client_sessions_service = client_singletons.client_sessions_service
 
-
-class ClientSessionInfoCommand(HomeInterpreterClientSessionInfoCommand):
+class ClientSessionInfoCommand(BaseCommand[DisconnectedContext]):
     name = "info"
     description = "Display information for a client session by its ID"
     epilog = format_argparse_epilog(
@@ -49,24 +43,14 @@ class ClientSessionInfoCommand(HomeInterpreterClientSessionInfoCommand):
 
     async def run(
         self,
-        context: Context,
+        context: DisconnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-
-            try:
-                client_session = (
-                    client_sessions_service.get_client_session_by_client_session_id(
-                        parsed_args.client_session_id[0],
-                    )
-                )
-                await self._display_client_session_info(
-                    client_session=client_session,
-                    rest_api=client_session.rest_api,
-                    show_password=parsed_args.password,
-                )
-            except ClientSessionNotFoundError as exc:
-                print_error(str(exc))
+            await display_client_session_info(
+                client_session_id=parsed_args.client_session_id[0],
+                show_password=parsed_args.password,
+            )
         except SystemExit:
             pass
 

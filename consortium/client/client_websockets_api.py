@@ -79,7 +79,7 @@ class WebsocketsAPI:
         self.connected = True
 
     async def disconnect(self) -> None:
-        if not self.connected:
+        if not self.connected or self._websocket is None:
             raise WebsocketsAPINotConnectedError
 
         await self._websocket.close()
@@ -98,7 +98,7 @@ class WebsocketsAPI:
         self.running = True
 
     async def stop(self) -> None:
-        if not self.running:
+        if not self.running or self._websocket_message_handler_task is None:
             raise WebsocketsAPIHandlerNotRunningError
 
         self._websocket_message_handler_task.cancel()
@@ -173,9 +173,9 @@ class WebsocketsAPI:
     async def _send_message(
         self,
         action: str,
-        events: list[str] = None,
+        events: list[str] | None = None,
     ) -> None:
-        if not self.connected:
+        if not self.connected or self._websocket is None:
             raise WebsocketsAPINotConnectedError
 
         if events is None:
@@ -188,7 +188,7 @@ class WebsocketsAPI:
         self._logger.debug("Sent message: {}", message)
 
     async def _recv_message(self) -> dict[str, Any]:
-        if not self.connected:
+        if not self.connected or self._websocket is None:
             raise WebsocketsAPINotConnectedError
 
         if not self.running:
@@ -216,12 +216,12 @@ class WebsocketsAPI:
                 ),
             )
 
-        return message
+        return message_json
 
     async def _send_and_recv_message(
         self,
         action: str,
-        events: list[str] = None,
+        events: list[str] | None = None,
     ) -> dict[str, Any]:
         await self._send_message(action=action, events=events)
         return await self._recv_message()
@@ -229,6 +229,9 @@ class WebsocketsAPI:
     async def _websocket_message_handler_loop(self) -> None:
         try:
             while True:
+                if self._websocket is None:
+                    raise WebsocketsAPINotConnectedError
+
                 raw_message = await self._websocket.recv()
 
                 try:

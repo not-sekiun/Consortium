@@ -12,6 +12,8 @@ Exception hierarchy for agent capabilities errors:
             - [`CustomOSStringAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.CustomOSStringAlreadyRegisteredError]
 """
 
+from typing import Any
+
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
 )
@@ -139,4 +141,19 @@ class CustomOSStringAlreadyRegisteredError(AgentCapabilitiesFrameworkError):
                 f"Failed to configure the agent capability. The custom OS string "
                 f"provided '{custom_os_str}' has already been registered."
             ),
+        )
+
+
+class AgentCapabilityRuntimeError(AgentCapabilitiesFrameworkError):
+    code = "AGENT_CAPABILITY_RUNTIME_ERROR"
+
+    def __init__(
+        self, agent_capability_name: str, error_message: str, detail: Any = None
+    ):
+        super().__init__(
+            message=(
+                f"Failed to execute agent capability '{agent_capability_name}'. "
+                f"{error_message}"
+            ),
+            detail=detail,
         )

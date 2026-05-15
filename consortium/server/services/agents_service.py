@@ -16,10 +16,11 @@ from consortium.server.exceptions.consortium_exceptions.agents_consortium_except
     AgentNotFoundError,
     AgentTaskNotFoundError,
 )
-from consortium.server.models.agent_task_and_result_models import (
-    AgentTaskModel,
-    AgentTaskStatus,
-)
+
+# from consortium.server.models.agent_task_models import (
+#     AgentTaskModel,
+#     AgentTaskStatus,
+# )
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService

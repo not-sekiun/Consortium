@@ -17,7 +17,7 @@ from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIOperationError,
 )
 from consortium.client.models.alias_model import Alias
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -142,7 +142,7 @@ class BaseInterpreter:
 
                 parsed_command = parse(tokenized_string=tokenized_string)
                 if parsed_command.command in self.commands:
-                    context = Context(
+                    context = ConnectedContext(
                         command=parsed_command.command,
                         arguments=parsed_command.arguments,
                         raw_input=parsed_command.raw_input,

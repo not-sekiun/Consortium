@@ -1,4 +1,4 @@
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -23,7 +23,7 @@ class ListenerLaunchCommand(BaseCommand):
     )
     group = "Listener Management Commands"
 
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api

@@ -9,6 +9,7 @@ from consortium.client.exceptions.client_session_exceptions import (
     ClientSessionAlreadyConnectedException,
     ClientSessionNotConnectedException,
 )
+from consortium.client.exceptions.rest_api_exceptions import RestAPINotLoggedInError
 
 
 class ClientSession:
@@ -29,14 +30,13 @@ class ClientSession:
         self.connected = False
         self.datetime_connected = None
 
-        # Add type annotations because pycharm can't seem to infer them here.
-        self.rest_api: RestAPI = RestAPI(
+        self.rest_api = RestAPI(
             username=self.username,
             password=self.password,
             remote_host=self.remote_host,
             remote_port=self.remote_port,
         )
-        self.websockets_api: WebsocketsAPI = WebsocketsAPI(
+        self.websockets_api = WebsocketsAPI(
             remote_host=self.remote_host,
             remote_port=self.remote_port,
         )
@@ -49,6 +49,11 @@ class ClientSession:
             raise ClientSessionAlreadyConnectedException
 
         await self.rest_api.connect()
+        if self.rest_api.json_web_token is None:
+            raise RestAPINotLoggedInError(
+                remote_host=self.remote_host,
+                remote_port=self.remote_port,
+            )
         await self.websockets_api.connect(json_web_token=self.rest_api.json_web_token)
 
         self.datetime_connected = datetime.now()

@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from consortium.client.commands.home_interpreter_commands.client_session_disconnect import (
     ClientSessionDisconnectCommand as HomeInterpreterClientSessionDisconnectCommand,
 )
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import AnyContext, ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     ExitClientSessionSignal,
@@ -33,7 +33,7 @@ class ClientSessionDisconnectCommand(HomeInterpreterClientSessionDisconnectComma
 
     async def run(
         self,
-        context: Context,
+        context: AnyContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
@@ -42,7 +42,9 @@ class ClientSessionDisconnectCommand(HomeInterpreterClientSessionDisconnectComma
                 client_session_id=client_session_id,
             )
 
-            if client_session_id == str(context.client_session.client_session_id):
+            if isinstance(context, ConnectedContext) and client_session_id == str(
+                context.client_session.client_session_id
+            ):
                 return ExitClientSessionSignal()
         except SystemExit:
             pass

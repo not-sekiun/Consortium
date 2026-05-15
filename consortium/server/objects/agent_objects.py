@@ -40,17 +40,26 @@ from consortium.server.exceptions.consortium_exceptions.options_consortium_excep
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
     PayloadNotFoundError,
 )
-from consortium.server.models.agent_task_and_result_models import (
-    AgentResultModel,
-    AgentResultStatus,
-    AgentTaskModel,
-    AgentTaskStatus,
-)
+
+# from consortium.server.models.agent_task_models import (
+# AgentResultModel,
+# AgentResultStatus,
+# AgentTaskModel,
+# AgentTaskStatus,
+# AgentTaskProgressLogEntryModel,
+# )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_file_manager_service import (
     AgentFileManagerService,
 )
 from consortium.server.utils import generate_random_human_readable_name, normalize_uuid
+from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
+    AgentCapabilityRuntimeError,
+)
+from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+    AgentCapabilityRuntimeError as AgentCapabilityRuntimeFrameworkError,
+)
+from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
 
 
 class AgentStatus(StrEnum):
@@ -205,7 +214,7 @@ class Agent:
         self.datetime_first_checked_in = datetime.now()
         self.datetime_last_checked_in = datetime.now()
 
-        # By default agents are considered ACTIVE when created. `self._status` is used
+        # By default, agents are considered ACTIVE when created. `self._status` is used
         # to track the reported status of the agent while the framework may
         # automatically infer other statuses such as ORPHANED or UNREACHABLE based on
         # the state of the attached listener. Even if an agent was marked as ACTIVE or
@@ -216,7 +225,7 @@ class Agent:
         # TODO: Move all the tasks and results to a database instead of storing them
         #  all in memory.
         self._tasks = {}
-        self._results = {}
+        # self._results = {}
 
         self._task_messages_queue = asyncio.Queue()
         self._agent_capability_execution_lock = asyncio.Lock()
@@ -381,8 +390,8 @@ class Agent:
             # is fetched for a task we mark the task as running if it is not already
             # running.
             task = self.get_task_by_task_id(task_id=message.task_id)
-            if task.status != AgentTaskStatus.RUNNING:
-                task.status = AgentTaskStatus.RUNNING
+            if task.status.state != AgentTaskState.RUNNING:
+                task.status.state = AgentTaskState.RUNNING
                 task.datetime_started = datetime.now()
             return message
         except asyncio.QueueEmpty:
@@ -392,48 +401,61 @@ class Agent:
 
     def get_all_tasks(
         self,
-        status: AgentTaskStatus | None = None,
-    ) -> list[AgentTaskModel]:
+        status: AgentTaskState | None = None,
+    ) -> list[AgentTask]:
         if status is not None:
             return [task for task in self._tasks.values() if task.status == status]
         return list(self._tasks.values())
 
-    def get_all_queued_tasks(self) -> list[AgentTaskModel]:
-        return self.get_all_tasks(status=AgentTaskStatus.QUEUED)
+    def get_all_queued_tasks(self) -> list[AgentTask]:
+        return self.get_all_tasks(status=AgentTaskState.QUEUED)
 
-    def get_all_running_tasks(self) -> list[AgentTaskModel]:
-        return self.get_all_tasks(status=AgentTaskStatus.RUNNING)
+    def get_all_running_tasks(self) -> list[AgentTask]:
+        return self.get_all_tasks(status=AgentTaskState.RUNNING)
 
-    def get_all_completed_tasks(self) -> list[AgentTaskModel]:
-        return self.get_all_tasks(status=AgentTaskStatus.COMPLETED)
+    def get_all_succeeded_tasks(self) -> list[AgentTask]:
+        return self.get_all_tasks(status=AgentTaskState.SUCCEEDED)
+
+    def get_all_failed_tasks(self) -> list[AgentTask]:
+        return self.get_all_tasks(status=AgentTaskState.FAILED)
+
+    def get_all_errored_tasks(self) -> list[AgentTask]:
+        return self.get_all_tasks(status=AgentTaskState.ERRORED)
+
+    # def get_all_completed_tasks(self) -> list[AgentTaskModel]:
+    #     return self.get_all_tasks(status=AgentTaskState.COMPLETED)
 
     def get_task_by_task_id(
         self,
         task_id: str | uuid.UUID,
-        status: AgentTaskStatus | None = None,
-    ) -> AgentTaskModel:
+        state: AgentTaskState | None = None,
+    ) -> AgentTask:
         task_id = normalize_uuid(value=task_id)
 
-        for task in self.get_all_tasks(status=status):
+        for task in self.get_all_tasks(status=state):
             if task_id == str(task.task_id):
                 return task
         raise AgentTaskNotFoundError(task_id=task_id)
 
-    def get_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
-        return self.get_task_by_task_id(task_id=task_id, status=AgentTaskStatus.QUEUED)
+    def get_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
+        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.QUEUED)
 
-    def get_running_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
-        return self.get_task_by_task_id(task_id=task_id, status=AgentTaskStatus.RUNNING)
+    def get_running_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
+        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.RUNNING)
 
-    def get_completed_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
-        return self.get_task_by_task_id(
-            task_id=task_id, status=AgentTaskStatus.COMPLETED
-        )
+    def get_succeeded_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
+        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.SUCCEEDED)
+
+    def get_failed_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
+        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.FAILED)
+
+    def get_errored_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
+        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.ERRORED)
 
     def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
         try:
             task = self.get_queued_task_by_task_id(task_id=task_id)
-            if task.status != AgentTaskStatus.QUEUED:
+            if task.status != AgentTaskState.QUEUED:
                 raise AgentTaskNotFoundError(task_id=str(task_id))
             del self._tasks[str(task.task_id)]
         except KeyError:
@@ -450,7 +472,7 @@ class Agent:
                 agent_str=str(self),
             ) from None
 
-        if task.status != AgentTaskStatus.RUNNING:
+        if task.status != AgentTaskState.RUNNING:
             raise AgentResultHasNoCorrespondingTaskError(
                 corresponding_task_id=str(result_message.task_id),
                 agent_str=str(self),
@@ -459,40 +481,40 @@ class Agent:
         agent_capability = self._running_agent_capabilities[str(result_message.task_id)]
         await agent_capability.result_messages_queue.put(result_message)
 
-    def get_all_results(
-        self,
-        status: AgentResultStatus | None = None,
-    ) -> list[AgentResultModel]:
-        if status is not None:
-            return [
-                result for result in self._results.values() if result.status == status
-            ]
-        return list(self._results.values())
-
-    def get_all_successful_results(self) -> list[AgentResultModel]:
-        return self.get_all_results(status=AgentResultStatus.SUCCESS)
-
-    def get_all_failed_results(self) -> list[AgentResultModel]:
-        return self.get_all_results(status=AgentResultStatus.FAILURE)
-
-    def get_all_errored_results(self) -> list[AgentResultModel]:
-        return self.get_all_results(status=AgentResultStatus.ERROR)
-
-    def get_result_by_task_id(self, task_id: str | uuid.UUID) -> AgentResultModel:
-        task_id = normalize_uuid(value=task_id)
-
-        for result in self._results.values():
-            if result.task_id == task_id:
-                return result
-        raise AgentResultTaskIDNotFoundError(task_id=task_id)
-
-    def get_result_by_result_id(self, result_id: str | uuid.UUID) -> AgentResultModel:
-        result_id = normalize_uuid(value=result_id)
-
-        try:
-            return self._results[result_id]
-        except KeyError:
-            raise AgentResultIDNotFoundError(result_id=result_id) from None
+    # def get_all_results(
+    #     self,
+    #     status: AgentResultStatus | None = None,
+    # ) -> list[AgentResultModel]:
+    #     if status is not None:
+    #         return [
+    #             result for result in self._results.values() if result.status == status
+    #         ]
+    #     return list(self._results.values())
+    #
+    # def get_all_successful_results(self) -> list[AgentResultModel]:
+    #     return self.get_all_results(status=AgentResultStatus.SUCCESS)
+    #
+    # def get_all_failed_results(self) -> list[AgentResultModel]:
+    #     return self.get_all_results(status=AgentResultStatus.FAILURE)
+    #
+    # def get_all_errored_results(self) -> list[AgentResultModel]:
+    #     return self.get_all_results(status=AgentResultStatus.ERROR)
+    #
+    # def get_result_by_task_id(self, task_id: str | uuid.UUID) -> AgentResultModel:
+    #     task_id = normalize_uuid(value=task_id)
+    #
+    #     for result in self._results.values():
+    #         if result.task_id == task_id:
+    #             return result
+    #     raise AgentResultTaskIDNotFoundError(task_id=task_id)
+    #
+    # def get_result_by_result_id(self, result_id: str | uuid.UUID) -> AgentResultModel:
+    #     result_id = normalize_uuid(value=result_id)
+    #
+    #     try:
+    #         return self._results[result_id]
+    #     except KeyError:
+    #         raise AgentResultIDNotFoundError(result_id=result_id) from None
 
     def mark_as_active(self) -> None:
         self._status = AgentStatus.ACTIVE
@@ -555,9 +577,11 @@ class Agent:
             try:
                 if agent_capability.is_atomic:
                     async with self._agent_capability_execution_lock:
-                        result_message = await agent_capability.execute(
-                            task_message=task_message,
-                        )
+                        # TODO: Remove, returning implicitly is a success
+                        # result_message = await agent_capability.execute(
+                        #     task_message=task_message,
+                        # )
+                        await agent_capability.execute(task_message=task_message)
                 else:
                     # "Wait" for the lock to be released but dont actually hold it while
                     # executing the agent capability. This allows non-atomic agent
@@ -565,87 +589,115 @@ class Agent:
                     # capabilities.
                     async with self._agent_capability_execution_lock:
                         pass
-                    result_message = await agent_capability.execute(
-                        task_message=task_message,
-                    )
 
-                if not isinstance(result_message, AgentResultMessageModel):
-                    self.logger.error(
-                        "Agent capability '{}' returned an invalid type '{}'. "
-                        "Expected `AgentResultMessageModel` to be returned.",
-                        agent_capability.name,
-                        type(result_message),
-                    )
-                    result = AgentResultModel(
-                        status=AgentResultStatus.ERROR,
-                        message=(
-                            f"Failed to execute agent capability "
-                            f"'{agent_capability.name}'. Agent capability returned an "
-                            f"invalid type '{type(result_message)}'. "
-                            f"Expected `AgentResultMessageModel` to be returned."
-                        ),
-                        task_id=task.task_id,
-                        command=task.command,
-                        arguments=task.arguments,
-                        datetime_started=task.datetime_started,
-                    )
-                else:
-                    result = AgentResultModel(
-                        status=AgentResultStatus.SUCCESS
-                        if result_message.success
-                        else AgentResultStatus.FAILURE,
-                        message=result_message.message,
-                        data=result_message.data,
-                        task_id=task.task_id,
-                        command=task.command,
-                        arguments=task.arguments,
-                        datetime_started=task.datetime_started,
-                    )
+                    # TODO: Remove, return is meaningless now returning is implicitly a
+                    #  success
+                    # result_message = await agent_capability.execute(
+                    #     task_message=task_message,
+                    # )
+                    await agent_capability.execute(task_message=task_message)
+                # Upon returning without raising an error the task is considered to
+                # automatically have completed without failure.
+                task.status = AgentTaskState.SUCCESS
+
+                # TODO: Remove, returning implicitly is a success
+                # if not isinstance(result_message, AgentResultMessageModel):
+                #     self.logger.error(
+                #         "Agent capability '{}' returned an invalid type '{}'. "
+                #         "Expected `AgentResultMessageModel` to be returned.",
+                #         agent_capability.name,
+                #         type(result_message),
+                #     )
+                #
+                #     result = AgentResultModel(
+                #         status=AgentResultStatus.ERROR,
+                #         message=(
+                #             f"Failed to execute agent capability "
+                #             f"'{agent_capability.name}'. Agent capability returned an "
+                #             f"invalid type '{type(result_message)}'. "
+                #             f"Expected `AgentResultMessageModel` to be returned."
+                #         ),
+                #         task_id=task.task_id,
+                #         command=task.command,
+                #         arguments=task.arguments,
+                #         datetime_started=task.datetime_started,
+                #     )
+                # else:
+                # result = AgentResultModel(
+                #     status=AgentResultStatus.SUCCESS
+                #     if result_message.success
+                #     else AgentResultStatus.FAILURE,
+                #     message=result_message.message,
+                #     data=result_message.data,
+                #     task_id=task.task_id,
+                #     command=task.command,
+                #     arguments=task.arguments,
+                #     datetime_started=task.datetime_started,
+                # )
+            except AgentCapabilityRuntimeFrameworkError as exc:
+                task.status._transition_to_failed(error=exc)
             except Exception as exc:
                 self.logger.error(
-                    "Failed to execute agent capability '{}' due to an unhandled "
-                    "exception raised during execution. {}: {}",
+                    "Failed to execute agent capability '{}'. An unhandled "
+                    "exception was raised during execution. {}: {}",
                     str(agent_capability),
                     exc.__class__.__name__,
                     str(exc),
                 )
-                result = AgentResultModel(
-                    status=AgentResultStatus.ERROR,
-                    message=(
-                        f"Failed to execute agent capability '{agent_capability.name}' "
-                        f"due to an unhandled exception raised during execution. "
-                        f"{exc.__class__.__name__}: {str(exc)}"
-                    ),
-                    data={},
-                    task_id=task.task_id,
-                    command=task.command,
-                    arguments=task.arguments,
-                    datetime_started=task.datetime_started,
+                task.status._transition_to_errored(
+                    error=AgentCapabilityRuntimeError(
+                        agent_capability_name=agent_capability.name,
+                        error_message=(
+                            "An unhandled exception was raised during execution. "
+                            f"{exc.__class__.__name__}: {exc}"
+                        ),
+                    )
                 )
+
+                # task.status = AgentTaskState.ERROR
+                # task.progress_log.append(AgentTaskProgressLogModel())
+
+                # TODO: Replace with mutation on task object
+                # result = AgentResultModel(
+                #     status=AgentResultStatus.ERROR,
+                #     message=(
+                #         f"Failed to execute agent capability '{agent_capability.name}' "
+                #         f"due to an unhandled exception raised during execution. "
+                #         f"{exc.__class__.__name__}: {str(exc)}"
+                #     ),
+                #     data={},
+                #     task_id=task.task_id,
+                #     command=task.command,
+                #     arguments=task.arguments,
+                #     datetime_started=task.datetime_started,
+                # )
 
             # Upon receiving the final aggregated result message we can remove the
             # agent capability as it is now no longer considered to be running.
             self._running_agent_capabilities.pop(str(task_message.task_id))
 
-            self._results[str(result.result_id)] = result
+            # TODO: Remove
+            # self._results[str(result.result_id)] = result
 
-            # Adding the result implies that the task is completed
-            task.status = AgentTaskStatus.COMPLETED
+            # TODO: Remove
+            # # Adding the result implies that the task is completed
+            # task.status = AgentTaskState.COMPLETED
 
-            # Finally we fire the event to notify all event handlers that a result
-            # has been received.
-            await server_singletons.events_service.trigger_event(
-                event_type=EventType.AGENT_RESULT_RECEIVED,
-                message=(
-                    f"Agent {self} received result with result ID {result.result_id} "
-                    f"for task with task ID {task_message.task_id}"
-                ),
-                data={
-                    "agent_id": str(self.agent_id),
-                    "result": result.model_dump(mode="json"),
-                    "task": task.model_dump(mode="json"),
-                },
-            )
+            # TODO: Replace with Task mutation event
+            # # Finally we fire the event to notify all event handlers that a result
+            # # has been received.
+            # await server_singletons.events_service.trigger_event(
+            #     event_type=EventType.AGENT_RESULT_RECEIVED,
+            #     message=(
+            #         f"Agent {self} received result with result ID {result.result_id} "
+            #         f"for task with task ID {task_message.task_id}"
+            #     ),
+            #     data={
+            #         "agent_id": str(self.agent_id),
+            #         "result": result.model_dump(mode="json"),
+            #         "task": task.model_dump(mode="json"),
+            #     },
+            # )
 
         running_agent_capability = agent_capability(agent=self, task=task)
         self._running_agent_capabilities[str(task.task_id)] = running_agent_capability
