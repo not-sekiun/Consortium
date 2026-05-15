@@ -8,8 +8,8 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.client_session_command_utils import describe_client_session
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
 class ClientSessionDescribeCommand(BaseCommand):

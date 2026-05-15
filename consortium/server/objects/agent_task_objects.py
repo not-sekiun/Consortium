@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
-from typing import Any
 from enum import StrEnum
+from typing import Any
 
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
     AgentCapabilityRuntimeError,

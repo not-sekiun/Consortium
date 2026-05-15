@@ -4,7 +4,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, JsonValue
 
-
 # class AgentTaskStatus(StrEnum):
 #     QUEUED = "QUEUED"
 #     RUNNING = "RUNNING"

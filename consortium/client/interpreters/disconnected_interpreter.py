@@ -62,7 +62,7 @@ class DisconnectedInterpreter(BaseInterpreter):
         all_client_sessions = client_sessions_service.get_all_client_sessions()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            nested_completer=self.prompt_session.completer,
+            completer=self.prompt_session.completer,
         )
         for key, value in {
             command: {

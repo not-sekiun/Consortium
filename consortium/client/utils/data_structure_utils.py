@@ -11,18 +11,28 @@ from prompt_toolkit.completion import Completer, NestedCompleter
 # object.
 def extract_nested_completer_dict_from_nested_completer(
     nested_completer: NestedCompleter,
-) -> dict[str, Any] | Completer:
-    # Some other types of Completer might be present like PathCompleter for commands
-    # that operate on file paths
-    if not isinstance(nested_completer, NestedCompleter):
-        return nested_completer
+) -> dict[str, Any]:
+    def traverse_nested_completers(
+        completer: Completer,
+    ) -> dict[str, Any] | Completer:
+        # Some other types of Completer might be present like PathCompleter for commands
+        # that operate on file paths, do not further attempt to process those
+        if not isinstance(completer, NestedCompleter):
+            return completer
 
-    completion_dict = {}
-    for key, value in nested_completer.options.items():
-        if value is None:
-            completion_dict[key] = None
-        else:
-            completion_dict[key] = extract_nested_completer_dict_from_nested_completer(
-                value,
-            )
-    return completion_dict
+        completion_dict = {}
+        for key, value in completer.options.items():
+            if value is None:
+                completion_dict[key] = None
+            else:
+                completion_dict[key] = traverse_nested_completers(completer=value)
+        return completion_dict
+
+    result = traverse_nested_completers(completer=nested_completer)
+    # This should never happen
+    if not isinstance(result, dict):
+        raise ValueError(
+            "The provided NestedCompleter has an unexpected structure and cannot be "
+            "processed.",
+        )
+    return result

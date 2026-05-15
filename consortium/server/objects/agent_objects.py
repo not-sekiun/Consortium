@@ -13,17 +13,20 @@ from consortium.framework.agent_message_models import (
     AgentTaskMessageModel,
 )
 from consortium.framework.agents import BaseAgentCapability
-from consortium.framework.event_hooks import EventType
+from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+    AgentCapabilityRuntimeError as AgentCapabilityRuntimeFrameworkError,
+)
 from consortium.framework.listeners import BaseListener
 from consortium.server import server_singletons as server_singletons
+from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
+    AgentCapabilityRuntimeError,
+)
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentCapabilityNotFoundError,
     AgentCapabilityOptionNotFoundError,
     AgentCapabilityOptionValueValidationError,
     AgentCreationParameterTypeError,
     AgentResultHasNoCorrespondingTaskError,
-    AgentResultIDNotFoundError,
-    AgentResultTaskIDNotFoundError,
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
     MissingRequiredAgentCapabilityOptionError,
@@ -40,6 +43,7 @@ from consortium.server.exceptions.consortium_exceptions.options_consortium_excep
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
     PayloadNotFoundError,
 )
+from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
 
 # from consortium.server.models.agent_task_models import (
 # AgentResultModel,
@@ -53,13 +57,6 @@ from consortium.server.services.agent_file_manager_service import (
     AgentFileManagerService,
 )
 from consortium.server.utils import generate_random_human_readable_name, normalize_uuid
-from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
-    AgentCapabilityRuntimeError,
-)
-from consortium.framework.exceptions.agent_capabilties_framework_exception import (
-    AgentCapabilityRuntimeError as AgentCapabilityRuntimeFrameworkError,
-)
-from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
 
 
 class AgentStatus(StrEnum):

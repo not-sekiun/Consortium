@@ -1,7 +1,8 @@
 import uuid
 
+from rich.table import Table
+
 import consortium.client.client_singletons as client_singletons
-from consortium.client.utils.printer_utils import print_error, print_success, console
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
@@ -9,8 +10,7 @@ from consortium.client.utils.formatter_utils import (
     format_datetime_as_human_readable_str,
     format_role_str_with_color,
 )
-
-from rich.table import Table
+from consortium.client.utils.printer_utils import console, print_error, print_success
 
 client_sessions_service = client_singletons.client_sessions_service
 
@@ -72,7 +72,9 @@ async def display_client_session_info(
         format_datetime_as_human_readable_str(
             datetime_str=client_session.datetime_connected,
             include_elapsed_time=True,
-        ),
+        )
+        if client_session.datetime_connected is not None
+        else "N/A",  # The else block should technically never fire
     )
     table.add_row(
         "Server Release",
