@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from consortium.client.commands.agents_interpreter_commands import (
     AgentRenameCommand as AgentRenameAgentsInterpreterCommand,
 )
-from consortium.client.models.context_models import ConnectedContext
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -38,7 +38,7 @@ class AgentRenameCommand(AgentRenameAgentsInterpreterCommand):
             nargs=1,
         )
 
-    async def run(self, context: ConnectedContext) -> InterpreterSignal:
+    async def run(self, context: Context) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api

@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.models.context_models import ConnectedContext
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -39,7 +39,7 @@ class ListenerTemplateInfoOptionCommand(BaseCommand):
 
     async def run(
         self,
-        context: ConnectedContext,
+        context: Context,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

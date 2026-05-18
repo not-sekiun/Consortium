@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_models import DisconnectedContext
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -10,7 +10,7 @@ from consortium.client.utils.client_session_command_utils import rename_client_s
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ClientSessionRenameCommand(BaseCommand[DisconnectedContext]):
+class ClientSessionRenameCommand(BaseCommand):
     name = "rename"
     description = "Set the name of a specific client session by its ID"
     epilog = format_argparse_epilog(
@@ -36,7 +36,7 @@ class ClientSessionRenameCommand(BaseCommand[DisconnectedContext]):
 
     async def run(
         self,
-        context: DisconnectedContext,
+        context: Context,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

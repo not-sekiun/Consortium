@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_models import ConnectedContext
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -61,7 +61,7 @@ class GeneratorUpdateCommand(BaseCommand):
             default=False,
         )
 
-    async def run(self, context: ConnectedContext) -> InterpreterSignal:
+    async def run(self, context: Context) -> InterpreterSignal:
         try:
             if "--help-full" in context.arguments:
                 self.parser.epilog = (

@@ -2,7 +2,7 @@ from rich.table import Table
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
-from consortium.client.models.context_models import ConnectedContext
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -49,7 +49,7 @@ class ClientSessionListCommand(BaseCommand):
 
     async def run(
         self,
-        context: ConnectedContext,
+        context: Context,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

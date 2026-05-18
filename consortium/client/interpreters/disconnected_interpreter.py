@@ -23,7 +23,7 @@ from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class DisconnectedInterpreter(BaseInterpreter):
+class DisconnectedInterpreter(BaseInterpreter[None]):
     def __init__(
         self,
         aliases: dict[str, Alias],

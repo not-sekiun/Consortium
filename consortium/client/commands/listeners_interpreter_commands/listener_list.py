@@ -1,6 +1,6 @@
 from rich.table import Table
 
-from consortium.client.models.context_models import ConnectedContext
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -50,7 +50,7 @@ class ListenerListCommand(BaseCommand):
 
     async def run(
         self,
-        context: ConnectedContext,
+        context: Context,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

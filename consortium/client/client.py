@@ -33,10 +33,7 @@ from consortium.client.interpreters.disconnected_interpreter import (
 )
 from consortium.client.models.alias_model import Alias
 from consortium.client.models.client_models import ClientConfig
-from consortium.client.models.context_models import (
-    ConnectedContext,
-    DisconnectedContext,
-)
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ExitClientSessionSignal,
     ExitClientSignal,
@@ -192,7 +189,7 @@ class Client:
         if client_session is None:
             # Display banner once at client startup.
             await BannerCommand().run(
-                context=DisconnectedContext(
+                context=Context(
                     command="banner",
                     arguments=[],
                     raw_input="banner",
@@ -206,7 +203,7 @@ class Client:
         else:
             # Display banner once at client startup.
             await BannerCommand().run(
-                context=ConnectedContext(
+                context=Context(
                     command="banner",
                     arguments=[],
                     raw_input="banner",
