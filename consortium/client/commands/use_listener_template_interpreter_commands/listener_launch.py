@@ -1,4 +1,4 @@
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -10,7 +10,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class ListenerLaunchCommand(BaseCommand):
+class ListenerLaunchCommand(BaseCommand[ConnectedContext]):
     name = "launch"
     description = (
         "Create a listener from the current listener template and then start it"
@@ -23,16 +23,16 @@ class ListenerLaunchCommand(BaseCommand):
     )
     group = "Listener Management Commands"
 
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
-            listener_template_id = context.interpreter_context["listener_template"][
+            listener_template_id = context.interpreter_context.listener_template[
                 "listener_template_id"
             ]
-            listener_template_options = context.interpreter_context[
-                "listener_template"
-            ]["options"]
+            listener_template_options = context.interpreter_context.listener_template[
+                "options"
+            ]
 
             listener_template_option_values = {}
             for option_name, option in listener_template_options.items():

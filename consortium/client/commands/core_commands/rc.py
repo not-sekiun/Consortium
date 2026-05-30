@@ -1,6 +1,6 @@
 import argparse
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -12,7 +12,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_info
 
 
-class RcCommand(BaseCommand):
+class RcCommand(BaseCommand[AnyContext]):
     name = "rc"
     description = (
         "Run commands from a provided resource file in the current interpreter"
@@ -40,7 +40,7 @@ class RcCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: AnyContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
@@ -54,7 +54,7 @@ class RcCommand(BaseCommand):
                         if line and not line.startswith("#")
                     ]
                     for command in commands:
-                        context.interpreter_context["resource_commands"].append(command)
+                        context.interpreter_context.resource_commands.append(command)
                     print_info(f"Loaded resource file: {resource_file}")
             except Exception as exc:
                 print_info(f"Failed to read resource file '{resource_file}' : {exc}")

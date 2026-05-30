@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -10,7 +10,7 @@ from consortium.client.utils.agent_command_utils import describe_agent
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class AgentDescribeCommand(BaseCommand):
+class AgentDescribeCommand(BaseCommand[ConnectedContext]):
     name = "describe"
     description = (
         "Set the description of the current agent, or a specific agent by its ID"
@@ -39,7 +39,7 @@ class AgentDescribeCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -48,7 +48,7 @@ class AgentDescribeCommand(BaseCommand):
                 rest_api=rest_api,
                 agent_id=parsed_args.agent_id
                 if parsed_args.agent_id
-                else context.interpreter_context["agent"]["agent_id"],
+                else context.interpreter_context.agent["agent_id"],
                 description=parsed_args.description[0],
             )
         except SystemExit:

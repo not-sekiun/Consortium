@@ -1,0 +1,931 @@
+error[unresolved-import]: Module `consortium.client.models.context_model` has no member `Context`
+  --> consortium\client\client.py:36:52
+   |
+36 | from consortium.client.models.context_model import Context
+   |                                                    ^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `None` has no attribute `client_session_id`
+  --> consortium\client\commands\disconnected_interpreter_commands\client_session_disconnect.py:46:41
+   |
+46 |             if client_session_id == str(context.client_session.client_session_id):
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+   --> consortium\client\commands\interact_agent_interpreter_commands\agent_capability_command.py:410:30
+    |
+410 |                     agent_id=context.interpreter_context.agent["agent_id"],
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+   --> consortium\client\commands\interact_agent_interpreter_commands\agent_capability_command.py:415:38
+    |
+415 |                     f"Tasked agent '{context.interpreter_context.agent['name']}' "
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+   --> consortium\client\commands\interact_agent_interpreter_commands\agent_capability_command.py:416:25
+    |
+416 |                     f"({context.interpreter_context.agent['agent_id']}) with task "
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+  --> consortium\client\commands\interact_agent_interpreter_commands\agent_describe.py:51:22
+   |
+51 |                 else context.interpreter_context.agent["agent_id"],
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+  --> consortium\client\commands\interact_agent_interpreter_commands\agent_info.py:58:22
+   |
+58 |                 else context.interpreter_context.agent["agent_id"],
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+  --> consortium\client\commands\interact_agent_interpreter_commands\agent_rename.py:49:22
+   |
+49 |                 else context.interpreter_context.agent["agent_id"],
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+  --> consortium\client\commands\interact_agent_interpreter_commands\result_list.py:71:25
+   |
+71 |                 agent = context.interpreter_context.agent
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+  --> consortium\client\commands\interact_agent_interpreter_commands\task_list.py:71:25
+   |
+71 |                 agent = context.interpreter_context.agent
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\agent_template_info.py:54:22
+   |
+54 |                 else context.interpreter_context.agent_template["agent_template_id"],
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\agent_template_info_option.py:46:30
+   |
+46 |             agent_template = context.interpreter_context.agent_template
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\agent_template_list_option.py:35:38
+   |
+35 |             agent_template_options = context.interpreter_context.agent_template[
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\agent_template_reset_option.py:37:38
+   |
+37 |             agent_template_options = context.interpreter_context.agent_template[
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\agent_template_set_option.py:73:38
+   |
+73 |             agent_template_options = context.interpreter_context.agent_template[
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\agent_template_unset_option.py:37:38
+   |
+37 |             agent_template_options = context.interpreter_context.agent_template[
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\agent_template_use.py:41:38
+   |
+41 |             current_agent_template = context.interpreter_context.agent_template
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\generator_create.py:28:33
+   |
+28 |             agent_template_id = context.interpreter_context.agent_template[
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\generator_create.py:31:38
+   |
+31 |             agent_template_options = context.interpreter_context.agent_template[
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\generator_launch.py:30:33
+   |
+30 |             agent_template_id = context.interpreter_context.agent_template[
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\commands\use_agent_template_interpreter_commands\generator_launch.py:33:38
+   |
+33 |             agent_template_options = context.interpreter_context.agent_template[
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_create.py:28:36
+   |
+28 |             listener_template_id = context.interpreter_context.listener_template[
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_create.py:31:41
+   |
+31 |             listener_template_options = context.interpreter_context.listener_template[
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_launch.py:30:36
+   |
+30 |             listener_template_id = context.interpreter_context.listener_template[
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_launch.py:33:41
+   |
+33 |             listener_template_options = context.interpreter_context.listener_template[
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_template_info.py:53:22
+   |
+53 |                 else context.interpreter_context.listener_template[
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_template_info_option.py:46:33
+   |
+46 |             listener_template = context.interpreter_context.listener_template
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_template_list_option.py:35:41
+   |
+35 |             listener_template_options = context.interpreter_context.listener_template[
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_template_reset_option.py:37:41
+   |
+37 |             listener_template_options = context.interpreter_context.listener_template[
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_template_set_option.py:73:41
+   |
+73 |             listener_template_options = context.interpreter_context.listener_template[
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_template_unset_option.py:37:41
+   |
+37 |             listener_template_options = context.interpreter_context.listener_template[
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\commands\use_listener_template_interpreter_commands\listener_template_use.py:43:41
+   |
+43 |             current_listener_template = context.interpreter_context.listener_template
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[invalid-argument-type]: Argument to `BaseInterpreter.__init__` is incorrect
+  --> consortium\client\interpreters\agents_interpreter.py:40:13
+   |
+40 |             commands=COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `list[BaseCommand[Unknown]]`, found `list[AssetDownloadCommand | AgentInfoCommand | AssetInfoCommand | ... omitted 21 union elements]`
+   |
+info: Method defined here
+  --> consortium\client\repl_interface\base_interpreter.py:37:9
+   |
+37 |     def __init__(
+   |         ^^^^^^^^
+38 |         self,
+39 |         prompt: str | ANSI | HTML | list[tuple[str, str]],
+40 |         commands: list[BaseCommand],
+   |         --------------------------- Parameter declared here
+   |
+info: `list` is invariant in its type parameter
+info: Consider using the covariant supertype `collections.abc.Sequence`
+info: For more information, see https://docs.astral.sh/ty/reference/typing-faq/#invariant-generics
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+  --> consortium\client\interpreters\agents_interpreter.py:49:28
+   |
+49 |         all_assets = await self.client_session.rest_api.get_all_assets()
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+  --> consortium\client\interpreters\agents_interpreter.py:52:13
+   |
+52 |             self.prompt_session.completer,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+   |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+  --> consortium\client\interpreters\agents_interpreter.py:70:27
+   |
+70 |         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
+   |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+  --> consortium\client\interpreters\agents_interpreter.py:75:29
+   |
+75 |         all_results = await self.client_session.rest_api.get_all_agent_results()
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+   --> consortium\client\interpreters\agents_interpreter.py:105:13
+    |
+105 |             self.prompt_session.completer,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+    |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+   --> consortium\client\interpreters\agents_interpreter.py:119:13
+    |
+119 |             self.prompt_session.completer,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+    |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+   --> consortium\client\interpreters\agents_interpreter.py:134:13
+    |
+134 |             self.prompt_session.completer,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+    |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:150:15
+    |
+150 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:154:15
+    |
+154 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:158:15
+    |
+158 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:162:15
+    |
+162 |         await self.client_session.websockets_api.start()
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:168:15
+    |
+168 |         await self.client_session.websockets_api.stop()
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:171:15
+    |
+171 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:175:15
+    |
+175 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:179:15
+    |
+179 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:185:28
+    |
+185 |         all_agents = await self.client_session.rest_api.get_all_agents()
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\agents_interpreter.py:194:12
+    |
+194 |         if self.client_session.websockets_api.connected:
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+  --> consortium\client\interpreters\disconnected_interpreter.py:61:13
+   |
+61 |             nested_completer=self.prompt_session.completer,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+   |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[invalid-assignment]: Object of type `list[GeneratorCancelCommand | GeneratorDeleteCommand | AgentTemplateInfoCommand | ... omitted 19 union elements]` is not assignable to `list[BaseCommand[Unknown]] | None`
+  --> consortium\client\interpreters\generators_interpreter.py:40:13
+   |
+40 |             commands = COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS
+   |             --------   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Incompatible value of type `list[GeneratorCancelCommand | GeneratorDeleteCommand | AgentTemplateInfoCommand | ... omitted 19 union elements]`
+   |             |
+   |             Declared type `list[BaseCommand[Unknown]] | None`
+   |
+
+error[invalid-argument-type]: Argument to `BaseInterpreter.__init__` is incorrect
+  --> consortium\client\interpreters\generators_interpreter.py:44:13
+   |
+44 |             commands=commands,
+   |             ^^^^^^^^^^^^^^^^^ Expected `list[BaseCommand[Unknown]]`, found `list[BaseCommand[Unknown]] | None`
+   |
+info: element `None` of union `list[BaseCommand[Unknown]] | None` is not assignable to `list[BaseCommand[Unknown]]`
+info: Method defined here
+  --> consortium\client\repl_interface\base_interpreter.py:37:9
+   |
+37 |     def __init__(
+   |         ^^^^^^^^
+38 |         self,
+39 |         prompt: str | ANSI | HTML | list[tuple[str, str]],
+40 |         commands: list[BaseCommand],
+   |         --------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+  --> consortium\client\interpreters\generators_interpreter.py:51:19
+   |
+51 |             await self.client_session.rest_api.get_all_agent_generators()
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+  --> consortium\client\interpreters\generators_interpreter.py:54:19
+   |
+54 |             await self.client_session.rest_api.get_all_agent_templates()
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+  --> consortium\client\interpreters\generators_interpreter.py:64:13
+   |
+64 |             self.prompt_session.completer,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+   |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\generators_interpreter.py:130:15
+    |
+130 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\generators_interpreter.py:134:15
+    |
+134 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\generators_interpreter.py:138:15
+    |
+138 |         await self.client_session.websockets_api.start()
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\generators_interpreter.py:144:15
+    |
+144 |         await self.client_session.websockets_api.stop()
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\generators_interpreter.py:147:15
+    |
+147 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\generators_interpreter.py:151:15
+    |
+151 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\generators_interpreter.py:187:12
+    |
+187 |         if self.client_session.websockets_api.connected:
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+  --> consortium\client\interpreters\home_interpreter.py:48:13
+   |
+48 |             nested_completer=self.prompt_session.completer,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+   |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+  --> consortium\client\interpreters\interact_agent_interpreter.py:70:30
+   |
+70 |         agent_capabilities = self.interpreter_context.agent["agent_type"][
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:118:28
+    |
+118 |         all_agents = await self.client_session.rest_api.get_all_agents()
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:119:28
+    |
+119 |         all_assets = await self.client_session.rest_api.get_all_assets()
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+   --> consortium\client\interpreters\interact_agent_interpreter.py:122:13
+    |
+122 |             self.prompt_session.completer,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+    |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:139:27
+    |
+139 |         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:145:29
+    |
+145 |         all_results = await self.client_session.rest_api.get_all_agent_results()
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:163:30
+    |
+163 |         agent_capabilities = self.interpreter_context.agent["agent_type"][
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+   --> consortium\client\interpreters\interact_agent_interpreter.py:180:13
+    |
+180 |             self.prompt_session.completer,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+    |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+   --> consortium\client\interpreters\interact_agent_interpreter.py:197:13
+    |
+197 |             self.prompt_session.completer,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+    |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:204:41
+    |
+204 |         if event["data"]["agent_id"] == self.interpreter_context.agent["agent_id"]:
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+   --> consortium\client\interpreters\interact_agent_interpreter.py:218:13
+    |
+218 |             self.prompt_session.completer,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+    |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:235:15
+    |
+235 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:239:15
+    |
+239 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:244:15
+    |
+244 |         await self.client_session.websockets_api.start()
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:250:15
+    |
+250 |         await self.client_session.websockets_api.stop()
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:253:15
+    |
+253 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:257:15
+    |
+257 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\interact_agent_interpreter.py:271:12
+    |
+271 |         if self.client_session.websockets_api.connected:
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[invalid-assignment]: Object of type `list[ListenerCancelCommand | ListenerDeleteCommand | ListenerInfoCommand | ... omitted 19 union elements]` is not assignable to `list[BaseCommand[Unknown]] | None`
+  --> consortium\client\interpreters\listeners_interpreter.py:41:13
+   |
+41 |             commands = COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS
+   |             --------   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Incompatible value of type `list[ListenerCancelCommand | ListenerDeleteCommand | ListenerInfoCommand | ... omitted 19 union elements]`
+   |             |
+   |             Declared type `list[BaseCommand[Unknown]] | None`
+   |
+
+error[invalid-argument-type]: Argument to `BaseInterpreter.__init__` is incorrect
+  --> consortium\client\interpreters\listeners_interpreter.py:45:13
+   |
+45 |             commands=commands,
+   |             ^^^^^^^^^^^^^^^^^ Expected `list[BaseCommand[Unknown]]`, found `list[BaseCommand[Unknown]] | None`
+   |
+info: element `None` of union `list[BaseCommand[Unknown]] | None` is not assignable to `list[BaseCommand[Unknown]]`
+info: Method defined here
+  --> consortium\client\repl_interface\base_interpreter.py:37:9
+   |
+37 |     def __init__(
+   |         ^^^^^^^^
+38 |         self,
+39 |         prompt: str | ANSI | HTML | list[tuple[str, str]],
+40 |         commands: list[BaseCommand],
+   |         --------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+  --> consortium\client\interpreters\listeners_interpreter.py:51:31
+   |
+51 |         all_listeners = await self.client_session.rest_api.get_all_listeners()
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Attribute `rest_api` is not defined on `None` in union `ClientSession | None`
+  --> consortium\client\interpreters\listeners_interpreter.py:53:19
+   |
+53 |             await self.client_session.rest_api.get_all_listener_templates()
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+  --> consortium\client\interpreters\listeners_interpreter.py:63:13
+   |
+63 |             self.prompt_session.completer,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+   |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\listeners_interpreter.py:131:15
+    |
+131 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\listeners_interpreter.py:135:15
+    |
+135 |         await self.client_session.websockets_api.subscribe_to_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\listeners_interpreter.py:139:15
+    |
+139 |         await self.client_session.websockets_api.start()
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\listeners_interpreter.py:145:15
+    |
+145 |         await self.client_session.websockets_api.stop()
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\listeners_interpreter.py:148:15
+    |
+148 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\listeners_interpreter.py:152:15
+    |
+152 |         await self.client_session.websockets_api.unsubscribe_from_event(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `websockets_api` is not defined on `None` in union `ClientSession | None`
+   --> consortium\client\interpreters\listeners_interpreter.py:176:12
+    |
+176 |         if self.client_session.websockets_api.connected:
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[unresolved-attribute]: Attribute `values` is not defined on `list[Divergent]`, `str`, `int`, `float`, `None` in union `list[Divergent] | dict[str, Divergent] | str | ... omitted 3 union elements`
+  --> consortium\client\interpreters\use_agent_template_interpreter.py:35:23
+   |
+35 |         for option in agent_template["options"].values():
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+  --> consortium\client\interpreters\use_agent_template_interpreter.py:68:13
+   |
+68 |             self.prompt_session.completer,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+   |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `agent_template`
+  --> consortium\client\interpreters\use_agent_template_interpreter.py:70:26
+   |
+70 |         agent_template = self.interpreter_context.agent_template
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[unresolved-attribute]: Attribute `values` is not defined on `list[Divergent]`, `str`, `int`, `float`, `None` in union `list[Divergent] | dict[str, Divergent] | str | ... omitted 3 union elements`
+  --> consortium\client\interpreters\use_listener_template_interpreter.py:35:23
+   |
+35 |         for option in listener_template["options"].values():
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[invalid-argument-type]: Argument to function `extract_nested_completer_dict_from_nested_completer` is incorrect
+  --> consortium\client\interpreters\use_listener_template_interpreter.py:68:13
+   |
+68 |             self.prompt_session.completer,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected `NestedCompleter`, found `Completer | None`
+   |
+info: element `Completer` of union `Completer | None` is not assignable to `NestedCompleter`
+info: Function defined here
+  --> consortium\client\utils\data_structure_utils.py:12:5
+   |
+12 | def extract_nested_completer_dict_from_nested_completer(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     nested_completer: NestedCompleter,
+   |     --------------------------------- Parameter declared here
+   |
+
+error[unresolved-attribute]: Object of type `BaseInterpreterContext` has no attribute `listener_template`
+  --> consortium\client\interpreters\use_listener_template_interpreter.py:70:29
+   |
+70 |         listener_template = self.interpreter_context.listener_template
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+error[invalid-argument-type]: Argument to `PromptSession.__init__` is incorrect
+  --> consortium\client\repl_interface\base_interpreter.py:45:13
+   |
+45 |             message=prompt,
+   |             ^^^^^^^^^^^^^^ Expected `str | MagicFormattedText | list[tuple[str, str] | tuple[str, str, (MouseEvent, /) -> object]] | (() -> Any) | None`, found `str | ANSI | HTML | list[tuple[str, str]]`
+   |
+info: element `list[tuple[str, str]]` of union `str | ANSI | HTML | list[tuple[str, str]]` is not assignable to `str | MagicFormattedText | list[tuple[str, str] | tuple[str, str, (MouseEvent, /) -> object]] | (() -> Any) | None`
+info: └── type `list[tuple[str, str]]` is not assignable to any element of the union `str | MagicFormattedText | list[tuple[str, str] | tuple[str, str, (MouseEvent, /) -> object]] | (() -> Any) | None`
+info:     ├── type `list[tuple[str, str]]` is not assignable to protocol `MagicFormattedText`
+info:     │   └── protocol member `__pt_formatted_text__` is not defined on type `list[tuple[str, str]]`
+info:     ├── element `tuple[str, str, (MouseEvent, /) -> object]` of union `tuple[str, str] | tuple[str, str, (MouseEvent, /) -> object]` is not assignable to `tuple[str, str]`
+info:     │   └── a tuple of length 3 is not assignable to a tuple of length 2
+info:     └── ... omitted 3 union elements without additional context
+info: Method defined here
+   --> .venv\Lib\site-packages\prompt_toolkit\shortcuts\prompt.py:378:9
+    |
+378 |     def __init__(
+    |         ^^^^^^^^
+379 |         self,
+380 |         message: AnyFormattedText = "",
+    |         ------------------------------ Parameter declared here
+    |
+
+error[invalid-return-type]: Return type does not match returned value
+  --> consortium\client\repl_interface\base_interpreter.py:90:20
+   |
+90 |               return await self.prompt_session.prompt_async(
+   |  ____________________^
+91 | |                 message=". " if multiline_input else None
+92 | |             )
+   | |_____________^ expected `str`, found `_T@PromptSession`
+   |
+  ::: consortium\client\repl_interface\base_interpreter.py:77:70
+   |
+77 |       async def _get_raw_input(self, multiline_input: bool = False) -> str:
+   |                                                                        --- Expected `str` because of return type
+   |
+
+error[invalid-return-type]: Return type does not match returned value
+  --> consortium\client\utils\data_structure_utils.py:38:12
+   |
+38 |     return result
+   |            ^^^^^^ expected `dict[str, Any]`, found `dict[str, Any] | (Completer & Top[dict[Unknown, Unknown]])`
+   |
+  ::: consortium\client\utils\data_structure_utils.py:14:6
+   |
+14 | ) -> dict[str, Any]:
+   |      -------------- Expected `dict[str, Any]` because of return type
+   |
+info: element `Completer & Top[dict[Unknown, Unknown]]` of union `dict[str, Any] | (Completer & Top[dict[Unknown, Unknown]])` is not assignable to `dict[str, Any]`
+
+error[invalid-return-type]: Return type does not match returned value
+   --> consortium\client\utils\options_utils.py:354:12
+    |
+354 |     return option_json_data["name"], new_agent_generator_parameter
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `tuple[str, dict[str, bool]]`, found `tuple[Any, dict[str | int | float | Any, int | str | float]]`
+    |
+   ::: consortium\client\utils\options_utils.py:281:6
+    |
+281 | ) -> tuple[str, dict[str, bool]]:
+    |      --------------------------- Expected `tuple[str, dict[str, bool]]` because of return type
+    |
+info: the second tuple element is not compatible: `dict[str | int | float | Any, int | str | float]` is not assignable to `dict[str, bool]`
+info: └── element `int` of union `str | int | float | Any` is not assignable to `str`
+
+Found 104 diagnostics

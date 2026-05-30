@@ -5,7 +5,7 @@ from rich.table import Table
 
 import consortium.client.client_config as client_config
 from consortium.client.models.alias_model import Alias
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -22,7 +22,7 @@ from consortium.client.utils.printer_utils import (
 )
 
 
-class AliasCommand(BaseCommand):
+class AliasCommand(BaseCommand[AnyContext]):
     name = "alias"
     description = "Manage command aliases"
     epilog = format_argparse_epilog(
@@ -143,22 +143,22 @@ class AliasCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: AnyContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
 
             if parsed_args.sub_command == "list":
                 return self._handle_list_sub_command(
-                    context.interpreter_context["aliases"]
+                    context.interpreter_context.aliases
                 )
             elif parsed_args.sub_command == "set":
                 return self._handle_set_sub_command(
-                    parsed_args, context.interpreter_context["aliases"]
+                    parsed_args, context.interpreter_context.aliases
                 )
             elif parsed_args.sub_command == "unset":
                 return self._handle_unset_sub_command(
-                    parsed_args, context.interpreter_context["aliases"]
+                    parsed_args, context.interpreter_context.aliases
                 )
             else:
                 raise AssertionError(

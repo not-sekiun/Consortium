@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -18,7 +18,7 @@ from consortium.client.utils.options_utils import (
 from consortium.client.utils.printer_utils import print_error, print_success
 
 
-class GeneratorUpdateCommand(BaseCommand):
+class GeneratorUpdateCommand(BaseCommand[ConnectedContext]):
     name = "update"
     description = (
         "Update the configuration parameters of an existing non-running agent generator"
@@ -61,7 +61,7 @@ class GeneratorUpdateCommand(BaseCommand):
             default=False,
         )
 
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             if "--help-full" in context.arguments:
                 self.parser.epilog = (

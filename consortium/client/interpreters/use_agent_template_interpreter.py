@@ -1,4 +1,3 @@
-from collections import deque
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -13,7 +12,9 @@ from consortium.client.interpreters.generators_interpreter import (
     COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS,
     GeneratorsInterpreter,
 )
-from consortium.client.models.alias_model import Alias
+from consortium.client.models.interpreter_context_models import (
+    UseAgentTemplateInterpreterContext,
+)
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -26,10 +27,9 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
     def __init__(
         self,
         client_session: ClientSession,
-        aliases: dict[str, Alias],
-        resource_commands: deque[str],
-        agent_template: dict[str, Any],
+        interpreter_context: UseAgentTemplateInterpreterContext,
     ):
+        agent_template = interpreter_context.agent_template
         # Add a "value" key to the options to store the current value of the
         # option.
         for option in agent_template["options"].values():
@@ -56,11 +56,7 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
                 + [GeneratorsCommand()]
             ),
             client_session=client_session,
-            aliases=aliases,
-            resource_commands=resource_commands,
-            interpreter_context={
-                "agent_template": agent_template,
-            },
+            interpreter_context=interpreter_context,
         )
 
     async def _initialize_autocomplete(
@@ -71,7 +67,7 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-        agent_template = self.interpreter_context["agent_template"]
+        agent_template = self.interpreter_context.agent_template
         for key, value in {
             command: dict.fromkeys(agent_template["options"])
             for command in [

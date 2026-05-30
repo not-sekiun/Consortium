@@ -1,5 +1,5 @@
 import consortium.client.client_singletons as client_singletons
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     ExitClientSignal,
@@ -14,7 +14,7 @@ from consortium.client.utils.printer_utils import print_error, print_info, print
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class ExitCommand(BaseCommand):
+class ExitCommand(BaseCommand[AnyContext]):
     name = "exit"
     description = "Exit the Consortium client"
     epilog = format_argparse_epilog(
@@ -26,7 +26,7 @@ class ExitCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: AnyContext,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

@@ -1,4 +1,4 @@
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -10,7 +10,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class GeneratorLaunchCommand(BaseCommand):
+class GeneratorLaunchCommand(BaseCommand[ConnectedContext]):
     name = "launch"
     description = (
         "Create an agent generator from the current agent template and then start it"
@@ -23,14 +23,14 @@ class GeneratorLaunchCommand(BaseCommand):
     )
     group = "Agent Generator Management Commands"
 
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
-            agent_template_id = context.interpreter_context["agent_template"][
+            agent_template_id = context.interpreter_context.agent_template[
                 "agent_template_id"
             ]
-            agent_template_options = context.interpreter_context["agent_template"][
+            agent_template_options = context.interpreter_context.agent_template[
                 "options"
             ]
 

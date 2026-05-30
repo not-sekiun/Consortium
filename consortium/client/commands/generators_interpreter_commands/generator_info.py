@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -21,7 +21,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console
 
 
-class GeneratorInfoCommand(BaseCommand):
+class GeneratorInfoCommand(BaseCommand[ConnectedContext]):
     name = "info"
     description = "Display information about an agent generator by its ID"
     epilog = format_argparse_epilog(
@@ -41,7 +41,7 @@ class GeneratorInfoCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

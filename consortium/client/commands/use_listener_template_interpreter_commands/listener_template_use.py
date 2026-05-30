@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -13,7 +13,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info
 
 
-class ListenerTemplateUseCommand(BaseCommand):
+class ListenerTemplateUseCommand(BaseCommand[ConnectedContext]):
     name = "use"
     description = (
         "Use a listener template to create a new listener by switching to its context"
@@ -35,12 +35,12 @@ class ListenerTemplateUseCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
-            current_listener_template = context.interpreter_context["listener_template"]
+            current_listener_template = context.interpreter_context.listener_template
 
             if (
                 parsed_args.listener_template_id[0]

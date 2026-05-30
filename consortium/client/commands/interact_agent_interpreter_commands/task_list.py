@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from consortium.client.commands.agents_interpreter_commands import (
     TaskListCommand as TaskListAgentsInterpreterCommand,
 )
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -57,7 +57,7 @@ class TaskListCommand(TaskListAgentsInterpreterCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
@@ -68,7 +68,7 @@ class TaskListCommand(TaskListAgentsInterpreterCommand):
                     agent_id=parsed_args.agent_id,
                 )
             else:
-                agent = context.interpreter_context["agent"]
+                agent = context.interpreter_context.agent
 
             agent_tasks = await self._get_tasks_to_list(
                 rest_api=rest_api,

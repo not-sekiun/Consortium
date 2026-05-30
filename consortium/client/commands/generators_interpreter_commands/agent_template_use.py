@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -13,7 +13,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_info
 
 
-class AgentTemplateUseCommand(BaseCommand):
+class AgentTemplateUseCommand(BaseCommand[ConnectedContext]):
     name = "use"
     description = "Use an agent template to create a new agent generator by switching to its context"
     epilog = format_argparse_epilog(
@@ -33,7 +33,7 @@ class AgentTemplateUseCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

@@ -2,7 +2,7 @@ import re
 from argparse import ArgumentParser
 from typing import Any
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -166,7 +166,7 @@ def _determine_positional_options(
 def construct_agent_capability_command(
     agent_capability: dict[str, Any],
 ) -> BaseCommand:
-    class AgentCapabilityCommand(BaseCommand):
+    class AgentCapabilityCommand(BaseCommand[ConnectedContext]):
         name = agent_capability["name"]
         description = agent_capability["description"]
         epilog = format_value_type_specification_epilog()
@@ -310,7 +310,7 @@ def construct_agent_capability_command(
 
         async def run(
             self,
-            context: Context,
+            context: ConnectedContext,
         ) -> InterpreterSignal:
             try:
                 # Bypass allowing argparse to parse for the --help-full flag
@@ -407,13 +407,13 @@ def construct_agent_capability_command(
                         return ContinueSignal()
 
                 task = await client_rest_api_connection.task_agent_by_agent_id(
-                    agent_id=context.interpreter_context["agent"]["agent_id"],
+                    agent_id=context.interpreter_context.agent["agent_id"],
                     command=self.name,
                     arguments=arguments,
                 )
                 print_info(
-                    f"Tasked agent '{context.interpreter_context['agent']['name']}' "
-                    f"({context.interpreter_context['agent']['agent_id']}) with task "
+                    f"Tasked agent '{context.interpreter_context.agent['name']}' "
+                    f"({context.interpreter_context.agent['agent_id']}) with task "
                     f"with task ID {task['task_id']}.",
                 )
             except SystemExit:

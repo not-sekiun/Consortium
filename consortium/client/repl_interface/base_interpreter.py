@@ -1,5 +1,4 @@
-from collections import deque
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from prompt_toolkit import ANSI, HTML, PromptSession, print_formatted_text
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -16,8 +15,11 @@ from consortium.client.exceptions.client_interpreter_exceptions import (
 from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIOperationError,
 )
-from consortium.client.models.alias_model import Alias
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import (
+    ConnectedContext,
+    DisconnectedContext,
+)
+from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -39,14 +41,9 @@ class BaseInterpreter:
         self,
         prompt: str | ANSI | HTML | list[tuple[str, str]],
         commands: list[BaseCommand],
-        aliases: dict[str, Alias],
-        resource_commands: deque[str],
         client_session: ClientSession | None,
-        interpreter_context: dict[str, Any] | None = None,
+        interpreter_context: BaseInterpreterContext,
     ):
-        if interpreter_context is None:
-            interpreter_context = {}
-
         self.prompt_session = PromptSession(
             message=prompt,
             completer=NestedCompleter.from_nested_dict(
@@ -60,13 +57,8 @@ class BaseInterpreter:
         self.interpreter_context = interpreter_context
 
         # Add current interpreter commands to the interpreter context for the `help`
-        # command to access
-        self.interpreter_context["commands"] = self.commands
-        # Add aliases to the interpreter context for the `alias` command to access
-        self.interpreter_context["aliases"] = aliases
-        # Add the resource commands queue to the interpreter context for the `rc`
-        # command to access
-        self.interpreter_context["resource_commands"] = resource_commands
+        # command to access.
+        self.interpreter_context.commands = self.commands
 
     # We provide a function because it needs to be called on every prompt update. The
     # name of the session can be renamed at any moment. Just passing in `HTML` object
@@ -87,8 +79,8 @@ class BaseInterpreter:
 
     async def _get_raw_input(self, multiline_input: bool = False) -> str:
         # Check for any queued up resource commands and return those if they exist
-        if self.interpreter_context["resource_commands"]:
-            input_string = self.interpreter_context["resource_commands"].popleft()
+        if self.interpreter_context.resource_commands:
+            input_string = self.interpreter_context.resource_commands.popleft()
             print_formatted_text(
                 HTML("<b><ansimagenta>[RC]</ansimagenta></b>"),
                 ". " if multiline_input else self.prompt_session.message,
@@ -139,7 +131,7 @@ class BaseInterpreter:
         tokenized_string = tokenize(input_string=input_string)
         expanded_tokens = expand_aliases(
             tokens=tokenized_string.tokens,
-            aliases=self.interpreter_context["aliases"],
+            aliases=self.interpreter_context.aliases,
         )
         tokenized_string.tokens = expanded_tokens
         return parse(tokenized_string=tokenized_string)
@@ -152,7 +144,15 @@ class BaseInterpreter:
             return ContinueSignal()
 
         return await self.commands[parsed_command.command].run(
-            context=Context(
+            context=ConnectedContext(
+                command=parsed_command.command,
+                arguments=parsed_command.arguments,
+                raw_input=parsed_command.raw_input,
+                client_session=self.client_session,
+                interpreter_context=self.interpreter_context,
+            )
+            if self.client_session is not None
+            else DisconnectedContext(
                 command=parsed_command.command,
                 arguments=parsed_command.arguments,
                 raw_input=parsed_command.raw_input,

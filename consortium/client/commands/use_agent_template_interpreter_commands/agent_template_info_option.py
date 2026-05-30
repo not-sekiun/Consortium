@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console, print_error
 
 
-class AgentTemplateInfoOptionCommand(BaseCommand):
+class AgentTemplateInfoOptionCommand(BaseCommand[ConnectedContext]):
     name = "opt-info"
     description = (
         "Display information about a specific agent template option by its name"
@@ -39,11 +39,11 @@ class AgentTemplateInfoOptionCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            agent_template = context.interpreter_context["agent_template"]
+            agent_template = context.interpreter_context.agent_template
 
             try:
                 option = agent_template["options"][parsed_args.option_name[0]]

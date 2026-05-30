@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -12,7 +12,7 @@ from consortium.client.utils.agent_template_command_utils import (
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class AgentTemplateInfoCommand(BaseCommand):
+class AgentTemplateInfoCommand(BaseCommand[ConnectedContext]):
     name = "at-info"
     description = (
         "Display information about the current agent template, or a specific "
@@ -39,7 +39,7 @@ class AgentTemplateInfoCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
@@ -51,7 +51,7 @@ class AgentTemplateInfoCommand(BaseCommand):
                 rest_api=rest_api,
                 agent_template_id=parsed_args.agent_template_id
                 if parsed_args.agent_template_id
-                else context.interpreter_context["agent_template"]["agent_template_id"],
+                else context.interpreter_context.agent_template["agent_template_id"],
             )
         except SystemExit:
             pass

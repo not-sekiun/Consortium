@@ -1,20 +1,18 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import (
-    BaseCommand,
-)
+from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.utils.agent_command_utils import display_agent_info
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
 )
 
 
-class AgentInfoCommand(BaseCommand):
+class AgentInfoCommand(BaseCommand[ConnectedContext]):
     name = "info"
     description = "Display information about an agent by its ID"
     epilog = format_argparse_epilog(
@@ -44,7 +42,7 @@ class AgentInfoCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

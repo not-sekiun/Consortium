@@ -2,7 +2,7 @@ import random
 
 from consortium.client.client_config import CLIENT_RELEASE
 from consortium.client.client_rest_api import RestAPI
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console
 
 
-class BannerCommand(BaseCommand):
+class BannerCommand(BaseCommand[AnyContext]):
     name = "banner"
     description = "Display a banner with information about the Consortium framework"
     epilog = format_argparse_epilog(
@@ -109,7 +109,7 @@ class BannerCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: AnyContext,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

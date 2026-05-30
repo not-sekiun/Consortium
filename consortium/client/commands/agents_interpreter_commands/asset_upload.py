@@ -3,19 +3,17 @@ import shutil
 import tempfile
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import (
-    BaseCommand,
-)
+from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
 
 
-class AssetUploadCommand(BaseCommand):
+class AssetUploadCommand(BaseCommand[ConnectedContext]):
     name = "up"
     description = "Upload an asset file or directory from its file or directory path"
     epilog = format_argparse_epilog(
@@ -52,7 +50,7 @@ class AssetUploadCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

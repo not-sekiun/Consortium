@@ -1,4 +1,3 @@
-from collections import deque
 from typing import TYPE_CHECKING
 
 from prompt_toolkit import ANSI
@@ -9,7 +8,7 @@ from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.home_interpreter_commands import (
     HOME_INTERPRETER_COMMANDS,
 )
-from consortium.client.models.alias_model import Alias
+from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 from consortium.client.repl_interface.base_interpreter import BaseInterpreter
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
@@ -26,8 +25,7 @@ class HomeInterpreter(BaseInterpreter):
     def __init__(
         self,
         client_session: ClientSession,
-        aliases: dict[str, Alias],
-        resource_commands: deque[str],
+        interpreter_context: BaseInterpreterContext,
     ):
         super().__init__(
             prompt=ANSI(format_rich_text_as_ansi("[bold white]Consortium (Home)\n> ")),
@@ -38,8 +36,7 @@ class HomeInterpreter(BaseInterpreter):
             ]
             + CORE_COMMANDS,
             client_session=client_session,
-            aliases=aliases,
-            resource_commands=resource_commands,
+            interpreter_context=interpreter_context,
         )
 
     # TODO: Find a way for interpreters to "inherit" command completions or share

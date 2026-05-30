@@ -1,4 +1,3 @@
-from collections import deque
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
@@ -13,7 +12,9 @@ from consortium.client.interpreters.listeners_interpreter import (
     COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS,
     ListenersInterpreter,
 )
-from consortium.client.models.alias_model import Alias
+from consortium.client.models.interpreter_context_models import (
+    UseListenerTemplateInterpreterContext,
+)
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -26,10 +27,9 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
     def __init__(
         self,
         client_session: ClientSession,
-        aliases: dict[str, Alias],
-        resource_commands: deque[str],
-        listener_template: dict[str, Any],
+        interpreter_context: UseListenerTemplateInterpreterContext,
     ):
+        listener_template = interpreter_context.listener_template
         # Add a "value" key to the options to store the current value of the
         # option.
         for option in listener_template["options"].values():
@@ -56,11 +56,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
                 + [ListenersCommand()]
             ),
             client_session=client_session,
-            aliases=aliases,
-            resource_commands=resource_commands,
-            interpreter_context={
-                "listener_template": listener_template,
-            },
+            interpreter_context=interpreter_context,
         )
 
     async def _initialize_autocomplete(
@@ -71,7 +67,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
             self.prompt_session.completer,
         )
-        listener_template = self.interpreter_context["listener_template"]
+        listener_template = self.interpreter_context.listener_template
         for key, value in {
             command: dict.fromkeys(listener_template["options"])
             for command in [
@@ -95,7 +91,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
             all_listener_templates=all_listener_templates,
         )
 
-    # When switching into the UseListenerTemplateInterpreter, we dont want to list all
+    # When switching into the UseListenerTemplateInterpreter, we don't want to list all
     # listeners and listener templates, this was done in the parent listener
     # interpreter once when the user entered it.
     @staticmethod

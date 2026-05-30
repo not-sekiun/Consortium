@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -13,7 +13,7 @@ from consortium.client.utils.options_utils import OptionType
 from consortium.client.utils.printer_utils import print_error, print_success
 
 
-class ListenerTemplateUnsetOptionCommand(BaseCommand):
+class ListenerTemplateUnsetOptionCommand(BaseCommand[ConnectedContext]):
     name = "unset"
     description = "Unset the current listener template's option to an empty value"
     epilog = format_argparse_epilog(
@@ -31,12 +31,12 @@ class ListenerTemplateUnsetOptionCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            listener_template_options = context.interpreter_context[
-                "listener_template"
-            ]["options"]
+            listener_template_options = context.interpreter_context.listener_template[
+                "options"
+            ]
             option_name = parsed_args.option_name[0]
 
             try:

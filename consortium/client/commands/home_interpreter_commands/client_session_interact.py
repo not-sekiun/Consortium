@@ -4,7 +4,7 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -19,7 +19,7 @@ from consortium.client.utils.printer_utils import print_error, print_success
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class InteractClientSessionCommand(BaseCommand):
+class InteractClientSessionCommand(BaseCommand[ConnectedContext]):
     name = "interact"
     description = "Interact with a client session by its ID"
     epilog = format_argparse_epilog(
@@ -40,7 +40,7 @@ class InteractClientSessionCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

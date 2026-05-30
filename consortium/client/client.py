@@ -33,7 +33,13 @@ from consortium.client.interpreters.disconnected_interpreter import (
 )
 from consortium.client.models.alias_model import Alias
 from consortium.client.models.client_models import ClientConfig
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import Context
+from consortium.client.models.interpreter_context_models import (
+    BaseInterpreterContext,
+    InteractAgentInterpreterContext,
+    UseAgentTemplateInterpreterContext,
+    UseListenerTemplateInterpreterContext,
+)
 from consortium.client.models.interpreter_signal_models import (
     ExitClientSessionSignal,
     ExitClientSignal,
@@ -84,8 +90,10 @@ class Client:
     ) -> InterpreterSignal:
         interpreter = HomeInterpreter(
             client_session=client_session,
-            aliases=self._aliases,
-            resource_commands=self._resource_commands,
+            interpreter_context=BaseInterpreterContext(
+                aliases=self._aliases,
+                resource_commands=self._resource_commands,
+            ),
         )
 
         while True:
@@ -101,47 +109,61 @@ class Client:
                 case SwitchHomeInterpreterSignal():
                     interpreter = HomeInterpreter(
                         client_session=client_session,
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
+                        interpreter_context=BaseInterpreterContext(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                        ),
                     )
                 case SwitchListenersInterpreterSignal():
                     interpreter = ListenersInterpreter(
                         client_session=client_session,
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
+                        interpreter_context=BaseInterpreterContext(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                        ),
                     )
                 case SwitchAgentsInterpreterSignal():
                     interpreter = AgentsInterpreter(
                         client_session=client_session,
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
+                        interpreter_context=BaseInterpreterContext(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                        ),
                     )
                 case SwitchGeneratorsInterpreterSignal():
                     interpreter = GeneratorsInterpreter(
                         client_session=client_session,
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
+                        interpreter_context=BaseInterpreterContext(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                        ),
                     )
                 case SwitchUseAgentTemplateInterpreterSignal():
                     interpreter = UseAgentTemplateInterpreter(
                         client_session=client_session,
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
-                        agent_template=interpreter_signal.agent_template,
+                        interpreter_context=UseAgentTemplateInterpreterContext(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                            agent_template=interpreter_signal.agent_template,
+                        ),
                     )
                 case SwitchUseListenerTemplateInterpreterSignal():
                     interpreter = UseListenerTemplateInterpreter(
                         client_session=client_session,
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
-                        listener_template=interpreter_signal.listener_template,
+                        interpreter_context=UseListenerTemplateInterpreterContext(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                            listener_template=interpreter_signal.listener_template,
+                        ),
                     )
                 case SwitchInteractAgentInterpreterSignal():
                     interpreter = InteractAgentInterpreter(
                         client_session=client_session,
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
-                        agent=interpreter_signal.agent,
+                        interpreter_context=InteractAgentInterpreterContext(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                            agent=interpreter_signal.agent,
+                        ),
                     )
                 case _:
                     raise AssertionError(
@@ -193,12 +215,17 @@ class Client:
                     command="banner",
                     arguments=[],
                     raw_input="banner",
-                    interpreter_context={},
+                    interpreter_context=BaseInterpreterContext(
+                        aliases=self._aliases,
+                        resource_commands=self._resource_commands,
+                    ),
                 ),
             )
             interpreter_signal = await DisconnectedInterpreter(
-                aliases=self._aliases,
-                resource_commands=self._resource_commands,
+                interpreter_context=BaseInterpreterContext(
+                    aliases=self._aliases,
+                    resource_commands=self._resource_commands,
+                ),
             ).run()
         else:
             # Display banner once at client startup.
@@ -208,7 +235,10 @@ class Client:
                     arguments=[],
                     raw_input="banner",
                     client_session=client_session,
-                    interpreter_context={},
+                    interpreter_context=BaseInterpreterContext(
+                        aliases=self._aliases,
+                        resource_commands=self._resource_commands,
+                    ),
                 ),
             )
             interpreter_signal = await self._handle_client_session_interpreters(
@@ -223,8 +253,10 @@ class Client:
                     return
                 case ExitClientSessionSignal():
                     interpreter_signal = await DisconnectedInterpreter(
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
+                        interpreter_context=BaseInterpreterContext(
+                            aliases=self._aliases,
+                            resource_commands=self._resource_commands,
+                        ),
                     ).run()
                 case SwitchClientSessionSignal() as previous_interpreter_signal:
                     try:
@@ -242,8 +274,10 @@ class Client:
                             + "while switching client sessions..."
                         )
                         interpreter_signal = await DisconnectedInterpreter(
-                            aliases=self._aliases,
-                            resource_commands=self._resource_commands,
+                            interpreter_context=BaseInterpreterContext(
+                                aliases=self._aliases,
+                                resource_commands=self._resource_commands,
+                            ),
                         ).run()
                     # # Catch any fatal errors raised by the client session. If a fatal error
                     # # occurs in any of the interpreters it is already printed. We catch it

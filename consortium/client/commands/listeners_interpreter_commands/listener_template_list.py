@@ -2,7 +2,7 @@ from typing import Any
 
 from rich.table import Table
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -14,7 +14,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console
 
 
-class ListenerTemplateListCommand(BaseCommand):
+class ListenerTemplateListCommand(BaseCommand[ConnectedContext]):
     name = "lt-list"
     description = "List all listener templates along with their essential information"
     epilog = format_argparse_epilog(
@@ -43,7 +43,7 @@ class ListenerTemplateListCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

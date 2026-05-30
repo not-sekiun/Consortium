@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from rich.table import Table
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console, print_error
 
 
-class ListenerTemplateInfoOptionCommand(BaseCommand):
+class ListenerTemplateInfoOptionCommand(BaseCommand[ConnectedContext]):
     name = "opt-info"
     description = (
         "Display information about a specific listener template option by its name"
@@ -39,11 +39,11 @@ class ListenerTemplateInfoOptionCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
-            listener_template = context.interpreter_context["listener_template"]
+            listener_template = context.interpreter_context.listener_template
 
             try:
                 option = listener_template["options"][parsed_args.option_name[0]]

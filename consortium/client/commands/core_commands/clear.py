@@ -1,7 +1,7 @@
 import platform
 import subprocess
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -13,7 +13,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error
 
 
-class ClearCommand(BaseCommand):
+class ClearCommand(BaseCommand[AnyContext]):
     name = "clear"
     description = "Clear the terminal screen"
     epilog = format_argparse_epilog(
@@ -25,7 +25,7 @@ class ClearCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: AnyContext,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

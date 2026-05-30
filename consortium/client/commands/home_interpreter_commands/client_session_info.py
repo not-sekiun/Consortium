@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -16,7 +16,7 @@ from consortium.client.utils.formatter_utils import (
 )
 
 
-class ClientSessionInfoCommand(BaseCommand):
+class ClientSessionInfoCommand(BaseCommand[ConnectedContext]):
     name = "info"
     description = (
         "Display information for the current client session, or for a "
@@ -51,7 +51,7 @@ class ClientSessionInfoCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

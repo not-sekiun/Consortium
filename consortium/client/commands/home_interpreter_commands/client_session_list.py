@@ -2,7 +2,7 @@ from rich.table import Table
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -16,7 +16,7 @@ from consortium.client.utils.printer_utils import console
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class ClientSessionListCommand(BaseCommand):
+class ClientSessionListCommand(BaseCommand[ConnectedContext]):
     name = "list"
     description = "List all client sessions along with their essential information"
     epilog = format_argparse_epilog(
@@ -49,7 +49,7 @@ class ClientSessionListCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

@@ -1,6 +1,6 @@
 from rich.table import Table
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -12,7 +12,7 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console
 
 
-class ListenerTemplateListOptionCommand(BaseCommand):
+class ListenerTemplateListOptionCommand(BaseCommand[ConnectedContext]):
     name = "opt-list"
     description = (
         "List all options for the current listener template along with their "
@@ -28,13 +28,13 @@ class ListenerTemplateListOptionCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)
-            listener_template_options = context.interpreter_context[
-                "listener_template"
-            ]["options"]
+            listener_template_options = context.interpreter_context.listener_template[
+                "options"
+            ]
 
             table = Table(title="Listener Template Options", highlight=True)
             table.add_column("Option Type")

@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -10,7 +10,7 @@ from consortium.client.utils.agent_command_utils import rename_agent
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class AgentRenameCommand(BaseCommand):
+class AgentRenameCommand(BaseCommand[ConnectedContext]):
     name = "rename"
     description = "Set the name of the current agent, or a specific agent by its ID"
     epilog = format_argparse_epilog(
@@ -37,7 +37,7 @@ class AgentRenameCommand(BaseCommand):
             nargs=1,
         )
 
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -46,7 +46,7 @@ class AgentRenameCommand(BaseCommand):
                 rest_api=rest_api,
                 agent_id=parsed_args.agent_id
                 if parsed_args.agent_id
-                else context.interpreter_context["agent"]["agent_id"],
+                else context.interpreter_context.agent["agent_id"],
                 name=parsed_args.name[0],
             )
         except SystemExit:

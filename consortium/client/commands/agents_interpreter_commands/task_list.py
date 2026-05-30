@@ -5,14 +5,12 @@ from typing import Any
 from rich.table import Table
 
 from consortium.client.client_rest_api import RestAPI
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import (
-    BaseCommand,
-)
+from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.utils.formatter_utils import (
     format_agent_task_status_string_with_color,
     format_argparse_epilog,
@@ -23,7 +21,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console, print_info
 
 
-class TaskListCommand(BaseCommand):
+class TaskListCommand(BaseCommand[ConnectedContext]):
     name = "t-list"
     description = "List all tasks, or a specific agent's tasks by its ID"
     epilog = format_argparse_epilog(
@@ -150,7 +148,7 @@ class TaskListCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

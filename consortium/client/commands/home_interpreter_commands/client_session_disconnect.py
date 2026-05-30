@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     ExitClientSessionSignal,
@@ -15,7 +15,7 @@ from consortium.client.utils.client_session_command_utils import (
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ClientSessionDisconnectCommand(BaseCommand):
+class ClientSessionDisconnectCommand(BaseCommand[ConnectedContext]):
     name = "disconnect"
     description = (
         "Disconnect the current client session or a specific client session by its ID"
@@ -42,7 +42,7 @@ class ClientSessionDisconnectCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

@@ -1,19 +1,17 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import (
-    BaseCommand,
-)
+from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
 )
 
 
-class AssetRemoveCommand(BaseCommand):
+class AssetRemoveCommand(BaseCommand[ConnectedContext]):
     name = "as-rm"
     description = "Delete an asset by its ID"
     epilog = format_argparse_epilog(
@@ -33,7 +31,7 @@ class AssetRemoveCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             self.parser.parse_args(context.arguments)

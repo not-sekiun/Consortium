@@ -8,19 +8,17 @@ from consortium.client.client_rest_api import RestAPI
 from consortium.client.commands.agents_interpreter_commands.task_info import (
     TaskInfoCommand,
 )
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import (
-    BaseCommand,
-)
+from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console, print_info, print_warning
 
 
-class WatchCommand(BaseCommand):
+class WatchCommand(BaseCommand[ConnectedContext]):
     name = "watch"
     description = "Continuously watch a task until it completes"
     epilog = format_argparse_epilog(
@@ -93,7 +91,7 @@ class WatchCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

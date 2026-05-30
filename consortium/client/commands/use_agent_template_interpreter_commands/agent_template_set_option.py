@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -21,7 +21,7 @@ from consortium.client.utils.printer_utils import (
 )
 
 
-class AgentTemplateSetOptionCommand(BaseCommand):
+class AgentTemplateSetOptionCommand(BaseCommand[ConnectedContext]):
     name = "set"
     description = "Set the current agent template's option to a specific value"
     epilog = format_value_type_specification_epilog()
@@ -56,7 +56,7 @@ class AgentTemplateSetOptionCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             if "--help-full" in context.arguments:
@@ -70,7 +70,7 @@ class AgentTemplateSetOptionCommand(BaseCommand):
                 return ContinueSignal()
 
             parsed_args = self.parser.parse_args(context.arguments)
-            agent_template_options = context.interpreter_context["agent_template"][
+            agent_template_options = context.interpreter_context.agent_template[
                 "options"
             ]
 

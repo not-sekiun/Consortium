@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -12,7 +12,7 @@ from consortium.client.utils.client_session_command_utils import describe_client
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ClientSessionDescribeCommand(BaseCommand):
+class ClientSessionDescribeCommand(BaseCommand[ConnectedContext]):
     name = "describe"
     description = (
         "Set the description of the current client session or a specific client "
@@ -45,7 +45,7 @@ class ClientSessionDescribeCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)

@@ -1,11 +1,18 @@
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from typing import TYPE_CHECKING
 
-from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import InterpreterSignal
 
+if TYPE_CHECKING:
+    from consortium.client.models.context_models import (
+        AnyContext,
+        ConnectedContext,
+        DisconnectedContext,
+    )
 
-class BaseCommand(ABC):
+
+class BaseCommand[TContext: (ConnectedContext, DisconnectedContext, AnyContext)](ABC):
     name: str
     description: str = ""
     epilog: str = ""
@@ -31,4 +38,4 @@ class BaseCommand(ABC):
         return None
 
     @abstractmethod
-    async def run(self, context: Context) -> InterpreterSignal: ...
+    async def run(self, context: TContext) -> InterpreterSignal: ...

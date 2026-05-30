@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -12,7 +12,7 @@ from consortium.client.utils.listener_template_command_utils import (
 )
 
 
-class ListenerTemplateInfoCommand(BaseCommand):
+class ListenerTemplateInfoCommand(BaseCommand[ConnectedContext]):
     name = "lt-info"
     description = (
         "Display information about the current listener template, or a specific "
@@ -37,7 +37,7 @@ class ListenerTemplateInfoCommand(BaseCommand):
             nargs="?",
         )
 
-    async def run(self, context: Context) -> InterpreterSignal:
+    async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
@@ -50,7 +50,7 @@ class ListenerTemplateInfoCommand(BaseCommand):
                 rest_api=rest_api,
                 listener_template_id=parsed_args.listener_template_id
                 if parsed_args.listener_template_id is not None
-                else context.interpreter_context["listener_template"][
+                else context.interpreter_context.listener_template[
                     "listener_template_id"
                 ],
             )

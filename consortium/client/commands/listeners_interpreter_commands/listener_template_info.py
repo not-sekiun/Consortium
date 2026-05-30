@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from consortium.client.models.context_model import Context
+from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -16,7 +16,7 @@ from consortium.client.utils.listener_template_command_utils import (
 )
 
 
-class ListenerTemplateInfoCommand(BaseCommand):
+class ListenerTemplateInfoCommand(BaseCommand[ConnectedContext]):
     name = "lt-info"
     description = "Display information about a listener template by its ID"
     epilog = format_argparse_epilog(
@@ -39,7 +39,7 @@ class ListenerTemplateInfoCommand(BaseCommand):
 
     async def run(
         self,
-        context: Context,
+        context: ConnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
