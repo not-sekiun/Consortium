@@ -27,7 +27,7 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
 from consortium.client.repl_interface.lexer import tokenize
-from consortium.client.repl_interface.parser import parse
+from consortium.client.repl_interface.parser import ParsedCommand, parse
 from consortium.client.utils.printer_utils import console, print_error
 
 if TYPE_CHECKING:
@@ -85,6 +85,82 @@ class BaseInterpreter:
             f"Logged in as: {self.client_session.username}</b>",
         )
 
+    async def _get_raw_input(self, multiline_input: bool = False) -> str:
+        # Check for any queued up resource commands and return those if they exist
+        if self.interpreter_context["resource_commands"]:
+            input_string = self.interpreter_context["resource_commands"].popleft()
+            print_formatted_text(
+                HTML("<b><ansimagenta>[RC]</ansimagenta></b>"),
+                ". " if multiline_input else self.prompt_session.message,
+                end="",
+            )
+            print_formatted_text(input_string)
+            return input_string
+
+        with patch_stdout(raw=True):
+            return await self.prompt_session.prompt_async(
+                message=". " if multiline_input else None
+            )
+
+    async def _get_complete_input(self) -> str:
+        # Get the first valid input possible from either resource commands or stdin
+        input_string = await self._get_raw_input()
+
+        # Provide multi-line input functionality for unclosed quotes, attempt to test
+        # for incomplete quotes by tokenizing first, if tokenization detects unclosed
+        # quotes we fall through to the multiline portion
+        try:
+            tokenize(input_string=input_string)
+            return input_string
+        except UnclosedQuotesError:
+            pass
+
+        # Read in multiline input
+        previous_prompt = self.prompt_session.message
+        try:
+            while True:
+                input_string += "\n" + await self._get_raw_input(multiline_input=True)
+                try:
+                    tokenize(input_string=input_string)
+                    break
+                except UnclosedQuotesError:
+                    continue
+        finally:
+            # Calling `prompt_async()` with the message argument overwrites the
+            # previously set prompt message, so we reassign here to be able to call
+            # `prompt_async()` next time round passing in a message argument. We set
+            # it in the finally block to guarantee reassignment even if an exception
+            # bubbles up (eg a `KeyboardInterrupt`)
+            self.prompt_session.message = previous_prompt
+
+        return input_string
+
+    def _parse_input_string(self, input_string: str) -> ParsedCommand:
+        tokenized_string = tokenize(input_string=input_string)
+        expanded_tokens = expand_aliases(
+            tokens=tokenized_string.tokens,
+            aliases=self.interpreter_context["aliases"],
+        )
+        tokenized_string.tokens = expanded_tokens
+        return parse(tokenized_string=tokenized_string)
+
+    async def _dispatch_command(
+        self, parsed_command: ParsedCommand
+    ) -> InterpreterSignal:
+        if parsed_command.command not in self.commands:
+            print_error(f"Command '{parsed_command.command}' not found")
+            return ContinueSignal()
+
+        return await self.commands[parsed_command.command].run(
+            context=Context(
+                command=parsed_command.command,
+                arguments=parsed_command.arguments,
+                raw_input=parsed_command.raw_input,
+                client_session=self.client_session,
+                interpreter_context=self.interpreter_context,
+            )
+        )
+
     async def on_loop(self) -> None: ...
 
     async def on_enter(self) -> None: ...
@@ -98,74 +174,24 @@ class BaseInterpreter:
             try:
                 await self.on_loop()
 
-                if self.interpreter_context["resource_commands"]:
-                    input_string = self.interpreter_context[
-                        "resource_commands"
-                    ].popleft()
-                    print_formatted_text(
-                        HTML("<b><ansimagenta>[RC]</ansimagenta></b>"),
-                        self.prompt_session.message,
-                        end="",
-                    )
-                    print_formatted_text(input_string)
-                else:
-                    with patch_stdout(raw=True):
-                        input_string = await self.prompt_session.prompt_async()
+                input_string = await self._get_complete_input()
                 if not input_string:
                     continue
-
-                # Provide multi-line input functionality for unclosed quotes.
-                try:
-                    tokenized_string = tokenize(input_string=input_string)
-                except UnclosedQuotesError:
-                    previous_prompt = self.prompt_session.message
-                    while True:
-                        input_string += "\n" + await self.prompt_session.prompt_async(
-                            message=". ",
-                        )
-                        try:
-                            tokenized_string = tokenize(input_string=input_string)
-                            # Calling prompt_async() with the message argument
-                            # overwrites the previously set prompt message, so we
-                            # reassign here to be able to call prompt_async() next time
-                            # round with passing in a message argument.
-                            self.prompt_session.message = previous_prompt
-                            break
-                        except UnclosedQuotesError:
-                            continue
-
-                expanded_tokens = expand_aliases(
-                    tokens=tokenized_string.tokens,
-                    aliases=self.interpreter_context["aliases"],
+                parsed_command = self._parse_input_string(input_string=input_string)
+                interpreter_signal = await self._dispatch_command(
+                    parsed_command=parsed_command,
                 )
-                tokenized_string.tokens = expanded_tokens
-
-                parsed_command = parse(tokenized_string=tokenized_string)
-                if parsed_command.command in self.commands:
-                    context = Context(
-                        command=parsed_command.command,
-                        arguments=parsed_command.arguments,
-                        raw_input=parsed_command.raw_input,
-                        client_session=self.client_session,
-                        interpreter_context=self.interpreter_context,
-                    )
-                    interpreter_signal = await self.commands[
-                        parsed_command.command
-                    ].run(context)
-
-                    match interpreter_signal:
-                        case ContinueSignal():
-                            continue
-                        case InterpreterSignal():
-                            await self.on_exit()
-                            return interpreter_signal
-                        case _:
-                            raise AssertionError(
-                                "Unsupported interpreter signal returned from command. "
-                                f"Received signal '{interpreter_signal}'",
-                            )
-                else:
-                    print_error(f"Command '{parsed_command.command}' not found")
+                match interpreter_signal:
+                    case ContinueSignal():
+                        continue
+                    case InterpreterSignal():
+                        await self.on_exit()
+                        return interpreter_signal
+                    case _:
+                        raise AssertionError(
+                            "Unsupported interpreter signal returned from command. "
+                            f"Received signal '{interpreter_signal}'",
+                        )
             except KeyboardInterrupt:
                 print_error(
                     "Keyboard interrupt ignored. Use 'exit' to exit the interpreter.",
@@ -189,13 +215,11 @@ class BaseInterpreter:
                             padding=(0, 0),
                         )
                     )
-                continue
-            # except Exception as exc:
-            #     print_error(
-            #         f"Unhandled exception occurred. {exc.__class__.__name__}: {exc}"
-            #     )
-            #     console.print_exception(show_locals=True)
-            #     continue
+            except Exception as exc:
+                print_error(
+                    f"Unhandled exception occurred. {exc.__class__.__name__}: {exc}"
+                )
+                console.print_exception(show_locals=True)
 
         raise AssertionError(
             "Interpreter REPL loop broke out without returning a valid interpreter "

@@ -264,8 +264,10 @@ def test_update_listener_by_listener_id(
                 ),
                 expected_json_schema=LISTENER_JSON_SCHEMA,
                 expected_status_code=200,
-                validator_function=lambda response: response.json()["name"] == new_name
-                and response.json()["description"] == new_description,
+                validator_function=lambda response: (
+                    response.json()["name"] == new_name
+                    and response.json()["description"] == new_description
+                ),
             )
     else:
         # Test for spectator sessions.

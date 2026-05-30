@@ -192,8 +192,9 @@ def test_update_user_account_username_by_user_account_id(
             ),
             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
-            validator_function=lambda response: response.json()["username"]
-            == new_username,
+            validator_function=lambda response: (
+                response.json()["username"] == new_username
+            ),
         )
     else:
         validate_response(
@@ -231,8 +232,9 @@ def test_update_user_account_password_by_user_account_id(
             ),
             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
-            validator_function=lambda response: response.json()["password"]
-            == new_password,
+            validator_function=lambda response: (
+                response.json()["password"] == new_password
+            ),
         )
     else:
         validate_response(
@@ -321,9 +323,11 @@ def test_update_user_account_by_user_account_id(
                 validator_function=lambda response,
                 new_username_bind=new_username,
                 new_password_bind=new_password,
-                new_role_bind=new_role: response.json()["username"] == new_username_bind
-                and response.json()["password"] == new_password_bind
-                and response.json()["role"] == new_role_bind,
+                new_role_bind=new_role: (
+                    response.json()["username"] == new_username_bind
+                    and response.json()["password"] == new_password_bind
+                    and response.json()["role"] == new_role_bind
+                ),
             )
     else:
         for user_account_id in get_all_user_account_ids(admin_session):

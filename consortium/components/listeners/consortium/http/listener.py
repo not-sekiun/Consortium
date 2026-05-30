@@ -61,7 +61,7 @@ class Listener(BaseListener):
             try:
                 json_request_body = await request.json()
                 jsonschema.validate(json_request_body, agent_registration_json_schema)
-            except (json.JSONDecodeError, jsonschema.ValidationError):
+            except json.JSONDecodeError, jsonschema.ValidationError:
                 return web.Response(status=401)
 
             # Register the agent and create an agent record
@@ -162,7 +162,7 @@ class Listener(BaseListener):
                 try:
                     result_json = await request.json()
                     jsonschema.validate(result_json, agent_result_json_schema)
-                except (json.JSONDecodeError, jsonschema.ValidationError):
+                except json.JSONDecodeError, jsonschema.ValidationError:
                     self.logger.warning(
                         "Unidentified client {} sent malformed agent result data. "
                         "JSON data was not valid result JSON. Responded with 401 "

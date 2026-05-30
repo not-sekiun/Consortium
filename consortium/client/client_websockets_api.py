@@ -240,7 +240,7 @@ class WebsocketsAPI:
                         message,
                         _websockets_api_generic_response_json_schema,
                     )
-                except (json.JSONDecodeError, jsonschema.ValidationError):
+                except json.JSONDecodeError, jsonschema.ValidationError:
                     raise InvalidServerWebsocketAPIResponseError from None
 
                 # If the message is a response message, we place it in a queue so that

@@ -161,7 +161,7 @@ class WatchCommand(BaseCommand):
                                 progress_offset=progress_offset,
                             )
                             live.update(display)
-            except (KeyboardInterrupt, asyncio.CancelledError):
+            except KeyboardInterrupt, asyncio.CancelledError:
                 print_info("Watch stopped by user.")
 
         except SystemExit:

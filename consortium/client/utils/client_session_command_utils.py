@@ -15,6 +15,24 @@ from consortium.client.utils.printer_utils import console, print_error, print_su
 client_sessions_service = client_singletons.client_sessions_service
 
 
+async def disconnect_client_session(client_session_id: str | uuid.UUID) -> None:
+    try:
+        client_session = (
+            client_sessions_service.get_client_session_by_client_session_id(
+                client_session_id=client_session_id,
+            )
+        )
+        await client_sessions_service.remove_client_session_by_client_session_id(
+            client_session_id=client_session_id,
+        )
+        print_success(
+            f"Disconnected {client_session} from server "
+            f"{client_session.remote_host}:{client_session.remote_port}"
+        )
+    except ClientSessionNotFoundError as exc:
+        print_error(str(exc))
+
+
 def describe_client_session(
     client_session_id: str | uuid.UUID,
     description: str,

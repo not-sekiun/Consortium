@@ -409,7 +409,7 @@ async def websocket_endpoint(
         _logger.info(
             f"{user} made a WebSocket connection to the events API.",
         )
-    except (KeyError, IndexError):
+    except KeyError, IndexError:
         _logger.debug(
             "Failed to authorize the WebSocket connection request. The Authorization "
             "header was not provided.",

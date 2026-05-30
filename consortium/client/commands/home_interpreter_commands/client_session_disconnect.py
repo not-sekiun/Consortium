@@ -1,9 +1,5 @@
 from argparse import ArgumentParser
 
-import consortium.client.client_singletons as client_singletons
-from consortium.client.exceptions.client_sessions_service_exceptions import (
-    ClientSessionNotFoundError,
-)
 from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
@@ -13,10 +9,10 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
+from consortium.client.utils.client_session_command_utils import (
+    disconnect_client_session,
+)
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_error, print_success
-
-client_sessions_service = client_singletons.client_sessions_service
 
 
 class ClientSessionDisconnectCommand(BaseCommand):
@@ -44,26 +40,6 @@ class ClientSessionDisconnectCommand(BaseCommand):
             default=None,
         )
 
-    @staticmethod
-    async def _disconnect_client_session(
-        client_session_id: str,
-    ) -> None:
-        try:
-            client_session = (
-                client_sessions_service.get_client_session_by_client_session_id(
-                    client_session_id=client_session_id,
-                )
-            )
-            await client_sessions_service.remove_client_session_by_client_session_id(
-                client_session_id=client_session_id,
-            )
-            print_success(
-                f"Disconnected {client_session} from server "
-                f"{client_session.remote_host}:{client_session.remote_port}"
-            )
-        except ClientSessionNotFoundError as exc:
-            print_error(str(exc))
-
     async def run(
         self,
         context: Context,
@@ -76,7 +52,7 @@ class ClientSessionDisconnectCommand(BaseCommand):
             else:
                 client_session_id = parsed_args.client_session_id
 
-            await self._disconnect_client_session(client_session_id=client_session_id)
+            await disconnect_client_session(client_session_id=client_session_id)
 
             if client_session_id == str(context.client_session.client_session_id):
                 return ExitClientSessionSignal()

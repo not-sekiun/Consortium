@@ -242,7 +242,7 @@ class RepositoryDirectory:
                         extract_dir=path,
                         format=archive_file_format,
                     )
-            except (shutil.ReadError, ValueError):
+            except shutil.ReadError, ValueError:
                 raise InvalidRepositoryDirectoryArchiveFileFormatError(
                     archive_file_format=archive_file_format
                 ) from None
@@ -256,7 +256,7 @@ class RepositoryDirectory:
                         extract_dir=path,
                         format=archive_file_format,
                     )
-            except (shutil.ReadError, ValueError):
+            except shutil.ReadError, ValueError:
                 raise InvalidRepositoryDirectoryArchiveFileFormatError(
                     archive_file_format=archive_file_format
                 ) from None

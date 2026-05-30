@@ -1,5 +1,5 @@
 import consortium.client.client_singletons as client_singletons
-from consortium.client.models.context_model import AnyContext
+from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     ExitClientSignal,
@@ -26,7 +26,7 @@ class ExitCommand(BaseCommand):
 
     async def run(
         self,
-        context: AnyContext,
+        context: Context,
     ) -> InterpreterSignal:
         try:
             _ = self.parser.parse_args(context.arguments)

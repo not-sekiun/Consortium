@@ -23,7 +23,7 @@ from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class DisconnectedInterpreter(BaseInterpreter[None]):
+class DisconnectedInterpreter(BaseInterpreter):
     def __init__(
         self,
         aliases: dict[str, Alias],
@@ -62,7 +62,7 @@ class DisconnectedInterpreter(BaseInterpreter[None]):
         all_client_sessions = client_sessions_service.get_all_client_sessions()
 
         nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            completer=self.prompt_session.completer,
+            nested_completer=self.prompt_session.completer,
         )
         for key, value in {
             command: {

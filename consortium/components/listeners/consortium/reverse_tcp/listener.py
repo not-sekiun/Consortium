@@ -181,7 +181,7 @@ class _AgentHandler:
                 agent_registration_message,
                 agent_registration_json_schema,
             )
-        except (jsonschema.ValidationError, ValidationError):
+        except jsonschema.ValidationError, ValidationError:
             await self._close_connection()
             return
 
