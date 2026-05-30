@@ -2,6 +2,7 @@ import argparse
 
 from rich.table import Table
 
+from consortium.client.models.command_info_model import CommandInfo
 from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
@@ -35,11 +36,11 @@ class HelpCommand(BaseCommand[AnyContext]):
         )
 
     @staticmethod
-    def _print_summarized_help_menu(commands: dict[str, BaseCommand]) -> None:
+    def _print_summarized_help_menu(commands_info: dict[str, CommandInfo]) -> None:
         command_groups = {}
-        command_col_width = max(len(command.name) for command in commands.values())
+        command_col_width = max(len(command.name) for command in commands_info.values())
         max_description_length = max(
-            len(command.description) for command in commands.values()
+            len(command.description) for command in commands_info.values()
         )
         # Command column has 4 characters of padding, table borders and space.
         # Description column has 3 characters of padding, space on left and space and
@@ -50,7 +51,7 @@ class HelpCommand(BaseCommand[AnyContext]):
         )
 
         # Group commands by their specified group or default to "General Commands"
-        for _, command in commands.items():
+        for _, command in commands_info.items():
             # "General Commands" is the default group if no group is specified
             group = command.group or "General Commands"
             if group not in command_groups:
@@ -97,15 +98,15 @@ class HelpCommand(BaseCommand[AnyContext]):
             parsed_args = self.parser.parse_args(
                 context.arguments,
             )
-            commands = context.interpreter_context.commands
+            commands_info = context.interpreter_context.commands_info
 
             if parsed_args.command_name:
-                if parsed_args.command_name in commands:
-                    print(commands[parsed_args.command_name].summary)
+                if parsed_args.command_name in commands_info:
+                    print(commands_info[parsed_args.command_name].summary)
                 else:
                     print_error(f"Invalid command: {parsed_args.command_name}")
             else:
-                self._print_summarized_help_menu(commands)
+                self._print_summarized_help_menu(commands_info)
         except SystemExit:
             pass
 

@@ -19,8 +19,7 @@ class ConnectedContext(_Context):
     client_session: ClientSession
 
 
-class DisconnectedContext(_Context):
-    client_session: None
+class DisconnectedContext(_Context): ...
 
 
 type AnyContext = ConnectedContext | DisconnectedContext

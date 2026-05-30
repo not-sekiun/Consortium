@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from prompt_toolkit import ANSI, HTML, PromptSession, print_formatted_text
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
@@ -9,12 +7,14 @@ from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.text import Text
 
+from consortium.client.client_session import ClientSession
 from consortium.client.exceptions.client_interpreter_exceptions import (
     UnclosedQuotesError,
 )
 from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIOperationError,
 )
+from consortium.client.models.command_info_model import CommandInfo
 from consortium.client.models.context_models import (
     ConnectedContext,
     DisconnectedContext,
@@ -31,9 +31,6 @@ from consortium.client.repl_interface.base_command import (
 from consortium.client.repl_interface.lexer import tokenize
 from consortium.client.repl_interface.parser import ParsedCommand, parse
 from consortium.client.utils.printer_utils import console, print_error
-
-if TYPE_CHECKING:
-    from consortium.client.client_session import ClientSession
 
 
 class _BaseInterpreter[TClientSession: (ClientSession, None)]:
@@ -58,7 +55,15 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
 
         # Add current interpreter commands to the interpreter context for the `help`
         # command to access.
-        self.interpreter_context.commands = self.commands
+        self.interpreter_context.commands_info = {
+            command.name: CommandInfo(
+                name=command.name,
+                description=command.description,
+                group=command.group,
+                summary=command.summary,
+            )
+            for command in commands
+        }
 
     # We provide a function because it needs to be called on every prompt update. The
     # name of the session can be renamed at any moment. Just passing in `HTML` object
@@ -156,7 +161,6 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
                 command=parsed_command.command,
                 arguments=parsed_command.arguments,
                 raw_input=parsed_command.raw_input,
-                client_session=self.client_session,
                 interpreter_context=self.interpreter_context,
             )
         )

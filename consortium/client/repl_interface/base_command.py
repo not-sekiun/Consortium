@@ -1,15 +1,13 @@
+import inspect
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from typing import TYPE_CHECKING
 
+from consortium.client.models.context_models import (
+    AnyContext,
+    ConnectedContext,
+    DisconnectedContext,
+)
 from consortium.client.models.interpreter_signal_models import InterpreterSignal
-
-if TYPE_CHECKING:
-    from consortium.client.models.context_models import (
-        AnyContext,
-        ConnectedContext,
-        DisconnectedContext,
-    )
 
 
 class BaseCommand[
@@ -34,6 +32,10 @@ class BaseCommand[
     # implementation's parser.
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+        # Guard clause to prevent the firing of the init subclass logic for
+        # `BaseConnectedCommand` and `BaseDisconnectedCommand`
+        if ABC in cls.__bases__ or inspect.isabstract(cls):
+            return
         cls.summary = f"description: {cls.description}\n{cls().parser.format_usage()}"
 
     def configure_parser(self, parser: ArgumentParser) -> None:

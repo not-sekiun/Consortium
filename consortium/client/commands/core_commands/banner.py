@@ -2,7 +2,7 @@ import random
 
 from consortium.client.client_config import CLIENT_RELEASE
 from consortium.client.client_rest_api import RestAPI
-from consortium.client.models.context_models import AnyContext
+from consortium.client.models.context_models import AnyContext, ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -115,7 +115,7 @@ class BannerCommand(BaseCommand[AnyContext]):
             _ = self.parser.parse_args(context.arguments)
             await self._display_banner(
                 rest_api=context.client_session.rest_api
-                if context.client_session is not None
+                if isinstance(context, ConnectedContext)
                 else None
             )
         except SystemExit:

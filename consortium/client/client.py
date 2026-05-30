@@ -33,7 +33,10 @@ from consortium.client.interpreters.disconnected_interpreter import (
 )
 from consortium.client.models.alias_model import Alias
 from consortium.client.models.client_models import ClientConfig
-from consortium.client.models.context_models import Context
+from consortium.client.models.context_models import (
+    ConnectedContext,
+    DisconnectedContext,
+)
 from consortium.client.models.interpreter_context_models import (
     BaseInterpreterContext,
     InteractAgentInterpreterContext,
@@ -211,7 +214,7 @@ class Client:
         if client_session is None:
             # Display banner once at client startup.
             await BannerCommand().run(
-                context=Context(
+                context=DisconnectedContext(
                     command="banner",
                     arguments=[],
                     raw_input="banner",
@@ -227,10 +230,10 @@ class Client:
                     resource_commands=self._resource_commands,
                 ),
             ).run()
-        else:
+        elif isinstance(client_session, ClientSession):
             # Display banner once at client startup.
             await BannerCommand().run(
-                context=Context(
+                context=ConnectedContext(
                     command="banner",
                     arguments=[],
                     raw_input="banner",
@@ -243,6 +246,10 @@ class Client:
             )
             interpreter_signal = await self._handle_client_session_interpreters(
                 client_session=client_session,
+            )
+        else:
+            raise AssertionError(
+                "`client_session` is neither of type `ClientSession` or `None`"
             )
 
         # Based on successive client session return statuses decide whether to continue
