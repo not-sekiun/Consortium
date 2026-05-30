@@ -7,13 +7,13 @@ from consortium.client.models.interpreter_signal_models import (
     SwitchUseAgentTemplateInterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_info
 
 
-class AgentTemplateUseCommand(BaseCommand[ConnectedContext]):
+class AgentTemplateUseCommand(BaseConnectedCommand):
     name = "use"
     description = "Use an agent template to create a new agent generator by switching to its context"
     epilog = format_argparse_epilog(

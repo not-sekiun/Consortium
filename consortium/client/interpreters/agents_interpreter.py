@@ -9,7 +9,9 @@ from consortium.client.commands.agents_interpreter_commands import (
 )
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
-from consortium.client.repl_interface.base_interpreter import BaseInterpreter
+from consortium.client.repl_interface.base_interpreter import (
+    BaseConnectedInterpreter,
+)
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -25,7 +27,7 @@ COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS = [
 ] + AGENTS_INTERPRETER_COMMANDS
 
 
-class AgentsInterpreter(BaseInterpreter):
+class AgentsInterpreter(BaseConnectedInterpreter):
     def __init__(
         self,
         client_session: ClientSession,

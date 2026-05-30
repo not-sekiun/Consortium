@@ -4,13 +4,13 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class ListenerCreateCommand(BaseCommand[ConnectedContext]):
+class ListenerCreateCommand(BaseConnectedCommand):
     name = "create"
     description = "Create a listener from the current listener template"
     epilog = format_argparse_epilog(

@@ -8,7 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.formatter_utils import (
     format_agent_result_status_string_with_color,
     format_argparse_epilog,
@@ -18,7 +18,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console
 
 
-class ResultInfoCommand(BaseCommand[ConnectedContext]):
+class ResultInfoCommand(BaseConnectedCommand):
     name = "r-info"
     description = "Display information about an agent's result by its ID"
     epilog = format_argparse_epilog(

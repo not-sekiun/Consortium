@@ -5,12 +5,12 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.repl_interface.base_command import BaseDisconnectedCommand
 from consortium.client.utils.client_session_command_utils import rename_client_session
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ClientSessionRenameCommand(BaseCommand[DisconnectedContext]):
+class ClientSessionRenameCommand(BaseDisconnectedCommand):
     name = "rename"
     description = "Set the name of a specific client session by its ID"
     epilog = format_argparse_epilog(

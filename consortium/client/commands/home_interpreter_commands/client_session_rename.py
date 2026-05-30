@@ -6,13 +6,13 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.client_session_command_utils import rename_client_session
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ClientSessionRenameCommand(BaseCommand[ConnectedContext]):
+class ClientSessionRenameCommand(BaseConnectedCommand):
     name = "rename"
     description = (
         "Set the name of the current client session, or a specific client session by "

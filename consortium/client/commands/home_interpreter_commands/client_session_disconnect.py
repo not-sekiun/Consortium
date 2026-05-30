@@ -7,7 +7,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.client_session_command_utils import (
     disconnect_client_session,
@@ -15,7 +15,7 @@ from consortium.client.utils.client_session_command_utils import (
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ClientSessionDisconnectCommand(BaseCommand[ConnectedContext]):
+class ClientSessionDisconnectCommand(BaseConnectedCommand):
     name = "disconnect"
     description = (
         "Disconnect the current client session or a specific client session by its ID"

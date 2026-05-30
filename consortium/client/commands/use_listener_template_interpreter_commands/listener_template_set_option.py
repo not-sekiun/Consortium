@@ -6,7 +6,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import (
     format_value_type_specification_epilog,
@@ -21,7 +21,7 @@ from consortium.client.utils.printer_utils import (
 )
 
 
-class ListenerTemplateSetOptionCommand(BaseCommand[ConnectedContext]):
+class ListenerTemplateSetOptionCommand(BaseConnectedCommand):
     name = "set"
     description = "Set the current listener template's option to a specific value"
     epilog = format_value_type_specification_epilog()

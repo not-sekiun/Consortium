@@ -20,7 +20,9 @@ from consortium.client.interpreters.agents_interpreter import (
 from consortium.client.models.interpreter_context_models import (
     InteractAgentInterpreterContext,
 )
-from consortium.client.repl_interface.base_interpreter import BaseInterpreter
+from consortium.client.repl_interface.base_interpreter import (
+    BaseConnectedInterpreter,
+)
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -34,7 +36,7 @@ if TYPE_CHECKING:
     from consortium.client.client_session import ClientSession
 
 
-class InteractAgentInterpreter(BaseInterpreter):
+class InteractAgentInterpreter(BaseConnectedInterpreter):
     def __init__(
         self,
         client_session: ClientSession,

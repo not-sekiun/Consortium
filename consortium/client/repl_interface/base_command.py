@@ -12,7 +12,9 @@ if TYPE_CHECKING:
     )
 
 
-class BaseCommand[TContext: (ConnectedContext, DisconnectedContext, AnyContext)](ABC):
+class BaseCommand[
+    TContext: (ConnectedContext, DisconnectedContext, AnyContext) = AnyContext
+](ABC):
     name: str
     description: str = ""
     epilog: str = ""
@@ -39,3 +41,13 @@ class BaseCommand[TContext: (ConnectedContext, DisconnectedContext, AnyContext)]
 
     @abstractmethod
     async def run(self, context: TContext) -> InterpreterSignal: ...
+
+
+class BaseConnectedCommand(BaseCommand[ConnectedContext], ABC):
+    @abstractmethod
+    async def run(self, context: ConnectedContext) -> InterpreterSignal: ...
+
+
+class BaseDisconnectedCommand(BaseCommand[DisconnectedContext]):
+    @abstractmethod
+    async def run(self, context: DisconnectedContext) -> InterpreterSignal: ...

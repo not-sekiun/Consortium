@@ -6,13 +6,13 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseDisconnectedCommand,
 )
 from consortium.client.utils.client_session_command_utils import describe_client_session
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class ClientSessionDescribeCommand(BaseCommand[DisconnectedContext]):
+class ClientSessionDescribeCommand(BaseDisconnectedCommand):
     name = "describe"
     description = "Set the description of a client session by its ID"
     epilog = format_argparse_epilog(

@@ -11,7 +11,7 @@ from consortium.client.models.interpreter_signal_models import (
     SwitchClientSessionSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_success
@@ -19,7 +19,7 @@ from consortium.client.utils.printer_utils import print_error, print_success
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class InteractClientSessionCommand(BaseCommand[ConnectedContext]):
+class InteractClientSessionCommand(BaseConnectedCommand):
     name = "interact"
     description = "Interact with a client session by its ID"
     epilog = format_argparse_epilog(

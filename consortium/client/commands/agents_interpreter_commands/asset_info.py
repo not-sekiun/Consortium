@@ -7,7 +7,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
@@ -16,7 +16,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console
 
 
-class AssetInfoCommand(BaseCommand[ConnectedContext]):
+class AssetInfoCommand(BaseConnectedCommand):
     name = "as-info"
     description = "Display information about an asset by its ID"
     epilog = format_argparse_epilog(

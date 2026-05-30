@@ -8,12 +8,12 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
 
 
-class AssetUploadCommand(BaseCommand[ConnectedContext]):
+class AssetUploadCommand(BaseConnectedCommand):
     name = "up"
     description = "Upload an asset file or directory from its file or directory path"
     epilog = format_argparse_epilog(

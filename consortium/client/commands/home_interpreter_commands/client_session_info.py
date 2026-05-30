@@ -6,7 +6,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.client_session_command_utils import (
     display_client_session_info,
@@ -16,7 +16,7 @@ from consortium.client.utils.formatter_utils import (
 )
 
 
-class ClientSessionInfoCommand(BaseCommand[ConnectedContext]):
+class ClientSessionInfoCommand(BaseConnectedCommand):
     name = "info"
     description = (
         "Display information for the current client session, or for a "

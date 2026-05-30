@@ -9,7 +9,9 @@ from consortium.client.commands.home_interpreter_commands import (
     HOME_INTERPRETER_COMMANDS,
 )
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
-from consortium.client.repl_interface.base_interpreter import BaseInterpreter
+from consortium.client.repl_interface.base_interpreter import (
+    BaseConnectedInterpreter,
+)
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -21,7 +23,7 @@ if TYPE_CHECKING:
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class HomeInterpreter(BaseInterpreter):
+class HomeInterpreter(BaseConnectedInterpreter):
     def __init__(
         self,
         client_session: ClientSession,

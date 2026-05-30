@@ -8,7 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import (
     format_object_as_rich_ansi_highlight_str,
@@ -165,8 +165,8 @@ def _determine_positional_options(
 # that are present.
 def construct_agent_capability_command(
     agent_capability: dict[str, Any],
-) -> BaseCommand:
-    class AgentCapabilityCommand(BaseCommand[ConnectedContext]):
+) -> BaseConnectedCommand:
+    class AgentCapabilityCommand(BaseConnectedCommand):
         name = agent_capability["name"]
         description = agent_capability["description"]
         epilog = format_value_type_specification_epilog()

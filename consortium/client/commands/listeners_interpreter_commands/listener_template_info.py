@@ -6,7 +6,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -16,7 +16,7 @@ from consortium.client.utils.listener_template_command_utils import (
 )
 
 
-class ListenerTemplateInfoCommand(BaseCommand[ConnectedContext]):
+class ListenerTemplateInfoCommand(BaseConnectedCommand):
     name = "lt-info"
     description = "Display information about a listener template by its ID"
     epilog = format_argparse_epilog(

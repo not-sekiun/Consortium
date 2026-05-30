@@ -7,13 +7,13 @@ from consortium.client.models.interpreter_signal_models import (
     SwitchUseListenerTemplateInterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_info
 
 
-class ListenerTemplateUseCommand(BaseCommand[ConnectedContext]):
+class ListenerTemplateUseCommand(BaseConnectedCommand):
     name = "use"
     description = (
         "Use a listener template to create a new listener by switching to its context"

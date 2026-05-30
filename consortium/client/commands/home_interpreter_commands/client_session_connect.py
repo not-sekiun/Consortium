@@ -17,7 +17,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
@@ -25,7 +25,7 @@ from consortium.client.utils.printer_utils import print_error, print_info, print
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class ConnectCommand(BaseCommand[ConnectedContext]):
+class ConnectCommand(BaseConnectedCommand):
     name = "connect"
     description = "Connect to a Consortium server, creating a new client session"
     epilog = format_argparse_epilog(

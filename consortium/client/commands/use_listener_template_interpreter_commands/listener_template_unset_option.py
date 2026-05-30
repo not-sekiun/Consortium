@@ -6,14 +6,14 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.options_utils import OptionType
 from consortium.client.utils.printer_utils import print_error, print_success
 
 
-class ListenerTemplateUnsetOptionCommand(BaseCommand[ConnectedContext]):
+class ListenerTemplateUnsetOptionCommand(BaseConnectedCommand):
     name = "unset"
     description = "Unset the current listener template's option to an empty value"
     epilog = format_argparse_epilog(

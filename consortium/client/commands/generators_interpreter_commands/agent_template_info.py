@@ -6,7 +6,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.agent_template_command_utils import (
     display_agent_template_info,
@@ -16,7 +16,7 @@ from consortium.client.utils.formatter_utils import (
 )
 
 
-class AgentTemplateInfoCommand(BaseCommand[ConnectedContext]):
+class AgentTemplateInfoCommand(BaseConnectedCommand):
     name = "at-info"
     description = "Display information about an agent template by its ID"
     epilog = format_argparse_epilog(

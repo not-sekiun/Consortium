@@ -6,12 +6,12 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
     SwitchInteractAgentInterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class AgentInteractCommand(BaseCommand[ConnectedContext]):
+class AgentInteractCommand(BaseConnectedCommand):
     name = "interact"
     description = "Interact with an agent by its ID"
     epilog = format_argparse_epilog(

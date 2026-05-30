@@ -8,7 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console
@@ -16,7 +16,7 @@ from consortium.client.utils.printer_utils import console
 client_sessions_service = client_singletons.client_sessions_service
 
 
-class ClientSessionListCommand(BaseCommand[ConnectedContext]):
+class ClientSessionListCommand(BaseConnectedCommand):
     name = "list"
     description = "List all client sessions along with their essential information"
     epilog = format_argparse_epilog(

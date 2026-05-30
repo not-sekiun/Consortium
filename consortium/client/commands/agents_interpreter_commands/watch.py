@@ -13,12 +13,12 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console, print_info, print_warning
 
 
-class WatchCommand(BaseCommand[ConnectedContext]):
+class WatchCommand(BaseConnectedCommand):
     name = "watch"
     description = "Continuously watch a task until it completes"
     epilog = format_argparse_epilog(

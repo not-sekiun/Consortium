@@ -5,12 +5,12 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
-from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.agent_command_utils import rename_agent
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class AgentRenameCommand(BaseCommand[ConnectedContext]):
+class AgentRenameCommand(BaseConnectedCommand):
     name = "rename"
     description = "Set the name of an agent by its ID"
     epilog = format_argparse_epilog(

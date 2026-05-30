@@ -8,7 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import (
     format_agent_generator_state_string_with_color,
@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console
 
 
-class GeneratorListCommand(BaseCommand[ConnectedContext]):
+class GeneratorListCommand(BaseConnectedCommand):
     name = "list"
     description = "List all agent generators along with their essential information"
     epilog = format_argparse_epilog(

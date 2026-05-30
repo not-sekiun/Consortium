@@ -8,7 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -17,7 +17,7 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console, print_error
 
 
-class AgentTemplateInfoOptionCommand(BaseCommand[ConnectedContext]):
+class AgentTemplateInfoOptionCommand(BaseConnectedCommand):
     name = "opt-info"
     description = (
         "Display information about a specific agent template option by its name"

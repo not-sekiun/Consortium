@@ -36,12 +36,12 @@ if TYPE_CHECKING:
     from consortium.client.client_session import ClientSession
 
 
-class BaseInterpreter:
+class _BaseInterpreter[TClientSession: (ClientSession, None)]:
     def __init__(
         self,
         prompt: str | ANSI | HTML | list[tuple[str, str]],
         commands: list[BaseCommand],
-        client_session: ClientSession | None,
+        client_session: TClientSession,
         interpreter_context: BaseInterpreterContext,
     ):
         self.prompt_session = PromptSession(
@@ -225,3 +225,9 @@ class BaseInterpreter:
             "Interpreter REPL loop broke out without returning a valid interpreter "
             "signal."
         )
+
+
+class BaseConnectedInterpreter(_BaseInterpreter[ClientSession]): ...
+
+
+class BaseDisconnectedInterpreter(_BaseInterpreter[None]): ...

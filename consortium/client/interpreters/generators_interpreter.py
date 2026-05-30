@@ -11,7 +11,9 @@ from consortium.client.commands.generators_interpreter_commands import (
 )
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 from consortium.client.repl_interface.base_command import BaseCommand
-from consortium.client.repl_interface.base_interpreter import BaseInterpreter
+from consortium.client.repl_interface.base_interpreter import (
+    BaseConnectedInterpreter,
+)
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
@@ -24,7 +26,7 @@ COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS = [
 ] + GENERATORS_INTERPRETER_COMMANDS
 
 
-class GeneratorsInterpreter(BaseInterpreter):
+class GeneratorsInterpreter(BaseConnectedInterpreter):
     def __init__(
         self,
         client_session: ClientSession,

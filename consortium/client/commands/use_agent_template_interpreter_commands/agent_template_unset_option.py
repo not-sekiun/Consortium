@@ -6,14 +6,14 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.options_utils import OptionType
 from consortium.client.utils.printer_utils import print_error, print_success
 
 
-class AgentTemplateUnsetOptionCommand(BaseCommand[ConnectedContext]):
+class AgentTemplateUnsetOptionCommand(BaseConnectedCommand):
     name = "unset"
     description = "Unset the current agent template's option to an empty value"
     epilog = format_argparse_epilog(

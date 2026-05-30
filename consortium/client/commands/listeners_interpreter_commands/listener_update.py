@@ -6,7 +6,7 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import (
-    BaseCommand,
+    BaseConnectedCommand,
 )
 from consortium.client.utils.formatter_utils import (
     format_value_type_specification_epilog,
@@ -18,7 +18,7 @@ from consortium.client.utils.options_utils import (
 from consortium.client.utils.printer_utils import print_error, print_success
 
 
-class ListenerUpdateCommand(BaseCommand[ConnectedContext]):
+class ListenerUpdateCommand(BaseConnectedCommand):
     name = "update"
     description = (
         "Update the configuration parameters of an existing non-running listener"
