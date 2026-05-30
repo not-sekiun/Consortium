@@ -1,17 +1,16 @@
 from argparse import ArgumentParser
 
-from consortium.client.commands.agents_interpreter_commands import (
-    AgentInfoCommand as AgentInfoAgentsInterpreterCommand,
-)
 from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.utils.agent_command_utils import display_agent_info
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class AgentInfoCommand(AgentInfoAgentsInterpreterCommand):
+class AgentInfoCommand(BaseCommand):
     name = "info"
     description = (
         "Display information about the current agent, or a specific agent by its ID"
@@ -52,7 +51,7 @@ class AgentInfoCommand(AgentInfoAgentsInterpreterCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await self._display_agent_info(
+            await display_agent_info(
                 rest_api=rest_api,
                 agent_id=parsed_args.agent_id
                 if parsed_args.agent_id is not None

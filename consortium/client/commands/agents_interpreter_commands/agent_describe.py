@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 
-from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
@@ -9,8 +8,8 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
+from consortium.client.utils.agent_command_utils import describe_agent
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_success
 
 
 class AgentDescribeCommand(BaseCommand):
@@ -36,30 +35,12 @@ class AgentDescribeCommand(BaseCommand):
             nargs=1,
         )
 
-    @staticmethod
-    async def _describe_agent(
-        rest_api: RestAPI,
-        agent_id: str,
-        description: str,
-    ) -> None:
-        agent = await rest_api.get_agent_by_agent_id(
-            agent_id=agent_id,
-        )
-        await rest_api.update_agent_by_agent_id(
-            agent_id=agent_id,
-            new_agent_attributes={"description": description},
-        )
-        print_success(
-            f"Updated description of agent '{agent['name']}' ({agent['agent_id']}) "
-            f"to '{description}'",
-        )
-
     async def run(self, context: Context) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await self._describe_agent(
+            await describe_agent(
                 rest_api=rest_api,
                 agent_id=parsed_args.agent_id[0],
                 description=parsed_args.description[0],

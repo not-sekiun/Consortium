@@ -1,17 +1,18 @@
 from argparse import ArgumentParser
 
-from consortium.client.commands.listeners_interpreter_commands.listener_template_info import (
-    ListenerTemplateInfoCommand as ListenersInterpreterListenerTemplateInfoCommand,
-)
 from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.listener_template_command_utils import (
+    display_listener_template_info,
+)
 
 
-class ListenerTemplateInfoCommand(ListenersInterpreterListenerTemplateInfoCommand):
+class ListenerTemplateInfoCommand(BaseCommand):
     name = "lt-info"
     description = (
         "Display information about the current listener template, or a specific "
@@ -45,7 +46,7 @@ class ListenerTemplateInfoCommand(ListenersInterpreterListenerTemplateInfoComman
             # rather than using the cached info because a new agent profile may have
             # been loaded or removed, causing the registered compatible agent types
             # information to be stale
-            await self._display_listener_template_info(
+            await display_listener_template_info(
                 rest_api=rest_api,
                 listener_template_id=parsed_args.listener_template_id
                 if parsed_args.listener_template_id is not None

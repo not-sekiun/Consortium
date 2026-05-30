@@ -1,17 +1,16 @@
 from argparse import ArgumentParser
 
-from consortium.client.commands.agents_interpreter_commands import (
-    AgentDescribeCommand as AgentDescribeAgentsInterpreterCommand,
-)
 from consortium.client.models.context_model import Context
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.base_command import BaseCommand
+from consortium.client.utils.agent_command_utils import describe_agent
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class AgentDescribeCommand(AgentDescribeAgentsInterpreterCommand):
+class AgentDescribeCommand(BaseCommand):
     name = "describe"
     description = (
         "Set the description of the current agent, or a specific agent by its ID"
@@ -45,7 +44,7 @@ class AgentDescribeCommand(AgentDescribeAgentsInterpreterCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await self._describe_agent(
+            await describe_agent(
                 rest_api=rest_api,
                 agent_id=parsed_args.agent_id
                 if parsed_args.agent_id
