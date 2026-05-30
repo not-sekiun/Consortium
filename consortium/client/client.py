@@ -63,7 +63,19 @@ class Client:
     def __init__(self, client_config: ClientConfig):
         self._client_sessions_service = client_singletons.client_sessions_service
         self._client_config = client_config
-        self._aliases = {}
+        self._aliases = self._load_aliases_from_aliases_json_file()
+        self._resource_commands = deque()
+
+    @property
+    def _base_interpreter_context(self) -> BaseInterpreterContext:
+        return BaseInterpreterContext(
+            aliases=self._aliases,
+            resource_commands=self._resource_commands,
+        )
+
+    @staticmethod
+    def _load_aliases_from_aliases_json_file() -> dict[str, Alias]:
+        aliases = {}
         with open(client_config_module.CONSORTIUM_ALIASES_JSON_FILE_PATH) as file:
             alias_json = json.load(file)
             jsonschema.validate(
@@ -82,12 +94,83 @@ class Client:
                 },
             )
             for alias_name, alias in alias_json.items():
-                self._aliases[alias_name] = Alias(
+                aliases[alias_name] = Alias(
                     command=alias["command"], is_global=alias["is_global"]
                 )
-        self._resource_commands = deque()
+        return aliases
 
-    async def _handle_client_session_interpreters(
+    async def _attempt_initial_client_session_connection(self) -> ClientSession | None:
+        try:
+            client_session = await self._client_sessions_service.create_client_session(
+                username=self._client_config.username,
+                password=self._client_config.password,
+                remote_host=self._client_config.remote_host,
+                remote_port=self._client_config.remote_port,
+            )
+            print_success(
+                f"Connected to server "
+                f"{self._client_config.remote_host}:{self._client_config.remote_port} "
+                f"as '{self._client_config.username}'.",
+            )
+            return client_session
+        except (
+            # Exceptions raised when failing to log in to the REST API.
+            RestAPIError,
+            # Exceptions raised when failing to connect to the Websockets API.
+            WebsocketsAPIError,
+            # Generic network exceptions.
+            ClientSessionConnectionError,
+            WebSocketException,
+            ClientConnectionError,
+            TimeoutError,
+            OSError,
+        ) as exc:
+            print_error(
+                f"Failed to connect to server "
+                f"{self._client_config.remote_host}:{self._client_config.remote_port}. "
+                f"An error occurred while attempting to login. "
+                f"{exc.__class__.__name__}: {exc}",
+            )
+            return None
+
+    async def _display_startup_banner(
+        self, client_session: ClientSession | None
+    ) -> None:
+        if client_session is None:
+            await BannerCommand().run(
+                context=DisconnectedContext(
+                    command="banner",
+                    arguments=[],
+                    raw_input="banner",
+                    interpreter_context=BaseInterpreterContext(
+                        aliases=self._aliases,
+                        resource_commands=self._resource_commands,
+                    ),
+                ),
+            )
+        else:
+            await BannerCommand().run(
+                context=ConnectedContext(
+                    command="banner",
+                    arguments=[],
+                    raw_input="banner",
+                    client_session=client_session,
+                    interpreter_context=BaseInterpreterContext(
+                        aliases=self._aliases,
+                        resource_commands=self._resource_commands,
+                    ),
+                ),
+            )
+
+    async def _run_disconnected_interpreter(self) -> InterpreterSignal:
+        return await DisconnectedInterpreter(
+            interpreter_context=BaseInterpreterContext(
+                aliases=self._aliases,
+                resource_commands=self._resource_commands,
+            ),
+        ).run()
+
+    async def _handle_client_session(
         self,
         client_session: ClientSession,
     ) -> InterpreterSignal:
@@ -175,81 +258,18 @@ class Client:
                     )
 
     async def run(self) -> None:
-        try:
-            client_session = await self._client_sessions_service.create_client_session(
-                username=self._client_config.username,
-                password=self._client_config.password,
-                remote_host=self._client_config.remote_host,
-                remote_port=self._client_config.remote_port,
-            )
-            print_success(
-                f"Connected to server "
-                f"{self._client_config.remote_host}:{self._client_config.remote_port} "
-                f"as '{self._client_config.username}'.",
-            )
-        except (
-            # Exceptions raised when failing to log in to the REST API.
-            RestAPIError,
-            # Exceptions raised when failing to connect to the Websockets API.
-            WebsocketsAPIError,
-            # Generic network exceptions.
-            ClientSessionConnectionError,
-            WebSocketException,
-            ClientConnectionError,
-            TimeoutError,
-            OSError,
-        ) as exc:
-            client_session = None
-            print_error(
-                f"Failed to connect to server "
-                f"{self._client_config.remote_host}:{self._client_config.remote_port}. "
-                f"An error occurred while attempting to login. "
-                f"{exc.__class__.__name__}: {exc}",
-            )
+        client_session = await self._attempt_initial_client_session_connection()
+        await self._display_startup_banner(client_session=client_session)
 
         # Run the initial interpreter. Either we run a special disconnected interpreter
         # that can run independently of any client session in the case where a
         # connection failed, or we run the client session's own interpreter loop for a
         # successful initial connection.
         if client_session is None:
-            # Display banner once at client startup.
-            await BannerCommand().run(
-                context=DisconnectedContext(
-                    command="banner",
-                    arguments=[],
-                    raw_input="banner",
-                    interpreter_context=BaseInterpreterContext(
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
-                    ),
-                ),
-            )
-            interpreter_signal = await DisconnectedInterpreter(
-                interpreter_context=BaseInterpreterContext(
-                    aliases=self._aliases,
-                    resource_commands=self._resource_commands,
-                ),
-            ).run()
-        elif isinstance(client_session, ClientSession):
-            # Display banner once at client startup.
-            await BannerCommand().run(
-                context=ConnectedContext(
-                    command="banner",
-                    arguments=[],
-                    raw_input="banner",
-                    client_session=client_session,
-                    interpreter_context=BaseInterpreterContext(
-                        aliases=self._aliases,
-                        resource_commands=self._resource_commands,
-                    ),
-                ),
-            )
-            interpreter_signal = await self._handle_client_session_interpreters(
-                client_session=client_session,
-            )
+            interpreter_signal = await self._run_disconnected_interpreter()
         else:
-            raise AssertionError(
-                "`client_session` is neither of type `ClientSession` or `None`"
+            interpreter_signal = await self._handle_client_session(
+                client_session=client_session,
             )
 
         # Based on successive client session return statuses decide whether to continue
@@ -259,16 +279,12 @@ class Client:
                 case ExitClientSignal():
                     return
                 case ExitClientSessionSignal():
-                    interpreter_signal = await DisconnectedInterpreter(
-                        interpreter_context=BaseInterpreterContext(
-                            aliases=self._aliases,
-                            resource_commands=self._resource_commands,
-                        ),
-                    ).run()
+                    interpreter_signal = await self._run_disconnected_interpreter()
                 case SwitchClientSessionSignal() as previous_interpreter_signal:
                     try:
-                        # The client connection switched to has no guarantee of being valid
-                        interpreter_signal = await self._handle_client_session_interpreters(
+                        # The client connection switched to has no guarantee of being
+                        # valid
+                        interpreter_signal = await self._handle_client_session(
                             client_session=previous_interpreter_signal.client_session
                         )
                     except RestAPIOperationError as exc:
@@ -280,12 +296,7 @@ class Client:
                             "Switching to disconnected interpreter due to error raised "
                             + "while switching client sessions..."
                         )
-                        interpreter_signal = await DisconnectedInterpreter(
-                            interpreter_context=BaseInterpreterContext(
-                                aliases=self._aliases,
-                                resource_commands=self._resource_commands,
-                            ),
-                        ).run()
+                        interpreter_signal = await self._run_disconnected_interpreter()
                     # # Catch any fatal errors raised by the client session. If a fatal error
                     # # occurs in any of the interpreters it is already printed. We catch it
                     # # here and kill the session.
