@@ -3,13 +3,16 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
+from pydantic import BaseModel, Field, JsonValue
+
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
     AgentCapabilityRuntimeError,
 )
-from consortium.server.models.agent_task_models import (
-    AgentTaskProgressLogEntryModel,
-    AgentTaskProgressStatus,
-)
+
+# from consortium.server.models.agent_task_models import (
+#     AgentTaskProgressLogEntryModel,
+#     AgentTaskProgressStatus,
+# )
 
 
 class AgentTaskState(StrEnum):
@@ -94,6 +97,29 @@ class AgentTaskStatus:
         self._transition_to_state(new_state=AgentTaskState.ERRORED, error=error)
 
 
+class AgentTaskEventType(StrEnum):
+    SUCCESS = "SUCCESS"
+    INFO = "INFO"
+    FAILURE = "FAILURE"
+    ERROR = "ERROR"
+    COMPLETED = "COMPLETED"
+    ARTIFACT = "ARTIFACT"
+
+
+class AgentTaskEvent(BaseModel):
+    event_type: AgentTaskEventType
+    message: str | None = None
+    data: dict[str, JsonValue] = {}
+    datetime_reported: datetime = Field(default_factory=datetime.now)
+
+
+class AgentProgressUpdate(BaseModel):
+    percent_complete: float = Field(ge=0.0, le=100.0, default=0.0)
+    message: str | None = None
+    data: dict[str, JsonValue] = {}
+    datetime_reported: datetime = Field(default_factory=datetime.now)
+
+
 class AgentTask:
     def __init__(
         self,
@@ -105,30 +131,35 @@ class AgentTask:
         self.arguments = arguments
         self.status = AgentTaskStatus()
         self.current_progress = None
-        self.progress_log = []
+        self.events = []
         self.datetime_created = datetime.now()
         self.datetime_started = None
 
-    def update_task_progress(
+    def append_event(
         self,
-        success: bool = True,
-        message: str = "",
+        event_type: AgentTaskEventType,
+        message: str,
         data: dict[str, Any] | None = None,
-        log_progress: bool = False,
     ) -> None:
-        agent_task_progress = AgentTaskProgressLogEntryModel(
+        self.events.append(
+            AgentTaskEvent(
+                event_type=event_type,
+                message=message,
+                data=data or {},
+            )
+        )
+
+    def update_progress(
+        self,
+        percent_complete: float = 0,
+        message: str | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        self.current_progress = AgentProgressUpdate(
+            percent_complete=percent_complete,
             message=message,
             data=data or {},
-            status=(
-                AgentTaskProgressStatus.SUCCESS
-                if success
-                else AgentTaskProgressStatus.FAILURE
-            ),
         )
-        self.current_progress = agent_task_progress
-
-        if log_progress:
-            self.progress_log.append(agent_task_progress)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -139,7 +170,7 @@ class AgentTask:
             "current_progress": self.current_progress.model_dump()
             if self.current_progress is not None
             else None,
-            "progress_log": [log.model_dump() for log in self.progress_log],
+            "events": [event.model_dump() for event in self.events],
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_started": self.datetime_started.isoformat()
             if self.datetime_started is not None

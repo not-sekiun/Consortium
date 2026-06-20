@@ -4,15 +4,16 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, JsonValue
 
-# class AgentTaskStatus(StrEnum):
-#     QUEUED = "QUEUED"
-#     RUNNING = "RUNNING"
-#     COMPLETED = "COMPLETED"  # TODO: Remove and replace with success failure error
-#
-#     # # TODO: Implement to subsume Result objects
-#     # SUCCEEDED = "SUCCESS"
-#     # FAILED = "FAILURE"
-#     # ERRORED = "ERROR"
+
+class AgentTaskStatus(StrEnum):
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"  # TODO: Remove and replace with success failure error
+
+    # TODO: Implement to subsume Result objects
+    SUCCEEDED = "SUCCESS"
+    FAILED = "FAILURE"
+    ERRORED = "ERROR"
 
 
 class AgentTaskProgressStatus(StrEnum):
@@ -34,12 +35,12 @@ class AgentTaskProgressLogAPIResponseModel(BaseModel):
     entries: list[AgentTaskProgressLogEntryModel]
 
 
-# class AgentTaskCurrentProgressModel(BaseModel):
-#     message: str | None = None
-#     data: dict[str, JsonValue] = {}
-#     status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
-#     # percent_complete: int | float = Field(ge=0.0, le=100.0, default=0) TODO: Remove, percent complete is too domain specific
-#     datetime_reported: datetime = Field(default_factory=datetime.now)
+class AgentTaskCurrentProgressModel(BaseModel):
+    message: str | None = None
+    data: dict[str, JsonValue] = {}
+    status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
+    # percent_complete: int | float = Field(ge=0.0, le=100.0, default=0) TODO: Remove, percent complete is too domain specific
+    datetime_reported: datetime = Field(default_factory=datetime.now)
 
 
 class AgentTaskModel(BaseModel):

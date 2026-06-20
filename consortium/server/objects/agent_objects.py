@@ -43,15 +43,14 @@ from consortium.server.exceptions.consortium_exceptions.options_consortium_excep
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
     PayloadNotFoundError,
 )
+from consortium.server.models.agent_task_models import (
+    # AgentResultModel,
+    # AgentResultStatus,
+    AgentTaskModel,
+    # AgentTaskStatus,
+    # AgentTaskProgressLogEntryModel,
+)
 from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
-
-# from consortium.server.models.agent_task_models import (
-# AgentResultModel,
-# AgentResultStatus,
-# AgentTaskModel,
-# AgentTaskStatus,
-# AgentTaskProgressLogEntryModel,
-# )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_file_manager_service import (
     AgentFileManagerService,
@@ -95,7 +94,7 @@ class _AgentParametersModel(BaseModel):
 class Agent:
     def __init__(
         self,
-        listener_id: uuid.UUID,
+        listener_id: str | uuid.UUID,
         payload_id: str | uuid.UUID | None = None,
         agent_type: str | None = None,
         name: str | None = None,
