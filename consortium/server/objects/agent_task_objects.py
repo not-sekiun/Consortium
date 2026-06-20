@@ -23,6 +23,8 @@ class AgentTaskState(StrEnum):
     ERRORED = "ERRORED"
 
 
+# TODO: Find some way to subsume into Component Status, Component Status should be made
+#  more reusable across different objects.
 class AgentTaskStatus:
     _VALID_STATE_TRANSITIONS = {
         AgentTaskState.QUEUED: {AgentTaskState.RUNNING},
@@ -31,9 +33,9 @@ class AgentTaskStatus:
             AgentTaskState.FAILED,
             AgentTaskState.ERRORED,
         },
-        AgentTaskState.SUCCEEDED: {},
-        AgentTaskState.FAILED: {},
-        AgentTaskState.ERRORED: {},
+        AgentTaskState.SUCCEEDED: set(),
+        AgentTaskState.FAILED: set(),
+        AgentTaskState.ERRORED: set(),
     }
 
     def __init__(self):
@@ -107,6 +109,7 @@ class AgentTaskEventType(StrEnum):
 
 
 class AgentTaskEvent(BaseModel):
+    sequence: int
     event_type: AgentTaskEventType
     message: str | None = None
     data: dict[str, JsonValue] = {}
@@ -135,6 +138,8 @@ class AgentTask:
         self.datetime_created = datetime.now()
         self.datetime_started = None
 
+        self._sequence = 0
+
     def append_event(
         self,
         event_type: AgentTaskEventType,
@@ -143,11 +148,13 @@ class AgentTask:
     ) -> None:
         self.events.append(
             AgentTaskEvent(
+                sequence=self._sequence,
                 event_type=event_type,
                 message=message,
                 data=data or {},
             )
         )
+        self._sequence += 1
 
     def update_progress(
         self,
