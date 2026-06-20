@@ -25,8 +25,8 @@ from consortium.server.models.agent_models import (
 )
 from consortium.server.models.agent_task_models import (
     AgentTaskAPIResponseModel,
+    AgentTaskEventsAPIResponseModel,
     AgentTaskModel,
-    AgentTaskProgressLogAPIResponseModel,
     AgentTaskStatus,
 )
 from consortium.server.models.common_models import SuccessResponseModel
@@ -165,7 +165,7 @@ def _convert_agent_task_model_to_api_response_model(
         arguments=task.arguments,
         status=task.status,
         current_progress=task.current_progress,
-        progress_log=AgentTaskProgressLogAPIResponseModel(
+        progress_log=AgentTaskEventsAPIResponseModel(
             total_count=total_count,
             entries=filtered_entries,
         ),

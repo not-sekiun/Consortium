@@ -3,10 +3,13 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field, JsonValue
-
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
     AgentCapabilityRuntimeError,
+)
+from consortium.server.models.agent_task_models import (
+    AgentCurrentProgressModel,
+    AgentTaskEventModel,
+    AgentTaskEventType,
 )
 
 # from consortium.server.models.agent_task_models import (
@@ -99,30 +102,6 @@ class AgentTaskStatus:
         self._transition_to_state(new_state=AgentTaskState.ERRORED, error=error)
 
 
-class AgentTaskEventType(StrEnum):
-    SUCCESS = "SUCCESS"
-    INFO = "INFO"
-    FAILURE = "FAILURE"
-    ERROR = "ERROR"
-    COMPLETED = "COMPLETED"
-    ARTIFACT = "ARTIFACT"
-
-
-class AgentTaskEvent(BaseModel):
-    sequence: int
-    event_type: AgentTaskEventType
-    message: str | None = None
-    data: dict[str, JsonValue] = {}
-    datetime_reported: datetime = Field(default_factory=datetime.now)
-
-
-class AgentProgressUpdate(BaseModel):
-    percent_complete: float = Field(ge=0.0, le=100.0, default=0.0)
-    message: str | None = None
-    data: dict[str, JsonValue] = {}
-    datetime_reported: datetime = Field(default_factory=datetime.now)
-
-
 class AgentTask:
     def __init__(
         self,
@@ -147,7 +126,7 @@ class AgentTask:
         data: dict[str, Any] | None = None,
     ) -> None:
         self.events.append(
-            AgentTaskEvent(
+            AgentTaskEventModel(
                 sequence=self._sequence,
                 event_type=event_type,
                 message=message,
@@ -162,7 +141,7 @@ class AgentTask:
         message: str | None = None,
         data: dict[str, Any] | None = None,
     ) -> None:
-        self.current_progress = AgentProgressUpdate(
+        self.current_progress = AgentCurrentProgressModel(
             percent_complete=percent_complete,
             message=message,
             data=data or {},

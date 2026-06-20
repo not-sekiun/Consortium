@@ -16,31 +16,55 @@ class AgentTaskStatus(StrEnum):
     ERRORED = "ERROR"
 
 
-class AgentTaskProgressStatus(StrEnum):
+# class AgentTaskProgressStatus(StrEnum):
+#     SUCCESS = "SUCCESS"
+#     FAILURE = "FAILURE"
+
+
+# class AgentTaskProgressLogEntryModel(BaseModel):
+#     # sequence: int  TODO: Remove and just rely on list indices
+#     message: str | None = None
+#     data: dict[str, JsonValue] = {}
+#     status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
+#     # percent_complete: int | float = Field(ge=0.0, le=100.0) TODO: Remove, percent complete is too domain specific
+#     datetime_reported: datetime = Field(default_factory=datetime.now)
+
+
+class AgentTaskEventType(StrEnum):
     SUCCESS = "SUCCESS"
+    INFO = "INFO"
     FAILURE = "FAILURE"
+    ERROR = "ERROR"
+    COMPLETED = "COMPLETED"
+    ARTIFACT = "ARTIFACT"
 
 
-class AgentTaskProgressLogEntryModel(BaseModel):
-    # sequence: int  TODO: Remove and just rely on list indices
+class AgentTaskEventModel(BaseModel):
+    sequence: int
+    event_type: AgentTaskEventType
     message: str | None = None
     data: dict[str, JsonValue] = {}
-    status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
-    # percent_complete: int | float = Field(ge=0.0, le=100.0) TODO: Remove, percent complete is too domain specific
     datetime_reported: datetime = Field(default_factory=datetime.now)
 
 
-class AgentTaskProgressLogAPIResponseModel(BaseModel):
+class AgentCurrentProgressModel(BaseModel):
+    percent_complete: float = Field(ge=0.0, le=100.0, default=0.0)
+    message: str | None = None
+    data: dict[str, JsonValue] = {}
+    datetime_reported: datetime = Field(default_factory=datetime.now)
+
+
+class AgentTaskEventsAPIResponseModel(BaseModel):
     total_count: int
-    entries: list[AgentTaskProgressLogEntryModel]
+    entries: list[AgentTaskEventModel]
 
 
-class AgentTaskCurrentProgressModel(BaseModel):
-    message: str | None = None
-    data: dict[str, JsonValue] = {}
-    status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
-    # percent_complete: int | float = Field(ge=0.0, le=100.0, default=0) TODO: Remove, percent complete is too domain specific
-    datetime_reported: datetime = Field(default_factory=datetime.now)
+# class AgentTaskCurrentProgressModel(BaseModel):
+#     message: str | None = None
+#     data: dict[str, JsonValue] = {}
+#     status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
+#     # percent_complete: int | float = Field(ge=0.0, le=100.0, default=0) TODO: Remove, percent complete is too domain specific
+#     datetime_reported: datetime = Field(default_factory=datetime.now)
 
 
 class AgentTaskModel(BaseModel):
@@ -48,10 +72,8 @@ class AgentTaskModel(BaseModel):
     command: str
     arguments: dict[str, JsonValue]
     status: AgentTaskStatus = AgentTaskStatus.QUEUED
-    current_progress: AgentTaskProgressLogEntryModel | None = (
-        None  # AgentTaskCurrentProgressModel | None = None  Todo: Remove and unify with `progress_log`
-    )
-    progress_log: list[AgentTaskProgressLogEntryModel] = []
+    current_progress: AgentCurrentProgressModel | None = None
+    events: list[AgentTaskEventModel] = []
     datetime_created: datetime = Field(default_factory=datetime.now)
     datetime_started: datetime | None = None
 
@@ -61,8 +83,8 @@ class AgentTaskAPIResponseModel(BaseModel):
     command: str
     arguments: dict[str, JsonValue]
     status: AgentTaskStatus
-    current_progress: AgentTaskProgressLogEntryModel | None = None
-    progress_log: AgentTaskProgressLogAPIResponseModel
+    current_progress: AgentCurrentProgressModel | None = None
+    events: AgentTaskEventsAPIResponseModel
     datetime_created: datetime
     datetime_started: datetime | None = None
 
