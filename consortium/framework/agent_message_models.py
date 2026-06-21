@@ -76,9 +76,9 @@ def _wrap_payload(v):
         )
 
 
-class AgentTaskMessageModel(BaseModel):
+class TaskLaunchMessageModel(BaseModel):
     """
-    Model representing a task message sent to an agent.
+    Model representing a task launch message sent to an agent.
 
     Attributes:
         task_id (uuid.UUID): Unique identifier for the task.
@@ -101,7 +101,7 @@ class AgentTaskMessageModel(BaseModel):
 
     def to_json(self):
         """
-        Serialize the `AgentTaskMessageModel` to a JSON-compatible dictionary.
+        Serialize the `TaskLaunchMessageModel` to a JSON-compatible dictionary.
         """
         return {
             "task_id": str(self.task_id),
@@ -111,9 +111,32 @@ class AgentTaskMessageModel(BaseModel):
         }
 
 
-class AgentResultMessageModel(BaseModel):
+class TaskInputMessageModel(BaseModel):
     """
-    Model representing a result message sent from an agent.
+    Model representing a task input message sent to an agent.
+
+    Attributes:
+        task_id (uuid.UUID): Unique identifier for the associated task.
+        data (dict[str, JsonValue]): Additional data related to the task, must be
+            JSON-serializable.
+    """
+
+    task_id: uuid.UUID
+    data: dict[str, JsonValue] = {}
+
+    def to_json(self):
+        """
+        Serialize the `TaskInputMessageModel` to a JSON-compatible dictionary.
+        """
+        return {
+            "task_id": str(self.task_id),
+            "data": self.data,
+        }
+
+
+class TaskOutputMessageModel(BaseModel):
+    """
+    Model representing a task output message sent from an agent.
 
     Attributes:
         task_id (uuid.UUID): Unique identifier for the associated task.
@@ -135,7 +158,7 @@ class AgentResultMessageModel(BaseModel):
 
     def to_json(self):
         """
-        Serialize the `AgentResultMessageModel` to a JSON-compatible dictionary.
+        Serialize the `TaskOutputMessageModel` to a JSON-compatible dictionary.
         """
         return {
             "task_id": str(self.task_id),

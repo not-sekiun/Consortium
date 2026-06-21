@@ -9,8 +9,8 @@ from pydantic import UUID4, BaseModel, JsonValue, ValidationError
 
 from consortium.framework._components import State
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.agents import BaseAgentCapability
 from consortium.framework.exceptions.agent_capabilties_framework_exception import (
@@ -359,7 +359,7 @@ class Agent:
         )
 
     async def send_task_message(
-        self, task_message: AgentTaskMessageModel, timeout: float | None = None
+        self, task_message: TaskLaunchMessageModel, timeout: float | None = None
     ) -> None:
         if timeout is None:
             await self._task_messages_queue.put(task_message)
@@ -371,7 +371,7 @@ class Agent:
 
     async def get_next_task_message(
         self, timeout: float | None = None
-    ) -> AgentTaskMessageModel | None:
+    ) -> TaskLaunchMessageModel | None:
         try:
             if timeout == 0:
                 message = self._task_messages_queue.get_nowait()
@@ -457,9 +457,7 @@ class Agent:
         except KeyError:
             raise AgentTaskNotFoundError(task_id=str(task_id)) from None
 
-    async def recv_result_message(
-        self, result_message: AgentResultMessageModel
-    ) -> None:
+    async def recv_result_message(self, result_message: TaskOutputMessageModel) -> None:
         try:
             task = self.get_task_by_task_id(task_id=result_message.task_id)
         except AgentTaskNotFoundError:
@@ -565,7 +563,7 @@ class Agent:
         ):
             # Strip redundant information from the task to create the initial task
             # message
-            task_message = AgentTaskMessageModel(
+            task_message = TaskLaunchMessageModel(
                 task_id=task.task_id,
                 command=task.command,
                 arguments=task.arguments,

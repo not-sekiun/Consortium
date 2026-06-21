@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
-from consortium.framework.agent_message_models import AgentTaskMessageModel
+from consortium.framework.agent_message_models import TaskLaunchMessageModel
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
@@ -189,7 +189,7 @@ class ConnectedAgentsService:
         count: int | None = None,
         block: bool = False,
         timeout: float | None = None,
-    ) -> list[AgentTaskMessageModel]:
+    ) -> list[TaskLaunchMessageModel]:
         """
         Get pending tasks for an agent connected to this listener. This method also
         performs an automatic check-in for the agent.
@@ -211,7 +211,7 @@ class ConnectedAgentsService:
                 to this listener.
 
         Returns:
-            list[AgentTaskMessageModel]: A list of task message objects. Returns an
+            list[TaskLaunchMessageModel]: A list of task message objects. Returns an
                 empty list if no tasks are available and block=False.
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)

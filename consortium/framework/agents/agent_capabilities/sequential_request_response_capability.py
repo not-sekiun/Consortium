@@ -4,8 +4,8 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Protocol
 
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.agents.agent_capabilities._common_protocols import (
     _ResolveTimeoutProtocol,
@@ -33,11 +33,11 @@ class _SequentialResultMessagesHandlerProtocol(Protocol):
     def __call__(
         self,
         agent: Agent,
-        result_message: AgentResultMessageModel,
+        result_message: TaskOutputMessageModel,
         context: SimpleNamespace,
     ) -> (
-        tuple[AgentResultMessageModel, bool]
-        | Awaitable[tuple[AgentResultMessageModel, bool]]
+        tuple[TaskOutputMessageModel, bool]
+        | Awaitable[tuple[TaskOutputMessageModel, bool]]
     ): ...
 
 
@@ -47,15 +47,15 @@ class _SequentialTimeoutHandlerProtocol(Protocol):
         agent: Agent,
         context: SimpleNamespace,
     ) -> (
-        tuple[AgentResultMessageModel | None, bool]
-        | Awaitable[tuple[AgentResultMessageModel | None, bool]]
+        tuple[TaskOutputMessageModel | None, bool]
+        | Awaitable[tuple[TaskOutputMessageModel | None, bool]]
     ): ...
 
 
 class _ResolveIterationsProtocol(Protocol):
     def __call__(
         self,
-        task_message: AgentTaskMessageModel,
+        task_message: TaskLaunchMessageModel,
         context: SimpleNamespace,
     ) -> int: ...
 
@@ -84,8 +84,8 @@ def sequential_request_response_capability(
     timeout_handler: _SequentialTimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
     async def _execute(
-        self, task_message: AgentTaskMessageModel
-    ) -> AgentResultMessageModel:
+        self, task_message: TaskLaunchMessageModel
+    ) -> TaskOutputMessageModel:
         context = SimpleNamespace()
 
         index = 0

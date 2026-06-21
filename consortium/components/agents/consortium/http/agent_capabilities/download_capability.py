@@ -2,8 +2,8 @@ import pathlib
 import zlib
 
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
@@ -72,8 +72,8 @@ class DownloadCapability(BaseAgentCapability):
 
     async def execute(
         self,
-        task_message: AgentTaskMessageModel,
-    ) -> AgentResultMessageModel:
+        task_message: TaskLaunchMessageModel,
+    ) -> TaskOutputMessageModel:
         # Remove `destination` argument before sending task because it is not needed by
         # the agent
         task_message.arguments.pop("destination", None)
@@ -117,7 +117,7 @@ class DownloadCapability(BaseAgentCapability):
                 try:
                     chunk = zlib.decompress(response.payload.data)
                 except zlib.error as exc:
-                    return AgentResultMessageModel(
+                    return TaskOutputMessageModel(
                         task_id=task_message.task_id,
                         success=False,
                         message=f"Failed to decompress file chunk: {exc}",
@@ -162,7 +162,7 @@ class DownloadCapability(BaseAgentCapability):
                     )
                 break
             else:
-                return AgentResultMessageModel(
+                return TaskOutputMessageModel(
                     task_id=task_message.task_id,
                     success=False,
                     message=(
@@ -173,7 +173,7 @@ class DownloadCapability(BaseAgentCapability):
             response = await self.recv_from_agent()
 
         # Return response to indicate successful download
-        return AgentResultMessageModel(
+        return TaskOutputMessageModel(
             task_id=task_message.task_id,
             success=True,
             message=f"Downloaded {'directory' if is_dir else 'file'} '{target_name}'",

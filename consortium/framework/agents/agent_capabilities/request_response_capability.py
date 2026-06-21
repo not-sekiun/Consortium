@@ -4,8 +4,8 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Protocol
 
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.agents.agent_capabilities._common_protocols import (
     _ResolveTimeoutProtocol,
@@ -30,18 +30,18 @@ class _TaskMessageHandlerProtocol(Protocol):
     def __call__(
         self,
         agent: Agent,
-        task_message: AgentTaskMessageModel,
+        task_message: TaskLaunchMessageModel,
         context: SimpleNamespace,
-    ) -> AgentTaskMessageModel | Awaitable[AgentTaskMessageModel]: ...
+    ) -> TaskLaunchMessageModel | Awaitable[TaskLaunchMessageModel]: ...
 
 
 class _ResultMessageHandlerProtocol(Protocol):
     def __call__(
         self,
         agent: Agent,
-        result_message: AgentResultMessageModel,
+        result_message: TaskOutputMessageModel,
         context: SimpleNamespace,
-    ) -> AgentResultMessageModel | Awaitable[AgentResultMessageModel]: ...
+    ) -> TaskOutputMessageModel | Awaitable[TaskOutputMessageModel]: ...
 
 
 class _TimeoutHandlerProtocol(Protocol):
@@ -49,7 +49,7 @@ class _TimeoutHandlerProtocol(Protocol):
         self,
         agent: Agent,
         context: SimpleNamespace,
-    ) -> AgentResultMessageModel | Awaitable[AgentResultMessageModel]: ...
+    ) -> TaskOutputMessageModel | Awaitable[TaskOutputMessageModel]: ...
 
 
 def request_response_capability(
@@ -74,8 +74,8 @@ def request_response_capability(
     timeout_handler: _TimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
     async def _execute(
-        self, task_message: AgentTaskMessageModel
-    ) -> AgentResultMessageModel:
+        self, task_message: TaskLaunchMessageModel
+    ) -> TaskOutputMessageModel:
         context = SimpleNamespace()
 
         if resolve_timeout:
@@ -115,7 +115,7 @@ def request_response_capability(
             if asyncio.iscoroutine(result_message):
                 result_message = await result_message
 
-        if not isinstance(result_message, AgentResultMessageModel):
+        if not isinstance(result_message, TaskOutputMessageModel):
             raise TypeError(
                 "The `result_handler` must return an `AgentResultMessageModel`."
             )

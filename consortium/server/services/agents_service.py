@@ -7,8 +7,8 @@ from typing import Any
 from loguru import logger
 
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.event_hooks.event_type import EventType
@@ -134,7 +134,7 @@ class AgentsService:
         count: int | None = None,
         block: bool = False,
         timeout: float | None = None,
-    ) -> list[AgentTaskMessageModel]:
+    ) -> list[TaskLaunchMessageModel]:
         """
         Get pending task messages for an agent. This method retrieves task messages
         that are queued for the agent and returns them as a list of
@@ -157,7 +157,7 @@ class AgentsService:
                 found.
 
         Returns:
-            list[AgentTaskMessageModel]: A list of task messages. Returns an empty list
+            list[TaskLaunchMessageModel]: A list of task messages. Returns an empty list
                 if no tasks are available and block=False.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
@@ -166,7 +166,7 @@ class AgentsService:
         if timeout == 0:
             block = False
 
-        task_messages: list[AgentTaskMessageModel] = []
+        task_messages: list[TaskLaunchMessageModel] = []
 
         # Determine max tasks to collect
         max_tasks = count if count is not None else float("inf")
@@ -228,7 +228,7 @@ class AgentsService:
             data = {}
 
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        result_message = AgentResultMessageModel(
+        result_message = TaskOutputMessageModel(
             task_id=task_id,
             success=success,
             message=message,

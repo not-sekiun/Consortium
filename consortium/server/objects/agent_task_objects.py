@@ -12,11 +12,6 @@ from consortium.server.models.agent_task_models import (
     AgentTaskEventType,
 )
 
-# from consortium.server.models.agent_task_models import (
-#     AgentTaskProgressLogEntryModel,
-#     AgentTaskProgressStatus,
-# )
-
 
 class AgentTaskState(StrEnum):
     QUEUED = "QUEUED"
@@ -113,11 +108,58 @@ class AgentTask:
         self.arguments = arguments
         self.status = AgentTaskStatus()
         self.current_progress = None
-        self.events = []
         self.datetime_created = datetime.now()
         self.datetime_started = None
 
-        self._sequence = 0
+        self._sequence: int = 0
+        self._events: list[AgentTaskEventModel] = []  # TODO: Move to db when possible
+
+    def get_events(
+        self, limit: int = 10, offset: int | None = None
+    ) -> list[AgentTaskEventModel]:
+        total_count = len(self._events)
+
+        if total_count == 0:
+            filtered_events = []
+        else:
+            # Get min and max sequence numbers
+            sequences = [event.sequence for event in self._events]
+            min_seq = min(sequences)
+            max_seq = max(sequences)
+
+            # If offset is None, return the tail (entries with highest sequence numbers)
+            if offset is None:
+                # Get entries with the highest sequence numbers, up to limit
+                start_seq = max(min_seq, max_seq - limit + 1)
+                filtered_events = [
+                    event for event in self._events if event.sequence >= start_seq
+                ]
+                # Sort by sequence and take the last limit entries
+                filtered_events = sorted(filtered_events, key=lambda e: e.sequence)[
+                    -limit:
+                ]
+            # Handle negative offset (from max sequence)
+            elif offset < 0:
+                start_seq = max(min_seq, max_seq + offset + 1)
+                end_seq = start_seq + limit - 1
+                filtered_events = [
+                    event
+                    for event in self._events
+                    if start_seq <= event.sequence <= end_seq
+                ]
+                filtered_events = sorted(filtered_events, key=lambda e: e.sequence)
+            else:
+                # Filter entries where sequence >= offset
+                start_seq = offset
+                end_seq = offset + limit - 1
+                filtered_events = [
+                    event
+                    for event in self._events
+                    if start_seq <= event.sequence <= end_seq
+                ]
+                filtered_events = sorted(filtered_events, key=lambda e: e.sequence)
+
+        return filtered_events
 
     def append_event(
         self,
@@ -125,7 +167,7 @@ class AgentTask:
         message: str,
         data: dict[str, Any] | None = None,
     ) -> None:
-        self.events.append(
+        self._events.append(
             AgentTaskEventModel(
                 sequence=self._sequence,
                 event_type=event_type,
@@ -156,7 +198,7 @@ class AgentTask:
             "current_progress": self.current_progress.model_dump()
             if self.current_progress is not None
             else None,
-            "events": [event.model_dump() for event in self.events],
+            "events": [event.model_dump() for event in self.get_events()],
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_started": self.datetime_started.isoformat()
             if self.datetime_started is not None

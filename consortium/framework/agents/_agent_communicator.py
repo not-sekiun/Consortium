@@ -4,17 +4,17 @@ from collections.abc import AsyncIterable
 from typing import Any
 
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
-from consortium.server.models.agent_task_models import AgentTaskModel
+from consortium.server.objects.agent_task_objects import AgentTask
 
 if typing.TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
 
 
 class _AgentCommunicator:
-    def __init__(self, agent: Agent, task: AgentTaskModel):
+    def __init__(self, agent: Agent, task: AgentTask):
         self.agent = agent
         self.task = task
         # The agent result messages queue is per agent capability and serves to
@@ -23,7 +23,7 @@ class _AgentCommunicator:
 
     async def send_to_agent(
         self,
-        task_message: AgentTaskMessageModel | None = None,
+        task_message: TaskLaunchMessageModel | None = None,
         command: str | None = None,
         arguments: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -42,7 +42,7 @@ class _AgentCommunicator:
                 arguments = {}
             if data is None:
                 data = {}
-            task_message = AgentTaskMessageModel(
+            task_message = TaskLaunchMessageModel(
                 task_id=self.task.task_id,
                 command=command,
                 arguments=arguments,
@@ -57,7 +57,7 @@ class _AgentCommunicator:
     async def recv_from_agent(
         self,
         timeout: int | float | None = None,
-    ) -> AgentResultMessageModel:
+    ) -> TaskOutputMessageModel:
         if timeout is None:
             return await self.result_messages_queue.get()
         return await asyncio.wait_for(
@@ -67,13 +67,13 @@ class _AgentCommunicator:
 
     async def send_and_recv_from_agent(
         self,
-        task_message: AgentTaskMessageModel | None = None,
+        task_message: TaskLaunchMessageModel | None = None,
         command: str | None = None,
         arguments: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
         timeout: int | float | None = None,
-    ) -> AgentResultMessageModel:
+    ) -> TaskOutputMessageModel:
         if timeout is None:
             await self.send_to_agent(
                 task_message=task_message,

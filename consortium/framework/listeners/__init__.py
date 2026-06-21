@@ -1,6 +1,6 @@
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
@@ -10,6 +10,6 @@ __all__ = [
     "BaseListener",
     "BaseListenerTemplate",
     "BaseListenerType",
-    "AgentTaskMessageModel",
-    "AgentResultMessageModel",
+    "TaskLaunchMessageModel",
+    "TaskOutputMessageModel",
 ]

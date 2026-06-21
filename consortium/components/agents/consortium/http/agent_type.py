@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from consortium.framework.agent_message_models import AgentResultMessageModel
+from consortium.framework.agent_message_models import TaskOutputMessageModel
 from consortium.framework.agents import (
     BaseAgentType,
     SupportedOS,
@@ -110,7 +110,7 @@ def ping_result_handler(agent, result_message, context):
 
 def ping_timeout_handler(agent, context):
     delta = datetime.now() - context.run
-    result_message = AgentResultMessageModel(
+    result_message = TaskOutputMessageModel(
         task_id=context.task_id,
         success=False,
         message=(

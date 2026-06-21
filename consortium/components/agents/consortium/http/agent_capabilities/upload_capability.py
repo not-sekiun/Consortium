@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
@@ -84,8 +84,8 @@ class UploadCapability(BaseAgentCapability):
 
     async def execute(
         self,
-        task_message: AgentTaskMessageModel,
-    ) -> AgentResultMessageModel:
+        task_message: TaskLaunchMessageModel,
+    ) -> TaskOutputMessageModel:
         source = Path(task_message.arguments["source"])
         chunk_size = task_message.arguments["chunk_size"]
         recursive = task_message.arguments["recursive"]
@@ -93,7 +93,7 @@ class UploadCapability(BaseAgentCapability):
         compression_level = task_message.arguments["compression_level"]
 
         if not source.exists():
-            return AgentResultMessageModel(
+            return TaskOutputMessageModel(
                 task_id=task_message.task_id,
                 success=False,
                 message=f"Failed to start upload. Path '{source}' does not exist.",
@@ -113,7 +113,7 @@ class UploadCapability(BaseAgentCapability):
             return ready_response
 
         if ready_response.data.get("type") != "ready":
-            return AgentResultMessageModel(
+            return TaskOutputMessageModel(
                 task_id=task_message.task_id,
                 success=False,
                 message="Agent did not signal ready for upload.",

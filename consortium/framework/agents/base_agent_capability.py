@@ -8,8 +8,8 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from consortium.framework._utils import format_docstring_to_single_line
 from consortium.framework.agent_message_models import (
-    AgentResultMessageModel,
-    AgentTaskMessageModel,
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.agents._agent_communicator import _AgentCommunicator
 from consortium.framework.framework_types import Primitive, PrimitiveCollection
@@ -26,12 +26,7 @@ from consortium.server.exceptions.consortium_exceptions.agent_capabilities_conso
     InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
-from consortium.server.models.agent_task_models import (
-    AgentTaskCurrentProgressModel,
-    AgentTaskModel,
-    AgentTaskProgressLogEntryModel,
-    AgentTaskProgressStatus,
-)
+from consortium.server.objects.agent_task_objects import AgentTask
 from consortium.server.objects.mitre_attack_objects import (
     # MitreAttackTechniqueID,
     resolve_mitre_attack_technique_id,
@@ -109,7 +104,7 @@ class BaseAgentCapability(_AgentCommunicator):
     ) = None
 
     # TODO: Deprecate global task messages queue in favor of per capability queues.
-    def __init__(self, agent: Agent, task: AgentTaskModel):
+    def __init__(self, agent: Agent, task: AgentTask):
         super().__init__(agent=agent, task=task)
 
         # Sequence number to keep track of task progress updates
@@ -223,45 +218,45 @@ class BaseAgentCapability(_AgentCommunicator):
             f")"
         )
 
-    def update_task_progress(
-        self,
-        success: bool = True,
-        message: str = "",
-        data: dict[str, Any] | None = None,
-        percent_complete: int | float = 0,
-        log_progress: bool = False,
-    ) -> None:
-        agent_task_progress = AgentTaskCurrentProgressModel(
-            message=message,
-            data=data or {},
-            status=(
-                AgentTaskProgressStatus.SUCCESS
-                if success
-                else AgentTaskProgressStatus.FAILURE
-            ),
-            percent_complete=percent_complete,
-        )
-        self.task.current_progress = agent_task_progress
-
-        if log_progress:
-            agent_task_progress_log = AgentTaskProgressLogEntryModel(
-                sequence=self._task_progress_sequence_number,
-                message=message,
-                data=data or {},
-                status=(
-                    AgentTaskProgressStatus.SUCCESS
-                    if success
-                    else AgentTaskProgressStatus.FAILURE
-                ),
-                percent_complete=percent_complete,
-            )
-            self.task.progress_log.append(agent_task_progress_log)
-            self._task_progress_sequence_number += 1
+    # def update_task_progress(
+    #     self,
+    #     success: bool = True,
+    #     message: str = "",
+    #     data: dict[str, Any] | None = None,
+    #     percent_complete: int | float = 0,
+    #     log_progress: bool = False,
+    # ) -> None:
+    #     agent_task_progress = AgentTaskCurrentProgressModel(
+    #         message=message,
+    #         data=data or {},
+    #         status=(
+    #             AgentTaskProgressStatus.SUCCESS
+    #             if success
+    #             else AgentTaskProgressStatus.FAILURE
+    #         ),
+    #         percent_complete=percent_complete,
+    #     )
+    #     self.task.current_progress = agent_task_progress
+    #
+    #     if log_progress:
+    #         agent_task_progress_log = AgentTaskProgressLogEntryModel(
+    #             sequence=self._task_progress_sequence_number,
+    #             message=message,
+    #             data=data or {},
+    #             status=(
+    #                 AgentTaskProgressStatus.SUCCESS
+    #                 if success
+    #                 else AgentTaskProgressStatus.FAILURE
+    #             ),
+    #             percent_complete=percent_complete,
+    #         )
+    #         self.task.progress_log.append(agent_task_progress_log)
+    #         self._task_progress_sequence_number += 1
 
     async def execute(
         self,
-        task_message: AgentTaskMessageModel,
-    ) -> AgentResultMessageModel:
+        task_message: TaskLaunchMessageModel,
+    ) -> TaskOutputMessageModel:
         return await self.send_and_recv_from_agent(
             task_message=task_message,
         )
