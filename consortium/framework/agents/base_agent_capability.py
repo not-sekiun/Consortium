@@ -26,6 +26,7 @@ from consortium.server.exceptions.consortium_exceptions.agent_capabilities_conso
     InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
+from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.objects.agent_task_objects import AgentTask
 from consortium.server.objects.mitre_attack_objects import (
     # MitreAttackTechniqueID,
@@ -216,6 +217,36 @@ class BaseAgentCapability(_AgentCommunicator):
             f"options={self.options!r}, "
             f"validating_function={self.validating_function!r}"
             f")"
+        )
+
+    def update_progress(
+        self,
+        percent_complete: float = 0,
+        message: str | None = None,
+        data: dict[str, Any] | None = None,
+    ):
+        self.task.update_progress(
+            percent_complete=percent_complete, message=message, data=data
+        )
+
+    def emit_success(self, message: str, data: dict[str, Any] | None = None):
+        self.task.append_event(
+            event_type=AgentTaskEventType.SUCCESS, message=message, data=data or {}
+        )
+
+    def emit_info(self, message: str, data: dict[str, Any] | None = None):
+        self.task.append_event(
+            event_type=AgentTaskEventType.INFO, message=message, data=data or {}
+        )
+
+    def emit_failure(self, message: str, data: dict[str, Any] | None = None):
+        self.task.append_event(
+            event_type=AgentTaskEventType.FAILURE, message=message, data=data or {}
+        )
+
+    def emit_artifact(self, message: str, data: dict[str, Any] | None = None):
+        self.task.append_event(
+            event_type=AgentTaskEventType.ARTIFACT, message=message, data=data or {}
         )
 
     # def update_task_progress(

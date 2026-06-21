@@ -31,12 +31,17 @@ class AgentTaskStatus(StrEnum):
 
 
 class AgentTaskEventType(StrEnum):
+    # These task event types are manually emitted by `BaseAgentCapability` authors
     SUCCESS = "SUCCESS"
     INFO = "INFO"
     FAILURE = "FAILURE"
+    ARTIFACT = "ARTIFACT"
+
+    # These task event types are automatically emitted by the framework upon
+    # unhandled error (`ERROR`) or terminal completion of a task when the method exits
+    # (`COMPLETED`)
     ERROR = "ERROR"
     COMPLETED = "COMPLETED"
-    ARTIFACT = "ARTIFACT"
 
 
 class AgentTaskEventModel(BaseModel):

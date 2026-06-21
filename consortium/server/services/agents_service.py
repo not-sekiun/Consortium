@@ -17,10 +17,10 @@ from consortium.server.exceptions.consortium_exceptions.agents_consortium_except
     AgentTaskNotFoundError,
 )
 
-# from consortium.server.models.agent_task_models import (
-#     AgentTaskModel,
-#     AgentTaskStatus,
-# )
+from consortium.server.models.agent_task_models import (
+    AgentTaskModel,
+    AgentTaskStatus,
+)
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService
@@ -235,7 +235,7 @@ class AgentsService:
             data=data,
             payload=payload,
         )
-        await agent.recv_result_message(result_message=result_message)
+        await agent.dispatch_task_output_message(task_output_message=result_message)
         self._logger.debug(
             "Submitted result for task ID {} to agent {!r}",
             task_id,

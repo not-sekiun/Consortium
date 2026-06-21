@@ -320,10 +320,7 @@ def test_update_user_account_by_user_account_id(
                 expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
                 expected_status_code=200,
                 # Bind the variables to avoid late binding issue in lambda
-                validator_function=lambda response,
-                new_username_bind=new_username,
-                new_password_bind=new_password,
-                new_role_bind=new_role: (
+                validator_function=lambda response, new_username_bind=new_username, new_password_bind=new_password, new_role_bind=new_role: (
                     response.json()["username"] == new_username_bind
                     and response.json()["password"] == new_password_bind
                     and response.json()["role"] == new_role_bind

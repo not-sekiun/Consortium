@@ -85,7 +85,7 @@ class DownloadCapability(BaseAgentCapability):
         is_dir = header.data["type"] == "directory"
         target_name = pathlib.Path(header.data["path"]).name
         # `header.data['type']` can be 'file' or 'directory' here for the initial header
-        self.update_task_progress(
+        self.update_progress(
             message=f"Starting download of {header.data['type']} '{target_name}'",
             percent_complete=0,
         )
@@ -109,7 +109,7 @@ class DownloadCapability(BaseAgentCapability):
                 downloaded_bytes = 0
                 # Ephemerally update the status of the task with the start of a new
                 # file/directory download
-                self.update_task_progress(
+                self.update_progress(
                     message=f"Starting download of file '{response.data['path']}'",
                     percent_complete=0,
                 )
@@ -130,19 +130,19 @@ class DownloadCapability(BaseAgentCapability):
                     if current_file_size
                     else 0
                 )
-                self.update_task_progress(
+                self.update_progress(
                     message=f"Downloading {current_file}: {downloaded_bytes}/{current_file_size} bytes",
                     percent_complete=percent_complete,
                 )
             elif msg_type == "directory":
                 # Ephemerally update the status of the task with the start of a new
                 # file/directory download
-                self.update_task_progress(
+                self.update_progress(
                     message=f"Created new directory '{response.data['path']}'",
                     percent_complete=100,
                 )
             elif msg_type == "end_of_file":
-                self.update_task_progress(
+                self.update_progress(
                     message=f"Downloaded file '{current_file}'",
                     percent_complete=100,
                     log_progress=True,
@@ -155,7 +155,7 @@ class DownloadCapability(BaseAgentCapability):
                 # task and break loop if a directory was being downloaded, avoid logging
                 # since we already log file download completion on 'end_of_file'
                 if is_dir:
-                    self.update_task_progress(
+                    self.update_progress(
                         message=f"Downloaded directory '{target_name}'",
                         percent_complete=100,
                         log_progress=True,

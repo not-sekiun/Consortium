@@ -457,23 +457,27 @@ class Agent:
         except KeyError:
             raise AgentTaskNotFoundError(task_id=str(task_id)) from None
 
-    async def recv_result_message(self, result_message: TaskOutputMessageModel) -> None:
+    async def dispatch_task_output_message(
+        self, task_output_message: TaskOutputMessageModel
+    ) -> None:
         try:
-            task = self.get_task_by_task_id(task_id=result_message.task_id)
+            task = self.get_task_by_task_id(task_id=task_output_message.task_id)
         except AgentTaskNotFoundError:
             raise AgentResultHasNoCorrespondingTaskError(
-                corresponding_task_id=str(result_message.task_id),
+                corresponding_task_id=str(task_output_message.task_id),
                 agent_str=str(self),
             ) from None
 
         if task.status != AgentTaskState.RUNNING:
             raise AgentResultHasNoCorrespondingTaskError(
-                corresponding_task_id=str(result_message.task_id),
+                corresponding_task_id=str(task_output_message.task_id),
                 agent_str=str(self),
             )
 
-        agent_capability = self._running_agent_capabilities[str(result_message.task_id)]
-        await agent_capability.result_messages_queue.put(result_message)
+        agent_capability = self._running_agent_capabilities[
+            str(task_output_message.task_id)
+        ]
+        await agent_capability.result_messages_queue.put(task_output_message)
 
     # def get_all_results(
     #     self,
