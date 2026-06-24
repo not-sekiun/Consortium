@@ -1,4 +1,4 @@
 {
     "entry_point": "plugin:Plugin",
-    "enabled": true
+    "enabled": false
 }

@@ -1,13 +1,16 @@
 from enum import StrEnum
 
+import httpx
 import jsonschema
-import requests
+import pytest
 
 from tests.api_tests.common_json_response_schemas import (
     METHOD_NOT_ALLOWED_ERROR_JSON_SCHEMA,
     NOT_FOUND_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.utils import validate_response
+
+pytestmark = pytest.mark.anyio
 
 
 class _HTTPMethod(StrEnum):
@@ -19,105 +22,108 @@ class _HTTPMethod(StrEnum):
     OPTIONS = "OPTIONS"
 
 
-# _ALL_METHODS is just used for checking membership of the _HTTPMethod enum so we use
-# the set() constructor to make it more efficient to check membership.
 _ALL_METHODS = set(_HTTPMethod)
-# Programmatically get all the endpoints and methods from the openapi specification. For
-# endpoints that require a path parameter, the path parameter is represented by the
-# string of its variable. For example, "/api/listeners/{listener_id}" would be
-# represented as "/api/listeners/listener_id" this is because the relevant tested errors
-# (401, 405, and 422) are raised ahead of a 404. e.g. POSTing to a GET endpoint at
-# /api/listeners/listener_id would raise a 405 before a 404.
-_ENDPOINTS_AND_METHODS_MAP = {}
-open_api_json_specification = requests.get(
-    "http://localhost:9999/openapi.json",
-).json()
-str_methods_to_enum_methods = {
-    "get": _HTTPMethod.GET,
-    "post": _HTTPMethod.POST,
-    "put": _HTTPMethod.PUT,
-    "delete": _HTTPMethod.DELETE,
-    "patch": _HTTPMethod.PATCH,
-    "options": _HTTPMethod.OPTIONS,
-}
-for open_api_path in open_api_json_specification["paths"]:
-    for method in open_api_json_specification["paths"][open_api_path]:
-        method_enum = str_methods_to_enum_methods[method]
-        url_path = "http://localhost:9999" + open_api_path.replace("{", "").replace(
-            "}",
-            "",
-        )
-        if url_path not in _ENDPOINTS_AND_METHODS_MAP:
-            _ENDPOINTS_AND_METHODS_MAP[url_path] = [method_enum]
-        else:
-            _ENDPOINTS_AND_METHODS_MAP[url_path].append(method_enum)
 
 
-def test_unauthorized_error_response():
-    requests_session = requests.Session()
-    method_to_function_map = {
-        _HTTPMethod.GET: requests_session.get,
-        _HTTPMethod.POST: requests_session.post,
-        _HTTPMethod.PUT: requests_session.put,
-        _HTTPMethod.DELETE: requests_session.delete,
-        _HTTPMethod.PATCH: requests_session.patch,
-        _HTTPMethod.OPTIONS: requests_session.options,
+async def _build_endpoints_map(app) -> dict[str, list[_HTTPMethod]]:
+    """Fetch the OpenAPI spec from the running app and build path→methods map."""
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        spec = (await client.get("/openapi.json")).json()
+
+    str_to_method = {
+        "get": _HTTPMethod.GET,
+        "post": _HTTPMethod.POST,
+        "put": _HTTPMethod.PUT,
+        "delete": _HTTPMethod.DELETE,
+        "patch": _HTTPMethod.PATCH,
+        "options": _HTTPMethod.OPTIONS,
     }
+    endpoints: dict[str, list[_HTTPMethod]] = {}
+    for path, methods_dict in spec["paths"].items():
+        for method_str in methods_dict:
+            if method_str not in str_to_method:
+                continue
+            # Replace {param} placeholders with their bare name so
+            # 405/401 tests hit the right parameterized route.
+            url_path = path.replace("{", "").replace("}", "")
+            method_enum = str_to_method[method_str]
+            endpoints.setdefault(url_path, []).append(method_enum)
+    return endpoints
 
-    for endpoint, supported_methods_list in _ENDPOINTS_AND_METHODS_MAP.items():
-        for supported_method in supported_methods_list:
-            validate_response(
-                test_response=method_to_function_map[supported_method](endpoint),
-                expected_status_code=401,
-                validator_function=lambda response: not response.content,
-            )
+
+async def test_unauthorized_error_response(app):
+    """Every endpoint returns an empty 401 when no auth header is provided."""
+    endpoints = await _build_endpoints_map(app)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        method_to_fn = {
+            _HTTPMethod.GET: client.get,
+            _HTTPMethod.POST: client.post,
+            _HTTPMethod.PUT: client.put,
+            _HTTPMethod.DELETE: client.delete,
+            _HTTPMethod.PATCH: client.patch,
+            _HTTPMethod.OPTIONS: client.options,
+        }
+        for endpoint, supported_methods in endpoints.items():
+            for method in supported_methods:
+                response = await method_to_fn[method](endpoint)
+                assert response.status_code == 401, (
+                    f"Expected 401 at {method} {endpoint}, "
+                    f"got {response.status_code}: {response.text}"
+                )
+                assert not response.content, (
+                    f"Expected empty body on 401 at {method} {endpoint}, "
+                    f"got: {response.text}"
+                )
 
 
-def test_not_found_error_response(admin_session: requests.Session):
+async def test_not_found_error_response(admin_client):
+    """A request to a path that does not exist returns 404 with standard error body."""
     validate_response(
-        test_response=admin_session.get("http://localhost:9999/does-not-exist"),
+        test_response=await admin_client.get("/does-not-exist"),
         expected_json_schema=NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
     )
 
 
-def test_method_not_allowed_error_response(
-    admin_session: requests.Session,
-):
-    method_to_function_map = {
-        _HTTPMethod.GET: admin_session.get,
-        _HTTPMethod.POST: admin_session.post,
-        _HTTPMethod.PUT: admin_session.put,
-        _HTTPMethod.DELETE: admin_session.delete,
-        _HTTPMethod.PATCH: admin_session.patch,
-        _HTTPMethod.OPTIONS: admin_session.options,
+async def test_method_not_allowed_error_response(app, admin_client):
+    """Each endpoint returns 405 with standard body for unsupported HTTP methods."""
+    endpoints = await _build_endpoints_map(app)
+    method_to_fn = {
+        _HTTPMethod.GET: admin_client.get,
+        _HTTPMethod.POST: admin_client.post,
+        _HTTPMethod.PUT: admin_client.put,
+        _HTTPMethod.DELETE: admin_client.delete,
+        _HTTPMethod.PATCH: admin_client.patch,
+        _HTTPMethod.OPTIONS: admin_client.options,
     }
-
-    for endpoint, supported_methods_list in _ENDPOINTS_AND_METHODS_MAP.items():
+    for endpoint, supported_methods in endpoints.items():
         for test_method in _ALL_METHODS:
-            if test_method not in supported_methods_list:
-                response = method_to_function_map[test_method](endpoint)
-
-                # 404s will occur when a test path coincidentally matches a
-                # parameterized path. For example, consider the two valid endpoints,
-                # GET /api/user-accounts/all and DELETE
-                # /api/user-accounts/{user_id}. When we attempt to test GET
-                # /api/user-accounts/all with an invalid DELETE method, the server
-                # is interpreting it as a DELETE request with "all" as the path
-                # parameter. This will result in a 404 error or 422 where data
-                # needs to be POSTed in the request body.
-                if response.status_code in (404, 422):
-                    continue
-
-                # Make assertions without the validate_response function to
-                # avoid duplicate requests being sent to the server.
-                assert response.status_code == 405
-                try:
-                    jsonschema.validate(
-                        response.json(),
-                        METHOD_NOT_ALLOWED_ERROR_JSON_SCHEMA,
-                    )
-                except jsonschema.ValidationError as exc:
-                    raise AssertionError(
-                        f"Response JSON schema did not match expected schema. {exc}",
-                    ) from None
+            if test_method in supported_methods:
+                continue
+            response = await method_to_fn[test_method](endpoint)
+            # 404s occur when a test path coincidentally matches a parameterized
+            # route (e.g. DELETE /api/user-accounts/all vs DELETE
+            # /api/user-accounts/{id}). 422s appear when a body is required.
+            # Both are false positives — skip them.
+            if response.status_code in (404, 422):
+                continue
+            assert response.status_code == 405, (
+                f"Expected 405 at {test_method} {endpoint}, "
+                f"got {response.status_code}: {response.text}"
+            )
+            try:
+                jsonschema.validate(
+                    response.json(),
+                    METHOD_NOT_ALLOWED_ERROR_JSON_SCHEMA,
+                )
+            except jsonschema.ValidationError as exc:
+                raise AssertionError(
+                    f"Response body at {test_method} {endpoint} did not match "
+                    f"METHOD_NOT_ALLOWED schema: {exc}"
+                ) from None

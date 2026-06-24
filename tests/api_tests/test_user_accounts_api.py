@@ -1,13 +1,14 @@
 import uuid
 
 import pytest
-import requests
 
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_user_account_ids, validate_response
+
+pytestmark = pytest.mark.anyio
 
 USER_ACCOUNT_JSON_SCHEMA = {
     "type": "object",
@@ -17,12 +18,7 @@ USER_ACCOUNT_JSON_SCHEMA = {
         "password": {"type": "string"},
         "role": {"type": "string", "enum": ["ADMIN", "OPERATOR", "SPECTATOR"]},
     },
-    "required": [
-        "user_account_id",
-        "username",
-        "password",
-        "role",
-    ],
+    "required": ["user_account_id", "username", "password", "role"],
     "additionalProperties": False,
 }
 ALL_USER_ACCOUNTS_JSON_SCHEMA = {
@@ -44,7 +40,7 @@ USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
-DUPLICATE_USER_ACCOUNT_CREATION_ERROR_JSON_SCHEMA = {
+USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "error": {
@@ -52,7 +48,25 @@ DUPLICATE_USER_ACCOUNT_CREATION_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {
                     "type": "string",
-                    "enum": ["DUPLICATE_USER_ACCOUNT_CREATION_ERROR"],
+                    "enum": ["USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+USER_ACCOUNT_AUTHENTICATION_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["USER_ACCOUNT_AUTHENTICATION_ERROR"],
                 },
                 "message": {"type": "string"},
                 "detail": {},
@@ -66,7 +80,6 @@ DUPLICATE_USER_ACCOUNT_CREATION_ERROR_JSON_SCHEMA = {
 
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
 @pytest.mark.parametrize(
-    # test_user_account is a tuple of (username, password, role)
     "test_user_account",
     [
         (uuid.uuid4().hex, uuid.uuid4().hex, "ADMIN"),
@@ -74,16 +87,11 @@ DUPLICATE_USER_ACCOUNT_CREATION_ERROR_JSON_SCHEMA = {
         (uuid.uuid4().hex, uuid.uuid4().hex, "SPECTATOR"),
     ],
 )
-def test_create_user_account(
-    admin_session: requests.Session,
-    session: requests.Session,
-    test_user_account: tuple[str, str, str],
-):
-    if session == admin_session:
-        # Test for admin sessions.
+async def test_create_user_account(admin_client, client, test_user_account):
+    if client == admin_client:
         user_account = validate_response(
-            test_response=admin_session.post(
-                "http://localhost:9999/api/user-accounts",
+            test_response=await admin_client.post(
+                "/api/user-accounts",
                 json={
                     "username": test_user_account[0],
                     "password": test_user_account[1],
@@ -94,26 +102,21 @@ def test_create_user_account(
             expected_status_code=201,
         ).json()
         validate_response(
-            test_response=admin_session.get(
-                f"http://localhost:9999/api/user-accounts/{user_account['user_account_id']}",
+            test_response=await admin_client.get(
+                f"/api/user-accounts/{user_account['user_account_id']}",
             ),
             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
-            # Don't call the lambda variable response because it will shadow the
-            # response variable from the outer scope
-            validator_function=lambda response: all(
-                (
-                    response.json()["username"] == test_user_account[0],
-                    response.json()["password"] == test_user_account[1],
-                    response.json()["role"] == test_user_account[2],
-                ),
+            validator_function=lambda r, u=test_user_account: (
+                r.json()["username"] == u[0]
+                and r.json()["password"] == u[1]
+                and r.json()["role"] == u[2]
             ),
         )
     else:
-        # Test for operator and spectator sessions.
         validate_response(
-            test_response=session.post(
-                "http://localhost:9999/api/user-accounts",
+            test_response=await client.post(
+                "/api/user-accounts",
                 json={
                     "username": test_user_account[0],
                     "password": test_user_account[1],
@@ -125,121 +128,113 @@ def test_create_user_account(
         )
 
 
-def test_get_user_account_by_user_account_id(
-    admin_session: requests.Session,
-    session: requests.Session,
-):
-    if session == admin_session:
-        for user_account_id in get_all_user_account_ids(admin_session):
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
+async def test_create_user_account_with_duplicate_username(admin_client, client):
+    """Duplicate username returns 422 with USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR."""
+    if client == admin_client:
+        validate_response(
+            test_response=await admin_client.post(
+                "/api/user-accounts",
+                json={"username": "admin", "password": "somepass", "role": "OPERATOR"},
+            ),
+            expected_json_schema=USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+
+
+async def test_get_own_user_account(client):
+    validate_response(
+        test_response=await client.get("/api/user-accounts/me"),
+        expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+
+
+async def test_get_user_account_by_user_account_id(admin_client, client):
+    all_ids = await get_all_user_account_ids(admin_client)
+    if client == admin_client:
+        for ua_id in all_ids:
             validate_response(
-                test_response=session.get(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                ),
+                test_response=await client.get(f"/api/user-accounts/{ua_id}"),
                 expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
                 expected_status_code=200,
             )
+        # Invalid UUID4 → 422
+        validate_response(
+            test_response=await admin_client.get("/api/user-accounts/not-a-valid-uuid"),
+            expected_status_code=422,
+        )
     else:
-        for user_account_id in get_all_user_account_ids(admin_session):
+        for ua_id in all_ids:
             validate_response(
-                test_response=session.get(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                ),
+                test_response=await client.get(f"/api/user-accounts/{ua_id}"),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
 
 
-def test_get_all_user_accounts(
-    admin_session: requests.Session,
-    session: requests.Session,
-):
-    if session == admin_session:
-        # Test for admin sessions.
+async def test_get_all_user_accounts(admin_client, client):
+    if client == admin_client:
         validate_response(
-            test_response=session.get("http://localhost:9999/api/user-accounts/all"),
+            test_response=await client.get("/api/user-accounts/all"),
             expected_json_schema=ALL_USER_ACCOUNTS_JSON_SCHEMA,
             expected_status_code=200,
         )
     else:
-        # Test for operator and spectator sessions.
         validate_response(
-            test_response=session.get("http://localhost:9999/api/user-accounts/all"),
+            test_response=await client.get("/api/user-accounts/all"),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
 
-# TODO: The restored user account information does not get reflected in the server. Fix
-#  this
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_update_user_account_username_by_user_account_id(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
+async def test_update_user_account_username_by_user_account_id(admin_client, client):
     new_username = uuid.uuid4().hex
-    user = session.get("http://localhost:9999/api/users/me").json()
+    user = (await client.get("/api/users/me")).json()
     user_account_id = user["user_account"]["user_account_id"]
 
-    if session == admin_session:
+    if client == admin_client:
         validate_response(
-            session.patch(
-                f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                json={
-                    "username": new_username,
-                },
+            test_response=await client.patch(
+                f"/api/user-accounts/{user_account_id}",
+                json={"username": new_username},
             ),
             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
-            validator_function=lambda response: (
-                response.json()["username"] == new_username
-            ),
+            validator_function=lambda r: r.json()["username"] == new_username,
         )
     else:
         validate_response(
-            session.patch(
-                f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                json={
-                    "username": new_username,
-                },
+            test_response=await client.patch(
+                f"/api/user-accounts/{user_account_id}",
+                json={"username": new_username},
             ),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
 
-# TODO: The restored user account information does not get reflected in the server. Fix
-#  this
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_update_user_account_password_by_user_account_id(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
-    user_account = session.get("http://localhost:9999/api/user-accounts/me").json()
+async def test_update_user_account_password_by_user_account_id(admin_client, client):
+    user_account = (await client.get("/api/user-accounts/me")).json()
     user_account_id = user_account["user_account_id"]
     new_password = uuid.uuid4().hex
 
-    if session == admin_session:
+    if client == admin_client:
         validate_response(
-            session.patch(
-                f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                json={
-                    "password": new_password,
-                },
+            test_response=await client.patch(
+                f"/api/user-accounts/{user_account_id}",
+                json={"password": new_password},
             ),
             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
-            validator_function=lambda response: (
-                response.json()["password"] == new_password
-            ),
+            validator_function=lambda r: r.json()["password"] == new_password,
         )
     else:
         validate_response(
-            session.patch(
-                f"http://localhost:9999/api/user-accounts/{user_account_id}",
+            test_response=await client.patch(
+                f"/api/user-accounts/{user_account_id}",
                 json={"password": new_password},
             ),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
@@ -247,43 +242,28 @@ def test_update_user_account_password_by_user_account_id(
         )
 
 
-# TODO: The restored user account information does not get reflected in the server. Fix
-#  this
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_update_user_account_role_by_user_account_id(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
-    old_role_str_to_new_role_str_map = {
-        "ADMIN": "ADMIN",
-        "OPERATOR": "SPECTATOR",
-        "SPECTATOR": "ADMIN",
-    }
-    user_account = session.get("http://localhost:9999/api/user-accounts/me").json()
+async def test_update_user_account_role_by_user_account_id(admin_client, client):
+    old_to_new_role = {"ADMIN": "ADMIN", "OPERATOR": "SPECTATOR", "SPECTATOR": "ADMIN"}
+    user_account = (await client.get("/api/user-accounts/me")).json()
     user_account_id = user_account["user_account_id"]
-    new_role = old_role_str_to_new_role_str_map[user_account["role"]]
+    new_role = old_to_new_role[user_account["role"]]
 
-    if session == admin_session:
+    if client == admin_client:
         validate_response(
-            session.patch(
-                f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                json={
-                    "role": new_role,
-                },
+            test_response=await client.patch(
+                f"/api/user-accounts/{user_account_id}",
+                json={"role": new_role},
             ),
             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
             expected_status_code=200,
-            validator_function=lambda response: response.json()["role"] == new_role,
+            validator_function=lambda r: r.json()["role"] == new_role,
         )
     else:
         validate_response(
-            session.patch(
-                f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                json={
-                    "role": new_role,
-                },
+            test_response=await client.patch(
+                f"/api/user-accounts/{user_account_id}",
+                json={"role": new_role},
             ),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
@@ -291,26 +271,19 @@ def test_update_user_account_role_by_user_account_id(
 
 
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_update_user_account_by_user_account_id(
-    admin_session: requests.Session,
-    session: requests.Session,
-):
-    if session == admin_session:
-        old_role_str_to_new_role_str_map = {
-            "ADMIN": "ADMIN",
-            "OPERATOR": "SPECTATOR",
-            "SPECTATOR": "ADMIN",
-        }
-        for user_account_id in get_all_user_account_ids(admin_session):
-            user_account = session.get(
-                "http://localhost:9999/api/user-accounts/me",
-            ).json()
+async def test_update_user_account_by_user_account_id(admin_client, client):
+    old_to_new_role = {"ADMIN": "ADMIN", "OPERATOR": "SPECTATOR", "SPECTATOR": "ADMIN"}
+
+    if client == admin_client:
+        all_ids = await get_all_user_account_ids(admin_client)
+        for ua_id in all_ids:
+            ua = (await admin_client.get(f"/api/user-accounts/{ua_id}")).json()
             new_username = uuid.uuid4().hex
             new_password = uuid.uuid4().hex
-            new_role = old_role_str_to_new_role_str_map[user_account["role"]]
+            new_role = old_to_new_role[ua["role"]]
             validate_response(
-                test_response=admin_session.patch(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                test_response=await admin_client.patch(
+                    f"/api/user-accounts/{ua_id}",
                     json={
                         "username": new_username,
                         "password": new_password,
@@ -319,32 +292,25 @@ def test_update_user_account_by_user_account_id(
                 ),
                 expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
                 expected_status_code=200,
-                # Bind the variables to avoid late binding issue in lambda
-                validator_function=lambda response, new_username_bind=new_username, new_password_bind=new_password, new_role_bind=new_role: (
-                    response.json()["username"] == new_username_bind
-                    and response.json()["password"] == new_password_bind
-                    and response.json()["role"] == new_role_bind
+                validator_function=lambda r,
+                u=new_username,
+                p=new_password,
+                ro=new_role: (
+                    r.json()["username"] == u
+                    and r.json()["password"] == p
+                    and r.json()["role"] == ro
                 ),
             )
     else:
-        for user_account_id in get_all_user_account_ids(admin_session):
-            user_account = session.get(
-                "http://localhost:9999/api/user-accounts/me",
-            ).json()
-            new_username = uuid.uuid4().hex
-            old_password = user_account["password"]
-            new_password = uuid.uuid4().hex
-            new_role = "OPERATOR"
+        all_ids = await get_all_user_account_ids(admin_client)
+        for ua_id in all_ids:
             validate_response(
-                test_response=session.patch(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
+                test_response=await client.patch(
+                    f"/api/user-accounts/{ua_id}",
                     json={
-                        "username": new_username,
-                        "password": {
-                            "new_password": new_password,
-                            "old_password": old_password,
-                        },
-                        "role": new_role,
+                        "username": uuid.uuid4().hex,
+                        "password": uuid.uuid4().hex,
+                        "role": "OPERATOR",
                     },
                 ),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
@@ -352,112 +318,105 @@ def test_update_user_account_by_user_account_id(
             )
 
 
-# @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-# def test_update_own_user_account(
-#     admin_session: requests.Session,
-#     operator_session: requests.Session,
-#     spectator_session: requests.Session,
-#     session: requests.Session,
-# ):
-#     new_username = uuid.uuid4().hex
-#     new_password = uuid.uuid4().hex
-#
-#     if session == admin_session:
-#         new_role = "OPERATOR"
-#         validate_response(
-#             session.patch(
-#                 "http://localhost:9999/api/user-accounts/me",
-#                 json={
-#                     "username": new_username,
-#                     "password": new_password,
-#                     "role": new_role,
-#                 },
-#             ),
-#             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
-#             expected_status_code=200,
-#             validator_function=lambda response: response.json()["username"]
-#             == new_username
-#             and response.json()["password"] == new_password
-#             and response.json()["role"] == new_role,
-#         )
-#     elif session == operator_session:
-#         new_role = "ADMIN"
-#         validate_response(
-#             session.patch(
-#                 "http://localhost:9999/api/user-accounts/me",
-#                 json={
-#                     "username": new_username,
-#                     "password": new_password,
-#                     "role": new_role,
-#                 },
-#             ),
-#             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-#             expected_status_code=403,
-#         )
-#         validate_response(
-#             session.patch(
-#                 "http://localhost:9999/api/user-accounts/me",
-#                 json={
-#                     "username": new_username,
-#                     "password": new_password,
-#                 },
-#             ),
-#             expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
-#             expected_status_code=200,
-#             validator_function=lambda response: response.json()["username"]
-#             == new_username
-#             and response.json()["password"] == new_password
-#             and response.json()["role"] == "OPERATOR",
-#         )
-#     else:
-#         # Test for spectator sessions.
-#         new_role = "ADMIN"
-#         validate_response(
-#             spectator_session.patch(
-#                 "http://localhost:9999/api/user-accounts/me",
-#                 json={
-#                     "username": new_username,
-#                     "password": new_password,
-#                     "role": new_role,
-#                 },
-#             ),
-#             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-#             expected_status_code=403,
-#         )
-#
-#
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
+async def test_update_user_account_by_user_account_id_not_found(admin_client):
+    """Patching a non-existent (valid UUID4) user account returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000000"
+    validate_response(
+        test_response=await admin_client.patch(
+            f"/api/user-accounts/{fake_uuid}",
+            json={"username": "newname"},
+        ),
+        expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
 
 
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
-def test_delete_user_account_by_user_account_id(
-    admin_session: requests.Session,
-    session: requests.Session,
-):
-    if session == admin_session:
-        # Test for admin sessions.
-        # Deleting a user account will not log a user out from the associated account.
-        for user_account_id in get_all_user_account_ids(admin_session):
+async def test_update_own_user_account(admin_client, operator_client, client):
+    """PATCH /api/user-accounts/me — admins and operators can update own account."""
+    new_username = uuid.uuid4().hex
+
+    if client in (admin_client, operator_client):
+        user_account = (await client.get("/api/user-accounts/me")).json()
+        old_password = user_account["password"]
+
+        validate_response(
+            test_response=await client.patch(
+                "/api/user-accounts/me",
+                json={
+                    "username": new_username,
+                    "password": {
+                        "old_password": old_password,
+                        "new_password": uuid.uuid4().hex,
+                    },
+                },
+            ),
+            expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
+            expected_status_code=200,
+            validator_function=lambda r: r.json()["username"] == new_username,
+        )
+    else:
+        # Spectators do not have UPDATE_OWN_USER_ACCOUNT permission
+        validate_response(
+            test_response=await client.patch(
+                "/api/user-accounts/me",
+                json={"username": new_username},
+            ),
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+            expected_status_code=403,
+        )
+
+
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
+async def test_update_own_user_account_wrong_old_password(admin_client):
+    """Wrong old_password on PATCH /api/user-accounts/me returns 403."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/user-accounts/me",
+            json={
+                "password": {
+                    "old_password": "definitely-wrong-password",
+                    "new_password": "newpassword",
+                }
+            },
+        ),
+        expected_json_schema=USER_ACCOUNT_AUTHENTICATION_ERROR_JSON_SCHEMA,
+        expected_status_code=403,
+    )
+
+
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
+async def test_delete_user_account_by_user_account_id(admin_client, client):
+    if client == admin_client:
+        all_ids = await get_all_user_account_ids(admin_client)
+        for ua_id in all_ids:
             validate_response(
-                test_response=session.delete(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                ),
+                test_response=await client.delete(f"/api/user-accounts/{ua_id}"),
                 expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
-                test_response=session.get(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                ),
+                test_response=await client.get(f"/api/user-accounts/{ua_id}"),
                 expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
                 expected_status_code=404,
             )
     else:
-        # Test for operator and spectator sessions.
-        for user_account_id in get_all_user_account_ids(admin_session):
+        all_ids = await get_all_user_account_ids(admin_client)
+        for ua_id in all_ids:
             validate_response(
-                test_response=session.delete(
-                    f"http://localhost:9999/api/user-accounts/{user_account_id}",
-                ),
+                test_response=await client.delete(f"/api/user-accounts/{ua_id}"),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
+
+
+@pytest.mark.usefixtures("restore_default_user_accounts_after_test")
+async def test_delete_user_account_not_found(admin_client):
+    """Deleting a non-existent (valid UUID4) user account returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000001"
+    validate_response(
+        test_response=await admin_client.delete(f"/api/user-accounts/{fake_uuid}"),
+        expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )

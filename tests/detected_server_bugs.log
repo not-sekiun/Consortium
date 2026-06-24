@@ -1,0 +1,107 @@
+Consortium Server — Detected Bugs and Test Defects
+===================================================
+Logged during E2E test refactoring (2026-06-25)
+================================================
+
+## TEST DEFECTS (bugs in the original test code, now fixed)
+
+[TEST-BUG-01] conftest.py — delete_agent_generators_after_test used wrong URL
+  File: tests/api_tests/conftest.py (original)
+  Problem: The cleanup fixture called admin_session.delete(
+      f"http://localhost:9999/api/listeners/{agent_generator_id}")
+    instead of /api/agent-generators/{agent_generator_id}.
+    Agent generators were never actually deleted, allowing state to leak
+    between tests.
+  Fix: Changed URL to /api/agent-generators/{agent_generator_id} in new conftest.py.
+
+[TEST-BUG-02] test_listeners_api.py — test_update_listener used PUT instead of PATCH
+  File: tests/api_tests/test_listeners_api.py (original), line 254
+  Problem: session.put(f"http://localhost:9999/api/listeners/{listener_id}", ...)
+    The listeners API only exposes PATCH for updates; PUT is not registered.
+    This would always return 405 Method Not Allowed, never testing the actual
+    update path.
+  Fix: Changed to client.patch(...) in the refactored test.
+
+[TEST-BUG-03] test_listeners_api.py — LISTENER_JSON_SCHEMA had wrong required key
+  File: tests/api_tests/test_listeners_api.py (original)
+  Problem: The inline status sub-schema defined "state" in properties but listed
+    "status" in the required array:
+      "required": ["status", "error"]  # should be ["state", "error"]
+    The StatusModel (component_models.py) serialises as {"state": ..., "error": ...}.
+    JSON Schema validation would always fail for the status sub-object because
+    the required key "status" was absent from actual responses.
+  Fix: Changed required to ["state", "error"] in LISTENER_JSON_SCHEMA.
+
+[TEST-BUG-04] framework_components_json_response_schemas.py — STATUS_JSON_SCHEMA used wrong key
+  File: tests/api_tests/framework_components_json_response_schemas.py
+  Problem: STATUS_JSON_SCHEMA defined the status field as {"status": {"type": "string"}}
+    with "required": ["status", "error"], but StatusModel serialises the field
+    as "state", not "status". Any test validating agent generator or agent generator
+    build-step status objects against this schema would always fail.
+  Fix: Changed property key and required entry from "status" to "state".
+
+[TEST-BUG-05] test_user_accounts_api.py — wrong error code in schema
+  File: tests/api_tests/test_user_accounts_api.py (original)
+  Problem: DUPLICATE_USER_ACCOUNT_CREATION_ERROR_JSON_SCHEMA specified error code
+    "DUPLICATE_USER_ACCOUNT_CREATION_ERROR". The server actually raises
+    UserAccountUsernameAlreadyExistsError which serialises as
+    "USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR".
+    The schema was defined but never used in any active test, so the mismatch
+    went undetected.
+  Fix: Renamed to USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR_JSON_SCHEMA with the
+    correct error code and added a test that exercises the duplicate-username path.
+
+[TEST-BUG-06] conftest.py — _JSON_WEB_TOKEN_JSON_SCHEMA used wrong field name
+  File: tests/api_tests/conftest.py (original)
+  Problem: The schema required "type" but JSONWebTokenModel (user_models.py) and
+    JSONWebToken.to_json() both serialise the field as "token_type". Any schema
+    validation on the login response would have failed.
+  Fix: Updated to require "token_type".
+
+[TEST-BUG-07] test_logout_api.py — operator_session accidentally excluded from RBAC check
+  File: tests/api_tests/test_logout_api.py (original), line 190
+  Problem: The RBAC denial loop was written as:
+      for session in [spectator_session]:  # , spectator_session]:
+    The comment indicates operator_session was meant to be included but was
+    accidentally left out. Operator does not have LOGOUT_USER_ACCOUNT_BY_USER_ACCOUNT_ID
+    permission, so this left the operator RBAC path untested.
+  Fix: Refactored test_logout_user_account_by_user_account_id to iterate over both
+    operator_client and spectator_client for the 403 assertions.
+
+
+## SERVER-SIDE ISSUES (do not fix — report only)
+
+[SERVER-BUG-01] user_accounts_api.py — duplicate username returns 422 instead of 409
+  File: consortium/server/api/user_accounts_api.py, create_user_account endpoint
+  Problem: When a POST /api/user-accounts request supplies a username that already
+    exists, the server raises UserAccountUsernameAlreadyExistsError and returns
+    HTTP 422 Unprocessable Entity. Per RFC 9110 / REST conventions, creating a
+    duplicate resource is a conflict and should return 409 Conflict.
+    The same pattern applies to PATCH /api/user-accounts/{id} and
+    PATCH /api/user-accounts/me when a duplicate username is specified.
+  Severity: Low (semantic correctness / API design)
+
+[SERVER-BUG-02] agents_api.py — GET /api/agents/tasks requires undeclared permission READ_ALL_AGENT_TASKS
+  File: consortium/server/api/agents_api.py, get_all_agent_tasks endpoint
+  Problem: The endpoint uses AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS)
+    but server_dependencies.py ROLE_PERMISSIONS maps spectators and operators to
+    READ_ALL_AGENT_TASKS_BY_AGENT_ID rather than READ_ALL_AGENT_TASKS.
+    If READ_ALL_AGENT_TASKS is not in any role's permission set the endpoint would
+    always return 403 for all roles.
+  Severity: Medium (potential complete denial of service for the endpoint)
+
+[SERVER-BUG-03] user_accounts_api.py — update_own_user_account and update_user_account_by_user_account_id are synchronous (def not async def)
+  File: consortium/server/api/user_accounts_api.py, lines 226 and 298
+  Problem: These route handlers are declared with def rather than async def.
+    While FastAPI can handle synchronous handlers (running them in a thread pool),
+    the inconsistency with all other handlers in the file (which are async) may
+    cause unexpected blocking behaviour under load.
+  Severity: Low (functional but potentially blocking)
+
+[SERVER-BUG-04] listeners_api.py — PATCH /api/listeners/{listener_id} requires UPDATE_LISTENER_BY_LISTENER_ID but the original tests used PUT
+  File: consortium/server/api/listeners_api.py
+  Problem: No PUT /api/listeners/{listener_id} endpoint is defined; only PATCH.
+    The original test_listeners_api.py (line 254) used session.put(...) which
+    would have returned 405 Method Not Allowed, never exercising the update path.
+    This means the PATCH update path was never tested in production runs.
+  Severity: Low (test coverage gap, server code itself is correct)

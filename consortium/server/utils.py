@@ -7,12 +7,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
+    BaseConsortiumError,
+)
+
 if TYPE_CHECKING:
     from loguru import Logger
 
-    from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-        BaseConsortiumError,
-    )
     from consortium.server.services.agent_generators_service import (
         AgentGeneratorsService,
     )

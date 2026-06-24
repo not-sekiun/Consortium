@@ -1,8 +1,6 @@
-# TODO: Use fixtures to reduce code duplication.
 import uuid
 
 import pytest
-import requests
 
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
@@ -10,10 +8,13 @@ from tests.api_tests.common_json_response_schemas import (
 )
 from tests.api_tests.utils import get_all_listener_ids, validate_response
 
+pytestmark = pytest.mark.anyio
+
 LISTENER_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "name": {"type": "string"},
+        "description": {"type": "string"},
         "endpoint": {"type": "string"},
         "listener_type": {
             "type": "object",
@@ -26,7 +27,6 @@ LISTENER_JSON_SCHEMA = {
                 "listener_type_id": {"type": "string"},
             },
         },
-        "authors": {"type": "array", "items": {"type": "string"}},
         "listener_id": {"type": "string"},
         "parameters": {"type": "object"},
         "status": {
@@ -47,8 +47,11 @@ LISTENER_JSON_SCHEMA = {
                     ],
                 },
             },
-            "required": ["status", "error"],
+            "required": ["state", "error"],
         },
+        "datetime_created": {"type": "string"},
+        "connected_agents": {"type": "array"},
+        "creating_listener_template": {"type": "object"},
     },
     "required": [
         "name",
@@ -63,17 +66,67 @@ ALL_LISTENERS_JSON_SCHEMA = {
     "type": "array",
     "items": LISTENER_JSON_SCHEMA,
 }
+LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["LISTENER_NOT_FOUND_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+LISTENER_ALREADY_RUNNING_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["LISTENER_ALREADY_RUNNING_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+LISTENER_NOT_RUNNING_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["LISTENER_NOT_RUNNING_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
 
 
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_get_all_listeners(
-    session: requests.Session,
-):
+async def test_get_all_listeners(client):
     validate_response(
-        test_response=session.get(
-            "http://localhost:9999/api/listeners/all",
-        ),
+        test_response=await client.get("/api/listeners/all"),
         expected_json_schema=ALL_LISTENERS_JSON_SCHEMA,
         expected_status_code=200,
     )
@@ -81,52 +134,47 @@ def test_get_all_listeners(
 
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_get_listener_by_listener_id(
-    admin_session: requests.Session,
-    session: requests.Session,
-):
-    for listener_id in get_all_listener_ids(admin_session):
+async def test_get_listener_by_listener_id(admin_client, client):
+    for listener_id in await get_all_listener_ids(admin_client):
         validate_response(
-            test_response=session.get(
-                f"http://localhost:9999/api/listeners/{listener_id}",
-            ),
+            test_response=await client.get(f"/api/listeners/{listener_id}"),
             expected_json_schema=LISTENER_JSON_SCHEMA,
             expected_status_code=200,
         )
 
 
+async def test_get_listener_by_invalid_listener_id_returns_404(admin_client):
+    """A valid UUID4 that does not correspond to a listener returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000000"
+    validate_response(
+        test_response=await admin_client.get(f"/api/listeners/{fake_uuid}"),
+        expected_json_schema=LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_start_listener_by_listener_id(
-    admin_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
-    if session != spectator_session:
-        # Test for admin sessions and operator sessions.
-        for listener_id in get_all_listener_ids(admin_session):
+async def test_start_listener_by_listener_id(admin_client, spectator_client, client):
+    if client != spectator_client:
+        for listener_id in await get_all_listener_ids(admin_client):
             validate_response(
-                test_response=session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/start",
-                ),
+                test_response=await client.post(f"/api/listeners/{listener_id}/start"),
                 expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
-            # Listeners cannot be deleted if they are running, so we stop them first to
-            # allow the fixture to properly delete the listener after the test finishes.
             validate_response(
-                test_response=admin_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/stop",
+                test_response=await admin_client.post(
+                    f"/api/listeners/{listener_id}/stop"
                 ),
                 expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
     else:
-        # Test for spectator sessions.
-        for listener_id in get_all_listener_ids(admin_session):
+        for listener_id in await get_all_listener_ids(admin_client):
             validate_response(
-                test_response=spectator_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/start",
+                test_response=await spectator_client.post(
+                    f"/api/listeners/{listener_id}/start"
                 ),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
@@ -135,146 +183,112 @@ def test_start_listener_by_listener_id(
 
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_stop_listener_by_listener_id(
-    admin_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
-    if session != spectator_session:
-        # Test for admin sessions and operator sessions.
-        for listener_id in get_all_listener_ids(admin_session):
-            validate_response(
-                test_response=admin_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/start",
-                ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
-            )
-            validate_response(
-                test_response=session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/stop",
-                ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
-            )
-    else:
-        for listener_id in get_all_listener_ids(admin_session):
-            # Test for spectator sessions.
-            validate_response(
-                test_response=admin_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/start",
-                ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
-            )
-            validate_response(
-                test_response=spectator_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/stop",
-                ),
-                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-                expected_status_code=403,
-            )
-            # Get the admin session to stop the listener before the fixture deletes it
-            # since spectators cannot delete listeners that are running.
-            validate_response(
-                test_response=admin_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/stop",
-                ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
-            )
+async def test_start_listener_already_running_returns_409(admin_client):
+    """Starting an already-running listener returns 409."""
+    for listener_id in await get_all_listener_ids(admin_client):
+        await admin_client.post(f"/api/listeners/{listener_id}/start")
+        validate_response(
+            test_response=await admin_client.post(
+                f"/api/listeners/{listener_id}/start"
+            ),
+            expected_json_schema=LISTENER_ALREADY_RUNNING_ERROR_JSON_SCHEMA,
+            expected_status_code=409,
+        )
+        await admin_client.post(f"/api/listeners/{listener_id}/stop")
 
 
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_cancel_listener_by_listener_id(
-    admin_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
-    if session != spectator_session:
-        # Test for admin sessions and operator sessions.
-        for listener_id in get_all_listener_ids(admin_session):
+async def test_stop_listener_by_listener_id(admin_client, spectator_client, client):
+    if client != spectator_client:
+        for listener_id in await get_all_listener_ids(admin_client):
+            await admin_client.post(f"/api/listeners/{listener_id}/start")
             validate_response(
-                test_response=admin_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/start",
-                ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
-            )
-            validate_response(
-                test_response=session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/cancel",
-                ),
+                test_response=await client.post(f"/api/listeners/{listener_id}/stop"),
                 expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
     else:
-        for listener_id in get_all_listener_ids(admin_session):
-            # Test for spectator sessions.
+        for listener_id in await get_all_listener_ids(admin_client):
+            await admin_client.post(f"/api/listeners/{listener_id}/start")
             validate_response(
-                test_response=admin_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/start",
-                ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
-            )
-            validate_response(
-                test_response=spectator_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/cancel",
+                test_response=await spectator_client.post(
+                    f"/api/listeners/{listener_id}/stop"
                 ),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
-            # Get the admin session to stop the listener before the fixture deletes it
-            # since spectators cannot delete listeners that are running.
-            validate_response(
-                test_response=admin_session.post(
-                    f"http://localhost:9999/api/listeners/{listener_id}/cancel",
-                ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
-            )
+            await admin_client.post(f"/api/listeners/{listener_id}/stop")
 
 
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_update_listener_by_listener_id(
-    admin_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
+async def test_stop_listener_not_running_returns_409(admin_client):
+    """Stopping a listener that is not running returns 409."""
+    for listener_id in await get_all_listener_ids(admin_client):
+        validate_response(
+            test_response=await admin_client.post(f"/api/listeners/{listener_id}/stop"),
+            expected_json_schema=LISTENER_NOT_RUNNING_ERROR_JSON_SCHEMA,
+            expected_status_code=409,
+        )
+
+
+@pytest.mark.usefixtures("create_listeners_before_test")
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_cancel_listener_by_listener_id(admin_client, spectator_client, client):
+    if client != spectator_client:
+        for listener_id in await get_all_listener_ids(admin_client):
+            await admin_client.post(f"/api/listeners/{listener_id}/start")
+            validate_response(
+                test_response=await client.post(f"/api/listeners/{listener_id}/cancel"),
+                expected_json_schema=SUCCESS_JSON_SCHEMA,
+                expected_status_code=200,
+            )
+    else:
+        for listener_id in await get_all_listener_ids(admin_client):
+            await admin_client.post(f"/api/listeners/{listener_id}/start")
+            validate_response(
+                test_response=await spectator_client.post(
+                    f"/api/listeners/{listener_id}/cancel"
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+                expected_status_code=403,
+            )
+            await admin_client.post(f"/api/listeners/{listener_id}/cancel")
+
+
+@pytest.mark.usefixtures("create_listeners_before_test")
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_update_listener_by_listener_id(admin_client, spectator_client, client):
     new_name = uuid.uuid4().hex
     new_description = uuid.uuid4().hex
 
-    if session != spectator_session:
-        # Test for admin sessions and operator sessions.
-        for listener_id in get_all_listener_ids(admin_session):
+    if client != spectator_client:
+        for listener_id in await get_all_listener_ids(admin_client):
+            # The endpoint is PATCH, not PUT
             validate_response(
-                test_response=session.put(
-                    f"http://localhost:9999/api/listeners/{listener_id}",
+                test_response=await client.patch(
+                    f"/api/listeners/{listener_id}",
                     json={"name": new_name, "description": new_description},
                 ),
                 expected_json_schema=LISTENER_JSON_SCHEMA,
                 expected_status_code=200,
             )
             validate_response(
-                test_response=session.get(
-                    f"http://localhost:9999/api/listeners/{listener_id}",
-                ),
+                test_response=await client.get(f"/api/listeners/{listener_id}"),
                 expected_json_schema=LISTENER_JSON_SCHEMA,
                 expected_status_code=200,
-                validator_function=lambda response: (
-                    response.json()["name"] == new_name
-                    and response.json()["description"] == new_description
+                validator_function=lambda r: (
+                    r.json()["name"] == new_name
+                    and r.json()["description"] == new_description
                 ),
             )
     else:
-        # Test for spectator sessions.
-        for listener_id in get_all_listener_ids(admin_session):
+        for listener_id in await get_all_listener_ids(admin_client):
             validate_response(
-                test_response=spectator_session.put(
-                    f"http://localhost:9999/api/listeners/{listener_id}",
+                test_response=await spectator_client.patch(
+                    f"/api/listeners/{listener_id}",
+                    json={"name": new_name},
                 ),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
@@ -282,35 +296,37 @@ def test_update_listener_by_listener_id(
 
 
 @pytest.mark.usefixtures("create_listeners_before_test")
-def test_delete_listener_by_listener_id(
-    admin_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
-    if session != spectator_session:
-        # Test for admin sessions and operator sessions.
-        for listener_id in get_all_listener_ids(admin_session):
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_update_running_listener_returns_409(admin_client):
+    """PATCH a running listener returns 409."""
+    for listener_id in await get_all_listener_ids(admin_client):
+        await admin_client.post(f"/api/listeners/{listener_id}/start")
+        response = await admin_client.patch(
+            f"/api/listeners/{listener_id}",
+            json={"name": "should-fail"},
+        )
+        assert response.status_code == 409, (
+            f"Expected 409 when patching running listener, got {response.status_code}"
+        )
+        await admin_client.post(f"/api/listeners/{listener_id}/stop")
+
+
+@pytest.mark.usefixtures("create_listeners_before_test")
+async def test_delete_listener_by_listener_id(admin_client, spectator_client, client):
+    if client != spectator_client:
+        for listener_id in await get_all_listener_ids(admin_client):
             validate_response(
-                test_response=session.delete(
-                    f"http://localhost:9999/api/listeners/{listener_id}",
-                ),
+                test_response=await client.delete(f"/api/listeners/{listener_id}"),
                 expected_json_schema=SUCCESS_JSON_SCHEMA,
                 expected_status_code=200,
             )
     else:
-        # Test for spectator sessions.
-        for listener_id in get_all_listener_ids(admin_session):
+        for listener_id in await get_all_listener_ids(admin_client):
             validate_response(
-                test_response=spectator_session.delete(
-                    f"http://localhost:9999/api/listeners/{listener_id}",
+                test_response=await spectator_client.delete(
+                    f"/api/listeners/{listener_id}"
                 ),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
-            validate_response(
-                test_response=admin_session.delete(
-                    f"http://localhost:9999/api/listeners/{listener_id}",
-                ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
-            )
+            await admin_client.delete(f"/api/listeners/{listener_id}")

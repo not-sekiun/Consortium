@@ -1,7 +1,9 @@
-import requests
+import pytest
 
 from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
+
+pytestmark = pytest.mark.anyio
 
 USER_JSON_SCHEMA = {
     "type": "object",
@@ -54,105 +56,77 @@ USER_NOT_FOUND_ERROR_JSON_SCHEMA = {
 }
 
 
-def test_get_own_user(session: requests.Session):
+async def test_get_own_user(client):
     validate_response(
-        test_response=session.get("http://localhost:9999/api/users/me"),
+        test_response=await client.get("/api/users/me"),
         expected_json_schema=USER_JSON_SCHEMA,
         expected_status_code=200,
     )
 
 
-def test_get_all_users(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    session: requests.Session,
-):
-    if session in (admin_session, operator_session):
-        # Test for admin and operator sessions.
+async def test_get_all_users(admin_client, operator_client, client):
+    if client in (admin_client, operator_client):
         validate_response(
-            test_response=session.get("http://localhost:9999/api/users/all"),
+            test_response=await client.get("/api/users/all"),
             expected_json_schema=ALL_USERS_JSON_SCHEMA,
             expected_status_code=200,
         )
     else:
-        # Test for spectator sessions.
         validate_response(
-            test_response=session.get("http://localhost:9999/api/users/all"),
+            test_response=await client.get("/api/users/all"),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
 
-def test_get_user_by_user_id(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    session: requests.Session,
-):
-    all_users_user_ids = [
-        user["user_id"]
-        for user in admin_session.get("http://localhost:9999/api/users/all").json()
-    ]
+async def test_get_user_by_user_id(admin_client, operator_client, client):
+    all_users_response = await admin_client.get("/api/users/all")
+    all_user_ids = [user["user_id"] for user in all_users_response.json()]
 
-    if session in (admin_session, operator_session):
-        for user_id in all_users_user_ids:
+    if client in (admin_client, operator_client):
+        for user_id in all_user_ids:
             validate_response(
-                test_response=session.get(
-                    f"http://localhost:9999/api/users/{user_id}",
-                ),
+                test_response=await client.get(f"/api/users/{user_id}"),
                 expected_json_schema=USER_JSON_SCHEMA,
                 expected_status_code=200,
             )
         validate_response(
-            test_response=admin_session.get(
-                "http://localhost:9999/api/users/invalid-user-id",
-            ),
+            test_response=await admin_client.get("/api/users/invalid-user-id"),
             expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
             expected_status_code=404,
         )
     else:
-        for user_id in all_users_user_ids:
+        for user_id in all_user_ids:
             validate_response(
-                test_response=session.get(
-                    f"http://localhost:9999/api/users/{user_id}",
-                ),
+                test_response=await client.get(f"/api/users/{user_id}"),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
-        # 404 should not be returned despite the user ID being an invalid user ID to
-        # prevent information leakage to low privileged users (OPERATOR and SPECTATOR).
+        # 404 must not leak to low-privilege users
         validate_response(
-            test_response=session.get(
-                "http://localhost:9999/api/users/invalid-user-id",
-            ),
+            test_response=await client.get("/api/users/invalid-user-id"),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 
 
-def test_update_own_display_name(session: requests.Session):
-    # Get the current user's information
-    current_user_response = validate_response(
-        test_response=session.get("http://localhost:9999/api/users/me"),
-        expected_json_schema=USER_JSON_SCHEMA,
-        expected_status_code=200,
-    )
-    original_display_name = current_user_response.json()["display_name"]
+async def test_update_own_display_name(client):
+    current_user = (await client.get("/api/users/me")).json()
+    original_display_name = current_user["display_name"]
 
-    # Update the display name
-    updated_user_response = validate_response(
-        test_response=session.patch(
-            "http://localhost:9999/api/users/me",
+    updated = validate_response(
+        test_response=await client.patch(
+            "/api/users/me",
             json={"display_name": "Updated Display Name"},
         ),
         expected_json_schema=USER_JSON_SCHEMA,
         expected_status_code=200,
     )
-    assert updated_user_response.json()["display_name"] == "Updated Display Name"
+    assert updated.json()["display_name"] == "Updated Display Name"
 
-    # Restore the original display name
     validate_response(
-        test_response=session.patch(
-            "http://localhost:9999/api/users/me",
+        test_response=await client.patch(
+            "/api/users/me",
             json={"display_name": original_display_name},
         ),
         expected_json_schema=USER_JSON_SCHEMA,
@@ -160,69 +134,56 @@ def test_update_own_display_name(session: requests.Session):
     )
 
 
-def test_update_user_display_name_by_user_id(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
+async def test_update_user_display_name_by_user_id(
+    admin_client, operator_client, spectator_client, client
 ):
-    # Get all users
-    all_users = admin_session.get("http://localhost:9999/api/users/all").json()
-
-    # Find a user that is not the current session user
-    current_user = session.get("http://localhost:9999/api/users/me").json()
-    target_user = next(
-        user for user in all_users if user["user_id"] != current_user["user_id"]
-    )
+    all_users = (await admin_client.get("/api/users/all")).json()
+    current_user = (await client.get("/api/users/me")).json()
+    target_user = next(u for u in all_users if u["user_id"] != current_user["user_id"])
     target_user_id = target_user["user_id"]
     original_display_name = target_user["display_name"]
 
-    if session == admin_session:
-        # Admin should be able to update any user's display name
-        updated_user_response = validate_response(
-            test_response=session.patch(
-                f"http://localhost:9999/api/users/{target_user_id}",
+    if client == admin_client:
+        updated = validate_response(
+            test_response=await client.patch(
+                f"/api/users/{target_user_id}",
                 json={"display_name": "Admin Updated Name"},
             ),
             expected_json_schema=USER_JSON_SCHEMA,
             expected_status_code=200,
         )
-        assert updated_user_response.json()["display_name"] == "Admin Updated Name"
+        assert updated.json()["display_name"] == "Admin Updated Name"
 
-        # Restore the original display name
         validate_response(
-            test_response=session.patch(
-                f"http://localhost:9999/api/users/{target_user_id}",
+            test_response=await client.patch(
+                f"/api/users/{target_user_id}",
                 json={"display_name": original_display_name},
             ),
             expected_json_schema=USER_JSON_SCHEMA,
             expected_status_code=200,
         )
 
-        # Test with invalid user ID
         validate_response(
-            test_response=session.patch(
-                "http://localhost:9999/api/users/invalid-user-id",
+            test_response=await client.patch(
+                "/api/users/invalid-user-id",
                 json={"display_name": "Should Fail"},
             ),
             expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
             expected_status_code=404,
         )
     else:
-        # Operator and spectator should not be able to update other users' display names
         validate_response(
-            test_response=session.patch(
-                f"http://localhost:9999/api/users/{target_user_id}",
+            test_response=await client.patch(
+                f"/api/users/{target_user_id}",
                 json={"display_name": "Should Fail"},
             ),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
-
-        # 404 should not be returned despite invalid user ID to prevent information leakage
+        # Invalid user ID must not leak 404 to low-privilege users
         validate_response(
-            test_response=session.patch(
-                "http://localhost:9999/api/users/invalid-user-id",
+            test_response=await client.patch(
+                "/api/users/invalid-user-id",
                 json={"display_name": "Should Fail"},
             ),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,

@@ -1,4 +1,5 @@
-import requests
+import httpx
+import pytest
 
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
@@ -10,197 +11,175 @@ from tests.api_tests.test_user_accounts_api import (
 from tests.api_tests.test_users_api import USER_NOT_FOUND_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
 
+pytestmark = pytest.mark.anyio
 
-def test_logout_from_server(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    spectator_session: requests.Session,
-):
-    """Test that all users can logout themselves."""
+
+async def test_logout_from_server(app, admin_client, operator_client, spectator_client):
+    """All roles can logout themselves, after which their token becomes invalid."""
     sessions_with_credentials = [
-        (admin_session, "admin", "admin"),
-        (operator_session, "operator", "operator"),
-        (spectator_session, "spectator", "spectator"),
+        (admin_client, "admin", "admin"),
+        (operator_client, "operator", "operator"),
+        (spectator_client, "spectator", "spectator"),
     ]
-
     for session, username, password in sessions_with_credentials:
-        # Logout
         validate_response(
-            test_response=session.post("http://localhost:9999/api/logout"),
+            test_response=await session.post("/api/logout"),
+            expected_json_schema=SUCCESS_JSON_SCHEMA,
+            expected_status_code=200,
+        )
+        validate_response(
+            test_response=await session.get("/api/users/me"),
+            expected_status_code=401,
+        )
+        # Re-login so subsequent tests can still use this session
+        response = await session.post(
+            "/api/login",
+            data={"username": username, "password": password},
+        )
+        assert response.status_code == 200, f"Re-login failed for {username}"
+        session.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
+
+
+async def test_logout_user_by_user_id(
+    app, admin_client, operator_client, spectator_client
+):
+    """Admin can force-logout a user by user_id; non-admins get 403."""
+    second_admin = httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://test",
+    )
+    try:
+        login_resp = await second_admin.post(
+            "/api/login",
+            data={"username": "admin", "password": "admin"},
+        )
+        assert login_resp.status_code == 200
+        second_admin.headers["Authorization"] = (
+            f"Bearer {login_resp.json()['access_token']}"
+        )
+
+        target_user_id = (await second_admin.get("/api/users/me")).json()["user_id"]
+
+        validate_response(
+            test_response=await second_admin.get("/api/users/me"),
+            expected_status_code=200,
+        )
+
+        validate_response(
+            test_response=await admin_client.post(f"/api/logout/user/{target_user_id}"),
             expected_json_schema=SUCCESS_JSON_SCHEMA,
             expected_status_code=200,
         )
 
-        # Verify logged out
         validate_response(
-            test_response=session.get("http://localhost:9999/api/users/me"),
+            test_response=await second_admin.get("/api/users/me"),
             expected_status_code=401,
         )
 
-        # Re-login for subsequent tests
-        response = session.post(
-            "http://localhost:9999/api/login",
-            data={"username": username, "password": password},
-        )
-        session.headers.update(
-            {"Authorization": f"Bearer {response.json()['access_token']}"}
+        # Invalid user ID → 404
+        validate_response(
+            test_response=await admin_client.post("/api/logout/user/invalid-user-id"),
+            expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
+            expected_status_code=404,
         )
 
+        # Operator and spectator get 403; invalid ID also returns 403 (no leakage)
+        for non_admin in [operator_client, spectator_client]:
+            validate_response(
+                test_response=await non_admin.post(
+                    f"/api/logout/user/{target_user_id}"
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+                expected_status_code=403,
+            )
+            validate_response(
+                test_response=await non_admin.post("/api/logout/user/invalid-user-id"),
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+                expected_status_code=403,
+            )
+    finally:
+        await second_admin.aclose()
 
-def test_logout_user_by_user_id(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    spectator_session: requests.Session,
+
+async def test_logout_user_account_by_user_account_id(
+    app, admin_client, operator_client, spectator_client
 ):
-    """Test logging out a user by user ID."""
-    # Create a second admin session to test logout on
-    second_admin_session = requests.Session()
-    login_response = second_admin_session.post(
-        "http://localhost:9999/api/login",
-        data={"username": "admin", "password": "admin"},
+    """Admin can force-logout all sessions for a user account by user_account_id."""
+    second_spectator = httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://test",
     )
-    second_admin_session.headers.update(
-        {"Authorization": f"Bearer {login_response.json()['access_token']}"}
-    )
-
-    # Get the admin user ID
-    admin_user_response = second_admin_session.get("http://localhost:9999/api/users/me")
-    target_user_id = admin_user_response.json()["user_id"]
-
-    # Verify second admin session is logged in
-    validate_response(
-        test_response=second_admin_session.get("http://localhost:9999/api/users/me"),
-        expected_status_code=200,
-    )
-
-    # Admin should be able to logout users by user ID
-    validate_response(
-        test_response=admin_session.post(
-            f"http://localhost:9999/api/logout/user/{target_user_id}"
-        ),
-        expected_json_schema=SUCCESS_JSON_SCHEMA,
-        expected_status_code=200,
-    )
-
-    # Verify second admin session is logged out
-    validate_response(
-        test_response=second_admin_session.get("http://localhost:9999/api/users/me"),
-        expected_status_code=401,
-    )
-
-    # Test with invalid user ID
-    validate_response(
-        test_response=admin_session.post(
-            "http://localhost:9999/api/logout/user/invalid-user-id"
-        ),
-        expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
-        expected_status_code=404,
-    )
-
-    # Operator and spectator should not be able to logout users by user ID
-    for session in [operator_session, spectator_session]:
-        validate_response(
-            test_response=session.post(
-                f"http://localhost:9999/api/logout/user/{target_user_id}"
-            ),
-            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-            expected_status_code=403,
+    try:
+        login_resp = await second_spectator.post(
+            "/api/login",
+            data={"username": "spectator", "password": "spectator"},
+        )
+        assert login_resp.status_code == 200
+        second_spectator.headers["Authorization"] = (
+            f"Bearer {login_resp.json()['access_token']}"
         )
 
-        # 404 should not be returned to prevent information leakage
+        target_user_account_id = (await second_spectator.get("/api/users/me")).json()[
+            "user_account"
+        ]["user_account_id"]
+
         validate_response(
-            test_response=session.post(
-                "http://localhost:9999/api/logout/user/invalid-user-id"
-            ),
-            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-            expected_status_code=403,
+            test_response=await second_spectator.get("/api/users/me"),
+            expected_status_code=200,
         )
 
-
-def test_logout_user_account_by_user_account_id(
-    admin_session: requests.Session,
-    operator_session: requests.Session,
-    spectator_session: requests.Session,
-):
-    # """Test logging out a user by user account ID."""
-    # # Create a second spectator session to test logout on
-    second_spectator_session = requests.Session()
-    login_response = second_spectator_session.post(
-        "http://localhost:9999/api/login",
-        data={"username": "spectator", "password": "spectator"},
-    )
-    second_spectator_session.headers.update(
-        {"Authorization": f"Bearer {login_response.json()['access_token']}"}
-    )
-
-    # Get the spectator user account ID
-    spectator_user_response = second_spectator_session.get(
-        "http://localhost:9999/api/users/me"
-    )
-    target_user_account_id = spectator_user_response.json()["user_account"][
-        "user_account_id"
-    ]
-
-    # Verify second spectator session is logged in
-    validate_response(
-        test_response=second_spectator_session.get(
-            "http://localhost:9999/api/users/me"
-        ),
-        expected_status_code=200,
-    )
-
-    # Admin should be able to logout users by user account ID
-    validate_response(
-        test_response=admin_session.post(
-            f"http://localhost:9999/api/logout/user-account/{target_user_account_id}"
-        ),
-        expected_json_schema=SUCCESS_JSON_SCHEMA,
-        expected_status_code=200,
-    )
-
-    # Verify second spectator session is logged out
-    validate_response(
-        test_response=second_spectator_session.get(
-            "http://localhost:9999/api/users/me"
-        ),
-        expected_status_code=401,
-    )
-
-    # Test with invalid user account ID
-    validate_response(
-        test_response=admin_session.post(
-            "http://localhost:9999/api/logout/user-account/invalid-user-account-id"
-        ),
-        expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
-        expected_status_code=404,
-    )
-
-    # Log back in spectator session for subsequent tests because logging out the second
-    # spectator session by user account ID causes the first spectator session to be
-    # logged out as well.
-    response = spectator_session.post(
-        "http://localhost:9999/api/login",
-        data={"username": "spectator", "password": "spectator"},
-    )
-    spectator_session.headers.update(
-        {"Authorization": f"Bearer {response.json()['access_token']}"}
-    )
-
-    # Operator and spectator should not be able to logout users by user account ID
-    for session in [spectator_session]:  # , spectator_session]:
         validate_response(
-            test_response=session.post(
-                f"http://localhost:9999/api/logout/user-account/{target_user_account_id}"
+            test_response=await admin_client.post(
+                f"/api/logout/user-account/{target_user_account_id}"
             ),
-            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-            expected_status_code=403,
+            expected_json_schema=SUCCESS_JSON_SCHEMA,
+            expected_status_code=200,
         )
 
-        # 404 should not be returned to prevent information leakage
+        # Both first and second spectator sessions are now invalid
         validate_response(
-            test_response=session.post(
-                "http://localhost:9999/api/logout/user-account/invalid-user-account-id"
-            ),
-            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-            expected_status_code=403,
+            test_response=await second_spectator.get("/api/users/me"),
+            expected_status_code=401,
         )
+        validate_response(
+            test_response=await spectator_client.get("/api/users/me"),
+            expected_status_code=401,
+        )
+
+        # Invalid user account ID → 404
+        validate_response(
+            test_response=await admin_client.post(
+                "/api/logout/user-account/invalid-user-account-id"
+            ),
+            expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
+            expected_status_code=404,
+        )
+
+        # Operator and spectator get 403; invalid ID also returns 403
+        # Re-login spectator first so it can make RBAC-denied requests
+        login_resp2 = await spectator_client.post(
+            "/api/login",
+            data={"username": "spectator", "password": "spectator"},
+        )
+        assert login_resp2.status_code == 200
+        spectator_client.headers["Authorization"] = (
+            f"Bearer {login_resp2.json()['access_token']}"
+        )
+
+        for non_admin in [operator_client, spectator_client]:
+            validate_response(
+                test_response=await non_admin.post(
+                    f"/api/logout/user-account/{target_user_account_id}"
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+                expected_status_code=403,
+            )
+            validate_response(
+                test_response=await non_admin.post(
+                    "/api/logout/user-account/invalid-user-account-id"
+                ),
+                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+                expected_status_code=403,
+            )
+    finally:
+        await second_spectator.aclose()

@@ -1,11 +1,9 @@
 import pytest
-import requests
 
-from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_JSON_SCHEMA,
-)
-from tests.api_tests.test_listeners_api import LISTENER_JSON_SCHEMA
+from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import get_all_listener_template_ids, validate_response
+
+pytestmark = pytest.mark.anyio
 
 LISTENER_TEMPLATE_JSON_SCHEMA = {
     "type": "object",
@@ -119,11 +117,7 @@ OPTION_VALUE_ERROR_JSON_SCHEMA = {
                         "option_value": {},
                         "error_message": {"type": "string"},
                     },
-                    "required": [
-                        "option_str",
-                        "option_value",
-                        "error_message",
-                    ],
+                    "required": ["option_str", "option_value", "error_message"],
                 },
             },
             "required": ["code", "message", "detail"],
@@ -133,34 +127,25 @@ OPTION_VALUE_ERROR_JSON_SCHEMA = {
 }
 
 
-def test_get_all_listener_templates(
-    session: requests.Session,
-):
+async def test_get_all_listener_templates(client):
     validate_response(
-        test_response=session.get(
-            "http://localhost:9999/api/listener-templates/all",
-        ),
+        test_response=await client.get("/api/listener-templates/all"),
         expected_json_schema=ALL_LISTENER_TEMPLATES_JSON_SCHEMA,
         expected_status_code=200,
     )
 
 
-def test_get_listener_template_by_listener_template_id(
-    admin_session: requests.Session,
-    session: requests.Session,
-):
-    for listener_template_id in get_all_listener_template_ids(admin_session):
+async def test_get_listener_template_by_listener_template_id(admin_client, client):
+    for template_id in await get_all_listener_template_ids(admin_client):
         validate_response(
-            test_response=session.get(
-                f"http://localhost:9999/api/listener-templates/{listener_template_id}",
-            ),
+            test_response=await client.get(f"/api/listener-templates/{template_id}"),
             expected_json_schema=LISTENER_TEMPLATE_JSON_SCHEMA,
             expected_status_code=200,
         )
 
     validate_response(
-        test_response=session.get(
-            "http://localhost:9999/api/listener-templates/invalid-listener-template-id",
+        test_response=await client.get(
+            "/api/listener-templates/invalid-listener-template-id"
         ),
         expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
@@ -168,43 +153,33 @@ def test_get_listener_template_by_listener_template_id(
 
 
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_create_listener_through_listener_template_by_listener_template_id(
-    admin_session: requests.Session,
-    spectator_session: requests.Session,
-    session: requests.Session,
+async def test_create_listener_through_listener_template(
+    admin_client, spectator_client, client
 ):
-    if session != spectator_session:
-        # Test for admin sessions and operator sessions.
-        for listener_template_id in get_all_listener_template_ids(admin_session):
+    from tests.api_tests.test_listeners_api import LISTENER_JSON_SCHEMA
+
+    for template_id in await get_all_listener_template_ids(admin_client):
+        template = (
+            await admin_client.get(f"/api/listener-templates/{template_id}")
+        ).json()
+        options_payload = {
+            name: opt["default_value"] for name, opt in template["options"].items()
+        }
+
+        if client != spectator_client:
             validate_response(
-                test_response=session.post(
-                    f"http://localhost:9999/api/listener-templates/{listener_template_id}",
-                    json={
-                        option_name: option["default_value"]
-                        for option_name, option in session.get(
-                            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
-                        )
-                        .json()["options"]
-                        .items()
-                    },
+                test_response=await client.post(
+                    f"/api/listener-templates/{template_id}",
+                    json=options_payload,
                 ),
                 expected_json_schema=LISTENER_JSON_SCHEMA,
                 expected_status_code=201,
             )
-    else:
-        # Test for spectator sessions.
-        for listener_template_id in get_all_listener_template_ids(admin_session):
+        else:
             validate_response(
-                test_response=session.post(
-                    f"http://localhost:9999/api/listener-templates/{listener_template_id}",
-                    json={
-                        option_name: option["default_value"]
-                        for option_name, option in session.get(
-                            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
-                        )
-                        .json()["options"]
-                        .items()
-                    },
+                test_response=await client.post(
+                    f"/api/listener-templates/{template_id}",
+                    json=options_payload,
                 ),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
@@ -212,34 +187,35 @@ def test_create_listener_through_listener_template_by_listener_template_id(
 
 
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_create_listener_with_missing_required_option(
-    admin_session: requests.Session,
-):
-    for listener_template_id in get_all_listener_template_ids(admin_session):
-        listener_template = admin_session.get(
-            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+async def test_create_listener_with_invalid_template_id(admin_client):
+    validate_response(
+        test_response=await admin_client.post(
+            "/api/listener-templates/invalid-template-id",
+            json={},
+        ),
+        expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_create_listener_with_missing_required_option(admin_client):
+    for template_id in await get_all_listener_template_ids(admin_client):
+        template = (
+            await admin_client.get(f"/api/listener-templates/{template_id}")
         ).json()
-
-        # Find required options
         required_options = [
-            option_name
-            for option_name, option in listener_template["options"].items()
-            if option["required"]
+            name for name, opt in template["options"].items() if opt["required"]
         ]
-
         if required_options:
-            # Build parameters dict with all defaults except one required option
-            parameters = {
-                option_name: option["default_value"]
-                for option_name, option in listener_template["options"].items()
+            params = {
+                name: opt["default_value"] for name, opt in template["options"].items()
             }
-            # Remove one required option
-            del parameters[required_options[0]]
-
+            del params[required_options[0]]
             validate_response(
-                test_response=admin_session.post(
-                    f"http://localhost:9999/api/listener-templates/{listener_template_id}",
-                    json=parameters,
+                test_response=await admin_client.post(
+                    f"/api/listener-templates/{template_id}",
+                    json=params,
                 ),
                 expected_json_schema=MISSING_REQUIRED_OPTION_ERROR_JSON_SCHEMA,
                 expected_status_code=422,
@@ -247,43 +223,31 @@ def test_create_listener_with_missing_required_option(
 
 
 @pytest.mark.usefixtures("delete_listeners_after_test")
-def test_create_listener_with_invalid_option_value_type(
-    admin_session: requests.Session,
-):
-    # Map of type names to invalid values
+async def test_create_listener_with_invalid_option_value_type(admin_client):
     invalid_values_by_type = {
-        "str": 123,  # int instead of str
-        "int": "not_an_int",  # str instead of int
-        "float": "not_a_float",  # str instead of float
-        "bool": "not_a_bool",  # str instead of bool
+        "str": 123,
+        "int": "not_an_int",
+        "float": "not_a_float",
+        "bool": "not_a_bool",
     }
-
-    for listener_template_id in get_all_listener_template_ids(admin_session):
-        listener_template = admin_session.get(
-            f"http://localhost:9999/api/listener-templates/{listener_template_id}",
+    for template_id in await get_all_listener_template_ids(admin_client):
+        template = (
+            await admin_client.get(f"/api/listener-templates/{template_id}")
         ).json()
-
-        # Build base parameters with all defaults
-        parameters = {
-            option_name: option["default_value"]
-            for option_name, option in listener_template["options"].items()
+        params = {
+            name: opt["default_value"] for name, opt in template["options"].items()
         }
-
-        # Find an option with a specific value_type to test invalid type
-        for option_name, option in listener_template["options"].items():
+        for option_name, option in template["options"].items():
             value_type = option.get("value_type")
             if value_type and value_type in invalid_values_by_type:
-                # Create a copy with an invalid value for this option
-                invalid_parameters = parameters.copy()
-                invalid_parameters[option_name] = invalid_values_by_type[value_type]
-
+                invalid_params = params.copy()
+                invalid_params[option_name] = invalid_values_by_type[value_type]
                 validate_response(
-                    test_response=admin_session.post(
-                        f"http://localhost:9999/api/listener-templates/{listener_template_id}",
-                        json=invalid_parameters,
+                    test_response=await admin_client.post(
+                        f"/api/listener-templates/{template_id}",
+                        json=invalid_params,
                     ),
                     expected_json_schema=OPTION_VALUE_ERROR_JSON_SCHEMA,
                     expected_status_code=422,
                 )
-                # Only test one invalid option per template
                 break

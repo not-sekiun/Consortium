@@ -1,9 +1,9 @@
-import requests
+import pytest
 
-from tests.api_tests.common_json_response_schemas import (
-    FORBIDDEN_ERROR_JSON_SCHEMA,
-)
+from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
+
+pytestmark = pytest.mark.anyio
 
 SERVER_VERSION_JSON_SCHEMA = {
     "type": "object",
@@ -35,29 +35,24 @@ SERVER_CONFIG_JSON_SCHEMA = {
 }
 
 
-def test_get_server_release(session: requests.Session):
+async def test_get_server_release(client):
     validate_response(
-        test_response=session.get("http://localhost:9999/api/server/release"),
+        test_response=await client.get("/api/server/release"),
         expected_json_schema=SERVER_VERSION_JSON_SCHEMA,
         expected_status_code=200,
     )
 
 
-def test_get_server_config(
-    spectator_session: requests.Session,
-    session: requests.Session,
-):
-    if session != spectator_session:
-        # Test for admin sessions and operator sessions.
+async def test_get_server_config(spectator_client, client):
+    if client != spectator_client:
         validate_response(
-            test_response=session.get("http://localhost:9999/api/server/config"),
+            test_response=await client.get("/api/server/config"),
             expected_json_schema=SERVER_CONFIG_JSON_SCHEMA,
             expected_status_code=200,
         )
     else:
-        # Test for spectator sessions.
         validate_response(
-            test_response=session.get("http://localhost:9999/api/server/config"),
+            test_response=await client.get("/api/server/config"),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
