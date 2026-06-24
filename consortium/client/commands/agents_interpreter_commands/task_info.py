@@ -78,7 +78,7 @@ class TaskInfoCommand(BaseConnectedCommand):
             "Status",
             format_agent_task_status_string_with_color(task["status"]["state"])
             + (
-                "(" + task["status"]["error"]["message"] + ")"
+                " (" + task["status"]["error"]["message"] + ")"
                 if task["status"]["error"]
                 else ""
             ),
