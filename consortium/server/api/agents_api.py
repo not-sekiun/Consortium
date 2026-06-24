@@ -222,8 +222,7 @@ def get_all_agent_tasks(
 ) -> list[AgentTaskModel]:
     tasks = _agents_service.get_all_agent_tasks(status=status)
     return [
-        AgentTaskModel(**task.to_json(limit=limit, offset=offset))
-        for task in tasks
+        AgentTaskModel(**task.to_json(limit=limit, offset=offset)) for task in tasks
     ]
 
     # return _convert_agent_task_models_to_api_response_models(
@@ -352,8 +351,7 @@ def get_all_agent_tasks_by_agent_id(
         ) from None
 
     return [
-        AgentTaskModel(**task.to_json(limit=limit, offset=offset))
-        for task in tasks
+        AgentTaskModel(**task.to_json(limit=limit, offset=offset)) for task in tasks
     ]
 
     # return _convert_agent_task_models_to_api_response_models(

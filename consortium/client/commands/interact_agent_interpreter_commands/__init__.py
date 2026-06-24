@@ -13,6 +13,7 @@ from consortium.client.commands.interact_agent_interpreter_commands.agent_info i
 from consortium.client.commands.interact_agent_interpreter_commands.agent_rename import (
     AgentRenameCommand,
 )
+
 # from consortium.client.commands.interact_agent_interpreter_commands.result_list import (
 #     ResultListCommand,
 # )
