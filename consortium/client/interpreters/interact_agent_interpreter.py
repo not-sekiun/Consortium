@@ -27,7 +27,6 @@ from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
 from consortium.client.utils.printer_utils import (
-    print_info,
     print_success,
     print_warning,
 )
@@ -130,7 +129,6 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         for command in [
             "info",
             "interact",
-            # "r-list",
             "t-list",
             "rename",
             "describe",
@@ -143,11 +141,6 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
             nested_completer_dict[command] = {
                 task["task_id"]: None for task in all_tasks
             }
-
-        # all_results = await self.client_session.rest_api.get_all_agent_results()
-        # nested_completer_dict["r-info"] = {
-        #     result["result_id"]: None for result in all_results
-        # }
 
         # Register commands that take the asset ID as the first positional argument to
         # autocomplete with.
@@ -188,27 +181,27 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         )
 
     # TODO: Read from an event stream instead
-    # Event handler listens for specific agent events related to the current agent
-    # being interacted with, namely any received agent results.
-    async def _agent_result_received_event_handler(
-        self,
-        event: dict[str, Any],
-    ) -> None:
-        result = event["data"]["result"]
-
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            self.prompt_session.completer,
-        )
-        nested_completer_dict["r-info"][result["result_id"]] = None
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
-        )
-
-        if event["data"]["agent_id"] == self.interpreter_context.agent["agent_id"]:
-            print_info(
-                f"Received result with result ID {result['result_id']} for "
-                f"task with task ID {result['task_id']}:\n{result['message']}",
-            )
+    # # Event handler listens for specific agent events related to the current agent
+    # # being interacted with, namely any received agent results.
+    # async def _agent_result_received_event_handler(
+    #     self,
+    #     event: dict[str, Any],
+    # ) -> None:
+    #     result = event["data"]["result"]
+    #
+    #     nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
+    #         self.prompt_session.completer,
+    #     )
+    #     nested_completer_dict["r-info"][result["result_id"]] = None
+    #     self.prompt_session.completer = NestedCompleter.from_nested_dict(
+    #         nested_completer_dict,
+    #     )
+    #
+    #     if event["data"]["agent_id"] == self.interpreter_context.agent["agent_id"]:
+    #         print_info(
+    #             f"Received result with result ID {result['result_id']} for "
+    #             f"task with task ID {result['task_id']}:\n{result['message']}",
+    #         )
 
     async def _agent_registered_event_handler(
         self,
@@ -223,7 +216,6 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         for command in [
             "info",
             "interact",
-            # "r-list",
             "t-list",
             "rename",
             "describe",
@@ -235,10 +227,11 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
 
     async def _setup_event_handlers(self) -> None:
         # Register all relevant event handlers first
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="AGENT_RESULT_RECEIVED",
-            event_handler=self._agent_result_received_event_handler,
-        )
+        # TODO: Remove and replace with something to watch tasks completion instead
+        # await self.client_session.websockets_api.subscribe_to_event(
+        #     event_type="AGENT_RESULT_RECEIVED",
+        #     event_handler=self._agent_result_received_event_handler,
+        # )
         await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
@@ -253,10 +246,11 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="AGENT_RESULT_RECEIVED",
-            event_handler=self._agent_result_received_event_handler,
-        )
+        # TODO: Remove
+        # await self.client_session.websockets_api.unsubscribe_from_event(
+        #     event_type="AGENT_RESULT_RECEIVED",
+        #     event_handler=self._agent_result_received_event_handler,
+        # )
         await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,

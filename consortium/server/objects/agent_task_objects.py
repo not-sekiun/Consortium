@@ -128,7 +128,7 @@ class AgentTask:
             f"AgentTask("
             f"task_id={self.task_id!r}, "
             f"command={self.command!r}, "
-            f"arguments={self.arguments!r},"
+            f"arguments={self.arguments!r}, "
             f"status={self.status!r},"
             f")"
         )
