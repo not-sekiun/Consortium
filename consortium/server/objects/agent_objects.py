@@ -213,12 +213,8 @@ class Agent:
         # INACTIVE by the listener, the moment it is not running or deleted, the agent
         # state will be ORPHANED or UNREACHABLE respectively.
         self._status = AgentStatus.ACTIVE
-
-        # TODO: Move all the tasks and results to a database instead of storing them
-        #  all in memory.
+        # TODO: Move all the tasks to a database instead of storing them in memory.
         self._tasks = {}
-        # self._results = {}
-
         self._task_messages_queue = asyncio.Queue()
         self._agent_capability_execution_lock = asyncio.Lock()
         # Each agent capability is mapped to a task by the task ID. This lets us

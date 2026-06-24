@@ -88,7 +88,6 @@ class EventsService:
         return list(EventType)
 
     @log_and_propagate_error_on_service_method
-    # async def trigger_event(self, event: Event):
     async def trigger_event(
         self, event_type: EventType, message: str = "", data: JSON | None = None
     ) -> None:
