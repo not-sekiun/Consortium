@@ -9,9 +9,10 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from consortium.framework._utils import format_docstring_to_single_line
 from consortium.framework.agent_message_models import (
     TaskLaunchMessageModel,
-    TaskOutputMessageModel,
+    # TaskOutputMessageModel,
 )
 from consortium.framework.agents._agent_communicator import _AgentCommunicator
+from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.framework_types import Primitive, PrimitiveCollection
 from consortium.framework.options import (
     ChoiceValueOption,
@@ -252,7 +253,7 @@ class BaseAgentCapability(_AgentCommunicator):
     async def execute(
         self,
         task_message: TaskLaunchMessageModel,
-    ) -> TaskOutputMessageModel:
+    ) -> Success | Failure | None:
         return await self.send_and_recv_from_agent(
             task_message=task_message,
         )

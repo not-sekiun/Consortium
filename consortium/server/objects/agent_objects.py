@@ -13,6 +13,7 @@ from consortium.framework.agent_message_models import (
     TaskOutputMessageModel,
 )
 from consortium.framework.agents import BaseAgentCapability
+from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.event_hooks import EventType
 from consortium.framework.exceptions.agent_capabilties_framework_exception import (
     AgentCapabilityRuntimeError as AgentCapabilityRuntimeFrameworkError,
@@ -44,6 +45,7 @@ from consortium.server.exceptions.consortium_exceptions.options_consortium_excep
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
     PayloadNotFoundError,
 )
+from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_file_manager_service import (
@@ -538,11 +540,9 @@ class Agent:
             try:
                 if agent_capability.is_atomic:
                     async with self._agent_capability_execution_lock:
-                        # TODO: Remove, returning implicitly is a success
-                        # result_message = await agent_capability.execute(
-                        #     task_message=task_message,
-                        # )
-                        await agent_capability.execute(task_message=task_message)
+                        task_outcome = await agent_capability.execute(
+                            task_message=task_message
+                        )
                 else:
                     # "Wait" for the lock to be released but dont actually hold it while
                     # executing the agent capability. This allows non-atomic agent
@@ -551,52 +551,51 @@ class Agent:
                     async with self._agent_capability_execution_lock:
                         pass
 
-                    # TODO: Remove, return is meaningless now returning is implicitly a
-                    #  success
-                    # result_message = await agent_capability.execute(
-                    #     task_message=task_message,
-                    # )
-                    await agent_capability.execute(task_message=task_message)
-                # Upon returning without raising an error the task is considered to
-                # automatically have completed without failure.
-                task.status._transition_to_succeeded()
+                    task_outcome = await agent_capability.execute(
+                        task_message=task_message
+                    )
 
-                # TODO: Remove, returning implicitly is a success
-                # if not isinstance(result_message, AgentResultMessageModel):
-                #     self.logger.error(
-                #         "Agent capability '{}' returned an invalid type '{}'. "
-                #         "Expected `AgentResultMessageModel` to be returned.",
-                #         agent_capability.name,
-                #         type(result_message),
-                #     )
-                #
-                #     result = AgentResultModel(
-                #         status=AgentResultStatus.ERROR,
-                #         message=(
-                #             f"Failed to execute agent capability "
-                #             f"'{agent_capability.name}'. Agent capability returned an "
-                #             f"invalid type '{type(result_message)}'. "
-                #             f"Expected `AgentResultMessageModel` to be returned."
-                #         ),
-                #         task_id=task.task_id,
-                #         command=task.command,
-                #         arguments=task.arguments,
-                #         datetime_started=task.datetime_started,
-                #     )
-                # else:
-                # result = AgentResultModel(
-                #     status=AgentResultStatus.SUCCESS
-                #     if result_message.success
-                #     else AgentResultStatus.FAILURE,
-                #     message=result_message.message,
-                #     data=result_message.data,
-                #     task_id=task.task_id,
-                #     command=task.command,
-                #     arguments=task.arguments,
-                #     datetime_started=task.datetime_started,
-                # )
+                # Upon returning without raising an error check the `task_outcome` to
+                # see if it is present or not and emit the final event based on that
+                if isinstance(task_outcome, Success):
+                    task.status._transition_to_succeeded()
+                    task.append_event(
+                        event_type=AgentTaskEventType.SUCCESS,
+                        message=task_outcome.task_output_message.message,
+                        data=task_outcome.task_output_message.data,
+                    )
+                elif isinstance(task_outcome, Failure):
+                    # TODO: Decide on a standard way for Failure to communicate message
+                    #  and data as compared to `AgentCapabilityRuntimeFrameworkError`
+                    task.status._transition_to_failed()
+                    task.append_event(
+                        event_type=AgentTaskEventType.FAILURE,
+                        message=task_outcome.task_output_message.message,
+                        data=task_outcome.task_output_message.data,
+                    )
+                elif task_outcome is None:
+                    pass
+                else:
+                    self.logger.warning(
+                        "Agent {} had a task {} that completed but returned a value "
+                        "that was `{!r}` instead of `Success`, `Failure` or `None`. "
+                        "This return value was ignored but should be fixed.",
+                        self,
+                        task,
+                        task_outcome,
+                    )
             except AgentCapabilityRuntimeFrameworkError as exc:
                 task.status._transition_to_failed(error=exc)
+                # TODO: Decide on what to append in this case and how data should be
+                #  communicated via `AgentCapabilityRuntimeFrameworkError` and where
+                #  the exception should live
+                task.append_event(
+                    event_type=AgentTaskEventType.FAILURE,
+                    message=exc.message,
+                    data={
+                        "detail": exc.detail,
+                    },
+                )
             except Exception as exc:
                 self.logger.error(
                     "Failed to execute agent capability '{}'. An unhandled "
@@ -614,37 +613,16 @@ class Agent:
                         ),
                     )
                 )
-
-                # task.status = AgentTaskState.ERROR
-                # task.progress_log.append(AgentTaskProgressLogModel())
-
-                # TODO: Replace with mutation on task object
-                # result = AgentResultModel(
-                #     status=AgentResultStatus.ERROR,
-                #     message=(
-                #         f"Failed to execute agent capability '{agent_capability.name}' "
-                #         f"due to an unhandled exception raised during execution. "
-                #         f"{exc.__class__.__name__}: {str(exc)}"
-                #     ),
-                #     data={},
-                #     task_id=task.task_id,
-                #     command=task.command,
-                #     arguments=task.arguments,
-                #     datetime_started=task.datetime_started,
-                # )
+                # TODO: Decide on what to append in this case
+                task.append_event(
+                    event_type=AgentTaskEventType.FAILURE,
+                    message=str(exc),
+                )
 
             # Upon receiving the final aggregated result message we can remove the
             # agent capability as it is now no longer considered to be running.
             self._running_agent_capabilities.pop(str(task_message.task_id))
 
-            # TODO: Remove
-            # self._results[str(result.result_id)] = result
-
-            # TODO: Remove
-            # # Adding the result implies that the task is completed
-            # task.status = AgentTaskState.COMPLETED
-
-            # TODO: Replace with Task completed event
             # Finally we fire the event to notify all event handlers that a task has
             # completed
             await server_singletons.events_service.trigger_event(
