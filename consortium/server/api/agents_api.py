@@ -165,12 +165,12 @@ def get_agent_task_by_task_id(
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS))
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of progress log entries to return")
+        int, Query(gt=0, description="Maximum number of task events to return")
     ] = 10,
     offset: Annotated[
         int | None,
         Query(
-            description="Starting position in progress log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
+            description="Starting position in task events log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
         ),
     ] = None,
 ) -> AgentTaskModel:
@@ -203,12 +203,12 @@ def get_all_agent_tasks_by_agent_id(
     ],
     status: AgentTaskState | None = None,
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of progress log entries to return")
+        int, Query(gt=0, description="Maximum number of task events to return")
     ] = 10,
     offset: Annotated[
         int | None,
         Query(
-            description="Starting position in progress log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
+            description="Starting position in task events log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
         ),
     ] = None,
 ) -> list[AgentTaskModel]:
@@ -274,12 +274,12 @@ def get_agent_tasks_by_agent_id_and_task_id(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of progress log entries to return")
+        int, Query(gt=0, description="Maximum number of task events to return")
     ] = 10,
     offset: Annotated[
         int | None,
         Query(
-            description="Starting position in progress log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
+            description="Starting position in task events log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
         ),
     ] = None,
 ) -> AgentTaskModel:
@@ -322,12 +322,12 @@ async def task_agent_by_agent_id(
         None, Depends(AuthorizeUserRequest(UserPermissions.TASK_AGENT_BY_AGENT_ID))
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of progress log entries to return")
+        int, Query(gt=0, description="Maximum number of task events to return")
     ] = 10,
     offset: Annotated[
         int | None,
         Query(
-            description="Starting position in progress log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
+            description="Starting position in task events log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
         ),
     ] = None,
 ) -> AgentTaskModel:

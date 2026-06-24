@@ -116,6 +116,7 @@ class AgentTask:
         self.current_progress = None
         self.datetime_created = datetime.now()
         self.datetime_started = None
+        self.datetime_completed = None
 
         self._sequence: int = 0
         self._events: list[AgentTaskEventModel] = []  # TODO: Move to db when possible
@@ -231,5 +232,8 @@ class AgentTask:
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_started": self.datetime_started.isoformat()
             if self.datetime_started is not None
+            else None,
+            "datetime_completed": self.datetime_completed.isoformat()
+            if self.datetime_completed is not None
             else None,
         }

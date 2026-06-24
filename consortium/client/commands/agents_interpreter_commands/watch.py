@@ -26,9 +26,9 @@ class WatchCommand(BaseConnectedCommand):
         Examples:
             watch 123e4567-e89b-12d3-a456-42661417400
             watch 123e4567-e89b-12d3-a456-42661417400 --interval 5
-            watch 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 progress entries (tail)
-            watch 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 progress entries
-            watch 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 entries starting from 5th from end
+            watch 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 task events (tail)
+            watch 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 task events
+            watch 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 task events starting from 5th from end
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -50,7 +50,7 @@ class WatchCommand(BaseConnectedCommand):
             "-l",
             "--limit",
             help=(
-                "Maximum number of progress log entries to return. "
+                "Maximum number of task events to return. "
                 "When specified without --offset, returns the last N entries (tail). "
                 "Must be a positive integer (defaults to 10 entries)."
             ),
@@ -61,7 +61,7 @@ class WatchCommand(BaseConnectedCommand):
             "-o",
             "--offset",
             help=(
-                "Starting position in the progress log. Positive values start from "
+                "Starting position in the task event log. Positive values start from "
                 "the beginning, negative values offset from the end. "
                 "If not specified, returns the tail (last N entries based on limit)."
             ),
@@ -73,19 +73,19 @@ class WatchCommand(BaseConnectedCommand):
     async def _fetch_and_build_display(
         rest_api: RestAPI,
         task_id: str,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> tuple[Group, str]:
         task = await rest_api.get_agent_task_by_task_id(
             task_id=task_id,
-            progress_limit=progress_limit,
-            progress_offset=progress_offset,
+            limit=limit,
+            offset=offset,
         )
 
-        task_info_table, task_progress_log_table = TaskInfoCommand.build_task_tables(
+        task_info_table, task_events_table = TaskInfoCommand.build_task_tables(
             task=task
         )
-        display = Group(task_info_table, "", task_progress_log_table, "")
+        display = Group(task_info_table, "", task_events_table, "")
 
         return display, task["status"]["state"]
 
@@ -98,12 +98,12 @@ class WatchCommand(BaseConnectedCommand):
             rest_api = context.client_session.rest_api
             task_id = parsed_args.task_id
             interval = parsed_args.interval
-            progress_limit = parsed_args.limit
-            progress_offset = parsed_args.offset
+            limit = parsed_args.limit
+            offset = parsed_args.offset
 
-            if progress_limit and progress_limit > 100:
+            if limit and limit > 100:
                 print_warning(
-                    f"Displaying {progress_limit} log entries (> 100) may cause "
+                    f"Displaying {limit} log entries (> 100) may cause "
                     f"[bold red]performance issues[/] during live updates for the server and client."
                 )
                 response = input("Continue anyway? [y/N]: ").strip().lower()
@@ -111,8 +111,8 @@ class WatchCommand(BaseConnectedCommand):
                     print_info("Watch cancelled.")
                     return ContinueSignal()
             else:
-                # Ensure progress_limit has a default value even if not explicitly set
-                progress_limit = progress_limit or 10
+                # Ensure limit has a default value even if not explicitly set
+                limit = limit or 10
 
             if interval <= 0:
                 print_warning(
@@ -130,8 +130,8 @@ class WatchCommand(BaseConnectedCommand):
                 display, status = await self._fetch_and_build_display(
                     rest_api=rest_api,
                     task_id=task_id,
-                    progress_limit=progress_limit,
-                    progress_offset=progress_offset,
+                    limit=limit,
+                    offset=offset,
                 )
 
                 if status == "COMPLETED":
@@ -155,8 +155,8 @@ class WatchCommand(BaseConnectedCommand):
                             display, status = await self._fetch_and_build_display(
                                 rest_api=rest_api,
                                 task_id=task_id,
-                                progress_limit=progress_limit,
-                                progress_offset=progress_offset,
+                                limit=limit,
+                                offset=offset,
                             )
                             live.update(display)
             except KeyboardInterrupt, asyncio.CancelledError:

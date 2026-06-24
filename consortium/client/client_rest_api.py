@@ -357,10 +357,10 @@ class RestAPI:
     @_requires_authentication
     async def get_all_agent_tasks(
         self,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[dict[str, Any]]:
-        params = self._build_progress_params(progress_limit, progress_offset)
+        params = self._build_task_events_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/tasks",
@@ -371,10 +371,10 @@ class RestAPI:
     async def get_agent_task_by_task_id(
         self,
         task_id: str,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ):
-        params = self._build_progress_params(progress_limit, progress_offset)
+        params = self._build_task_events_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/tasks/{task_id}",
@@ -385,10 +385,10 @@ class RestAPI:
     async def get_all_agent_tasks_by_agent_id(
         self,
         agent_id: str,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[dict[str, Any]]:
-        params = self._build_progress_params(progress_limit, progress_offset)
+        params = self._build_task_events_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -399,11 +399,11 @@ class RestAPI:
     async def get_all_queued_tasks_by_agent_id(
         self,
         agent_id: str,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[dict[str, Any]]:
         params = {"status": "QUEUED"}
-        params.update(self._build_progress_params(progress_limit, progress_offset))
+        params.update(self._build_task_events_params(limit, offset))
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -414,11 +414,11 @@ class RestAPI:
     async def get_all_running_agent_tasks_by_agent_id(
         self,
         agent_id: str,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[dict[str, Any]]:
         params = {"status": "RUNNING"}
-        params.update(self._build_progress_params(progress_limit, progress_offset))
+        params.update(self._build_task_events_params(limit, offset))
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -429,11 +429,11 @@ class RestAPI:
     async def get_all_completed_tasks_by_agent_id(
         self,
         agent_id: str,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[dict[str, Any]]:
         params = {"status": "COMPLETED"}
-        params.update(self._build_progress_params(progress_limit, progress_offset))
+        params.update(self._build_task_events_params(limit, offset))
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -445,10 +445,10 @@ class RestAPI:
         self,
         agent_id: str,
         task_id: str,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ):
-        params = self._build_progress_params(progress_limit, progress_offset)
+        params = self._build_task_events_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks/{task_id}",
@@ -565,16 +565,15 @@ class RestAPI:
         return await response.json()
 
     @staticmethod
-    def _build_progress_params(
-        progress_limit: int | None,
-        progress_offset: int | None,
+    def _build_task_events_params(
+        limit: int | None,
+        offset: int | None,
     ) -> dict[str, Any]:
-        """Build query parameters for progress log pagination."""
         params = {}
-        if progress_limit is not None:
-            params["progress_limit"] = progress_limit
-        if progress_offset is not None:
-            params["progress_offset"] = progress_offset
+        if limit is not None:
+            params["limit"] = limit
+        if offset is not None:
+            params["offset"] = offset
         return params
 
     @staticmethod

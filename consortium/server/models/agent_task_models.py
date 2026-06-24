@@ -74,6 +74,7 @@ class AgentTaskModel(BaseModel):
     events: AgentTaskEventsModel
     datetime_created: datetime
     datetime_started: datetime | None = None
+    datetime_completed: datetime | None = None
 
 
 # class AgentCapabilityRuntimeErrorModel(BaseModel):

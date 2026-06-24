@@ -85,7 +85,9 @@ def format_agent_task_status_string_with_color(
     state_string_to_colored_state_string_map = {
         "QUEUED": "[bold cyan]QUEUED[/]",
         "RUNNING": "[bold yellow]RUNNING[/]",
-        "COMPLETED": "[bold green]COMPLETED[/]",
+        "SUCCEEDED": "[bold green]SUCCEEDED[/]",
+        "FAILED": "[bold red]FAILED[/]",
+        "ERRORED": "[bold red]ERRORED[/]",
     }
 
     return state_string_to_colored_state_string_map.get(status_str, status_str)

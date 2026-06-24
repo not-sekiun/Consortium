@@ -124,7 +124,7 @@ class DownloadCapability(BaseAgentCapability):
                     )
                 downloaded_bytes += len(chunk)
                 # Ephemeral update (Overwrites previous status but does not log to
-                # progress log to avoid flooding it)
+                # task events to avoid flooding it)
                 percent_complete = (
                     round(downloaded_bytes / current_file_size * 100, 2)
                     if current_file_size
@@ -144,12 +144,12 @@ class DownloadCapability(BaseAgentCapability):
             elif msg_type == "end_of_file":
                 self.emit_info(
                     message=f"Downloaded file '{current_file}'",
-                )  # Log completion of file download in progress log for task
+                )  # Log completion of file download in task events for task
                 current_file = None
                 current_file_size = 0
                 downloaded_bytes = 0
             elif msg_type == "end_of_transfer":
-                # Entire file or directory download is finished, log to progress log of
+                # Entire file or directory download is finished, emit to task events of
                 # task and break loop if a directory was being downloaded, avoid logging
                 # since we already log file download completion on 'end_of_file'
                 if is_dir:

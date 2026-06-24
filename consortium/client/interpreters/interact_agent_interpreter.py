@@ -194,17 +194,16 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         agent_id = event["data"]["agent_id"]
         task = event["data"]["task"]
 
-        # TODO: Prettify task printing
         if agent_id == self.interpreter_context.agent["agent_id"]:
             print_info(f"{message}")
 
-            events_summary = ""
+            events_summary_lines = []
             for event in task["events"]["entries"]:
                 sequence = event["sequence"]
                 event_type = event["event_type"]
                 message = event["message"]
 
-                events_summary += (
+                events_summary_lines.append(
                     f"[dim white][{sequence}][/] "
                     f"{format_agent_task_event_type_string_with_color(event_type_str=event_type)}: "
                     f"{message}\n"
@@ -212,7 +211,7 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
 
             console.print(
                 Panel(
-                    events_summary,
+                    "\n".join(events_summary_lines),
                     title=f"Events summary ({len(task['events']['entries'])}/{task['events']['total_count']} entries displayed)",
                     title_align="left",
                     expand=False,

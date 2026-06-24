@@ -10,7 +10,7 @@ from consortium.client.models.interpreter_signal_models import (
 )
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.formatter_utils import (
-    format_agent_task_progress_status_string_with_color,
+    format_agent_task_event_type_string_with_color,
     format_agent_task_status_string_with_color,
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
@@ -26,9 +26,9 @@ class TaskInfoCommand(BaseConnectedCommand):
         """
         Examples:
             t-info 123e4567-e89b-12d3-a456-42661417400
-            t-info 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 progress entries (tail)
-            t-info 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 progress entries
-            t-info 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 entries starting from 5th from end
+            t-info 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 task events (tail)
+            t-info 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 task events
+            t-info 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 task events starting from 5th from end
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -43,7 +43,7 @@ class TaskInfoCommand(BaseConnectedCommand):
             "-l",
             "--limit",
             help=(
-                "Maximum number of progress log entries to return. "
+                "Maximum number of task events to return. "
                 "When specified without --offset, returns the last N entries (tail). "
                 "Must be a positive integer. Default is 10."
             ),
@@ -54,7 +54,7 @@ class TaskInfoCommand(BaseConnectedCommand):
             "-o",
             "--offset",
             help=(
-                "Starting position in the progress log. Positive values start from "
+                "Starting position in the task event log. Positive values start from "
                 "the beginning, negative values offset from the end. "
                 "If not specified, returns the tail (last N entries based on limit)."
             ),
@@ -99,56 +99,62 @@ class TaskInfoCommand(BaseConnectedCommand):
             if task["datetime_started"] is not None
             else "N/A",
         )
+        task_info_table.add_row(
+            "Datetime Completed",
+            format_datetime_as_human_readable_str(
+                datetime_str=task["datetime_completed"], include_elapsed_time=True
+            )
+            if task["datetime_started"] is not None
+            else "N/A",
+        )
 
-        progress_log = task["progress_log"]
-        total_count = progress_log["total_count"]
-        entries = progress_log["entries"]
-        task_progress_log_table = Table(
+        events = task["events"]
+        total_count = events["total_count"]
+        entries = events["entries"]
+        task_events_table = Table(
             title=(
-                f"Task Progress Log Information (showing {len(entries)} of {total_count} entries)"
+                f"Task Events Information (showing {len(entries)} of {total_count} entries)"
             ),
             highlight=True,
         )
-        task_progress_log_table.add_column("#", justify="right")
-        task_progress_log_table.add_column("Status")
-        task_progress_log_table.add_column("Message")
-        task_progress_log_table.add_column("% Done")
-        task_progress_log_table.add_column("Datetime Reported")
-        for progress in entries:
-            task_progress_log_table.add_row(
-                str(progress["sequence"]),
-                format_agent_task_progress_status_string_with_color(
-                    status_str=progress["status"]["state"]
+        task_events_table.add_column("#", justify="right")
+        task_events_table.add_column("Status")
+        task_events_table.add_column("Message")
+        task_events_table.add_column("Datetime Reported")
+        for event in entries:
+            task_events_table.add_row(
+                str(event["sequence"]),
+                format_agent_task_event_type_string_with_color(
+                    event_type_str=event["event_type"]
                 ),
-                progress["message"],
-                f"{progress['percent_complete']}%",
+                event["message"],
+                # TODO: Remove, events dont have percent complete?
+                # f"{event['percent_complete']}%",
                 format_datetime_as_human_readable_str(
-                    datetime_str=progress["datetime_reported"],
+                    datetime_str=event["datetime_reported"],
                     include_elapsed_time=True,
                 ),
             )
 
-        return task_info_table, task_progress_log_table
+        return task_info_table, task_events_table
 
     @staticmethod
     async def _display_task_info(
         rest_api: RestAPI,
         task_id: str,
-        progress_limit: int | None = None,
-        progress_offset: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> None:
         task = await rest_api.get_agent_task_by_task_id(
             task_id=task_id,
-            progress_limit=progress_limit,
-            progress_offset=progress_offset,
+            limit=limit,
+            offset=offset,
         )
 
-        task_info_table, task_progress_log_table = TaskInfoCommand.build_task_tables(
-            task
-        )
+        task_info_table, task_events_table = TaskInfoCommand.build_task_tables(task)
 
         console.print(task_info_table, "")
-        console.print(task_progress_log_table, "")
+        console.print(task_events_table, "")
 
     async def run(
         self,
@@ -161,8 +167,8 @@ class TaskInfoCommand(BaseConnectedCommand):
             await self._display_task_info(
                 rest_api=rest_api,
                 task_id=parsed_args.task_id,
-                progress_limit=parsed_args.limit,
-                progress_offset=parsed_args.offset,
+                limit=parsed_args.limit,
+                offset=parsed_args.offset,
             )
         except SystemExit:
             pass

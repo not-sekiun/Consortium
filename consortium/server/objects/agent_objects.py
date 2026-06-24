@@ -464,7 +464,8 @@ class Agent:
                 task,
                 task.status,
             )
-            # TODO: Possibly make this error different to differentiate the error conditions
+            # TODO: Possibly make this error different to differentiate the error
+            #  conditions
             raise AgentResultHasNoCorrespondingTaskError(
                 corresponding_task_id=str(task_output_message.task_id),
                 agent_str=str(self),
@@ -615,9 +616,11 @@ class Agent:
                     message=str(exc),
                 )
 
-            # Upon receiving the final aggregated result message we can remove the
-            # agent capability as it is now no longer considered to be running.
+            # Upon returning from the task's execution method we can remove the agent
+            # capability as it is now no longer considered to be running and update the
+            # tasks completion datetime
             self._running_agent_capabilities.pop(str(task_message.task_id))
+            task.datetime_completed = datetime.now()
 
             # Finally we fire the event to notify all event handlers that a task has
             # completed
