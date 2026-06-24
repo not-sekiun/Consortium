@@ -6,7 +6,7 @@ from typing import Any
 
 from loguru import logger
 
-from consortium.framework.agent_message_models import (
+from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )

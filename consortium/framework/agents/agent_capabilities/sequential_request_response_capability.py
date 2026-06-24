@@ -3,15 +3,15 @@ from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Protocol
 
-from consortium.framework.agent_message_models import (
-    TaskLaunchMessageModel,
-    TaskOutputMessageModel,
-)
 from consortium.framework.agents.agent_capabilities._common_protocols import (
     _ResolveTimeoutProtocol,
 )
 from consortium.framework.agents.agent_capabilities.request_response_capability import (
     _TaskMessageHandlerProtocol,
+)
+from consortium.framework.agents.agent_message_models import (
+    TaskLaunchMessageModel,
+    TaskOutputMessageModel,
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,

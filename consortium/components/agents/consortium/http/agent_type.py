@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from consortium.framework.agent_message_models import TaskOutputMessageModel
 from consortium.framework.agents import (
     BaseAgentType,
     SupportedOS,
     request_response_capability,
 )
+from consortium.framework.agents.agent_message_models import TaskOutputMessageModel
 from consortium.framework.options import SingleValueOption
 
 from .agent_capabilities.download import DownloadCapability

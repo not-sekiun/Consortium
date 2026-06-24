@@ -3,7 +3,7 @@ import zlib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from consortium.framework.agent_message_models import (
+from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )

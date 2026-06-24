@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING, Any, get_type_hints
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from consortium.framework._utils import format_docstring_to_single_line
-from consortium.framework.agent_message_models import (
+from consortium.framework.agents._agent_communicator import _AgentCommunicator
+from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     # TaskOutputMessageModel,
 )
-from consortium.framework.agents._agent_communicator import _AgentCommunicator
 from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.framework_types import Primitive, PrimitiveCollection
 from consortium.framework.options import (

@@ -1,12 +1,11 @@
 import pathlib
 import zlib
 
-from consortium.framework.agent_message_models import (
-    TaskLaunchMessageModel,
-    TaskOutputMessageModel,
-)
-from consortium.framework.agents.base_agent_capability import (
+from consortium.framework.agents import (
     BaseAgentCapability,
+    Failure,
+    Success,
+    TaskLaunchMessageModel,
 )
 from consortium.framework.options import SingleValueOption
 
@@ -70,17 +69,18 @@ class DownloadCapability(BaseAgentCapability):
     }
     mitre_attack_techniques = {"T1041", "T1005", "T1560.002"}
 
+    # TODO: Add artifact reporting + write to artifacts service
     async def execute(
         self,
         task_message: TaskLaunchMessageModel,
-    ) -> TaskOutputMessageModel:
+    ) -> Success | Failure | None:
         # Remove `destination` argument before sending task because it is not needed by
         # the agent
         task_message.arguments.pop("destination", None)
 
         header = await self.send_and_recv_from_agent(task_message=task_message)
         if not header.success:
-            return header
+            return Failure(task_output_message=header)
 
         is_dir = header.data["type"] == "directory"
         target_name = pathlib.Path(header.data["path"]).name
@@ -98,7 +98,7 @@ class DownloadCapability(BaseAgentCapability):
         response = header
         while True:
             if not response.success:  # Error response from agent, abort download
-                return response
+                return Failure(task_output_message=response)
 
             msg_type = response.data.get("type")
 
@@ -117,9 +117,7 @@ class DownloadCapability(BaseAgentCapability):
                 try:
                     chunk = zlib.decompress(response.payload.data)
                 except zlib.error as exc:
-                    return TaskOutputMessageModel(
-                        task_id=task_message.task_id,
-                        success=False,
+                    return Failure(
                         message=f"Failed to decompress file chunk: {exc}",
                     )
                 downloaded_bytes += len(chunk)
@@ -158,19 +156,15 @@ class DownloadCapability(BaseAgentCapability):
                     )
                 break
             else:
-                return TaskOutputMessageModel(
-                    task_id=task_message.task_id,
-                    success=False,
+                return Failure(
                     message=(
                         f"Unknown message type received during download: {msg_type}"
-                    ),
+                    )
                 )
 
             response = await self.recv_from_agent()
 
         # Return response to indicate successful download
-        return TaskOutputMessageModel(
-            task_id=task_message.task_id,
-            success=True,
+        return Success(
             message=f"Downloaded {'directory' if is_dir else 'file'} '{target_name}'",
         )

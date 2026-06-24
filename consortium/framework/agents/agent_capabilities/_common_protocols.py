@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from typing import Protocol
 
-from consortium.framework.agent_message_models import TaskLaunchMessageModel
+from consortium.framework.agents.agent_message_models import TaskLaunchMessageModel
 
 
 class _ResolveTimeoutProtocol(Protocol):

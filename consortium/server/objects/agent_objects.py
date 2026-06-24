@@ -8,11 +8,11 @@ from loguru import logger
 from pydantic import UUID4, BaseModel, JsonValue, ValidationError
 
 from consortium.framework._components import State
-from consortium.framework.agent_message_models import (
+from consortium.framework.agents import BaseAgentCapability
+from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
-from consortium.framework.agents import BaseAgentCapability
 from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.event_hooks import EventType
 from consortium.framework.exceptions.agent_capabilties_framework_exception import (
@@ -558,8 +558,8 @@ class Agent:
                     task.status._transition_to_succeeded()
                     task.append_event(
                         event_type=AgentTaskEventType.SUCCESS,
-                        message=task_outcome.task_output_message.message,
-                        data=task_outcome.task_output_message.data,
+                        message=task_outcome.message,
+                        data=task_outcome.data,
                     )
                 elif isinstance(task_outcome, Failure):
                     # TODO: Decide on a standard way for Failure to communicate message
@@ -567,8 +567,8 @@ class Agent:
                     task.status._transition_to_failed()
                     task.append_event(
                         event_type=AgentTaskEventType.FAILURE,
-                        message=task_outcome.task_output_message.message,
-                        data=task_outcome.task_output_message.data,
+                        message=task_outcome.message,
+                        data=task_outcome.data,
                     )
                 elif task_outcome is None:
                     pass

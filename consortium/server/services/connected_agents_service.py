@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
-from consortium.framework.agent_message_models import TaskLaunchMessageModel
+from consortium.framework.agents.agent_message_models import TaskLaunchMessageModel
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,

@@ -194,7 +194,10 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         agent_id = event["data"]["agent_id"]
         task = event["data"]["task"]
 
-        if agent_id == self.interpreter_context.agent["agent_id"]:
+        if (
+            agent_id == self.interpreter_context.agent["agent_id"]
+            and task["events"]["entries"]
+        ):
             print_info(f"{message}")
 
             events_summary_lines = []
