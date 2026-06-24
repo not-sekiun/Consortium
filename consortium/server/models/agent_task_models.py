@@ -13,7 +13,7 @@ class AgentTaskState(StrEnum):
     COMPLETED = "COMPLETED"  # TODO: Remove and replace with success failure error
 
     # TODO: Implement to subsume Result objects
-    SUCCEEDED = "SUCCESS"
+    SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILURE"
     ERRORED = "ERROR"
 

@@ -22,7 +22,7 @@ class AgentTaskState(StrEnum):
 
 
 # TODO: Find some way to subsume into Component Status, Component Status should be made
-#  more reusable across different objects.
+#  more reusable across different objects this is some dogshit code
 class AgentTaskStatus:
     _VALID_STATE_TRANSITIONS = {
         AgentTaskState.QUEUED: {AgentTaskState.RUNNING},
@@ -39,6 +39,12 @@ class AgentTaskStatus:
     def __init__(self):
         self.state = AgentTaskState.QUEUED
         self.error = None
+
+    def __str__(self) -> str:
+        return f"{self.state}: {self.error}" if self.error is not None else self.state
+
+    def __repr__(self) -> str:
+        return f"Status(state={self.state!r}, error={self.error!r})"
 
     def to_json(self):
         return {
@@ -115,10 +121,17 @@ class AgentTask:
         self._events: list[AgentTaskEventModel] = []  # TODO: Move to db when possible
 
     def __str__(self) -> str:
-        return f"'{self.command}'"
+        return f"'{self.command}' ({self.task_id})"
 
     def __repr__(self) -> str:
-        return f"AgentTask(command={self.command!r}, arguments={self.arguments!r})"
+        return (
+            f"AgentTask("
+            f"task_id={self.task_id!r}, "
+            f"command={self.command!r}, "
+            f"arguments={self.arguments!r},"
+            f"status={self.status!r},"
+            f")"
+        )
 
     @property
     def events_total_count(self) -> int:

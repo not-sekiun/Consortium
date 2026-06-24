@@ -4,7 +4,10 @@ import consortium.client.client_singletons as client_singletons
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
-from consortium.client.models.context_models import ConnectedContext
+from consortium.client.models.context_models import (
+    ConnectedContext,
+    DisconnectedContext,
+)
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
@@ -40,7 +43,9 @@ class InteractClientSessionCommand(BaseConnectedCommand):
 
     async def run(
         self,
-        context: ConnectedContext,
+        # This command is imported and used by disconnected interpreter so we also have
+        # to check for a `DisconnectedContext`
+        context: ConnectedContext | DisconnectedContext,
     ) -> InterpreterSignal:
         try:
             parsed_args = self.parser.parse_args(context.arguments)
@@ -55,7 +60,10 @@ class InteractClientSessionCommand(BaseConnectedCommand):
                 print_error(str(exc))
                 return ContinueSignal()
 
-            if client_session is context.client_session:
+            if (
+                isinstance(client_session, ConnectedContext)
+                and client_session is context.client_session
+            ):
                 print_error(
                     f"Already interacting with client session: {client_session}"
                 )

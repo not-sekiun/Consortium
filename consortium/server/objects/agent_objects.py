@@ -43,13 +43,6 @@ from consortium.server.exceptions.consortium_exceptions.options_consortium_excep
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
     PayloadNotFoundError,
 )
-from consortium.server.models.agent_task_models import (
-    # AgentResultModel,
-    # AgentResultStatus,
-    AgentTaskModel,
-    # AgentTaskStatus,
-    # AgentTaskProgressLogEntryModel,
-)
 from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_file_manager_service import (
@@ -451,7 +444,7 @@ class Agent:
     def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
         try:
             task = self.get_queued_task_by_task_id(task_id=task_id)
-            if task.status != AgentTaskState.QUEUED:
+            if task.status.state != AgentTaskState.QUEUED:
                 raise AgentTaskNotFoundError(task_id=str(task_id))
             del self._tasks[str(task.task_id)]
         except KeyError:
@@ -468,7 +461,14 @@ class Agent:
                 agent_str=str(self),
             ) from None
 
-        if task.status != AgentTaskState.RUNNING:
+        if task.status.state != AgentTaskState.RUNNING:
+            self.logger.warning(
+                "Agent received a result for task {} that does exist with status {} but "
+                "is not currently running.",
+                task,
+                task.status,
+            )
+            # TODO: Possibly make this error different to differentiate the error conditions
             raise AgentResultHasNoCorrespondingTaskError(
                 corresponding_task_id=str(task_output_message.task_id),
                 agent_str=str(self),

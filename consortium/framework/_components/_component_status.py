@@ -70,6 +70,12 @@ class Status:
         self.state = State.INITIALIZED
         self.error = None
 
+    def __str__(self) -> str:
+        return f"{self.state}: {self.error}" if self.error is not None else self.state
+
+    def __repr__(self) -> str:
+        return f"Status(state={self.state!r}, error={self.error!r})"
+
     def to_json(self):
         return {
             "state": str(self.state),
