@@ -411,9 +411,6 @@ class Agent:
     def get_all_errored_tasks(self) -> list[AgentTask]:
         return self.get_all_tasks(state=AgentTaskState.ERRORED)
 
-    # def get_all_completed_tasks(self) -> list[AgentTaskModel]:
-    #     return self.get_all_tasks(status=AgentTaskState.COMPLETED)
-
     def get_task_by_task_id(
         self,
         task_id: str | uuid.UUID,
