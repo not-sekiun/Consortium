@@ -564,7 +564,16 @@ class Agent:
                 elif isinstance(task_outcome, Failure):
                     # TODO: Decide on a standard way for Failure to communicate message
                     #  and data as compared to `AgentCapabilityRuntimeFrameworkError`
-                    task.status._transition_to_failed()
+                    #  also figure out whether transition_to_failed() should take an
+                    #  error parameter. Should failures represent themselves through a
+                    #  "falsely" constructed `AgentCapabilityRuntimeError`?
+                    task.status._transition_to_failed(
+                        error=AgentCapabilityRuntimeError(
+                            agent_capability_name=agent_capability.name,
+                            error_message=task_outcome.message,
+                            detail=task_outcome.data,
+                        )
+                    )
                     task.append_event(
                         event_type=AgentTaskEventType.FAILURE,
                         message=task_outcome.message,

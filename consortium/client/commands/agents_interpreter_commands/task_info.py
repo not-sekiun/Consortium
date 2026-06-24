@@ -76,7 +76,12 @@ class TaskInfoCommand(BaseConnectedCommand):
         )
         task_info_table.add_row(
             "Status",
-            format_agent_task_status_string_with_color(task["status"]["state"]),
+            format_agent_task_status_string_with_color(task["status"]["state"])
+            + (
+                "(" + task["status"]["error"]["message"] + ")"
+                if task["status"]["error"]
+                else ""
+            ),
         )
         task_info_table.add_row(
             "Current Progress",

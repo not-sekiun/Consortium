@@ -69,7 +69,9 @@ class DownloadCapability(BaseAgentCapability):
     }
     mitre_attack_techniques = {"T1041", "T1005", "T1560.002"}
 
-    # TODO: Add artifact reporting + write to artifacts service
+    # TODO: Make download actually write artifacts via artifacts service and
+    #  emit_artifact should properly log this event with reference to the artifact
+    #  created
     async def execute(
         self,
         task_message: TaskLaunchMessageModel,
@@ -140,7 +142,7 @@ class DownloadCapability(BaseAgentCapability):
                     percent_complete=100,
                 )
             elif msg_type == "end_of_file":
-                self.emit_info(
+                self.emit_artifact(
                     message=f"Downloaded file '{current_file}'",
                 )  # Log completion of file download in task events for task
                 current_file = None
@@ -151,7 +153,7 @@ class DownloadCapability(BaseAgentCapability):
                 # task and break loop if a directory was being downloaded, avoid logging
                 # since we already log file download completion on 'end_of_file'
                 if is_dir:
-                    self.emit_info(
+                    self.emit_artifact(
                         message=f"Downloaded directory '{target_name}'",
                     )
                 break

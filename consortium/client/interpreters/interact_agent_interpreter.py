@@ -209,7 +209,7 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
                 events_summary_lines.append(
                     f"[dim white][{sequence}][/] "
                     f"{format_agent_task_event_type_string_with_color(event_type_str=event_type)}: "
-                    f"{message}\n"
+                    f"{message}"
                 )
 
             console.print(

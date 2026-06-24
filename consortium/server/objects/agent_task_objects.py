@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from enum import StrEnum
 from typing import Any
 
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
@@ -10,15 +9,8 @@ from consortium.server.models.agent_task_models import (
     AgentCurrentProgressModel,
     AgentTaskEventModel,
     AgentTaskEventType,
+    AgentTaskState,
 )
-
-
-class AgentTaskState(StrEnum):
-    QUEUED = "QUEUED"
-    RUNNING = "RUNNING"
-    SUCCEEDED = "SUCCEEDED"
-    FAILED = "FAILED"
-    ERRORED = "ERRORED"
 
 
 # TODO: Find some way to subsume into Component Status, Component Status should be made

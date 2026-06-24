@@ -11,8 +11,8 @@ class AgentTaskState(StrEnum):
     QUEUED = "QUEUED"
     RUNNING = "RUNNING"
     SUCCEEDED = "SUCCEEDED"
-    FAILED = "FAILURE"
-    ERRORED = "ERROR"
+    FAILED = "FAILED"
+    ERRORED = "ERRORED"
 
 
 # class AgentTaskProgressLogEntryModel(BaseModel):
