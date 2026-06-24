@@ -96,6 +96,7 @@ class EventsService:
         if data is None:
             data = {}
 
+        errors = []
         event = Event(
             event_type=event_type,
             message=message,
@@ -105,9 +106,10 @@ class EventsService:
             try:
                 await event_handler(event)
             except Exception as exc:
-                self._logger.opt(ansi=True, exception=exc).error(
-                    "Unhandled exception occurred while triggering event handler. "
-                    "{}: {}",
-                    exc.__class__.__name__,
-                    exc,
-                )
+                errors.append(exc)
+
+        if errors:
+            raise ExceptionGroup(
+                f"{len(errors)} event handler(s) failed for {event.event_type!r}",
+                errors,
+            )

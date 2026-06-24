@@ -414,7 +414,7 @@ def construct_agent_capability_command(
                 print_info(
                     f"Tasked agent '{context.interpreter_context.agent['name']}' "
                     f"({context.interpreter_context.agent['agent_id']}) with task "
-                    f"with task ID {task['task_id']}.",
+                    f"'{task['command']}' ({task['task_id']}).",
                 )
             except SystemExit:
                 pass

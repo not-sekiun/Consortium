@@ -80,9 +80,9 @@ class HelpCommand(BaseCommand[AnyContext]):
         # their own style
         if agent_capability_commands is not None:
             table = Table(
-                title="Agent Capability Commands", title_style="italic bold magenta"
+                title="Agent Capability Commands", title_style="italic bold red"
             )
-            table.add_column("Command", width=command_col_width, style="bold magenta")
+            table.add_column("Command", width=command_col_width, style="bold red")
             table.add_column("Description", width=description_col_width)
             for command in sorted(
                 agent_capability_commands, key=lambda command: command.name
