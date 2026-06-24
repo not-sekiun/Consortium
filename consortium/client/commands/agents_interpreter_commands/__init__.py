@@ -25,13 +25,6 @@ from consortium.client.commands.agents_interpreter_commands.asset_list import (
 from consortium.client.commands.agents_interpreter_commands.asset_upload import (
     AssetUploadCommand,
 )
-
-# from consortium.client.commands.agents_interpreter_commands.result_info import (
-#     ResultInfoCommand,
-# )
-# from consortium.client.commands.agents_interpreter_commands.result_list import (
-#     ResultListCommand,
-# )
 from consortium.client.commands.agents_interpreter_commands.task_info import (
     TaskInfoCommand,
 )
@@ -46,12 +39,10 @@ AGENTS_INTERPRETER_COMMANDS = [
     AssetDownloadCommand(),
     AgentInfoCommand(),
     AssetInfoCommand(),
-    # ResultInfoCommand(),
     TaskInfoCommand(),
     AgentInteractCommand(),
     AgentListCommand(),
     AssetListCommand(),
-    # ResultListCommand(),
     TaskListCommand(),
     AgentDescribeCommand(),
     AgentRenameCommand(),
