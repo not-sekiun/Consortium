@@ -25,8 +25,6 @@ from consortium.server.models.agent_models import (
 )
 from consortium.server.models.agent_task_models import (
     AgentTaskModel,
-    AgentTaskEventsModel,
-    AgentTaskModel,
     AgentTaskState,
 )
 from consortium.server.models.common_models import SuccessResponseModel
@@ -110,82 +108,6 @@ _invalid_result_uuid_error = InvalidUUIDError(
     resource_name="result", uuid_value="<uuid_value>"
 )
 
-#
-# def _convert_agent_task_model_to_api_response_model(
-#     task: AgentTaskModel,
-#     limit: int = 10,
-#     offset: int | None = None,
-# ) -> AgentTaskAPIResponseModel:
-#     progress_log = task.progress_log
-#     total_count = len(progress_log)
-#
-#     if total_count == 0:
-#         filtered_entries = []
-#     else:
-#         # Get min and max sequence numbers
-#         sequences = [entry.sequence for entry in progress_log]
-#         min_seq = min(sequences)
-#         max_seq = max(sequences)
-#
-#         # If offset is None, return the tail (entries with highest sequence numbers)
-#         if offset is None:
-#             # Get entries with the highest sequence numbers, up to limit
-#             start_seq = max(min_seq, max_seq - limit + 1)
-#             filtered_entries = [
-#                 entry for entry in progress_log if entry.sequence >= start_seq
-#             ]
-#             # Sort by sequence and take the last limit entries
-#             filtered_entries = sorted(filtered_entries, key=lambda e: e.sequence)[
-#                 -limit:
-#             ]
-#         # Handle negative offset (from max sequence)
-#         elif offset < 0:
-#             start_seq = max(min_seq, max_seq + offset + 1)
-#             end_seq = start_seq + limit - 1
-#             filtered_entries = [
-#                 entry
-#                 for entry in progress_log
-#                 if start_seq <= entry.sequence <= end_seq
-#             ]
-#             filtered_entries = sorted(filtered_entries, key=lambda e: e.sequence)
-#         else:
-#             # Filter entries where sequence >= offset
-#             start_seq = offset
-#             end_seq = offset + limit - 1
-#             filtered_entries = [
-#                 entry
-#                 for entry in progress_log
-#                 if start_seq <= entry.sequence <= end_seq
-#             ]
-#             filtered_entries = sorted(filtered_entries, key=lambda e: e.sequence)
-#
-#     return AgentTaskAPIResponseModel(
-#         task_id=task.task_id,
-#         command=task.command,
-#         arguments=task.arguments,
-#         status=task.status,
-#         current_progress=task.current_progress,
-#         progress_log=AgentTaskEventsAPIResponseModel(
-#             total_count=total_count,
-#             entries=filtered_entries,
-#         ),
-#         datetime_created=task.datetime_created,
-#         datetime_started=task.datetime_started,
-#     )
-
-
-# def _convert_agent_task_models_to_api_response_models(
-#     tasks: list[AgentTaskModel],
-#     limit: int = 10,
-#     offset: int | None = None,
-# ) -> list[AgentTaskAPIResponseModel]:
-#     return [
-#         _convert_agent_task_model_to_api_response_model(
-#             task, limit, offset
-#         )
-#         for task in tasks
-#     ]
-
 
 @router.get(
     "/all",
@@ -225,10 +147,6 @@ def get_all_agent_tasks(
         AgentTaskModel(**task.to_json(limit=limit, offset=offset)) for task in tasks
     ]
 
-    # return _convert_agent_task_models_to_api_response_models(
-    #     tasks, limit, offset
-    # )
-
 
 @router.get(
     "/tasks/{task_id}",
@@ -264,53 +182,6 @@ def get_agent_task_by_task_id(
         ) from None
 
     return AgentTaskModel(**task.to_json(limit=limit, offset=offset))
-
-    # return _convert_agent_task_model_to_api_response_model(
-    #     task=task,
-    #     limit=limit,
-    #     offset=offset,
-    # )
-
-
-#
-# @router.get(
-#     "/results",
-#     responses={
-#         200: {"model": list[AgentResultModel]},
-#     },
-# )
-# def get_all_agent_results(
-#     _: Annotated[
-#         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
-#     ],
-#     status: AgentResultStatus | None = None,
-# ) -> list[AgentResultModel]:
-#     return _agents_service.get_all_agent_results(status=status)
-#
-#
-# @router.get(
-#     "/results/{result_id}",
-#     responses={
-#         200: {"model": AgentResultModel},
-#         404: {"model": _agent_result_not_found_error.to_pydantic_model()},
-#         422: {
-#             "model": _invalid_result_uuid_error.to_pydantic_model()
-#             | _unprocessable_entity_error.to_pydantic_model()
-#         },
-#     },
-# )
-# def get_agent_result_by_result_id(
-#     _: Annotated[
-#         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS))
-#     ],
-#     result_id: UUID4,
-# ) -> AgentResultModel:
-#     try:
-#         return _agents_service.get_agent_result_by_result_id(result_id=result_id)
-#     except consortium_excs.AgentResultIDNotFoundError as exc:
-#         raise api_excs.AgentResultNotFoundError.from_consortium_exception(
-#             consortium_exception=exc
-#         ) from None
 
 
 @router.get(
@@ -353,12 +224,6 @@ def get_all_agent_tasks_by_agent_id(
     return [
         AgentTaskModel(**task.to_json(limit=limit, offset=offset)) for task in tasks
     ]
-
-    # return _convert_agent_task_models_to_api_response_models(
-    #     tasks=tasks,
-    #     limit=limit,
-    #     offset=offset,
-    # )
 
 
 @router.get(
@@ -432,75 +297,6 @@ def get_agent_tasks_by_agent_id_and_task_id(
         raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-
-
-# @router.get(
-#     "/{agent_id}/results",
-#     responses={
-#         200: {"model": list[AgentResultModel]},
-#         404: {"model": _agent_not_found_error.to_pydantic_model()},
-#         422: {
-#             "model": _invalid_agent_uuid_error.to_pydantic_model()
-#             | _unprocessable_entity_error.to_pydantic_model()
-#         },
-#     },
-# )
-# def get_all_agent_results_by_agent_id(
-#     agent_id: UUID4,
-#     _: Annotated[
-#         None,
-#         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
-#     ],
-#     status: AgentResultStatus | None = None,
-# ) -> list[AgentResultModel]:
-#     try:
-#         return _agents_service.get_all_agent_results_by_agent_id(
-#             agent_id=agent_id, status=status
-#         )
-#     except consortium_excs.AgentNotFoundError as exc:
-#         raise api_excs.AgentNotFoundError.from_consortium_exception(
-#             consortium_exception=exc
-#         ) from None
-#
-#
-# # TODO: Consider adding a get result by task ID too
-# @router.get(
-#     "/{agent_id}/results/{result_id}",
-#     responses={
-#         200: {"model": AgentResultModel},
-#         404: {
-#             "model": _agent_not_found_error.to_pydantic_model()
-#             | _agent_result_not_found_error.to_pydantic_model(),
-#         },
-#         422: {
-#             "model": _invalid_agent_uuid_error.to_pydantic_model()
-#             | _invalid_result_uuid_error.to_pydantic_model()
-#             | _unprocessable_entity_error.to_pydantic_model()
-#         },
-#     },
-# )
-# def get_agent_result_by_agent_id_and_result_id(
-#     agent_id: UUID4,
-#     result_id: UUID4,
-#     _: Annotated[
-#         None,
-#         Depends(
-#             AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID)
-#         ),
-#     ],
-# ) -> AgentResultModel:
-#     try:
-#         return _agents_service.get_agent_result_by_agent_id_and_result_id(
-#             agent_id=agent_id, result_id=result_id
-#         )
-#     except consortium_excs.AgentNotFoundError as exc:
-#         raise api_excs.AgentNotFoundError.from_consortium_exception(
-#             consortium_exception=exc
-#         ) from None
-#     except consortium_excs.AgentResultIDNotFoundError as exc:
-#         raise api_excs.AgentResultNotFoundError.from_consortium_exception(
-#             consortium_exception=exc
-#         ) from None
 
 
 @router.post(
