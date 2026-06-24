@@ -15,15 +15,6 @@ class AgentTaskState(StrEnum):
     ERRORED = "ERRORED"
 
 
-# class AgentTaskProgressLogEntryModel(BaseModel):
-#     # sequence: int  TODO: Remove and just rely on list indices
-#     message: str | None = None
-#     data: dict[str, JsonValue] = {}
-#     status: AgentTaskProgressStatus = AgentTaskProgressStatus.SUCCESS
-#     # percent_complete: int | float = Field(ge=0.0, le=100.0) TODO: Remove, percent complete is too domain specific
-#     datetime_reported: datetime = Field(default_factory=datetime.now)
-
-
 class AgentTaskEventType(StrEnum):
     # These task event types are manually emitted by `BaseAgentCapability` authors
     SUCCESS = "SUCCESS"

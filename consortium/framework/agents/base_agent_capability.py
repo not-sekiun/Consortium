@@ -39,12 +39,12 @@ if TYPE_CHECKING:
 
 
 class SupportedOS(StrEnum):
-    WINDOWS = "windows"
-    LINUX = "linux"
-    MACOS = "macos"
-    ANDROID = "android"
-    IOS = "ios"
-    ANY = "any"
+    WINDOWS = "WINDOWS"
+    LINUX = "LINUX"
+    MACOS = "MACOS"
+    ANDROID = "ANDROID"
+    IOS = "IOS"
+    ANY = "ANY"
 
     # Add type hinting here for IDE autocompletion support.
     DESKTOP: set[SupportedOS]
@@ -108,9 +108,6 @@ class BaseAgentCapability(_AgentCommunicator):
     # TODO: Deprecate global task messages queue in favor of per capability queues.
     def __init__(self, agent: Agent, task: AgentTask):
         super().__init__(agent=agent, task=task)
-
-        # Sequence number to keep track of task progress updates
-        self._task_progress_sequence_number = 1
 
     def __init_subclass__(cls, **kwargs):
         if not hasattr(cls, "name"):

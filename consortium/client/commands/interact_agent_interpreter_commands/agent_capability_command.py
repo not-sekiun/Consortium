@@ -371,6 +371,7 @@ def construct_agent_capability_command(
                     # attribute) name
                     option_value = getattr(parsed_args, normalized_name, None)
 
+                    # Check if the option is a toggleable flag
                     if original_name in self._flag_toggle_option_names:
                         arguments[original_name] = bool(option_value)
                         continue
