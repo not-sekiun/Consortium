@@ -13,6 +13,7 @@ from consortium.framework.agent_message_models import (
     TaskOutputMessageModel,
 )
 from consortium.framework.agents import BaseAgentCapability
+from consortium.framework.event_hooks import EventType
 from consortium.framework.exceptions.agent_capabilties_framework_exception import (
     AgentCapabilityRuntimeError as AgentCapabilityRuntimeFrameworkError,
 )
@@ -643,21 +644,19 @@ class Agent:
             # # Adding the result implies that the task is completed
             # task.status = AgentTaskState.COMPLETED
 
-            # TODO: Replace with Task mutation event
-            # # Finally we fire the event to notify all event handlers that a result
-            # # has been received.
-            # await server_singletons.events_service.trigger_event(
-            #     event_type=EventType.AGENT_RESULT_RECEIVED,
-            #     message=(
-            #         f"Agent {self} received result with result ID {result.result_id} "
-            #         f"for task with task ID {task_message.task_id}"
-            #     ),
-            #     data={
-            #         "agent_id": str(self.agent_id),
-            #         "result": result.model_dump(mode="json"),
-            #         "task": task.model_dump(mode="json"),
-            #     },
-            # )
+            # TODO: Replace with Task completed event
+            # Finally we fire the event to notify all event handlers that a task has
+            # completed
+            await server_singletons.events_service.trigger_event(
+                event_type=EventType.AGENT_TASK_COMPLETED,
+                message=(
+                    f"Agent {self} completed task {task} with status {task.status}"
+                ),
+                data={
+                    "agent_id": str(self.agent_id),
+                    "task": task.to_json(),
+                },
+            )
 
         running_agent_capability = agent_capability(agent=self, task=task)
         self._running_agent_capabilities[str(task.task_id)] = running_agent_capability

@@ -131,13 +131,13 @@ class BaseEventHook(ComponentMetadata):
             f")"
         )
 
-    async def on_event_hook_setup(self) -> None:
+    async def on_setup(self) -> None:
         """
         Executed once when the event hook is initialized. Use this method to perform
         any setup or resource allocation required before handling events.
         """
 
-    async def on_event_hook_triggered(self, event: Event) -> None:
+    async def on_triggered(self, event: Event) -> None:
         """
         Executed whenever one of the subscribed events occurs. Implement custom
         logic here to process the event and perform any related actions.
@@ -146,7 +146,7 @@ class BaseEventHook(ComponentMetadata):
             event
         """
 
-    async def on_event_hook_teardown(self) -> None:
+    async def on_teardown(self) -> None:
         """
         Executed when the event hook is being shut down. Use this method to
         release resources or perform cleanup operations.

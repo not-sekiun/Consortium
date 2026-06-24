@@ -335,4 +335,4 @@ class EventHooksService:
         self._logger.debug("Triggered event: {}", event)
         for event_hook in self._event_hook_registry_service.get_all_components():
             if event.event_type in event_hook.event_types:
-                event_hook.on_event_hook_triggered(event)
+                event_hook.on_triggered(event)

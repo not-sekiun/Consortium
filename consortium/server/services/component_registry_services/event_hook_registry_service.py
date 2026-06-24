@@ -96,10 +96,10 @@ class EventHookRegistryService(
         for event_type in component.event_types:
             self._events_service.register_event_handler_to_event_type(
                 event_type=event_type,
-                event_handler=component.on_event_hook_triggered,
+                event_handler=component.on_triggered,
             )
         try:
-            await component.on_event_hook_setup()
+            await component.on_setup()
         except Exception as exc:
             raise EventHookSetupError(
                 event_hook_str=str(component),
@@ -113,7 +113,7 @@ class EventHookRegistryService(
         context: dict,
     ) -> BaseEventHook:
         try:
-            await component.on_event_hook_teardown()
+            await component.on_teardown()
         except Exception as exc:
             raise EventHookTeardownError(
                 event_hook_str=str(component),
@@ -122,6 +122,6 @@ class EventHookRegistryService(
         for event_type in component.event_types:
             self._events_service.deregister_event_handler_from_event_type(
                 event_type=event_type,
-                event_handler=component.on_event_hook_triggered,
+                event_handler=component.on_triggered,
             )
         return component

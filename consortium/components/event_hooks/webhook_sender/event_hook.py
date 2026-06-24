@@ -22,7 +22,7 @@ class EventHook(BaseEventHook):
     authors = {"Sekiun (github.com/not-sekiun)"}
     event_types = {"STOP_SERVER", "START_SERVER", "AGENT_REGISTERED"}
 
-    async def on_event_hook_setup(self) -> None:
+    async def on_setup(self) -> None:
         try:
             with (self.event_hook_project_folder / "config.json").open(
                 "r",
@@ -133,7 +133,7 @@ class EventHook(BaseEventHook):
                 )
             await asyncio.sleep(retry_delay_seconds)
 
-    async def on_event_hook_triggered(self, event):
+    async def on_triggered(self, event):
         async with aiohttp.ClientSession() as client_session:
             for webhook in self.environment.config["webhooks"]:
                 event_dict = event.to_json()

@@ -66,7 +66,7 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         ]:
             nested_completer_dict[command] = agent_ids_completion
 
-        # Register commands that take the task or result ID as the first positional
+        # Register commands that take the task ID as the first positional
         # argument to autocomplete with.
         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
         for command in ["t-info", "watch"]:
@@ -106,21 +106,6 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             nested_completer_dict,
         )
 
-    # TODO: Remove and replace with something to watch tasks completion instead
-    # async def _agent_result_received_event_handler(
-    #     self,
-    #     event: dict[str, Any],
-    # ) -> None:
-    #     result = event["data"]["result"]
-    #
-    #     nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-    #         self.prompt_session.completer,
-    #     )
-    #     nested_completer_dict["r-info"][result["result_id"]] = None
-    #     self.prompt_session.completer = NestedCompleter.from_nested_dict(
-    #         nested_completer_dict,
-    #     )
-
     async def _agent_registered_event_handler(
         self,
         event: dict[str, Any],
@@ -152,11 +137,6 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
         )
-        # TODO: Remove and also remove this from the websockets event
-        # await self.client_session.websockets_api.subscribe_to_event(
-        #     event_type="AGENT_RESULT_RECEIVED",
-        #     event_handler=self._agent_result_received_event_handler,
-        # )
         await self.client_session.websockets_api.start()
 
     async def _teardown_event_handlers(self) -> None:
@@ -174,11 +154,6 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
         )
-        # TODO: Remove
-        # await self.client_session.websockets_api.unsubscribe_from_event(
-        #     event_type="AGENT_RESULT_RECEIVED",
-        #     event_handler=self._agent_result_received_event_handler,
-        # )
 
     async def on_enter(self) -> None:
         all_agents = await self.client_session.rest_api.get_all_agents()
