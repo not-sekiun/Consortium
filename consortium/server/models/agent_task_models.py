@@ -10,17 +10,9 @@ from consortium.server.models.common_models import ErrorModel
 class AgentTaskState(StrEnum):
     QUEUED = "QUEUED"
     RUNNING = "RUNNING"
-    COMPLETED = "COMPLETED"  # TODO: Remove and replace with success failure error
-
-    # TODO: Implement to subsume Result objects
     SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILURE"
     ERRORED = "ERROR"
-
-
-# class AgentTaskProgressStatus(StrEnum):
-#     SUCCESS = "SUCCESS"
-#     FAILURE = "FAILURE"
 
 
 # class AgentTaskProgressLogEntryModel(BaseModel):
