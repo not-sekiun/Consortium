@@ -479,41 +479,6 @@ class Agent:
         ]
         await agent_capability.result_messages_queue.put(task_output_message)
 
-    # def get_all_results(
-    #     self,
-    #     status: AgentResultStatus | None = None,
-    # ) -> list[AgentResultModel]:
-    #     if status is not None:
-    #         return [
-    #             result for result in self._results.values() if result.status == status
-    #         ]
-    #     return list(self._results.values())
-    #
-    # def get_all_successful_results(self) -> list[AgentResultModel]:
-    #     return self.get_all_results(status=AgentResultStatus.SUCCESS)
-    #
-    # def get_all_failed_results(self) -> list[AgentResultModel]:
-    #     return self.get_all_results(status=AgentResultStatus.FAILURE)
-    #
-    # def get_all_errored_results(self) -> list[AgentResultModel]:
-    #     return self.get_all_results(status=AgentResultStatus.ERROR)
-    #
-    # def get_result_by_task_id(self, task_id: str | uuid.UUID) -> AgentResultModel:
-    #     task_id = normalize_uuid(value=task_id)
-    #
-    #     for result in self._results.values():
-    #         if result.task_id == task_id:
-    #             return result
-    #     raise AgentResultTaskIDNotFoundError(task_id=task_id)
-    #
-    # def get_result_by_result_id(self, result_id: str | uuid.UUID) -> AgentResultModel:
-    #     result_id = normalize_uuid(value=result_id)
-    #
-    #     try:
-    #         return self._results[result_id]
-    #     except KeyError:
-    #         raise AgentResultIDNotFoundError(result_id=result_id) from None
-
     def mark_as_active(self) -> None:
         self._status = AgentStatus.ACTIVE
 
