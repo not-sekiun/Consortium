@@ -455,71 +455,6 @@ class RestAPI:
             params=params if params else None,
         )
 
-    # @_requires_authentication
-    # async def get_all_agent_results(self) -> list[dict[str, Any]]:
-    #     return await self._make_api_request(
-    #         method="GET",
-    #         url=f"{self._api_base_url}/agents/results",
-    #     )
-    #
-    # @_requires_authentication
-    # async def get_agent_result_by_result_id(self, result_id: str):
-    #     return await self._make_api_request(
-    #         method="GET",
-    #         url=f"{self._api_base_url}/agents/results/{result_id}",
-    #     )
-    #
-    # @_requires_authentication
-    # async def get_all_agent_results_by_agent_id(
-    #     self,
-    #     agent_id: str,
-    # ) -> list[dict[str, Any]]:
-    #     return await self._make_api_request(
-    #         method="GET",
-    #         url=f"{self._api_base_url}/agents/{agent_id}/results",
-    #     )
-    #
-    # @_requires_authentication
-    # async def get_all_successful_agent_results_by_agent_id(
-    #     self,
-    #     agent_id: str,
-    # ) -> list[dict[str, Any]]:
-    #     return await self._make_api_request(
-    #         method="GET",
-    #         url=f"{self._api_base_url}/agents/{agent_id}/results?status=SUCCESS",
-    #     )
-    #
-    # @_requires_authentication
-    # async def get_all_failed_agent_results_by_agent_id(
-    #     self,
-    #     agent_id: str,
-    # ) -> list[dict[str, Any]]:
-    #     return await self._make_api_request(
-    #         method="GET",
-    #         url=f"{self._api_base_url}/agents/{agent_id}/results?status=FAILURE",
-    #     )
-    #
-    # @_requires_authentication
-    # async def get_all_errored_agent_results_by_agent_id(
-    #     self,
-    #     agent_id: str,
-    # ) -> list[dict[str, Any]]:
-    #     return await self._make_api_request(
-    #         method="GET",
-    #         url=f"{self._api_base_url}/agents/{agent_id}/results?status=ERROR",
-    #     )
-    #
-    # @_requires_authentication
-    # async def get_agent_result_by_agent_id_and_result_id(
-    #     self,
-    #     agent_id: str,
-    #     result_id: str,
-    # ):
-    #     return await self._make_api_request(
-    #         method="GET",
-    #         url=f"{self._api_base_url}/agents/{agent_id}/results/{result_id}",
-    #     )
-
     @_requires_authentication
     async def update_agent_by_agent_id(
         self,
@@ -593,7 +528,7 @@ class RestAPI:
         self,
         asset_id: str,
         maximum_chunk_size: int = 1024,
-    ) -> AsyncGenerator[bytes, None]:
+    ) -> AsyncGenerator[bytes]:
         response = await self._aiohttp_client_session.get(
             f"{self._api_base_url}/assets/download/{asset_id}",
         )
