@@ -7,12 +7,12 @@ from consortium.framework.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
-from consortium.framework.agents import (
-    Failure,
-    Success,
-)
 from consortium.framework.agents.agent_capabilities._common_protocols import (
     _ResolveTimeoutProtocol,
+)
+from consortium.framework.agents.agent_outcomes import (
+    Failure,
+    Success,
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
