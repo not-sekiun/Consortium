@@ -218,13 +218,13 @@ class AgentTask:
             "command": self.command,
             "arguments": self.arguments,
             "status": self.status.to_json(),
-            "current_progress": self.current_progress.model_dump()
+            "current_progress": self.current_progress.model_dump(mode="json")
             if self.current_progress is not None
             else None,
             "events": {
                 "total_count": self.events_total_count,
                 "entries": [
-                    event.model_dump()
+                    event.model_dump(mode="json")
                     for event in self.get_events(limit=limit, offset=offset)
                 ],
             },
