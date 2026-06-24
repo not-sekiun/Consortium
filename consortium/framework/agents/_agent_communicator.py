@@ -4,6 +4,7 @@ from collections.abc import AsyncIterable
 from typing import Any
 
 from consortium.framework.agent_message_models import (
+    TaskInputMessageModel,
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
@@ -21,9 +22,12 @@ class _AgentCommunicator:
         # demultiplex messages coming in from the listener.
         self.result_messages_queue = asyncio.Queue()
 
+    # TODO: Decide if we want `send_to_agent` to only send TaskInputMessageModels right
+    #  now to prevent duplicate sending of `TaskLaunchMessageModels` same with
+    #  `send_and_recv_from_agent`
     async def send_to_agent(
         self,
-        task_message: TaskLaunchMessageModel | None = None,
+        task_message: TaskLaunchMessageModel | TaskInputMessageModel | None = None,
         command: str | None = None,
         arguments: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -67,7 +71,7 @@ class _AgentCommunicator:
 
     async def send_and_recv_from_agent(
         self,
-        task_message: TaskLaunchMessageModel | None = None,
+        task_message: TaskLaunchMessageModel | TaskInputMessageModel | None = None,
         command: str | None = None,
         arguments: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,

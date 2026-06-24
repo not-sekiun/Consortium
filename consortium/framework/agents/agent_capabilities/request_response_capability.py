@@ -7,6 +7,10 @@ from consortium.framework.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
+from consortium.framework.agents import (
+    Failure,
+    Success,
+)
 from consortium.framework.agents.agent_capabilities._common_protocols import (
     _ResolveTimeoutProtocol,
 )
@@ -73,9 +77,7 @@ def request_response_capability(
     result_handler: _ResultMessageHandlerProtocol | None = None,
     timeout_handler: _TimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
-    async def _execute(
-        self, task_message: TaskLaunchMessageModel
-    ) -> TaskOutputMessageModel:
+    async def _execute(self, task_message: TaskLaunchMessageModel) -> Success | Failure:
         context = SimpleNamespace()
 
         if resolve_timeout:
@@ -101,8 +103,11 @@ def request_response_capability(
                 result_message = timeout_handler(agent=self.agent, context=context)
                 if asyncio.iscoroutine(result_message):
                     result_message = await result_message
-                print(result_message)
-                return result_message
+                return (
+                    Success(result_message)
+                    if result_message.success
+                    else Failure(result_message)
+                )
             else:
                 raise
 
@@ -117,10 +122,14 @@ def request_response_capability(
 
         if not isinstance(result_message, TaskOutputMessageModel):
             raise TypeError(
-                "The `result_handler` must return an `AgentResultMessageModel`."
+                "The `result_handler` must return an `TaskOutputMessageModel`."
             )
 
-        return result_message
+        return (
+            Success(result_message)
+            if result_message.success
+            else Failure(result_message)
+        )
 
     return type(
         "RequestResponseCapability",
