@@ -249,41 +249,6 @@ class BaseAgentCapability(_AgentCommunicator):
             event_type=AgentTaskEventType.ARTIFACT, message=message, data=data or {}
         )
 
-    # def update_task_progress(
-    #     self,
-    #     success: bool = True,
-    #     message: str = "",
-    #     data: dict[str, Any] | None = None,
-    #     percent_complete: int | float = 0,
-    #     log_progress: bool = False,
-    # ) -> None:
-    #     agent_task_progress = AgentTaskCurrentProgressModel(
-    #         message=message,
-    #         data=data or {},
-    #         status=(
-    #             AgentTaskProgressStatus.SUCCESS
-    #             if success
-    #             else AgentTaskProgressStatus.FAILURE
-    #         ),
-    #         percent_complete=percent_complete,
-    #     )
-    #     self.task.current_progress = agent_task_progress
-    #
-    #     if log_progress:
-    #         agent_task_progress_log = AgentTaskProgressLogEntryModel(
-    #             sequence=self._task_progress_sequence_number,
-    #             message=message,
-    #             data=data or {},
-    #             status=(
-    #                 AgentTaskProgressStatus.SUCCESS
-    #                 if success
-    #                 else AgentTaskProgressStatus.FAILURE
-    #             ),
-    #             percent_complete=percent_complete,
-    #         )
-    #         self.task.progress_log.append(agent_task_progress_log)
-    #         self._task_progress_sequence_number += 1
-
     async def execute(
         self,
         task_message: TaskLaunchMessageModel,

@@ -87,7 +87,7 @@ class WatchCommand(BaseConnectedCommand):
         )
         display = Group(task_info_table, "", task_progress_log_table, "")
 
-        return display, task["status"]
+        return display, task["status"]["state"]
 
     async def run(
         self,

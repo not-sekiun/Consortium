@@ -75,7 +75,8 @@ class TaskInfoCommand(BaseConnectedCommand):
             format_dict_as_multi_line_key_value_string(input_dict=task["arguments"]),
         )
         task_info_table.add_row(
-            "Status", format_agent_task_status_string_with_color(task["status"])
+            "Status",
+            format_agent_task_status_string_with_color(task["status"]["state"]),
         )
         task_info_table.add_row(
             "Current Progress",
@@ -117,7 +118,7 @@ class TaskInfoCommand(BaseConnectedCommand):
             task_progress_log_table.add_row(
                 str(progress["sequence"]),
                 format_agent_task_progress_status_string_with_color(
-                    status_str=progress["status"]
+                    status_str=progress["status"]["state"]
                 ),
                 progress["message"],
                 f"{progress['percent_complete']}%",

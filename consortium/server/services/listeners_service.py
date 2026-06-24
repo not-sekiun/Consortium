@@ -57,6 +57,17 @@ class ListenersService:
     @log_and_propagate_error_on_service_method
     @validate_call
     def get_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> BaseListener:
+        """Gets a listener by its ID.
+
+        Args:
+            listener_id (str | uuid.UUID): The ID of the listener to retrieve.
+
+        Returns:
+            BaseListener: The requested listener.
+
+        Raises:
+            ListenerNotFoundError: If no listener with the given ID exists.
+        """
         listener_id = normalize_uuid(listener_id)
 
         try:
@@ -68,6 +79,11 @@ class ListenersService:
 
     @log_and_propagate_error_on_service_method
     def get_all_listeners(self) -> list[BaseListener]:
+        """Gets all registered listeners.
+
+        Returns:
+            list[BaseListener]: A list of all listeners.
+        """
         all_listeners = list(self._listeners.values())
         self._logger.debug(
             "Retrieved all listeners ({} retrieved)",
@@ -83,6 +99,20 @@ class ListenersService:
         name: str | None = None,
         description: str = "",
     ) -> BaseListener:
+        """Creates a listener from a listener template.
+
+        Args:
+            listener_template_id (str | uuid.UUID): The ID of the listener template to use.
+            parameters (dict[str, Any]): The parameters for the new listener.
+            name (str | None, optional): The name of the new listener. Defaults to None.
+            description (str, optional): The description of the new listener. Defaults to "".
+
+        Returns:
+            BaseListener: The newly created listener.
+
+        Raises:
+            ListenerTemplateNotFoundError: If the specified listener template does not exist.
+        """
         listener_template = self._listener_templates_service.get_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
         )
@@ -107,6 +137,14 @@ class ListenersService:
 
     @log_and_propagate_error_on_service_method
     def add_listener(self, listener: BaseListener) -> None:
+        """Adds an existing listener to the service.
+
+        Args:
+            listener (BaseListener): The listener to add.
+
+        Raises:
+            ListenerAlreadyExistsError: If a listener with the same ID already exists.
+        """
         if str(listener.listener_id) in self._listeners:
             raise ListenerAlreadyExistsError(
                 listener_id=str(listener.listener_id),
@@ -123,6 +161,15 @@ class ListenersService:
 
     @log_and_propagate_error_on_service_method
     def remove_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> None:
+        """Removes a listener by its ID.
+
+        Args:
+            listener_id (str | uuid.UUID): The ID of the listener to remove.
+
+        Raises:
+            ListenerNotFoundError: If the listener does not exist.
+            ListenerAlreadyRunningError: If the listener is currently running.
+        """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == State.RUNNING:
             raise ListenerAlreadyRunningError(
@@ -148,6 +195,23 @@ class ListenersService:
         description: str | None = None,
         parameters: dict[str, Any] | None = None,
     ) -> BaseListener:
+        """Updates a listener's configuration.
+
+        Args:
+            listener_id (str | uuid.UUID): The ID of the listener to update.
+            name (str | None, optional): The new name for the listener. Defaults to None.
+            description (str | None, optional): The new description for the listener. Defaults to None.
+            parameters (dict[str, Any] | None, optional): The new parameters for the listener. Defaults to None.
+
+        Returns:
+            BaseListener: The updated listener.
+
+        Raises:
+            ListenerNotFoundError: If the listener does not exist.
+            ListenerAlreadyRunningError: If attempting to update parameters while the listener is running.
+            InvalidListenerParameterNameError: If an invalid parameter name is provided.
+            InvalidListenerParameterValueError: If an invalid parameter value is provided.
+        """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         # Changed dictionary is used to track what attributes were updated. This data
@@ -287,6 +351,18 @@ class ListenersService:
     async def start_listener_by_listener_id(
         self, listener_id: str | uuid.UUID, blocking: bool = False
     ) -> BaseListener:
+        """Starts a listener by its ID.
+
+        Args:
+            listener_id (str | uuid.UUID): The ID of the listener to start.
+            blocking (bool, optional): Whether to wait until the listener has fully started. Defaults to False.
+
+        Returns:
+            BaseListener: The started listener.
+
+        Raises:
+            ListenerNotFoundError: If the listener does not exist.
+        """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.start()
@@ -307,6 +383,18 @@ class ListenersService:
     async def stop_listener_by_listener_id(
         self, listener_id: str | uuid.UUID, blocking: bool = False
     ) -> BaseListener:
+        """Stops a listener by its ID.
+
+        Args:
+            listener_id (str | uuid.UUID): The ID of the listener to stop.
+            blocking (bool, optional): Whether to wait until the listener has fully stopped. Defaults to False.
+
+        Returns:
+            BaseListener: The stopped listener.
+
+        Raises:
+            ListenerNotFoundError: If the listener does not exist.
+        """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.stop()
@@ -327,6 +415,18 @@ class ListenersService:
     async def cancel_listener_by_listener_id(
         self, listener_id: str | uuid.UUID, blocking: bool = False
     ) -> BaseListener:
+        """Cancels a listener by its ID.
+
+        Args:
+            listener_id (str | uuid.UUID): The ID of the listener to cancel.
+            blocking (bool, optional): Whether to wait until the listener has fully stopped. Defaults to False.
+
+        Returns:
+            BaseListener: The cancelled listener.
+
+        Raises:
+            ListenerNotFoundError: If the listener does not exist.
+        """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
         await listener.cancel()

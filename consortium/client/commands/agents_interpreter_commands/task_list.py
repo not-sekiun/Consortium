@@ -138,7 +138,7 @@ class TaskListCommand(BaseConnectedCommand):
                     }
                 ),
                 format_agent_task_status_string_with_color(
-                    status_str=agent_task["status"],
+                    status_str=agent_task["status"]["state"],
                 ),
                 format_datetime_as_human_readable_str(
                     datetime_str=agent_task["datetime_started"]
