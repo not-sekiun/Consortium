@@ -114,6 +114,16 @@ class AgentTask:
         self._sequence: int = 0
         self._events: list[AgentTaskEventModel] = []  # TODO: Move to db when possible
 
+    def __str__(self) -> str:
+        return f"'{self.command}'"
+
+    def __repr__(self) -> str:
+        return f"AgentTask(command={self.command!r}, arguments={self.arguments!r})"
+
+    @property
+    def events_total_count(self) -> int:
+        return len(self._events)
+
     def get_events(
         self, limit: int = 10, offset: int | None = None
     ) -> list[AgentTaskEventModel]:
@@ -189,7 +199,7 @@ class AgentTask:
             data=data or {},
         )
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self, limit: int = 10, offset: int | None = None) -> dict[str, Any]:
         return {
             "task_id": str(self.task_id),
             "command": self.command,
@@ -198,7 +208,13 @@ class AgentTask:
             "current_progress": self.current_progress.model_dump()
             if self.current_progress is not None
             else None,
-            "events": [event.model_dump() for event in self.get_events()],
+            "events": {
+                "total_count": self.events_total_count,
+                "entries": [
+                    event.model_dump()
+                    for event in self.get_events(limit=limit, offset=offset)
+                ],
+            },
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_started": self.datetime_started.isoformat()
             if self.datetime_started is not None

@@ -297,7 +297,7 @@ class Agent:
 
         return self._status
 
-    async def submit_task(self, task: AgentTaskModel) -> None:
+    async def submit_task(self, task: AgentTask) -> None:
         if task.command not in self.agent_type.agent_capabilities:
             raise AgentCapabilityNotFoundError(
                 command=task.command,
@@ -559,11 +559,11 @@ class Agent:
     async def _start_agent_capability(
         self,
         agent_capability: type[BaseAgentCapability],
-        task: AgentTaskModel,
+        task: AgentTask,
     ) -> None:
         async def _agent_capability_task_handler(
             agent_capability: BaseAgentCapability,
-            task: AgentTaskModel,
+            task: AgentTask,
         ):
             # Strip redundant information from the task to create the initial task
             # message
@@ -596,7 +596,7 @@ class Agent:
                     await agent_capability.execute(task_message=task_message)
                 # Upon returning without raising an error the task is considered to
                 # automatically have completed without failure.
-                task.status = AgentTaskState.SUCCESS
+                task.status._transition_to_succeeded()
 
                 # TODO: Remove, returning implicitly is a success
                 # if not isinstance(result_message, AgentResultMessageModel):

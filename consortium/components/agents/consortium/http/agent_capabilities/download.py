@@ -142,10 +142,8 @@ class DownloadCapability(BaseAgentCapability):
                     percent_complete=100,
                 )
             elif msg_type == "end_of_file":
-                self.update_progress(
+                self.emit_info(
                     message=f"Downloaded file '{current_file}'",
-                    percent_complete=100,
-                    log_progress=True,
                 )  # Log completion of file download in progress log for task
                 current_file = None
                 current_file_size = 0
@@ -155,10 +153,8 @@ class DownloadCapability(BaseAgentCapability):
                 # task and break loop if a directory was being downloaded, avoid logging
                 # since we already log file download completion on 'end_of_file'
                 if is_dir:
-                    self.update_progress(
+                    self.emit_info(
                         message=f"Downloaded directory '{target_name}'",
-                        percent_complete=100,
-                        log_progress=True,
                     )
                 break
             else:

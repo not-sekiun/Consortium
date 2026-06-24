@@ -4,8 +4,10 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, JsonValue
 
+from consortium.server.models.common_models import ErrorModel
 
-class AgentTaskStatus(StrEnum):
+
+class AgentTaskState(StrEnum):
     QUEUED = "QUEUED"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"  # TODO: Remove and replace with success failure error
@@ -59,7 +61,7 @@ class AgentCurrentProgressModel(BaseModel):
     datetime_reported: datetime = Field(default_factory=datetime.now)
 
 
-class AgentTaskEventsAPIResponseModel(BaseModel):
+class AgentTaskEventsModel(BaseModel):
     total_count: int
     entries: list[AgentTaskEventModel]
 
@@ -72,24 +74,29 @@ class AgentTaskEventsAPIResponseModel(BaseModel):
 #     datetime_reported: datetime = Field(default_factory=datetime.now)
 
 
+class AgentTaskStatusModel(BaseModel):
+    state: AgentTaskState
+    error: ErrorModel | None
+
+
+# class AgentTaskModel(BaseModel):
+#     task_id: uuid.UUID
+#     command: str
+#     arguments: dict[str, JsonValue]
+#     status: AgentTaskStatusModel
+#     current_progress: AgentCurrentProgressModel | None
+#     events: list[AgentTaskEventModel]
+#     datetime_created: datetime
+#     datetime_started: datetime | None
+
+
 class AgentTaskModel(BaseModel):
-    task_id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    command: str
-    arguments: dict[str, JsonValue]
-    status: AgentTaskStatus = AgentTaskStatus.QUEUED
-    current_progress: AgentCurrentProgressModel | None = None
-    events: list[AgentTaskEventModel] = []
-    datetime_created: datetime = Field(default_factory=datetime.now)
-    datetime_started: datetime | None = None
-
-
-class AgentTaskAPIResponseModel(BaseModel):
     task_id: uuid.UUID
     command: str
     arguments: dict[str, JsonValue]
-    status: AgentTaskStatus
+    status: AgentTaskStatusModel
     current_progress: AgentCurrentProgressModel | None = None
-    events: AgentTaskEventsAPIResponseModel
+    events: AgentTaskEventsModel
     datetime_created: datetime
     datetime_started: datetime | None = None
 

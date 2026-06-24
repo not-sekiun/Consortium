@@ -112,7 +112,7 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
             # Register each agent capability command for the autocompleter.
             self.commands[agent_capability_name] = agent_capability_command
             # Also register in the context for the help command to display properly.
-            self.interpreter_context.commands[agent_capability_name] = (
+            self.interpreter_context.commands_info[agent_capability_name] = (
                 agent_capability_command
             )
 
@@ -130,7 +130,7 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         for command in [
             "info",
             "interact",
-            "r-list",
+            # "r-list",
             "t-list",
             "rename",
             "describe",
@@ -144,10 +144,10 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
                 task["task_id"]: None for task in all_tasks
             }
 
-        all_results = await self.client_session.rest_api.get_all_agent_results()
-        nested_completer_dict["r-info"] = {
-            result["result_id"]: None for result in all_results
-        }
+        # all_results = await self.client_session.rest_api.get_all_agent_results()
+        # nested_completer_dict["r-info"] = {
+        #     result["result_id"]: None for result in all_results
+        # }
 
         # Register commands that take the asset ID as the first positional argument to
         # autocomplete with.
@@ -187,6 +187,7 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
             nested_completer_dict,
         )
 
+    # TODO: Read from an event stream instead
     # Event handler listens for specific agent events related to the current agent
     # being interacted with, namely any received agent results.
     async def _agent_result_received_event_handler(
@@ -222,7 +223,7 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         for command in [
             "info",
             "interact",
-            "r-list",
+            # "r-list",
             "t-list",
             "rename",
             "describe",

@@ -60,7 +60,7 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         for command in [
             "info",
             "interact",
-            "r-list",
+            # "r-list",
             "t-list",
             "rename",
             "describe",
@@ -74,10 +74,10 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             nested_completer_dict[command] = {
                 task["task_id"]: None for task in all_tasks
             }
-        all_results = await self.client_session.rest_api.get_all_agent_results()
-        nested_completer_dict["r-info"] = {
-            result["result_id"]: None for result in all_results
-        }
+        # all_results = await self.client_session.rest_api.get_all_agent_results()
+        # nested_completer_dict["r-info"] = {
+        #     result["result_id"]: None for result in all_results
+        # }
 
         # Register commands that take the asset ID as the first positional argument to
         # autocomplete with.

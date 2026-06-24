@@ -16,10 +16,10 @@ from consortium.server.exceptions.consortium_exceptions.agents_consortium_except
     AgentNotFoundError,
     AgentTaskNotFoundError,
 )
-
+from consortium.server.objects.agent_task_objects import AgentTask
 from consortium.server.models.agent_task_models import (
     AgentTaskModel,
-    AgentTaskStatus,
+    AgentTaskState,
 )
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.server_logging import LoggerType
@@ -265,8 +265,8 @@ class AgentsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_agent_tasks(
-        self, status: AgentTaskStatus | None = None
-    ) -> list[AgentTaskModel]:
+        self, status: AgentTaskState | None = None
+    ) -> list[AgentTask]:
         all_tasks = []
         for agent in self._agents.values():
             all_tasks.extend(agent.get_all_tasks(status=status))
@@ -284,7 +284,7 @@ class AgentsService:
         return all_tasks
 
     @log_and_propagate_error_on_service_method
-    def get_agent_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTaskModel:
+    def get_agent_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
         for agent in self._agents.values():
             try:
                 task = agent.get_task_by_task_id(task_id=task_id)
@@ -301,8 +301,8 @@ class AgentsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_agent_tasks_by_agent_id(
-        self, agent_id: str | uuid.UUID, status: AgentTaskStatus | None = None
-    ) -> list[AgentTaskModel]:
+        self, agent_id: str | uuid.UUID, status: AgentTaskState | None = None
+    ) -> list[AgentTask]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         all_tasks = agent.get_all_tasks(status=status)
         if status is None:
@@ -325,7 +325,7 @@ class AgentsService:
         self,
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
-    ) -> AgentTaskModel:
+    ) -> AgentTask:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = agent.get_task_by_task_id(task_id=task_id)
         self._logger.debug(
@@ -433,10 +433,10 @@ class AgentsService:
         agent_id: str | uuid.UUID,
         command: str,
         arguments: dict[str, Any],
-    ) -> AgentTaskModel:
+    ) -> AgentTask:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
 
-        task = AgentTaskModel(command=command, arguments=arguments)
+        task = AgentTask(command=command, arguments=arguments)
         await agent.submit_task(task=task)
 
         await self._events_service.trigger_event(
@@ -444,7 +444,7 @@ class AgentsService:
             message=f"Tasked agent: {agent}",
             data={
                 "agent_id": str(agent.agent_id),
-                "task": task.model_dump(mode="json"),
+                "task": task.to_json(),
             },
         )
         self._logger.info("Tasked agent {} with task {}", agent, task)

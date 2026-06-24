@@ -8,8 +8,8 @@ from consortium.framework.agents import (
 )
 from consortium.framework.options import SingleValueOption
 
-from .agent_capabilities.download_capability import DownloadCapability
-from .agent_capabilities.upload_capability import UploadCapability
+from .agent_capabilities.download import DownloadCapability
+from .agent_capabilities.upload import UploadCapability
 
 authors = {"Sekiun (github.com/not-sekiun)"}
 
