@@ -5,15 +5,15 @@ from rich.console import Group
 from rich.live import Live
 
 from consortium.client.client_rest_api import RestAPI
-from consortium.client.commands.agents_interpreter_commands.task_info import (
-    TaskInfoCommand,
-)
 from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
+from consortium.client.utils.agent_task_command_utils import (
+    create_task_info_and_task_events_tables,
+)
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import console, print_info, print_warning
 
@@ -82,7 +82,7 @@ class WatchCommand(BaseConnectedCommand):
             offset=offset,
         )
 
-        task_info_table, task_events_table = TaskInfoCommand.build_task_tables(
+        task_info_table, task_events_table = create_task_info_and_task_events_tables(
             task=task
         )
         display = Group(task_info_table, "", task_events_table, "")

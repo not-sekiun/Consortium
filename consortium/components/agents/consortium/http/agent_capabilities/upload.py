@@ -83,7 +83,7 @@ class UploadCapability(BaseAgentCapability):
     mitre_attack_techniques = {"T1105"}
 
     # FIXME: What the fuck is this bullshit
-    async def execute(
+    async def on_execute(
         self,
         task_message: TaskLaunchMessageModel,
     ) -> TaskOutputMessageModel:

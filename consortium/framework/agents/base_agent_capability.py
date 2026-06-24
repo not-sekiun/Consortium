@@ -247,12 +247,22 @@ class BaseAgentCapability(_AgentCommunicator):
             event_type=AgentTaskEventType.ARTIFACT, message=message, data=data or {}
         )
 
-    async def execute(
+    # TODO: Implement
+    async def on_launch(
+        self, task_launch_message: TaskLaunchMessageModel
+    ) -> TaskLaunchMessageModel: ...
+
+    async def on_execute(
         self,
         task_message: TaskLaunchMessageModel,
     ) -> Success | Failure | None:
-        return await self.send_and_recv_from_agent(
+        task_output_message = await self.send_and_recv_from_agent(
             task_message=task_message,
+        )
+        return (
+            Success(task_output_message=task_output_message)
+            if task_output_message.success
+            else Failure(task_output_message=task_output_message)
         )
 
     @classmethod
