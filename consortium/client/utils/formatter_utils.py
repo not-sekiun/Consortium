@@ -46,9 +46,7 @@ def format_listener_state_string_with_color(
         "COMPLETED": "[bold cyan]COMPLETED[/]",
     }
 
-    if state_str in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[state_str]
-    return state_str
+    return state_string_to_colored_state_string_map.get(state_str, state_str)
 
 
 # Format the color of agent generator component status strings to be rendered by rich's
@@ -67,23 +65,7 @@ def format_agent_generator_state_string_with_color(
         "COMPLETED": "[bold green]COMPLETED[/]",
     }
 
-    if state_str in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[state_str]
-    return state_str
-
-
-def format_agent_result_status_string_with_color(
-    status_str: str,
-) -> str:
-    state_string_to_colored_state_string_map = {
-        "SUCCESS": "[bold green]SUCCESS[/]",
-        "FAILURE": "[bold red]FAILURE[/]",
-        "ERROR": "[bold white on red]ERROR[/]",
-    }
-
-    if status_str in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[status_str]
-    return status_str
+    return state_string_to_colored_state_string_map.get(state_str, state_str)
 
 
 def format_agent_task_progress_status_string_with_color(
@@ -94,9 +76,7 @@ def format_agent_task_progress_status_string_with_color(
         "FAILURE": "[bold red]FAILURE[/]",
     }
 
-    if status_str in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[status_str]
-    return status_str
+    return state_string_to_colored_state_string_map.get(status_str, status_str)
 
 
 def format_agent_task_status_string_with_color(
@@ -108,9 +88,7 @@ def format_agent_task_status_string_with_color(
         "COMPLETED": "[bold green]COMPLETED[/]",
     }
 
-    if status_str in state_string_to_colored_state_string_map:
-        return state_string_to_colored_state_string_map[status_str]
-    return status_str
+    return state_string_to_colored_state_string_map.get(status_str, status_str)
 
 
 def format_snake_case_to_title(snake_case_str: str) -> str:
@@ -282,9 +260,7 @@ def format_role_str_with_color(role: str) -> str:
         "SPECTATOR": "[bold cyan]SPECTATOR[/]",
     }
 
-    if role in role_str_to_colored_role_str_map:
-        return role_str_to_colored_role_str_map[role]
-    return role
+    return role_str_to_colored_role_str_map.get(role, role)
 
 
 def format_agent_status_string_with_color(
@@ -297,6 +273,20 @@ def format_agent_status_string_with_color(
         "UNREACHABLE": "[bold red]UNREACHABLE[/]",
     }
 
-    if status_str in status_string_to_colored_status_string_map:
-        return status_string_to_colored_status_string_map[status_str]
-    return status_str
+    return status_string_to_colored_status_string_map.get(status_str, status_str)
+
+
+def format_agent_task_event_type_string_with_color(
+    event_type_str: str,
+) -> str:
+    event_type_string_to_colored_event_type_map = {
+        "SUCCESS": "[bold green]SUCCESS[/]",
+        "INFO": "[bold cyan]INFO[/]",
+        "FAILURE": "[bold red]FAILURE[/]",
+        "ARTIFACT": "[bold yellow]ARTIFACT[/]",
+        "ERROR": "[bold red]ERROR[/]",
+        "COMPLETED": "[bold white]COMPLETED[/]",
+    }
+    return event_type_string_to_colored_event_type_map.get(
+        event_type_str, event_type_str
+    )

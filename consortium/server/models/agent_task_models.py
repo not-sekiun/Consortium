@@ -35,6 +35,8 @@ class AgentTaskEventType(StrEnum):
     # unhandled error (`ERROR`) or terminal completion of a task when the method exits
     # (`COMPLETED`)
     ERROR = "ERROR"
+    # TODO: Consider remove AgentTaskEventType.COMPLETED it is currently not used and
+    #  im not sure if its necessary
     COMPLETED = "COMPLETED"
 
 

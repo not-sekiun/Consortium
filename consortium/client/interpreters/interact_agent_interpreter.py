@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import HTML
 from prompt_toolkit.completion import NestedCompleter
+from rich.panel import Panel
 
 from consortium.client.commands.core_commands.agents import AgentsCommand
 from consortium.client.commands.interact_agent_interpreter_commands import (
@@ -26,7 +27,11 @@ from consortium.client.repl_interface.base_interpreter import (
 from consortium.client.utils.data_structure_utils import (
     extract_nested_completer_dict_from_nested_completer,
 )
+from consortium.client.utils.formatter_utils import (
+    format_agent_task_event_type_string_with_color,
+)
 from consortium.client.utils.printer_utils import (
+    console,
     print_info,
     print_success,
     print_warning,
@@ -191,8 +196,27 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
 
         # TODO: Prettify task printing
         if agent_id == self.interpreter_context.agent["agent_id"]:
-            print_info(
-                f"{message}:\n{task}",
+            print_info(f"{message}")
+
+            events_summary = ""
+            for event in task["events"]["entries"]:
+                sequence = event["sequence"]
+                event_type = event["event_type"]
+                message = event["message"]
+
+                events_summary += (
+                    f"[dim white][{sequence}][/] "
+                    f"{format_agent_task_event_type_string_with_color(event_type_str=event_type)}: "
+                    f"{message}\n"
+                )
+
+            console.print(
+                Panel(
+                    events_summary,
+                    title=f"Events summary ({len(task['events']['entries'])}/{task['events']['total_count']} entries displayed)",
+                    title_align="left",
+                    expand=False,
+                )
             )
 
     async def _agent_registered_event_handler(
