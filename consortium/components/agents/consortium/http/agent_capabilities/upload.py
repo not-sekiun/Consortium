@@ -1,19 +1,13 @@
-import base64
-import zlib
 from pathlib import Path
-from typing import TYPE_CHECKING
 
+from consortium.framework.agents import Failure, Success
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
-    TaskOutputMessageModel,
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
 )
 from consortium.framework.options import SingleValueOption
-
-if TYPE_CHECKING:
-    pass
 
 
 class UploadCapability(BaseAgentCapability):
@@ -83,10 +77,10 @@ class UploadCapability(BaseAgentCapability):
     mitre_attack_techniques = {"T1105"}
 
     # FIXME: What the fuck is this bullshit
-    async def on_execute(
+    async def execute(
         self,
         task_message: TaskLaunchMessageModel,
-    ) -> TaskOutputMessageModel:
+    ) -> Success | Failure | None:
         source = Path(task_message.arguments["source"])
         chunk_size = task_message.arguments["chunk_size"]
         recursive = task_message.arguments["recursive"]
@@ -94,10 +88,8 @@ class UploadCapability(BaseAgentCapability):
         compression_level = task_message.arguments["compression_level"]
 
         if not source.exists():
-            return TaskOutputMessageModel(
-                task_id=task_message.task_id,
-                success=False,
-                message=f"Failed to start upload. Path '{source}' does not exist.",
+            return Failure(
+                message=f"Failed to start upload. Path '{source}' does not exist."
             )
 
         # Remove source from arguments before sending, agent doesn't need it
@@ -111,64 +103,60 @@ class UploadCapability(BaseAgentCapability):
         # Wait for agent to signal ready
         ready_response = await self.send_and_recv_from_agent(task_message=task_message)
         if not ready_response.success:
-            return ready_response
+            return Failure(task_output_message=ready_response)
 
         if ready_response.data.get("type") != "ready":
-            return TaskOutputMessageModel(
-                task_id=task_message.task_id,
-                success=False,
-                message="Agent did not signal ready for upload.",
-            )
+            return Failure(message="Agent did not signal ready for upload.")
 
-        def send_chunk(chunk_type, **kwargs):
-            return self.send_upload_chunk_to_agent(
-                task_id=task_message.task_id,
-                chunk_data={"type": chunk_type, **kwargs},
-            )
+        # def send_chunk(chunk_type, **kwargs):
+        #     return self.send_upload_chunk_to_agent(
+        #         task_id=task_message.task_id,
+        #         chunk_data={"type": chunk_type, **kwargs},
+        #     )
+        #
+        # def stream_file_chunks(file_path):
+        #     with open(file_path, mode="rb") as file:
+        #         while chunk := file.read(chunk_size):
+        #             if compression_level:
+        #                 chunk = zlib.compress(chunk, level=compression_level)
+        #                 send_chunk(
+        #                     "chunk",
+        #                     chunk=base64.b64encode(chunk).decode(),
+        #                     compressed=True,
+        #                 )
+        #             else:
+        #                 send_chunk("chunk", chunk=base64.b64encode(chunk).decode())
+        #
+        # if source.is_file():
+        #     # Single file upload
+        #     await send_chunk("file", path=source.name, size=source.stat().st_size)
+        #     stream_file_chunks(source)
+        #     await send_chunk("end_of_file")
+        #     await send_chunk("end_of_upload")
+        # else:
+        #     # Directory upload
+        #     await send_chunk("directory", path=source.name)
+        #
+        #     for item in source.rglob("*") if recursive else source.iterdir():
+        #         relative_path = str(item.relative_to(source))
+        #
+        #         if item.is_dir():
+        #             if ignore_empty_dirs and not any(item.iterdir()):
+        #                 continue
+        #             await send_chunk("directory_entry", path=relative_path)
+        #         elif item.is_file():
+        #             await send_chunk(
+        #                 "file_in_directory",
+        #                 path=relative_path,
+        #                 size=item.stat().st_size,
+        #             )
+        #             stream_file_chunks(item)
+        #             await send_chunk("end_of_file")
+        #
+        #         if not recursive and item.is_dir():
+        #             continue
+        #
+        #     await send_chunk("end_of_directory")
 
-        def stream_file_chunks(file_path):
-            with open(file_path, mode="rb") as file:
-                while chunk := file.read(chunk_size):
-                    if compression_level:
-                        chunk = zlib.compress(chunk, level=compression_level)
-                        send_chunk(
-                            "chunk",
-                            chunk=base64.b64encode(chunk).decode(),
-                            compressed=True,
-                        )
-                    else:
-                        send_chunk("chunk", chunk=base64.b64encode(chunk).decode())
-
-        if source.is_file():
-            # Single file upload
-            await send_chunk("file", path=source.name, size=source.stat().st_size)
-            stream_file_chunks(source)
-            await send_chunk("end_of_file")
-            await send_chunk("end_of_upload")
-        else:
-            # Directory upload
-            await send_chunk("directory", path=source.name)
-
-            for item in source.rglob("*") if recursive else source.iterdir():
-                relative_path = str(item.relative_to(source))
-
-                if item.is_dir():
-                    if ignore_empty_dirs and not any(item.iterdir()):
-                        continue
-                    await send_chunk("directory_entry", path=relative_path)
-                elif item.is_file():
-                    await send_chunk(
-                        "file_in_directory",
-                        path=relative_path,
-                        size=item.stat().st_size,
-                    )
-                    stream_file_chunks(item)
-                    await send_chunk("end_of_file")
-
-                if not recursive and item.is_dir():
-                    continue
-
-            await send_chunk("end_of_directory")
-
-        # Wait for final confirmation from agent
-        return await self.recv_from_agent()
+        # # Wait for final confirmation from agent
+        # return await self.recv_from_agent()

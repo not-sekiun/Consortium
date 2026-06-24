@@ -537,7 +537,7 @@ class Agent:
             try:
                 if agent_capability.is_atomic:
                     async with self._agent_capability_execution_lock:
-                        task_outcome = await agent_capability.on_execute(
+                        task_outcome = await agent_capability.execute(
                             task_message=task_message
                         )
                 else:
@@ -548,7 +548,7 @@ class Agent:
                     async with self._agent_capability_execution_lock:
                         pass
 
-                    task_outcome = await agent_capability.on_execute(
+                    task_outcome = await agent_capability.execute(
                         task_message=task_message
                     )
 

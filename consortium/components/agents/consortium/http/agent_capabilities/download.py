@@ -72,7 +72,7 @@ class DownloadCapability(BaseAgentCapability):
     # TODO: Make download actually write artifacts via artifacts service and
     #  emit_artifact should properly log this event with reference to the artifact
     #  created
-    async def on_execute(
+    async def execute(
         self,
         task_message: TaskLaunchMessageModel,
     ) -> Success | Failure | None:

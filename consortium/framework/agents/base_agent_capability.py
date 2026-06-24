@@ -250,12 +250,7 @@ class BaseAgentCapability(_AgentCommunicator):
             event_type=AgentTaskEventType.ARTIFACT, message=message, data=data or {}
         )
 
-    # TODO: Implement
-    async def on_launch(
-        self, task_launch_message: TaskLaunchMessageModel
-    ) -> TaskLaunchMessageModel: ...
-
-    async def on_execute(
+    async def execute(
         self,
         task_message: TaskLaunchMessageModel,
     ) -> Success | Failure | None:
