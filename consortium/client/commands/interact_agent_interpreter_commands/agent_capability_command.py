@@ -176,6 +176,8 @@ def construct_agent_capability_command(
         _original_to_normalized_name_map: dict[str, str] = {}
         # Set of original option names that are positional arguments
         _positional_option_names: set[str] = set()
+        # Set of original option names that are toggleable flags
+        _flag_toggle_option_names: set[str] = set()
 
         def configure_parser(self, parser: ArgumentParser) -> None:
             options = dict(sorted(agent_capability["options"].items()))
@@ -255,6 +257,29 @@ def construct_agent_capability_command(
 
                 option = options[original_name]
 
+                # Check for special case single value option non-positional arguments
+                # that accept a boolean and have a default value. For convenience these
+                # can be `store_true`/`store_false` parameters to avoid needing to pass
+                # in True or False values
+                if (
+                    _is_single_value_option(option)
+                    and option.get("value_type") == "bool"
+                    and not option["required"]
+                ):
+                    default = bool(option["default_value"])
+                    store_action = "store_false" if default else "store_true"
+
+                    parser.add_argument(
+                        abbreviated_flags[normalized_name],
+                        f"--{normalized_name}",
+                        help=_escape_percent_signs(text=option["description"])
+                        + _construct_help_default_str(value=default),
+                        action=store_action,
+                        default=default,
+                    )
+                    self._flag_toggle_option_names.add(original_name)
+                    continue
+
                 # Configure nargs based on option type
                 if _is_single_value_option(option):
                     nargs = "?"
@@ -272,9 +297,10 @@ def construct_agent_capability_command(
                 # Determine argparse type
                 argparse_type = str
                 if _is_single_value_option(option):
-                    if option.get("value_type") == "int":
+                    value_type = option.get("value_type")
+                    if value_type == "int":
                         argparse_type = int
-                    elif option.get("value_type") == "float":
+                    elif value_type == "float":
                         argparse_type = float
 
                 parser.add_argument(
@@ -344,6 +370,10 @@ def construct_agent_capability_command(
                     # Get the value(s) from parsed args using normalized (`parsed_args`
                     # attribute) name
                     option_value = getattr(parsed_args, normalized_name, None)
+
+                    if original_name in self._flag_toggle_option_names:
+                        arguments[original_name] = bool(option_value)
+                        continue
 
                     # Skip if no value was provided (None means flag wasn't used)
                     if option_value is None:
