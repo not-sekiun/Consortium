@@ -3,8 +3,8 @@ import inspect
 import random
 import types
 import uuid
-from typing import Any, TYPE_CHECKING
 from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
@@ -59,47 +59,6 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
         return async_wrapper
     else:
         return sync_wrapper
-
-
-# def log_and_propagate_error_on_service_method(func) -> Callable:
-#     @functools.wraps(func)
-#     async def async_wrapper(self, *args, **kwargs):
-#         try:
-#             return await func(self, *args, **kwargs)
-#         except BaseConsortiumError as exc:
-#             self._logger.error("{}: {}", type(exc).__name__, exc)
-#             raise
-#         except Exception as exc:
-#             self._logger.opt(ansi=True, exception=exc).critical(
-#                 "<white><RED><bold>Unhandled exception in {}.{}. {}: {}</></></>",
-#                 type(self).__name__,
-#                 func.__name__,
-#                 type(exc).__name__,
-#                 exc,
-#             )
-#             raise
-#
-#     @functools.wraps(func)
-#     def sync_wrapper(self, *args, **kwargs):
-#         try:
-#             return func(self, *args, **kwargs)
-#         except BaseConsortiumError as exc:
-#             self._logger.error("{}: {}", type(exc).__name__, exc)
-#             raise
-#         except Exception as exc:
-#             self._logger.opt(ansi=True, exception=exc).critical(
-#                 "<white><RED><bold>Unhandled exception in {}.{}. {}: {}</></></>",
-#                 type(self).__name__,
-#                 func.__name__,
-#                 type(exc).__name__,
-#                 exc,
-#             )
-#             raise
-#
-#     if inspect.iscoroutinefunction(func):
-#         return async_wrapper
-#     else:
-#         return sync_wrapper
 
 
 def construct_services_namespace_object(
