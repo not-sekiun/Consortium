@@ -269,7 +269,7 @@ class AgentsService:
     ) -> list[AgentTask]:
         all_tasks = []
         for agent in self._agents.values():
-            all_tasks.extend(agent.get_all_tasks(status=status))
+            all_tasks.extend(agent.get_all_tasks(state=status))
         if status is None:
             self._logger.debug(
                 "Retrieved all tasks from all agents ({} retrieved)",
@@ -304,7 +304,7 @@ class AgentsService:
         self, agent_id: str | uuid.UUID, status: AgentTaskState | None = None
     ) -> list[AgentTask]:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        all_tasks = agent.get_all_tasks(status=status)
+        all_tasks = agent.get_all_tasks(state=status)
         if status is None:
             self._logger.debug(
                 "Retrieved agent tasks from agent {} ({} retrieved)",

@@ -397,26 +397,26 @@ class Agent:
 
     def get_all_tasks(
         self,
-        status: AgentTaskState | None = None,
+        state: AgentTaskState | None = None,
     ) -> list[AgentTask]:
-        if status is not None:
-            return [task for task in self._tasks.values() if task.status == status]
+        if state is not None:
+            return [task for task in self._tasks.values() if task.status.state == state]
         return list(self._tasks.values())
 
     def get_all_queued_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(status=AgentTaskState.QUEUED)
+        return self.get_all_tasks(state=AgentTaskState.QUEUED)
 
     def get_all_running_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(status=AgentTaskState.RUNNING)
+        return self.get_all_tasks(state=AgentTaskState.RUNNING)
 
     def get_all_succeeded_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(status=AgentTaskState.SUCCEEDED)
+        return self.get_all_tasks(state=AgentTaskState.SUCCEEDED)
 
     def get_all_failed_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(status=AgentTaskState.FAILED)
+        return self.get_all_tasks(state=AgentTaskState.FAILED)
 
     def get_all_errored_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(status=AgentTaskState.ERRORED)
+        return self.get_all_tasks(state=AgentTaskState.ERRORED)
 
     # def get_all_completed_tasks(self) -> list[AgentTaskModel]:
     #     return self.get_all_tasks(status=AgentTaskState.COMPLETED)
@@ -428,7 +428,7 @@ class Agent:
     ) -> AgentTask:
         task_id = normalize_uuid(value=task_id)
 
-        for task in self.get_all_tasks(status=state):
+        for task in self.get_all_tasks(state=state):
             if task_id == str(task.task_id):
                 return task
         raise AgentTaskNotFoundError(task_id=task_id)

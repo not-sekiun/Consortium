@@ -138,7 +138,7 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         for command in [
             "info",
             "interact",
-            "r-list",
+            # "r-list",
             "t-list",
             "rename",
             "describe",
