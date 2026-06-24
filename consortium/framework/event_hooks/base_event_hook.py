@@ -113,7 +113,7 @@ class BaseEventHook(ComponentMetadata):
         super().__init_subclass__(**kwargs)
 
     def __str__(self):
-        return f"{self.name} ({self.event_hook_id})"
+        return f"'{self.name}' ({self.event_hook_id})"
 
     def __repr__(self):
         return (

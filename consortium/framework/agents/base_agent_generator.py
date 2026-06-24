@@ -10,6 +10,7 @@ from typing import Any, final, get_type_hints
 from loguru import logger
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
+import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
@@ -38,6 +39,7 @@ from consortium.server.exceptions.consortium_exceptions.components_consortium_ex
     ComponentStopError,
 )
 from consortium.server.server_logging import LoggerType
+from consortium.server.utils import construct_services_namespace_object
 
 
 class _BaseAgentGeneratorBuildStepModel(BaseModel):
@@ -66,6 +68,10 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
+        cls.services = construct_services_namespace_object(
+            server_singletons=server_singletons
+        )
+
         expected_attrs_and_types_map = get_type_hints(cls)
 
         # Check all attributes exist
@@ -289,6 +295,10 @@ class BaseAgentGenerator(ComponentLifeCycle):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
+        cls.services = construct_services_namespace_object(
+            server_singletons=server_singletons
+        )
+
         if not hasattr(cls, "agent_generator_build_steps"):
             raise MissingAgentGeneratorConfigurationParameterError(
                 agent_generator_filepath=sys.modules[cls.__module__].__file__,

@@ -87,7 +87,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.plugin_id})"
+        return f"'{self.name}' ({self.plugin_id})"
 
     def __repr__(self) -> str:
         return (

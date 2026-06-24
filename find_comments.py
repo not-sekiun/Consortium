@@ -239,7 +239,7 @@ def extract_comment_tokens(source: str):
                 raw = tok.string  # includes leading '#'
                 text = raw.lstrip("#")
                 results.append((line_no, text))
-    except (tokenize.TokenizeError, IndentationError, SyntaxError):
+    except tokenize.TokenizeError, IndentationError, SyntaxError:
         pass
     return results
 

@@ -8,6 +8,7 @@ from typing import get_type_hints
 
 from pydantic import ConfigDict
 
+import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
 from consortium.framework._utils import format_docstring_to_single_line, remap_exception
 from consortium.framework.framework_types import (
@@ -42,6 +43,7 @@ from consortium.server.exceptions.consortium_exceptions.listener_templates_conso
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
 )
+from consortium.server.utils import construct_services_namespace_object
 
 Options = (
     SingleValueOption
@@ -92,6 +94,9 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             sys.modules[cls.__module__].__file__,
         ).parents[0]
         cls.registered_compatible_agent_types = set()
+        cls.services = construct_services_namespace_object(
+            server_singletons=server_singletons
+        )
 
         try:
             cls._validate_metadata()
@@ -248,6 +253,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             parameters=parameters,
         )
 
+    # TODO: Consider replacing JSONObject with JsonValue?
     def to_json(self) -> JSONObject:
         """
         Convert the listener template metadata to a JSON serializable dictionary.

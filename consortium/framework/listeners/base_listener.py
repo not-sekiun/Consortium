@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, get_type_hints
 from loguru import logger
 from pydantic import BaseModel, JsonValue, ValidationError
 
+import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
@@ -28,6 +29,7 @@ from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exc
 )
 from consortium.server.server_logging import LoggerType
 from consortium.server.services.connected_agents_service import ConnectedAgentsService
+from consortium.server.utils import construct_services_namespace_object
 
 if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
@@ -154,6 +156,9 @@ class BaseListener(ComponentLifeCycle):  # ABC):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
+        cls.services = construct_services_namespace_object(
+            server_singletons=server_singletons
+        )
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:

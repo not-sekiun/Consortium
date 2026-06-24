@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any, get_type_hints
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+import consortium.server.server_singletons as server_singletons
 from consortium.framework._utils import format_docstring_to_single_line
 from consortium.framework.agents._agent_communicator import _AgentCommunicator
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
-    # TaskOutputMessageModel,
 )
 from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.framework_types import Primitive, PrimitiveCollection
@@ -33,6 +33,7 @@ from consortium.server.objects.mitre_attack_objects import (
     # MitreAttackTechniqueID,
     resolve_mitre_attack_technique_id,
 )
+from consortium.server.utils import construct_services_namespace_object
 
 if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
@@ -122,7 +123,9 @@ class BaseAgentCapability(_AgentCommunicator):
         cls.supported_oses = cls.supported_oses or {SupportedOS.ANY}
         cls.authors = cls.authors or set()
         cls.mitre_attack_techniques = cls.mitre_attack_techniques or set()
-
+        cls.services = construct_services_namespace_object(
+            server_singletons=server_singletons
+        )
         try:
             _BaseAgentCapabilityModel(
                 name=cls.name,
