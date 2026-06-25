@@ -147,6 +147,7 @@ def get_listener_by_listener_id(
 
 @router.post(
     "/{listener_id}/start",
+    status_code=202,
     responses={
         202: {"model": ListenerModel},
         404: {
@@ -198,6 +199,7 @@ async def start_listener_by_listener_id(
 
 @router.post(
     "/{listener_id}/stop",
+    status_code=202,
     responses={
         202: {"model": ListenerModel},
         404: {
@@ -249,6 +251,7 @@ async def stop_listener_by_listener_id(
 
 @router.post(
     "/{listener_id}/cancel",
+    status_code=202,
     responses={
         202: {"model": ListenerModel},
         404: {

@@ -4,10 +4,12 @@ import pathlib
 import httpx
 import pytest
 
-from consortium.server import server_singletons
+import consortium.server.server_singletons as server_singletons
 from consortium.server.models.config_models import LoggingConfigModel, ServerConfigModel
 from consortium.server.server import Server
 from consortium.server.server_logging import configure_logger
+
+_MOCK_LISTENER_LABEL = "consortium.listeners.mock"
 
 _JSON_WEB_TOKEN_JSON_SCHEMA = {
     "type": "object",
@@ -149,10 +151,20 @@ def client(admin_client, operator_client, spectator_client, request):
     }[request.param]
 
 
+@pytest.fixture(scope="session")
+async def load_mock_listener_profile(app):
+    mock_dir = pathlib.Path(__file__).parent / "mock" / "mock_listener"
+    await server_singletons.listener_profiles_service.load_listener_profile_from_listener_profile_project_folder(
+        listener_profile_project_folder=mock_dir,
+    )
+
+
 @pytest.fixture
-async def create_listeners_before_test(admin_client):
+async def create_listeners_before_test(admin_client, load_mock_listener_profile):
     templates_response = await admin_client.get("/api/listener-templates/all")
     for template in templates_response.json():
+        if template["label"] != _MOCK_LISTENER_LABEL:
+            continue
         template_id = template["listener_template_id"]
         detail_response = await admin_client.get(
             f"/api/listener-templates/{template_id}"
@@ -170,7 +182,12 @@ async def delete_listeners_after_test(admin_client):
     yield
     response = await admin_client.get("/api/listeners/all")
     for listener in response.json():
-        await admin_client.delete(f"/api/listeners/{listener['listener_id']}")
+        listener_id = listener["listener_id"]
+        # stop the listener first; ignore 409 (not running) and other non-fatal errors
+        stop_response = await admin_client.post(f"/api/listeners/{listener_id}/stop")
+        if stop_response.status_code not in (202, 409):
+            await admin_client.post(f"/api/listeners/{listener_id}/cancel")
+        await admin_client.delete(f"/api/listeners/{listener_id}")
 
 
 @pytest.fixture
