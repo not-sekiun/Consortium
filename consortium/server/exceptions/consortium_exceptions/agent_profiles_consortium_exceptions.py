@@ -1,5 +1,5 @@
 """
-Exception hierarchy for agent profiles errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentProfilesError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfilesError]
@@ -10,8 +10,8 @@ Exception hierarchy for agent profiles errors:
                     - [`InvalidAgentProfileProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectManifestFileJSONError]
                     - [`InvalidAgentProfileProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectManifestFileSchemaError]
                 - [`InvalidAgentProfileProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileError]
-                    - [`InvalidAgentProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileTOMLError]
-                    - [`InvalidAgentProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileDependencyError]
+                - [`InvalidAgentProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileTOMLError]
+                - [`InvalidAgentProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileDependencyError]
                 - [`InvalidAgentProfileProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectFolderStructureError]
                     - [`AgentProfileProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectManifestFileNotFoundError]
                     - [`AgentProfileProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectEntryPointModuleNotFoundError]

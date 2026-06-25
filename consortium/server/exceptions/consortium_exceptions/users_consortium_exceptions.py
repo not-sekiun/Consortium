@@ -1,5 +1,5 @@
 """
-Exception hierarchy for users errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`UsersError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UsersError]

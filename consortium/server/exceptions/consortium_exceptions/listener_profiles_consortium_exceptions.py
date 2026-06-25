@@ -1,5 +1,5 @@
 """
-Exception hierarchy for listener profiles errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`ListenerProfilesError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfilesError]
@@ -10,8 +10,8 @@ Exception hierarchy for listener profiles errors:
                     - [`InvalidListenerProfileProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectManifestFileJSONError]
                     - [`InvalidListenerProfileProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectManifestFileSchemaError]
                 - [`InvalidListenerProfileProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileError]
-                    - [`InvalidListenerProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileTOMLError]
-                    - [`InvalidListenerProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileDependencyError]
+                - [`InvalidListenerProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileTOMLError]
+                - [`InvalidListenerProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileDependencyError]
                 - [`InvalidListenerProfileProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectFolderStructureError]
                     - [`ListenerProfileProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectManifestFileNotFoundError]
                     - [`ListenerProfileProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectEntryPointModuleNotFoundError]

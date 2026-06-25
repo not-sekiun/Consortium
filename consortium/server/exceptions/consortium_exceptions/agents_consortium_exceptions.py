@@ -1,3 +1,26 @@
+"""
+Exception hierarchy:
+
+- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
+    - [`AgentsError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentsError]
+        - [`AgentsFrameworkError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentsFrameworkError]
+            - [`AgentTaskNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentTaskNotFoundError]
+            - [`AgentResultNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentResultNotFoundError]
+                - [`AgentResultIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentResultIDNotFoundError]
+                - [`AgentResultTaskIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentResultTaskIDNotFoundError]
+            - [`AgentResultHasNoCorrespondingTaskError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentResultHasNoCorrespondingTaskError]
+            - [`AgentTaskingError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentTaskingError]
+                - [`AgentCapabilityNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentCapabilityNotFoundError]
+                - [`AgentCapabilityOptionNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentCapabilityOptionNotFoundError]
+                - [`MissingRequiredAgentCapabilityOptionError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.MissingRequiredAgentCapabilityOptionError]
+                - [`AgentCapabilityOptionValueValidationError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentCapabilityOptionValueValidationError]
+            - [`AgentCreationError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentCreationError]
+                - [`AgentCreationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentCreationParameterTypeError]
+                - [`AgentTypeResolutionError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentTypeResolutionError]
+        - [`AgentServiceError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentServiceError]
+            - [`AgentNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentNotFoundError]
+"""
+
 from typing import Any
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (

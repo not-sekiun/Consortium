@@ -1,5 +1,5 @@
 """
-Exception hierarchy for components errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`ComponentsError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentsError]
@@ -24,8 +24,8 @@ Exception hierarchy for components errors:
                     - [`InvalidComponentProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectManifestFileJSONError]
                     - [`InvalidComponentProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectManifestFileSchemaError]
                 - [`InvalidComponentProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileError]
-                    - [`InvalidComponentProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileTOMLError]
-                    - [`InvalidComponentProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileDependencyError]
+                - [`InvalidComponentProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileTOMLError]
+                - [`InvalidComponentProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileDependencyError]
                 - [`InvalidComponentProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectFolderStructureError]
                     - [`ComponentProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectManifestFileNotFoundError]
                     - [`ComponentProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectEntryPointModuleNotFoundError]

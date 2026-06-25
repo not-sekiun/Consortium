@@ -1,3 +1,22 @@
+"""
+Exception hierarchy:
+
+- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
+    - [`PayloadsError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadsError]
+        - [`PayloadsFrameworkError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadsFrameworkError]
+            - [`PayloadCreationError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadCreationError]
+                - [`PayloadCreationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadCreationParameterTypeError]
+        - [`PayloadsServiceError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadsServiceError]
+            - [`InvalidPayloadsMetadataFileError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.InvalidPayloadsMetadataFileError]
+                - [`InvalidPayloadsMetadataFileJSONError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.InvalidPayloadsMetadataFileJSONError]
+                - [`InvalidPayloadsMetadataFileSchemaError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.InvalidPayloadsMetadataFileSchemaError]
+            - [`PayloadNotFoundError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadNotFoundError]
+            - [`PayloadDeletionError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadDeletionError]
+                - [`PayloadRepositoryResourceMissingError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadRepositoryResourceMissingError]
+            - [`PayloadMetadataMissingError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadMetadataMissingError]
+            - [`PayloadIDReservationNotFoundError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadIDReservationNotFoundError]
+"""
+
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
 )

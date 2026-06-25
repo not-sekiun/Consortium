@@ -1,5 +1,5 @@
 """
-Exception hierarchy for agent templates errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentTemplatesError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplatesError]
@@ -9,7 +9,6 @@ Exception hierarchy for agent templates errors:
                 - [`MissingAgentTemplateConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.MissingAgentTemplateConfigurationParameterError]
                 - [`EmptyAgentTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.EmptyAgentTemplateLabelError]
                 - [`InvalidAgentTemplateVersionError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidAgentTemplateVersionError]
-                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidAgentTemplateDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidAgentTemplateDependencyVersionSpecifierError]
                 - [`DuplicateAgentTemplateOptionNameError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.DuplicateAgentTemplateOptionNameError]
             - [`AgentTemplateOptionError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplateOptionError]

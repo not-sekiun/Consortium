@@ -1,10 +1,7 @@
 """
-Exception hierarchy of the broadly grouped domain exceptions for `BaseConsortiumError`:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`ListenersError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersError]
-        - [`ListenersFrameworkError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersFrameworkError]
-        - [`ListenersServiceError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersServiceError]
 """
 
 from typing import Any

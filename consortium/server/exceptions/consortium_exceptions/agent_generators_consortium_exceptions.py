@@ -1,3 +1,37 @@
+"""
+Exception hierarchy:
+
+- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
+    - [`AgentGeneratorsError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorsError]
+        - [`AgentGeneratorsFrameworkError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorsFrameworkError]
+            - [`AgentGeneratorConfigurationError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorConfigurationError]
+                - [`AgentGeneratorConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorConfigurationParameterTypeError]
+                - [`MissingAgentGeneratorConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.MissingAgentGeneratorConfigurationParameterError]
+                - [`AgentGeneratorOverridesFinalMethodError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorOverridesFinalMethodError]
+                - [`MissingAgentGeneratorBuildStepConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.MissingAgentGeneratorBuildStepConfigurationParameterError]
+                - [`AgentGeneratorBuildStepOverridesFinalMethodError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorBuildStepOverridesFinalMethodError]
+            - [`AgentGeneratorBuildStepConfigurationError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorBuildStepConfigurationError]
+                - [`AgentGeneratorBuildStepConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorBuildStepConfigurationParameterTypeError]
+                - [`RequiredAgentGeneratorBuildStepConfigurationParameterNotDeclaredError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.RequiredAgentGeneratorBuildStepConfigurationParameterNotDeclaredError]
+                - [`EmptyAgentGeneratorBuildStepNameError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.EmptyAgentGeneratorBuildStepNameError]
+            - [`AgentGeneratorCreationError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorCreationError]
+                - [`AgentGeneratorCreationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorCreationParameterTypeError]
+            - [`AgentGeneratorOperationError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorOperationError]
+                - [`AgentGeneratorStartError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorStartError]
+                - [`AgentGeneratorRuntimeError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorRuntimeError]
+                - [`AgentGeneratorBuildStepRuntimeError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorBuildStepRuntimeError]
+                - [`AgentGeneratorStopError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorStopError]
+            - [`AgentGeneratorStateError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorStateError]
+                - [`AgentGeneratorNotRunningError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorNotRunningError]
+                - [`AgentGeneratorAlreadyRunningError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorAlreadyRunningError]
+        - [`AgentGeneratorsServiceError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorsServiceError]
+            - [`AgentGeneratorNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorNotFoundError]
+            - [`AgentGeneratorAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorAlreadyExistsError]
+            - [`AgentGeneratorParameterUpdateError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorParameterUpdateError]
+                - [`InvalidAgentGeneratorParameterNameError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.InvalidAgentGeneratorParameterNameError]
+                - [`InvalidAgentGeneratorParameterValueError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.InvalidAgentGeneratorParameterValueError]
+"""
+
 from typing import Any
 
 from consortium.server.exceptions.consortium_exceptions import (

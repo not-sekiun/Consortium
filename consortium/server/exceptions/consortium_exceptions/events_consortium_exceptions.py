@@ -1,5 +1,5 @@
 """
-Exception hierarchy for events errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`EventsError`][consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions.EventsError]

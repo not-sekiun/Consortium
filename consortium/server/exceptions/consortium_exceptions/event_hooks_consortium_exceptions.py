@@ -1,5 +1,5 @@
 """
-Exception hierarchy for event hooks errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`EventHooksError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHooksError]
@@ -10,8 +10,8 @@ Exception hierarchy for event hooks errors:
                     - [`InvalidEventHookProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectManifestFileJSONError]
                     - [`InvalidEventHookProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectManifestFileSchemaError]
                 - [`InvalidEventHookProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileError]
-                    - [`InvalidEventHookProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileTOMLError]
-                    - [`InvalidEventHookProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileDependencyError]
+                - [`InvalidEventHookProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileTOMLError]
+                - [`InvalidEventHookProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileDependencyError]
                 - [`InvalidEventHookProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectFolderStructureError]
                     - [`EventHookProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectManifestFileNotFoundError]
                     - [`EventHookProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectEntryPointModuleNotFoundError]
@@ -38,7 +38,6 @@ Exception hierarchy for event hooks errors:
                 - [`MissingEventHookConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.MissingEventHookConfigurationParameterError]
                 - [`EmptyEventHookLabelError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EmptyEventHookLabelError]
                 - [`InvalidEventHookVersionError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookVersionError]
-                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidEventHookDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookDependencyVersionSpecifierError]
 """
 

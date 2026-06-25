@@ -1,5 +1,5 @@
 """
-Exception hierarchy for agent capabilities errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentCapabilitiesError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilitiesError]
@@ -10,6 +10,7 @@ Exception hierarchy for agent capabilities errors:
             - [`EmptyAgentCapabilityNameError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.EmptyAgentCapabilityNameError]
             - [`DuplicateAgentCapabilityOptionNameError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.DuplicateAgentCapabilityOptionNameError]
             - [`CustomOSStringAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.CustomOSStringAlreadyRegisteredError]
+            - [`AgentCapabilityRuntimeError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilityRuntimeError]
 """
 
 from typing import Any

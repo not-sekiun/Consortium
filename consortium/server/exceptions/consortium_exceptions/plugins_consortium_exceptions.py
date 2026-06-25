@@ -1,5 +1,5 @@
 """
-Exception hierarchy for plugins errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`PluginsError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginsError]
@@ -10,8 +10,8 @@ Exception hierarchy for plugins errors:
                     - [`InvalidPluginProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectManifestFileJSONError]
                     - [`InvalidPluginProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectManifestFileSchemaError]
                 - [`InvalidPluginProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectPyProjectFileError]
-                    - [`InvalidPluginProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectPyProjectFileTOMLError]
-                    - [`InvalidPluginProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectPyProjectFileDependencyError]
+                - [`InvalidPluginProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectPyProjectFileTOMLError]
+                - [`InvalidPluginProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectPyProjectFileDependencyError]
                 - [`InvalidPluginProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectFolderStructureError]
                     - [`PluginProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginProjectManifestFileNotFoundError]
                     - [`PluginProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginProjectEntryPointModuleNotFoundError]
@@ -37,7 +37,6 @@ Exception hierarchy for plugins errors:
                 - [`MissingPluginConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.MissingPluginConfigurationParameterError]
                 - [`EmptyPluginLabelError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.EmptyPluginLabelError]
                 - [`InvalidPluginVersionError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginVersionError]
-                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidPluginDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginDependencyVersionSpecifierError]
             - [`PluginOperationError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginOperationError]
                 - [`PluginStartError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginStartError]

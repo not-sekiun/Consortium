@@ -1,5 +1,5 @@
 """
-Exception hierarchy for C2 types errors:
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`C2TypesError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.C2TypesError]
@@ -13,6 +13,8 @@ Exception hierarchy for C2 types errors:
         - [`C2TypesServiceError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.C2TypesServiceError]
             - [`ListenerTypeNotFoundError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.ListenerTypeNotFoundError]
             - [`AgentTypeNotFoundError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.AgentTypeNotFoundError]
+            - [`DuplicateAgentTypeNameError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.DuplicateAgentTypeNameError]
+            - [`UnresolvableAgentTypeReferenceError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.UnresolvableAgentTypeReferenceError]
 """
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
