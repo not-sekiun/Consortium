@@ -224,7 +224,7 @@ async def create_user_account(
         },
     },
 )
-def update_own_user_account(
+async def update_own_user_account(
     request_data: UpdateOwnUserAccountRequestDataModel,
     user: Annotated[User, Depends(get_current_user)],
     _: Annotated[
@@ -296,7 +296,7 @@ def update_own_user_account(
         },
     },
 )
-def update_user_account_by_user_account_id(
+async def update_user_account_by_user_account_id(
     user_account_id: UUID4,
     request_data: UpdateUserAccountByUserAccountIDRequestDataModel,
     _: Annotated[
