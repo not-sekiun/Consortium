@@ -24,23 +24,30 @@ STATUS_JSON_SCHEMA = {
 }
 
 # JSON schemas for the /api/agent-templates endpoints
+MITRE_ATTACK_TECHNIQUE_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "mitre_attack_technique_id": {"type": "string"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "tactics": {"type": "array", "items": {"type": "string"}},
+        "url": {"type": "string"},
+        "platforms": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": [
+        "mitre_attack_technique_id",
+        "name",
+        "description",
+        "tactics",
+        "url",
+        "platforms",
+    ],
+    "additionalProperties": False,
+}
 AGENT_TYPE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "agent_type_id": {"type": "string"},
         "name": {"type": "string"},
-        "compatible_listener_types": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "listener_type_id": {"type": "string"},
-                    "name": {"type": "string"},
-                },
-                "required": ["listener_type_id", "name"],
-                "additionalProperties": False,
-            },
-        },
         "agent_capabilities": {
             "type": "object",
             "patternProperties": {
@@ -49,8 +56,6 @@ AGENT_TYPE_JSON_SCHEMA = {
                     "properties": {
                         "name": {"type": "string"},
                         "description": {"type": "string"},
-                        # TODO: Include each option type's JSON schema in the
-                        #  main JSON schema.
                         "options": {"type": "object"},
                         "requires_admin": {"type": "boolean"},
                         "supported_oses": {
@@ -61,6 +66,11 @@ AGENT_TYPE_JSON_SCHEMA = {
                             "type": "array",
                             "items": {"type": "string"},
                         },
+                        "mitre_attack_techniques": {
+                            "type": "array",
+                            "items": MITRE_ATTACK_TECHNIQUE_JSON_SCHEMA,
+                        },
+                        "validating_function": {"type": ["string", "null"]},
                     },
                     "required": [
                         "name",
@@ -69,6 +79,8 @@ AGENT_TYPE_JSON_SCHEMA = {
                         "requires_admin",
                         "supported_oses",
                         "authors",
+                        "mitre_attack_techniques",
+                        "validating_function",
                     ],
                     "additionalProperties": False,
                 },
@@ -76,9 +88,7 @@ AGENT_TYPE_JSON_SCHEMA = {
         },
     },
     "required": [
-        "agent_type_id",
         "name",
-        "compatible_listener_types",
         "agent_capabilities",
     ],
     "additionalProperties": False,
@@ -94,6 +104,10 @@ AGENT_TEMPLATE_JSON_SCHEMA = {
         "authors": {"type": "array", "items": {"type": "string"}},
         "agent_template_id": {"type": "string"},
         "agent_type": AGENT_TYPE_JSON_SCHEMA,
+        "compatible_listener_types": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
         "options": {"type": "object"},
         "validating_function": {"type": ["string", "null"]},
     },
@@ -106,6 +120,7 @@ AGENT_TEMPLATE_JSON_SCHEMA = {
         "authors",
         "agent_template_id",
         "agent_type",
+        "compatible_listener_types",
         "options",
         "validating_function",
     ],
@@ -147,8 +162,10 @@ AGENT_GENERATOR_JSON_SCHEMA = {
             "type": "object",
             "properties": {
                 "agent_template_id": {"type": "string"},
+                "label": {"type": "string"},
                 "name": {"type": "string"},
             },
+            "required": ["agent_template_id", "label", "name"],
         },
         "datetime_created": {"type": "string"},
         "parameters": {"type": "object"},
@@ -160,7 +177,7 @@ AGENT_GENERATOR_JSON_SCHEMA = {
                     "agent_generator_build_step_id": {"type": "string"},
                     "name": {"type": "string"},
                     "description": {"type": "string"},
-                    "ignore_failure": {"type": "boolean"},
+                    # "ignore_failure": {"type": "boolean"},
                     "datetime_started": {"type": ["string", "null"]},
                     "datetime_stopped": {"type": ["string", "null"]},
                     "time_elapsed_in_seconds": {"type": ["number", "null"]},
@@ -170,7 +187,7 @@ AGENT_GENERATOR_JSON_SCHEMA = {
                     "agent_generator_build_step_id",
                     "name",
                     "description",
-                    "ignore_failure",
+                    # "ignore_failure",
                     "datetime_started",
                     "datetime_stopped",
                     "time_elapsed_in_seconds",
@@ -178,6 +195,10 @@ AGENT_GENERATOR_JSON_SCHEMA = {
                 ],
                 "additionalProperties": False,
             },
+        },
+        "compatible_listener_types": {
+            "type": "array",
+            "items": {"type": "string"},
         },
     },
     "required": [
@@ -190,6 +211,7 @@ AGENT_GENERATOR_JSON_SCHEMA = {
         "parameters",
         "agent_generator_build_steps",
         "agent_type",
+        "compatible_listener_types",
     ],
     "additionalProperties": False,
 }

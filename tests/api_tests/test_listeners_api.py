@@ -20,12 +20,12 @@ LISTENER_JSON_SCHEMA = {
             "type": "object",
             "properties": {
                 "name": {"type": "string"},
-                "compatible_agent_type_ids": {
+                "registered_compatible_agent_types": {
                     "type": "array",
                     "items": {"type": "string"},
                 },
-                "listener_type_id": {"type": "string"},
             },
+            "required": ["name", "registered_compatible_agent_types"],
         },
         "listener_id": {"type": "string"},
         "parameters": {"type": "object"},
@@ -39,10 +39,11 @@ LISTENER_JSON_SCHEMA = {
                         {
                             "type": "object",
                             "properties": {
-                                "type": {"type": "string"},
+                                "code": {"type": "string"},
                                 "message": {"type": "string"},
+                                "detail": {},
                             },
-                            "required": ["type", "message"],
+                            "required": ["code", "message", "detail"],
                         },
                     ],
                 },

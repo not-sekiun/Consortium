@@ -18,21 +18,13 @@ LISTENER_TEMPLATE_JSON_SCHEMA = {
         "listener_type": {
             "type": "object",
             "properties": {
-                "listener_type_id": {"type": "string"},
                 "name": {"type": "string"},
-                "compatible_agent_types": {
+                "registered_compatible_agent_types": {
                     "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "agent_type_id": {"type": "string"},
-                            "name": {"type": "string"},
-                        },
-                        "additionalProperties": False,
-                    },
+                    "items": {"type": "string"},
                 },
             },
-            "required": ["listener_type_id", "name", "compatible_agent_types"],
+            "required": ["name", "registered_compatible_agent_types"],
             "additionalProperties": False,
         },
         "options": {"type": "object"},
