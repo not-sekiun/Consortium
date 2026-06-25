@@ -22,13 +22,9 @@ from consortium.client.commands.use_agent_template_interpreter_commands.agent_te
 from consortium.client.commands.use_agent_template_interpreter_commands.generator_create import (
     GeneratorCreateCommand,
 )
-from consortium.client.commands.use_agent_template_interpreter_commands.generator_launch import (
-    GeneratorLaunchCommand,
-)
 
 USE_AGENT_TEMPLATE_INTERPRETER_COMMANDS = [
     GeneratorCreateCommand(),
-    GeneratorLaunchCommand(),
     AgentTemplateInfoCommand(),
     AgentTemplateInfoOptionCommand(),
     AgentTemplateListOptionCommand(),

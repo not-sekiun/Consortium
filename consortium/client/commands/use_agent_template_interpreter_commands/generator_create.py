@@ -1,3 +1,5 @@
+from argparse import ArgumentParser
+
 from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
@@ -12,18 +14,29 @@ from consortium.client.utils.printer_utils import print_success
 
 class GeneratorCreateCommand(BaseConnectedCommand):
     name = "create"
-    description = "Create an agent generator from the current agent template"
+    description = "Create an agent generator from the current agent template and start it (use --no-start to skip starting)"
     epilog = format_argparse_epilog(
         """
         Examples:
           create
+          create --no-start
+          create -n
         """,
     )
     group = "Agent Generator Management Commands"
 
+    def configure_parser(self, parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "--no-start",
+            "-n",
+            help="Create the agent generator without starting it.",
+            action="store_true",
+            default=False,
+        )
+
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
         try:
-            _ = self.parser.parse_args(context.arguments)
+            parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
             agent_template_id = context.interpreter_context.agent_template[
                 "agent_template_id"
@@ -39,9 +52,17 @@ class GeneratorCreateCommand(BaseConnectedCommand):
                 agent_template_id=agent_template_id,
                 agent_template_option_values=agent_template_option_values,
             )
-            print_success(
-                f"Created agent generator: '{agent_generator['name']}' ({agent_generator['agent_generator_id']})",
-            )
+            if parsed_args.no_start:
+                print_success(
+                    f"Created agent generator: '{agent_generator['name']}' ({agent_generator['agent_generator_id']})",
+                )
+            else:
+                _ = await rest_api.start_agent_generator_by_agent_generator_id(
+                    agent_generator_id=agent_generator["agent_generator_id"],
+                )
+                print_success(
+                    f"Created and started agent generator: '{agent_generator['name']}' ({agent_generator['agent_generator_id']})",
+                )
         except SystemExit:
             pass
 
