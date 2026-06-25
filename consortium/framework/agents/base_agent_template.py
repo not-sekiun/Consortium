@@ -190,6 +190,16 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         if parameters is None:
             parameters = {}
 
+        # Check for missing required options before filling in defaults, so that
+        # a required option with default_value=None is caught rather than silently
+        # accepted.
+        for option_name, option in self.options.items():
+            if option.required and option_name not in parameters:
+                raise MissingRequiredAgentTemplateOptionError(
+                    agent_template_str=str(self),
+                    option_name=option_name,
+                )
+
         # Fill in default option values for options that were not provided in the
         # parameters dictionary. For options that do not have a default value
         # they fill in as `None`
@@ -217,14 +227,6 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
                     agent_template_str=str(self),
                     error_message=str(exc),
                 ) from None
-
-        # Check for missing required options.
-        for option_name, option in self.options.items():
-            if option.required and option_name not in parameters:
-                raise MissingRequiredAgentTemplateOptionError(
-                    agent_template_str=str(self),
-                    option_name=option_name,
-                )
 
         # Run validation function on the entire set of parameters if one was provided.
         if self.validating_function:
