@@ -279,8 +279,7 @@ async def test_delete_agent_generator_by_agent_generator_id(
         if client != spectator_client:
             validate_response(
                 test_response=await client.delete(f"/api/agent-generators/{ag_id}"),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_status_code=204,
             )
         else:
             validate_response(

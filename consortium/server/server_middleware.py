@@ -167,7 +167,9 @@ async def log_rest_api_requests_and_responses(
             request.url.path,
             response.status_code,
             responses[response.status_code],
-            response.headers["content-length"],
+            # For empty responses like in the case of 204 on certain DELETE endpoints
+            # `content-length` is entirely omitted
+            response.headers.get("content-length", 0),
         )
 
         return response

@@ -27,7 +27,6 @@ from consortium.server.models.agent_task_models import (
     AgentTaskModel,
     AgentTaskState,
 )
-from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
@@ -392,8 +391,9 @@ async def update_agent_by_agent_id(
 
 @router.delete(
     "/{agent_id}/tasks/queued/{task_id}",
+    status_code=204,
     responses={
-        200: {"model": SuccessResponseModel},
+        204: {},
         404: {
             "model": _agent_task_not_found_error.to_pydantic_model()
             | _agent_not_found_error.to_pydantic_model(),
@@ -412,7 +412,7 @@ async def delete_queued_agent_task_by_agent_id_and_task_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.DELETE_AGENT_TASK_BY_TASK_ID)),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         await _agents_service.delete_queued_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id, task_id=task_id
@@ -425,5 +425,3 @@ async def delete_queued_agent_task_by_agent_id_and_task_id(
         raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-
-    return SuccessResponseModel()

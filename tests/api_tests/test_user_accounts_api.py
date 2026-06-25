@@ -5,7 +5,6 @@ import pytest
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
-    SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_user_account_ids, validate_response
 
@@ -421,8 +420,7 @@ async def test_delete_user_account_by_user_account_id(admin_client, client):
         for ua_id in all_ids:
             validate_response(
                 test_response=await client.delete(f"/api/user-accounts/{ua_id}"),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_status_code=204,
             )
             validate_response(
                 test_response=await client.get(f"/api/user-accounts/{ua_id}"),

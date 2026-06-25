@@ -366,8 +366,9 @@ async def update_agent_generator_by_agent_generator_id(
 
 @router.delete(
     "/{agent_generator_id}",
+    status_code=204,
     responses={
-        200: {"model": SuccessResponseModel},
+        204: {},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {"model": _agent_generator_already_running_error.to_pydantic_model()},
         422: {"model": _invalid_uuid_error.to_pydantic_model()},
@@ -383,7 +384,7 @@ async def delete_agent_generator_by_agent_generator_id(
             ),
         ),
     ],
-):
+) -> None:
     try:
         _agent_generators_service.remove_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
@@ -396,5 +397,3 @@ async def delete_agent_generator_by_agent_generator_id(
         raise api_excs.AgentGeneratorAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-
-    return SuccessResponseModel()

@@ -3,12 +3,9 @@ import pytest
 
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
+    INVALID_UUID_ERROR_JSON_SCHEMA,
     SUCCESS_JSON_SCHEMA,
 )
-from tests.api_tests.test_user_accounts_api import (
-    USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
-)
-from tests.api_tests.test_users_api import USER_NOT_FOUND_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
@@ -76,14 +73,14 @@ async def test_logout_user_by_user_id(
             expected_status_code=401,
         )
 
-        # Invalid user ID: 404
+        # Non-UUID string: 422 (UUID validation fires before lookup for admin)
         validate_response(
             test_response=await admin_client.post("/api/logout/user/invalid-user-id"),
-            expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
-            expected_status_code=404,
+            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
         )
 
-        # Operator and spectator get 403; invalid ID also returns 403 (no leakage)
+        # Operator and spectator get 403; 403 fires before UUID validation for non-admins
         for non_admin in [operator_client, spectator_client]:
             validate_response(
                 test_response=await non_admin.post(
@@ -146,13 +143,13 @@ async def test_logout_user_account_by_user_account_id(
             expected_status_code=401,
         )
 
-        # Invalid user account ID: 404
+        # Non-UUID string: 422 (UUID validation fires before lookup for admin)
         validate_response(
             test_response=await admin_client.post(
                 "/api/logout/user-account/invalid-user-account-id"
             ),
-            expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
-            expected_status_code=404,
+            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
         )
 
         # Operator and spectator get 403; invalid ID also returns 403

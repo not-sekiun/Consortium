@@ -183,14 +183,14 @@ async def test_update_user_display_name_by_user_id(
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
-        # Non-UUID4 string: 422 (UUID validation fires before auth even for low-privilege users)
+        # Non-UUID4 string: 403 (permission check fires before UUID validation)
         validate_response(
             test_response=await client.patch(
                 "/api/users/invalid-user-id",
                 json={"display_name": "Should Fail"},
             ),
-            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
-            expected_status_code=422,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+            expected_status_code=403,
         )
         # Valid UUID4 that does not exist: 403 for low-privilege users (auth runs first)
         validate_response(

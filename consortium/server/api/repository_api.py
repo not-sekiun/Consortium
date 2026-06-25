@@ -24,7 +24,6 @@ from consortium.server.exceptions.api_exceptions import (
 from consortium.server.exceptions.consortium_exceptions import (
     repository_consortium_exceptions as consortium_excs,
 )
-from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.repository_models import (
     RepositoryResourceModel,
 )
@@ -252,7 +251,5 @@ def create_delete_repository_resource_by_resource_id_endpoint(
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
-
-        return SuccessResponseModel()
 
     return delete_repository_resource_by_resource_id

@@ -352,6 +352,7 @@ async def update_listener_by_listener_id(
 
 @router.delete(
     "/{listener_id}",
+    status_code=204,
     responses={
         204: {},
         404: {

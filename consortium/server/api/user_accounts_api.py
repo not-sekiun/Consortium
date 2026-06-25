@@ -20,7 +20,6 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 from consortium.server.exceptions.consortium_exceptions import (
     user_accounts_consortium_exceptions as consortium_excs,
 )
-from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.request_data_models import (
     UpdateOwnUserAccountRequestDataModel,
     UpdateUserAccountByUserAccountIDRequestDataModel,
@@ -351,8 +350,9 @@ async def update_user_account_by_user_account_id(
 
 @router.delete(
     "/{user_account_id}",
+    status_code=204,
     responses={
-        200: {"model": SuccessResponseModel},
+        204: {},
         404: {
             "model": _user_account_not_found_error.to_pydantic_model(),
         },
@@ -372,7 +372,7 @@ async def delete_user_account_by_user_account_id(
             ),
         ),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         _user_accounts_service.delete_user_account_by_user_account_id(
             user_account_id=str(user_account_id),
@@ -387,5 +387,3 @@ async def delete_user_account_by_user_account_id(
         _user_accounts_service.write_framework_user_accounts()
     except consortium_excs.UserAccountsFileError:
         raise InternalServerError() from None
-
-    return SuccessResponseModel()

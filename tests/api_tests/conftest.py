@@ -64,7 +64,7 @@ def configure_logging():
     )
     configure_logger(
         LoggingConfigModel(
-            level="DEBUG",
+            level="WARNING",
             log_file=log_file,
             rotation=None,
             retention=1,

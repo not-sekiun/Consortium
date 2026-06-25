@@ -23,7 +23,6 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 from consortium.server.exceptions.consortium_exceptions import (
     repository_consortium_exceptions as consortium_excs,
 )
-from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.models.repository_models import RepositoryResourceModel
 from consortium.server.objects.user_account_objects import UserPermissions
 
@@ -87,9 +86,9 @@ router.add_api_route(
         repository_service=_payloads_service,
         delete_repository_resource_by_resource_id_permission=UserPermissions.DELETE_PAYLOAD_BY_PAYLOAD_ID,
     ),
-    methods=["DELETE"],
+    status_code=204,
     responses={
-        200: {"model": SuccessResponseModel},
+        204: {},
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },

@@ -248,6 +248,11 @@ class ListenerTemplateOptionValueValidationError(ListenerTemplateOptionError):
                 f"'{listener_template_str}'. The provided value '{option_value}' for "
                 f"the option '{option_name}' is invalid. {error_message}"
             ),
+            detail={
+                "option_str": option_name,
+                "option_value": option_value,
+                "error_message": error_message,
+            },
         )
 
 
@@ -268,6 +273,10 @@ class MissingRequiredListenerTemplateOptionError(
                 f"'{listener_template_str}'. The required option '{option_name}' was not "
                 f"provided."
             ),
+            detail={
+                "listener_template_str": listener_template_str,
+                "option_str": option_name,
+            },
         )
 
 

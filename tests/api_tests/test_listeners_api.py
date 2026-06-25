@@ -5,7 +5,6 @@ import pytest
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
-    SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_listener_ids, validate_response
 
@@ -171,15 +170,15 @@ async def test_start_listener_by_listener_id(admin_client, spectator_client, cli
         for listener_id in await get_all_listener_ids(admin_client):
             validate_response(
                 test_response=await client.post(f"/api/listeners/{listener_id}/start"),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_json_schema=LISTENER_JSON_SCHEMA,
+                expected_status_code=202,
             )
             validate_response(
                 test_response=await admin_client.post(
                     f"/api/listeners/{listener_id}/stop"
                 ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_json_schema=LISTENER_JSON_SCHEMA,
+                expected_status_code=202,
             )
     else:
         for listener_id in await get_all_listener_ids(admin_client):
@@ -216,8 +215,8 @@ async def test_stop_listener_by_listener_id(admin_client, spectator_client, clie
             await admin_client.post(f"/api/listeners/{listener_id}/start")
             validate_response(
                 test_response=await client.post(f"/api/listeners/{listener_id}/stop"),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_json_schema=LISTENER_JSON_SCHEMA,
+                expected_status_code=202,
             )
     else:
         for listener_id in await get_all_listener_ids(admin_client):
@@ -252,8 +251,8 @@ async def test_cancel_listener_by_listener_id(admin_client, spectator_client, cl
             await admin_client.post(f"/api/listeners/{listener_id}/start")
             validate_response(
                 test_response=await client.post(f"/api/listeners/{listener_id}/cancel"),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_json_schema=LISTENER_JSON_SCHEMA,
+                expected_status_code=202,
             )
     else:
         for listener_id in await get_all_listener_ids(admin_client):
@@ -328,8 +327,7 @@ async def test_delete_listener_by_listener_id(admin_client, spectator_client, cl
         for listener_id in await get_all_listener_ids(admin_client):
             validate_response(
                 test_response=await client.delete(f"/api/listeners/{listener_id}"),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_status_code=204,
             )
     else:
         for listener_id in await get_all_listener_ids(admin_client):
