@@ -30,6 +30,10 @@ _users_service = server_singletons.users_service
 _already_logged_in_error = AlreadyLoggedInError()
 
 
+# TODO: Fix a bug when 409 already logged in is raised, it is converted to 401 by the
+#  starlette exception handler hook to prevent fingerprinting. We want 401s to only be
+#  returned to logged out users by users already logged in should get feedback about an
+#  erroneous re-logging
 @router.post(
     "",
     responses={

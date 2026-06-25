@@ -182,7 +182,9 @@ async def delete_agent_generators_after_test(admin_client):
 
 
 @pytest.fixture
-async def restore_default_user_accounts_after_test(admin_client):
+async def restore_default_user_accounts_after_test(
+    admin_client, operator_client, spectator_client
+):
     yield
     all_response = await admin_client.get("/api/user-accounts/all")
     for ua in all_response.json():
@@ -196,6 +198,23 @@ async def restore_default_user_accounts_after_test(admin_client):
             "/api/user-accounts",
             json={"username": username, "password": password, "role": role},
         )
+    # Logout each client to remove their old User objects from users_service, then
+    # re-login. Without the logout step, the login endpoint returns disguised-401
+    # (AlreadyLoggedInError) because is_user_logged_in still finds the old session.
+    # After logout, is_user_logged_in returns False and login proceeds normally.
+    for client, username, password in [
+        (admin_client, "admin", "admin"),
+        (operator_client, "operator", "operator"),
+        (spectator_client, "spectator", "spectator"),
+    ]:
+        await client.post("/api/logout")
+        response = await client.post(
+            "/api/login", data={"username": username, "password": password}
+        )
+        if response.status_code == 200:
+            client.headers["Authorization"] = (
+                f"Bearer {response.json()['access_token']}"
+            )
 
 
 @pytest.fixture(scope="session", autouse=True)
