@@ -1,14 +1,13 @@
 import asyncio
 import shutil
 
-# TODO: Partition out generator related stuff to a separate package
 from consortium.framework.agents import (
     BaseAgentGenerator,
     BaseAgentGeneratorBuildStep,
 )
 from consortium.framework.agents.agent_generator_utils import multiple_string_replace
 
-# TODO: Move framework exceptions to generator package as signals to be more explicit
+# TODO: Move framework exceptions to signals to be more explicit
 from consortium.framework.exceptions import (
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorStartError,
@@ -21,6 +20,9 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         "Build and export the agent as a Python script, oneliner command, or "
         "self-extracting PyInstaller executable."
     )
+
+    async def on_started(self) -> None:
+        pass
 
     async def build(self, parameters: dict) -> None:
         await asyncio.sleep(5)

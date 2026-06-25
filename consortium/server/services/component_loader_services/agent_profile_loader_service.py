@@ -1,6 +1,12 @@
 import pathlib
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
+from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
+    AgentCapabilitiesFrameworkError,
+)
+from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
+    AgentGeneratorsFrameworkError,
+)
 from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplatesFrameworkError,
 )
@@ -16,7 +22,11 @@ from consortium.server.services.component_loader_services.component_loader_servi
 
 class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
     _component_type = BaseAgentTemplate  # TODO: Fix type mismatch this only describes the input but not output type
-    _component_framework_error = AgentTemplatesFrameworkError
+    _component_framework_error = (
+        AgentTemplatesFrameworkError,
+        AgentGeneratorsFrameworkError,
+        AgentCapabilitiesFrameworkError,
+    )
     _manifest_json_schema = {
         "type": "object",
         "properties": {

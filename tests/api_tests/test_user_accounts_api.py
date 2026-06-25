@@ -184,7 +184,7 @@ async def test_get_user_account_by_user_account_id(admin_client, client):
         # Non-UUID4 string: 403 (auth fires before UUID validation)
         validate_response(
             test_response=await client.get("/api/user-accounts/not-a-valid-uuid"),
-            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
 

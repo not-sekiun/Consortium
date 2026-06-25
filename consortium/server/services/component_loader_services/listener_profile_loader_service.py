@@ -7,6 +7,9 @@ from consortium.server.exceptions.consortium_exceptions.components_consortium_ex
 from consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions import (
     ListenerTemplatesFrameworkError,
 )
+from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
+    ListenersFrameworkError,
+)
 from consortium.server.objects.c2_profile_objects import ListenerProfile
 from consortium.server.services.component_loader_services.component_loader_service import (
     Component,
@@ -16,7 +19,10 @@ from consortium.server.services.component_loader_services.component_loader_servi
 
 class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate]):
     _component_type = BaseListenerTemplate  # TODO: Fix type mismatch this only describes the input but not output type
-    _component_framework_error = ListenerTemplatesFrameworkError
+    _component_framework_error = (
+        ListenerTemplatesFrameworkError,
+        ListenersFrameworkError,
+    )
     _manifest_json_schema = {
         "type": "object",
         "properties": {

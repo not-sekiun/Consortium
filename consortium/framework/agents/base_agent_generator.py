@@ -22,13 +22,16 @@ from consortium.framework.exceptions import (
 from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
     AgentGeneratorAlreadyRunningError,
     AgentGeneratorBuildStepConfigurationParameterTypeError,
+    AgentGeneratorBuildStepOverridesFinalMethodError,
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorConfigurationParameterTypeError,
     AgentGeneratorCreationParameterTypeError,
     AgentGeneratorNotRunningError,
+    AgentGeneratorOverridesFinalMethodError,
     AgentGeneratorRuntimeError,
     AgentGeneratorStartError,
     AgentGeneratorStopError,
+    MissingAgentGeneratorBuildStepConfigurationParameterError,
     MissingAgentGeneratorConfigurationParameterError,
 )
 from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
@@ -68,6 +71,22 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
+        for method_name in (
+            "on_started",
+            "on_running",
+            "on_completed",
+            "on_stopped",
+            "on_cancelled",
+            "on_errored",
+        ):
+            if method_name in cls.__dict__:
+                raise AgentGeneratorBuildStepOverridesFinalMethodError(
+                    agent_generator_build_step_filepath=sys.modules[
+                        cls.__module__
+                    ].__file__,
+                    method_name=method_name,
+                )
+
         cls.services = construct_services_namespace_object(
             server_singletons=server_singletons
         )
@@ -77,8 +96,10 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         # Check all attributes exist
         for attr in expected_attrs_and_types_map.keys():
             if not hasattr(cls, attr):
-                raise MissingAgentGeneratorConfigurationParameterError(
-                    agent_generator_filepath=sys.modules[cls.__module__].__file__,
+                raise MissingAgentGeneratorBuildStepConfigurationParameterError(
+                    agent_generator_build_step_filepath=sys.modules[
+                        cls.__module__
+                    ].__file__,
                     parameter_name=attr,
                 )
 
@@ -115,7 +136,6 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
 
     async def build(self, parameters: dict) -> None: ...
 
-    # TODO: Maybe think of a stricter way to prevent overriding this method.
     @final
     async def on_started(self) -> None:
         self.datetime_started = datetime.now()
@@ -295,6 +315,12 @@ class BaseAgentGenerator(ComponentLifeCycle):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
+        if "on_running" in cls.__dict__:
+            raise AgentGeneratorOverridesFinalMethodError(
+                agent_generator_filepath=sys.modules[cls.__module__].__file__,
+                method_name="on_running",
+            )
+
         cls.services = construct_services_namespace_object(
             server_singletons=server_singletons
         )
@@ -338,7 +364,6 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
     async def on_completed(self) -> None: ...
 
-    # TODO: Maybe think of a stricter way to prevent overriding this method.
     @final
     async def on_running(self) -> None:
         # Reset each build step before running them in case the agent generator is

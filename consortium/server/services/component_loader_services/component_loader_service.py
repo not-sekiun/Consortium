@@ -40,7 +40,13 @@ Component = TypeVar("Component")
 # event hooks system.
 class ComponentLoaderService[Component]:
     _component_type: type[Component]
-    _component_framework_error: type[Exception]
+    # Domain-specific framework error(s) that can surface during import or
+    # instantiation of a component. These are distinct from Component*Error, which
+    # describes failures in the loader infrastructure itself (missing manifest,
+    # bad entry point, etc.). Domain errors originate in the implementation being
+    # loaded and carry their own precise semantics, so they must be re-raised
+    # directly rather than wrapped as InternalComponentProjectError.
+    _component_framework_error: type[Exception] | tuple[type[Exception], ...]
     _manifest_json_schema: dict[str, Any]
 
     def __init__(self, release_service: ReleaseService, consortium_root: pathlib.Path):
@@ -221,6 +227,9 @@ class ComponentLoaderService[Component]:
                 )
             else:
                 component_module = importlib.import_module(component_module_path)
+        # Domain framework errors (e.g. a build step overriding a final method) are
+        # raised via __init_subclass__ at class definition time, which fires during
+        # import. Re-raise them directly so callers receive the precise domain error.
         except self._component_framework_error as exc:
             raise exc from None
         # This should only catch errors that are not related to the component project.
@@ -289,6 +298,8 @@ class ComponentLoaderService[Component]:
         try:
             component_object = component_class()
             return component_object
+        # Same reasoning as import: domain errors raised during instantiation are
+        # precise and meaningful, not loader failures, so they must not be wrapped.
         except self._component_framework_error as exc:
             raise exc from None
         except Exception as exc:
@@ -390,6 +401,11 @@ class ComponentLoaderService[Component]:
                 ComponentConfigurationError,
                 ComponentDependencyError,
             ) as exc:
+                errored_components.append((component_project_folder_path, exc))
+            # Domain framework errors escape the Component*Error hierarchy entirely,
+            # so they need a separate clause to be collected rather than crashing
+            # the batch load.
+            except self._component_framework_error as exc:
                 errored_components.append((component_project_folder_path, exc))
         return retrieved_components, skipped_components, errored_components
 

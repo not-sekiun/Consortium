@@ -54,6 +54,19 @@ class MissingAgentGeneratorConfigurationParameterError(
         )
 
 
+class AgentGeneratorOverridesFinalMethodError(AgentGeneratorConfigurationError):
+    code = "AGENT_GENERATOR_OVERRIDES_FINAL_METHOD_ERROR"
+
+    def __init__(self, agent_generator_filepath: str, method_name: str) -> None:
+        self.agent_generator_filepath = agent_generator_filepath
+        self.method_name = method_name
+        super().__init__(
+            f"Failed to configure the agent generator defined at "
+            f"'{agent_generator_filepath}'. The provided implementation overrides "
+            f"`{method_name}()`, which is `final` and must not be overridden."
+        )
+
+
 class AgentGeneratorBuildStepConfigurationError(AgentGeneratorsFrameworkError):
     code = "AGENT_GENERATOR_BUILD_STEP_CONFIGURATION_ERROR"
 
@@ -98,6 +111,39 @@ class RequiredAgentGeneratorBuildStepConfigurationParameterNotDeclaredError(
                 f"'{parameter_name}' was not declared in the agent generator build "
                 f"step's definition."
             ),
+        )
+
+
+class MissingAgentGeneratorBuildStepConfigurationParameterError(
+    AgentGeneratorConfigurationError,
+):
+    code = "MISSING_AGENT_GENERATOR_BUILD_STEP_CONFIGURATION_PARAMETER_ERROR"
+
+    def __init__(self, parameter_name: str, agent_generator_build_step_filepath: str):
+        super().__init__(
+            message=(
+                f"Failed to configure the agent generator build step defined at "
+                f"'{agent_generator_build_step_filepath}'. The required parameter "
+                f"'{parameter_name}' was not declared in the agent generator build "
+                f"step's definition."
+            ),
+        )
+
+
+class AgentGeneratorBuildStepOverridesFinalMethodError(
+    AgentGeneratorConfigurationError
+):
+    code = "AGENT_GENERATOR_BUILD_STEP_OVERRIDES_FINAL_METHOD_ERROR"
+
+    def __init__(
+        self, agent_generator_build_step_filepath: str, method_name: str
+    ) -> None:
+        self.agent_generator_build_step_filepath = agent_generator_build_step_filepath
+        self.method_name = method_name
+        super().__init__(
+            f"Failed to configure the agent generator build step defined at "
+            f"'{agent_generator_build_step_filepath}'. The provided implementation "
+            f"overrides `{method_name}()`, which is `final` and must not be overridden."
         )
 
 
