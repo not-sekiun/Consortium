@@ -198,16 +198,13 @@ async def restore_default_user_accounts_after_test(
             "/api/user-accounts",
             json={"username": username, "password": password, "role": role},
         )
-    # Logout each client to remove their old User objects from users_service, then
-    # re-login. Without the logout step, the login endpoint returns disguised-401
-    # (AlreadyLoggedInError) because is_user_logged_in still finds the old session.
-    # After logout, is_user_logged_in returns False and login proceeds normally.
+    # Re-login each client to get new JWTs linked to the newly created UserAccount
+    # UUIDs. Login is idempotent so no logout is required first.
     for client, username, password in [
         (admin_client, "admin", "admin"),
         (operator_client, "operator", "operator"),
         (spectator_client, "spectator", "spectator"),
     ]:
-        await client.post("/api/logout")
         response = await client.post(
             "/api/login", data={"username": username, "password": password}
         )

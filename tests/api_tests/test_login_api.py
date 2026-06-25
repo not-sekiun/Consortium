@@ -13,24 +13,6 @@ JWT_JSON_SCHEMA = {
     },
     "required": ["access_token", "token_type"],
 }
-ALREADY_LOGGED_IN_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["ALREADY_LOGGED_IN_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 async def test_login_with_valid_credentials(app):
@@ -75,16 +57,22 @@ async def test_login_with_unknown_username_returns_401(app):
         assert not response.content, "Expected empty body on failed login"
 
 
-async def test_login_while_already_logged_in_returns_409(admin_client):
-    """A second login attempt while already logged in returns 409."""
-    validate_response(
-        test_response=await admin_client.post(
-            "/api/login",
-            data={"username": "admin", "password": "admin"},
-        ),
-        expected_json_schema=ALREADY_LOGGED_IN_ERROR_JSON_SCHEMA,
-        expected_status_code=409,
+async def test_login_while_already_logged_in_returns_new_jwt(admin_client):
+    """A second login attempt while already logged in issues a fresh JWT (idempotent login)."""
+    old_token = admin_client.headers["Authorization"]
+    response = await admin_client.post(
+        "/api/login",
+        data={"username": "admin", "password": "admin"},
     )
+    validate_response(
+        test_response=response,
+        expected_json_schema=JWT_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    new_token = f"Bearer {response.json()['access_token']}"
+    assert new_token != old_token, "Expected a new JWT to be issued on re-login"
+    # Restore original token so session-scoped client is unaffected by this test.
+    admin_client.headers["Authorization"] = old_token
 
 
 async def test_all_user_roles_can_login(app):
