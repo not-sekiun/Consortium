@@ -2,7 +2,6 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import HTML
-from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.commands.core_commands import GeneratorsCommand
 from consortium.client.commands.use_agent_template_interpreter_commands import (
@@ -14,9 +13,6 @@ from consortium.client.interpreters.generators_interpreter import (
 )
 from consortium.client.models.interpreter_context_models import (
     UseAgentTemplateInterpreterContext,
-)
-from consortium.client.utils.data_structure_utils import (
-    extract_nested_completer_dict_from_nested_completer,
 )
 
 if TYPE_CHECKING:
@@ -64,10 +60,10 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         all_agent_generators: list[dict[str, Any]],
         all_agent_templates: list[dict[str, Any]],
     ) -> None:
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            self.prompt_session.completer,
-        )
         agent_template = self.interpreter_context.agent_template
+
+        update_completions_dict = {}
+
         for key, value in {
             command: dict.fromkeys(agent_template["options"])
             for command in [
@@ -77,11 +73,9 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
                 "unset",
             ]
         }.items():
-            nested_completer_dict[key] = value
+            update_completions_dict[key] = value
 
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
-        )
+        self.update_completions(update_completions_dict=update_completions_dict)
 
         # We run the parent method after we have updated the autocomplete with this
         # interpreter's commands to ensure that when it is called, the autocomplete

@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI, HTML
-from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.generators_interpreter_commands import (
@@ -13,9 +12,6 @@ from consortium.client.models.interpreter_context_models import BaseInterpreterC
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
-)
-from consortium.client.utils.data_structure_utils import (
-    extract_nested_completer_dict_from_nested_completer,
 )
 
 if TYPE_CHECKING:
@@ -62,9 +58,7 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         all_agent_generators: list[dict[str, Any]],
         all_agent_templates: list[dict[str, Any]],
     ) -> None:
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            self.prompt_session.completer,
-        )
+        update_completions_dict = {}
 
         # Register commands that take the agent generator ID as the first positional
         # argument to autocomplete with.
@@ -83,12 +77,12 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
                 "describe",
             ]
         }.items():
-            nested_completer_dict[key] = value
+            update_completions_dict[key] = value
 
         # Register the "update" command to autocomplete with the agent generator ID as
         # the first positional argument and the parameters of the agent generator as
         # the second positional argument.
-        nested_completer_dict["update"] = {
+        update_completions_dict["update"] = {
             agent_generator["agent_generator_id"]: dict.fromkeys(
                 agent_generator["parameters"]
             )
@@ -107,13 +101,11 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
                 "use",
             ]
         }.items():
-            nested_completer_dict[key] = value
+            update_completions_dict[key] = value
 
-        nested_completer_dict["help"] = dict.fromkeys(self.commands)
+        update_completions_dict["help"] = dict.fromkeys(self.commands)
 
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
-        )
+        self.update_completions(update_completions_dict=update_completions_dict)
 
     async def _agent_generator_created_or_removed_event_handler(
         self,

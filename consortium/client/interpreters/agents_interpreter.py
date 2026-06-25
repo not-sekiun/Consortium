@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI
-from prompt_toolkit.completion import NestedCompleter, PathCompleter
+from prompt_toolkit.completion import PathCompleter
 
 from consortium.client.commands.agents_interpreter_commands import (
     AGENTS_INTERPRETER_COMMANDS,
@@ -11,9 +11,6 @@ from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
-)
-from consortium.client.utils.data_structure_utils import (
-    extract_nested_completer_dict_from_nested_completer,
 )
 from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 from consortium.client.utils.printer_utils import print_success
@@ -50,9 +47,7 @@ class AgentsInterpreter(BaseConnectedInterpreter):
     ) -> None:
         all_assets = await self.client_session.rest_api.get_all_assets()
 
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            self.prompt_session.completer,
-        )
+        update_completions_dict = {}
 
         # Register commands that take the agent ID as the first positional argument to
         # autocomplete with.
@@ -64,13 +59,13 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             "rename",
             "describe",
         ]:
-            nested_completer_dict[command] = agent_ids_completion
+            update_completions_dict[command] = agent_ids_completion
 
         # Register commands that take the task ID as the first positional
         # argument to autocomplete with.
         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
         for command in ["t-info", "watch"]:
-            nested_completer_dict[command] = {
+            update_completions_dict[command] = {
                 task["task_id"]: None for task in all_tasks
             }
 
@@ -78,32 +73,25 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         # autocomplete with.
         assets_completion = {asset["resource_id"]: None for asset in all_assets}
         for command in ["as-dl", "as-info"]:
-            nested_completer_dict[command] = assets_completion
+            update_completions_dict[command] = assets_completion
 
         # Register the help command to autocomplete with all available commands. This
         # includes all the newly added agent capability commands that are dynamically
         # added before this method is called.
-        nested_completer_dict["help"] = dict.fromkeys(self.commands)
+        update_completions_dict["help"] = dict.fromkeys(self.commands)
 
         # Register the asset upload command to autocomplete with all available files.
-        nested_completer_dict["up"] = PathCompleter()
+        update_completions_dict["up"] = PathCompleter()
 
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
-        )
+        self.update_completions(update_completions_dict=update_completions_dict)
 
     async def _agent_tasked_event_handler(
         self,
         event: dict[str, Any],
     ) -> None:
         task = event["data"]["task"]
-
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            self.prompt_session.completer,
-        )
-        nested_completer_dict["t-info"][task["task_id"]] = None
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
+        self.update_completions(
+            update_completions_dict={"t-info": {task["task_id"]: None}}
         )
 
     async def _agent_registered_event_handler(
@@ -113,19 +101,15 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         agent = event["data"]
         print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in")
 
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            self.prompt_session.completer,
-        )
-        for command in [
-            "info",
-            "interact",
-            "t-list",
-            "rename",
-            "describe",
-        ]:
-            nested_completer_dict[command][agent["agent_id"]] = None
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
+        agent_id_completions_dict = {agent["agent_id"]: None}
+        self.update_completions(
+            update_completions_dict={
+                "info": agent_id_completions_dict,
+                "interact": agent_id_completions_dict,
+                "t-list": agent_id_completions_dict,
+                "rename": agent_id_completions_dict,
+                "describe": agent_id_completions_dict,
+            },
         )
 
     async def _setup_event_handlers(self) -> None:

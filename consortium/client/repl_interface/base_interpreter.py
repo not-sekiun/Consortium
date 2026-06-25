@@ -1,6 +1,5 @@
 from prompt_toolkit import ANSI, HTML, PromptSession, print_formatted_text
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.patch_stdout import patch_stdout
 from rich.columns import Columns
 from rich.panel import Panel
@@ -28,6 +27,11 @@ from consortium.client.repl_interface.alias_expander import expand_aliases
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
+from consortium.client.repl_interface.custom_completer import (
+    CompletionsDict,
+    CustomCompleter,
+    custom_completer_filter_builder,
+)
 from consortium.client.repl_interface.lexer import tokenize
 from consortium.client.repl_interface.parser import ParsedCommand, parse
 from consortium.client.utils.printer_utils import console, print_error
@@ -41,13 +45,18 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
         client_session: TClientSession,
         interpreter_context: BaseInterpreterContext,
     ):
+        _custom_completer = CustomCompleter(
+            {command.name: None for command in commands}
+        )
+        _custom_completer_filter = custom_completer_filter_builder(
+            custom_completer=_custom_completer
+        )
         self.prompt_session = PromptSession(
             message=prompt,
-            completer=NestedCompleter.from_nested_dict(
-                {command.name: None for command in commands},
-            ),
+            completer=_custom_completer,
             auto_suggest=AutoSuggestFromHistory(),
             bottom_toolbar=self._get_bottom_toolbar_string,
+            complete_while_typing=_custom_completer_filter,
         )
         self.commands = {command.name: command for command in commands}
         self.client_session = client_session
@@ -163,6 +172,17 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
                 raw_input=parsed_command.raw_input,
                 interpreter_context=self.interpreter_context,
             )
+        )
+
+    def update_completions(self, update_completions_dict: CompletionsDict) -> None:
+        # nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
+        #     nested_completer=self.prompt_session.completer,
+        # )
+        completions_dict = self.prompt_session.completer.completions_dict
+        for k, v in update_completions_dict.items():
+            completions_dict[k] = v
+        self.prompt_session.completer = CustomCompleter(
+            completions_dict=completions_dict
         )
 
     async def on_loop(self) -> None: ...

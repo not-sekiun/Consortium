@@ -2,7 +2,6 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import HTML
-from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.commands.core_commands import ListenersCommand
 from consortium.client.commands.use_listener_template_interpreter_commands import (
@@ -14,9 +13,6 @@ from consortium.client.interpreters.listeners_interpreter import (
 )
 from consortium.client.models.interpreter_context_models import (
     UseListenerTemplateInterpreterContext,
-)
-from consortium.client.utils.data_structure_utils import (
-    extract_nested_completer_dict_from_nested_completer,
 )
 
 if TYPE_CHECKING:
@@ -64,10 +60,10 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
         all_listeners: list[dict[str, Any]],
         all_listener_templates: list[dict[str, Any]],
     ) -> None:
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            self.prompt_session.completer,
-        )
         listener_template = self.interpreter_context.listener_template
+
+        update_completions_dict = {}
+
         for key, value in {
             command: dict.fromkeys(listener_template["options"])
             for command in [
@@ -77,10 +73,9 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
                 "unset",
             ]
         }.items():
-            nested_completer_dict[key] = value
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
-        )
+            update_completions_dict[key] = value
+
+        self.update_completions(update_completions_dict=update_completions_dict)
 
         # We run the parent method after we have updated the autocomplete with this
         # interpreter's commands to ensure that when it is called, the autocomplete

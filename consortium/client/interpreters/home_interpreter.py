@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from prompt_toolkit import ANSI
-from prompt_toolkit.completion import NestedCompleter
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.commands.core_commands import CORE_COMMANDS
@@ -11,9 +10,6 @@ from consortium.client.commands.home_interpreter_commands import (
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
-)
-from consortium.client.utils.data_structure_utils import (
-    extract_nested_completer_dict_from_nested_completer,
 )
 from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 
@@ -46,9 +42,7 @@ class HomeInterpreter(BaseConnectedInterpreter):
     async def on_loop(self) -> None:
         all_client_sessions = client_sessions_service.get_all_client_sessions()
 
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            nested_completer=self.prompt_session.completer,
-        )
+        update_completions_dict = {}
         for key, value in {
             command: {
                 str(client_session.client_session_id): None
@@ -62,9 +56,6 @@ class HomeInterpreter(BaseConnectedInterpreter):
                 "describe",
             ]
         }.items():
-            nested_completer_dict[key] = value
-        nested_completer_dict["help"] = dict.fromkeys(self.commands)
-
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
-        )
+            update_completions_dict[key] = value
+        update_completions_dict["help"] = dict.fromkeys(self.commands)
+        self.update_completions(update_completions_dict=update_completions_dict)

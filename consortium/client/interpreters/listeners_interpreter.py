@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI, HTML
-from prompt_toolkit.completion import NestedCompleter
 
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.listeners_interpreter_commands import (
@@ -13,9 +12,6 @@ from consortium.client.models.interpreter_context_models import BaseInterpreterC
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
-)
-from consortium.client.utils.data_structure_utils import (
-    extract_nested_completer_dict_from_nested_completer,
 )
 
 if TYPE_CHECKING:
@@ -61,9 +57,7 @@ class ListenersInterpreter(BaseConnectedInterpreter):
         all_listeners: list[dict[str, Any]],
         all_listener_templates: list[dict[str, Any]],
     ) -> None:
-        nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-            self.prompt_session.completer,
-        )
+        update_completions_dict = {}
 
         for key, value in {
             command: {listener["listener_id"]: None for listener in all_listeners}
@@ -77,9 +71,9 @@ class ListenersInterpreter(BaseConnectedInterpreter):
                 "describe",
             ]
         }.items():
-            nested_completer_dict[key] = value
+            update_completions_dict[key] = value
 
-        nested_completer_dict["update"] = {
+        update_completions_dict["update"] = {
             listener["listener_id"]: dict.fromkeys(listener["parameters"])
             for listener in all_listeners
         }
@@ -94,13 +88,11 @@ class ListenersInterpreter(BaseConnectedInterpreter):
                 "use",
             ]
         }.items():
-            nested_completer_dict[key] = value
+            update_completions_dict[key] = value
 
-        nested_completer_dict["help"] = dict.fromkeys(self.commands)
+        update_completions_dict["help"] = dict.fromkeys(self.commands)
 
-        self.prompt_session.completer = NestedCompleter.from_nested_dict(
-            nested_completer_dict,
-        )
+        self.update_completions(update_completions_dict=update_completions_dict)
 
     @staticmethod
     def _list_all_listeners_and_listener_templates(
