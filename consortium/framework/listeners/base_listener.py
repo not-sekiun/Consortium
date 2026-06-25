@@ -44,7 +44,7 @@ class _BaseListenerParametersModel(BaseModel):
     parameters: dict[str, JsonValue]
 
 
-class BaseListener(ComponentLifeCycle):  # ABC):
+class BaseListener(ComponentLifeCycle):
     """
     Base class for implementing custom listeners in the Consortium framework.
 

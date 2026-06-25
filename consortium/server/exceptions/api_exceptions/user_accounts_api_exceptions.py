@@ -1,4 +1,5 @@
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
+    ConflictError,
     ForbiddenError,
     NotFoundError,
     UnprocessableEntityError,
@@ -28,7 +29,7 @@ class EmptyUserAccountPasswordError(UnprocessableEntityError): ...
 class InvalidUserAccountRoleError(UnprocessableEntityError): ...
 
 
-class UserAccountUsernameAlreadyExistsError(UnprocessableEntityError): ...
+class UserAccountUsernameAlreadyExistsError(ConflictError): ...
 
 
 # Add a bit more context in the error message compared to the services error message.

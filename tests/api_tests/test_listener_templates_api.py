@@ -138,7 +138,7 @@ async def test_get_listener_template_by_listener_template_id(admin_client, clien
             expected_status_code=200,
         )
 
-    # Non-UUID4 string → 422
+    # Non-UUID4 string: 422
     validate_response(
         test_response=await client.get(
             "/api/listener-templates/invalid-listener-template-id"
@@ -146,7 +146,7 @@ async def test_get_listener_template_by_listener_template_id(admin_client, clien
         expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
         expected_status_code=422,
     )
-    # Valid UUID4 that does not exist → 404
+    # Valid UUID4 that does not exist: 404
     validate_response(
         test_response=await client.get(
             "/api/listener-templates/00000000-0000-4000-8000-000000000061"

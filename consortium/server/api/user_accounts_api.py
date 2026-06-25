@@ -160,9 +160,11 @@ async def get_user_account_by_user_account_id(
     status_code=201,
     responses={
         201: {"model": UserAccountModel},
-        422: {
+        409: {
             "model": _user_account_username_already_exists_error_during_creation.to_pydantic_model()
-            | _empty_user_account_username_error_during_creation.to_pydantic_model()
+        },
+        422: {
+            "model": _empty_user_account_username_error_during_creation.to_pydantic_model()
             | _empty_user_account_password_error_during_creation.to_pydantic_model()
             | _invalid_user_account_role_error_during_creation.to_pydantic_model()
             | _unprocessable_entity_error.to_pydantic_model(),

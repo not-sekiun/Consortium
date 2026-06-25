@@ -131,7 +131,7 @@ async def test_create_user_account(admin_client, client, test_user_account):
 
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
 async def test_create_user_account_with_duplicate_username(admin_client, client):
-    """Duplicate username returns 422 with USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR."""
+    """Duplicate username returns 409 with USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR."""
     if client == admin_client:
         validate_response(
             test_response=await admin_client.post(
@@ -139,7 +139,7 @@ async def test_create_user_account_with_duplicate_username(admin_client, client)
                 json={"username": "admin", "password": "somepass", "role": "OPERATOR"},
             ),
             expected_json_schema=USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR_JSON_SCHEMA,
-            expected_status_code=422,
+            expected_status_code=409,
         )
 
 
@@ -160,13 +160,13 @@ async def test_get_user_account_by_user_account_id(admin_client, client):
                 expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
                 expected_status_code=200,
             )
-        # Non-UUID4 string → 422
+        # Non-UUID4 string: 422
         validate_response(
             test_response=await client.get("/api/user-accounts/not-a-valid-uuid"),
             expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
             expected_status_code=422,
         )
-        # Valid UUID4 that does not exist → 404
+        # Valid UUID4 that does not exist: 404
         validate_response(
             test_response=await client.get(
                 "/api/user-accounts/00000000-0000-4000-8000-000000000070"
@@ -181,11 +181,11 @@ async def test_get_user_account_by_user_account_id(admin_client, client):
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
-        # Non-UUID4 string → 422 (UUID validation fires before auth)
+        # Non-UUID4 string: 403 (auth fires before UUID validation)
         validate_response(
             test_response=await client.get("/api/user-accounts/not-a-valid-uuid"),
             expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
-            expected_status_code=422,
+            expected_status_code=403,
         )
 
 

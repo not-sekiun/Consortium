@@ -218,7 +218,7 @@ async def test_task_agent_by_invalid_uuid_returns_422(admin_client):
 async def test_delete_queued_agent_task_requires_admin_or_operator(
     admin_client, operator_client, client
 ):
-    """DELETE /api/agents/{id}/tasks/queued/{task_id} → 403 spectators, 404 others."""
+    """DELETE /api/agents/{id}/tasks/queued/{task_id}: 403 spectators, 404 others."""
     fake_agent_id = "00000000-0000-4000-8000-000000000015"
     fake_task_id = "00000000-0000-4000-8000-000000000016"
     if client in (admin_client, operator_client):

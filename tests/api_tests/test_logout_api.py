@@ -76,7 +76,7 @@ async def test_logout_user_by_user_id(
             expected_status_code=401,
         )
 
-        # Invalid user ID → 404
+        # Invalid user ID: 404
         validate_response(
             test_response=await admin_client.post("/api/logout/user/invalid-user-id"),
             expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
@@ -146,7 +146,7 @@ async def test_logout_user_account_by_user_account_id(
             expected_status_code=401,
         )
 
-        # Invalid user account ID → 404
+        # Invalid user account ID: 404
         validate_response(
             test_response=await admin_client.post(
                 "/api/logout/user-account/invalid-user-account-id"

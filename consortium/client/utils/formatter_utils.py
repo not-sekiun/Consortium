@@ -183,7 +183,7 @@ def format_seconds_as_human_readable_str(seconds: float) -> str:
 
     # For durations over a minute, seconds are rounded and optional
     if int(secs) > 0 and not parts:
-        # Only include seconds if nothing else was shown (e.g. 1m 0s → 1m)
+        # Only include seconds if nothing else was shown (e.g. 1m 0s: 1m)
         parts.append(f"{int(secs)}s")
 
     return " ".join(parts)
