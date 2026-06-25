@@ -130,12 +130,15 @@ class AuthorizeUserRequest:
             # Permissions for the /api/agents endpoint
             UserPermissions.READ_ALL_AGENTS,
             UserPermissions.READ_AGENT_BY_AGENT_ID,
+            UserPermissions.READ_ALL_AGENT_TASKS,
+            UserPermissions.READ_AGENT_TASK_BY_TASK_ID,
             UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID,
             UserPermissions.READ_AGENT_TASK_BY_AGENT_ID_AND_TASK_ID,
             UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,
             UserPermissions.READ_AGENT_RESULT_BY_AGENT_ID_AND_TASK_ID_OR_RESULT_ID,
             UserPermissions.TASK_AGENT_BY_AGENT_ID,
             UserPermissions.UPDATE_AGENT_BY_AGENT_ID,
+            UserPermissions.DELETE_AGENT_TASK_BY_TASK_ID,
             # Permissions for the /api/events endpoint
             UserPermissions.USE_EVENTS_WEBSOCKET,
             # Permissions for the /api/assets endpoint
@@ -155,16 +158,19 @@ class AuthorizeUserRequest:
             UserPermissions.READ_PAYLOAD_BY_PAYLOAD_ID,
             UserPermissions.DELETE_PAYLOAD_BY_PAYLOAD_ID,
         },
-        # Spectators generally have only read-only permissions
+        # Spectators are read-only operators, same read access, no write/delete/download
         UserRole.SPECTATOR: {
             # Permissions for the /api/user-accounts endpoint
             UserPermissions.READ_OWN_USER_ACCOUNT,  # TODO: Probably should remove
             # Permissions for the /api/users endpoint
             UserPermissions.READ_OWN_USER,
-            # The only non read permission, used to update display name
+            UserPermissions.READ_ALL_USERS,
+            UserPermissions.READ_USER_BY_USER_ID,
+            # The only non-read permission, used to update display name
             UserPermissions.UPDATE_OWN_USER,
             # Permissions for the /api/server endpoint
             UserPermissions.READ_SERVER_RELEASE,
+            UserPermissions.READ_SERVER_CONFIG,
             # Permissions for the /api/listener-templates endpoint
             UserPermissions.READ_ALL_LISTENER_TEMPLATES,
             UserPermissions.READ_LISTENER_TEMPLATE_BY_LISTENER_TEMPLATE_ID,
@@ -180,6 +186,8 @@ class AuthorizeUserRequest:
             # Permissions for the /api/agents endpoint
             UserPermissions.READ_ALL_AGENTS,
             UserPermissions.READ_AGENT_BY_AGENT_ID,
+            UserPermissions.READ_ALL_AGENT_TASKS,
+            UserPermissions.READ_AGENT_TASK_BY_TASK_ID,
             UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID,
             UserPermissions.READ_AGENT_TASK_BY_AGENT_ID_AND_TASK_ID,
             UserPermissions.READ_ALL_AGENT_RESULTS_BY_AGENT_ID,

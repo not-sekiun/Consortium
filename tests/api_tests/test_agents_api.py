@@ -74,23 +74,14 @@ async def test_get_all_agents_returns_empty_list(client):
     )
 
 
-async def test_get_agent_by_invalid_id_returns_404(
-    admin_client, operator_client, client
-):
-    """GET /api/agents/{id} with unknown valid UUID4 returns 404 for admin/operator."""
+async def test_get_agent_by_invalid_id_returns_404(client):
+    """GET /api/agents/{id} with unknown valid UUID4 returns 404 for all roles."""
     fake_uuid = "00000000-0000-4000-8000-000000000010"
-    if client in (admin_client, operator_client):
-        validate_response(
-            test_response=await client.get(f"/api/agents/{fake_uuid}"),
-            expected_json_schema=AGENT_NOT_FOUND_ERROR_JSON_SCHEMA,
-            expected_status_code=404,
-        )
-    else:
-        validate_response(
-            test_response=await client.get(f"/api/agents/{fake_uuid}"),
-            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-            expected_status_code=403,
-        )
+    validate_response(
+        test_response=await client.get(f"/api/agents/{fake_uuid}"),
+        expected_json_schema=AGENT_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
 
 
 async def test_get_all_agent_tasks_returns_empty_list(client):
@@ -103,42 +94,24 @@ async def test_get_all_agent_tasks_returns_empty_list(client):
     )
 
 
-async def test_get_agent_task_by_invalid_id_returns_404(
-    admin_client, operator_client, client
-):
-    """GET /api/agents/tasks/{task_id} with unknown valid UUID4 returns 404."""
+async def test_get_agent_task_by_invalid_id_returns_404(client):
+    """GET /api/agents/tasks/{task_id} with unknown valid UUID4 returns 404 for all roles."""
     fake_uuid = "00000000-0000-4000-8000-000000000011"
-    if client in (admin_client, operator_client):
-        validate_response(
-            test_response=await client.get(f"/api/agents/tasks/{fake_uuid}"),
-            expected_json_schema=AGENT_TASK_NOT_FOUND_ERROR_JSON_SCHEMA,
-            expected_status_code=404,
-        )
-    else:
-        validate_response(
-            test_response=await client.get(f"/api/agents/tasks/{fake_uuid}"),
-            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-            expected_status_code=403,
-        )
+    validate_response(
+        test_response=await client.get(f"/api/agents/tasks/{fake_uuid}"),
+        expected_json_schema=AGENT_TASK_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
 
 
-async def test_get_all_agent_tasks_by_agent_id_returns_404(
-    admin_client, operator_client, client
-):
-    """GET /api/agents/{agent_id}/tasks with unknown agent returns 404."""
+async def test_get_all_agent_tasks_by_agent_id_returns_404(client):
+    """GET /api/agents/{agent_id}/tasks with unknown agent returns 404 for all roles."""
     fake_uuid = "00000000-0000-4000-8000-000000000012"
-    if client in (admin_client, operator_client):
-        validate_response(
-            test_response=await client.get(f"/api/agents/{fake_uuid}/tasks"),
-            expected_json_schema=AGENT_NOT_FOUND_ERROR_JSON_SCHEMA,
-            expected_status_code=404,
-        )
-    else:
-        validate_response(
-            test_response=await client.get(f"/api/agents/{fake_uuid}/tasks"),
-            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-            expected_status_code=403,
-        )
+    validate_response(
+        test_response=await client.get(f"/api/agents/{fake_uuid}/tasks"),
+        expected_json_schema=AGENT_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
 
 
 async def test_update_agent_requires_admin_or_operator(

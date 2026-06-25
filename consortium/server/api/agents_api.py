@@ -162,7 +162,7 @@ def get_all_agent_tasks(
 def get_agent_task_by_task_id(
     task_id: UUID4,
     _: Annotated[
-        None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS))
+        None, Depends(AuthorizeUserRequest(UserPermissions.READ_AGENT_TASK_BY_TASK_ID))
     ],
     limit: Annotated[
         int, Query(gt=0, description="Maximum number of task events to return")
