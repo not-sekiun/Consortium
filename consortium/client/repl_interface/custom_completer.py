@@ -31,7 +31,7 @@ class CustomCompleter(Completer):
             is_being_typed = is_last_word and not has_trailing_space
 
             if is_being_typed:
-                # The token under the cursor is a command iff its parent node is
+                # The token under the cursor is a command if its parent node is
                 # still a dict of further commands.
                 return isinstance(current, dict)
 
@@ -52,14 +52,13 @@ class CustomCompleter(Completer):
             yield from self._nested_completer.get_completions(document, complete_event)
             return
 
-        # ---- THE FIX --------------------------------------------------------
         # PathCompleter treats the WHOLE text_before_cursor as a single path.
         # Hand it "deploy src/m" and it tries to list a dir called "deploy src"
         # and finds nothing.  So strip everything up to the last whitespace and
         # give it only the current token, in its own Document.
         #
         # (This naive rfind(" ") split ignores quoted paths with spaces; good
-        # enough for the MRE. Use shlex if you need quote handling.)
+        # enough for the MRE.
         token = text[text.rfind(" ") + 1 :]
         sub_doc = Document(token, cursor_position=len(token))
         yield from self._path_completer.get_completions(sub_doc, complete_event)

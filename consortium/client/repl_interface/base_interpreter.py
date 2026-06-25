@@ -175,9 +175,6 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
         )
 
     def update_completions(self, update_completions_dict: CompletionsDict) -> None:
-        # nested_completer_dict = extract_nested_completer_dict_from_nested_completer(
-        #     nested_completer=self.prompt_session.completer,
-        # )
         completions_dict = self.prompt_session.completer.completions_dict
         for k, v in update_completions_dict.items():
             completions_dict[k] = v
