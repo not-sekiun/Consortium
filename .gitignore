@@ -11,4 +11,5 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
+.claude/
 CLAUDE.md
