@@ -123,6 +123,24 @@ OPTION_VALUE_ERROR_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
+LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
 
 
 async def test_get_all_listener_templates(client):
@@ -276,3 +294,26 @@ async def test_create_listener_with_invalid_option_value_type(
                     expected_status_code=422,
                 )
                 break
+
+
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_create_listener_with_unknown_option_key_returns_422(
+    admin_client, mock_listener_template_ids
+):
+    """POST /api/listener-templates/{id} with an unrecognised option key returns 422."""
+    for template_id in mock_listener_template_ids:
+        template = (
+            await admin_client.get(f"/api/listener-templates/{template_id}")
+        ).json()
+        params = {
+            name: opt["default_value"] for name, opt in template["options"].items()
+        }
+        params["nonexistent_option_key"] = "value"
+        validate_response(
+            test_response=await admin_client.post(
+                f"/api/listener-templates/{template_id}",
+                json=params,
+            ),
+            expected_json_schema=LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )

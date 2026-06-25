@@ -121,6 +121,42 @@ LISTENER_NOT_RUNNING_ERROR_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
+INVALID_LISTENER_PARAMETER_NAME_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["INVALID_LISTENER_PARAMETER_NAME_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+INVALID_LISTENER_PARAMETER_VALUE_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["INVALID_LISTENER_PARAMETER_VALUE_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
 
 
 @pytest.mark.usefixtures("create_listeners_before_test")
@@ -355,3 +391,151 @@ async def test_delete_listener_by_listener_id(admin_client, spectator_client, cl
                 expected_status_code=403,
             )
             await admin_client.delete(f"/api/listeners/{listener_id}")
+
+
+async def test_start_listener_not_found_returns_404(admin_client):
+    """POST /{id}/start with a valid UUID4 that has no matching listener returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000030"
+    validate_response(
+        test_response=await admin_client.post(f"/api/listeners/{fake_uuid}/start"),
+        expected_json_schema=LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+async def test_start_listener_by_invalid_uuid_returns_422(admin_client):
+    """POST /{id}/start with a non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.post("/api/listeners/not-a-uuid/start"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_stop_listener_not_found_returns_404(admin_client):
+    """POST /{id}/stop with a valid UUID4 that has no matching listener returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000031"
+    validate_response(
+        test_response=await admin_client.post(f"/api/listeners/{fake_uuid}/stop"),
+        expected_json_schema=LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+async def test_stop_listener_by_invalid_uuid_returns_422(admin_client):
+    """POST /{id}/stop with a non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.post("/api/listeners/not-a-uuid/stop"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_cancel_listener_not_found_returns_404(admin_client):
+    """POST /{id}/cancel with a valid UUID4 that has no matching listener returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000032"
+    validate_response(
+        test_response=await admin_client.post(f"/api/listeners/{fake_uuid}/cancel"),
+        expected_json_schema=LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+@pytest.mark.usefixtures("create_listeners_before_test")
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_cancel_listener_not_running_returns_409(admin_client):
+    """POST /{id}/cancel on a listener that is not running returns 409."""
+    for listener_id in await get_all_listener_ids(admin_client):
+        validate_response(
+            test_response=await admin_client.post(
+                f"/api/listeners/{listener_id}/cancel"
+            ),
+            expected_json_schema=LISTENER_NOT_RUNNING_ERROR_JSON_SCHEMA,
+            expected_status_code=409,
+        )
+
+
+async def test_cancel_listener_by_invalid_uuid_returns_422(admin_client):
+    """POST /{id}/cancel with a non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.post("/api/listeners/not-a-uuid/cancel"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_listener_not_found_returns_404(admin_client):
+    """PATCH /{id} with a valid UUID4 that has no matching listener returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000033"
+    validate_response(
+        test_response=await admin_client.patch(
+            f"/api/listeners/{fake_uuid}",
+            json={"name": "new-name"},
+        ),
+        expected_json_schema=LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+@pytest.mark.usefixtures("create_listeners_before_test")
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_update_listener_with_invalid_parameter_name_returns_422(admin_client):
+    """PATCH /{id} with an unrecognised parameter name returns 422."""
+    for listener_id in await get_all_listener_ids(admin_client):
+        validate_response(
+            test_response=await admin_client.patch(
+                f"/api/listeners/{listener_id}",
+                json={"parameters": {"nonexistent_parameter": "value"}},
+            ),
+            expected_json_schema=INVALID_LISTENER_PARAMETER_NAME_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+
+
+@pytest.mark.usefixtures("create_listeners_before_test")
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_update_listener_with_invalid_parameter_value_returns_422(admin_client):
+    """PATCH /{id} with a wrong-type value for a known parameter returns 422."""
+    for listener_id in await get_all_listener_ids(admin_client):
+        validate_response(
+            test_response=await admin_client.patch(
+                f"/api/listeners/{listener_id}",
+                # timeout is an int; passing a string triggers the value error
+                json={"parameters": {"timeout": "not_an_int"}},
+            ),
+            expected_json_schema=INVALID_LISTENER_PARAMETER_VALUE_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+
+
+@pytest.mark.usefixtures("create_listeners_before_test")
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_delete_running_listener_returns_409(admin_client):
+    """DELETE /{id} on a running listener returns 409."""
+    for listener_id in await get_all_listener_ids(admin_client):
+        await admin_client.post(f"/api/listeners/{listener_id}/start")
+        validate_response(
+            test_response=await admin_client.delete(f"/api/listeners/{listener_id}"),
+            expected_json_schema=LISTENER_ALREADY_RUNNING_ERROR_JSON_SCHEMA,
+            expected_status_code=409,
+        )
+        await admin_client.post(f"/api/listeners/{listener_id}/stop")
+
+
+async def test_delete_listener_not_found_returns_404(admin_client):
+    """DELETE /{id} with a valid UUID4 that has no matching listener returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000034"
+    validate_response(
+        test_response=await admin_client.delete(f"/api/listeners/{fake_uuid}"),
+        expected_json_schema=LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+async def test_delete_listener_by_invalid_uuid_returns_422(admin_client):
+    """DELETE /{id} with a non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.delete("/api/listeners/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )

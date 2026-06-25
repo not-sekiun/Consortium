@@ -72,6 +72,42 @@ AGENT_GENERATOR_NOT_RUNNING_ERROR_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
+INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
 
 
 async def _create_one_agent_generator_per_template(
@@ -373,3 +409,168 @@ async def test_delete_agent_generator_by_invalid_uuid_returns_422(admin_client):
         expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
         expected_status_code=422,
     )
+
+
+async def test_start_agent_generator_not_found_returns_404(admin_client):
+    """POST /{id}/start with a valid UUID4 that has no matching generator returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000040"
+    validate_response(
+        test_response=await admin_client.post(
+            f"/api/agent-generators/{fake_uuid}/start"
+        ),
+        expected_json_schema=AGENT_GENERATOR_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+async def test_start_agent_generator_by_invalid_uuid_returns_422(admin_client):
+    """POST /{id}/start with a non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.post("/api/agent-generators/not-a-uuid/start"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_stop_agent_generator_not_found_returns_404(admin_client):
+    """POST /{id}/stop with a valid UUID4 that has no matching generator returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000041"
+    validate_response(
+        test_response=await admin_client.post(
+            f"/api/agent-generators/{fake_uuid}/stop"
+        ),
+        expected_json_schema=AGENT_GENERATOR_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+async def test_stop_agent_generator_by_invalid_uuid_returns_422(admin_client):
+    """POST /{id}/stop with a non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.post("/api/agent-generators/not-a-uuid/stop"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_cancel_agent_generator_not_found_returns_404(admin_client):
+    """POST /{id}/cancel with a valid UUID4 that has no matching generator returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000042"
+    validate_response(
+        test_response=await admin_client.post(
+            f"/api/agent-generators/{fake_uuid}/cancel"
+        ),
+        expected_json_schema=AGENT_GENERATOR_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_cancel_agent_generator_not_running_returns_409(
+    admin_client, mock_agent_template_ids
+):
+    """POST /{id}/cancel on a generator that is not running returns 409."""
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
+    for ag_id in ag_ids:
+        validate_response(
+            test_response=await admin_client.post(
+                f"/api/agent-generators/{ag_id}/cancel"
+            ),
+            expected_json_schema=AGENT_GENERATOR_NOT_RUNNING_ERROR_JSON_SCHEMA,
+            expected_status_code=409,
+        )
+
+
+async def test_cancel_agent_generator_by_invalid_uuid_returns_422(admin_client):
+    """POST /{id}/cancel with a non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.post(
+            "/api/agent-generators/not-a-uuid/cancel"
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_agent_generator_not_found_returns_404(admin_client):
+    """PATCH /{id} with a valid UUID4 that has no matching generator returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000043"
+    validate_response(
+        test_response=await admin_client.patch(
+            f"/api/agent-generators/{fake_uuid}",
+            json={"name": "new-name"},
+        ),
+        expected_json_schema=AGENT_GENERATOR_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+async def test_update_agent_generator_by_invalid_uuid_returns_422(admin_client):
+    """PATCH /{id} with a non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/agent-generators/not-a-uuid",
+            json={"name": "new-name"},
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_update_agent_generator_with_invalid_parameter_name_returns_422(
+    admin_client, mock_agent_template_ids
+):
+    """PATCH /{id} with an unrecognised parameter name returns 422."""
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
+    for ag_id in ag_ids:
+        validate_response(
+            test_response=await admin_client.patch(
+                f"/api/agent-generators/{ag_id}",
+                json={"parameters": {"nonexistent_parameter": "value"}},
+            ),
+            expected_json_schema=INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_update_agent_generator_with_invalid_parameter_value_returns_422(
+    admin_client, mock_agent_template_ids
+):
+    """PATCH /{id} with a wrong-type value for a known parameter returns 422."""
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
+    for ag_id in ag_ids:
+        validate_response(
+            test_response=await admin_client.patch(
+                f"/api/agent-generators/{ag_id}",
+                # retry_count is an int; passing a string triggers the value error
+                json={"parameters": {"retry_count": "not_an_int"}},
+            ),
+            expected_json_schema=INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_delete_running_agent_generator_returns_409(
+    admin_client, mock_agent_template_ids
+):
+    """DELETE /{id} on a running agent generator returns 409."""
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
+    for ag_id in ag_ids:
+        await admin_client.post(f"/api/agent-generators/{ag_id}/start")
+        validate_response(
+            test_response=await admin_client.delete(f"/api/agent-generators/{ag_id}"),
+            expected_json_schema=AGENT_GENERATOR_ALREADY_RUNNING_ERROR_JSON_SCHEMA,
+            expected_status_code=409,
+        )
+        await admin_client.post(f"/api/agent-generators/{ag_id}/stop")

@@ -76,6 +76,42 @@ USER_ACCOUNT_AUTHENTICATION_ERROR_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
+EMPTY_USER_ACCOUNT_USERNAME_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["EMPTY_USER_ACCOUNT_USERNAME_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+EMPTY_USER_ACCOUNT_PASSWORD_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["EMPTY_USER_ACCOUNT_PASSWORD_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
 
 
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
@@ -454,4 +490,103 @@ async def test_delete_user_account_by_invalid_uuid_returns_422(admin_client):
         test_response=await admin_client.delete("/api/user-accounts/not-a-valid-uuid"),
         expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
         expected_status_code=422,
+    )
+
+
+async def test_create_user_account_with_empty_username(admin_client):
+    """POST /api/user-accounts with an empty username returns 422."""
+    validate_response(
+        test_response=await admin_client.post(
+            "/api/user-accounts",
+            json={"username": "", "password": "somepass", "role": "OPERATOR"},
+        ),
+        expected_json_schema=EMPTY_USER_ACCOUNT_USERNAME_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_create_user_account_with_empty_password(admin_client):
+    """POST /api/user-accounts with an empty password returns 422."""
+    validate_response(
+        test_response=await admin_client.post(
+            "/api/user-accounts",
+            json={"username": "newuser", "password": "", "role": "OPERATOR"},
+        ),
+        expected_json_schema=EMPTY_USER_ACCOUNT_PASSWORD_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_own_user_account_with_empty_username(admin_client):
+    """PATCH /api/user-accounts/me with an empty username returns 422."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/user-accounts/me",
+            json={"username": ""},
+        ),
+        expected_json_schema=EMPTY_USER_ACCOUNT_USERNAME_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_own_user_account_with_empty_new_password(admin_client):
+    """PATCH /api/user-accounts/me with an empty new_password returns 422."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/user-accounts/me",
+            json={"password": {"old_password": "admin", "new_password": ""}},
+        ),
+        expected_json_schema=EMPTY_USER_ACCOUNT_PASSWORD_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_own_user_account_with_duplicate_username(admin_client):
+    """PATCH /api/user-accounts/me with a username already taken returns 409."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/user-accounts/me",
+            json={"username": "operator"},
+        ),
+        expected_json_schema=USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR_JSON_SCHEMA,
+        expected_status_code=409,
+    )
+
+
+async def test_update_user_account_by_id_with_empty_username(admin_client):
+    """PATCH /api/user-accounts/{id} with an empty username returns 422."""
+    user_account = (await admin_client.get("/api/user-accounts/me")).json()
+    validate_response(
+        test_response=await admin_client.patch(
+            f"/api/user-accounts/{user_account['user_account_id']}",
+            json={"username": ""},
+        ),
+        expected_json_schema=EMPTY_USER_ACCOUNT_USERNAME_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_user_account_by_id_with_empty_password(admin_client):
+    """PATCH /api/user-accounts/{id} with an empty password returns 422."""
+    user_account = (await admin_client.get("/api/user-accounts/me")).json()
+    validate_response(
+        test_response=await admin_client.patch(
+            f"/api/user-accounts/{user_account['user_account_id']}",
+            json={"password": ""},
+        ),
+        expected_json_schema=EMPTY_USER_ACCOUNT_PASSWORD_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_user_account_by_id_with_duplicate_username(admin_client):
+    """PATCH /api/user-accounts/{id} with an already-taken username returns 409."""
+    user_account = (await admin_client.get("/api/user-accounts/me")).json()
+    validate_response(
+        test_response=await admin_client.patch(
+            f"/api/user-accounts/{user_account['user_account_id']}",
+            json={"username": "operator"},
+        ),
+        expected_json_schema=USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR_JSON_SCHEMA,
+        expected_status_code=409,
     )

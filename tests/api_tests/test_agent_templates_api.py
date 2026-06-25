@@ -14,6 +14,43 @@ from tests.api_tests.utils import get_all_agent_template_ids, validate_response
 
 pytestmark = pytest.mark.anyio
 
+AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+
 
 async def test_get_all_agent_templates(client):
     validate_response(
@@ -79,3 +116,49 @@ async def test_create_agent_generator_through_agent_template(
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
+
+
+async def test_create_agent_generator_with_nonexistent_template_id(admin_client):
+    """POST /api/agent-templates/{id} with a valid UUID4 that has no matching template returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000063"
+    validate_response(
+        test_response=await admin_client.post(
+            f"/api/agent-templates/{fake_uuid}",
+            json={},
+        ),
+        expected_json_schema=AGENT_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_create_agent_generator_with_unknown_option_key_returns_422(
+    admin_client, mock_agent_template_ids
+):
+    """POST /api/agent-templates/{id} with an unrecognised option key returns 422."""
+    for template_id in mock_agent_template_ids:
+        validate_response(
+            test_response=await admin_client.post(
+                f"/api/agent-templates/{template_id}",
+                json={"nonexistent_option_key": "value"},
+            ),
+            expected_json_schema=AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_create_agent_generator_with_invalid_option_value_type_returns_422(
+    admin_client, mock_agent_template_ids
+):
+    """POST /api/agent-templates/{id} with a wrong-type value for a known option returns 422."""
+    for template_id in mock_agent_template_ids:
+        validate_response(
+            test_response=await admin_client.post(
+                f"/api/agent-templates/{template_id}",
+                # retry_count is an int option; passing a string triggers the value error
+                json={"retry_count": "not_an_int"},
+            ),
+            expected_json_schema=AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )

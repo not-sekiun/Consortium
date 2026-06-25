@@ -57,6 +57,44 @@ RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA = {
     },
     "required": ["error"],
 }
+DIRECTORY_ARCHIVE_FORMAT_NOT_SPECIFIED_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": [
+                        "REPOSITORY_DIRECTORY_ARCHIVE_FILE_FORMAT_NOT_SPECIFIED_ERROR"
+                    ],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+DIRECTORY_FILE_NOT_ARCHIVE_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["REPOSITORY_DIRECTORY_FILE_NOT_ARCHIVE_FILE_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
 
 
 async def test_get_all_assets(client):
@@ -166,3 +204,63 @@ async def test_upload_asset_requires_admin_or_operator(
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
+
+
+async def test_upload_file_asset_returns_200(admin_client):
+    """POST /api/assets/upload with a regular file and is_directory=false returns 200."""
+    response = await admin_client.post(
+        "/api/assets/upload",
+        data={"is_directory": "false"},
+        files={"file": ("test.txt", io.BytesIO(b"hello world"), "text/plain")},
+    )
+    validate_response(
+        test_response=response,
+        expected_json_schema=REPOSITORY_RESOURCE_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    resource_id = response.json()["resource_id"]
+    await admin_client.delete(f"/api/assets/{resource_id}")
+
+
+async def test_upload_directory_asset_without_extension_returns_415(admin_client):
+    """POST /api/assets/upload with is_directory=true and no file extension returns 415.
+
+    os.path.splitext on a filename with no extension yields an empty extension
+    string, which triggers RepositoryDirectoryArchiveFileFormatNotSpecifiedError.
+    """
+    validate_response(
+        test_response=await admin_client.post(
+            "/api/assets/upload",
+            data={"is_directory": "true"},
+            files={
+                "file": (
+                    "testfile",
+                    io.BytesIO(b"archive content"),
+                    "application/octet-stream",
+                )
+            },
+        ),
+        expected_json_schema=DIRECTORY_ARCHIVE_FORMAT_NOT_SPECIFIED_ERROR_JSON_SCHEMA,
+        expected_status_code=415,
+    )
+
+
+async def test_upload_directory_asset_with_non_archive_extension_returns_415(
+    admin_client,
+):
+    """POST /api/assets/upload with is_directory=true and a non-archive extension returns 415.
+
+    A .txt extension is not in the allowed archive set (.zip, .tar, .gz, .bz2, .xz),
+    which triggers RepositoryDirectoryFileNotArchiveFileError.
+    """
+    validate_response(
+        test_response=await admin_client.post(
+            "/api/assets/upload",
+            data={"is_directory": "true"},
+            files={
+                "file": ("testfile.txt", io.BytesIO(b"archive content"), "text/plain")
+            },
+        ),
+        expected_json_schema=DIRECTORY_FILE_NOT_ARCHIVE_ERROR_JSON_SCHEMA,
+        expected_status_code=415,
+    )

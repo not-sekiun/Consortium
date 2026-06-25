@@ -10,6 +10,43 @@ from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
 
+USER_NOT_FOUND_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["USER_NOT_FOUND_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": ["USER_ACCOUNT_NOT_FOUND_ERROR"],
+                },
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
+
 
 async def test_logout_from_server(app, admin_client, operator_client, spectator_client):
     """All roles can logout themselves, after which their token becomes invalid."""
@@ -180,3 +217,25 @@ async def test_logout_user_account_by_user_account_id(
             )
     finally:
         await second_spectator.aclose()
+
+
+async def test_logout_user_account_by_nonexistent_user_account_id_returns_404(
+    admin_client,
+):
+    """POST /logout/user-account/{id} with a valid UUID4 for a non-existent account returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000080"
+    validate_response(
+        test_response=await admin_client.post(f"/api/logout/user-account/{fake_uuid}"),
+        expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
+
+
+async def test_logout_user_by_nonexistent_user_id_returns_404(admin_client):
+    """POST /logout/user/{id} with a valid UUID4 for a non-existent user returns 404."""
+    fake_uuid = "00000000-0000-4000-8000-000000000081"
+    validate_response(
+        test_response=await admin_client.post(f"/api/logout/user/{fake_uuid}"),
+        expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
+        expected_status_code=404,
+    )
