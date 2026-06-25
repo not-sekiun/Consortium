@@ -51,9 +51,9 @@ async def test_get_agent_template_by_agent_template_id(admin_client, client):
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
 async def test_create_agent_generator_through_agent_template(
-    admin_client, spectator_client, client
+    admin_client, spectator_client, client, mock_agent_template_ids
 ):
-    for template_id in await get_all_agent_template_ids(admin_client):
+    for template_id in mock_agent_template_ids:
         template = (
             await admin_client.get(f"/api/agent-templates/{template_id}")
         ).json()

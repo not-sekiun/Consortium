@@ -308,15 +308,31 @@ async def test_update_listener_by_listener_id(admin_client, spectator_client, cl
 @pytest.mark.usefixtures("create_listeners_before_test")
 @pytest.mark.usefixtures("delete_listeners_after_test")
 async def test_update_running_listener_returns_409(admin_client):
-    """PATCH a running listener returns 409."""
+    """PATCH parameters on a running listener returns 409; name/description updates are always allowed."""
     for listener_id in await get_all_listener_ids(admin_client):
         await admin_client.post(f"/api/listeners/{listener_id}/start")
+        # Updating parameters while running is blocked
         response = await admin_client.patch(
             f"/api/listeners/{listener_id}",
-            json={"name": "should-fail"},
+            json={"parameters": {}},
         )
         assert response.status_code == 409, (
-            f"Expected 409 when patching running listener, got {response.status_code}"
+            f"Expected 409 when patching parameters on running listener, got {response.status_code}"
+        )
+        # Updating only name/description is always safe regardless of state
+        name_response = await admin_client.patch(
+            f"/api/listeners/{listener_id}",
+            json={"name": "new-name"},
+        )
+        assert name_response.status_code == 200, (
+            f"Expected 200 when patching name on running listener, got {name_response.status_code}"
+        )
+        desc_response = await admin_client.patch(
+            f"/api/listeners/{listener_id}",
+            json={"description": "new-description"},
+        )
+        assert desc_response.status_code == 200, (
+            f"Expected 200 when patching description on running listener, got {desc_response.status_code}"
         )
         await admin_client.post(f"/api/listeners/{listener_id}/stop")
 

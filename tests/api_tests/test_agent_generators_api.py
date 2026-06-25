@@ -10,10 +10,7 @@ from tests.api_tests.common_json_response_schemas import (
 from tests.api_tests.framework_components_json_response_schemas import (
     AGENT_GENERATOR_JSON_SCHEMA,
 )
-from tests.api_tests.utils import (
-    get_all_agent_template_ids,
-    validate_response,
-)
+from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
 
@@ -79,10 +76,10 @@ AGENT_GENERATOR_NOT_RUNNING_ERROR_JSON_SCHEMA = {
 
 async def _create_one_agent_generator_per_template(
     admin_client,
+    template_ids: list[str],
 ) -> list[str]:
-    """Create one agent generator per available template; return created IDs."""
     agent_generator_ids = []
-    for template_id in await get_all_agent_template_ids(admin_client):
+    for template_id in template_ids:
         template = (
             await admin_client.get(f"/api/agent-templates/{template_id}")
         ).json()
@@ -108,8 +105,10 @@ async def test_get_all_agent_generators_empty(client):
 
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
-async def test_get_all_agent_generators(admin_client, client):
-    await _create_one_agent_generator_per_template(admin_client)
+async def test_get_all_agent_generators(admin_client, client, mock_agent_template_ids):
+    await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     validate_response(
         test_response=await client.get("/api/agent-generators/all"),
         expected_json_schema=ALL_AGENT_GENERATORS_JSON_SCHEMA,
@@ -118,8 +117,12 @@ async def test_get_all_agent_generators(admin_client, client):
 
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
-async def test_get_agent_generator_by_agent_generator_id(admin_client, client):
-    ag_ids = await _create_one_agent_generator_per_template(admin_client)
+async def test_get_agent_generator_by_agent_generator_id(
+    admin_client, client, mock_agent_template_ids
+):
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     for ag_id in ag_ids:
         validate_response(
             test_response=await client.get(f"/api/agent-generators/{ag_id}"),
@@ -140,9 +143,11 @@ async def test_get_agent_generator_by_invalid_id_returns_404(admin_client):
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
 async def test_start_agent_generator_by_agent_generator_id(
-    admin_client, spectator_client, client
+    admin_client, spectator_client, client, mock_agent_template_ids
 ):
-    ag_ids = await _create_one_agent_generator_per_template(admin_client)
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     for ag_id in ag_ids:
         if client != spectator_client:
             validate_response(
@@ -160,9 +165,13 @@ async def test_start_agent_generator_by_agent_generator_id(
 
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
-async def test_start_agent_generator_already_running_returns_409(admin_client):
+async def test_start_agent_generator_already_running_returns_409(
+    admin_client, mock_agent_template_ids
+):
     """Starting an already-running agent generator returns 409."""
-    ag_ids = await _create_one_agent_generator_per_template(admin_client)
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     for ag_id in ag_ids:
         await admin_client.post(f"/api/agent-generators/{ag_id}/start")
         validate_response(
@@ -177,9 +186,11 @@ async def test_start_agent_generator_already_running_returns_409(admin_client):
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
 async def test_stop_agent_generator_by_agent_generator_id(
-    admin_client, spectator_client, client
+    admin_client, spectator_client, client, mock_agent_template_ids
 ):
-    ag_ids = await _create_one_agent_generator_per_template(admin_client)
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     for ag_id in ag_ids:
         if client != spectator_client:
             await admin_client.post(f"/api/agent-generators/{ag_id}/start")
@@ -199,9 +210,13 @@ async def test_stop_agent_generator_by_agent_generator_id(
 
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
-async def test_stop_agent_generator_not_running_returns_409(admin_client):
+async def test_stop_agent_generator_not_running_returns_409(
+    admin_client, mock_agent_template_ids
+):
     """Stopping an agent generator that is not running returns 409."""
-    ag_ids = await _create_one_agent_generator_per_template(admin_client)
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     for ag_id in ag_ids:
         validate_response(
             test_response=await admin_client.post(
@@ -214,9 +229,11 @@ async def test_stop_agent_generator_not_running_returns_409(admin_client):
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
 async def test_cancel_agent_generator_by_agent_generator_id(
-    admin_client, spectator_client, client
+    admin_client, spectator_client, client, mock_agent_template_ids
 ):
-    ag_ids = await _create_one_agent_generator_per_template(admin_client)
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     for ag_id in ag_ids:
         if client != spectator_client:
             await admin_client.post(f"/api/agent-generators/{ag_id}/start")
@@ -241,11 +258,13 @@ async def test_cancel_agent_generator_by_agent_generator_id(
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
 async def test_update_agent_generator_by_agent_generator_id(
-    admin_client, spectator_client, client
+    admin_client, spectator_client, client, mock_agent_template_ids
 ):
     new_name = uuid.uuid4().hex
     new_description = uuid.uuid4().hex
-    ag_ids = await _create_one_agent_generator_per_template(admin_client)
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     for ag_id in ag_ids:
         if client != spectator_client:
             validate_response(
@@ -271,10 +290,48 @@ async def test_update_agent_generator_by_agent_generator_id(
 
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")
-async def test_delete_agent_generator_by_agent_generator_id(
-    admin_client, spectator_client, client
+async def test_update_running_agent_generator_returns_409(
+    admin_client, mock_agent_template_ids
 ):
-    ag_ids = await _create_one_agent_generator_per_template(admin_client)
+    """PATCH parameters on a running agent generator returns 409; name/description updates are always allowed."""
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
+    for ag_id in ag_ids:
+        await admin_client.post(f"/api/agent-generators/{ag_id}/start")
+        # Updating parameters while running is blocked
+        response = await admin_client.patch(
+            f"/api/agent-generators/{ag_id}",
+            json={"parameters": {}},
+        )
+        assert response.status_code == 409, (
+            f"Expected 409 when patching parameters on running agent generator, got {response.status_code}"
+        )
+        # Updating only name/description is always safe regardless of state
+        name_response = await admin_client.patch(
+            f"/api/agent-generators/{ag_id}",
+            json={"name": "new-name"},
+        )
+        assert name_response.status_code == 200, (
+            f"Expected 200 when patching name on running agent generator, got {name_response.status_code}"
+        )
+        desc_response = await admin_client.patch(
+            f"/api/agent-generators/{ag_id}",
+            json={"description": "new-description"},
+        )
+        assert desc_response.status_code == 200, (
+            f"Expected 200 when patching description on running agent generator, got {desc_response.status_code}"
+        )
+        await admin_client.post(f"/api/agent-generators/{ag_id}/stop")
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_delete_agent_generator_by_agent_generator_id(
+    admin_client, spectator_client, client, mock_agent_template_ids
+):
+    ag_ids = await _create_one_agent_generator_per_template(
+        admin_client, mock_agent_template_ids
+    )
     for ag_id in ag_ids:
         if client != spectator_client:
             validate_response(

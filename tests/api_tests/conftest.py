@@ -9,7 +9,8 @@ from consortium.server.models.config_models import LoggingConfigModel, ServerCon
 from consortium.server.server import Server
 from consortium.server.server_logging import configure_logger
 
-_MOCK_LISTENER_LABEL = "consortium.listeners.mock"
+_MOCK_LISTENER_LABELS = {"consortium.listeners.mock_1", "consortium.listeners.mock_2"}
+_MOCK_AGENT_LABELS = {"consortium.agents.mock_1", "consortium.agents.mock_2"}
 
 _JSON_WEB_TOKEN_JSON_SCHEMA = {
     "type": "object",
@@ -152,18 +153,48 @@ def client(admin_client, operator_client, spectator_client, request):
 
 
 @pytest.fixture(scope="session")
-async def load_mock_listener_profile(app):
-    mock_dir = pathlib.Path(__file__).parent / "mock" / "mock_listener"
-    await server_singletons.listener_profiles_service.load_listener_profile_from_listener_profile_project_folder(
-        listener_profile_project_folder=mock_dir,
-    )
+async def load_mock_listener_profiles(app):
+    mock_root = pathlib.Path(__file__).parent / "mock"
+    for folder in ("mock_listener_1", "mock_listener_2"):
+        await server_singletons.listener_profiles_service.load_listener_profile_from_listener_profile_project_folder(
+            listener_profile_project_folder=mock_root / folder,
+        )
+
+
+@pytest.fixture(scope="session")
+async def load_mock_agent_profiles(app):
+    mock_root = pathlib.Path(__file__).parent / "mock"
+    for folder in ("mock_agent_1", "mock_agent_2"):
+        await server_singletons.agent_profiles_service.load_agent_profile_from_agent_profile_project_folder(
+            agent_profile_project_folder=mock_root / folder,
+        )
 
 
 @pytest.fixture
-async def create_listeners_before_test(admin_client, load_mock_listener_profile):
+async def mock_listener_template_ids(admin_client, load_mock_listener_profiles):
+    templates_response = await admin_client.get("/api/listener-templates/all")
+    return [
+        t["listener_template_id"]
+        for t in templates_response.json()
+        if t["label"] in _MOCK_LISTENER_LABELS
+    ]
+
+
+@pytest.fixture
+async def mock_agent_template_ids(admin_client, load_mock_agent_profiles):
+    templates_response = await admin_client.get("/api/agent-templates/all")
+    return [
+        t["agent_template_id"]
+        for t in templates_response.json()
+        if t["label"] in _MOCK_AGENT_LABELS
+    ]
+
+
+@pytest.fixture
+async def create_listeners_before_test(admin_client, load_mock_listener_profiles):
     templates_response = await admin_client.get("/api/listener-templates/all")
     for template in templates_response.json():
-        if template["label"] != _MOCK_LISTENER_LABEL:
+        if template["label"] not in _MOCK_LISTENER_LABELS:
             continue
         template_id = template["listener_template_id"]
         detail_response = await admin_client.get(

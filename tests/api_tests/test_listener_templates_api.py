@@ -4,7 +4,10 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
-from tests.api_tests.utils import get_all_listener_template_ids, validate_response
+from tests.api_tests.utils import (
+    get_all_listener_template_ids,
+    validate_response,
+)
 
 pytestmark = pytest.mark.anyio
 
@@ -158,11 +161,11 @@ async def test_get_listener_template_by_listener_template_id(admin_client, clien
 
 @pytest.mark.usefixtures("delete_listeners_after_test")
 async def test_create_listener_through_listener_template(
-    admin_client, spectator_client, client
+    admin_client, spectator_client, client, mock_listener_template_ids
 ):
     from tests.api_tests.test_listeners_api import LISTENER_JSON_SCHEMA
 
-    for template_id in await get_all_listener_template_ids(admin_client):
+    for template_id in mock_listener_template_ids:
         template = (
             await admin_client.get(f"/api/listener-templates/{template_id}")
         ).json()
@@ -217,8 +220,10 @@ async def test_create_listener_with_nonexistent_template_id(admin_client):
 
 
 @pytest.mark.usefixtures("delete_listeners_after_test")
-async def test_create_listener_with_missing_required_option(admin_client):
-    for template_id in await get_all_listener_template_ids(admin_client):
+async def test_create_listener_with_missing_required_option(
+    admin_client, mock_listener_template_ids
+):
+    for template_id in mock_listener_template_ids:
         template = (
             await admin_client.get(f"/api/listener-templates/{template_id}")
         ).json()
@@ -241,14 +246,16 @@ async def test_create_listener_with_missing_required_option(admin_client):
 
 
 @pytest.mark.usefixtures("delete_listeners_after_test")
-async def test_create_listener_with_invalid_option_value_type(admin_client):
+async def test_create_listener_with_invalid_option_value_type(
+    admin_client, mock_listener_template_ids
+):
     invalid_values_by_type = {
         "str": 123,
         "int": "not_an_int",
         "float": "not_a_float",
         "bool": "not_a_bool",
     }
-    for template_id in await get_all_listener_template_ids(admin_client):
+    for template_id in mock_listener_template_ids:
         template = (
             await admin_client.get(f"/api/listener-templates/{template_id}")
         ).json()
