@@ -1,6 +1,7 @@
 import json
+from pathlib import Path
 
-import requests
+import httpx
 
 # The official raw STIX data from MITRE's GitHub
 MITRE_STIX_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
@@ -8,7 +9,7 @@ MITRE_STIX_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-
 
 def main():
     print("[*] Fetching MITRE ATT&CK data...")
-    response = requests.get(MITRE_STIX_URL)
+    response = httpx.get(MITRE_STIX_URL)
     data = response.json()
 
     distilled = {}
@@ -49,7 +50,10 @@ def main():
                     "platforms": obj.get("x_mitre_platforms", []),
                 }
 
-    with open("../data/server/mitre_attack_data.json", "w") as f:
+    script_dir = Path(__file__).resolve().parent
+    target_file = script_dir.parent / "data" / "server" / "mitre_attack_data.json"
+    target_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(target_file, "w") as f:
         json.dump(distilled, f, indent=4)
     print(
         f"[+] Done! Created distilled MITRE ATT&CK data JSON file for {len(distilled)} techniques at data/server/mitre_attack_data.json."
