@@ -1,4 +1,19 @@
 # Standard HTTP error JSON response schemas for all api endpoints.
+INVALID_UUID_ERROR_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "enum": ["INVALID_UUID_ERROR"]},
+                "message": {"type": "string"},
+                "detail": {},
+            },
+            "required": ["code", "message", "detail"],
+        },
+    },
+    "required": ["error"],
+}
 FORBIDDEN_ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {

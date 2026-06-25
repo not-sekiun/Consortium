@@ -1,6 +1,9 @@
 import pytest
 
-from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
+from tests.api_tests.common_json_response_schemas import (
+    FORBIDDEN_ERROR_JSON_SCHEMA,
+    INVALID_UUID_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
@@ -90,8 +93,17 @@ async def test_get_user_by_user_id(admin_client, operator_client, client):
                 expected_json_schema=USER_JSON_SCHEMA,
                 expected_status_code=200,
             )
+        # Non-UUID4 string → 422 (UUID validation fires before auth)
         validate_response(
-            test_response=await admin_client.get("/api/users/invalid-user-id"),
+            test_response=await client.get("/api/users/invalid-user-id"),
+            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+        # Valid UUID4 that does not exist → 404
+        validate_response(
+            test_response=await client.get(
+                "/api/users/00000000-0000-4000-8000-000000000050"
+            ),
             expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
             expected_status_code=404,
         )
@@ -102,9 +114,17 @@ async def test_get_user_by_user_id(admin_client, operator_client, client):
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
-        # 404 must not leak to low-privilege users
+        # Non-UUID4 string → 422 (UUID validation fires before auth even for spectators)
         validate_response(
             test_response=await client.get("/api/users/invalid-user-id"),
+            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+        # Valid UUID4 that does not exist → 403 for low-privilege users (auth runs first)
+        validate_response(
+            test_response=await client.get(
+                "/api/users/00000000-0000-4000-8000-000000000050"
+            ),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
@@ -163,9 +183,19 @@ async def test_update_user_display_name_by_user_id(
             expected_status_code=200,
         )
 
+        # Non-UUID4 string → 422 (UUID validation fires before auth)
         validate_response(
             test_response=await client.patch(
                 "/api/users/invalid-user-id",
+                json={"display_name": "Should Fail"},
+            ),
+            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+        # Valid UUID4 that does not exist → 404
+        validate_response(
+            test_response=await client.patch(
+                "/api/users/00000000-0000-4000-8000-000000000051",
                 json={"display_name": "Should Fail"},
             ),
             expected_json_schema=USER_NOT_FOUND_ERROR_JSON_SCHEMA,
@@ -180,10 +210,19 @@ async def test_update_user_display_name_by_user_id(
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
-        # Invalid user ID must not leak 404 to low-privilege users
+        # Non-UUID4 string → 422 (UUID validation fires before auth even for low-privilege users)
         validate_response(
             test_response=await client.patch(
                 "/api/users/invalid-user-id",
+                json={"display_name": "Should Fail"},
+            ),
+            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
+        # Valid UUID4 that does not exist → 403 for low-privilege users (auth runs first)
+        validate_response(
+            test_response=await client.patch(
+                "/api/users/00000000-0000-4000-8000-000000000051",
                 json={"display_name": "Should Fail"},
             ),
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,

@@ -17,7 +17,12 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 )
 
 
-class ListenerTemplateNotFoundError(NotFoundError): ...
+# At the services level, Listener templates distinguish between not being found by their
+# `listener_template_id` (`LISTENER_TEMPLATE_ID_NOT_FOUND_ERROR`) or `label`
+# (`LISTENER_TEMPLATE_ID_NOT_FOUND_ERROR`). But this distinction does not exist at the
+# API level hence we override using those error codes with this error code
+class ListenerTemplateNotFoundError(NotFoundError):
+    code = "LISTENER_TEMPLATE_NOT_FOUND_ERROR"
 
 
 class ListenerTemplateOptionNotFoundError(UnprocessableEntityError): ...

@@ -1,6 +1,9 @@
 import pytest
 
-from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
+from tests.api_tests.common_json_response_schemas import (
+    FORBIDDEN_ERROR_JSON_SCHEMA,
+    INVALID_UUID_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import get_all_listener_template_ids, validate_response
 
 pytestmark = pytest.mark.anyio
@@ -135,9 +138,18 @@ async def test_get_listener_template_by_listener_template_id(admin_client, clien
             expected_status_code=200,
         )
 
+    # Non-UUID4 string → 422
     validate_response(
         test_response=await client.get(
             "/api/listener-templates/invalid-listener-template-id"
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+    # Valid UUID4 that does not exist → 404
+    validate_response(
+        test_response=await client.get(
+            "/api/listener-templates/00000000-0000-4000-8000-000000000061"
         ),
         expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
@@ -180,9 +192,23 @@ async def test_create_listener_through_listener_template(
 
 @pytest.mark.usefixtures("delete_listeners_after_test")
 async def test_create_listener_with_invalid_template_id(admin_client):
+    """POST /api/listener-templates/{id} with non-UUID4 string returns 422."""
     validate_response(
         test_response=await admin_client.post(
             "/api/listener-templates/invalid-template-id",
+            json={},
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_create_listener_with_nonexistent_template_id(admin_client):
+    """POST /api/listener-templates/{id} with valid UUID4 that does not exist returns 404."""
+    validate_response(
+        test_response=await admin_client.post(
+            "/api/listener-templates/00000000-0000-4000-8000-000000000062",
             json={},
         ),
         expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,

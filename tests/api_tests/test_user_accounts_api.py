@@ -4,6 +4,7 @@ import pytest
 
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
+    INVALID_UUID_ERROR_JSON_SCHEMA,
     SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_user_account_ids, validate_response
@@ -159,10 +160,19 @@ async def test_get_user_account_by_user_account_id(admin_client, client):
                 expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
                 expected_status_code=200,
             )
-        # Invalid UUID4 → 422
+        # Non-UUID4 string → 422
         validate_response(
-            test_response=await admin_client.get("/api/user-accounts/not-a-valid-uuid"),
+            test_response=await client.get("/api/user-accounts/not-a-valid-uuid"),
+            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
             expected_status_code=422,
+        )
+        # Valid UUID4 that does not exist → 404
+        validate_response(
+            test_response=await client.get(
+                "/api/user-accounts/00000000-0000-4000-8000-000000000070"
+            ),
+            expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
+            expected_status_code=404,
         )
     else:
         for ua_id in all_ids:
@@ -171,6 +181,12 @@ async def test_get_user_account_by_user_account_id(admin_client, client):
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
             )
+        # Non-UUID4 string → 422 (UUID validation fires before auth)
+        validate_response(
+            test_response=await client.get("/api/user-accounts/not-a-valid-uuid"),
+            expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+            expected_status_code=422,
+        )
 
 
 async def test_get_all_user_accounts(admin_client, client):
@@ -332,6 +348,18 @@ async def test_update_user_account_by_user_account_id_not_found(admin_client):
     )
 
 
+async def test_update_user_account_by_invalid_uuid_returns_422(admin_client):
+    """PATCH /api/user-accounts/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/user-accounts/not-a-valid-uuid",
+            json={"username": "newname"},
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")
 async def test_update_own_user_account(admin_client, operator_client, client):
     """PATCH /api/user-accounts/me — admins and operators can update own account."""
@@ -419,4 +447,13 @@ async def test_delete_user_account_not_found(admin_client):
         test_response=await admin_client.delete(f"/api/user-accounts/{fake_uuid}"),
         expected_json_schema=USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
+    )
+
+
+async def test_delete_user_account_by_invalid_uuid_returns_422(admin_client):
+    """DELETE /api/user-accounts/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.delete("/api/user-accounts/not-a-valid-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
     )

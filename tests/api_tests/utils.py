@@ -1,8 +1,24 @@
+import json
 from collections.abc import Callable
 
 import httpx
 import jsonschema
 import pytest
+
+
+def _format_request_info(test_response: httpx.Response) -> str:
+    try:
+        request = test_response.request
+        return f"{request.method} {request.url}"
+    except RuntimeError:
+        return "<no request available>"
+
+
+def _format_response_body(test_response: httpx.Response) -> str:
+    try:
+        return json.dumps(test_response.json(), indent=2, sort_keys=True)
+    except json.JSONDecodeError, ValueError:
+        return test_response.text
 
 
 def validate_response(
@@ -11,27 +27,41 @@ def validate_response(
     expected_status_code: int | None = None,
     validator_function: Callable | None = None,
 ) -> httpx.Response:
+    request_info = _format_request_info(test_response)
+    formatted_body = _format_response_body(test_response)
+
     if expected_status_code is not None:
-        assert test_response.status_code == expected_status_code, (
-            f"Failed to assert response status code. Expected status code "
-            f"'{expected_status_code}' but got status code {test_response.status_code}. "
-            f"Response data: {test_response.text}"
-        )
+        if test_response.status_code != expected_status_code:
+            raise AssertionError(
+                f"Failed to assert response status code. Expected status code "
+                f"'{expected_status_code}' but got status code {test_response.status_code}.\n"
+                f"Request: {request_info}\n"
+                f"Response data:\n{formatted_body}"
+            )
+
     if expected_json_schema is not None:
         try:
             jsonschema.validate(test_response.json(), expected_json_schema)
         except jsonschema.exceptions.ValidationError as exc:
-            pytest.fail(f"{exc.message} Response data: {test_response.text}")
+            pytest.fail(
+                f"{exc.message}\n"
+                f"Request: {request_info}\n"
+                f"Response data:\n{formatted_body}"
+            )
         except Exception as exc:
             pytest.fail(
-                f"Failed to decode response as JSON. Error: {exc}. "
-                f"Response data: {test_response.text}",
+                f"Failed to decode response as JSON. Error: {exc}.\n"
+                f"Request: {request_info}\n"
+                f"Response data:\n{formatted_body}"
             )
+
     if validator_function is not None:
         assert validator_function(test_response), (
-            f"Failed to assert response with custom validator function. "
-            f"Response data: {test_response.text}"
+            f"Failed to assert response with custom validator function.\n"
+            f"Request: {request_info}\n"
+            f"Response data:\n{formatted_body}"
         )
+
     return test_response
 
 

@@ -132,6 +132,7 @@ def get_listener_template_by_listener_template_id(
 
 @router.post(
     "/{listener_template_id}",
+    status_code=201,
     responses={
         201: {"model": ListenerModel},
         404: {"model": _listener_template_not_found_error.to_pydantic_model()},

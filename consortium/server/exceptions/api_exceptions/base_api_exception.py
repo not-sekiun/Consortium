@@ -11,7 +11,7 @@ T = TypeVar("T")
 
 class BaseAPIError(Exception):
     status_code: int
-    code: str
+    code: str | None = None
 
     # This ensures that there is ever only a single instance of the pydantic model
     # within the entire framework. This is important because duplicate pydantic models
@@ -111,5 +111,8 @@ class BaseAPIError(Exception):
             message=consortium_exception.message,
             detail=consortium_exception.detail,
         )
-        api_exception.code = consortium_exception.code
+        own_code = cls.__dict__.get("code")
+        api_exception.code = (
+            own_code if own_code is not None else consortium_exception.code
+        )
         return api_exception

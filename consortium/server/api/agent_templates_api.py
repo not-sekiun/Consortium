@@ -80,6 +80,7 @@ _invalid_uuid_error = InvalidUUIDError(
 
 @router.post(
     "/{agent_template_id}",
+    status_code=201,
     responses={
         201: {"model": AgentGeneratorModel},
         404: {"model": _agent_template_not_found_error.to_pydantic_model()},

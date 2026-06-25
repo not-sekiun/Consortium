@@ -4,6 +4,7 @@ import pytest
 
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
+    INVALID_UUID_ERROR_JSON_SCHEMA,
     SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.framework_components_json_response_schemas import (
@@ -297,4 +298,22 @@ async def test_delete_agent_generator_not_found(admin_client):
         test_response=await admin_client.delete(f"/api/agent-generators/{fake_uuid}"),
         expected_json_schema=AGENT_GENERATOR_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
+    )
+
+
+async def test_get_agent_generator_by_invalid_uuid_returns_422(admin_client):
+    """GET /api/agent-generators/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.get("/api/agent-generators/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_delete_agent_generator_by_invalid_uuid_returns_422(admin_client):
+    """DELETE /api/agent-generators/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.delete("/api/agent-generators/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
     )

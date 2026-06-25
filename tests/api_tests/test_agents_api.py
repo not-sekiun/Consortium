@@ -1,6 +1,9 @@
 import pytest
 
-from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
+from tests.api_tests.common_json_response_schemas import (
+    FORBIDDEN_ERROR_JSON_SCHEMA,
+    INVALID_UUID_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
@@ -188,6 +191,57 @@ async def test_task_agent_requires_admin_or_operator(
         )
 
 
+async def test_get_agent_by_invalid_uuid_returns_422(admin_client):
+    """GET /api/agents/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.get("/api/agents/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_get_agent_task_by_invalid_uuid_returns_422(admin_client):
+    """GET /api/agents/tasks/{task_id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.get("/api/agents/tasks/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_get_agent_tasks_by_invalid_agent_uuid_returns_422(admin_client):
+    """GET /api/agents/{agent_id}/tasks with non-UUID4 agent_id returns 422."""
+    validate_response(
+        test_response=await admin_client.get("/api/agents/not-a-uuid/tasks"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_agent_by_invalid_uuid_returns_422(admin_client):
+    """PATCH /api/agents/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/agents/not-a-uuid",
+            json={"name": "new-name"},
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_task_agent_by_invalid_uuid_returns_422(admin_client):
+    """POST /api/agents/{id}/tasks with non-UUID4 agent_id returns 422."""
+    validate_response(
+        test_response=await admin_client.post(
+            "/api/agents/not-a-uuid/tasks",
+            json={"command": "shell", "arguments": {}},
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
 async def test_delete_queued_agent_task_requires_admin_or_operator(
     admin_client, operator_client, client
 ):
@@ -210,3 +264,14 @@ async def test_delete_queued_agent_task_requires_admin_or_operator(
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
+
+
+async def test_delete_queued_agent_task_by_invalid_uuid_returns_422(admin_client):
+    """DELETE /api/agents/{agent_id}/tasks/queued/{task_id} with non-UUID4 returns 422."""
+    validate_response(
+        test_response=await admin_client.delete(
+            "/api/agents/not-a-uuid/tasks/queued/00000000-0000-4000-8000-000000000016"
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )

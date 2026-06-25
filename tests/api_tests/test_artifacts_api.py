@@ -1,6 +1,9 @@
 import pytest
 
-from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
+from tests.api_tests.common_json_response_schemas import (
+    FORBIDDEN_ERROR_JSON_SCHEMA,
+    INVALID_UUID_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.test_assets_api import (
     ALL_RESOURCES_JSON_SCHEMA,
     RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA,
@@ -65,3 +68,30 @@ async def test_download_artifact_requires_admin_or_operator(
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
+
+
+async def test_get_artifact_by_invalid_uuid_returns_422(admin_client):
+    """GET /api/artifacts/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.get("/api/artifacts/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_delete_artifact_by_invalid_uuid_returns_422(admin_client):
+    """DELETE /api/artifacts/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.delete("/api/artifacts/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_download_artifact_by_invalid_uuid_returns_422(admin_client):
+    """GET /api/artifacts/download/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.get("/api/artifacts/download/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )

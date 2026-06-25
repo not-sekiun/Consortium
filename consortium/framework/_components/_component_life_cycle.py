@@ -124,10 +124,14 @@ class ComponentLifeCycle(abc.ABC):
 
         self._runtime_loop_task.cancel()
 
+        _actually_cancelled = False
         try:
             await self._runtime_loop_task
-            self.status._transition_to_cancelled()
+            # The task completed naturally before the cancellation could interrupt
+            # it (race between the RUNNING check and the task finishing). Accept
+            # whatever terminal state the task already transitioned to.
         except asyncio.CancelledError:
+            _actually_cancelled = True
             self.status._transition_to_cancelled()
         except Exception as exc:
             self.status._transition_to_fatal(
@@ -136,7 +140,8 @@ class ComponentLifeCycle(abc.ABC):
                 ),
             )
             raise exc
-        finally:
+
+        if _actually_cancelled:
             try:
                 await self.on_cancelled()
             except Exception as exc:

@@ -1,11 +1,13 @@
 import json
+import pathlib
 
 import httpx
 import pytest
 
 from consortium.server import server_singletons
-from consortium.server.models.config_models import ServerConfigModel
+from consortium.server.models.config_models import LoggingConfigModel, ServerConfigModel
 from consortium.server.server import Server
+from consortium.server.server_logging import configure_logger
 
 _JSON_WEB_TOKEN_JSON_SCHEMA = {
     "type": "object",
@@ -50,8 +52,29 @@ def validate_server_config_json_file_before_tests():
         assert server_config_json_data[key] == value
 
 
+@pytest.fixture(scope="session", autouse=True)
+def configure_logging():
+    consortium_root = pathlib.Path(__file__).parents[2]
+    log_file = str(
+        consortium_root
+        / "data"
+        / "server"
+        / "logs"
+        / "{time:YYYY-MM-DDTHH-mm-ss}.test.log"
+    )
+    configure_logger(
+        LoggingConfigModel(
+            level="DEBUG",
+            log_file=log_file,
+            rotation=None,
+            retention=1,
+            colorize=True,
+        )
+    )
+
+
 @pytest.fixture(scope="session")
-async def app():
+async def app(configure_logging):
     """Initialize the FastAPI app once for the entire test session."""
     server = Server(
         server_config=ServerConfigModel(

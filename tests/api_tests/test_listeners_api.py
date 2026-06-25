@@ -4,6 +4,7 @@ import pytest
 
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
+    INVALID_UUID_ERROR_JSON_SCHEMA,
     SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_listener_ids, validate_response
@@ -151,6 +152,15 @@ async def test_get_listener_by_invalid_listener_id_returns_404(admin_client):
         test_response=await admin_client.get(f"/api/listeners/{fake_uuid}"),
         expected_json_schema=LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
+    )
+
+
+async def test_get_listener_by_invalid_uuid_returns_422(admin_client):
+    """GET /api/listeners/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.get("/api/listeners/not-a-uuid"),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
     )
 
 

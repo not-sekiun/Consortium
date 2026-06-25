@@ -157,6 +157,7 @@ async def get_user_account_by_user_account_id(
 
 @router.post(
     "",
+    status_code=201,
     responses={
         201: {"model": UserAccountModel},
         422: {
