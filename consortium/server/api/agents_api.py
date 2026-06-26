@@ -414,7 +414,7 @@ async def delete_queued_agent_task_by_agent_id_and_task_id(
     ],
 ) -> None:
     try:
-        await _agents_service.delete_queued_agent_task_by_agent_id_and_task_id(
+        _agents_service.delete_queued_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id, task_id=task_id
         )
     except consortium_excs.AgentNotFoundError as exc:

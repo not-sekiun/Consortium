@@ -8,10 +8,10 @@ from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
-from consortium.server.objects.agent_task_objects import AgentTask
 
 if typing.TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
+    from consortium.server.objects.agent_task_objects import AgentTask
 
 
 class _AgentCommunicator:

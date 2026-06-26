@@ -1,18 +1,34 @@
 import sys
+from dataclasses import dataclass, field
+from typing import Any
 
 from loguru import logger
 
 from consortium.server.models.logging_models import LoggerType, LoggingConfigModel
 
+# Sentinel used to distinguish "not passed" from None in modify_sink's sink argument.
+_UNSET = object()
+
+
+@dataclass
+class SinkInfo:
+    handler_id: int
+    sink: Any
+    level: str
+    label: str
+    is_server_default: bool
+    # All kwargs passed to logger.add() (including format and level) so the sink can be
+    # fully reconstructed when modify_sink tears it down and rebuilds it.
+    sink_kwargs: dict = field(default_factory=dict)
+
 
 class LoggingService:
     def __init__(self):
         logger.remove()  # Remove all default loggers.
-
+        self._sinks: dict[str, SinkInfo] = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
-        self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "Logging Service"
@@ -49,26 +65,65 @@ class LoggingService:
             + "{extra[logger_name]}</></>: {message}\n{exception}"
         )
 
-    def configure_logger(self, logging_config: LoggingConfigModel) -> None:
-        # Add file logging if `log_file` is provided
-        if logging_config.log_file is not None:
-            logger.add(
-                logging_config.log_file,
-                format="{time:YYYY-MM-DDTHH:mm:ss.SSSZ} {level:<8} {extra[logger_name]}: {message}",
-                level=logging_config.level,
-                rotation=logging_config.rotation,
-                retention=logging_config.retention,
-                colorize=False,
-            )
+    def add_sink(
+        self,
+        sink: Any,
+        level: str,
+        label: str,
+        *,
+        format=None,
+        is_server_default: bool = False,
+        **kwargs,
+    ) -> int:
+        # Raises ValueError if label already registered to avoid silent double-registration.
+        if label in self._sinks:
+            raise ValueError(f"A sink with label '{label}' is already registered.")
 
-        # Always log to stdout
-        logger.add(
-            sys.stdout,
-            colorize=logging_config.colorize,
-            format=self._log_formatter,
-            level=logging_config.level,
+        if format is None:
+            format = self._log_formatter
+
+        # Consolidate all logger.add() params so modify_sink can reconstruct faithfully.
+        sink_kwargs = {"level": level, "format": format, **kwargs}
+        handler_id = logger.add(sink, **sink_kwargs)
+        self._sinks[label] = SinkInfo(
+            handler_id=handler_id,
+            sink=sink,
+            level=level,
+            label=label,
+            is_server_default=is_server_default,
+            sink_kwargs=sink_kwargs,
         )
+        return handler_id
 
+    def remove_sink(self, label: str) -> None:
+        if label not in self._sinks:
+            raise KeyError(f"No sink with label '{label}' is registered.")
+        sink_info = self._sinks.pop(label)
+        logger.remove(sink_info.handler_id)
+
+    def modify_sink(self, label: str, *, sink: Any = _UNSET, **overrides) -> None:
+        # Loguru has no update API so we tear down the existing handler and rebuild it
+        # with the merged kwargs. sink_kwargs on SinkInfo is kept up to date so
+        # successive modify_sink calls layer correctly.
+        if label not in self._sinks:
+            raise KeyError(f"No sink with label '{label}' is registered.")
+
+        info = self._sinks[label]
+        logger.remove(info.handler_id)
+
+        new_sink = info.sink if sink is _UNSET else sink
+        new_kwargs = {**info.sink_kwargs, **overrides}
+
+        info.handler_id = logger.add(new_sink, **new_kwargs)
+        info.sink = new_sink
+        info.level = new_kwargs.get("level", info.level)
+        info.sink_kwargs = new_kwargs
+
+    def get_sinks(self) -> list[SinkInfo]:
+        return list(self._sinks.values())
+
+    def configure_default_logging(self, logging_config: LoggingConfigModel) -> None:
+        # Set display colors per log level.
         logger.level("TRACE", color="<dim><magenta>")
         logger.level("DEBUG", color="<bold><cyan>")
         logger.level("INFO", color="<bold><blue>")
@@ -76,3 +131,25 @@ class LoggingService:
         logger.level("ERROR", color="<bold><red>")
         logger.level("CRITICAL", color="<white><RED><bold>")
         logger.level("SUCCESS", color="<bold><green>")
+
+        self.add_sink(
+            sink=sys.stdout,
+            level=logging_config.level,
+            label="stdout",
+            colorize=logging_config.colorize,
+            is_server_default=True,
+        )
+
+        if logging_config.log_file is not None:
+            self.add_sink(
+                sink=logging_config.log_file,
+                level=logging_config.level,
+                label="file",
+                format="{time:YYYY-MM-DDTHH:mm:ss.SSSZ} {level:<8} {extra[logger_name]}: {message}",
+                colorize=False,
+                rotation=logging_config.rotation,
+                retention=logging_config.retention,
+                is_server_default=True,
+            )
+
+        self._logger.debug("Started {}", self)

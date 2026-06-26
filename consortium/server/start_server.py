@@ -8,7 +8,6 @@ from pydantic import ValidationError
 import consortium.server.server_reloader as server_reloader
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
-from consortium.server.server_logging import configure_logger
 from consortium.server.services.logging_service import LoggingService
 
 
@@ -37,6 +36,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         )
     else:
         server_config_filepath = arguments.server_config
+
     try:
         with open(server_config_filepath) as file:
             json_data = json.load(file)
@@ -74,6 +74,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         )
     else:
         logging_config_filepath = arguments.logging_config
+
     try:
         with open(logging_config_filepath) as file:
             json_data = json.load(file)
@@ -103,8 +104,11 @@ async def _start_server(arguments: argparse.Namespace) -> None:
             f"configuration file JSON schema: {exc}",
         )
         return
+
+    logging_service = LoggingService()
+
     try:
-        configure_logger(logging_config=logging_config)
+        logging_service.configure_default_logging(logging_config=logging_config)
     # Loguru raises `ValueError` for invalid rotation and retention values.
     except ValueError as exc:
         print(
@@ -122,8 +126,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
 
     # Configure server and create a reference to it in the server singletons module.
     server_singletons.server = Server(server_config=server_config)
-    # Initialize the logging service with the logging configuration.
-    server_singletons.logging_service = LoggingService(logging_config=logging_config)
+    server_singletons.logging_service = logging_service
     await server_singletons.server.start_server()
 
 

@@ -223,6 +223,47 @@ async def delete_listeners_after_test(admin_client):
 
 
 @pytest.fixture
+async def mock_agent(
+    admin_client, load_mock_listener_profiles, load_mock_agent_profiles
+):
+    # Find the mock_1 listener template and create a listener from its default options.
+    templates_response = await admin_client.get("/api/listener-templates/all")
+    template = next(
+        t
+        for t in templates_response.json()
+        if t["label"] == "consortium.listeners.mock_1"
+    )
+    template_id = template["listener_template_id"]
+    detail_response = await admin_client.get(f"/api/listener-templates/{template_id}")
+    options = detail_response.json()["options"]
+    create_response = await admin_client.post(
+        f"/api/listener-templates/{template_id}",
+        json={name: opt["default_value"] for name, opt in options.items()},
+    )
+    assert create_response.status_code == 201, (
+        f"Failed to create mock listener: {create_response.text}"
+    )
+    listener_id = create_response.json()["listener_id"]
+
+    # Register an agent directly via the service; no listener start is required.
+    agent = server_singletons.agents_service.register_agent(
+        listener_id=listener_id,
+        agent_type="mock_alpha",
+        name="test-agent",
+    )
+    agent_id = str(agent.agent_id)
+
+    yield {"agent_id": agent_id, "listener_id": listener_id}
+
+    # Deregister the agent before deleting the listener to avoid orphan state.
+    try:
+        server_singletons.agents_service.deregister_agent_by_agent_id(agent_id=agent_id)
+    except Exception:
+        pass
+    await admin_client.delete(f"/api/listeners/{listener_id}")
+
+
+@pytest.fixture
 async def delete_agent_generators_after_test(admin_client):
     yield
     response = await admin_client.get("/api/agent-generators/all")

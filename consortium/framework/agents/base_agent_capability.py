@@ -28,7 +28,6 @@ from consortium.server.exceptions.consortium_exceptions.agent_capabilities_conso
     MissingAgentCapabilityConfigurationParameterError,
 )
 from consortium.server.models.agent_task_models import AgentTaskEventType
-from consortium.server.objects.agent_task_objects import AgentTask
 from consortium.server.objects.mitre_attack_objects import (
     # MitreAttackTechniqueID,
     resolve_mitre_attack_technique_id,
@@ -37,6 +36,7 @@ from consortium.server.utils import construct_services_namespace_object
 
 if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
+    from consortium.server.objects.agent_task_objects import AgentTask
 
 
 class SupportedOS(StrEnum):
