@@ -7,19 +7,18 @@ from consortium.server.models.logging_models import LoggerType, LoggingConfigMod
 
 class LoggingService:
     def __init__(self):
+        logger.remove()  # Remove all default loggers.
+
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._logger.debug("Started {}", self)
-        self.logging_config = LoggingConfigModel(
-            level="TRACE",
-        )
 
     def __str__(self) -> str:
         return "Logging Service"
 
     def __repr__(self) -> str:
-        return f"LoggingService(logging_config={self.logging_config!r})"
+        return "LoggingService()"
 
     @staticmethod
     def _log_formatter(record):
@@ -51,8 +50,6 @@ class LoggingService:
         )
 
     def configure_logger(self, logging_config: LoggingConfigModel) -> None:
-        logger.remove()  # Remove all default loggers.
-
         # Add file logging if `log_file` is provided
         if logging_config.log_file is not None:
             logger.add(
