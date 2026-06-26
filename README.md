@@ -67,16 +67,11 @@ dependencies. Git is recommended for installing and updating the framework.
 
 ### Installation
 
-1. Clone the repository and navigate into the project's root folder.
+Clone the repository and install dependencies.
 
 ```bash
 git clone https://github.com/not-sekiun/Consortium.git
 cd Consortium
-```
-
-2. Install project dependencies.
-
-```bash
 uv sync
 ```
 
@@ -85,13 +80,13 @@ uv sync
 The Consortium C2 framework runs on a client-server model. Start the server _first_
 before starting any compatible client to connect to the server.
 
-1. Start the Consortium server. By default, it binds to `0.0.0.0:1337`.
+Start the Consortium server. By default, it binds to `0.0.0.0:9999`.
 
 ```bash
 uv run consortium.py server
 ```
 
-2. Start the Consortium client. By default, it connects to `127.0.0.1:1337`
+Afterwards, start the Consortium client. By default, it connects to `127.0.0.1:9999`
 
 ```bash
 uv run consortium.py client
@@ -99,15 +94,10 @@ uv run consortium.py client
 
 ### Updating
 
-1. From the project's root folder, pull any new repository changes.
+Pull the latest changes from the repository and update/install any new dependencies.
 
 ```shell
 git pull
-```
-
-2. Update any dependencies that are present.
-
-```shell
 uv sync
 ```
 
@@ -122,7 +112,6 @@ Complete documentation is available at the
 [official Consortium documentation site](https://not-sekiun.github.io/Consortium/).
 
 Alternatively, you can install dependencies to host and view the documentation locally.
-
 From the project root folder, run:
 
 ```shell
@@ -156,14 +145,14 @@ Then open a web browser to either URL.
 
 ### Server Events Websocket API Documentation
 
-The Consortium server provides a WebSocket API for server-initiated push events.
+The Consortium server provides a WebSocket Events API for server-initiated push events.
 Complete documentation is located at the
 [official Consortium documentation site](https://not-sekiun.github.io/Consortium/)
 
 ![WebSocket API documentation for mkdocs](docs/assets/websockets_api_mkdocs.png)
 
-To view this documentation locally, install the documentation dependencies as outlined
-[here](#complete-framework-documentation-and-self-hosted-documentation)
+Alternatively, to host and view this documentation locally, refer back to
+[this section](#complete-framework-documentation-and-self-hosted-documentation)
 
 ### Client Documentation
 
@@ -204,9 +193,8 @@ description: Create a new client connection to a Consortium server using a confi
 usage: connect [-h] [-c [CONFIG_FILEPATH]] [-rh HOSTNAME/IP] [-rp PORT] [-u USERNAME] [-p PASSWORD]
 ```
 
-To get the most comprehensive help for a specific command, including examples on how to
-use that particular command, type `<command> --help` or
-`<command> -h`.
+To get comprehensive help for a specific command, including examples on how to use it,
+type `<command> --help` or `<command> -h`.
 
 > [!Note]
 > The portion of the example behind the `#` is a comment that is not part of the
