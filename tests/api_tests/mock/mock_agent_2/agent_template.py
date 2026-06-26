@@ -84,6 +84,15 @@ class AgentTemplate(BaseAgentTemplate):
             default_value={},
             value_type=str,
         ),
+        SingleValueOption(
+            name="retry_count",
+            description="Number of times the agent retries a failed check-in.",
+            required=False,
+            default_value=3,
+            value_type=int,
+            greater_than_or_equal_to=0,
+            less_than_or_equal_to=100,
+        ),
     }
 
     def resolve_agent_generator_name(self, parameters):

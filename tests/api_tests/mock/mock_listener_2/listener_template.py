@@ -81,6 +81,15 @@ class ListenerTemplate(BaseListenerTemplate):
             default_value={},
             value_type=str,
         ),
+        SingleValueOption(
+            name="timeout",
+            description="Connection timeout in seconds.",
+            required=True,
+            default_value=30,
+            value_type=int,
+            greater_than_or_equal_to=0,
+            less_than_or_equal_to=3600,
+        ),
     }
 
     def resolve_listener_name(self, parameters):
