@@ -205,7 +205,7 @@ class RepositoryService:
         )
 
     @log_and_propagate_error_on_service_method
-    def create_repository_file(
+    def create_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
         binary: bool = True,
@@ -240,7 +240,7 @@ class RepositoryService:
         return repository_file
 
     @log_and_propagate_error_on_service_method
-    def create_repository_directory(
+    def create_directory(
         self,
         content: bytes | BinaryIO | str | pathlib.Path | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"]
@@ -270,11 +270,11 @@ class RepositoryService:
         return repository_directory
 
     @log_and_propagate_error_on_service_method
-    def delete_repository_resource_by_resource_id(
+    def delete_resource_by_resource_id(
         self,
         resource_id: str | uuid.UUID,
     ) -> None:
-        repository_resource = self.get_repository_resource_by_resource_id(
+        repository_resource = self.get_resource_by_resource_id(
             resource_id=resource_id,
         )
 
@@ -290,7 +290,7 @@ class RepositoryService:
         self.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
-    def get_all_repository_resources(
+    def get_all_resources(
         self,
     ) -> list[RepositoryFile | RepositoryDirectory]:
         repository_resources = list(self._repository_resources.values())
@@ -301,7 +301,7 @@ class RepositoryService:
         return repository_resources
 
     @log_and_propagate_error_on_service_method
-    def get_repository_resource_by_resource_id(
+    def get_resource_by_resource_id(
         self,
         resource_id: str | uuid.UUID,
     ) -> RepositoryFile | RepositoryDirectory:

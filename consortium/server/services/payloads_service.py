@@ -105,7 +105,7 @@ class PayloadsService:
                     ) from None
                 for payload_id, payload_metadata in payloads_metadata.items():
                     try:
-                        resource = self._repository_service.get_repository_resource_by_resource_id(
+                        resource = self._repository_service.get_resource_by_resource_id(
                             resource_id=payload_id,
                         )
                         agent_template = self._agent_templates_service.get_agent_template_by_agent_template_id(
@@ -186,7 +186,7 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        resource = self._repository_service.create_repository_file(
+        resource = self._repository_service.create_file(
             content=content,
             binary=is_binary,
             name=name,
@@ -255,7 +255,7 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        resource = self._repository_service.create_repository_directory(
+        resource = self._repository_service.create_directory(
             content=content,
             archive_file_format=archive_file_format,
             name=name,
@@ -310,7 +310,7 @@ class PayloadsService:
         payload_exists = payload_id in self._payloads
         try:
             resource_exists = (
-                self._repository_service.get_repository_resource_by_resource_id(
+                self._repository_service.get_resource_by_resource_id(
                     resource_id=payload_id
                 )
                 is not None
@@ -340,7 +340,7 @@ class PayloadsService:
             )
 
         if resource_exists:
-            self._repository_service.delete_repository_resource_by_resource_id(
+            self._repository_service.delete_resource_by_resource_id(
                 resource_id=payload_id
             )
         if payload_exists:

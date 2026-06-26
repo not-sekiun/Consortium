@@ -11,7 +11,7 @@ import pathlib
 import shutil
 import tempfile
 from collections.abc import Callable
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import Depends, Form, UploadFile
 from fastapi.responses import FileResponse
@@ -29,12 +29,11 @@ from consortium.server.models.repository_models import (
 )
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
-from consortium.server.services.repository_service import RepositoryService
 
 
-def create_get_all_repository_resources_endpoint(
-    repository_service: RepositoryService,
-    get_all_repository_resources_permission: UserPermissions,
+def create_get_all_resources_endpoint(
+    get_all_resources_handler: Callable[[], list],
+    get_all_resources_permission: UserPermissions,
 ) -> Callable:
     # The return type annotation of this method is omitted because of a weird bug in
     # FastAPI's OpenAPI JSON schema generator that causes models to be duplicated if a
@@ -44,37 +43,33 @@ def create_get_all_repository_resources_endpoint(
         _: Annotated[
             None,
             Depends(
-                AuthorizeUserRequest(get_all_repository_resources_permission),
+                AuthorizeUserRequest(get_all_resources_permission),
             ),
         ],
     ):
         return [
             RepositoryResourceModel(**repository_resource.to_json())
-            for repository_resource in repository_service.get_all_repository_resources()
+            for repository_resource in get_all_resources_handler()
         ]
 
     return get_all_repository_resources
 
 
-def create_get_repository_resource_by_resource_id_endpoint(
-    repository_service: RepositoryService,
-    get_repository_resource_by_resource_id_permission: UserPermissions,
+def create_get_resource_by_resource_id_endpoint(
+    get_resource_by_resource_id_handler: Callable[[str], Any],
+    get_resource_by_resource_id_permission: UserPermissions,
 ) -> Callable:
     async def get_repository_resource_by_resource_id(
         resource_id: UUID4,
         _: Annotated[
             None,
             Depends(
-                AuthorizeUserRequest(get_repository_resource_by_resource_id_permission),
+                AuthorizeUserRequest(get_resource_by_resource_id_permission),
             ),
         ],
     ):
         try:
-            repository_resource = (
-                repository_service.get_repository_resource_by_resource_id(
-                    resource_id=str(resource_id),
-                )
-            )
+            repository_resource = get_resource_by_resource_id_handler(str(resource_id))
         except consortium_excs.RepositoryResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
@@ -85,30 +80,26 @@ def create_get_repository_resource_by_resource_id_endpoint(
     return get_repository_resource_by_resource_id
 
 
-def create_download_repository_resource_by_resource_id_endpoint(
-    repository_service: RepositoryService,
-    download_repository_resource_by_resource_id_permission: UserPermissions,
+def create_download_resource_by_resource_id_endpoint(
+    get_resource_by_resource_id_handler: Callable[[str], Any],
+    download_resource_by_resource_id_permission: UserPermissions,
 ) -> Callable:
     # Define this function synchronously because calling `shutil.make_archive()` in an
     # async function causes event loop issues. This will signal to FastAPI that this
     # endpoint should be run in a threadpool.
-    def download_repository_resource_by_resource_id(
+    def download_resource_by_resource_id(
         resource_id: UUID4,
         _: Annotated[
             None,
             Depends(
                 AuthorizeUserRequest(
-                    download_repository_resource_by_resource_id_permission,
+                    download_resource_by_resource_id_permission,
                 ),
             ),
         ],
     ) -> FileResponse:
         try:
-            repository_resource = (
-                repository_service.get_repository_resource_by_resource_id(
-                    resource_id=str(resource_id),
-                )
-            )
+            repository_resource = get_resource_by_resource_id_handler(str(resource_id))
         except consortium_excs.RepositoryResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
@@ -126,7 +117,7 @@ def create_download_repository_resource_by_resource_id_endpoint(
                 path=str(temp_archive_file.with_suffix(".zip").resolve()),
                 filename=f"{repository_resource.name}.zip"
                 if repository_resource.name
-                else f"{str(repository_resource.resource_id)}.zip",
+                else f"{str(resource_id)}.zip",
                 # Only delete the temporary directory AFTER the file has been
                 # completely sent.
                 background=BackgroundTask(temp_dir.cleanup),
@@ -136,15 +127,16 @@ def create_download_repository_resource_by_resource_id_endpoint(
                 path=str(repository_resource.path),
                 filename=repository_resource.name
                 if repository_resource.name
-                else str(repository_resource.resource_id),
+                else str(resource_id),
             )
 
-    return download_repository_resource_by_resource_id
+    return download_resource_by_resource_id
 
 
-def create_upload_repository_resource_endpoint(
-    repository_service: RepositoryService,
-    upload_repository_resource_permission: UserPermissions,
+def create_upload_resource_endpoint(
+    create_file_handler: Callable[..., Any],
+    create_directory_handler: Callable[..., Any],
+    upload_resource_permission: UserPermissions,
 ) -> Callable:
     # Define this function synchronously because writing large files to disk in an
     # async function causes event loop issues. This will signal to FastAPI that this
@@ -153,7 +145,7 @@ def create_upload_repository_resource_endpoint(
         _: Annotated[
             None,
             Depends(
-                AuthorizeUserRequest(upload_repository_resource_permission),
+                AuthorizeUserRequest(upload_resource_permission),
             ),
         ],
         file: UploadFile,
@@ -206,7 +198,7 @@ def create_upload_repository_resource_endpoint(
                 ".tar.xz": "xztar",
             }
             try:
-                resource = repository_service.create_repository_directory(
+                resource = create_directory_handler(
                     content=file.file,
                     archive_file_format=file_format_to_format_string[file_extension],
                     name=name if name else file.filename,
@@ -215,7 +207,7 @@ def create_upload_repository_resource_endpoint(
             except consortium_excs.InvalidRepositoryDirectoryArchiveFileFormatError:
                 raise api_excs.InvalidRepositoryDirectoryArchiveFileFormatError() from None
         else:
-            resource = repository_service.create_repository_file(
+            resource = create_file_handler(
                 content=file.file,
                 name=name if name else file.filename,
                 description=description if description else "",
@@ -228,9 +220,9 @@ def create_upload_repository_resource_endpoint(
     return upload_repository_resource
 
 
-def create_delete_repository_resource_by_resource_id_endpoint(
-    repository_service: RepositoryService,
-    delete_repository_resource_by_resource_id_permission: UserPermissions,
+def create_delete_resource_by_resource_id_endpoint(
+    delete_resource_by_resource_id_handler: Callable[[str], None],
+    delete_resource_by_resource_id_permission: UserPermissions,
 ) -> Callable:
     async def delete_repository_resource_by_resource_id(
         resource_id: UUID4,
@@ -238,15 +230,13 @@ def create_delete_repository_resource_by_resource_id_endpoint(
             None,
             Depends(
                 AuthorizeUserRequest(
-                    delete_repository_resource_by_resource_id_permission,
+                    delete_resource_by_resource_id_permission,
                 ),
             ),
         ],
     ):
         try:
-            repository_service.delete_repository_resource_by_resource_id(
-                resource_id=str(resource_id),
-            )
+            delete_resource_by_resource_id_handler(str(resource_id))
         except consortium_excs.RepositoryResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,

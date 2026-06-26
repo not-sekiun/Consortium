@@ -3,11 +3,11 @@ from fastapi.responses import FileResponse
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.api.repository_api import (
-    create_delete_repository_resource_by_resource_id_endpoint,
-    create_download_repository_resource_by_resource_id_endpoint,
-    create_get_all_repository_resources_endpoint,
-    create_get_repository_resource_by_resource_id_endpoint,
-    create_upload_repository_resource_endpoint,
+    create_delete_resource_by_resource_id_endpoint,
+    create_download_resource_by_resource_id_endpoint,
+    create_get_all_resources_endpoint,
+    create_get_resource_by_resource_id_endpoint,
+    create_upload_resource_endpoint,
 )
 from consortium.server.exceptions.api_exceptions import (
     repository_api_exceptions as api_excs,
@@ -66,9 +66,9 @@ _unprocessable_entity_error = UnprocessableEntityError(
 
 router.add_api_route(
     path="/all",
-    endpoint=create_get_all_repository_resources_endpoint(
-        repository_service=_assets_service,
-        get_all_repository_resources_permission=UserPermissions.READ_ALL_ASSETS,
+    endpoint=create_get_all_resources_endpoint(
+        get_all_resources_handler=_assets_service.get_all_resources,
+        get_all_resources_permission=UserPermissions.READ_ALL_ASSETS,
     ),
     methods=["GET"],
     responses={
@@ -78,9 +78,9 @@ router.add_api_route(
 )
 router.add_api_route(
     path="/{resource_id}",
-    endpoint=create_get_repository_resource_by_resource_id_endpoint(
-        repository_service=_assets_service,
-        get_repository_resource_by_resource_id_permission=UserPermissions.READ_ASSET_BY_ASSET_ID,
+    endpoint=create_get_resource_by_resource_id_endpoint(
+        get_resource_by_resource_id_handler=_assets_service.get_resource_by_resource_id,
+        get_resource_by_resource_id_permission=UserPermissions.READ_ASSET_BY_ASSET_ID,
     ),
     methods=["GET"],
     responses={
@@ -97,9 +97,9 @@ router.add_api_route(
 )
 router.add_api_route(
     path="/{resource_id}",
-    endpoint=create_delete_repository_resource_by_resource_id_endpoint(
-        repository_service=_assets_service,
-        delete_repository_resource_by_resource_id_permission=UserPermissions.DELETE_ASSET_BY_ASSET_ID,
+    endpoint=create_delete_resource_by_resource_id_endpoint(
+        delete_resource_by_resource_id_handler=_assets_service.delete_resource_by_resource_id,
+        delete_resource_by_resource_id_permission=UserPermissions.DELETE_ASSET_BY_ASSET_ID,
     ),
     methods=["DELETE"],
     status_code=204,
@@ -117,9 +117,9 @@ router.add_api_route(
 )
 router.add_api_route(
     path="/download/{resource_id}",
-    endpoint=create_download_repository_resource_by_resource_id_endpoint(
-        repository_service=_assets_service,
-        download_repository_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_ASSETS,
+    endpoint=create_download_resource_by_resource_id_endpoint(
+        get_resource_by_resource_id_handler=_assets_service.get_resource_by_resource_id,
+        download_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_ASSETS,
     ),
     methods=["GET"],
     response_class=FileResponse,
@@ -136,9 +136,10 @@ router.add_api_route(
 )
 router.add_api_route(
     path="/upload",
-    endpoint=create_upload_repository_resource_endpoint(
-        repository_service=_assets_service,
-        upload_repository_resource_permission=UserPermissions.UPLOAD_ASSETS,
+    endpoint=create_upload_resource_endpoint(
+        create_file_handler=_assets_service.create_file,
+        create_directory_handler=_assets_service.create_directory,
+        upload_resource_permission=UserPermissions.UPLOAD_ASSETS,
     ),
     methods=["POST"],
     responses={

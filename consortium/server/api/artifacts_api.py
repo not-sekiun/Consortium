@@ -3,10 +3,10 @@ from fastapi.responses import FileResponse
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.api.repository_api import (
-    create_delete_repository_resource_by_resource_id_endpoint,
-    create_download_repository_resource_by_resource_id_endpoint,
-    create_get_all_repository_resources_endpoint,
-    create_get_repository_resource_by_resource_id_endpoint,
+    create_delete_resource_by_resource_id_endpoint,
+    create_download_resource_by_resource_id_endpoint,
+    create_get_all_resources_endpoint,
+    create_get_resource_by_resource_id_endpoint,
 )
 from consortium.server.exceptions.api_exceptions import (
     repository_api_exceptions as api_excs,
@@ -56,9 +56,9 @@ _unprocessable_entity_error = UnprocessableEntityError(
 
 router.add_api_route(
     path="/all",
-    endpoint=create_get_all_repository_resources_endpoint(
-        repository_service=_artifacts_service,
-        get_all_repository_resources_permission=UserPermissions.READ_ALL_ARTIFACTS,
+    endpoint=create_get_all_resources_endpoint(
+        get_all_resources_handler=_artifacts_service.get_all_resources,
+        get_all_resources_permission=UserPermissions.READ_ALL_ARTIFACTS,
     ),
     methods=["GET"],
     responses={
@@ -68,9 +68,9 @@ router.add_api_route(
 )
 router.add_api_route(
     path="/{resource_id}",
-    endpoint=create_delete_repository_resource_by_resource_id_endpoint(
-        repository_service=_artifacts_service,
-        delete_repository_resource_by_resource_id_permission=UserPermissions.DELETE_ARTIFACT_BY_ARTIFACT_ID,
+    endpoint=create_delete_resource_by_resource_id_endpoint(
+        delete_resource_by_resource_id_handler=_artifacts_service.delete_resource_by_resource_id,
+        delete_resource_by_resource_id_permission=UserPermissions.DELETE_ARTIFACT_BY_ARTIFACT_ID,
     ),
     status_code=204,
     responses={
@@ -87,9 +87,9 @@ router.add_api_route(
 )
 router.add_api_route(
     path="/{resource_id}",
-    endpoint=create_get_repository_resource_by_resource_id_endpoint(
-        repository_service=_artifacts_service,
-        get_repository_resource_by_resource_id_permission=UserPermissions.READ_ARTIFACT_BY_ARTIFACT_ID,
+    endpoint=create_get_resource_by_resource_id_endpoint(
+        get_resource_by_resource_id_handler=_artifacts_service.get_resource_by_resource_id,
+        get_resource_by_resource_id_permission=UserPermissions.READ_ARTIFACT_BY_ARTIFACT_ID,
     ),
     methods=["GET"],
     responses={
@@ -106,9 +106,9 @@ router.add_api_route(
 )
 router.add_api_route(
     path="/download/{resource_id}",
-    endpoint=create_download_repository_resource_by_resource_id_endpoint(
-        repository_service=_artifacts_service,
-        download_repository_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_ARTIFACTS,
+    endpoint=create_download_resource_by_resource_id_endpoint(
+        get_resource_by_resource_id_handler=_artifacts_service.get_resource_by_resource_id,
+        download_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_ARTIFACTS,
     ),
     methods=["GET"],
     response_class=FileResponse,
