@@ -7,6 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.14%2B-blue" alt="Python Version">
   <img src="https://github.com/not-sekiun/Consortium/actions/workflows/tests.yml/badge.svg" alt="Pytest">
+  <img src="https://img.shields.io/badge/Contact%20me-5865F2?logo=discord&logoColor=white)](https://discord.com/users/395192115996655627">
 </p>
 
 # Consortium
@@ -20,17 +21,14 @@ listeners and agents.
 
 > [!CAUTION]
 > Consortium is **actively being developed** and is currently considered to be in the
-> _alpha phase_ of development. The current branch `main` is essentially a developer
-> branch where I dump all code without regards to correctness. As such it should be
-> noted that:
+> _alpha phase_ of development. As such it should be noted that:
 >
-> 1. Backwards incompatible/breaking changes may be made to the framework at any time.
-> 2. The framework may contain major bugs and even incomplete code that can cause crashes.
-> 3. The framework is currently not considered to be feature-complete.
-> 4. Documentation will be severely lacking and incomplete.
+> 1. Backwards incompatible/breaking changes may be made at any time.
+> 2. The framework is currently not considered to be feature-complete.
+> 3. Documentation will be lacking and incomplete.
 >
-> I am working to resolve all these and work towards a 1.0.0 release so please raise any
-> problems, feature requests, or bug reports in the GitHub issues section.
+> Feel free to raise any problems, feature requests, or bug reports in the GitHub
+> issues section.
 
 ## Features
 
