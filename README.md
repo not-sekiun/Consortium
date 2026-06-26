@@ -56,8 +56,8 @@ server _through its REST API_.
 ### Prerequisites
 
 Consortium requires Python 3.14+ and uses the uv package manager to handle its
-dependencies. Git is recommended for installing and updating the framework, no
-binary releases will be provided.
+dependencies. Git is recommended for installing and updating the framework.
+
 1. [Install Python 3.14+](https://www.python.org/downloads)
 2. [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
 3. [Install Git](https://www.git-scm.com)
@@ -67,55 +67,76 @@ binary releases will be provided.
 
 ### Installation
 
-1. Clone the Consortium repository with `git` and `cd` into its root folder.
+1. Clone the repository and navigate into the project's root folder.
+
 ```bash
 git clone https://github.com/not-sekiun/Consortium.git
 cd Consortium
 ```
 
-2. Install dependencies through `uv`.
+2. Install project dependencies.
+
 ```bash
 uv sync
 ```
 
 ### Starting the Framework
 
-The Consortium C2 framework runs on a client-server model. To use the
-framework the server must be started before starting any compatible client
-to connect to the server.
+The Consortium C2 framework runs on a client-server model. Start the server _first_
+before starting any compatible client to connect to the server.
 
-1. Start the Consortium server. By default, it binds at `0.0.0.0:1337`.
+1. Start the Consortium server. By default, it binds to `0.0.0.0:1337`.
+
 ```bash
 uv run consortium.py server
 ```
 
 2. Start the Consortium client. By default, it connects to `127.0.0.1:1337`
+
 ```bash
 uv run consortium.py client
 ```
 
 ### Updating
 
-1. In the project's root folder, pull the new repository changes with `git`.
+1. From the project's root folder, pull any new repository changes.
+
 ```shell
 git pull
 ```
 
-2. Update any dependencies that are present using `poetry`.
+2. Update any dependencies that are present.
+
 ```shell
 uv sync
 ```
 
 ## Documentation
 
+### Complete Framework Documentation and Self-Hosted Documentation
+
+> [!WARNING]
+> The current documentation page is still heavily a WIP and is largely incomplete.
+
+Complete documentation is available at the
+[official Consortium documentation site](https://not-sekiun.github.io/Consortium/).
+
+Alternatively, you can install dependencies to host and view the documentation locally.
+
+From the project root folder, run:
+
+```shell
+uv sync --group docs
+uv run mkdocs serve
+```
+
 ### Server REST API Documentation
 
 > [!Note]
 > The REST API documentation is only accessible to the local host.
 
-The Consortium server is powered by FastAPI, which provides a built-in Swagger UI
-for interacting with the server's REST API. The Swagger UI can be accessed by
-navigating to `/doc` or `/redoc` at the server's root URL in a web browser.
+Automatically generated REST API endpoint documentation is available at `/doc` and
+`/redoc` from the server's root URL.
 
 Start the server first.
 
@@ -123,38 +144,26 @@ Start the server first.
 uv run consortium.py server
 ```
 
-Then open a web browser to the API endpoints.
+Then open a web browser to either URL.
 
-#### REST API documentation for the /docs endpoint (http://localhost:9999/docs by default)
+#### REST API documentation at /docs (http://localhost:9999/docs by default)
 
 ![REST API documentation for "docs" endpoint](docs/assets/rest_api_documentation_doc_endpoint.png)
 
-#### REST API documentation for the /redoc endpoint (http://localhost:9999/redoc by default)
+#### REST API documentation at /redoc (http://localhost:9999/redoc by default)
 
 ![REST API documentation for "redoc" endpoint](docs/assets/rest_api_documentation_redoc_endpoint.png)
 
 ### Server Events Websocket API Documentation
 
-The Consortium server provides a WebSocket API for server-initiated push events. While
-this is considered part of its API, it is _not_ documented by FastAPI due to issues
-with the OpenAPI specification. As such the WebSocket API is documented at the
-Consortium wiki's Events WebSocket API page.
+The Consortium server provides a WebSocket API for server-initiated push events.
+Complete documentation is located at the
+[official Consortium documentation site](https://not-sekiun.github.io/Consortium/)
 
 ![WebSocket API documentation for mkdocs](docs/assets/websockets_api_mkdocs.png)
 
-This documentation is hosted locally and included with the repository. To view it
-locally, install the documenation dependencies through uv,
-`uv sync --group docs` and run it by changing directory into the `docs` folder and
-serving the documentation locally.
-
-> [!NOTE]
-> The mkdocs page is still heavily a WIP and is largely incomplete. It is included here
-> only for completeness.
-
-```shell
-cd docs
-uv run mkdocs serve
-```
+To view this documentation locally, install the documentation dependencies as outlined
+[here](#complete-framework-documentation-and-self-hosted-documentation)
 
 ### Client Documentation
 
@@ -230,51 +239,18 @@ Examples:
 
 ```
 
-### Complete Framework Documentation (WIP)
-
-Complete documentation is available at the [Consortium wiki](https://github.com/not-sekiun/Consortium).
-Alternatively, you can install dependencies to host and view the documentation locally.
-From the project root folder, run:
-
-```shell
-uv sync --group docs
-uv run mkdocs serve
-```
-
-The wiki provides:
-
-1. A detailed guide on using the framework
-2. An introduction to the workflow of the framework
-3. Explanations of commonly used terms
-4. An overview of the infrastructure of the framework
-
-The wiki also covers advanced topics not documented within the application itself,
-including:
-
-- Writing custom native listeners, agents, plugins, and event hooks
-- Utilizing the WebSocket API for server-initiated push events
-- Writing listeners and agents in languages other than Python
-
-
 ## Credits
 
-This project would not have been possible without the existence of the following
-excellently written libraries and frameworks.
+This project makes heavy use of the following libraries and frameworks.
 
 - [FastAPI](https://github.com/fastapi/fastapi) for the REST API and websockets server.
-- [Prompt-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) for the
-client CLI interface.
-- [Rich](https://github.com/Textualize/rich) for modernizing and beautifying displays
-in the terminal
-- [Websockets](https://github.com/python-websockets/websockets) for the event based
-communication for the client.
+- [Prompt-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) for the client CLI interface.
+- [Rich](https://github.com/Textualize/rich) for modernizing and beautifying displays in the terminal
+- [Websockets](https://github.com/python-websockets/websockets) for the event based communication for the client.
 
-On top of that many other pre-existing C2 frameworks provided the inspiration and
-motivation to create this one.
+Many other pre-existing C2 frameworks provided the inspiration and motivation to create
+this one.
 
-- [Empire, formerly Powershell-Empire](https://github.com/BC-SECURITY/Empire) for some
-of the client design and UI
-- [Mythic](https://github.com/its-a-feature/Mythic) for some elements of the framework
-design
-- [Cobalt Strike](https://www.cobaltstrike.com/) for the functionality and design of
-the listeners and agents
+- [Empire, formerly Powershell-Empire](https://github.com/BC-SECURITY/Empire) for some of the client design and UI
+- [Mythic](https://github.com/its-a-feature/Mythic) for some elements of the framework design
+- [Cobalt Strike](https://www.cobaltstrike.com/) for the functionality and design of the listeners and agents
