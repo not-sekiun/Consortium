@@ -16,11 +16,11 @@ dependencies = [
     "watchdog>=6.0.0",
     "websockets>=15.0.1",
     "pydantic>=2.0",
-    "httpx>=0.28.1",
 ]
 
 [dependency-groups]
 dev = [
+    "anyio>=4.13.0",
     "httpx>=0.28.1",
     "pre-commit>=4.5.0",
     "pytest>=9.0.2",

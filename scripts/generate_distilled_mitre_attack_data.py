@@ -1,16 +1,27 @@
+import asyncio
 import json
 from pathlib import Path
 
-import httpx
+import aiohttp
 
 # The official raw STIX data from MITRE's GitHub
 MITRE_STIX_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
 
 
-def main():
+async def main():
     print("[*] Fetching MITRE ATT&CK data...")
-    response = httpx.get(MITRE_STIX_URL)
-    data = response.json()
+    async with aiohttp.ClientSession() as session:
+        async with session.get(MITRE_STIX_URL) as response:
+            if response.status != 200:
+                print(
+                    "[-] Failed to fetch MITRE ATT&CK data. "
+                    "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json "
+                    f"returned with status code {response.status}"
+                )
+                return
+            # github returns json data with mimetype text/plain which causes aiohttp to
+            # throw an error on .json(), so we set content_type=None to ignore it
+            data = await response.json(content_type=None)
 
     distilled = {}
 
@@ -61,4 +72,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

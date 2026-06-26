@@ -222,7 +222,6 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "fastapi", extra = ["standard"] },
-    { name = "httpx" },
     { name = "jsonschema" },
     { name = "loguru" },
     { name = "packaging" },
@@ -236,6 +235,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "anyio" },
     { name = "httpx" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -252,7 +252,6 @@ docs = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.13.2" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.124.0" },
-    { name = "httpx", specifier = ">=0.28.1" },
     { name = "jsonschema", specifier = ">=4.25.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "packaging", specifier = ">=25.0" },
@@ -266,6 +265,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "anyio", specifier = ">=4.13.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pre-commit", specifier = ">=4.5.0" },
     { name = "pytest", specifier = ">=9.0.2" },
