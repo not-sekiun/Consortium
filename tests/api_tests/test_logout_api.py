@@ -4,7 +4,6 @@ import pytest
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
-    SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.utils import validate_response
 
@@ -58,8 +57,7 @@ async def test_logout_from_server(app, admin_client, operator_client, spectator_
     for session, username, password in sessions_with_credentials:
         validate_response(
             test_response=await session.post("/api/logout"),
-            expected_json_schema=SUCCESS_JSON_SCHEMA,
-            expected_status_code=200,
+            expected_status_code=204,
         )
         validate_response(
             test_response=await session.get("/api/users/me"),
@@ -101,8 +99,7 @@ async def test_logout_user_by_user_id(
 
         validate_response(
             test_response=await admin_client.post(f"/api/logout/user/{target_user_id}"),
-            expected_json_schema=SUCCESS_JSON_SCHEMA,
-            expected_status_code=200,
+            expected_status_code=204,
         )
 
         validate_response(
@@ -166,8 +163,7 @@ async def test_logout_user_account_by_user_account_id(
             test_response=await admin_client.post(
                 f"/api/logout/user-account/{target_user_account_id}"
             ),
-            expected_json_schema=SUCCESS_JSON_SCHEMA,
-            expected_status_code=200,
+            expected_status_code=204,
         )
 
         # Both first and second spectator sessions are now invalid

@@ -21,7 +21,6 @@ from consortium.server.exceptions.consortium_exceptions import (
     agent_generators_consortium_exceptions as consortium_excs,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
-from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
@@ -158,7 +157,7 @@ def get_agent_generator_by_agent_generator_id(
 @router.post(
     "/{agent_generator_id}/start",
     responses={
-        200: {"model": SuccessResponseModel},
+        202: {},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {
             "model": _agent_generator_already_running_error.to_pydantic_model()
@@ -169,6 +168,7 @@ def get_agent_generator_by_agent_generator_id(
             | _unprocessable_entity_error.to_pydantic_model()
         },
     },
+    status_code=202,
 )
 async def start_agent_generator_by_agent_generator_id(
     agent_generator_id: UUID4,
@@ -180,7 +180,7 @@ async def start_agent_generator_by_agent_generator_id(
             ),
         ),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         await _agent_generators_service.start_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
@@ -205,13 +205,11 @@ async def start_agent_generator_by_agent_generator_id(
             },
         ) from None
 
-    return SuccessResponseModel()
-
 
 @router.post(
     "/{agent_generator_id}/stop",
     responses={
-        200: {"model": SuccessResponseModel},
+        202: {},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {
             "model": _agent_generator_not_running_error.to_pydantic_model()
@@ -222,6 +220,7 @@ async def start_agent_generator_by_agent_generator_id(
             | _unprocessable_entity_error.to_pydantic_model()
         },
     },
+    status_code=202,
 )
 async def stop_agent_generator_by_agent_generator_id(
     agent_generator_id: UUID4,
@@ -233,7 +232,7 @@ async def stop_agent_generator_by_agent_generator_id(
             ),
         ),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         await _agent_generators_service.stop_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
@@ -258,13 +257,11 @@ async def stop_agent_generator_by_agent_generator_id(
             },
         ) from None
 
-    return SuccessResponseModel()
-
 
 @router.post(
     "/{agent_generator_id}/cancel",
     responses={
-        200: {"model": SuccessResponseModel},
+        202: {},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {"model": _agent_generator_not_running_error.to_pydantic_model()},
         422: {
@@ -272,6 +269,7 @@ async def stop_agent_generator_by_agent_generator_id(
             | _unprocessable_entity_error.to_pydantic_model()
         },
     },
+    status_code=202,
 )
 async def cancel_agent_generator_by_agent_generator_id(
     agent_generator_id: UUID4,
@@ -283,7 +281,7 @@ async def cancel_agent_generator_by_agent_generator_id(
             ),
         ),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         await _agent_generators_service.cancel_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
@@ -303,8 +301,6 @@ async def cancel_agent_generator_by_agent_generator_id(
                 "message": str(exc),
             },
         ) from None
-
-    return SuccessResponseModel()
 
 
 @router.patch(

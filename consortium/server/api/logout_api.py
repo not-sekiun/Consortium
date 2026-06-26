@@ -20,7 +20,6 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 from consortium.server.exceptions.consortium_exceptions import (
     users_consortium_exceptions as users_consortium_excs,
 )
-from consortium.server.models.common_models import SuccessResponseModel
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import (
     AuthorizeUserRequest,
@@ -53,21 +52,21 @@ _invalid_user_uuid_error = InvalidUUIDError(
 )
 
 
-@router.post("", responses={200: {"model": SuccessResponseModel}})
+@router.post("", responses={204: {}}, status_code=204)
 async def logout_from_server(
     user: Annotated[User, Depends(get_current_user)],
-) -> SuccessResponseModel:
+) -> None:
     _users_service.logout_user_by_user_id(user_id=user.user_id)
-    return SuccessResponseModel()
 
 
 @router.post(
     "/user-account/{user_account_id}",
     responses={
-        200: {"model": SuccessResponseModel},
+        204: {},
         404: {"model": _user_account_not_found_error.to_pydantic_model()},
         422: {"model": _invalid_user_account_uuid_error.to_pydantic_model()},
     },
+    status_code=204,
 )
 async def logout_user_account_by_user_account_id(
     user_account_id: UUID4,
@@ -77,7 +76,7 @@ async def logout_user_account_by_user_account_id(
             AuthorizeUserRequest(UserPermissions.LOGOUT_USER_ACCOUNT_BY_USER_ACCOUNT_ID)
         ),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         _user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=str(user_account_id)
@@ -91,16 +90,15 @@ async def logout_user_account_by_user_account_id(
         if str(user.user_account.user_account_id) == str(user_account_id):
             _users_service.logout_user_by_user_id(user_id=user.user_id)
 
-    return SuccessResponseModel()
-
 
 @router.post(
     "/user/{user_id}",
     responses={
-        200: {"model": SuccessResponseModel},
+        204: {},
         404: {"model": _user_not_found_error.to_pydantic_model()},
         422: {"model": _invalid_user_uuid_error.to_pydantic_model()},
     },
+    status_code=204,
 )
 async def logout_user_by_user_id(
     user_id: UUID4,
@@ -108,10 +106,8 @@ async def logout_user_by_user_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.LOGOUT_USER_BY_USER_ID)),
     ],
-) -> SuccessResponseModel:
+) -> None:
     try:
         _users_service.logout_user_by_user_id(user_id=str(user_id))
     except users_consortium_excs.UserIDNotFoundError:
         raise users_api_excs.UserNotFoundError(user_id=str(user_id)) from None
-
-    return SuccessResponseModel()

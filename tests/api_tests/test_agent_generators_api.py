@@ -5,7 +5,6 @@ import pytest
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
-    SUCCESS_JSON_SCHEMA,
 )
 from tests.api_tests.framework_components_json_response_schemas import (
     AGENT_GENERATOR_JSON_SCHEMA,
@@ -188,8 +187,7 @@ async def test_start_agent_generator_by_agent_generator_id(
         if client != spectator_client:
             validate_response(
                 test_response=await client.post(f"/api/agent-generators/{ag_id}/start"),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_status_code=202,
             )
             await admin_client.post(f"/api/agent-generators/{ag_id}/stop")
         else:
@@ -232,8 +230,7 @@ async def test_stop_agent_generator_by_agent_generator_id(
             await admin_client.post(f"/api/agent-generators/{ag_id}/start")
             validate_response(
                 test_response=await client.post(f"/api/agent-generators/{ag_id}/stop"),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_status_code=202,
             )
         else:
             await admin_client.post(f"/api/agent-generators/{ag_id}/start")
@@ -277,8 +274,7 @@ async def test_cancel_agent_generator_by_agent_generator_id(
                 test_response=await client.post(
                     f"/api/agent-generators/{ag_id}/cancel"
                 ),
-                expected_json_schema=SUCCESS_JSON_SCHEMA,
-                expected_status_code=200,
+                expected_status_code=202,
             )
         else:
             await admin_client.post(f"/api/agent-generators/{ag_id}/start")
