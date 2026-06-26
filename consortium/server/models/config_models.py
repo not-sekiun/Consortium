@@ -21,7 +21,7 @@ class LoggingConfigModel(BaseModel):
         "ERROR",
         "CRITICAL",
     ]
-    log_file: str
+    log_file: str | None
     rotation: str | int | None
     retention: str | int | None
     colorize: bool

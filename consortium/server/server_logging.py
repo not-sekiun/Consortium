@@ -52,20 +52,26 @@ def log_formatter(record):
 
 def configure_logger(logging_config: LoggingConfigModel):
     logger.remove()  # Remove all default loggers.
-    logger.add(
-        logging_config.log_file,
-        format="{time:YYYY-MM-DDTHH:mm:ss.SSSZ} {level:<8} {extra[logger_name]}: {message}",
-        level=logging_config.level,
-        rotation=logging_config.rotation,
-        retention=logging_config.retention,
-        colorize=False,
-    )
+
+    # Add file logging if `log_file` is provided
+    if logging_config.log_file is not None:
+        logger.add(
+            logging_config.log_file,
+            format="{time:YYYY-MM-DDTHH:mm:ss.SSSZ} {level:<8} {extra[logger_name]}: {message}",
+            level=logging_config.level,
+            rotation=logging_config.rotation,
+            retention=logging_config.retention,
+            colorize=False,
+        )
+
+    # Always log to stdout
     logger.add(
         sys.stdout,
         colorize=logging_config.colorize,
         format=log_formatter,
         level=logging_config.level,
     )
+
     logger.level("TRACE", color="<dim><magenta>")
     logger.level("DEBUG", color="<bold><cyan>")
     logger.level("INFO", color="<bold><blue>")

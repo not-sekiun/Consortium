@@ -78,16 +78,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
             json_data = json.load(file)
         logging_config = LoggingConfigModel(
             level="DEBUG" if arguments.debug else json_data.get("level", "INFO"),
-            log_file=json_data.get(
-                "log_file",
-                str(
-                    consortium_root
-                    / "data"
-                    / "server"
-                    / "logs"
-                    / "{time:YYYY-MM-DDTHH-mm-ss}.log"
-                ),
-            ),
+            log_file=json_data.get("log_file"),
             rotation=json_data.get("rotation", None),
             retention=json_data.get("retention", 1),
             colorize=json_data.get("colorize", True),
