@@ -1,1 +1,35 @@
-{}
+{
+    "91f6b863-0b09-4e4e-b8af-2546247e2b19": {
+        "resource_id": "91f6b863-0b09-4e4e-b8af-2546247e2b19",
+        "name": "raidens_cute_butthole.png",
+        "description": "",
+        "size": 2051235,
+        "exists_on_disk": true,
+        "md5_checksum": "d83e22dcb66b79747c25f046fc4b37e4",
+        "datetime_created": "2025-12-17T06:49:51.339370",
+        "datetime_modified": "2025-12-17T06:49:51.338558",
+        "is_directory": false
+    },
+    "0accc462-0c3b-453f-beb8-88db53e47fee": {
+        "resource_id": "0accc462-0c3b-453f-beb8-88db53e47fee",
+        "name": "Are you kidding me (feat. mami).mp3",
+        "description": "",
+        "size": 3850221,
+        "exists_on_disk": true,
+        "md5_checksum": "e4c178fbcc8f972c1b54ac58c5529ea9",
+        "datetime_created": "2025-12-26T16:27:09.605877",
+        "datetime_modified": "2025-12-26T16:27:09.604457",
+        "is_directory": false
+    },
+    "95ee756c-6d19-4072-a68f-07cba345e95d": {
+        "resource_id": "95ee756c-6d19-4072-a68f-07cba345e95d",
+        "name": "argshit.py",
+        "description": "",
+        "size": 433,
+        "exists_on_disk": true,
+        "md5_checksum": "7fb7af1dcde5b8413f634bd17fd02ffb",
+        "datetime_created": "2025-12-28T03:01:30.325171",
+        "datetime_modified": "2025-12-28T03:01:30.324381",
+        "is_directory": false
+    }
+}
