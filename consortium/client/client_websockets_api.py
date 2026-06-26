@@ -82,7 +82,10 @@ class WebsocketsAPI:
         if not self.connected or self._websocket is None:
             raise WebsocketsAPINotConnectedError
 
-        await self._websocket.close()
+        try:
+            await self._websocket.close()
+        except websockets.exceptions.ConnectionClosed:
+            pass
 
         self.connected = False
         self.json_web_token = None

@@ -43,11 +43,10 @@ class InvalidServerRestAPILoginResponseError(RestAPIAuthenticationError):
 
 
 class RestAPIOperationError(RestAPIError):
-    def __init__(self, code: str, message: str, detail: Any):
+    def __init__(self, status_code: int, code: str, message: str, detail: Any):
+        self.status_code = status_code
         self.code = code
         self.message = message
         self.detail = detail
 
-        super().__init__(
-            f"{code}: {message}",
-        )
+        super().__init__(f"[{self.status_code}] {code}: {message}")

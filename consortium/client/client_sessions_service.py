@@ -116,6 +116,7 @@ class ClientSessionsService:
         )
 
         await client_session.disconnect()
+
         self._logger.debug(
             f"Disconnected client session: {client_session!r}",
         )

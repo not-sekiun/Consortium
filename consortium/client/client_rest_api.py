@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from typing import IO, Any, Literal
 
 import aiohttp
+from aiohttp import ClientConnectionError
 from loguru import logger
 
 from consortium.client.exceptions.rest_api_exceptions import (
@@ -47,13 +48,22 @@ class RestAPI:
         self.logged_in = False
         self.json_web_token = None
 
-        self._logger = logger.bind(
-            logger_name=(
-                str(self)
-            ),  # TODO: Proper logging support add a __str__ or __repr__
-        )
+        self._logger = logger.bind(logger_name=str(self))
         self._api_base_url = f"http://{self.remote_host}:{self.remote_port}/api"
         self._aiohttp_client_session = aiohttp.ClientSession()
+
+    def __str__(self):
+        return f"RestAPI Session Connected to {self.remote_host}:{self.remote_port}"
+
+    def __repr__(self):
+        return (
+            f"RestAPI("
+            f"username={repr(self.username)}, "
+            f"password={repr(self.password)},"
+            f"remote_host={repr(self.remote_host)}, "
+            f"remote_port={repr(self.remote_port)}"
+            f")"
+        )
 
     async def connect(self) -> None:
         if self.logged_in:
@@ -109,7 +119,14 @@ class RestAPI:
                 remote_host=self.remote_host, remote_port=self.remote_port
             )
 
-        await self.logout()
+        try:
+            await self.logout()
+        except ClientConnectionError:
+            pass
+        except RestAPIOperationError as exc:
+            if exc.status_code == 401:
+                pass
+            raise exc from None
         self._aiohttp_client_session.headers.pop("Authorization")
         await self._aiohttp_client_session.close()
         self.logged_in = False
@@ -577,9 +594,12 @@ class RestAPI:
         return params
 
     @staticmethod
-    def _check_for_api_error_response(response_json: dict[str, Any]) -> None:
+    def _check_for_api_error_response(
+        status_code: int, response_json: dict[str, Any]
+    ) -> None:
         if "error" in response_json:
             raise RestAPIOperationError(
+                status_code=status_code,
                 code=response_json["error"]["code"],
                 message=response_json["error"]["message"],
                 detail=response_json["error"]["detail"],
@@ -628,6 +648,7 @@ class RestAPI:
         # exceptions for API errors, we construct and raise that exception here
         if response.status == 401:
             raise RestAPIOperationError(
+                status_code=response.status,
                 code="UNAUTHORIZED_ERROR",
                 message=(
                     "Failed to perform the requested operation. The current client "
@@ -643,5 +664,7 @@ class RestAPI:
             response=response,
             response_json=response_json,
         )
-        self._check_for_api_error_response(response_json=response_json)
+        self._check_for_api_error_response(
+            status_code=response.status, response_json=response_json
+        )
         return response_json

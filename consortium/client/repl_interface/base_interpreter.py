@@ -1,3 +1,4 @@
+from aiohttp import ClientConnectionError
 from prompt_toolkit import ANSI, HTML, PromptSession, print_formatted_text
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -5,7 +6,9 @@ from rich.columns import Columns
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.text import Text
+from websockets.exceptions import ConnectionClosed
 
+import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
 from consortium.client.exceptions.client_interpreter_exceptions import (
     UnclosedQuotesError,
@@ -21,6 +24,7 @@ from consortium.client.models.context_models import (
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
+    ExitClientSessionSignal,
     InterpreterSignal,
 )
 from consortium.client.repl_interface.alias_expander import expand_aliases
@@ -33,7 +37,9 @@ from consortium.client.repl_interface.custom_completer import (
 )
 from consortium.client.repl_interface.lexer import tokenize
 from consortium.client.repl_interface.parser import ParsedCommand, parse
-from consortium.client.utils.printer_utils import console, print_error
+from consortium.client.utils.printer_utils import console, print_error, print_info
+
+_client_sessions_service = client_singletons.client_sessions_service
 
 
 class _BaseInterpreter[TClientSession: (ClientSession, None)]:
@@ -179,58 +185,84 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
     async def on_exit(self) -> None: ...
 
     async def run(self) -> InterpreterSignal:
-        await self.on_enter()
+        try:
+            await self.on_enter()
 
-        while True:
-            try:
-                await self.on_loop()
+            while True:
+                try:
+                    await self.on_loop()
 
-                input_string = await self._get_complete_input()
-                if not input_string:
-                    continue
-                parsed_command = self._parse_input_string(input_string=input_string)
-                interpreter_signal = await self._dispatch_command(
-                    parsed_command=parsed_command,
-                )
-                match interpreter_signal:
-                    case ContinueSignal():
+                    input_string = await self._get_complete_input()
+                    if not input_string:
                         continue
-                    case InterpreterSignal():
-                        await self.on_exit()
-                        return interpreter_signal
-                    case _:
-                        raise AssertionError(
-                            "Unsupported interpreter signal returned from command. "
-                            f"Received signal '{interpreter_signal}'",
-                        )
-            except KeyboardInterrupt:
-                print_error(
-                    "Keyboard interrupt ignored. Use 'exit' to exit the interpreter.",
-                )
-            except RestAPIOperationError as exc:
-                print_error(f"{exc}")
-                if exc.detail:
-                    console.print(
-                        Columns(
-                            [
-                                Text("╰─", style="bold cyan"),
-                                Panel(
-                                    Pretty(exc.detail),
-                                    title="Error Detail",
-                                    style="bold cyan",
-                                    expand=False,
-                                    title_align="left",
-                                ),
-                            ],
-                            expand=False,
-                            padding=(0, 0),
-                        )
+                    parsed_command = self._parse_input_string(input_string=input_string)
+                    interpreter_signal = await self._dispatch_command(
+                        parsed_command=parsed_command,
                     )
-            except Exception as exc:
-                print_error(
-                    f"Unhandled exception occurred. {exc.__class__.__name__}: {exc}"
-                )
-                console.print_exception(show_locals=True)
+                    match interpreter_signal:
+                        case ContinueSignal():
+                            continue
+                        case InterpreterSignal():
+                            await self.on_exit()
+                            return interpreter_signal
+                        case _:
+                            raise AssertionError(
+                                "Unsupported interpreter signal returned from command. "
+                                f"Received signal '{interpreter_signal}'",
+                            )
+                except KeyboardInterrupt:
+                    print_error(
+                        "Keyboard interrupt ignored. Use 'exit' to exit the "
+                        "interpreter.",
+                    )
+                except RestAPIOperationError as exc:
+                    print_error(f"{exc}")
+                    if exc.detail:
+                        console.print(
+                            Columns(
+                                [
+                                    Text("╰─", style="bold cyan"),
+                                    Panel(
+                                        Pretty(exc.detail),
+                                        title="Error Detail",
+                                        style="bold cyan",
+                                        expand=False,
+                                        title_align="left",
+                                    ),
+                                ],
+                                expand=False,
+                                padding=(0, 0),
+                            )
+                        )
+
+                    # Check for case where our access was revoked mid-session or the
+                    # server restarted causing the JWT to be invalidated
+                    if exc.status_code == 401:
+                        print_info(
+                            "Current session access was remotely revoked. Removing current "
+                            "session and returning to disconnected interpreter..."
+                        )
+                        await _client_sessions_service.remove_client_session_by_client_session_id(
+                            client_session_id=self.client_session.client_session_id
+                        )
+                        return ExitClientSessionSignal()
+        # Check for case where connection to the remote server was lost mid-session
+        except ClientConnectionError, ConnectionClosed:
+            print_error(
+                "Connection to server lost. Removing current session and returning "
+                "to disconnected interpreter..."
+            )
+            await _client_sessions_service.remove_client_session_by_client_session_id(
+                client_session_id=self.client_session.client_session_id
+            )
+            return ExitClientSessionSignal()
+        except Exception as exc:
+            print_error(
+                f"Unhandled exception occurred. {exc.__class__.__name__}: {exc}"
+            )
+            console.print_exception(show_locals=True)
+            print_info("Exiting...")
+            exit()
 
         raise AssertionError(
             "Interpreter REPL loop broke out without returning a valid interpreter "
