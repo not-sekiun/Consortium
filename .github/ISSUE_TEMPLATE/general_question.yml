@@ -1,0 +1,11 @@
+name: Question
+description: Ask a general question relating to Consortium
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What question do you have?
+    validations:
+      required: true
