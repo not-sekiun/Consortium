@@ -2,7 +2,7 @@
   <img width="20%" src="docs/assets/logo.png">
 </p>
 
-<p align="center"><b>A modern C2 framework with a focus on programmatic extensibility</b></p>
+<p align="center"><b>Modern C2 framework with a focus on extensibility</b></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.14%2B-blue" alt="Python Version">
