@@ -89,12 +89,7 @@ UNPROCESSABLE_ENTITY_ERROR_JSON_SCHEMA = {
 }
 
 
-# Standard operation acknowledgement JSON response schemas for all api endpoints
-SUCCESS_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {"success": {"type": "boolean", "enum": [True]}},
-    "required": ["success"],
-}
+# Standard error JSON response schemas for all api endpoints
 ERROR_JSON_SCHEMA = {
     "type": "object",
     "properties": {

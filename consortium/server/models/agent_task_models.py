@@ -4,7 +4,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, JsonValue
 
-from consortium.server.models.common_models import ErrorModel
+from consortium.server.models.error_models import ErrorModel
 
 
 class AgentTaskState(StrEnum):
