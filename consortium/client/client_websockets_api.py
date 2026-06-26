@@ -211,8 +211,12 @@ class WebsocketsAPI:
         if not message_json["success"]:
             raise SeverWebsocketsAPIErrorResponseError(
                 error_message=(
-                    f"{message_json['error']['code']}: "
-                    f"{message_json['error']['message']}"
+                    "\n".join(
+                        [
+                            f"{error['code']}: {error['message']}"
+                            for error in message_json["errors"]
+                        ]
+                    )
                 ),
             )
 

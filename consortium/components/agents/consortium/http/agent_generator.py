@@ -21,9 +21,6 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         "self-extracting PyInstaller executable."
     )
 
-    async def on_started(self) -> None:
-        pass
-
     async def build(self, parameters: dict) -> None:
         await asyncio.sleep(5)
 
@@ -48,11 +45,11 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
             )
 
         if parameters["format"] == "script":
-            pass
+            print(source_code)
         elif parameters["format"] == "executable":
-            pass
+            print(source_code)
         elif parameters["format"] == "oneliner":
-            pass
+            print(source_code)
         else:
             raise AgentGeneratorBuildStepRuntimeError(
                 f"Unknown agent format '{parameters['format']}' specified when "

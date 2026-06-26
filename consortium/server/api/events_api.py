@@ -70,7 +70,7 @@ _client_action_websocket_message_json_schema = {
         },
         "events": {
             "type": "array",
-            "items": {"type": "string", "enum": _events_service.get_all_event_types()},
+            "items": {"type": "string"},
         },
     },
     "required": ["action"],
@@ -168,22 +168,6 @@ class _WebsocketManager:
             "detail": detail,
         }
 
-    def _construct_error_response_json(
-        self,
-        code: _ErrorResponseErrorCodes,
-        message: str,
-        detail: Any | None = None,
-    ) -> dict[str, Any]:
-        return {
-            "type": "response",
-            "success": False,
-            "error": self._construct_error_json(
-                code=code,
-                message=message,
-                detail=detail,
-            ),
-        }
-
     @staticmethod
     def _construct_errors_response_json(
         errors: list[dict[str, Any]],
@@ -193,6 +177,29 @@ class _WebsocketManager:
             "success": False,
             "errors": errors,
         }
+
+    def _construct_single_error_response_json(
+        self,
+        code: _ErrorResponseErrorCodes,
+        message: str,
+        detail: Any | None = None,
+    ) -> dict[str, Any]:
+        """
+        Convenience wrapper for the (common) case of a single error: builds
+        the one error object and wraps it in the same `errors` list shape
+        that every other error response uses, so callers never need to know
+        whether their failure is "a single error" or "multiple errors" -
+        the response shape is always `{"errors": [...]}`.
+        """
+        return self._construct_errors_response_json(
+            errors=[
+                self._construct_error_json(
+                    code=code,
+                    message=message,
+                    detail=detail,
+                ),
+            ],
+        )
 
     async def _handle_get_all_events_action(self) -> None:
         all_events = _events_service.get_all_event_types()
@@ -335,7 +342,7 @@ class _WebsocketManager:
                     )
                 except jsonschema.ValidationError as exc:
                     await self._websocket.send_json(
-                        self._construct_error_response_json(
+                        self._construct_single_error_response_json(
                             code=_ErrorResponseErrorCodes.INVALID_MESSAGE_FORMAT_ERROR,
                             message=(
                                 "Failed to process the client's action message. "
@@ -344,6 +351,7 @@ class _WebsocketManager:
                             detail=exc.cause,
                         ),
                     )
+                    continue
 
                 action = action_message["action"]
 

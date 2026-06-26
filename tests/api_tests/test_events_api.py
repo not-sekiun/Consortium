@@ -121,6 +121,36 @@ class _WebSocketSession:
             await asyncio.wait_for(self._task, timeout=2.0)
 
 
+@pytest.fixture
+async def ws_factory(app):
+    """
+    Factory fixture for creating `_WebSocketSession` instances bound to `app`.
+
+    Every session produced by the returned factory is tracked and closed
+    automatically on teardown, so tests no longer need to call `await
+    ws.close()` themselves (closing early inside a test, e.g. to assert
+    post-disconnect behavior, still works fine - `close()` is a no-op on an
+    already-finished session).
+    """
+    sessions: list[_WebSocketSession] = []
+
+    def _make() -> _WebSocketSession:
+        ws = _WebSocketSession(app)
+        sessions.append(ws)
+        return ws
+
+    yield _make
+
+    for ws in sessions:
+        await ws.close()
+
+
+@pytest.fixture
+async def ws(ws_factory):
+    """A single, unopened `_WebSocketSession` for tests that need only one."""
+    return ws_factory()
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -148,55 +178,46 @@ def _extract_token(client) -> str:
 # ---------------------------------------------------------------------------
 
 
-async def test_connect_without_authorization_header_is_rejected(app):
-    ws = _WebSocketSession(app)
+async def test_connect_without_authorization_header_is_rejected(ws):
     accepted = await ws.open(headers={})
     assert not accepted
     assert ws.close_code == 1008
 
 
-async def test_connect_with_non_bearer_scheme_is_rejected(app):
-    ws = _WebSocketSession(app)
+async def test_connect_with_non_bearer_scheme_is_rejected(ws):
     accepted = await ws.open(headers={"authorization": "Basic dXNlcjpwYXNz"})
     assert not accepted
     assert ws.close_code == 1008
 
 
-async def test_connect_with_malformed_jwt_is_rejected(app):
-    ws = _WebSocketSession(app)
+async def test_connect_with_malformed_jwt_is_rejected(ws):
     accepted = await ws.open(headers=_bearer("this.is.not.a.valid.jwt"))
     assert not accepted
     assert ws.close_code == 1008
 
 
-async def test_connect_with_unknown_access_token_is_rejected(app):
+async def test_connect_with_unknown_access_token_is_rejected(ws):
     # Validly signed JWT but the access token doesn't match any logged-in user.
     fake_jwt = _forge_jwt("00000000-0000-0000-0000-000000000000")
-    ws = _WebSocketSession(app)
     accepted = await ws.open(headers=_bearer(fake_jwt))
     assert not accepted
     assert ws.close_code == 1008
 
 
-async def test_authenticated_admin_can_connect_and_disconnect(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_authenticated_admin_can_connect_and_disconnect(ws, admin_client):
     accepted = await ws.open(headers=_bearer(_extract_token(admin_client)))
     assert accepted
     await ws.close()
 
 
-async def test_authenticated_operator_can_connect(app, operator_client):
-    ws = _WebSocketSession(app)
+async def test_authenticated_operator_can_connect(ws, operator_client):
     accepted = await ws.open(headers=_bearer(_extract_token(operator_client)))
     assert accepted
-    await ws.close()
 
 
-async def test_authenticated_spectator_can_connect(app, spectator_client):
-    ws = _WebSocketSession(app)
+async def test_authenticated_spectator_can_connect(ws, spectator_client):
     accepted = await ws.open(headers=_bearer(_extract_token(spectator_client)))
     assert accepted
-    await ws.close()
 
 
 # ---------------------------------------------------------------------------
@@ -204,8 +225,7 @@ async def test_authenticated_spectator_can_connect(app, spectator_client):
 # ---------------------------------------------------------------------------
 
 
-async def test_get_all_events_returns_every_event_type(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_get_all_events_returns_every_event_type(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"action": "get_all_events"})
@@ -215,8 +235,6 @@ async def test_get_all_events_returns_every_event_type(app, admin_client):
     assert response["success"] is True
     assert sorted(response["data"]) == sorted(str(et) for et in EventType)
 
-    await ws.close()
-
 
 # ---------------------------------------------------------------------------
 # get_subscribed_events action  (lines 206-215)
@@ -224,9 +242,8 @@ async def test_get_all_events_returns_every_event_type(app, admin_client):
 
 
 async def test_get_subscribed_events_returns_empty_before_any_subscription(
-    app, admin_client
+    ws, admin_client
 ):
-    ws = _WebSocketSession(app)
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"action": "get_subscribed_events"})
@@ -236,11 +253,8 @@ async def test_get_subscribed_events_returns_empty_before_any_subscription(
     assert response["success"] is True
     assert response["data"] == []
 
-    await ws.close()
 
-
-async def test_get_subscribed_events_reflects_subscription(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_get_subscribed_events_reflects_subscription(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     event = str(EventType.START_SERVER)
@@ -253,8 +267,6 @@ async def test_get_subscribed_events_reflects_subscription(app, admin_client):
     assert response["success"] is True
     assert event in response["data"]
 
-    await ws.close()
-
 
 # ---------------------------------------------------------------------------
 # get_unsubscribed_events action  (lines 217-226)
@@ -262,9 +274,8 @@ async def test_get_subscribed_events_reflects_subscription(app, admin_client):
 
 
 async def test_get_unsubscribed_events_returns_all_events_before_subscription(
-    app, admin_client
+    ws, admin_client
 ):
-    ws = _WebSocketSession(app)
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"action": "get_unsubscribed_events"})
@@ -274,11 +285,8 @@ async def test_get_unsubscribed_events_returns_all_events_before_subscription(
     assert response["success"] is True
     assert sorted(response["data"]) == sorted(str(et) for et in EventType)
 
-    await ws.close()
 
-
-async def test_get_unsubscribed_events_excludes_subscribed_event(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_get_unsubscribed_events_excludes_subscribed_event(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     event = str(EventType.STOP_SERVER)
@@ -291,16 +299,13 @@ async def test_get_unsubscribed_events_excludes_subscribed_event(app, admin_clie
     assert response["success"] is True
     assert event not in response["data"]
 
-    await ws.close()
-
 
 # ---------------------------------------------------------------------------
 # subscribe action  (lines 228-276)
 # ---------------------------------------------------------------------------
 
 
-async def test_subscribe_to_valid_event_succeeds(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_subscribe_to_valid_event_succeeds(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json(
@@ -311,11 +316,8 @@ async def test_subscribe_to_valid_event_succeeds(app, admin_client):
     assert response["type"] == "response"
     assert response["success"] is True
 
-    await ws.close()
 
-
-async def test_subscribe_to_multiple_events_at_once(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_subscribe_to_multiple_events_at_once(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     events = [str(EventType.LISTENER_CREATED), str(EventType.LISTENER_REMOVED)]
@@ -329,11 +331,8 @@ async def test_subscribe_to_multiple_events_at_once(app, admin_client):
     for event in events:
         assert event in sub_response["data"]
 
-    await ws.close()
 
-
-async def test_subscribe_to_invalid_event_type_returns_error(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_subscribe_to_invalid_event_type_returns_error(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"action": "subscribe", "events": ["NOT_A_REAL_EVENT"]})
@@ -345,13 +344,10 @@ async def test_subscribe_to_invalid_event_type_returns_error(app, admin_client):
     assert response["errors"][0]["code"] == "INVALID_EVENT_TYPE_ERROR"
     assert response["errors"][0]["detail"] == {"event": "NOT_A_REAL_EVENT"}
 
-    await ws.close()
-
 
 async def test_subscribe_to_multiple_invalid_events_returns_one_error_per_event(
-    app, admin_client
+    ws, admin_client
 ):
-    ws = _WebSocketSession(app)
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"action": "subscribe", "events": ["BAD_1", "BAD_2"]})
@@ -362,13 +358,10 @@ async def test_subscribe_to_multiple_invalid_events_returns_one_error_per_event(
     codes = {e["code"] for e in response["errors"]}
     assert codes == {"INVALID_EVENT_TYPE_ERROR"}
 
-    await ws.close()
-
 
 async def test_subscribe_twice_to_same_event_returns_already_subscribed_error(
-    app, admin_client
+    ws, admin_client
 ):
-    ws = _WebSocketSession(app)
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     event = str(EventType.PAYLOAD_CREATED)
@@ -381,16 +374,13 @@ async def test_subscribe_twice_to_same_event_returns_already_subscribed_error(
     assert response["success"] is False
     assert response["errors"][0]["code"] == "ALREADY_SUBSCRIBED_TO_EVENT_ERROR"
 
-    await ws.close()
-
 
 # ---------------------------------------------------------------------------
 # unsubscribe action  (lines 278-324)
 # ---------------------------------------------------------------------------
 
 
-async def test_unsubscribe_from_subscribed_event_succeeds(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_unsubscribe_from_subscribed_event_succeeds(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     event = str(EventType.AGENT_CHECKED_IN)
@@ -407,11 +397,8 @@ async def test_unsubscribe_from_subscribed_event_succeeds(app, admin_client):
     sub_response = await ws.receive_json()
     assert event not in sub_response["data"]
 
-    await ws.close()
 
-
-async def test_unsubscribe_from_invalid_event_type_returns_error(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_unsubscribe_from_invalid_event_type_returns_error(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"action": "unsubscribe", "events": ["NOT_A_REAL_EVENT"]})
@@ -420,11 +407,8 @@ async def test_unsubscribe_from_invalid_event_type_returns_error(app, admin_clie
     assert response["success"] is False
     assert response["errors"][0]["code"] == "INVALID_EVENT_TYPE_ERROR"
 
-    await ws.close()
 
-
-async def test_unsubscribe_from_not_subscribed_event_returns_error(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_unsubscribe_from_not_subscribed_event_returns_error(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json(
@@ -435,13 +419,10 @@ async def test_unsubscribe_from_not_subscribed_event_returns_error(app, admin_cl
     assert response["success"] is False
     assert response["errors"][0]["code"] == "NOT_SUBSCRIBED_TO_EVENT_ERROR"
 
-    await ws.close()
-
 
 async def test_unsubscribe_from_multiple_not_subscribed_events_returns_multiple_errors(
-    app, admin_client
+    ws, admin_client
 ):
-    ws = _WebSocketSession(app)
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     events = [str(EventType.ASSET_CREATED), str(EventType.ASSET_DELETED)]
@@ -451,8 +432,6 @@ async def test_unsubscribe_from_multiple_not_subscribed_events_returns_multiple_
     assert response["success"] is False
     assert len(response["errors"]) == 2
 
-    await ws.close()
-
 
 # ---------------------------------------------------------------------------
 # Message format validation  (lines 331-366)
@@ -460,9 +439,8 @@ async def test_unsubscribe_from_multiple_not_subscribed_events_returns_multiple_
 
 
 async def test_action_message_with_unknown_action_value_returns_format_error(
-    app, admin_client
+    ws, admin_client
 ):
-    ws = _WebSocketSession(app)
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"action": "do_something_unknown"})
@@ -470,13 +448,10 @@ async def test_action_message_with_unknown_action_value_returns_format_error(
 
     assert response["type"] == "response"
     assert response["success"] is False
-    assert response["error"]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
-
-    await ws.close()
+    assert response["errors"][0]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
 
 
-async def test_subscribe_without_events_field_returns_format_error(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_subscribe_without_events_field_returns_format_error(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     # The JSON schema requires "events" when action is "subscribe".
@@ -484,35 +459,27 @@ async def test_subscribe_without_events_field_returns_format_error(app, admin_cl
     response = await ws.receive_json()
 
     assert response["success"] is False
-    assert response["error"]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
-
-    await ws.close()
+    assert response["errors"][0]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
 
 
-async def test_unsubscribe_without_events_field_returns_format_error(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_unsubscribe_without_events_field_returns_format_error(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"action": "unsubscribe"})
     response = await ws.receive_json()
 
     assert response["success"] is False
-    assert response["error"]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
-
-    await ws.close()
+    assert response["errors"][0]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
 
 
-async def test_message_without_action_field_returns_format_error(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_message_without_action_field_returns_format_error(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     await ws.send_json({"events": [str(EventType.START_SERVER)]})
     response = await ws.receive_json()
 
     assert response["success"] is False
-    assert response["error"]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
-
-    await ws.close()
+    assert response["errors"][0]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
 
 
 # ---------------------------------------------------------------------------
@@ -520,8 +487,7 @@ async def test_message_without_action_field_returns_format_error(app, admin_clie
 # ---------------------------------------------------------------------------
 
 
-async def test_subscribed_client_receives_triggered_event(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_subscribed_client_receives_triggered_event(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     event_type = EventType.ARTIFACT_CREATED
@@ -541,13 +507,8 @@ async def test_subscribed_client_receives_triggered_event(app, admin_client):
     assert event_msg["message"] == "test trigger"
     assert event_msg["data"] == {"key": "value"}
 
-    await ws.close()
 
-
-async def test_client_does_not_receive_events_it_did_not_subscribe_to(
-    app, admin_client
-):
-    ws = _WebSocketSession(app)
+async def test_client_does_not_receive_events_it_did_not_subscribe_to(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     # Subscribe to one event type
@@ -566,11 +527,8 @@ async def test_client_does_not_receive_events_it_did_not_subscribe_to(
     # No message should have been pushed into this session's queue
     assert ws._from_app.empty()
 
-    await ws.close()
 
-
-async def test_after_unsubscribe_client_no_longer_receives_event(app, admin_client):
-    ws = _WebSocketSession(app)
+async def test_after_unsubscribe_client_no_longer_receives_event(ws, admin_client):
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     event_type = EventType.PAYLOAD_UPDATED
@@ -587,8 +545,6 @@ async def test_after_unsubscribe_client_no_longer_receives_event(app, admin_clie
 
     assert ws._from_app.empty()
 
-    await ws.close()
-
 
 # ---------------------------------------------------------------------------
 # Multiple connections
@@ -596,10 +552,10 @@ async def test_after_unsubscribe_client_no_longer_receives_event(app, admin_clie
 
 
 async def test_multiple_clients_both_receive_same_event(
-    app, admin_client, operator_client
+    ws_factory, admin_client, operator_client
 ):
-    ws1 = _WebSocketSession(app)
-    ws2 = _WebSocketSession(app)
+    ws1 = ws_factory()
+    ws2 = ws_factory()
     await ws1.open(headers=_bearer(_extract_token(admin_client)))
     await ws2.open(headers=_bearer(_extract_token(operator_client)))
 
@@ -619,22 +575,18 @@ async def test_multiple_clients_both_receive_same_event(
     assert msg1["type"] == "event"
     assert msg2["type"] == "event"
 
-    await ws1.close()
-    await ws2.close()
-
 
 # ---------------------------------------------------------------------------
 # Disconnect cleanup  (lines 367-376)
 # ---------------------------------------------------------------------------
 
 
-async def test_disconnect_deregisters_event_handlers(app, admin_client):
+async def test_disconnect_deregisters_event_handlers(ws, admin_client):
     """
     After a client disconnects, triggering an event it was subscribed to must
     not call its (now-closed) handler.  If cleanup failed, trigger_event would
     try to send on a closed WebSocket and raise an ExceptionGroup.
     """
-    ws = _WebSocketSession(app)
     await ws.open(headers=_bearer(_extract_token(admin_client)))
 
     event_type = EventType.PAYLOAD_DELETED
@@ -653,8 +605,7 @@ async def test_disconnect_deregisters_event_handlers(app, admin_client):
     )
 
 
-async def test_disconnect_without_subscription_does_not_error(app, admin_client):
+async def test_disconnect_without_subscription_does_not_error(ws, admin_client):
     """Disconnect with no subscriptions should complete without errors."""
-    ws = _WebSocketSession(app)
     await ws.open(headers=_bearer(_extract_token(admin_client)))
     await ws.close()
