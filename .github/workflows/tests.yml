@@ -19,7 +19,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: uv sync --group dev
 
       - name: Run tests with coverage
         run: uv run pytest --cov --cov-report=term-missing
