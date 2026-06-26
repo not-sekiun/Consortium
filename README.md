@@ -4,7 +4,10 @@
 
 <p align="center"><b>A modern C2 framework with a focus on programmatic extensibility</b></p>
 
-![Pytest Status](https://github.com/not-sekiun/Consortium/actions/workflows/tests.yml/badge.svg)
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.14%2B-blue" alt="Python Version">
+  <img src="https://github.com/not-sekiun/Consortium/actions/workflows/tests.yml/badge.svg" alt="Pytest">
+</p>
 
 # Consortium
 
