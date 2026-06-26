@@ -46,8 +46,8 @@ from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exce
     PayloadNotFoundError,
 )
 from consortium.server.models.agent_task_models import AgentTaskEventType
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
-from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_file_manager_service import (
     AgentFileManagerService,
 )

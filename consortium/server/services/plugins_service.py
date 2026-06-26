@@ -11,7 +11,7 @@ from consortium.server.exceptions.consortium_exceptions.plugins_consortium_excep
     PluginsError,
     PluginUnloadingError,
 )
-from consortium.server.server_logging import LoggerType
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.component_loader_services.plugin_loader_service import (
     PluginLoaderService,
 )

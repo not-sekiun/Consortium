@@ -19,9 +19,9 @@ from consortium.server.exceptions.consortium_exceptions.agents_consortium_except
 from consortium.server.models.agent_task_models import (
     AgentTaskState,
 )
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.agent_task_objects import AgentTask
-from consortium.server.server_logging import LoggerType
 from consortium.server.services.events_service import EventsService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,

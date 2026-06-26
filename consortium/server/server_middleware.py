@@ -14,12 +14,12 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions import (
     UserAccessTokenNotFoundError,
 )
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_jwt_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
 )
-from consortium.server.server_logging import LoggerType
 
 _rest_api_logger = logger.bind(
     logger_name="REST API", logger_type=LoggerType.REST_API_LOGGER

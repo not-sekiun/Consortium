@@ -23,9 +23,9 @@ from consortium.server.exceptions.consortium_exceptions.user_accounts_consortium
     UserAccountUsernameAlreadyExistsError,
     UserAccountUsernameNotFoundError,
 )
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserRole
-from consortium.server.server_logging import LoggerType
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,

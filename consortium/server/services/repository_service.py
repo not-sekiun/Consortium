@@ -14,11 +14,11 @@ from consortium.server.exceptions.consortium_exceptions.repository_consortium_ex
     RepositoryResourceNotFoundError,
     UnsyncedRepositoryMetadataFileError,
 )
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
 )
-from consortium.server.server_logging import LoggerType
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,

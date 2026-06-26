@@ -31,12 +31,12 @@ from consortium.server.api.payloads_api import router as payloads_api_router
 from consortium.server.api.server_api import router as server_api_router
 from consortium.server.api.user_accounts_api import router as user_accounts_api_router
 from consortium.server.api.users_api import router as users_api_router
-from consortium.server.models.config_models import ServerConfigModel
+from consortium.server.models.logging_models import LoggerType
+from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
 from consortium.server.server_exception_handlers import (
     register_server_exception_handlers,
 )
-from consortium.server.server_logging import LoggerType
 from consortium.server.server_middleware import (
     check_if_remote_host_is_allowed,
     check_if_request_is_authenticated,

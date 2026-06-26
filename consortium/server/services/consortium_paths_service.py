@@ -2,7 +2,7 @@ import pathlib
 
 from loguru import logger
 
-from consortium.server.server_logging import LoggerType
+from consortium.server.models.logging_models import LoggerType
 
 
 class ConsortiumPathsService:

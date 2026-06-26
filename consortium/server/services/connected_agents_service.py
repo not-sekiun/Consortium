@@ -9,7 +9,7 @@ from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
 )
-from consortium.server.server_logging import LoggerType
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
 )

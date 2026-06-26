@@ -5,7 +5,8 @@ import httpx
 import pytest
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.models.config_models import LoggingConfigModel, ServerConfigModel
+from consortium.server.models.logging_models import LoggingConfigModel
+from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server import Server
 from consortium.server.server_logging import configure_logger
 

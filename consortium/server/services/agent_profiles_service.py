@@ -11,8 +11,8 @@ from consortium.server.exceptions.consortium_exceptions.agent_profiles_consortiu
 from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplatesFrameworkError,
 )
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.c2_profile_objects import AgentProfile
-from consortium.server.server_logging import LoggerType
 from consortium.server.services.component_loader_services.agent_profile_loader_service import (
     AgentProfileLoaderService,
 )

@@ -7,7 +7,7 @@ from consortium.server.exceptions.consortium_exceptions.agent_templates_consorti
     AgentTemplateIDNotFoundError,
     AgentTemplateLabelNotFoundError,
 )
-from consortium.server.server_logging import LoggerType
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,

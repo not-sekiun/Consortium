@@ -31,7 +31,7 @@ from consortium.server.exceptions.consortium_exceptions.plugins_consortium_excep
     PluginStartError,
     PluginStopError,
 )
-from consortium.server.server_logging import LoggerType
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import construct_services_namespace_object
 
 

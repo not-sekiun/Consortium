@@ -7,7 +7,7 @@ from consortium.server.exceptions.consortium_exceptions.listener_templates_conso
     ListenerTemplateIDNotFoundError,
     ListenerTemplateLabelNotFoundError,
 )
-from consortium.server.server_logging import LoggerType
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,

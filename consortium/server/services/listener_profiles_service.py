@@ -11,8 +11,8 @@ from consortium.server.exceptions.consortium_exceptions.listener_profiles_consor
 from consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions import (
     ListenerTemplatesFrameworkError,
 )
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.c2_profile_objects import ListenerProfile
-from consortium.server.server_logging import LoggerType
 from consortium.server.services.component_loader_services.listener_profile_loader_service import (
     ListenerProfileLoaderService,
 )

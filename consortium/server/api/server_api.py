@@ -9,8 +9,7 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     MethodNotAllowedError,
     UnauthorizedError,
 )
-from consortium.server.models.config_models import ServerConfigModel
-from consortium.server.models.server_models import ReleaseModel
+from consortium.server.models.server_models import ReleaseModel, ServerConfigModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 

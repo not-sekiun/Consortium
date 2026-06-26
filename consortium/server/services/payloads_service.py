@@ -22,8 +22,8 @@ from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exce
 from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
     RepositoryResourceNotFoundError,
 )
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.payload_objects import Payload
-from consortium.server.server_logging import LoggerType
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService

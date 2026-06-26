@@ -11,7 +11,7 @@ from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_e
     EventHooksFrameworkError,
     EventHooksServiceError,
 )
-from consortium.server.server_logging import LoggerType
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.component_loader_services.event_hook_loader_service import (
     EventHookLoaderService,
 )

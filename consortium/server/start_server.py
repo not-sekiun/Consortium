@@ -6,7 +6,8 @@ import pathlib
 from pydantic import ValidationError
 
 import consortium.server.server_reloader as server_reloader
-from consortium.server.models.config_models import LoggingConfigModel, ServerConfigModel
+from consortium.server.models.logging_models import LoggingConfigModel
+from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server_logging import configure_logger
 from consortium.server.services.logging_service import LoggingService
 

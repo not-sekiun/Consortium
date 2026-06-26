@@ -3,6 +3,14 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class ServerConfigModel(BaseModel):
+    local_host: str
+    local_port: int
+    remote_host_whitelist: list[str]
+    remote_host_blacklist: list[str]
+    server_header: str | None
+
+
 # `datetime_released` is None in the case whereby the projected datetime of a
 # particular release is unknown (such as for development versions, release candidates,
 # or nightly builds of the framework). This is reflected in the release.json file where

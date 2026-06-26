@@ -27,7 +27,7 @@ from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exc
     ListenerStartError,
     ListenerStopError,
 )
-from consortium.server.server_logging import LoggerType
+from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.connected_agents_service import ConnectedAgentsService
 from consortium.server.utils import construct_services_namespace_object
 
