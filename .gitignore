@@ -11,6 +11,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
-.claude/
 tools/defaults.txt
+.coverage
+.claude/
 CLAUDE.md
