@@ -12,5 +12,5 @@ __pycache__/
 .ruff_cache/
 .venv/
 .claude/
-tools/
+tools/defaults.txt
 CLAUDE.md
