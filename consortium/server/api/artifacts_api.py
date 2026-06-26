@@ -84,6 +84,7 @@ router.add_api_route(
         },
     },
     name="Delete Artifact By Resource ID",
+    methods=["DELETE"],
 )
 router.add_api_route(
     path="/{resource_id}",

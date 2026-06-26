@@ -117,6 +117,7 @@ router.add_api_route(
         },
     },
     name="Delete Payload By Resource ID",
+    methods=["DELETE"],
 )
 router.add_api_route(
     path="/download/{resource_id}",
