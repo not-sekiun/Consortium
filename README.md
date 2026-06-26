@@ -227,6 +227,12 @@ Examples:
 
 ```
 
+## Contributing
+
+I am currently not accepting any code contributions to the Consortium framework, the
+current code base is too unstable. However, I am accepting feature requests, bug
+reports, and other issues through the GitHub issues section.
+
 ## Credits
 
 This project makes heavy use of the following libraries and frameworks.
