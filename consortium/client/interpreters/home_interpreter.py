@@ -42,20 +42,15 @@ class HomeInterpreter(BaseConnectedInterpreter):
     async def on_loop(self) -> None:
         all_client_sessions = client_sessions_service.get_all_client_sessions()
 
-        update_completions_dict = {}
-        for key, value in {
-            command: {
-                str(client_session.client_session_id): None
-                for client_session in all_client_sessions
-            }
-            for command in [
-                "disconnect",
-                "info",
-                "interact",
-                "rename",
-                "describe",
-            ]
-        }.items():
-            update_completions_dict[key] = value
-        update_completions_dict["help"] = dict.fromkeys(self.commands)
-        self.update_completions(update_completions_dict=update_completions_dict)
+        completions_dict = self.completer.get_completions_dict()
+
+        client_session_ids_completion = {
+            str(client_session.client_session_id): None
+            for client_session in all_client_sessions
+        }
+        for command in ["disconnect", "info", "interact", "rename", "describe"]:
+            completions_dict[command] = client_session_ids_completion
+
+        completions_dict["help"] = dict.fromkeys(self.commands)
+
+        self.completer.set_completions_dict(completions_dict)

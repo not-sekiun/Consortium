@@ -28,7 +28,6 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
 from consortium.client.repl_interface.custom_completer import (
-    CompletionsDict,
     CustomCompleter,
     custom_completer_filter_builder,
 )
@@ -45,18 +44,17 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
         client_session: TClientSession,
         interpreter_context: BaseInterpreterContext,
     ):
-        _custom_completer = CustomCompleter(
-            {command.name: None for command in commands}
-        )
-        _custom_completer_filter = custom_completer_filter_builder(
-            custom_completer=_custom_completer
+        self.completer = CustomCompleter(
+            completions_dict={command.name: None for command in commands}
         )
         self.prompt_session = PromptSession(
             message=prompt,
-            completer=_custom_completer,
+            completer=self.completer,
             auto_suggest=AutoSuggestFromHistory(),
             bottom_toolbar=self._get_bottom_toolbar_string,
-            complete_while_typing=_custom_completer_filter,
+            complete_while_typing=custom_completer_filter_builder(
+                custom_completer=self.completer
+            ),
         )
         self.commands = {command.name: command for command in commands}
         self.client_session = client_session
@@ -172,14 +170,6 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
                 raw_input=parsed_command.raw_input,
                 interpreter_context=self.interpreter_context,
             )
-        )
-
-    def update_completions(self, update_completions_dict: CompletionsDict) -> None:
-        completions_dict = self.prompt_session.completer.completions_dict
-        for k, v in update_completions_dict.items():
-            completions_dict[k] = v
-        self.prompt_session.completer = CustomCompleter(
-            completions_dict=completions_dict
         )
 
     async def on_loop(self) -> None: ...

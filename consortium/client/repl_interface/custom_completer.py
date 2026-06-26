@@ -1,3 +1,5 @@
+import copy
+
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, NestedCompleter, PathCompleter
 from prompt_toolkit.document import Document
@@ -7,13 +9,20 @@ type CompletionsDict = dict[str, None | CompletionsDict]
 
 
 # `CustomCompleters` take the form of `NestedCompleters` but whose terminal leaf
-# completions are a looping set of `PathCompleters`.
+# completions are a looping set of `PathCompleters` to allow easy completing of file
+# paths anywhere
 class CustomCompleter(Completer):
     def __init__(self, completions_dict: CompletionsDict):
         self._completions_dict = completions_dict
         self._nested_completer = NestedCompleter.from_nested_dict(completions_dict)
         self._path_completer = PathCompleter(expanduser=True)
-        self.completions_dict = completions_dict
+
+    def get_completions_dict(self) -> CompletionsDict:
+        return copy.deepcopy(self._completions_dict)
+
+    def set_completions_dict(self, completions_dict: CompletionsDict) -> None:
+        self._completions_dict = completions_dict
+        self._nested_completer = NestedCompleter.from_nested_dict(completions_dict)
 
     def in_command_position(self, text):
         """True  -> still typing a command or subcommand.

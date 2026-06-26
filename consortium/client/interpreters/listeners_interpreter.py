@@ -57,42 +57,37 @@ class ListenersInterpreter(BaseConnectedInterpreter):
         all_listeners: list[dict[str, Any]],
         all_listener_templates: list[dict[str, Any]],
     ) -> None:
-        update_completions_dict = {}
+        completions_dict = self.completer.get_completions_dict()
 
-        for key, value in {
-            command: {listener["listener_id"]: None for listener in all_listeners}
-            for command in [
-                "start",
-                "stop",
-                "cancel",
-                "delete",
-                "info",
-                "rename",
-                "describe",
-            ]
-        }.items():
-            update_completions_dict[key] = value
+        listener_ids_completion = {
+            listener["listener_id"]: None for listener in all_listeners
+        }
+        for command in [
+            "start",
+            "stop",
+            "cancel",
+            "delete",
+            "info",
+            "rename",
+            "describe",
+        ]:
+            completions_dict[command] = listener_ids_completion
 
-        update_completions_dict["update"] = {
+        completions_dict["update"] = {
             listener["listener_id"]: dict.fromkeys(listener["parameters"])
             for listener in all_listeners
         }
 
-        for key, value in {
-            command: {
-                listener_template["listener_template_id"]: None
-                for listener_template in all_listener_templates
-            }
-            for command in [
-                "lt-info",
-                "use",
-            ]
-        }.items():
-            update_completions_dict[key] = value
+        listener_template_ids_completion = {
+            listener_template["listener_template_id"]: None
+            for listener_template in all_listener_templates
+        }
+        for command in ["lt-info", "use"]:
+            completions_dict[command] = listener_template_ids_completion
 
-        update_completions_dict["help"] = dict.fromkeys(self.commands)
+        completions_dict["help"] = dict.fromkeys(self.commands)
 
-        self.update_completions(update_completions_dict=update_completions_dict)
+        self.completer.set_completions_dict(completions_dict)
 
     @staticmethod
     def _list_all_listeners_and_listener_templates(

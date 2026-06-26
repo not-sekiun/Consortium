@@ -26,6 +26,8 @@ class TaskInfoCommand(BaseConnectedCommand):
             t-info 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 task events (tail)
             t-info 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 task events
             t-info 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 task events starting from 5th from end
+            t-info 123e4567-e89b-12d3-a456-42661417400 --raw  # Print task events as plain unformatted text (useful for copy-paste)
+            t-info 123e4567-e89b-12d3-a456-42661417400 --raw --limit 50  # Print last 50 task events as plain text
         """,
     )
     group = "Tasks and Results Management Commands"
@@ -58,6 +60,17 @@ class TaskInfoCommand(BaseConnectedCommand):
             type=int,
             default=None,
         )
+        parser.add_argument(
+            "-r",
+            "--raw",
+            help=(
+                "Print task events as plain unformatted text instead of a table. "
+                "Each event message is printed on its own line. "
+                "Useful for tasks that produce output intended to be copied or piped. "
+                "The task info table and events summary are still displayed."
+            ),
+            action="store_true",
+        )
 
     @staticmethod
     async def _display_task_info(
@@ -65,6 +78,7 @@ class TaskInfoCommand(BaseConnectedCommand):
         task_id: str,
         limit: int | None = None,
         offset: int | None = None,
+        raw: bool = False,
     ) -> None:
         task = await rest_api.get_agent_task_by_task_id(
             task_id=task_id,
@@ -77,7 +91,17 @@ class TaskInfoCommand(BaseConnectedCommand):
         )
 
         console.print(task_info_table, "")
-        console.print(task_events_table, "")
+
+        if raw:
+            events = task["events"]
+            entries = events["entries"]
+            total_count = events["total_count"]
+            print(f"Task Events (showing {len(entries)} of {total_count} entries)\n")
+            for event in entries:
+                print(event["message"])
+            print()
+        else:
+            console.print(task_events_table, "")
 
     async def run(
         self,
@@ -92,6 +116,7 @@ class TaskInfoCommand(BaseConnectedCommand):
                 task_id=parsed_args.task_id,
                 limit=parsed_args.limit,
                 offset=parsed_args.offset,
+                raw=parsed_args.raw,
             )
         except SystemExit:
             pass

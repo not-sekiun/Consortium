@@ -47,52 +47,45 @@ class AgentsInterpreter(BaseConnectedInterpreter):
     ) -> None:
         all_assets = await self.client_session.rest_api.get_all_assets()
 
-        update_completions_dict = {}
+        completions_dict = self.completer.get_completions_dict()
 
         # Register commands that take the agent ID as the first positional argument to
         # autocomplete with.
         agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
-        for command in [
-            "info",
-            "interact",
-            "t-list",
-            "rename",
-            "describe",
-        ]:
-            update_completions_dict[command] = agent_ids_completion
+        for command in ["info", "interact", "t-list", "rename", "describe"]:
+            completions_dict[command] = agent_ids_completion
 
         # Register commands that take the task ID as the first positional
         # argument to autocomplete with.
         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
+        task_ids_completion = {task["task_id"]: None for task in all_tasks}
         for command in ["t-info", "watch"]:
-            update_completions_dict[command] = {
-                task["task_id"]: None for task in all_tasks
-            }
+            completions_dict[command] = task_ids_completion
 
         # Register commands that take the asset ID as the first positional argument to
         # autocomplete with.
         assets_completion = {asset["resource_id"]: None for asset in all_assets}
         for command in ["as-dl", "as-info"]:
-            update_completions_dict[command] = assets_completion
+            completions_dict[command] = assets_completion
 
         # Register the help command to autocomplete with all available commands. This
         # includes all the newly added agent capability commands that are dynamically
         # added before this method is called.
-        update_completions_dict["help"] = dict.fromkeys(self.commands)
+        completions_dict["help"] = dict.fromkeys(self.commands)
 
         # Register the asset upload command to autocomplete with all available files.
-        update_completions_dict["up"] = PathCompleter()
+        completions_dict["up"] = PathCompleter()
 
-        self.update_completions(update_completions_dict=update_completions_dict)
+        self.completer.set_completions_dict(completions_dict)
 
     async def _agent_tasked_event_handler(
         self,
         event: dict[str, Any],
     ) -> None:
         task = event["data"]["task"]
-        self.update_completions(
-            update_completions_dict={"t-info": {task["task_id"]: None}}
-        )
+        completions_dict = self.completer.get_completions_dict()
+        completions_dict["t-info"][task["task_id"]] = None
+        self.completer.set_completions_dict(completions_dict)
 
     async def _agent_registered_event_handler(
         self,
@@ -101,16 +94,10 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         agent = event["data"]
         print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in")
 
-        agent_id_completions_dict = {agent["agent_id"]: None}
-        self.update_completions(
-            update_completions_dict={
-                "info": agent_id_completions_dict,
-                "interact": agent_id_completions_dict,
-                "t-list": agent_id_completions_dict,
-                "rename": agent_id_completions_dict,
-                "describe": agent_id_completions_dict,
-            },
-        )
+        completions_dict = self.completer.get_completions_dict()
+        for command in ["info", "interact", "t-list", "rename", "describe"]:
+            completions_dict[command][agent["agent_id"]] = None
+        self.completer.set_completions_dict(completions_dict)
 
     async def _setup_event_handlers(self) -> None:
         await self.client_session.websockets_api.subscribe_to_event(

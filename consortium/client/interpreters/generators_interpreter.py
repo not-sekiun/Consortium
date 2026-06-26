@@ -58,31 +58,29 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         all_agent_generators: list[dict[str, Any]],
         all_agent_templates: list[dict[str, Any]],
     ) -> None:
-        update_completions_dict = {}
+        completions_dict = self.completer.get_completions_dict()
 
         # Register commands that take the agent generator ID as the first positional
         # argument to autocomplete with.
-        for key, value in {
-            command: {
-                agent_generator["agent_generator_id"]: None
-                for agent_generator in all_agent_generators
-            }
-            for command in [
-                "start",
-                "stop",
-                "cancel",
-                "delete",
-                "info",
-                "rename",
-                "describe",
-            ]
-        }.items():
-            update_completions_dict[key] = value
+        agent_generator_ids_completion = {
+            agent_generator["agent_generator_id"]: None
+            for agent_generator in all_agent_generators
+        }
+        for command in [
+            "start",
+            "stop",
+            "cancel",
+            "delete",
+            "info",
+            "rename",
+            "describe",
+        ]:
+            completions_dict[command] = agent_generator_ids_completion
 
         # Register the "update" command to autocomplete with the agent generator ID as
         # the first positional argument and the parameters of the agent generator as
         # the second positional argument.
-        update_completions_dict["update"] = {
+        completions_dict["update"] = {
             agent_generator["agent_generator_id"]: dict.fromkeys(
                 agent_generator["parameters"]
             )
@@ -91,21 +89,16 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
 
         # Register commands that take the agent template ID as the first positional
         # argument to autocomplete with.
-        for key, value in {
-            command: {
-                agent_template["agent_template_id"]: None
-                for agent_template in all_agent_templates
-            }
-            for command in [
-                "at-info",
-                "use",
-            ]
-        }.items():
-            update_completions_dict[key] = value
+        agent_template_ids_completion = {
+            agent_template["agent_template_id"]: None
+            for agent_template in all_agent_templates
+        }
+        for command in ["at-info", "use"]:
+            completions_dict[command] = agent_template_ids_completion
 
-        update_completions_dict["help"] = dict.fromkeys(self.commands)
+        completions_dict["help"] = dict.fromkeys(self.commands)
 
-        self.update_completions(update_completions_dict=update_completions_dict)
+        self.completer.set_completions_dict(completions_dict)
 
     async def _agent_generator_created_or_removed_event_handler(
         self,

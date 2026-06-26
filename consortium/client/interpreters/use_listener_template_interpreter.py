@@ -62,20 +62,13 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
     ) -> None:
         listener_template = self.interpreter_context.listener_template
 
-        update_completions_dict = {}
+        completions_dict = self.completer.get_completions_dict()
 
-        for key, value in {
-            command: dict.fromkeys(listener_template["options"])
-            for command in [
-                "opt-info",
-                "set",
-                "reset",
-                "unset",
-            ]
-        }.items():
-            update_completions_dict[key] = value
+        options_completion = dict.fromkeys(listener_template["options"])
+        for command in ["opt-info", "set", "reset", "unset"]:
+            completions_dict[command] = options_completion
 
-        self.update_completions(update_completions_dict=update_completions_dict)
+        self.completer.set_completions_dict(completions_dict)
 
         # We run the parent method after we have updated the autocomplete with this
         # interpreter's commands to ensure that when it is called, the autocomplete
