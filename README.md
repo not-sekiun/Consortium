@@ -2,7 +2,7 @@
   <img width="20%" src="docs/assets/logo.png">
 </p>
 
-<p align="center"><b>Modern C2 framework with a focus on programmatic extensibility</b></p>
+<p align="center"><b>A modern C2 framework with a focus on programmatic extensibility</b></p>
 
 ![Pytest Status](https://github.com/not-sekiun/Consortium/actions/workflows/tests.yml/badge.svg)
 
