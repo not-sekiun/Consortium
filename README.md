@@ -5,11 +5,12 @@
 <p align="center"><b>Modern C2 framework with a focus on extensibility</b></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.14%2B-blue" alt="Python Version">
+  <img src="https://img.shields.io/badge/python-3.14%2B-blue?logo=python&logoColor=white" alt="Python Version">
   <img src="https://github.com/not-sekiun/Consortium/actions/workflows/tests.yml/badge.svg" alt="Pytest">
   <a href="https://not-sekiun.github.io/Consortium/">
     <img src="https://img.shields.io/badge/docs-online-green?logo=readthedocs&logoColor=white">
   </a>
+  <im src="https://img.shields.io/github/commit-activity/m/not-sekiun/Consortium">
   <a href="https://discord.com/users/395192115996655627">
     <img src="https://img.shields.io/badge/Contact%20me-5865F2?logo=discord&logoColor=white">
   </a>
