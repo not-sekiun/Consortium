@@ -2,7 +2,7 @@
   <img width="20%" src="docs/assets/logo.png">
 </p>
 
-<p align="center"><i>Consortium: modern C2 framework with a focus on extensibility</i></p>
+<p align="center"><b>Modern C2 framework with a focus on programmatic extensibility</b></p>
 
 ---
 
