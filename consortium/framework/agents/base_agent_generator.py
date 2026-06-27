@@ -47,7 +47,7 @@ from consortium.server.utils import construct_services_namespace_object
 if TYPE_CHECKING:
     # This is used for type checking BaseAgentGeneratorBuildStep another runtime import
     # is within BaseAgentGenerator for actually instantiating the service
-    from consortium.server.services.agent_templates_payload_service import (
+    from consortium.server.services.agent_templates_payloads_service import (
         AgentTemplatesPayloadsService,
     )
 
@@ -277,7 +277,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
     ) -> None:
         # See starred Claude code conversation "circular import in agent framework"
         # for framework registry module fix
-        from consortium.server.services.agent_templates_payload_service import (
+        from consortium.server.services.agent_templates_payloads_service import (
             AgentTemplatesPayloadsService,
         )
 
