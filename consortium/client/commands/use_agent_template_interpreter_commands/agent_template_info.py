@@ -47,12 +47,12 @@ class AgentTemplateInfoCommand(BaseConnectedCommand):
 
             # Retrieve information about the current agent template from the server
             # rather than using the cached info because options may have changed
-            await display_agent_template_info(
-                rest_api=rest_api,
+            agent_template = await rest_api.get_agent_template_by_agent_template_id(
                 agent_template_id=parsed_args.agent_template_id
                 if parsed_args.agent_template_id
                 else context.interpreter_context.agent_template["agent_template_id"],
             )
+            display_agent_template_info(agent_template=agent_template)
         except SystemExit:
             pass
 

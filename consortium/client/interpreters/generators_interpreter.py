@@ -103,7 +103,7 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         # Register payload commands that take the payload ID as the first positional
         # argument to autocomplete with.
         payload_ids_completion = {
-            payload["resource_id"]: None for payload in all_payloads
+            payload["payload_id"]: None for payload in all_payloads
         }
         for command in ["pl-info", "pl-rm", "pl-dl"]:
             completions_dict[command] = payload_ids_completion

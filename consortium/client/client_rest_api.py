@@ -589,32 +589,32 @@ class RestAPI:
         )
 
     @_requires_authentication
-    async def get_payload_by_resource_id(
+    async def get_payload_by_payload_id(
         self,
-        resource_id: str,
+        payload_id: str,
     ) -> dict[str, Any]:
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/payloads/{resource_id}",
+            url=f"{self._api_base_url}/payloads/{payload_id}",
         )
 
     @_requires_authentication
-    async def delete_payload_by_resource_id(
+    async def delete_payload_by_payload_id(
         self,
-        resource_id: str,
+        payload_id: str,
     ) -> None:
         return await self._make_api_request(
             method="DELETE",
-            url=f"{self._api_base_url}/payloads/{resource_id}",
+            url=f"{self._api_base_url}/payloads/{payload_id}",
         )
 
-    async def download_payload_by_resource_id(
+    async def download_payload_by_payload_id(
         self,
-        resource_id: str,
+        payload_id: str,
         maximum_chunk_size: int = 1024,
     ) -> AsyncGenerator[bytes]:
         response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/payloads/download/{resource_id}",
+            f"{self._api_base_url}/payloads/download/{payload_id}",
         )
         async for chunk in response.content.iter_chunked(maximum_chunk_size):
             yield chunk

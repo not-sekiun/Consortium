@@ -29,8 +29,8 @@ class PayloadDownloadCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "resource_id",
-            help="Resource ID of the payload to download.",
+            "payload_id",
+            help="Payload ID of the payload to download.",
             nargs=1,
         )
         parser.add_argument(
@@ -61,8 +61,8 @@ class PayloadDownloadCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            payload = await rest_api.get_payload_by_resource_id(
-                resource_id=parsed_args.resource_id[0],
+            payload = await rest_api.get_payload_by_payload_id(
+                payload_id=parsed_args.payload_id[0],
             )
             # If user supplies an output path that takes precedence, else use the payload
             # name directly for payload files or append ".zip" for payload directories
@@ -86,7 +86,7 @@ class PayloadDownloadCommand(BaseConnectedCommand):
 
             print_info(
                 f"Downloading payload {'directory' if payload['is_directory'] else 'file'} "
-                f"'{payload['name']}' ({payload['resource_id']}) to '{output_file_path}'..."
+                f"'{payload['name']}' ({payload['payload_id']}) to '{output_file_path}'..."
             )
             with Progress() as progress:
                 downloading_task = progress.add_task(
@@ -94,8 +94,8 @@ class PayloadDownloadCommand(BaseConnectedCommand):
                     total=payload["size"],
                 )
                 with output_file_path.open("wb") as output_file:
-                    async for chunk in rest_api.download_payload_by_resource_id(
-                        resource_id=parsed_args.resource_id[0],
+                    async for chunk in rest_api.download_payload_by_payload_id(
+                        payload_id=parsed_args.payload_id[0],
                     ):
                         progress.update(downloading_task, advance=len(chunk))
                         output_file.write(chunk)

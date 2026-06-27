@@ -37,15 +37,15 @@ class AgentTemplateListOptionCommand(BaseConnectedCommand):
             ]
 
             table = Table(title="Agent Template Options", highlight=True)
-            table.add_column("Option Type")
             table.add_column("Name")
+            table.add_column("Option Type")
             table.add_column("Description")
             table.add_column("Required")
             table.add_column("Current Value")
             for option_name, option in sorted(agent_template_options.items()):
                 table.add_row(
-                    option["option_type"],
                     option_name,
+                    option["option_type"],
                     option["description"],
                     str(option["required"]),
                     str(option["value"]) if option["value"] is not None else "",

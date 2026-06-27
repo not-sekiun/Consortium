@@ -44,10 +44,10 @@ class AgentTemplateInfoCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await display_agent_template_info(
-                rest_api=rest_api,
+            agent_template = await rest_api.get_agent_template_by_agent_template_id(
                 agent_template_id=parsed_args.agent_template_id[0],
             )
+            display_agent_template_info(agent_template=agent_template)
         except SystemExit:
             pass
 

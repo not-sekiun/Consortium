@@ -59,6 +59,7 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         self,
         all_agent_generators: list[dict[str, Any]],
         all_agent_templates: list[dict[str, Any]],
+        all_payloads: list[dict[str, Any]],
     ) -> None:
         agent_template = self.interpreter_context.agent_template
 
@@ -77,6 +78,7 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
         await super()._initialize_autocomplete(
             all_agent_generators=all_agent_generators,
             all_agent_templates=all_agent_templates,
+            all_payloads=all_payloads,
         )
 
     # When switching into the UseAgentTemplateInterpreter, we don't want to list all

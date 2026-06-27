@@ -1,20 +1,12 @@
 from rich.table import Table
 
-from consortium.client.client_rest_api import RestAPI
 from consortium.client.utils.formatter_utils import (
     format_list_as_multi_line_bulleted_string,
 )
 from consortium.client.utils.printer_utils import console
 
 
-async def display_agent_template_info(
-    rest_api: RestAPI,
-    agent_template_id: str,
-) -> None:
-    agent_template = await rest_api.get_agent_template_by_agent_template_id(
-        agent_template_id=agent_template_id,
-    )
-
+def display_agent_template_info(agent_template: dict) -> None:
     table = Table(title="Agent Template Information", highlight=True)
     table.add_column("Information")
     table.add_column("Data")

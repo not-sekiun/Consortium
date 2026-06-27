@@ -57,7 +57,7 @@ class Payload:
         self.payload_data = payload_data
 
     @property
-    def resource_id(self) -> uuid.UUID:
+    def payload_id(self) -> uuid.UUID:
         return self.resource.resource_id
 
     @property
@@ -100,7 +100,7 @@ class Payload:
 
     def to_json(self) -> dict[str, JsonValue]:
         return {
-            "resource_id": str(self.resource_id),
+            "payload_id": str(self.payload_id),
             "name": self.name,
             "description": self.description,
             "path": str(self.path),

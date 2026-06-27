@@ -37,15 +37,15 @@ class ListenerTemplateListOptionCommand(BaseConnectedCommand):
             ]
 
             table = Table(title="Listener Template Options", highlight=True)
-            table.add_column("Option Type")
             table.add_column("Name")
+            table.add_column("Option Type")
             table.add_column("Description")
             table.add_column("Required")
             table.add_column("Current Value")
             for option_name, option in sorted(listener_template_options.items()):
                 table.add_row(
-                    option["option_type"],
                     option_name,
+                    option["option_type"],
                     option["description"],
                     str(option["required"]),
                     str(option["value"]) if option["value"] is not None else "",

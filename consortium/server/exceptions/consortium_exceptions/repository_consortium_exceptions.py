@@ -5,6 +5,7 @@
         - [`RepositoryServiceError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryServiceError]
             - [`RepositoryResourceNotFoundError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryResourceNotFoundError]
             - [`RepositoryResourceAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryResourceAlreadyExistsError]
+            - [`ResourceIDReservationNotFoundError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.ResourceIDReservationNotFoundError]
             - [`InvalidRepositoryMetadataFileError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileError]
                 - [`InvalidRepositoryMetadataFileJSONError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileJSONError]
                 - [`InvalidRepositoryMetadataFileSchemaError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileSchemaError]
@@ -73,6 +74,26 @@ class RepositoryResourceAlreadyExistsError(RepositoryServiceError):
         )
 
 
+class ResourceIDReservationNotFoundError(RepositoryServiceError):
+    """Raised when a resource ID passed to create_file or create_directory has no
+    matching reservation.
+    """
+
+    code = "RESOURCE_ID_RESERVATION_NOT_FOUND_ERROR"
+
+    def __init__(self, resource_id: str):
+        super().__init__(
+            message=(
+                f"Failed to create the repository resource and assign it the provided "
+                f"resource ID. No reservation was found for the provided resource ID "
+                f"'{resource_id}'. Reserve a resource ID first using "
+                f"`RepositoryService.reserve_resource_id` before creating a resource "
+                f"with that ID."
+            ),
+            detail={"resource_id": resource_id},
+        )
+
+
 class InvalidRepositoryMetadataFileError(RepositoryServiceError):
     """Base exception for all errors that occur due to an invalid repository metadata
     `.repository.json` file.
@@ -133,14 +154,23 @@ class UnsyncedRepositoryMetadataFileError(InvalidRepositoryMetadataFileError):
 
     code = "UNSYNCED_REPOSITORY_METADATA_FILE_ERROR"
 
-    def __init__(self, repository_directory_path: str):
+    def __init__(
+        self,
+        repository_directory_path: str,
+        unsynced_resource_ids: list[str],
+    ):
         super().__init__(
             message=(
                 "The repository metadata file `.repository.json` in the "
                 f"repository directory '{repository_directory_path}' is out of sync "
-                f"with the actual contents of the repository."
+                f"with the actual contents of the repository. The following resource "
+                f"IDs are recorded in the metadata but do not exist on disk: "
+                f"{unsynced_resource_ids}."
             ),
-            detail={"repository_directory_path": repository_directory_path},
+            detail={
+                "repository_directory_path": repository_directory_path,
+                "unsynced_resource_ids": unsynced_resource_ids,
+            },
         )
 
 

@@ -145,19 +145,16 @@ class AgentTemplatesPayloadsService:
         )
 
     @log_and_propagate_error_on_service_method
-    def delete_payload_by_payload_id(
-        self, payload_id: str | uuid.UUID, force: bool = False
-    ) -> None:
+    def delete_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> None:
         """Deletes a payload's repository resource and its associated metadata.
 
         Forwards to `PayloadsService.delete_payload_by_payload_id`. A `PAYLOAD_DELETED`
         event is only emitted when both the metadata and the repository resource existed
-        prior to deletion.
+        prior to deletion. If only one side exists, a warning is logged and the orphaned
+        side is cleaned up without emitting an event.
 
         Args:
             payload_id (str | uuid.UUID): The ID of the payload to delete.
-            force (bool): When `True`, deletes whichever side exists even if the other
-                is missing. Defaults to `False`.
 
         Returns:
             None
@@ -165,14 +162,9 @@ class AgentTemplatesPayloadsService:
         Raises:
             PayloadNotFoundError: If neither payload metadata nor a matching repository
                 resource exists.
-            PayloadRepositoryResourceMissingError: If payload metadata exists but the
-                corresponding repository resource is missing and `force` is `False`.
-            PayloadMetadataMissingError: If a repository resource exists but the
-                corresponding payload metadata is missing and `force` is `False`.
         """
         self._payloads_service.delete_payload_by_payload_id(
             payload_id=payload_id,
-            force=force,
         )
 
     @wraps(PayloadsService.get_payload_by_payload_id)

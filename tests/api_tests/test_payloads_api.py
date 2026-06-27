@@ -12,7 +12,7 @@ pytestmark = pytest.mark.anyio
 PAYLOAD_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "resource_id": {"type": "string"},
+        "payload_id": {"type": "string"},
         "name": {"type": ["string", "null"]},
         "description": {"type": "string"},
         "size": {"type": ["integer", "null"]},
@@ -65,7 +65,7 @@ PAYLOAD_JSON_SCHEMA = {
         "payload_data": {"type": "object"},
     },
     "required": [
-        "resource_id",
+        "payload_id",
         "name",
         "description",
         "size",

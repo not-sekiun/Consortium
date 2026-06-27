@@ -6,13 +6,12 @@ from collections.abc import Callable
 from inspect import signature
 from typing import get_type_hints
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, JsonValue
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
 from consortium.framework._utils import format_docstring_to_single_line, remap_exception
 from consortium.framework.framework_types import (
-    JSONObject,
     Primitive,
     PrimitiveCollection,
 )
@@ -255,8 +254,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             parameters=parameters,
         )
 
-    # TODO: Consider replacing JSONObject with JsonValue?
-    def to_json(self) -> JSONObject:
+    def to_json(self) -> dict[str, JsonValue]:
         """
         Convert the listener template metadata to a JSON serializable dictionary.
         """
@@ -267,7 +265,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             "description": self.description,
             "version": str(self.version),
             "compatible_framework_version": str(self.compatible_framework_version),
-            "authors": self.authors,
+            "authors": list(self.authors),
             "component_dependencies": list(map(str, self.component_dependencies)),
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
             "listener_type": self.listener_type.to_json(),

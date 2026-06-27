@@ -23,8 +23,8 @@ class PayloadRemoveCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "resource_id",
-            help="Resource ID of the payload to be removed.",
+            "payload_id",
+            help="Payload ID of the payload to be removed.",
             nargs=1,
         )
 
@@ -36,10 +36,10 @@ class PayloadRemoveCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await rest_api.delete_payload_by_resource_id(
-                resource_id=parsed_args.resource_id[0],
+            await rest_api.delete_payload_by_payload_id(
+                payload_id=parsed_args.payload_id[0],
             )
-            print_success(f"Deleted payload '{parsed_args.resource_id[0]}'")
+            print_success(f"Deleted payload '{parsed_args.payload_id[0]}'")
         except SystemExit:
             pass
 

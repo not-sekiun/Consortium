@@ -6,7 +6,7 @@ from collections.abc import Callable
 from inspect import signature
 from typing import get_type_hints
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, JsonValue
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
@@ -14,7 +14,6 @@ from consortium.framework._utils import format_docstring_to_single_line, remap_e
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.framework_types import (
-    JSONObject,
     Primitive,
     PrimitiveCollection,
 )
@@ -242,7 +241,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             parameters=parameters,
         )
 
-    def to_json(self) -> JSONObject:
+    def to_json(self) -> dict[str, JsonValue]:
         """
         Convert the agent template metadata to a JSON serializable dictionary.
         """
@@ -253,7 +252,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             "description": self.description,
             "version": str(self.version),
             "compatible_framework_version": str(self.compatible_framework_version),
-            "authors": self.authors,
+            "authors": list(self.authors),
             "component_dependencies": list(map(str, self.component_dependencies)),
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
             "agent_type": self.agent_generator.agent_type.to_json(),

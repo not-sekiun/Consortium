@@ -12,6 +12,7 @@ from consortium.server.exceptions.consortium_exceptions.repository_consortium_ex
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,
     RepositoryResourceNotFoundError,
+    ResourceIDReservationNotFoundError,
     UnsyncedRepositoryMetadataFileError,
 )
 from consortium.server.models.logging_models import LoggerType
@@ -32,6 +33,7 @@ class RepositoryService:
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._repository_resources = {}
+        self._reserved_resource_ids = set()
         # The repository metadata file is a JSON file that contains the metadata of all
         # the files that are stored on the file system. This is just a JSON dump of the
         # file system metadata that is stored in memory. This allows us to persistently
@@ -144,6 +146,29 @@ class RepositoryService:
                         json_schema_error_message=str(exc),
                     ) from None
 
+            # Pre-pass: verify all resources actually exist on disk before populating
+            # self._repository_resources, so a failure never leaves the registry in a
+            # partially-populated state. Checks real filesystem presence rather than
+            # trusting the metadata file's own exists_on_disk boolean.
+            unsynced_resource_ids = []
+            for _, repository_resource_json in repository_metadata.items():
+                resource_id = repository_resource_json["resource_id"]
+                if repository_resource_json["is_directory"]:
+                    resource_path = self.repository_directory_path / resource_id
+                else:
+                    name = repository_resource_json.get("name")
+                    ext = os.path.splitext(name)[1] if name else ""
+                    resource_path = (
+                        self.repository_directory_path / f"{resource_id}{ext}"
+                    )
+                if not resource_path.exists():
+                    unsynced_resource_ids.append(resource_id)
+            if unsynced_resource_ids:
+                raise UnsyncedRepositoryMetadataFileError(
+                    repository_directory_path=str(self.repository_directory_path),
+                    unsynced_resource_ids=unsynced_resource_ids,
+                )
+
             # The repository service does some special preprocessing for files or
             # directories that are registered to it. It takes the original path and sets
             # that as the name of the repository file or directory and then renames the
@@ -199,13 +224,6 @@ class RepositoryService:
                         repository_file
                     )
 
-                # TODO: Handle conditions where the metadata corrupts and no longer
-                #  corresponds to the actual status of affairs in the repository directory
-                if not repository_resource_json["exists_on_disk"]:
-                    raise UnsyncedRepositoryMetadataFileError(
-                        repository_directory_path=str(self.repository_directory_path)
-                    )
-
     @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
         """Writes the current in-memory repository resource metadata to disk as JSON.
@@ -227,11 +245,28 @@ class RepositoryService:
         )
 
     @log_and_propagate_error_on_service_method
+    def reserve_resource_id(self) -> uuid.UUID:
+        """Generates and reserves a resource ID to be claimed during resource creation.
+
+        The reserved ID must be passed as `resource_id` to `create_file` or
+        `create_directory`. This allows the caller to know the resource ID before the
+        file or directory is created (e.g., to embed the ID in the file content).
+
+        Returns:
+            uuid.UUID: The reserved resource ID.
+        """
+        resource_id = uuid.uuid4()
+        self._reserved_resource_ids.add(str(resource_id))
+        self._logger.debug("Reserved resource ID '{}'", str(resource_id))
+        return resource_id
+
+    @log_and_propagate_error_on_service_method
     def create_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
         name: str | None = None,
         description: str = "",
+        resource_id: str | uuid.UUID | None = None,
     ) -> RepositoryFile:
         """Creates and persists a new file resource in the repository.
 
@@ -243,14 +278,25 @@ class RepositoryService:
             name (str | None): A human-readable name for the file. When `None`, the
                 resource UUID is used as the name.
             description (str): An optional description for the file.
+            resource_id (str | uuid.UUID | None): A previously reserved ID to assign to
+                this resource. When `None`, a new ID is generated automatically.
 
         Returns:
             RepositoryFile: The newly created repository file resource.
+
+        Raises:
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
+                corresponding reservation.
         """
-        # TODO: Fix this hack. We should add a class method that allows manually
-        #  setting each particular relevant value for "loading" back in a previously
-        #  tracked file.
-        unique_resource_id = uuid.uuid4()
+        if resource_id is not None:
+            resource_id_str = normalize_uuid(resource_id)
+            if resource_id_str not in self._reserved_resource_ids:
+                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
+            self._reserved_resource_ids.discard(resource_id_str)
+            unique_resource_id = uuid.UUID(resource_id_str)
+        else:
+            unique_resource_id = uuid.uuid4()
+
         # TODO: Implement create_* class methods to allow creating the repository file
         #  in memory and on disk.
         repository_file = RepositoryFile.create(
@@ -281,6 +327,7 @@ class RepositoryService:
         | None = None,
         name: str | None = None,
         description: str = "",
+        resource_id: str | uuid.UUID | None = None,
     ) -> RepositoryDirectory:
         """Creates and persists a new directory resource in the repository.
 
@@ -297,11 +344,25 @@ class RepositoryService:
             name (str | None): A human-readable name for the directory. When `None`,
                 the resource UUID is used as the name.
             description (str): An optional description for the directory.
+            resource_id (str | uuid.UUID | None): A previously reserved ID to assign to
+                this resource. When `None`, a new ID is generated automatically.
 
         Returns:
             RepositoryDirectory: The newly created repository directory resource.
+
+        Raises:
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
+                corresponding reservation.
         """
-        unique_resource_id = uuid.uuid4()
+        if resource_id is not None:
+            resource_id_str = normalize_uuid(resource_id)
+            if resource_id_str not in self._reserved_resource_ids:
+                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
+            self._reserved_resource_ids.discard(resource_id_str)
+            unique_resource_id = uuid.UUID(resource_id_str)
+        else:
+            unique_resource_id = uuid.uuid4()
+
         repository_directory = RepositoryDirectory.create(
             path=self.repository_directory_path / str(unique_resource_id),
             content=content,

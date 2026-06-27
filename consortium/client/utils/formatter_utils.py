@@ -130,6 +130,17 @@ def format_list_as_multi_line_bulleted_string(input_list: list) -> str:
     return "\n".join(formatted_strings)
 
 
+def format_dict_as_multi_line_bulleted_key_value_string(input_dict: dict) -> str:
+    if not input_dict:
+        return ""
+
+    max_key_length = max(len(str(k)) for k in input_dict.keys())
+    formatted_list = [
+        f"{str(k):<{max_key_length}} : {v}" for k, v in input_dict.items()
+    ]
+    return format_list_as_multi_line_bulleted_string(formatted_list)
+
+
 def format_list_as_single_line_comma_separated_string(input_list: list) -> str:
     return ", ".join(str(item) for item in input_list)
 

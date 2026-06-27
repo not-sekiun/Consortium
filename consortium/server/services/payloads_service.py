@@ -16,12 +16,11 @@ from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exce
     InvalidPayloadsMetadataFileJSONError,
     InvalidPayloadsMetadataFileSchemaError,
     PayloadIDReservationNotFoundError,
-    PayloadMetadataMissingError,
     PayloadNotFoundError,
-    PayloadRepositoryResourceMissingError,
 )
 from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
     RepositoryResourceNotFoundError,
+    ResourceIDReservationNotFoundError,
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.payload_objects import Payload
@@ -51,7 +50,6 @@ class PayloadsService:
         self._payloads_metadata_file_path = (
             self._repository_service.repository_directory_path / ".payloads.json"
         )
-        self._reserved_payload_ids = set()
         self._payloads = {}
         self._logger.debug("Started {}", self)
 
@@ -78,7 +76,6 @@ class PayloadsService:
         """See [`RepositoryService.save_repository_metadata`][consortium.server.services.repository_service.RepositoryService.save_repository_metadata]."""
         self._repository_service.save_repository_metadata()
 
-    # TODO: Transition to using label instead of UUID
     @log_and_propagate_error_on_service_method
     def load_payloads_metadata(self) -> None:
         """Loads payload metadata from the `.payloads.json` file in the repository directory.
@@ -133,13 +130,17 @@ class PayloadsService:
                         repository_directory=str(self.repository_directory_path),
                         json_schema_error_message=str(exc),
                     ) from None
+                loaded_count = 0
+                skipped_count = 0
                 for payload_id, payload_metadata in payloads_metadata.items():
                     try:
                         resource = self._repository_service.get_resource_by_resource_id(
                             resource_id=payload_id,
                         )
-                        agent_template = self._agent_templates_service.get_agent_template_by_agent_template_id(
-                            agent_template_id=payload_metadata["agent_template"],
+                        agent_template = (
+                            self._agent_templates_service.get_agent_template_by_label(
+                                label=payload_metadata["agent_template"],
+                            )
                         )
                         self._payloads[payload_id] = Payload(
                             resource=resource,
@@ -147,6 +148,7 @@ class PayloadsService:
                             build_parameters=payload_metadata["build_parameters"],
                             payload_data=payload_metadata["payload_data"],
                         )
+                        loaded_count += 1
                     except RepositoryResourceNotFoundError:
                         self._logger.warning(
                             "Skipping loading payload with payload ID (resource ID) '{}' "
@@ -156,6 +158,7 @@ class PayloadsService:
                             "repository with the same resource ID.",
                             payload_id,
                         )
+                        skipped_count += 1
                         continue
                     except AgentTemplateNotFoundError:
                         self._logger.warning(
@@ -166,7 +169,25 @@ class PayloadsService:
                             payload_id,
                             payload_metadata["agent_template"],
                         )
+                        skipped_count += 1
                         continue
+                if payloads_metadata and loaded_count == 0:
+                    self._logger.error(
+                        "Failed to load any payloads from the payloads metadata file "
+                        "({} entr{} found, all skipped). This may indicate that the "
+                        "repository service or agent templates have not been loaded yet, "
+                        "or that the metadata is fully stale.",
+                        len(payloads_metadata),
+                        "ies" if len(payloads_metadata) != 1 else "y",
+                    )
+                elif skipped_count > 0:
+                    self._logger.warning(
+                        "Loaded {}/{} payload(s) from the payloads metadata file "
+                        "({} skipped due to missing resources or agent templates).",
+                        loaded_count,
+                        loaded_count + skipped_count,
+                        skipped_count,
+                    )
 
     @log_and_propagate_error_on_service_method
     def save_payloads_metadata(self) -> None:
@@ -177,8 +198,7 @@ class PayloadsService:
         """
         payloads_metadata_json = {
             payload_id: {
-                "agent_type": payload.agent_type.name,
-                "agent_template": str(payload.agent_template.agent_template_id),
+                "agent_template": str(payload.agent_template.label),
                 "build_parameters": payload.build_parameters,
                 "payload_data": payload.payload_data,
             }
@@ -205,8 +225,7 @@ class PayloadsService:
         Returns:
             uuid.UUID: The reserved payload ID.
         """
-        payload_id = uuid.uuid4()
-        self._reserved_payload_ids.add(str(payload_id))
+        payload_id = self._repository_service.reserve_resource_id()
         self._logger.debug("Reserved payload ID '{}'", str(payload_id))
         return payload_id
 
@@ -260,29 +279,17 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        resource = self._repository_service.create_file(
-            content=content,
-            name=name,
-            description=description,
-        )
-
-        # If a reserved payload ID was provided, use it and rename the generated
-        # resource to that payload ID
-        if payload_id is not None:
-            payload_id = normalize_uuid(payload_id)
-            # `_reserved_payload_ids` contains the string representation of the reserved
-            # payload IDs
-            if payload_id not in self._reserved_payload_ids:
-                raise PayloadIDReservationNotFoundError(
-                    payload_id=payload_id,
-                )
-            self._reserved_payload_ids.remove(payload_id)
-            # `resource_id` expects a uuid.UUID object so if a UUID string was passed
-            # instead we convert it back to a uuid.UUID object. At this point we should
-            # have already confirmed that the payload ID string is a valid UUID string
-            # when checking the reservation above.
-            resource.resource_id = uuid.UUID(payload_id)
-            resource.path.rename(payload_id)
+        try:
+            resource = self._repository_service.create_file(
+                content=content,
+                name=name,
+                description=description,
+                resource_id=payload_id,
+            )
+        except ResourceIDReservationNotFoundError:
+            raise PayloadIDReservationNotFoundError(
+                payload_id=normalize_uuid(payload_id),
+            ) from None
 
         payload = Payload(
             resource=resource,
@@ -290,13 +297,13 @@ class PayloadsService:
             build_parameters=build_parameters,
             payload_data=payload_data,
         )
-        self._payloads[str(payload.resource_id)] = payload
+        self._payloads[str(payload.payload_id)] = payload
         self.save_payloads_metadata()
 
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
-                message=f"Created payload: {payload.resource_id}",
+                message=f"Created payload: {payload.payload_id}",
                 data=payload.to_json(),
             )
         )
@@ -359,43 +366,31 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        resource = self._repository_service.create_directory(
-            content=content,
-            archive_file_format=archive_file_format,
-            name=name,
-            description=description,
-        )
+        try:
+            resource = self._repository_service.create_directory(
+                content=content,
+                archive_file_format=archive_file_format,
+                name=name,
+                description=description,
+                resource_id=payload_id,
+            )
+        except ResourceIDReservationNotFoundError:
+            raise PayloadIDReservationNotFoundError(
+                payload_id=normalize_uuid(payload_id),
+            ) from None
 
-        # If a reserved payload ID was provided, use it and rename the generated
-        # resource to that payload ID
-        if payload_id is not None:
-            payload_id = normalize_uuid(payload_id)
-            # `_reserved_payload_ids` contains the string representation of the reserved
-            # payload IDs
-            if payload_id not in self._reserved_payload_ids:
-                raise PayloadIDReservationNotFoundError(
-                    payload_id=payload_id,
-                )
-            self._reserved_payload_ids.remove(payload_id)
-            # `resource_id` expects a uuid.UUID object so if a UUID string was passed
-            # instead we convert it back to a uuid.UUID object. At this point we should
-            # have already confirmed that the payload ID string is a valid UUID string
-            # when checking the reservation above.
-            resource.resource_id = uuid.UUID(payload_id)
-            resource.path.rename(payload_id)
         payload = Payload(
             resource=resource,
             agent_template=agent_template,
             build_parameters=build_parameters,
             payload_data=payload_data,
         )
-
-        self._payloads[str(payload.resource_id)] = payload
+        self._payloads[str(payload.payload_id)] = payload
         self.save_payloads_metadata()
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
-                message=f"Created payload: {payload.resource_id}",
+                message=f"Created payload: {payload.payload_id}",
                 data=payload.to_json(),
             )
         )
@@ -406,20 +401,15 @@ class PayloadsService:
         return payload
 
     @log_and_propagate_error_on_service_method
-    def delete_payload_by_payload_id(
-        self, payload_id: str | uuid.UUID, force: bool = False
-    ) -> None:
+    def delete_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> None:
         """Deletes a payload's repository resource and its associated metadata.
 
         A `PAYLOAD_DELETED` event is only emitted when both the metadata and the
-        repository resource existed prior to deletion. If only one side exists and
-        `force` is `False`, an error is raised. With `force=True`, the existing side is
-        deleted without an event.
+        repository resource existed prior to deletion. If only one side exists, a
+        warning is logged and the orphaned side is cleaned up without emitting an event.
 
         Args:
             payload_id (str | uuid.UUID): The ID of the payload to delete.
-            force (bool): When `True`, deletes whichever side exists even if the other
-                is missing. Defaults to `False`.
 
         Returns:
             None
@@ -427,10 +417,6 @@ class PayloadsService:
         Raises:
             PayloadNotFoundError: If neither payload metadata nor a matching repository
                 resource exists.
-            PayloadRepositoryResourceMissingError: If payload metadata exists but the
-                corresponding repository resource is missing and `force` is `False`.
-            PayloadMetadataMissingError: If a repository resource exists but the
-                corresponding payload metadata is missing and `force` is `False`.
         """
         payload_id = normalize_uuid(payload_id)
 
@@ -448,30 +434,37 @@ class PayloadsService:
         if not payload_exists and not resource_exists:
             raise PayloadNotFoundError(payload_id=payload_id)
         if payload_exists and not resource_exists:
-            if not force:
-                raise PayloadRepositoryResourceMissingError(payload_id=payload_id)
             self._logger.warning(
                 "Payload metadata exists for payload with ID '{}', but the "
-                "corresponding repository resource is missing. Proceeding due to "
-                "force delete being requested",
+                "corresponding repository resource is missing. Cleaning up orphaned "
+                "metadata.",
                 payload_id,
             )
         if not payload_exists and resource_exists:
-            if not force:
-                raise PayloadMetadataMissingError(payload_id=payload_id)
             self._logger.warning(
                 "Payload repository resource exists for payload with ID '{}', but the "
-                "corresponding payload metadata is missing. Proceeding due to force "
-                "delete being requested",
+                "corresponding payload metadata is missing. Cleaning up orphaned "
+                "resource.",
                 payload_id,
             )
+
+        # Snapshot payload JSON before deleting the resource and payload metadata,
+        # since to_json() reads file metadata (e.g. datetime_modified) that requires
+        # the file to exist on disk. However if either the payload metadata or the
+        # repository resource is missing, we skip since the payload deletion even will
+        # not be fired
+        payload_json = (
+            self._payloads[payload_id].to_json()
+            if payload_exists and resource_exists
+            else None
+        )
 
         if resource_exists:
             self._repository_service.delete_resource_by_resource_id(
                 resource_id=payload_id
             )
         if payload_exists:
-            payload = self._payloads.pop(payload_id)
+            self._payloads.pop(payload_id)
             self.save_payloads_metadata()
             self._logger.debug(
                 "Deleted payload metadata for payload with ID '{}'", payload_id
@@ -485,7 +478,7 @@ class PayloadsService:
                     self._events_service.trigger_event(
                         event_type=EventType.PAYLOAD_DELETED,
                         message=f"Deleted payload: {payload_id}",
-                        data=payload.to_json(),
+                        data=payload_json,
                     )
                 )
 

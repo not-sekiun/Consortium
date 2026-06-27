@@ -8,12 +8,14 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
+from consortium.client.utils.agent_template_command_utils import (
+    display_agent_template_info,
+)
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
-    format_list_as_multi_line_bulleted_string,
+    format_dict_as_multi_line_bulleted_key_value_string,
     format_size_bytes_as_human_readable_str,
-    format_snake_case_to_title,
 )
 from consortium.client.utils.printer_utils import console
 
@@ -32,8 +34,8 @@ class PayloadInfoCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "resource_id",
-            help="Resource ID of the payload to display information for.",
+            "payload_id",
+            help="Payload ID of the payload to display information for.",
             nargs=1,
         )
         parser.add_argument(
@@ -51,15 +53,15 @@ class PayloadInfoCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            payload = await rest_api.get_payload_by_resource_id(
-                resource_id=parsed_args.resource_id[0],
+            payload = await rest_api.get_payload_by_payload_id(
+                payload_id=parsed_args.payload_id[0],
             )
 
             # Resource information table
             info_table = Table(title="Payload Information", highlight=True)
             info_table.add_column("Information")
             info_table.add_column("Data")
-            info_table.add_row("Resource ID", str(payload["resource_id"]))
+            info_table.add_row("Payload ID", str(payload["payload_id"]))
             info_table.add_row("Name", str(payload["name"]))
             info_table.add_row("Description", str(payload["description"]))
             size = payload["size"]
@@ -86,6 +88,12 @@ class PayloadInfoCommand(BaseConnectedCommand):
             info_table.add_row(
                 "Type", "DIRECTORY" if payload["is_directory"] else "FILE"
             )
+            info_table.add_row(
+                "Build Parameters",
+                format_dict_as_multi_line_bulleted_key_value_string(
+                    input_dict=payload["build_parameters"]
+                ),
+            )
             console.print(info_table, "")
 
             agent_type = payload["agent_type"]
@@ -93,9 +101,7 @@ class PayloadInfoCommand(BaseConnectedCommand):
 
             if not parsed_args.verbose:
                 # Summary table showing agent type and key template identifiers
-                summary_table = Table(
-                    title="Agent & Template [Summary]", highlight=True
-                )
+                summary_table = Table(title="Agent Template (Summary)", highlight=True)
                 summary_table.add_column("Information")
                 summary_table.add_column("Data")
                 summary_table.add_row("Agent Type", agent_type["name"])
@@ -106,35 +112,7 @@ class PayloadInfoCommand(BaseConnectedCommand):
                 summary_table.add_row("Template Name", agent_template["name"])
                 console.print(summary_table, "")
             else:
-                # Full agent template table
-                at_table = Table(title="Agent Template Information", highlight=True)
-                at_table.add_column("Information")
-                at_table.add_column("Data")
-                at_table.add_row(
-                    "Agent Template ID", agent_template["agent_template_id"]
-                )
-                at_table.add_row("Label", agent_template["label"])
-                at_table.add_row("Name", agent_template["name"])
-                at_table.add_row("Description", agent_template["description"])
-                at_table.add_row("Version", agent_template["version"])
-                at_table.add_row(
-                    "Compatible Framework Version",
-                    agent_template["compatible_framework_version"],
-                )
-                at_table.add_row(
-                    "Authors",
-                    format_list_as_multi_line_bulleted_string(
-                        input_list=agent_template["authors"]
-                    ),
-                )
-                at_table.add_row("Agent Type", agent_type["name"])
-                at_table.add_row(
-                    "Compatible Listener Types",
-                    format_list_as_multi_line_bulleted_string(
-                        input_list=list(agent_template["compatible_listener_types"]),
-                    ),
-                )
-                console.print(at_table, "")
+                display_agent_template_info(agent_template=agent_template)
 
                 # Options in a dedicated table to avoid cluttering the template table
                 options = agent_template["options"]
@@ -143,12 +121,12 @@ class PayloadInfoCommand(BaseConnectedCommand):
                         title="Agent Template Options", highlight=True
                     )
                     options_table.add_column("Option")
-                    options_table.add_column("Type")
+                    options_table.add_column("Option Type")
                     options_table.add_column("Description")
                     for option_name, option in options.items():
                         options_table.add_row(
                             option_name,
-                            format_snake_case_to_title(option.get("option_type", "")),
+                            option.get("option_type", ""),
                             str(option.get("description", "")),
                         )
                     console.print(options_table, "")

@@ -10,8 +10,6 @@
                 - [`InvalidPayloadsMetadataFileJSONError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.InvalidPayloadsMetadataFileJSONError]
                 - [`InvalidPayloadsMetadataFileSchemaError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.InvalidPayloadsMetadataFileSchemaError]
             - [`PayloadNotFoundError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadNotFoundError]
-            - [`PayloadDeletionError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadDeletionError]
-                - [`PayloadRepositoryResourceMissingError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadRepositoryResourceMissingError]
             - [`PayloadMetadataMissingError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadMetadataMissingError]
             - [`PayloadIDReservationNotFoundError`][consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions.PayloadIDReservationNotFoundError]
 """
@@ -96,35 +94,6 @@ class PayloadNotFoundError(PayloadsServiceError):
             message=(
                 f"Failed to find the requested payload. No payload was found "
                 f"with the provided payload ID '{payload_id}'."
-            ),
-        )
-
-
-class PayloadDeletionError(PayloadsServiceError):
-    code = "PAYLOAD_DELETION_ERROR"
-
-
-class PayloadRepositoryResourceMissingError(PayloadDeletionError):
-    code = "PAYLOAD_REPOSITORY_RESOURCE_MISSING_ERROR"
-
-    def __init__(self, payload_id: str):
-        super().__init__(
-            message=(
-                f"Failed to delete the payload with the provided payload ID "
-                f"'{payload_id}'. The repository resource for the payload is "
-                f"missing."
-            ),
-        )
-
-
-class PayloadMetadataMissingError(PayloadsServiceError):
-    code = "PAYLOAD_METADATA_MISSING_ERROR"
-
-    def __init__(self, payload_id: str):
-        super().__init__(
-            message=(
-                f"Failed to delete the payload with the provided payload ID "
-                f"'{payload_id}'. The metadata for the payload is missing."
             ),
         )
 

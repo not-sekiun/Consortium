@@ -35,7 +35,7 @@ class PayloadListCommand(BaseConnectedCommand):
             payloads = await rest_api.get_all_payloads()
 
             table = Table(title="Payloads", highlight=True)
-            table.add_column("Resource ID")
+            table.add_column("Payload ID")
             table.add_column("Name")
             table.add_column("Agent Type")
             table.add_column("Type")
@@ -43,7 +43,7 @@ class PayloadListCommand(BaseConnectedCommand):
             for payload in payloads:
                 size = payload["size"]
                 table.add_row(
-                    payload["resource_id"],
+                    payload["payload_id"],
                     payload["name"],
                     payload["agent_type"]["name"],
                     "DIRECTORY" if payload["is_directory"] else "FILE",

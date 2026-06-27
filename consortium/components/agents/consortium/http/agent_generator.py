@@ -46,6 +46,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
             self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,
                 content=source_code,
+                name=f"{parameters['file_name']}.py",
             )
         elif parameters["format"] == "executable":
             pass
@@ -77,6 +78,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
             self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,
                 content='python -c "' + repr(source_code) + '"',
+                name=f"{parameters['file_name']}.txt",
             )
         else:
             raise AgentGeneratorBuildStepRuntimeError(
