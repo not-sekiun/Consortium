@@ -24,7 +24,7 @@ from consortium.server.exceptions.consortium_exceptions import (
     payloads_consortium_exceptions as payload_excs,
     repository_consortium_exceptions as consortium_excs,
 )
-from consortium.server.models.repository_models import RepositoryResourceModel
+from consortium.server.models.payload_models import PayloadModel
 from consortium.server.objects.user_account_objects import UserPermissions
 
 router = APIRouter(
@@ -75,10 +75,11 @@ router.add_api_route(
     endpoint=create_get_all_resources_endpoint(
         get_all_resources_handler=_payloads_service.get_all_payloads,
         get_all_resources_permission=UserPermissions.READ_ALL_PAYLOADS,
+        response_model_class=PayloadModel,
     ),
     methods=["GET"],
     responses={
-        200: {"model": list[RepositoryResourceModel]},
+        200: {"model": list[PayloadModel]},
     },
     name="Get All Payloads",
 )
@@ -87,10 +88,11 @@ router.add_api_route(
     endpoint=create_get_resource_by_resource_id_endpoint(
         get_resource_by_resource_id_handler=_get_payload_by_payload_id_handler,
         get_resource_by_resource_id_permission=UserPermissions.READ_PAYLOAD_BY_PAYLOAD_ID,
+        response_model_class=PayloadModel,
     ),
     methods=["GET"],
     responses={
-        200: {"model": RepositoryResourceModel},
+        200: {"model": PayloadModel},
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },

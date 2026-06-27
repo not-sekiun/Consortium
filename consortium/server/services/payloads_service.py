@@ -78,6 +78,7 @@ class PayloadsService:
         """See [`RepositoryService.save_repository_metadata`][consortium.server.services.repository_service.RepositoryService.save_repository_metadata]."""
         self._repository_service.save_repository_metadata()
 
+    # TODO: Transition to using label instead of UUID
     @log_and_propagate_error_on_service_method
     def load_payloads_metadata(self) -> None:
         """Loads payload metadata from the `.payloads.json` file in the repository directory.
@@ -163,6 +164,7 @@ class PayloadsService:
                             "corresponding agent template '{}' was not found. Check "
                             "that the corresponding agent template is loaded.",
                             payload_id,
+                            payload_metadata["agent_template"],
                         )
                         continue
 
@@ -288,13 +290,13 @@ class PayloadsService:
             build_parameters=build_parameters,
             payload_data=payload_data,
         )
-        self._payloads[str(payload.payload_id)] = payload
+        self._payloads[str(payload.resource_id)] = payload
         self.save_payloads_metadata()
 
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
-                message=f"Created payload: {payload.payload_id}",
+                message=f"Created payload: {payload.resource_id}",
                 data=payload.to_json(),
             )
         )
@@ -388,12 +390,12 @@ class PayloadsService:
             payload_data=payload_data,
         )
 
-        self._payloads[str(payload.payload_id)] = payload
+        self._payloads[str(payload.resource_id)] = payload
         self.save_payloads_metadata()
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
-                message=f"Created payload: {payload.payload_id}",
+                message=f"Created payload: {payload.resource_id}",
                 data=payload.to_json(),
             )
         )

@@ -34,6 +34,7 @@ from consortium.server.server_dependencies import AuthorizeUserRequest
 def create_get_all_resources_endpoint(
     get_all_resources_handler: Callable[[], list],
     get_all_resources_permission: UserPermissions,
+    response_model_class: type[RepositoryResourceModel] = RepositoryResourceModel,
 ) -> Callable:
     # The return type annotation of this method is omitted because of a weird bug in
     # FastAPI's OpenAPI JSON schema generator that causes models to be duplicated if a
@@ -48,7 +49,7 @@ def create_get_all_resources_endpoint(
         ],
     ):
         return [
-            RepositoryResourceModel(**repository_resource.to_json())
+            response_model_class(**repository_resource.to_json())
             for repository_resource in get_all_resources_handler()
         ]
 
@@ -58,6 +59,7 @@ def create_get_all_resources_endpoint(
 def create_get_resource_by_resource_id_endpoint(
     get_resource_by_resource_id_handler: Callable[[str], Any],
     get_resource_by_resource_id_permission: UserPermissions,
+    response_model_class: type[RepositoryResourceModel] = RepositoryResourceModel,
 ) -> Callable:
     async def get_repository_resource_by_resource_id(
         resource_id: UUID4,
@@ -75,7 +77,7 @@ def create_get_resource_by_resource_id_endpoint(
                 consortium_exception=exc,
             ) from None
 
-        return RepositoryResourceModel(**repository_resource.to_json())
+        return response_model_class(**repository_resource.to_json())
 
     return get_repository_resource_by_resource_id
 

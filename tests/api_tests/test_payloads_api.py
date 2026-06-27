@@ -4,20 +4,93 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
-from tests.api_tests.test_assets_api import (
-    ALL_RESOURCES_JSON_SCHEMA,
-    RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA,
-)
+from tests.api_tests.test_assets_api import RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
+
+PAYLOAD_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "resource_id": {"type": "string"},
+        "name": {"type": ["string", "null"]},
+        "description": {"type": "string"},
+        "size": {"type": ["integer", "null"]},
+        "exists_on_disk": {"type": "boolean"},
+        "datetime_created": {"type": "string"},
+        "datetime_modified": {"type": "string"},
+        "md5_checksum": {"type": ["string", "null"]},
+        "is_directory": {"type": "boolean"},
+        "agent_type": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "agent_capabilities": {"type": "object"},
+            },
+            "required": ["name", "agent_capabilities"],
+        },
+        "agent_template": {
+            "type": "object",
+            "properties": {
+                "agent_template_id": {"type": "string"},
+                "label": {"type": "string"},
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "version": {"type": "string"},
+                "compatible_framework_version": {"type": "string"},
+                "authors": {"type": "array", "items": {"type": "string"}},
+                "agent_type": {"type": "object"},
+                "compatible_listener_types": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "options": {"type": "object"},
+                "validating_function": {"type": ["string", "null"]},
+            },
+            "required": [
+                "agent_template_id",
+                "label",
+                "name",
+                "description",
+                "version",
+                "compatible_framework_version",
+                "authors",
+                "agent_type",
+                "compatible_listener_types",
+                "options",
+                "validating_function",
+            ],
+        },
+        "build_parameters": {"type": "object"},
+        "payload_data": {"type": "object"},
+    },
+    "required": [
+        "resource_id",
+        "name",
+        "description",
+        "size",
+        "exists_on_disk",
+        "datetime_created",
+        "datetime_modified",
+        "md5_checksum",
+        "is_directory",
+        "agent_type",
+        "agent_template",
+        "build_parameters",
+        "payload_data",
+    ],
+}
+ALL_PAYLOADS_JSON_SCHEMA = {
+    "type": "array",
+    "items": PAYLOAD_JSON_SCHEMA,
+}
 
 
 async def test_get_all_payloads(client):
     """All roles can GET /api/payloads/all."""
     validate_response(
         test_response=await client.get("/api/payloads/all"),
-        expected_json_schema=ALL_RESOURCES_JSON_SCHEMA,
+        expected_json_schema=ALL_PAYLOADS_JSON_SCHEMA,
         expected_status_code=200,
     )
 

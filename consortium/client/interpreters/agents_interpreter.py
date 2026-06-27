@@ -62,8 +62,8 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         for command in ["t-info", "watch"]:
             completions_dict[command] = task_ids_completion
 
-        # Register commands that take the asset ID as the first positional argument to
-        # autocomplete with.
+        # Register commands that take the asset resource ID as the first positional
+        # argument to autocomplete with.
         assets_completion = {asset["resource_id"]: None for asset in all_assets}
         for command in ["as-dl", "as-info"]:
             completions_dict[command] = assets_completion
