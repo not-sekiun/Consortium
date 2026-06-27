@@ -38,6 +38,11 @@ class GeneratorListCommand(BaseConnectedCommand):
         table.add_column("Name")
         table.add_column("Build Progress")
         table.add_column("Status")
+
+        progress_bar_length = 10
+        empty_chr = "░"
+        full_chr = "█"
+
         for agent_generator in all_agent_generators:
             total_build_steps = len(agent_generator["agent_generator_build_steps"])
 
@@ -47,7 +52,7 @@ class GeneratorListCommand(BaseConnectedCommand):
                     agent_generator["agent_generator_id"],
                     agent_generator["agent_type"]["name"],
                     agent_generator["name"],
-                    "[░░░░░] Step 0/0: N/A (N/A)",
+                    f"[{progress_bar_length * empty_chr}] 0/0: N/A (N/A)",
                     format_agent_generator_state_string_with_color(
                         agent_generator["status"]["state"]
                     ),
@@ -62,23 +67,22 @@ class GeneratorListCommand(BaseConnectedCommand):
                     completed_build_steps += 1
                 else:
                     break  # Stop counting at the first non-completed step
-            # Compute progress bar string. Get percentage of completed steps, then
-            # multiply by 5 to get number of filled segments in a 5-segment bar.
-            # Round down to get integer number of filled segments.
+            filled = floor(
+                completed_build_steps / total_build_steps * progress_bar_length
+            )
             progress_bar_str = (
                 "["
-                + "█" * floor(completed_build_steps / total_build_steps * 5)
-                + "░" * (5 - floor(completed_build_steps / total_build_steps * 5))
+                + (full_chr * filled + empty_chr * (progress_bar_length - filled))
                 + "]"
             )
+            # Cap at total so the last completed step shows N/N, not (N+1)/N
+            current_step_display = min(completed_build_steps + 1, total_build_steps)
             table.add_row(
                 agent_generator["agent_generator_id"],
                 agent_generator["agent_type"]["name"],
                 agent_generator["name"],
                 f"{progress_bar_str} "
-                # Add 1 to completed_build_steps to indicate the current step being
-                # worked on
-                f"Step {completed_build_steps + 1}/{total_build_steps}: "
+                f"{current_step_display}/{total_build_steps}: "
                 f"{current_build_step['name']} "
                 f"({format_agent_generator_state_string_with_color(current_build_step['status']['state'])})",
                 format_agent_generator_state_string_with_color(

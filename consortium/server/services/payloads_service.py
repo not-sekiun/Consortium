@@ -1,5 +1,6 @@
 import asyncio
 import json
+import pathlib
 import uuid
 from collections.abc import Generator
 from functools import wraps
@@ -314,6 +315,95 @@ class PayloadsService:
         return payload
 
     @log_and_propagate_error_on_service_method
+    def add_payload_file(
+        self,
+        agent_template_id: str | uuid.UUID,
+        build_parameters: dict[str, Any],
+        path: pathlib.Path | str,
+        payload_data: dict[str, Any] | None = None,
+        payload_id: str | uuid.UUID | None = None,
+        name: str | None = None,
+        description: str = "",
+        copy: bool = False,
+    ) -> Payload:
+        """Registers an existing file on disk as a file-based payload.
+
+        Unlike `create_payload_file`, no new file is written. The file at `path`
+        is moved (or copied when `copy=True`) into the repository. Build parameters
+        are validated against the agent template before registration. If `payload_id`
+        is provided it must have been previously reserved via `reserve_payload_id`.
+        Emits a `PAYLOAD_CREATED` event.
+
+        Args:
+            agent_template_id (str | uuid.UUID): The ID of the agent template to
+                associate with the payload.
+            build_parameters (dict[str, Any]): Parameters used to build the agent
+                generator from the template (validated against the template).
+            path (pathlib.Path | str): Path to the existing file to register.
+            payload_data (dict[str, Any] | None): Arbitrary metadata attached to
+                the payload. When `None`, no extra metadata is stored.
+            payload_id (str | uuid.UUID | None): A previously reserved ID to
+                assign to this payload. When `None`, a new ID is generated.
+            name (str | None): A human-readable name for the payload file. When
+                `None`, the original filename is used.
+            description (str): An optional description for the payload.
+            copy (bool): When `False` (default) the source file is moved into the
+                repository. When `True` the source file is copied and the original
+                is left in place.
+
+        Returns:
+            Payload: The registered payload.
+
+        Raises:
+            AgentTemplateNotFoundError: If no agent template with the given ID
+                exists.
+            PayloadIDReservationNotFoundError: If `payload_id` is provided but
+                has no corresponding reservation.
+        """
+        agent_template = (
+            self._agent_templates_service.get_agent_template_by_agent_template_id(
+                agent_template_id=agent_template_id,
+            )
+        )
+        agent_template.create_agent_generator(
+            parameters=build_parameters,
+        )
+        try:
+            resource = self._repository_service.add_file(
+                path=path,
+                name=name,
+                description=description,
+                resource_id=payload_id,
+                copy=copy,
+            )
+        except ResourceIDReservationNotFoundError:
+            raise PayloadIDReservationNotFoundError(
+                payload_id=normalize_uuid(payload_id),
+            ) from None
+
+        payload = Payload(
+            resource=resource,
+            agent_template=agent_template,
+            build_parameters=build_parameters,
+            payload_data=payload_data,
+        )
+        self._payloads[str(payload.payload_id)] = payload
+        self.save_payloads_metadata()
+
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event_type=EventType.PAYLOAD_CREATED,
+                message=f"Created payload: {payload.payload_id}",
+                data=payload.to_json(),
+            )
+        )
+        self._logger.debug(
+            "Added payload file with payload ID '{}'",
+            resource.resource_id,
+        )
+        return payload
+
+    @log_and_propagate_error_on_service_method
     def create_payload_directory(
         self,
         agent_template_id: str | uuid.UUID,
@@ -396,6 +486,96 @@ class PayloadsService:
         )
         self._logger.debug(
             "Created payload directory with payload ID '{}'",
+            resource.resource_id,
+        )
+        return payload
+
+    @log_and_propagate_error_on_service_method
+    def add_payload_directory(
+        self,
+        agent_template_id: str | uuid.UUID,
+        build_parameters: dict[str, Any],
+        path: pathlib.Path | str,
+        payload_data: dict[str, Any] | None = None,
+        payload_id: str | uuid.UUID | None = None,
+        name: str | None = None,
+        description: str = "",
+        copy: bool = False,
+    ) -> Payload:
+        """Registers an existing directory on disk as a directory-based payload.
+
+        Unlike `create_payload_directory`, no archive is extracted and no new
+        directory is created. The directory at `path` is moved (or copied when
+        `copy=True`) into the repository. Build parameters are validated against
+        the agent template before registration. If `payload_id` is provided it
+        must have been previously reserved via `reserve_payload_id`. Emits a
+        `PAYLOAD_CREATED` event.
+
+        Args:
+            agent_template_id (str | uuid.UUID): The ID of the agent template to
+                associate with the payload.
+            build_parameters (dict[str, Any]): Parameters used to build the agent
+                generator from the template (validated against the template).
+            path (pathlib.Path | str): Path to the existing directory to register.
+            payload_data (dict[str, Any] | None): Arbitrary metadata attached to
+                the payload. When `None`, no extra metadata is stored.
+            payload_id (str | uuid.UUID | None): A previously reserved ID to
+                assign to this payload. When `None`, a new ID is generated.
+            name (str | None): A human-readable name for the payload directory.
+                When `None`, the original directory name is used.
+            description (str): An optional description for the payload.
+            copy (bool): When `False` (default) the source directory is moved into
+                the repository. When `True` the source directory is copied and the
+                original is left in place.
+
+        Returns:
+            Payload: The registered payload.
+
+        Raises:
+            AgentTemplateNotFoundError: If no agent template with the given ID
+                exists.
+            PayloadIDReservationNotFoundError: If `payload_id` is provided but
+                has no corresponding reservation.
+        """
+        agent_template = (
+            self._agent_templates_service.get_agent_template_by_agent_template_id(
+                agent_template_id=agent_template_id,
+            )
+        )
+        agent_template.create_agent_generator(
+            parameters=build_parameters,
+        )
+        try:
+            resource = self._repository_service.add_directory(
+                path=path,
+                name=name,
+                description=description,
+                resource_id=payload_id,
+                copy=copy,
+            )
+        except ResourceIDReservationNotFoundError:
+            raise PayloadIDReservationNotFoundError(
+                payload_id=normalize_uuid(payload_id),
+            ) from None
+
+        payload = Payload(
+            resource=resource,
+            agent_template=agent_template,
+            build_parameters=build_parameters,
+            payload_data=payload_data,
+        )
+        self._payloads[str(payload.payload_id)] = payload
+        self.save_payloads_metadata()
+
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event_type=EventType.PAYLOAD_CREATED,
+                message=f"Created payload: {payload.payload_id}",
+                data=payload.to_json(),
+            )
+        )
+        self._logger.debug(
+            "Added payload directory with payload ID '{}'",
             resource.resource_id,
         )
         return payload

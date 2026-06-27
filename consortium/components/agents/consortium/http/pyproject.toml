@@ -1,0 +1,6 @@
+[project]
+name = "consortium-http-agent"
+version = "0.1.0"
+dependencies = [
+    "pyinstaller>=6.0",
+]

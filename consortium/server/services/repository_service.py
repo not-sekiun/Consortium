@@ -1,6 +1,7 @@
 import json
 import os
 import pathlib
+import shutil
 import uuid
 from datetime import datetime
 from typing import BinaryIO, Literal, TextIO
@@ -320,6 +321,73 @@ class RepositoryService:
         return repository_file
 
     @log_and_propagate_error_on_service_method
+    def add_file(
+        self,
+        path: pathlib.Path | str,
+        name: str | None = None,
+        description: str = "",
+        resource_id: str | uuid.UUID | None = None,
+        copy: bool = False,
+    ) -> RepositoryFile:
+        """Registers an existing file on disk into the repository.
+
+        Unlike `create_file`, no new file is written. The file at `path` is moved
+        (or copied when `copy=True`) into the repository directory under a
+        UUID-based name and registered as a resource. Metadata is persisted after
+        registration.
+
+        Args:
+            path (pathlib.Path | str): Path to the existing file to register.
+            name (str | None): A human-readable name for the file. When `None`,
+                the original filename is used.
+            description (str): An optional description for the file.
+            resource_id (str | uuid.UUID | None): A previously reserved ID to
+                assign to this resource. When `None`, a new ID is generated.
+            copy (bool): When `False` (default) the source file is moved into the
+                repository. When `True` the source file is copied and the original
+                is left in place.
+
+        Returns:
+            RepositoryFile: The newly registered repository file resource.
+
+        Raises:
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but
+                has no corresponding reservation.
+        """
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        if resource_id is not None:
+            resource_id_str = normalize_uuid(resource_id)
+            if resource_id_str not in self._reserved_resource_ids:
+                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
+            self._reserved_resource_ids.discard(resource_id_str)
+            unique_resource_id = uuid.UUID(resource_id_str)
+        else:
+            unique_resource_id = uuid.uuid4()
+
+        dest_path = (
+            self.repository_directory_path / f"{unique_resource_id}{path.suffix}"
+        )
+        if copy:
+            shutil.copy2(str(path), dest_path)
+        else:
+            shutil.move(str(path), dest_path)
+
+        repository_file = RepositoryFile(
+            path=dest_path,
+            name=name if name else path.name,
+            description=description,
+        )
+        repository_file.resource_id = unique_resource_id
+        self._repository_resources[str(repository_file.resource_id)] = repository_file
+        self._logger.debug("Added repository file: {!r}", repository_file)
+
+        self.save_repository_metadata()
+
+        return repository_file
+
+    @log_and_propagate_error_on_service_method
     def create_directory(
         self,
         content: bytes | BinaryIO | str | pathlib.Path | None = None,
@@ -378,6 +446,73 @@ class RepositoryService:
             "Created repository directory: {!r}",
             repository_directory,
         )
+
+        self.save_repository_metadata()
+
+        return repository_directory
+
+    @log_and_propagate_error_on_service_method
+    def add_directory(
+        self,
+        path: pathlib.Path | str,
+        name: str | None = None,
+        description: str = "",
+        resource_id: str | uuid.UUID | None = None,
+        copy: bool = False,
+    ) -> RepositoryDirectory:
+        """Registers an existing directory on disk into the repository.
+
+        Unlike `create_directory`, no new directory is created. The directory at
+        `path` is moved (or copied when `copy=True`) into the repository directory
+        under a UUID-based name and registered as a resource. Metadata is persisted
+        after registration.
+
+        Args:
+            path (pathlib.Path | str): Path to the existing directory to register.
+            name (str | None): A human-readable name for the directory. When
+                `None`, the original directory name is used.
+            description (str): An optional description for the directory.
+            resource_id (str | uuid.UUID | None): A previously reserved ID to
+                assign to this resource. When `None`, a new ID is generated.
+            copy (bool): When `False` (default) the source directory is moved into
+                the repository. When `True` the source directory is copied and the
+                original is left in place.
+
+        Returns:
+            RepositoryDirectory: The newly registered repository directory resource.
+
+        Raises:
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but
+                has no corresponding reservation.
+        """
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        if resource_id is not None:
+            resource_id_str = normalize_uuid(resource_id)
+            if resource_id_str not in self._reserved_resource_ids:
+                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
+            self._reserved_resource_ids.discard(resource_id_str)
+            unique_resource_id = uuid.UUID(resource_id_str)
+        else:
+            unique_resource_id = uuid.uuid4()
+
+        dest_path = self.repository_directory_path / str(unique_resource_id)
+        if copy:
+            shutil.copytree(str(path), dest_path)
+        else:
+            shutil.move(str(path), dest_path)
+
+        repository_directory = RepositoryDirectory(
+            path=dest_path,
+            name=name if name else path.name,
+            description=description,
+        )
+        repository_directory.resource_id = unique_resource_id
+        self._repository_resources[str(repository_directory.resource_id)] = (
+            repository_directory
+        )
+        self._logger.debug("Added repository directory: {!r}", repository_directory)
 
         self.save_repository_metadata()
 

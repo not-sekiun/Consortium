@@ -172,7 +172,7 @@ def _handle_choice_value_option_parameter(
     value_type = _resolve_value_type_from_overriding_factors(
         value_type_flag=value_type_flag,
         value_type_annotation=value_type_annotation,
-        option_specified_value_type=option_json_data["value_type"],
+        option_specified_value_type=option_json_data.get("value_type"),
     )
     value = _convert_value_string_from_string_representation_based_on_value_type(
         value_string=value_string,

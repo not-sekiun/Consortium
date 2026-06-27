@@ -1,5 +1,7 @@
 import asyncio
+import pathlib
 import shutil
+import tempfile
 
 from consortium.framework.agents import (
     BaseAgentGenerator,
@@ -22,8 +24,6 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
     )
 
     async def build(self, parameters: dict) -> None:
-        await asyncio.sleep(5)
-
         with open(
             self.working_directory / "agent_source" / "agent.py",
         ) as file:
@@ -49,31 +49,49 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                 name=f"{parameters['file_name']}.py",
             )
         elif parameters["format"] == "executable":
-            pass
-            #     with tempfile.TemporaryDirectory() as temporary_directory:
-            #         os.chdir(temporary_directory)
-            #
-            #         with open("agent.py") as temporary_file:
-            #             temporary_file.write(source_code)
-            #
-            #         process = await run_command(
-            #             "pyinstaller",
-            #             "--onefile",
-            #             "--windowed",
-            #             "agent.py",
-            #         )
-            #
-            #         if process.return_code != 0:
-            #             raise AgentGeneratorBuildStepRuntimeError(
-            #                 f"Pyinstaller failed to freeze agent source code into packaged "
-            #                 f"executable. Standard error output: {process.stderr}"
-            #             )
-            #
-            #         shutil.move(
-            #             "agent.exe",
-            #             str(CONSORTIUM_ARTIFACTS_DIRECTORY_PATH / parameters["filename"])
-            #             + ".exe",
-            #         )
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = pathlib.Path(temp_dir)
+                agent_source_path = temp_path / "agent.py"
+                agent_source_path.write_text(source_code)
+
+                process = await asyncio.create_subprocess_exec(
+                    "pyinstaller",
+                    "--onefile",
+                    "--windowed",
+                    "--distpath",
+                    str(temp_path / "dist"),
+                    "--workpath",
+                    str(temp_path / "build"),
+                    "--specpath",
+                    str(temp_path),
+                    "--name",
+                    parameters["file_name"],
+                    str(agent_source_path),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    raise AgentGeneratorBuildStepRuntimeError(
+                        f"PyInstaller failed to build the agent executable. "
+                        f"Standard error output: {stderr.decode()}"
+                    )
+
+                dist_path = temp_path / "dist"
+                exe_candidates = list(dist_path.iterdir())
+                if not exe_candidates:
+                    raise AgentGeneratorBuildStepRuntimeError(
+                        "PyInstaller completed successfully but no output file "
+                        f"was found in the dist directory '{dist_path}'."
+                    )
+                exe_path = exe_candidates[0]
+
+                self.agent_templates_payload_service.add_payload_file(
+                    build_parameters=parameters,
+                    path=exe_path,
+                    name=exe_path.name,
+                )
         elif parameters["format"] == "oneliner":
             self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,

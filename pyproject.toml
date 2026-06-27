@@ -32,6 +32,13 @@ docs = [
     "mkdocs-material>=9.7.0",
     "mkdocstrings[python]>=1.0.0",
 ]
+plugins = []
+listeners = []
+agents = [
+    "pyinstaller>=6.21.0",
+]
+event-hooks = []
+
 
 [tool.ruff.lint]
 select = [

@@ -21,3 +21,4 @@ tools/defaults.txt
 .coverage
 
 before_merging.txt
+agent.exe

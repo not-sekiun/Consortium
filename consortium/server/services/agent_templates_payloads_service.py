@@ -1,3 +1,4 @@
+import pathlib
 import uuid
 from collections.abc import Generator
 from functools import wraps
@@ -142,6 +143,110 @@ class AgentTemplatesPayloadsService:
             archive_file_format=archive_file_format,
             name=name,
             description=description,
+        )
+
+    @log_and_propagate_error_on_service_method
+    def add_payload_file(
+        self,
+        build_parameters: dict[str, Any],
+        path: pathlib.Path | str,
+        payload_data: dict[str, Any] | None = None,
+        payload_id: str | uuid.UUID | None = None,
+        name: str | None = None,
+        description: str = "",
+        copy: bool = False,
+    ) -> Payload:
+        """Registers an existing file on disk as a payload for the bound agent template.
+
+        Forwards to `PayloadsService.add_payload_file`, injecting the agent template
+        ID bound to this service so the caller does not need to supply it.
+
+        Args:
+            build_parameters (dict[str, Any]): Parameters used to build the agent
+                generator from the bound agent template (validated against the
+                template).
+            path (pathlib.Path | str): Path to the existing file to register.
+            payload_data (dict[str, Any] | None): Arbitrary metadata attached to
+                the payload. When `None`, no extra metadata is stored.
+            payload_id (str | uuid.UUID | None): A previously reserved ID to
+                assign to this payload. When `None`, a new ID is generated.
+            name (str | None): A human-readable name for the payload file. When
+                `None`, the original filename is used.
+            description (str): An optional description for the payload.
+            copy (bool): When `False` (default) the source file is moved into the
+                repository. When `True` the source file is copied and the original
+                is left in place.
+
+        Returns:
+            Payload: The registered payload.
+
+        Raises:
+            AgentTemplateNotFoundError: If the bound agent template ID no longer
+                exists.
+            PayloadIDReservationNotFoundError: If `payload_id` is provided but
+                has no corresponding reservation.
+        """
+        return self._payloads_service.add_payload_file(
+            agent_template_id=self._agent_template_id,
+            build_parameters=build_parameters,
+            path=path,
+            payload_data=payload_data,
+            payload_id=payload_id,
+            name=name,
+            description=description,
+            copy=copy,
+        )
+
+    @log_and_propagate_error_on_service_method
+    def add_payload_directory(
+        self,
+        build_parameters: dict[str, Any],
+        path: pathlib.Path | str,
+        payload_data: dict[str, Any] | None = None,
+        payload_id: str | uuid.UUID | None = None,
+        name: str | None = None,
+        description: str = "",
+        copy: bool = False,
+    ) -> Payload:
+        """Registers an existing directory on disk as a payload for the bound agent template.
+
+        Forwards to `PayloadsService.add_payload_directory`, injecting the agent
+        template ID bound to this service so the caller does not need to supply it.
+
+        Args:
+            build_parameters (dict[str, Any]): Parameters used to build the agent
+                generator from the bound agent template (validated against the
+                template).
+            path (pathlib.Path | str): Path to the existing directory to register.
+            payload_data (dict[str, Any] | None): Arbitrary metadata attached to
+                the payload. When `None`, no extra metadata is stored.
+            payload_id (str | uuid.UUID | None): A previously reserved ID to
+                assign to this payload. When `None`, a new ID is generated.
+            name (str | None): A human-readable name for the payload directory.
+                When `None`, the original directory name is used.
+            description (str): An optional description for the payload.
+            copy (bool): When `False` (default) the source directory is moved into
+                the repository. When `True` the source directory is copied and the
+                original is left in place.
+
+        Returns:
+            Payload: The registered payload.
+
+        Raises:
+            AgentTemplateNotFoundError: If the bound agent template ID no longer
+                exists.
+            PayloadIDReservationNotFoundError: If `payload_id` is provided but
+                has no corresponding reservation.
+        """
+        return self._payloads_service.add_payload_directory(
+            agent_template_id=self._agent_template_id,
+            build_parameters=build_parameters,
+            path=path,
+            payload_data=payload_data,
+            payload_id=payload_id,
+            name=name,
+            description=description,
+            copy=copy,
         )
 
     @log_and_propagate_error_on_service_method
