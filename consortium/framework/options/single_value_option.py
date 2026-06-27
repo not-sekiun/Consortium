@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import get_type_hints
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.framework._utils import resolve_validating_function_string
 from consortium.framework.framework_types import Primitive, PrimitiveType
@@ -212,7 +212,7 @@ class SingleValueOption(BaseOption):
             validating_function=self.validating_function,
         )
 
-    def to_json(self) -> dict[str, Primitive | None]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "name": self.name,
             "description": self.description,

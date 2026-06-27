@@ -55,7 +55,6 @@ class AgentTemplatesPayloadsService:
         content: str | bytes | IO | Generator[bytes] | Generator[str],
         payload_data: dict[str, Any] | None = None,
         payload_id: str | uuid.UUID | None = None,
-        is_binary: bool = True,
         name: str | None = None,
         description: str = "",
     ) -> Payload:
@@ -73,8 +72,6 @@ class AgentTemplatesPayloadsService:
                 payload. When `None`, no extra metadata is stored.
             payload_id (str | uuid.UUID | None): A previously reserved ID to assign to
                 this payload. When `None`, a new ID is generated automatically.
-            is_binary (bool): When `True`, the file is written in binary mode. Defaults
-                to `True`.
             name (str | None): A human-readable name for the payload file. When `None`,
                 the resource UUID is used.
             description (str): An optional description for the payload.
@@ -93,7 +90,6 @@ class AgentTemplatesPayloadsService:
             content=content,
             payload_data=payload_data,
             payload_id=payload_id,
-            is_binary=is_binary,
             name=name,
             description=description,
         )

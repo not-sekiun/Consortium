@@ -1,7 +1,7 @@
 import sys
 from typing import get_type_hints
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
     EmptyListenerTypeNameError,
@@ -54,7 +54,7 @@ class BaseListenerType:
             f")"
         )
 
-    def to_json(self) -> dict[str, str]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "name": self.name,
             "registered_compatible_agent_types": list(

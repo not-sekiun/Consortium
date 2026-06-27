@@ -1,6 +1,6 @@
 from typing import Any, Generic, TypeVar
 
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, JsonValue, create_model
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
     BaseConsortiumError,
@@ -50,7 +50,7 @@ class BaseAPIError(Exception):
 
     # `to_json` may return `None` only for 401 Unauthorized errors where no body is
     # returned
-    def to_json(self) -> dict[str, Any] | None:
+    def to_json(self) -> dict[str, JsonValue] | None:
         return {
             "error": {
                 "code": self.code,

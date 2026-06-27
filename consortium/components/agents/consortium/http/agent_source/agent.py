@@ -21,8 +21,8 @@ SLEEP_TIME_JITTER = 0.5
 TASKS_URL_PATHS = ["/tasks"]
 RESULTS_URL_PATHS = ["/results"]
 REGISTRATION_URL_PATHS = ["/register"]
-AGENT_TYPE = "eula_multi"
 EXTRA_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)"}
+AGENT_TYPE = "eula_multi"
 
 
 def shell_capability(task_id, arguments, connection):

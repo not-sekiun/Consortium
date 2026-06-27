@@ -2,9 +2,9 @@ import pathlib
 import sys
 import types
 import uuid
-from typing import Any
 
 from loguru import logger
+from pydantic import JsonValue
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
@@ -152,7 +152,7 @@ class BaseEventHook(ComponentMetadata):
         release resources or perform cleanup operations.
         """
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, JsonValue]:
         """
         Return a JSON-serializable representation of the event hook's metadata,
         """
@@ -161,7 +161,7 @@ class BaseEventHook(ComponentMetadata):
             "label": self.label,
             "name": self.name,
             "description": self.description,
-            "authors": self.authors,
+            "authors": list(self.authors),
             "version": str(self.version),
             "compatible_framework_version": str(self.compatible_framework_version),
             "component_dependencies": list(map(str, self.component_dependencies)),

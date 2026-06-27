@@ -230,7 +230,6 @@ class RepositoryService:
     def create_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
-        binary: bool = True,
         name: str | None = None,
         description: str = "",
     ) -> RepositoryFile:
@@ -241,8 +240,6 @@ class RepositoryService:
 
         Args:
             content (str | bytes | TextIO | BinaryIO): The file content to write.
-            binary (bool): When `True`, the file is written in binary mode. Defaults to
-                `True`.
             name (str | None): A human-readable name for the file. When `None`, the
                 resource UUID is used as the name.
             description (str): An optional description for the file.
@@ -262,7 +259,6 @@ class RepositoryService:
             path=self.repository_directory_path
             / f"{unique_resource_id}{os.path.splitext(name)[1] if name else ''}",
             content=content,
-            binary=binary,
             name=name if name else unique_resource_id,
             description=description,
         )

@@ -2,6 +2,7 @@ import sys
 from typing import get_type_hints
 
 from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic.config import JsonValue
 
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
@@ -63,7 +64,7 @@ class BaseAgentType:
             f")"
         )
 
-    def to_json(self) -> dict[str, str]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "name": self.name,
             "agent_capabilities": {

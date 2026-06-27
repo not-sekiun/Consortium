@@ -7,6 +7,8 @@ from collections.abc import Generator
 from datetime import datetime
 from typing import BinaryIO, Literal, TextIO
 
+from pydantic import JsonValue
+
 from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
     InvalidRepositoryDirectoryArchiveFileFormatError,
     RepositoryDirectoryAlreadyExistsError,
@@ -83,7 +85,6 @@ class RepositoryFile:
         cls,
         path: pathlib.Path | str,
         content: str | bytes | TextIO | BinaryIO | None = None,
-        binary: bool = False,
         encoding: str = "utf-8",
         exist_ok: bool = False,
         name: str | None = None,
@@ -92,23 +93,30 @@ class RepositoryFile:
         if isinstance(path, str):
             path = pathlib.Path(path)
 
-        if not path.exists():
-            path.touch()
-        else:
-            if not exist_ok:
-                raise RepositoryFileAlreadyExistsError(
-                    repository_file_str=str(path),
-                )
+        if path.exists() and not exist_ok:
+            raise RepositoryFileAlreadyExistsError(repository_file_str=str(path))
 
-        mode = "wb" if binary else "w"
-        encoding = None if binary else encoding
+        path.parent.mkdir(parents=True, exist_ok=True)
+
         if hasattr(content, "read"):
-            with path.open(mode=mode, encoding=encoding) as file:
+            first_chunk = content.read(4096)
+            is_binary = isinstance(first_chunk, bytes)
+            mode = "wb" if is_binary else "w"
+            enc = None if is_binary else encoding
+            with path.open(mode=mode, encoding=enc) as file:
+                if first_chunk:
+                    file.write(first_chunk)
                 while chunk := content.read(4096):
                     file.write(chunk)
-        elif isinstance(content, (str, bytes)):
-            with path.open(mode=mode, encoding=encoding) as file:
+        elif isinstance(content, bytes):
+            with path.open(mode="wb") as file:
                 file.write(content)
+        elif isinstance(content, str):
+            with path.open(mode="w", encoding=encoding) as file:
+                file.write(content)
+        else:
+            # content is None (or unsupported type) -> empty file, text mode
+            path.touch()
 
         return cls(path=path, name=name, description=description)
 
@@ -154,7 +162,7 @@ class RepositoryFile:
             raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
         self.path.unlink()
 
-    def to_json(self) -> dict[str, str]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "resource_id": str(self.resource_id),
             "name": self.name,
@@ -307,7 +315,7 @@ class RepositoryDirectory:
 
         return (self.path / relative_path).resolve()
 
-    def to_json(self) -> dict[str, str]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "resource_id": str(self.resource_id),
             "name": self.name,

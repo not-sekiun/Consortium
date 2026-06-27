@@ -1,7 +1,7 @@
 import sys
-from typing import Any, TypeVar, get_type_hints
+from typing import TypeVar, get_type_hints
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.framework.options.option_types import OptionType
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
@@ -73,7 +73,7 @@ class BaseOption[ValueType]:
             OptionValueValidationError: If the value is invalid.
         """
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, JsonValue]:
         """
         Convert the option to a JSON serializable dictionary.
 

@@ -595,8 +595,11 @@ class RestAPI:
 
     @staticmethod
     def _check_for_api_error_response(
-        status_code: int, response_json: dict[str, Any]
+        status_code: int, response_json: dict[str, Any] | None
     ) -> None:
+        if response_json is None:  # Empty body like in HTTP 204 or 202 responses
+            return
+
         if "error" in response_json:
             raise RestAPIOperationError(
                 status_code=status_code,

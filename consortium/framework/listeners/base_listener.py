@@ -246,7 +246,7 @@ class BaseListener(ComponentLifeCycle):
                 listener_str=str(self),
             ) from None
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "listener_id": str(self.listener_id),
             "name": self.name,

@@ -482,7 +482,7 @@ class Agent:
     def mark_as_inactive(self) -> None:
         self._status = AgentStatus.INACTIVE
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, JsonValue]:
         connected_listener = self.connected_listener
         if connected_listener:
             connected_listener_json = connected_listener.to_json_reference()

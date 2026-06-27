@@ -1,6 +1,6 @@
 from typing import get_type_hints
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.framework.options import OptionType
 from consortium.framework.options._base_option import BaseOption
@@ -112,7 +112,7 @@ class ToggleableChoicesValueOption(BaseOption[dict[str, bool]]):
                     f"option '{self.name}' is not a boolean.",
                 )
 
-    def to_json(self) -> dict[str, str | bool | dict[str, bool] | list[str] | None]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "name": self.name,
             "description": self.description,

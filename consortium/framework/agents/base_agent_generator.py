@@ -206,7 +206,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         self.parameters = {}
         super().reset()
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "agent_generator_build_step_id": str(self.agent_generator_build_step_id),
             "name": self.name,
@@ -492,7 +492,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 agent_generator_str=str(self),
             ) from None
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "agent_generator_id": str(self.agent_generator_id),
             "name": self.name,

@@ -1,6 +1,6 @@
 from typing import get_type_hints
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.framework.framework_types import Primitive
 from consortium.framework.options._base_option import BaseOption
@@ -113,7 +113,7 @@ class ChoiceValueOption(BaseOption[Primitive]):
                 f"choice values {self.available_values}.",
             )
 
-    def to_json(self) -> dict[str, Primitive | list[Primitive] | None]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "name": self.name,
             "description": self.description,

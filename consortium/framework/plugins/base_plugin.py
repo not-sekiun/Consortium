@@ -3,9 +3,9 @@ import sys
 import traceback
 import types
 import uuid
-from typing import Any
 
 import loguru
+from pydantic.config import JsonValue
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import (
@@ -173,7 +173,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
                 plugin_str=str(self),
             ) from None
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "plugin_id": str(self.plugin_id),
             "label": self.label,

@@ -98,7 +98,7 @@ class Payload:
             return None
         return self.resource.md5_checksum
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "payload_id": str(self.payload_id),
             "name": self.name,
