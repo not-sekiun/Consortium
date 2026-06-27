@@ -4,7 +4,7 @@ from enum import StrEnum
 from inspect import signature
 from typing import TYPE_CHECKING, Any, get_type_hints
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._utils import format_docstring_to_single_line
@@ -13,7 +13,6 @@ from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
 )
 from consortium.framework.agents.agent_outcomes import Failure, Success
-from consortium.framework.framework_types import Primitive, PrimitiveCollection
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
@@ -82,9 +81,7 @@ class _BaseAgentCapabilityModel(BaseModel):
         | ToggleableChoicesValueOption
     ]
     mitre_attack_techniques: set[str]  # set[MitreAttackTechniqueID]
-    validating_function: (
-        Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
-    )
+    validating_function: Callable[[dict[str, JsonValue]], None] | None
 
 
 class BaseAgentCapability(_AgentCommunicator):
@@ -102,9 +99,7 @@ class BaseAgentCapability(_AgentCommunicator):
         | ToggleableChoicesValueOption
     ] = None
     mitre_attack_techniques: set[str] | None = None  # set[MitreAttackTechniqueID]
-    validating_function: (
-        Callable[[dict[str, Primitive | PrimitiveCollection]], None] | None
-    ) = None
+    validating_function: Callable[[dict[str, JsonValue]], None] | None = None
 
     # TODO: Deprecate global task messages queue in favor of per capability queues.
     def __init__(self, agent: Agent, task: AgentTask):
