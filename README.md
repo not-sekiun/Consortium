@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="15%" src="docs/assets/logo.png">
+  <img width="50%" src="docs/assets/banner.png">
 </p>
 
 <p align="center"><b>A modern C2 framework with a focus on extensibility</b></p>
@@ -16,14 +16,13 @@
   </a>
 </p>
 
-# Consortium
-
-Consortium is a _programming language agnostic_, and _networking protocol agnostic_
-command and control (C2) framework that is designed to be _collaborative_,
-_highly extensible_, and _modular_. The framework ships with its own listeners and
-agents while also allowing users to rapidly develop their own highly customized
-listeners and agents.
-
+<p align="center">
+  Consortium is a <i>programming language agnostic</i>, and
+  <i>networking protocol agnostic</i> command and control (C2) framework that is
+  designed to be <i>collaborative</i>, <i>highly extensible</i>, and <i>modular</i>.
+  The framework ships with its own listeners and agents while also allowing users to
+  rapidly develop their own highly customized listeners and agents.
+</p>
 
 > [!CAUTION]
 > Consortium is **actively being developed** and is currently considered to be in the

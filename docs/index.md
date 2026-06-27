@@ -5,13 +5,11 @@ hide:
     - footer
 ---
 
-<img alt="Consortium logo" src="assets/logo.png" style="display: block;float: none;margin-left: 45%;margin-right: auto;width: 10%">
+<img alt="Consortium logo" src="assets/banner.png" style="display: block; margin: 0 auto; width: 50%">
 
-<p style="text-align: center;"><i>Consortium: modern C2 framework with a focus on extensibility</i></p>
+<p style="text-align: center;"><i>A modern C2 framework with a focus on extensibility</i></p>
 
 ---
-
-# Consortium
 
 Consortium is a _programming language agnostic_, and _networking protocol agnostic_
 command and control (C2) framework that is designed to be _collaborative_,

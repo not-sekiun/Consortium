@@ -47,7 +47,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
   logo: assets/logo.png
-  favicon: assets/logo.png
+  favicon: assets/favicon.png
 
 nav:
 #  - Exceptions: test.md
