@@ -1,6 +1,9 @@
 from datetime import datetime
 
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4, BaseModel, JsonValue
+
+from consortium.server.models.agent_template_models import AgentTemplateModel
+from consortium.server.models.c2_type_models import AgentTypeModel
 
 
 class PayloadModel(BaseModel):
@@ -13,3 +16,7 @@ class PayloadModel(BaseModel):
     datetime_modified: datetime
     md5_checksum: str | None
     is_directory: bool
+    agent_type: AgentTypeModel
+    agent_template: AgentTemplateModel
+    build_parameters: dict[str, JsonValue]
+    payload_data: dict[str, JsonValue]
