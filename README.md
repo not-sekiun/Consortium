@@ -1,6 +1,8 @@
+<br>
 <p align="center">
   <img width="75%" src="docs/assets/banner.png">
 </p>
+<br>
 
 <p align="center"><b>A modern C2 framework with a focus on extensibility</b></p>
 
