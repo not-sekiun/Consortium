@@ -19,20 +19,16 @@ _highly extensible_, and _modular_. The framework ships with its own listeners a
 agents while also allowing users to rapidly develop their own highly customized
 listeners and agents.
 
-
 !!! warning
     Consortium is **actively being developed** and is currently considered to be in the
-    _alpha phase_ of development. The current branch `main` is essentially a developer
-    branch where I dump all code without regards to correctness. As such it should be
-    noted that:
+    _alpha phase_ of development. As such it should be noted that:
 
-    1. Backwards incompatible/breaking changes may be made to the framework at any time.
-    2. The framework may contain major bugs and even incomplete code that can cause crashes.
-    3. The framework is currently not considered to be feature-complete.
-    4. Documentation will be severely lacking and incomplete.
+    1. Backwards incompatible/breaking changes may be made at any time.
+    2. The framework is currently not considered to be feature-complete.
+    3. Documentation will be lacking and incomplete.
 
-    I am working to resolve all these and work towards a 1.0.0 release so please raise any
-    problems, feature requests, or bug reports in the GitHub issues section.
+    Feel free to raise any problems, feature requests, or bug reports in the GitHub
+    issues section.
 
 <div class="grid cards" markdown>
 

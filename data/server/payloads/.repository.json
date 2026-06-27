@@ -1,1 +1,13 @@
-{}
+{
+    "6cf3b2a4-b147-4a5f-bbcc-0b2f6b3031e6": {
+        "resource_id": "6cf3b2a4-b147-4a5f-bbcc-0b2f6b3031e6",
+        "name": "6cf3b2a4-b147-4a5f-bbcc-0b2f6b3031e6",
+        "description": "",
+        "size": 25084,
+        "exists_on_disk": true,
+        "md5_checksum": "71b168e5baa700caba660a483ce91eaa",
+        "datetime_created": "2026-06-27T20:25:16.297201",
+        "datetime_modified": "2026-06-27T20:25:16.296775",
+        "is_directory": false
+    }
+}

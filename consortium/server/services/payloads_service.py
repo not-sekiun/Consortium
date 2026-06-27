@@ -176,7 +176,7 @@ class PayloadsService:
         payloads_metadata_json = {
             payload_id: {
                 "agent_type": payload.agent_type.name,
-                "agent_template": payload.agent_template.agent_template_id,
+                "agent_template": str(payload.agent_template.agent_template_id),
                 "build_parameters": payload.build_parameters,
                 "payload_data": payload.payload_data,
             }

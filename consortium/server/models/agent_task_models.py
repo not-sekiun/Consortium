@@ -1,8 +1,7 @@
-import uuid
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, JsonValue
+from pydantic import UUID4, BaseModel, Field, JsonValue
 
 from consortium.server.models.error_models import ErrorModel
 
@@ -57,7 +56,7 @@ class AgentTaskStatusModel(BaseModel):
 
 
 class AgentTaskModel(BaseModel):
-    task_id: uuid.UUID
+    task_id: UUID4
     command: str
     arguments: dict[str, JsonValue]
     status: AgentTaskStatusModel

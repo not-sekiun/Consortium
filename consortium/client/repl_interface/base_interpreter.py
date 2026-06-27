@@ -246,6 +246,20 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
                             client_session_id=self.client_session.client_session_id
                         )
                         return ExitClientSessionSignal()
+        except RestAPIOperationError as exc:
+            # Check for case where our access was revoked mid-session or the
+            # server restarted causing the JWT to be invalidated
+            if exc.status_code == 401:
+                print_info(
+                    "Current session access was remotely revoked. Removing current "
+                    "session and returning to disconnected interpreter..."
+                )
+                await (
+                    _client_sessions_service.remove_client_session_by_client_session_id(
+                        client_session_id=self.client_session.client_session_id
+                    )
+                )
+                return ExitClientSessionSignal()
         # Check for case where connection to the remote server was lost mid-session
         except ClientConnectionError, ConnectionClosed:
             print_error(

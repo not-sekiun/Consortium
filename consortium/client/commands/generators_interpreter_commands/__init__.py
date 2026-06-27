@@ -34,6 +34,18 @@ from consortium.client.commands.generators_interpreter_commands.generator_update
 from consortium.client.commands.generators_interpreter_commands.generators_list import (
     GeneratorListCommand,
 )
+from consortium.client.commands.generators_interpreter_commands.payload_download import (
+    PayloadDownloadCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.payload_info import (
+    PayloadInfoCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.payload_list import (
+    PayloadListCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.payload_remove import (
+    PayloadRemoveCommand,
+)
 
 GENERATORS_INTERPRETER_COMMANDS = [
     GeneratorCancelCommand(),
@@ -48,4 +60,8 @@ GENERATORS_INTERPRETER_COMMANDS = [
     GeneratorStartCommand(),
     GeneratorStopCommand(),
     AgentTemplateUseCommand(),
+    PayloadDownloadCommand(),
+    PayloadInfoCommand(),
+    PayloadListCommand(),
+    PayloadRemoveCommand(),
 ]

@@ -124,9 +124,8 @@ class RestAPI:
         except ClientConnectionError:
             pass
         except RestAPIOperationError as exc:
-            if exc.status_code == 401:
-                pass
-            raise exc from None
+            if exc.status_code != 401:
+                raise exc from None
         self._aiohttp_client_session.headers.pop("Authorization")
         await self._aiohttp_client_session.close()
         self.logged_in = False
@@ -580,6 +579,45 @@ class RestAPI:
             },
         )
         return await response.json()
+
+    # Wrapper methods for the /api/payloads API endpoint.
+    @_requires_authentication
+    async def get_all_payloads(self) -> list[dict[str, Any]]:
+        return await self._make_api_request(
+            method="GET",
+            url=f"{self._api_base_url}/payloads/all",
+        )
+
+    @_requires_authentication
+    async def get_payload_by_payload_id(
+        self,
+        payload_id: str,
+    ) -> dict[str, Any]:
+        return await self._make_api_request(
+            method="GET",
+            url=f"{self._api_base_url}/payloads/{payload_id}",
+        )
+
+    @_requires_authentication
+    async def delete_payload_by_payload_id(
+        self,
+        payload_id: str,
+    ) -> None:
+        return await self._make_api_request(
+            method="DELETE",
+            url=f"{self._api_base_url}/payloads/{payload_id}",
+        )
+
+    async def download_payload_by_payload_id(
+        self,
+        payload_id: str,
+        maximum_chunk_size: int = 1024,
+    ) -> AsyncGenerator[bytes]:
+        response = await self._aiohttp_client_session.get(
+            f"{self._api_base_url}/payloads/download/{payload_id}",
+        )
+        async for chunk in response.content.iter_chunked(maximum_chunk_size):
+            yield chunk
 
     @staticmethod
     def _build_task_events_params(

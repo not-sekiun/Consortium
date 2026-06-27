@@ -3,8 +3,8 @@ from datetime import datetime
 from pydantic import UUID4, BaseModel
 
 
-class RepositoryResourceModel(BaseModel):
-    resource_id: UUID4
+class PayloadModel(BaseModel):
+    payload_id: UUID4
     name: str | None
     description: str
     size: int | None

@@ -259,7 +259,7 @@ class RepositoryService:
             path=self.repository_directory_path
             / f"{unique_resource_id}{os.path.splitext(name)[1] if name else ''}",
             content=content,
-            name=name if name else unique_resource_id,
+            name=name if name else str(unique_resource_id),
             description=description,
         )
         repository_file.resource_id = unique_resource_id

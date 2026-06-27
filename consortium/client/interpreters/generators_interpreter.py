@@ -53,10 +53,14 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         )
         return all_agent_generators, all_agent_templates
 
+    async def _get_all_payloads(self) -> list[dict[str, Any]]:
+        return await self.client_session.rest_api.get_all_payloads()
+
     async def _initialize_autocomplete(
         self,
         all_agent_generators: list[dict[str, Any]],
         all_agent_templates: list[dict[str, Any]],
+        all_payloads: list[dict[str, Any]],
     ) -> None:
         completions_dict = self.completer.get_completions_dict()
 
@@ -96,6 +100,14 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         for command in ["at-info", "use"]:
             completions_dict[command] = agent_template_ids_completion
 
+        # Register payload commands that take the payload ID as the first positional
+        # argument to autocomplete with.
+        payload_ids_completion = {
+            payload["resource_id"]: None for payload in all_payloads
+        }
+        for command in ["pl-info", "pl-rm", "pl-dl"]:
+            completions_dict[command] = payload_ids_completion
+
         completions_dict["help"] = dict.fromkeys(self.commands)
 
         self.completer.set_completions_dict(completions_dict)
@@ -108,9 +120,26 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             all_agent_generators,
             all_agent_templates,
         ) = await self._get_all_agent_generators_and_agent_templates()
+        all_payloads = await self._get_all_payloads()
         await self._initialize_autocomplete(
             all_agent_generators=all_agent_generators,
             all_agent_templates=all_agent_templates,
+            all_payloads=all_payloads,
+        )
+
+    async def _payload_created_or_removed_event_handler(
+        self,
+        _event: dict[str, Any],
+    ) -> None:
+        (
+            all_agent_generators,
+            all_agent_templates,
+        ) = await self._get_all_agent_generators_and_agent_templates()
+        all_payloads = await self._get_all_payloads()
+        await self._initialize_autocomplete(
+            all_agent_generators=all_agent_generators,
+            all_agent_templates=all_agent_templates,
+            all_payloads=all_payloads,
         )
 
     async def _setup_event_handlers(self) -> None:
@@ -121,6 +150,14 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_GENERATOR_REMOVED",
             event_handler=self._agent_generator_created_or_removed_event_handler,
+        )
+        await self.client_session.websockets_api.subscribe_to_event(
+            event_type="PAYLOAD_CREATED",
+            event_handler=self._payload_created_or_removed_event_handler,
+        )
+        await self.client_session.websockets_api.subscribe_to_event(
+            event_type="PAYLOAD_DELETED",
+            event_handler=self._payload_created_or_removed_event_handler,
         )
         await self.client_session.websockets_api.start()
 
@@ -138,6 +175,14 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_GENERATOR_REMOVED",
             event_handler=self._agent_generator_created_or_removed_event_handler,
+        )
+        await self.client_session.websockets_api.unsubscribe_from_event(
+            event_type="PAYLOAD_CREATED",
+            event_handler=self._payload_created_or_removed_event_handler,
+        )
+        await self.client_session.websockets_api.unsubscribe_from_event(
+            event_type="PAYLOAD_DELETED",
+            event_handler=self._payload_created_or_removed_event_handler,
         )
 
     @staticmethod
@@ -157,9 +202,11 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             all_agent_generators,
             all_agent_templates,
         ) = await self._get_all_agent_generators_and_agent_templates()
+        all_payloads = await self._get_all_payloads()
         await self._initialize_autocomplete(
             all_agent_generators=all_agent_generators,
             all_agent_templates=all_agent_templates,
+            all_payloads=all_payloads,
         )
         await self._setup_event_handlers()
         self._list_all_agent_generators_and_agent_templates(

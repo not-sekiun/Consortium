@@ -1,18 +1,18 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import UUID4, BaseModel, Field
 
 from consortium.server.objects.user_account_objects import UserRole
 
 
 class UserAccountReferenceModel(BaseModel):
-    user_account_id: uuid.UUID
+    user_account_id: UUID4
     username: str
 
 
 class UserModel(BaseModel):
-    user_id: uuid.UUID = Field(default_factory=uuid.uuid4, examples=["string"])
+    user_id: UUID4 = Field(default_factory=uuid.uuid4, examples=["string"])
     username: str
     display_name: str
     role: UserRole = Field(examples=["string"])
