@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="20%" src="docs/assets/logo.png">
+  <img width="15%" src="docs/assets/logo.png">
 </p>
 
 <p align="center"><b>A modern C2 framework with a focus on extensibility</b></p>
