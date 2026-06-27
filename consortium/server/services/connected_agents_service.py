@@ -32,7 +32,7 @@ class ConnectedAgentsService:
 
     def __init__(self, listener_id: uuid.UUID):
         # Importing here to avoid circular imports.
-        from consortium.server import server_singletons as server_singletons
+        import consortium.server.server_singletons as server_singletons
 
         self._listener_id = listener_id
         self._agents_service = server_singletons.agents_service

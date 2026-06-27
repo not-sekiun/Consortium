@@ -2,6 +2,7 @@ import asyncio
 import json
 import uuid
 from collections.abc import Generator
+from functools import wraps
 from typing import IO, Any, BinaryIO, Literal
 
 import jsonschema
@@ -60,30 +61,21 @@ class PayloadsService:
     def __repr__(self) -> str:
         return f"PayloadsService(repository_service={self._repository_service!r})"
 
+    # @wraps copies function docstring information over to avoid rewriting it, used for
+    # boilerplate forwarding methods that don't do anything meaningfully different. We
+    # still need to include some docstring pointing to the forwarded method since
+    # mkdocstrings' griffe analyzer only does static analysis when generating
+    # documentation
+    @wraps(RepositoryService.load_repository_metadata)
     @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
-        """Delegates to the underlying repository service to load repository metadata from disk.
-
-        Returns:
-            None
-
-        Raises:
-            InvalidRepositoryMetadataFileJSONError: If the repository metadata file
-                contains invalid JSON.
-            InvalidRepositoryMetadataFileSchemaError: If the repository metadata file
-                does not follow the expected schema.
-            UnsyncedRepositoryMetadataFileError: If a resource recorded in the metadata
-                file does not exist on disk.
-        """
+        """See [`RepositoryService.load_repository_metadata`][consortium.server.services.repository_service.RepositoryService.load_repository_metadata]."""
         self._repository_service.load_repository_metadata()
 
+    @wraps(RepositoryService.save_repository_metadata)
     @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
-        """Delegates to the underlying repository service to persist repository metadata to disk.
-
-        Returns:
-            None
-        """
+        """See [`RepositoryService.save_repository_metadata`][consortium.server.services.repository_service.RepositoryService.save_repository_metadata]."""
         self._repository_service.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
@@ -93,6 +85,10 @@ class PayloadsService:
         If the metadata file does not yet exist, it is created by calling
         `save_payloads_metadata`. Payloads whose corresponding repository resource or
         agent template cannot be found are logged as warnings and skipped.
+
+        Note that `self.load_repository_metadata` must be called before this method or
+        else the service will not be able to find any of the files that are on disk to
+        register them as payloads.
 
         Returns:
             None

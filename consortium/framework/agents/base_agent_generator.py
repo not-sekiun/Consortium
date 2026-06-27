@@ -5,7 +5,7 @@ import traceback
 import types
 import uuid
 from datetime import datetime
-from typing import Any, final, get_type_hints
+from typing import TYPE_CHECKING, Any, final, get_type_hints
 
 from loguru import logger
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
@@ -44,6 +44,13 @@ from consortium.server.exceptions.consortium_exceptions.components_consortium_ex
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import construct_services_namespace_object
 
+if TYPE_CHECKING:
+    # This is used for type checking BaseAgentGeneratorBuildStep another runtime import
+    # is within BaseAgentGenerator for actually instantiating the service
+    from consortium.server.services.agent_templates_payload_service import (
+        AgentTemplatesPayloadsService,
+    )
+
 
 class _BaseAgentGeneratorBuildStepModel(BaseModel):
     name: str
@@ -54,7 +61,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     name: str
     description: str = ""
 
-    def __init__(self):
+    def __init__(self, agent_templates_payload_service: AgentTemplatesPayloadsService):
         self.agent_generator_build_step_id = uuid.uuid4()
         self.datetime_started = None
         self.datetime_stopped = None
@@ -64,6 +71,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             logger_name=f"Agent Generator Build Step {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
         )
+        self.agent_templates_payload_service = agent_templates_payload_service
         self.working_directory = pathlib.Path(
             inspect.getsourcefile(self.__class__)
         ).parent
@@ -267,6 +275,12 @@ class BaseAgentGenerator(ComponentLifeCycle):
         description: str = "",
         parameters: dict[str, Any] | None = None,
     ) -> None:
+        # See starred Claude code conversation "circular import in agent framework"
+        # for framework registry module fix
+        from consortium.server.services.agent_templates_payload_service import (
+            AgentTemplatesPayloadsService,
+        )
+
         if parameters is None:
             parameters = {}
         # Manually validate name first so we can reference the name in subsequent
@@ -299,8 +313,14 @@ class BaseAgentGenerator(ComponentLifeCycle):
         self.parameters = parameters
 
         self.agent_generator_id = uuid.uuid4()
+        # self.creating_agent_template is assigned as a class variable at load time
+        self.agent_templates_payload_service = AgentTemplatesPayloadsService(
+            agent_template_id=self.creating_agent_template.agent_template_id,
+        )
         self.agent_generator_build_steps: list[BaseAgentGeneratorBuildStep] = [
-            agent_generator_build_step()
+            agent_generator_build_step(
+                agent_templates_payload_service=self.agent_templates_payload_service
+            )
             for agent_generator_build_step in self.__class__.agent_generator_build_steps
         ]
         self.datetime_created = datetime.now()
