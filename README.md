@@ -1,7 +1,13 @@
 <br>
 <p align="center">
-  <img width="75%" src="docs/assets/banner.png">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" width="75%" srcset="docs/assets/banner_dark_mode.png">
+    <source media="(prefers-color-scheme: light)" width="75%" srcset="docs/assets/banner_light_mode.png">
+    <img alt="Consortium Logo" src="docs/assets/banner_light_mode.png">
+  </picture>
 </p>
+
+
 <br>
 
 <p align="center"><b>A modern C2 framework with a focus on extensibility</b></p>
