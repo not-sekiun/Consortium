@@ -71,11 +71,50 @@ nav:
       - rest-api/introduction.md
   - Reference:
       - Services:
+        - reference/services/agents-service-reference.md
+        - reference/services/agent-file-manager-service-reference.md
+        - reference/services/agent-generators-service-reference.md
+        - reference/services/agent-profile-loader-service-reference.md
+        - reference/services/agent-profiles-service-reference.md
+        - reference/services/agent-templates-service-reference.md
+        - reference/services/c2-types-service-reference.md
+        - reference/services/connected-agents-service-reference.md
+        - reference/services/consortium-paths-service-reference.md
+        - reference/services/event-hook-loader-service.md
+        - reference/services/event-hooks-service-reference.md
+        - reference/services/events-service-reference.md
+        - reference/services/listener-profile-loader-service-reference.md
+        - reference/services/listener-profiles-service-reference.md
+        - reference/services/listener-templates-service-reference.md
+        - reference/services/listeners-service-reference.md
+        - reference/services/logging-service-reference.md
+        - reference/services/payloads-service-reference.md
         - reference/services/plugins-service-reference.md
+        - reference/services/plugin_loader_service.md
+        - reference/services/release-service-reference.md
+        - reference/services/repository-service-reference.md
+        - reference/services/user-accounts-service-reference.md
+        - reference/services/users-service-reference.md
       - Consortium Exceptions:
         - reference/exceptions/base-consortium-error.md
+        - reference/exceptions/agents-errors.md
+        - reference/exceptions/agent-capabilities-errors.md
+        - reference/exceptions/agent-generators-errors.md
+        - reference/exceptions/agent-profiles-errors.md
+        - reference/exceptions/agent-templates-errors.md
+        - reference/exceptions/c2-types-errors.md
+        - reference/exceptions/components-errors.md
+        - reference/exceptions/events-errors.md
+        - reference/exceptions/event-hooks-errors.md
         - reference/exceptions/listeners-errors.md
+        - reference/exceptions/listener-profiles-errors.md
+        - reference/exceptions/listener-templates-errors.md
+        - reference/exceptions/options-errors.md
+        - reference/exceptions/payloads-errors.md
         - reference/exceptions/plugins-errors.md
+        - reference/exceptions/repository-errors.md
+        - reference/exceptions/users-errors.md
+        - reference/exceptions/user-accounts-errors.md
 
 markdown_extensions:
   - pymdownx.highlight:

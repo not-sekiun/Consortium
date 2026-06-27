@@ -37,6 +37,7 @@ Exception hierarchy:
                 - [`MissingPluginConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.MissingPluginConfigurationParameterError]
                 - [`EmptyPluginLabelError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.EmptyPluginLabelError]
                 - [`InvalidPluginVersionError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginVersionError]
+                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidPluginDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginDependencyVersionSpecifierError]
             - [`PluginOperationError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginOperationError]
                 - [`PluginStartError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginStartError]

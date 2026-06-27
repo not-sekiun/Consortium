@@ -38,6 +38,7 @@ Exception hierarchy:
                 - [`MissingEventHookConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.MissingEventHookConfigurationParameterError]
                 - [`EmptyEventHookLabelError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EmptyEventHookLabelError]
                 - [`InvalidEventHookVersionError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookVersionError]
+                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidEventHookDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookDependencyVersionSpecifierError]
 """
 

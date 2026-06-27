@@ -62,14 +62,47 @@ class PayloadsService:
 
     @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
+        """Delegates to the underlying repository service to load repository metadata from disk.
+
+        Returns:
+            None
+
+        Raises:
+            InvalidRepositoryMetadataFileJSONError: If the repository metadata file
+                contains invalid JSON.
+            InvalidRepositoryMetadataFileSchemaError: If the repository metadata file
+                does not follow the expected schema.
+            UnsyncedRepositoryMetadataFileError: If a resource recorded in the metadata
+                file does not exist on disk.
+        """
         self._repository_service.load_repository_metadata()
 
     @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
+        """Delegates to the underlying repository service to persist repository metadata to disk.
+
+        Returns:
+            None
+        """
         self._repository_service.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
     def load_payloads_metadata(self) -> None:
+        """Loads payload metadata from the `.payloads.json` file in the repository directory.
+
+        If the metadata file does not yet exist, it is created by calling
+        `save_payloads_metadata`. Payloads whose corresponding repository resource or
+        agent template cannot be found are logged as warnings and skipped.
+
+        Returns:
+            None
+
+        Raises:
+            InvalidPayloadsMetadataFileJSONError: If the metadata file contains invalid
+                JSON.
+            InvalidPayloadsMetadataFileSchemaError: If the metadata file does not follow
+                the expected schema.
+        """
         payloads_metadata_json_schema = {
             "type": "object",
             "patternProperties": {
@@ -139,6 +172,11 @@ class PayloadsService:
 
     @log_and_propagate_error_on_service_method
     def save_payloads_metadata(self) -> None:
+        """Writes the current in-memory payload metadata to the `.payloads.json` file on disk.
+
+        Returns:
+            None
+        """
         payloads_metadata_json = {
             payload_id: {
                 "agent_type": payload.agent_type.name,
@@ -159,6 +197,16 @@ class PayloadsService:
 
     @log_and_propagate_error_on_service_method
     def reserve_payload_id(self) -> uuid.UUID:
+        """Generates and reserves a payload ID to be claimed later during payload creation.
+
+        Reservations are required when the caller needs to know the payload ID before
+        the payload file or directory has been created (e.g., to name the file after the
+        ID). The reserved ID must be provided as `payload_id` to `create_payload_file`
+        or `create_payload_directory`.
+
+        Returns:
+            uuid.UUID: The reserved payload ID.
+        """
         payload_id = uuid.uuid4()
         self._reserved_payload_ids.add(str(payload_id))
         self._logger.debug("Reserved payload ID '{}'", str(payload_id))
@@ -176,6 +224,37 @@ class PayloadsService:
         name: str | None = None,
         description: str = "",
     ) -> Payload:
+        """Creates a file-based payload and associates it with an agent template.
+
+        Build parameters are validated against the agent template before creating the
+        resource. If `payload_id` is provided it must have been previously reserved via
+        `reserve_payload_id`. Emits a `PAYLOAD_CREATED` event.
+
+        Args:
+            agent_template_id (str | uuid.UUID): The ID of the agent template to
+                associate with the payload.
+            build_parameters (dict[str, Any]): Parameters used to build the agent
+                generator from the template (validated against the template).
+            content (str | bytes | IO | Generator[bytes] | Generator[str]): The file
+                content to write to the repository.
+            payload_data (dict[str, Any] | None): Arbitrary metadata attached to the
+                payload. When `None`, no extra metadata is stored.
+            payload_id (str | uuid.UUID | None): A previously reserved ID to assign to
+                this payload. When `None`, a new ID is generated automatically.
+            is_binary (bool): When `True`, the file is written in binary mode. Defaults
+                to `True`.
+            name (str | None): A human-readable name for the payload file. When `None`,
+                the resource UUID is used.
+            description (str): An optional description for the payload.
+
+        Returns:
+            Payload: The created payload.
+
+        Raises:
+            AgentTemplateNotFoundError: If no agent template with the given ID exists.
+            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+                corresponding reservation.
+        """
         # Validate payload build parameters against the agent template and check that
         # the agent template exists
         agent_template = (
@@ -245,6 +324,37 @@ class PayloadsService:
         name: str | None = None,
         description: str = "",
     ) -> Payload:
+        """Creates a directory-based payload by extracting an archive and associating it with an agent template.
+
+        Build parameters are validated against the agent template before creating the
+        resource. If `payload_id` is provided it must have been previously reserved via
+        `reserve_payload_id`. Emits a `PAYLOAD_CREATED` event.
+
+        Args:
+            agent_template_id (str | uuid.UUID): The ID of the agent template to
+                associate with the payload.
+            build_parameters (dict[str, Any]): Parameters used to build the agent
+                generator from the template (validated against the template).
+            content (bytes | Generator[bytes] | BinaryIO): The archive content to
+                extract into the repository directory.
+            payload_data (dict[str, Any] | None): Arbitrary metadata attached to the
+                payload. When `None`, no extra metadata is stored.
+            payload_id (str | uuid.UUID | None): A previously reserved ID to assign to
+                this payload. When `None`, a new ID is generated automatically.
+            archive_file_format (Literal["zip", "tar", "gztar", "bztar", "xztar"]): The
+                format of the archive to extract. Defaults to `"zip"`.
+            name (str | None): A human-readable name for the payload directory. When
+                `None`, the resource UUID is used.
+            description (str): An optional description for the payload.
+
+        Returns:
+            Payload: The created payload.
+
+        Raises:
+            AgentTemplateNotFoundError: If no agent template with the given ID exists.
+            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+                corresponding reservation.
+        """
         # Validate payload build parameters against the agent template and check that
         # the agent template exists
         agent_template = (
@@ -305,6 +415,29 @@ class PayloadsService:
     def delete_payload_by_payload_id(
         self, payload_id: str | uuid.UUID, force: bool = False
     ) -> None:
+        """Deletes a payload's repository resource and its associated metadata.
+
+        A `PAYLOAD_DELETED` event is only emitted when both the metadata and the
+        repository resource existed prior to deletion. If only one side exists and
+        `force` is `False`, an error is raised. With `force=True`, the existing side is
+        deleted without an event.
+
+        Args:
+            payload_id (str | uuid.UUID): The ID of the payload to delete.
+            force (bool): When `True`, deletes whichever side exists even if the other
+                is missing. Defaults to `False`.
+
+        Returns:
+            None
+
+        Raises:
+            PayloadNotFoundError: If neither payload metadata nor a matching repository
+                resource exists.
+            PayloadRepositoryResourceMissingError: If payload metadata exists but the
+                corresponding repository resource is missing and `force` is `False`.
+            PayloadMetadataMissingError: If a repository resource exists but the
+                corresponding payload metadata is missing and `force` is `False`.
+        """
         payload_id = normalize_uuid(payload_id)
 
         payload_exists = payload_id in self._payloads
@@ -364,6 +497,17 @@ class PayloadsService:
 
     @log_and_propagate_error_on_service_method
     def get_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> Payload:
+        """Returns a payload by its ID.
+
+        Args:
+            payload_id (str | uuid.UUID): The ID of the payload to retrieve.
+
+        Returns:
+            Payload: The requested payload.
+
+        Raises:
+            PayloadNotFoundError: If no payload with the given ID exists.
+        """
         payload_id = normalize_uuid(payload_id)
 
         try:
@@ -380,6 +524,11 @@ class PayloadsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_payloads(self) -> list[Payload]:
+        """Returns all currently loaded payloads.
+
+        Returns:
+            list[Payload]: A list of all payloads. Empty if none have been created.
+        """
         payloads = list(self._payloads.values())
         self._logger.debug(
             "Retrieved all payloads ({} payload(s) found)",

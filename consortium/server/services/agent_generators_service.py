@@ -57,6 +57,18 @@ class AgentGeneratorsService:
         self,
         agent_generator_id: str | uuid.UUID,
     ) -> BaseAgentGenerator:
+        """Returns an agent generator by its ID.
+
+        Args:
+            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+                retrieve.
+
+        Returns:
+            BaseAgentGenerator: The requested agent generator.
+
+        Raises:
+            AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
+        """
         agent_generator_id = normalize_uuid(agent_generator_id)
 
         try:
@@ -74,6 +86,11 @@ class AgentGeneratorsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_agent_generators(self) -> list[BaseAgentGenerator]:
+        """Returns all agent generators currently held by the service.
+
+        Returns:
+            list[BaseAgentGenerator]: A list of all agent generators. Empty if none exist.
+        """
         all_agent_generators = list(self._agent_generators.values())
         self._logger.debug(
             "Retrieved all agent_generators ({} retrieved)",
@@ -89,6 +106,29 @@ class AgentGeneratorsService:
         name: str | None = None,
         description: str = "",
     ) -> BaseAgentGenerator:
+        """Creates and registers a new agent generator from the specified agent template.
+
+        Emits an `AGENT_GENERATOR_CREATED` event.
+
+        Args:
+            agent_template_id (str | uuid.UUID): The ID of the agent template to create
+                the agent generator from.
+            parameters (dict[str, Any]): Build parameters to pass to the agent template
+                when creating the agent generator.
+            name (str | None): An optional display name for the new agent generator.
+                If omitted, the name is derived from the template.
+            description (str): An optional description for the new agent generator.
+
+        Returns:
+            BaseAgentGenerator: The newly created agent generator instance.
+
+        Raises:
+            AgentTemplateIDNotFoundError: If no agent template with the given ID is found.
+            InvalidAgentGeneratorParameterNameError: If a parameter name is not valid for
+                the agent template.
+            InvalidAgentGeneratorParameterValueError: If a parameter value fails
+                validation against the agent template.
+        """
         agent_template = (
             self._agent_templates_service.get_agent_template_by_agent_template_id(
                 agent_template_id=agent_template_id,
@@ -123,6 +163,22 @@ class AgentGeneratorsService:
 
     @log_and_propagate_error_on_service_method
     def add_agent_generator(self, agent_generator: BaseAgentGenerator) -> None:
+        """Adds an already-instantiated agent generator to the service.
+
+        Unlike `create_agent_generator_from_agent_template_by_agent_template_id`, this
+        method accepts a pre-built agent generator instance rather than creating one from
+        a template. Emits an `AGENT_GENERATOR_ADDED` event.
+
+        Args:
+            agent_generator (BaseAgentGenerator): The agent generator instance to add.
+
+        Returns:
+            None
+
+        Raises:
+            AgentGeneratorAlreadyExistsError: If an agent generator with the same ID is
+                already registered.
+        """
         if str(agent_generator.agent_generator_id) in self._agent_generators:
             raise AgentGeneratorAlreadyExistsError(
                 agent_generator_id=str(agent_generator.agent_generator_id),
@@ -153,6 +209,23 @@ class AgentGeneratorsService:
         self,
         agent_generator_id: str | uuid.UUID,
     ) -> None:
+        """Removes an agent generator from the service.
+
+        Emits an `AGENT_GENERATOR_REMOVED` event. The agent generator must not currently
+        be running; stop it first before removing.
+
+        Args:
+            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+                remove.
+
+        Returns:
+            None
+
+        Raises:
+            AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
+            AgentGeneratorAlreadyRunningError: If the agent generator is currently
+                running.
+        """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
@@ -183,6 +256,35 @@ class AgentGeneratorsService:
         description: str | None = None,
         parameters: dict[str, Any] | None = None,
     ) -> BaseAgentGenerator:
+        """Updates the name, description, and/or parameters of an agent generator.
+
+        Parameter updates are applied atomically: if validation of any parameter fails,
+        no other updates are applied. When `parameters` is provided, missing keys are
+        back-filled from the existing parameter set so only the specified fields change.
+        Emits an `AGENT_GENERATOR_UPDATED` event when at least one field changes.
+
+        Args:
+            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+                update.
+            name (str | None): The new display name. When `None`, the name is not
+                changed.
+            description (str | None): The new description. When `None`, the description
+                is not changed.
+            parameters (dict[str, Any] | None): A partial or full mapping of parameter
+                names to new values. When `None`, parameters are not changed.
+
+        Returns:
+            BaseAgentGenerator: The updated agent generator instance.
+
+        Raises:
+            AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
+            AgentGeneratorAlreadyRunningError: If a parameter update is attempted while
+                the agent generator is running.
+            InvalidAgentGeneratorParameterNameError: If a key in `parameters` is not a
+                valid parameter for the creating agent template.
+            InvalidAgentGeneratorParameterValueError: If a value in `parameters` fails
+                validation against the creating agent template.
+        """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id
         )
@@ -333,6 +435,22 @@ class AgentGeneratorsService:
         agent_generator_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
+        """Starts an agent generator by its ID.
+
+        Emits an `AGENT_GENERATOR_STARTED` event after starting.
+
+        Args:
+            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+                start.
+            blocking (bool): If `True`, waits until the agent generator has fully
+                started before returning. Defaults to `False`.
+
+        Returns:
+            None
+
+        Raises:
+            AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
+        """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
@@ -355,6 +473,22 @@ class AgentGeneratorsService:
         agent_generator_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
+        """Stops an agent generator by its ID.
+
+        Emits an `AGENT_GENERATOR_STOPPED` event after stopping.
+
+        Args:
+            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+                stop.
+            blocking (bool): If `True`, waits until the agent generator has fully
+                stopped before returning. Defaults to `False`.
+
+        Returns:
+            None
+
+        Raises:
+            AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
+        """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
@@ -377,6 +511,23 @@ class AgentGeneratorsService:
         agent_generator_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
+        """Cancels an agent generator by its ID, forcibly aborting it.
+
+        Unlike stopping, cancellation does not wait for the agent generator to finish
+        its current operation cleanly. Emits an `AGENT_GENERATOR_CANCELLED` event.
+
+        Args:
+            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+                cancel.
+            blocking (bool): If `True`, waits until the agent generator has fully
+                stopped before returning. Defaults to `False`.
+
+        Returns:
+            None
+
+        Raises:
+            AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
+        """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )

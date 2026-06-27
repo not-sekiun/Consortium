@@ -64,6 +64,30 @@ class AgentsService:
         hostname: str | None = None,
         agent_data: dict[str, Any] | None = None,
     ) -> Agent:
+        """Registers a new agent and emits an `AGENT_REGISTERED` event.
+
+        Args:
+            listener_id: The ID of the listener this agent is connecting through.
+            payload_id: The ID of the payload that generated this agent, if any.
+            agent_type: The agent type classification object for this agent.
+            name: A human-readable display name for the agent.
+            description: A short description of the agent.
+            endpoint: A human-readable string identifying the agent's network endpoint.
+            user: The OS username the agent process is running as.
+            is_admin: Whether the agent is running with administrator or root privileges.
+            os: The name of the operating system.
+            version: The version of the operating system.
+            arch: The CPU architecture of the host system.
+            pid: The process ID of the agent.
+            locale: The locale string of the host system.
+            remote_host_address: The IP address the agent connected from.
+            local_host_address: The local IP address of the agent's host.
+            hostname: The hostname of the agent's host.
+            agent_data: Arbitrary key-value pairs carrying agent-specific metadata.
+
+        Returns:
+            Agent: The newly registered agent instance.
+        """
         agent = Agent(
             listener_id=listener_id,
             payload_id=payload_id,
@@ -99,6 +123,17 @@ class AgentsService:
 
     @log_and_propagate_error_on_service_method
     def deregister_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
+        """Removes a registered agent from the service and emits an `AGENT_DEREGISTERED` event.
+
+        Args:
+            agent_id (str | uuid.UUID): The ID of the agent to deregister.
+
+        Returns:
+            None
+
+        Raises:
+            AgentNotFoundError: If no agent with the given ID is registered.
+        """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         del self._agents[str(agent.agent_id)]
 
@@ -114,6 +149,19 @@ class AgentsService:
 
     @log_and_propagate_error_on_service_method
     def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
+        """Records a check-in from an agent, updating its last activity timestamp and marking it active.
+
+        Emits an `AGENT_CHECKED_IN` event.
+
+        Args:
+            agent_id (str | uuid.UUID): The ID of the agent checking in.
+
+        Returns:
+            None
+
+        Raises:
+            AgentNotFoundError: If no agent with the given ID is registered.
+        """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         asyncio.create_task(
             self._events_service.trigger_event(
@@ -243,6 +291,17 @@ class AgentsService:
 
     @log_and_propagate_error_on_service_method
     def get_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> Agent:
+        """Returns a registered agent by its ID.
+
+        Args:
+            agent_id (str | uuid.UUID): The ID of the agent to retrieve.
+
+        Returns:
+            Agent: The agent with the specified ID.
+
+        Raises:
+            AgentNotFoundError: If no agent with the given ID is registered.
+        """
         agent_id = normalize_uuid(value=agent_id)
 
         try:
@@ -255,6 +314,11 @@ class AgentsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_agents(self) -> list[Agent]:
+        """Returns all registered agents.
+
+        Returns:
+            list[Agent]: A list of all registered agents. Empty if none are registered.
+        """
         all_agents = list(self._agents.values())
         self._logger.debug(
             "Retrieved all agents ({} retrieved)",
@@ -266,6 +330,15 @@ class AgentsService:
     def get_all_agent_tasks(
         self, status: AgentTaskState | None = None
     ) -> list[AgentTask]:
+        """Returns all tasks across every registered agent, optionally filtered by state.
+
+        Args:
+            status (AgentTaskState | None): When provided, only tasks in this state are
+                returned. When `None`, all tasks regardless of state are returned.
+
+        Returns:
+            list[AgentTask]: A list of matching tasks. Empty if no tasks match.
+        """
         all_tasks = []
         for agent in self._agents.values():
             all_tasks.extend(agent.get_all_tasks(state=status))
@@ -284,6 +357,17 @@ class AgentsService:
 
     @log_and_propagate_error_on_service_method
     def get_agent_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
+        """Returns a task by its ID, searching across all registered agents.
+
+        Args:
+            task_id (str | uuid.UUID): The ID of the task to retrieve.
+
+        Returns:
+            AgentTask: The task with the specified ID.
+
+        Raises:
+            AgentTaskNotFoundError: If no task with the given ID exists on any agent.
+        """
         for agent in self._agents.values():
             try:
                 task = agent.get_task_by_task_id(task_id=task_id)
@@ -302,6 +386,19 @@ class AgentsService:
     def get_all_agent_tasks_by_agent_id(
         self, agent_id: str | uuid.UUID, status: AgentTaskState | None = None
     ) -> list[AgentTask]:
+        """Returns all tasks for a specific agent, optionally filtered by state.
+
+        Args:
+            agent_id (str | uuid.UUID): The ID of the agent whose tasks to retrieve.
+            status (AgentTaskState | None): When provided, only tasks in this state are
+                returned. When `None`, all tasks regardless of state are returned.
+
+        Returns:
+            list[AgentTask]: A list of matching tasks. Empty if no tasks match.
+
+        Raises:
+            AgentNotFoundError: If no agent with the given ID is registered.
+        """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         all_tasks = agent.get_all_tasks(state=status)
         if status is None:
@@ -325,6 +422,19 @@ class AgentsService:
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
     ) -> AgentTask:
+        """Returns a specific task belonging to a specific agent.
+
+        Args:
+            agent_id (str | uuid.UUID): The ID of the agent that owns the task.
+            task_id (str | uuid.UUID): The ID of the task to retrieve.
+
+        Returns:
+            AgentTask: The requested task.
+
+        Raises:
+            AgentNotFoundError: If no agent with the given agent ID is registered.
+            AgentTaskNotFoundError: If the agent has no task with the given task ID.
+        """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         task = agent.get_task_by_task_id(task_id=task_id)
         self._logger.debug(
@@ -341,6 +451,19 @@ class AgentsService:
         command: str,
         arguments: dict[str, Any],
     ) -> AgentTask:
+        """Queues a command for execution on the specified agent and emits an `AGENT_TASKED` event.
+
+        Args:
+            agent_id (str | uuid.UUID): The ID of the agent to task.
+            command (str): The name of the command to execute on the agent.
+            arguments (dict[str, Any]): The arguments to pass along with the command.
+
+        Returns:
+            AgentTask: The newly created task object representing the queued command.
+
+        Raises:
+            AgentNotFoundError: If no agent with the given ID is registered.
+        """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
 
         task = AgentTask(command=command, arguments=arguments)
@@ -365,6 +488,24 @@ class AgentsService:
         name: str | None = None,
         description: str | None = None,
     ) -> Agent:
+        """Updates the name and/or description of a registered agent.
+
+        Emits an `AGENT_UPDATED` event when at least one field changes. Passing `None`
+        for a field leaves it unchanged.
+
+        Args:
+            agent_id (str | uuid.UUID): The ID of the agent to update.
+            name (str | None): The new display name for the agent. When `None`, the
+                name is not changed.
+            description (str | None): The new description for the agent. When `None`,
+                the description is not changed.
+
+        Returns:
+            Agent: The updated agent instance.
+
+        Raises:
+            AgentNotFoundError: If no agent with the given ID is registered.
+        """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
 
         updated = {}
@@ -422,5 +563,19 @@ class AgentsService:
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
     ):
+        """Deletes a queued (not yet dispatched) task from the specified agent's task queue.
+
+        Args:
+            agent_id (str | uuid.UUID): The ID of the agent that owns the task.
+            task_id (str | uuid.UUID): The ID of the queued task to delete.
+
+        Returns:
+            None
+
+        Raises:
+            AgentNotFoundError: If no agent with the given agent ID is registered.
+            AgentTaskNotFoundError: If the agent has no queued task with the given
+                task ID.
+        """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         agent.delete_queued_task_by_task_id(task_id=task_id)

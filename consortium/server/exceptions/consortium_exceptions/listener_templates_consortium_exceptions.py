@@ -9,6 +9,7 @@ Exception hierarchy:
                 - [`MissingListenerTemplateConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.MissingListenerTemplateConfigurationParameterError]
                 - [`EmptyListenerTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.EmptyListenerTemplateLabelError]
                 - [`InvalidListenerTemplateVersionError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidListenerTemplateVersionError]
+                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidListenerTemplateDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.InvalidListenerTemplateDependencyVersionSpecifierError]
                 - [`DuplicateListenerTemplateOptionNameError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.DuplicateListenerTemplateOptionNameError]
             - [`ListenerTemplateOptionError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateOptionError]

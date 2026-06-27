@@ -48,6 +48,22 @@ class ExceptionRemappingComponentRegistryService(
         component_project_folder: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> Component:
+        """Loads a component from a project folder with domain-specific exception remapping.
+
+        Delegates to the base class and intercepts any `ComponentLoadingError` or
+        `ComponentDependencyError`, remapping them to the subclass-defined
+        domain-specific error types via `_COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP`.
+
+        Args:
+            component_project_folder (pathlib.Path): Path to the directory containing
+                the component project files and `manifest.json`.
+            ignore_enabled_component_flag (bool): When `True`, bypasses the `enabled`
+                check in the manifest. Defaults to `False`.
+
+        Returns:
+            Component: The instantiated component, or `None` if the component is
+                disabled.
+        """
         return super().get_component_from_component_project_folder(
             component_project_folder=component_project_folder,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
@@ -62,6 +78,23 @@ class ExceptionRemappingComponentRegistryService(
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:
+        """Scans a directory and loads all components, remapping errors to domain-specific types.
+
+        Delegates to the base class then replaces each `ComponentLoadingError` or
+        `ComponentDependencyError` in the errored list with the corresponding
+        domain-specific exception type. Non-remappable errors are forwarded unchanged.
+
+        Args:
+            directory (pathlib.Path): The root directory to recursively scan for
+                component project folders.
+            ignore_enabled_component_flag (bool): When `True`, bypasses the `enabled`
+                check in each manifest. Defaults to `False`.
+
+        Returns:
+            tuple[list[Component], list[pathlib.Path], list[tuple[pathlib.Path, ComponentLoadingError]]]:
+                A three-element tuple of loaded components, skipped paths, and
+                `(path, domain-error)` pairs for components that errored.
+        """
         retrieved, skipped, errored = (
             super().get_components_from_component_project_folder_directories(
                 directory=directory,
@@ -101,8 +134,30 @@ class ExceptionRemappingComponentRegistryService(
 
     @_remap_exception_decorator
     def register_component(self, component: Component) -> None:
+        """Registers a component with domain-specific exception remapping.
+
+        Delegates to the base class and intercepts any `ComponentLoadingError` or
+        `ComponentDependencyError`, remapping them to domain-specific types.
+
+        Args:
+            component (Component): The component instance to register.
+
+        Returns:
+            None
+        """
         return super().register_component(component=component)
 
     @_remap_exception_decorator
     def get_component_by_component_id(self, component_id: str | uuid.UUID) -> Component:
+        """Returns a registered component by its ID with domain-specific exception remapping.
+
+        Delegates to the base class and intercepts any `ComponentLoadingError` or
+        `ComponentDependencyError`, remapping them to domain-specific types.
+
+        Args:
+            component_id (str | uuid.UUID): The ID of the component to retrieve.
+
+        Returns:
+            Component: The requested component instance.
+        """
         return super().get_component_by_component_id(component_id=component_id)

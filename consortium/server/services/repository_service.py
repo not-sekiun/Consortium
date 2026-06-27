@@ -48,6 +48,23 @@ class RepositoryService:
 
     @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
+        """Loads repository resource metadata from the repository metadata JSON file on disk.
+
+        If the metadata file does not yet exist, an empty metadata file is created via
+        `save_repository_metadata`. Resources listed in the metadata but missing from
+        disk raise an error rather than being silently skipped.
+
+        Returns:
+            None
+
+        Raises:
+            InvalidRepositoryMetadataFileJSONError: If the metadata file contains
+                invalid JSON.
+            InvalidRepositoryMetadataFileSchemaError: If the metadata file does not
+                follow the expected schema.
+            UnsyncedRepositoryMetadataFileError: If a resource recorded in the metadata
+                file does not exist on disk.
+        """
         repository_metadata_json_schema = {
             "type": "object",
             "patternProperties": {
@@ -191,6 +208,11 @@ class RepositoryService:
 
     @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
+        """Writes the current in-memory repository resource metadata to disk as JSON.
+
+        Returns:
+            None
+        """
         repository_metadata_json = {
             resource_id: repository_resource.to_json()
             for resource_id, repository_resource in self._repository_resources.items()
@@ -212,6 +234,22 @@ class RepositoryService:
         name: str | None = None,
         description: str = "",
     ) -> RepositoryFile:
+        """Creates and persists a new file resource in the repository.
+
+        The file is stored on disk under a UUID-named path derived from the original
+        file extension (if provided). Metadata is persisted after creation.
+
+        Args:
+            content (str | bytes | TextIO | BinaryIO): The file content to write.
+            binary (bool): When `True`, the file is written in binary mode. Defaults to
+                `True`.
+            name (str | None): A human-readable name for the file. When `None`, the
+                resource UUID is used as the name.
+            description (str): An optional description for the file.
+
+        Returns:
+            RepositoryFile: The newly created repository file resource.
+        """
         # TODO: Fix this hack. We should add a class method that allows manually
         #  setting each particular relevant value for "loading" back in a previously
         #  tracked file.
@@ -248,6 +286,25 @@ class RepositoryService:
         name: str | None = None,
         description: str = "",
     ) -> RepositoryDirectory:
+        """Creates and persists a new directory resource in the repository.
+
+        When `content` is provided and `archive_file_format` is set, the content is
+        extracted from the archive into the new directory. Metadata is persisted after
+        creation.
+
+        Args:
+            content (bytes | BinaryIO | str | pathlib.Path | None): Archive content to
+                extract into the directory, or `None` to create an empty directory.
+            archive_file_format (Literal["zip", "tar", "gztar", "bztar", "xztar"] |
+                None): The archive format to use when extracting `content`. Must be set
+                when `content` is provided.
+            name (str | None): A human-readable name for the directory. When `None`,
+                the resource UUID is used as the name.
+            description (str): An optional description for the directory.
+
+        Returns:
+            RepositoryDirectory: The newly created repository directory resource.
+        """
         unique_resource_id = uuid.uuid4()
         repository_directory = RepositoryDirectory.create(
             path=self.repository_directory_path / str(unique_resource_id),
@@ -274,6 +331,19 @@ class RepositoryService:
         self,
         resource_id: str | uuid.UUID,
     ) -> None:
+        """Deletes a repository resource from disk and removes it from the registry.
+
+        Metadata is persisted after deletion.
+
+        Args:
+            resource_id (str | uuid.UUID): The ID of the resource to delete.
+
+        Returns:
+            None
+
+        Raises:
+            RepositoryResourceNotFoundError: If no resource with the given ID exists.
+        """
         repository_resource = self.get_resource_by_resource_id(
             resource_id=resource_id,
         )
@@ -293,6 +363,12 @@ class RepositoryService:
     def get_all_resources(
         self,
     ) -> list[RepositoryFile | RepositoryDirectory]:
+        """Returns all resources currently tracked by the repository service.
+
+        Returns:
+            list[RepositoryFile | RepositoryDirectory]: A list of all repository
+                resources. Empty if none have been created.
+        """
         repository_resources = list(self._repository_resources.values())
         self._logger.debug(
             "Retrieved all repository resources ({} resource(s) retrieved)",
@@ -305,6 +381,17 @@ class RepositoryService:
         self,
         resource_id: str | uuid.UUID,
     ) -> RepositoryFile | RepositoryDirectory:
+        """Returns a repository resource by its ID.
+
+        Args:
+            resource_id (str | uuid.UUID): The ID of the resource to retrieve.
+
+        Returns:
+            RepositoryFile | RepositoryDirectory: The requested repository resource.
+
+        Raises:
+            RepositoryResourceNotFoundError: If no resource with the given ID exists.
+        """
         resource_id = normalize_uuid(resource_id)
 
         try:

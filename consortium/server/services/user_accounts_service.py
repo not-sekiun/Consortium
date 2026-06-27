@@ -52,6 +52,17 @@ class UserAccountsService:
         self,
         user_account_id: str | uuid.UUID,
     ) -> UserAccountModel:
+        """Returns a user account by its ID.
+
+        Args:
+            user_account_id (str | uuid.UUID): The ID of the user account to retrieve.
+
+        Returns:
+            UserAccountModel: The requested user account.
+
+        Raises:
+            UserAccountIDNotFoundError: If no user account with the given ID exists.
+        """
         user_account_id = normalize_uuid(user_account_id)
 
         try:
@@ -66,6 +77,18 @@ class UserAccountsService:
 
     @log_and_propagate_error_on_service_method
     def get_user_account_by_username(self, username: str) -> UserAccountModel:
+        """Returns a user account by its username.
+
+        Args:
+            username (str): The username of the account to retrieve.
+
+        Returns:
+            UserAccountModel: The requested user account.
+
+        Raises:
+            UserAccountUsernameNotFoundError: If no user account with the given username
+                exists.
+        """
         for user_account in self._user_accounts.values():
             if user_account.username == username:
                 self._logger.debug("Retrieved user account: {!r}", user_account)
@@ -74,6 +97,11 @@ class UserAccountsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_user_accounts(self) -> list[UserAccountModel]:
+        """Returns all registered user accounts.
+
+        Returns:
+            list[UserAccountModel]: A list of all user accounts. Empty if none exist.
+        """
         all_user_accounts = list(self._user_accounts.values())
         self._logger.debug(
             "Retrieved all user accounts ({} user account(s) retrieved)",
@@ -88,6 +116,24 @@ class UserAccountsService:
         password: str,
         role: UserRole,
     ) -> UserAccountModel:
+        """Creates a new user account and adds it to the in-memory registry.
+
+        Args:
+            username (str): The username for the new account. Must be non-empty and
+                unique.
+            password (str): The password for the new account. Must be non-empty.
+            role (UserRole): The role to assign to the new account.
+
+        Returns:
+            UserAccountModel: The newly created user account.
+
+        Raises:
+            EmptyUserAccountUsernameError: If `username` is empty.
+            EmptyUserAccountPasswordError: If `password` is empty.
+            InvalidUserAccountRoleError: If `role` is not a valid `UserRole` value.
+            UserAccountUsernameAlreadyExistsError: If an account with the given username
+                already exists.
+        """
         if not username:
             raise EmptyUserAccountUsernameError._during_user_account_creation()
         if not password:
@@ -118,6 +164,29 @@ class UserAccountsService:
         password: str | None = None,
         role: UserRole | None = None,
     ) -> UserAccountModel:
+        """Updates a user account's username, password, and/or role.
+
+        Only fields that are not `None` are updated.
+
+        Args:
+            user_account_id (str | uuid.UUID): The ID of the user account to update.
+            username (str | None): The new username. When `None`, the username is not
+                changed.
+            password (str | None): The new password. When `None`, the password is not
+                changed.
+            role (UserRole | None): The new role. When `None`, the role is not changed.
+
+        Returns:
+            UserAccountModel: The updated user account.
+
+        Raises:
+            UserAccountIDNotFoundError: If no user account with the given ID exists.
+            EmptyUserAccountUsernameError: If `username` is an empty string.
+            EmptyUserAccountPasswordError: If `password` is an empty string.
+            InvalidUserAccountRoleError: If `role` is not a valid `UserRole` value.
+            UserAccountUsernameAlreadyExistsError: If an account with the given username
+                already exists.
+        """
         # Calling the `get_user_account_by_user_account_id()` method will implicitly
         # check to see if the user account ID is valid.
         user_account = self.get_user_account_by_user_account_id(
@@ -179,6 +248,17 @@ class UserAccountsService:
         self,
         user_account_id: str | uuid.UUID,
     ) -> None:
+        """Deletes a user account from the in-memory registry.
+
+        Args:
+            user_account_id (str | uuid.UUID): The ID of the user account to delete.
+
+        Returns:
+            None
+
+        Raises:
+            UserAccountIDNotFoundError: If no user account with the given ID exists.
+        """
         user_account = self.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
@@ -194,6 +274,19 @@ class UserAccountsService:
         username: str,
         password: str,
     ) -> UserAccountModel:
+        """Validates a username and password against registered user accounts.
+
+        Args:
+            username (str): The username to authenticate.
+            password (str): The password to validate.
+
+        Returns:
+            UserAccountModel: The authenticated user account.
+
+        Raises:
+            UserAccountAuthenticationError: If the username does not exist or the
+                password does not match.
+        """
         existing_usernames = [
             user_account.username for user_account in self.get_all_user_accounts()
         ]
@@ -213,6 +306,29 @@ class UserAccountsService:
         self,
         user_accounts_filepath: Path,
     ) -> list[UserAccountModel]:
+        """Reads user accounts from a JSON file and adds them to the in-memory registry.
+
+        Delegates parsing to `read_user_accounts_from_user_accounts_file` and then
+        registers each parsed account.
+
+        Args:
+            user_accounts_filepath (Path): Path to the JSON file to read accounts from.
+
+        Returns:
+            list[UserAccountModel]: The list of user accounts loaded from the file.
+
+        Raises:
+            UserAccountsFileNotFoundError: If the file does not exist.
+            UserAccountsFilepathIsDirectoryError: If the path points to a directory.
+            UserAccountsFileIsNotJSONError: If the file is not valid JSON.
+            UserAccountsFileSchemaError: If the JSON does not follow the expected schema.
+            UserAccountsFileReadAccessError: If the file cannot be read due to
+                insufficient permissions.
+            UserAccountUsernameAlreadyExistsError: If a username from the file conflicts
+                with an already-registered account.
+            UserAccountsFileContainsDuplicateUsernamesError: If the file itself contains
+                duplicate usernames.
+        """
         new_user_accounts = self.read_user_accounts_from_user_accounts_file(
             user_accounts_filepath=user_accounts_filepath,
         )
@@ -226,6 +342,30 @@ class UserAccountsService:
         self,
         user_accounts_filepath: Path,
     ) -> list[UserAccountModel]:
+        """Reads and validates user accounts from a JSON file without registering them.
+
+        Validates the file path, JSON structure, and schema. Checks that usernames are
+        unique against both existing registered accounts and entries within the file
+        itself.
+
+        Args:
+            user_accounts_filepath (Path): Path to the JSON file to read accounts from.
+
+        Returns:
+            list[UserAccountModel]: The list of parsed user accounts.
+
+        Raises:
+            UserAccountsFileNotFoundError: If the file does not exist.
+            UserAccountsFilepathIsDirectoryError: If the path points to a directory.
+            UserAccountsFileIsNotJSONError: If the file is not valid JSON.
+            UserAccountsFileSchemaError: If the JSON does not follow the expected schema.
+            UserAccountsFileReadAccessError: If the file cannot be read due to
+                insufficient permissions.
+            UserAccountUsernameAlreadyExistsError: If a username from the file conflicts
+                with an already-registered account.
+            UserAccountsFileContainsDuplicateUsernamesError: If the file itself contains
+                duplicate usernames.
+        """
         user_accounts_file_json_schema = {
             "type": "array",
             "items": {
@@ -305,6 +445,19 @@ class UserAccountsService:
         self,
         user_accounts_filepath: Path,
     ) -> int:
+        """Serializes and writes all registered user accounts to a JSON file.
+
+        Args:
+            user_accounts_filepath (Path): Path to the file to write accounts to.
+
+        Returns:
+            int: The number of bytes written.
+
+        Raises:
+            UserAccountsFilepathIsDirectoryError: If the path points to a directory.
+            UserAccountsFileWriteAccessError: If the file cannot be written due to
+                insufficient permissions.
+        """
         if user_accounts_filepath.is_dir():
             raise UserAccountsFilepathIsDirectoryError(
                 user_accounts_filepath=str(user_accounts_filepath),
@@ -341,6 +494,15 @@ class UserAccountsService:
 
     @log_and_propagate_error_on_service_method
     def load_framework_user_accounts(self) -> bool:
+        """Loads user accounts from the framework's configured user accounts file.
+
+        Errors encountered while loading are logged and suppressed; callers receive
+        a boolean indicating success or failure.
+
+        Returns:
+            bool: `True` if accounts were loaded successfully, `False` if a
+                `UserAccountsServiceError` occurred.
+        """
         self._logger.debug("Loading framework user accounts...")
 
         try:
@@ -361,6 +523,15 @@ class UserAccountsService:
 
     @log_and_propagate_error_on_service_method
     def reload_framework_user_accounts(self) -> bool:
+        """Deletes all existing user accounts then reloads them from the framework's file.
+
+        Errors encountered while reloading are logged and suppressed; callers receive a
+        boolean indicating success or failure.
+
+        Returns:
+            bool: `True` if accounts were reloaded successfully, `False` if a
+                `UserAccountsServiceError` occurred.
+        """
         self._logger.debug("Reloading framework user accounts...")
 
         try:
@@ -385,6 +556,15 @@ class UserAccountsService:
 
     @log_and_propagate_error_on_service_method
     def write_framework_user_accounts(self) -> bool:
+        """Writes all in-memory user accounts to the framework's configured user accounts file.
+
+        Errors encountered while writing are logged and suppressed; callers receive a
+        boolean indicating success or failure.
+
+        Returns:
+            bool: `True` if accounts were written successfully, `False` if a
+                `UserAccountsServiceError` occurred.
+        """
         self._logger.debug("Writing framework user accounts...")
 
         try:

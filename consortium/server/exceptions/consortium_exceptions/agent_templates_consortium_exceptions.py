@@ -9,6 +9,7 @@ Exception hierarchy:
                 - [`MissingAgentTemplateConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.MissingAgentTemplateConfigurationParameterError]
                 - [`EmptyAgentTemplateLabelError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.EmptyAgentTemplateLabelError]
                 - [`InvalidAgentTemplateVersionError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidAgentTemplateVersionError]
+                - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidAgentTemplateDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.InvalidAgentTemplateDependencyVersionSpecifierError]
                 - [`DuplicateAgentTemplateOptionNameError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.DuplicateAgentTemplateOptionNameError]
             - [`AgentTemplateOptionError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplateOptionError]
@@ -20,6 +21,7 @@ Exception hierarchy:
                 - [`AgentTemplateIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplateIDNotFoundError]
                 - [`AgentTemplateLabelNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplateLabelNotFoundError]
 """
+# TODO: The docstring generator tool for some reason missed out on InvalidFrameworkVersionSpecifierError agent template, listener template, event hooks and plugins exceptions
 
 from typing import Any
 

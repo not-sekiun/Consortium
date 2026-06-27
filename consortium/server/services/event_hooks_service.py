@@ -60,6 +60,38 @@ class EventHooksService:
         event_hook_project_folder: pathlib.Path,
         ignore_enabled_event_hook_flag: bool = False,
     ) -> BaseEventHook | None:
+        """Instantiates an event hook from a project folder without registering it.
+
+        Disabled event hooks (as indicated by `enabled: false` in their `manifest.json`)
+        are not instantiated unless `ignore_enabled_event_hook_flag` is `True`.
+
+        Args:
+            event_hook_project_folder (pathlib.Path): Path to the directory containing
+                the event hook project files and `manifest.json`.
+            ignore_enabled_event_hook_flag (bool): When `True`, bypasses the `enabled`
+                check in the manifest. Defaults to `False`.
+
+        Returns:
+            BaseEventHook | None: The instantiated event hook, or `None` if the event
+                hook is disabled and the enabled check is not overridden.
+
+        Raises:
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the event hook is
+                incompatible with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the event hook.
+        """
         event_hook = self._event_hook_registry_service.get_component_from_component_project_folder(
             component_project_folder=event_hook_project_folder,
             ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
@@ -89,27 +121,23 @@ class EventHooksService:
         list[pathlib.Path],
         list[tuple[pathlib.Path, EventHookLoadingError]] | None,
     ]:
-        """
-        Recursively scan a directory for event hook project folders and return the
-        event hooks found.
+        """Recursively scans a directory for event hook project folders and instantiates them.
 
-        Disabled event hooks (as indicated in their `manifest.json`'s `enabled` flag)
-        are skipped unless `ignore_enabled_event_hook_flag=True`.
+        Disabled event hooks (as indicated by `enabled: false` in their `manifest.json`)
+        are skipped unless `ignore_enabled_event_hook_flag` is `True`.
 
         Args:
-            directory: Directory containing event hook project folders.
-            ignore_enabled_event_hook_flag: Ignore the manifest `enabled` flag.
+            directory (pathlib.Path): The directory to scan for event hook project
+                folders.
+            ignore_enabled_event_hook_flag (bool): When `True`, bypasses the `enabled`
+                check in each event hook's manifest. Defaults to `False`.
 
         Returns:
-            A tuple `(retrieved, skipped, errored)`:
-                * `retrieved`: Successfully instantiated event hooks.
-                * `skipped`: Folders skipped because the event hook was disabled.
-                * `errored`: Tuples of `(path, EventHookLoadingError)` for hooks that
-                  failed to load.
-
-        Raises:
-            See [`get_event_hook_from_event_hook_project_folder`][consortium.server.services.event_hooks_service.EventHooksService.get_event_hook_from_event_hook_project_folder]
-            for specific exceptions raised during event hook retrieval.
+            tuple[list[BaseEventHook], list[pathlib.Path], list[tuple[pathlib.Path, EventHookLoadingError]] | None]:
+                A three-element tuple: (1) a list of successfully instantiated event
+                hooks, (2) a list of paths skipped because the event hook was disabled,
+                and (3) a list of `(path, error)` tuples for event hooks that failed to
+                load.
         """
         retrieved, skipped, errored = (
             self._event_hook_registry_service.get_components_from_component_project_folder_directories(
@@ -133,6 +161,20 @@ class EventHooksService:
 
     @log_and_propagate_error_on_service_method
     def register_event_hook(self, event_hook: BaseEventHook) -> BaseEventHook:
+        """Registers an already-instantiated event hook with the service.
+
+        Args:
+            event_hook (BaseEventHook): The event hook instance to register.
+
+        Returns:
+            BaseEventHook: The registered event hook instance.
+
+        Raises:
+            ComponentAlreadyRegisteredError: If an event hook with the same ID is
+                already registered.
+            DuplicateComponentLabelError: If an event hook with the same label is
+                already registered.
+        """
         self._event_hook_registry_service.register_component(
             component=event_hook,
         )
@@ -145,6 +187,42 @@ class EventHooksService:
         event_hook_project_folder: pathlib.Path,
         ignore_enabled_event_hook_flag: bool = False,
     ) -> BaseEventHook | None:
+        """Instantiates and registers an event hook from a project folder.
+
+        Disabled event hooks are skipped unless `ignore_enabled_event_hook_flag` is
+        `True`.
+
+        Args:
+            event_hook_project_folder (pathlib.Path): Path to the directory containing
+                the event hook project files and `manifest.json`.
+            ignore_enabled_event_hook_flag (bool): When `True`, bypasses the `enabled`
+                check in the manifest. Defaults to `False`.
+
+        Returns:
+            BaseEventHook | None: The registered event hook instance, or `None` if the
+                event hook is disabled and the enabled check is not overridden.
+
+        Raises:
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the event hook is
+                incompatible with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the event hook.
+            ComponentAlreadyRegisteredError: If an event hook with the same ID is
+                already registered.
+            DuplicateComponentLabelError: If an event hook with the same label is
+                already registered.
+        """
         event_hook = self._event_hook_registry_service.register_component_from_component_project_folder(
             component_project_folder=event_hook_project_folder,
             ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
@@ -163,6 +241,18 @@ class EventHooksService:
 
     @log_and_propagate_error_on_service_method
     async def load_event_hook(self, event_hook: BaseEventHook) -> BaseEventHook:
+        """Registers and activates an already-instantiated event hook.
+
+        Args:
+            event_hook (BaseEventHook): The event hook instance to load.
+
+        Returns:
+            BaseEventHook: The loaded event hook instance.
+
+        Raises:
+            ComponentAlreadyRegisteredError: If an event hook with the same ID is
+                already registered.
+        """
         event_hook = await self._event_hook_registry_service.load_component(
             component=event_hook,
         )
@@ -175,6 +265,38 @@ class EventHooksService:
         event_hook_project_folder: pathlib.Path,
         ignore_enabled_event_hook_flag: bool = False,
     ) -> BaseEventHook | None:
+        """Instantiates, registers, and activates an event hook from a project folder.
+
+        Disabled event hooks are skipped unless `ignore_enabled_event_hook_flag` is
+        `True`.
+
+        Args:
+            event_hook_project_folder (pathlib.Path): Path to the directory containing
+                the event hook project files and `manifest.json`.
+            ignore_enabled_event_hook_flag (bool): When `True`, bypasses the `enabled`
+                check in the manifest. Defaults to `False`.
+
+        Returns:
+            BaseEventHook | None: The loaded event hook instance, or `None` if the
+                event hook is disabled and the enabled check is not overridden.
+
+        Raises:
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the event hook is
+                incompatible with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the event hook.
+        """
         event_hook = await self._event_hook_registry_service.load_component_from_component_project_folder(
             component_project_folder=event_hook_project_folder,
             ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
@@ -196,6 +318,17 @@ class EventHooksService:
         self,
         event_hook_id: str | uuid.UUID,
     ) -> None:
+        """Deactivates and deregisters a loaded event hook by its ID.
+
+        Args:
+            event_hook_id (str | uuid.UUID): The ID of the event hook to unload.
+
+        Returns:
+            None
+
+        Raises:
+            ComponentNotFoundError: If no event hook with the given ID is registered.
+        """
         event_hook = (
             await self._event_hook_registry_service.unload_component_by_component_id(
                 component_id=event_hook_id,
@@ -210,6 +343,23 @@ class EventHooksService:
         event_hook_id: str | uuid.UUID,
         ignore_enabled_event_hook_flag: bool = False,
     ) -> BaseEventHook:
+        """Unloads and reloads an event hook from its original project folder.
+
+        If the event hook is disabled after reload and `ignore_enabled_event_hook_flag`
+        is `False`, the event hook will only be unloaded, not reloaded.
+
+        Args:
+            event_hook_id (str | uuid.UUID): The ID of the event hook to reload.
+            ignore_enabled_event_hook_flag (bool): When `True`, bypasses the `enabled`
+                check in the manifest during reload. Defaults to `False`.
+
+        Returns:
+            BaseEventHook: The reloaded event hook instance, or `None` if the event
+                hook was disabled and the enabled check was not overridden.
+
+        Raises:
+            ComponentNotFoundError: If no event hook with the given ID is registered.
+        """
         event_hook = (
             await self._event_hook_registry_service.reload_component_by_component_id(
                 component_id=event_hook_id,
@@ -235,6 +385,18 @@ class EventHooksService:
         self,
         ignore_enabled_event_hook_flag: bool = False,
     ) -> None:
+        """Scans the framework's event hooks directory and loads all enabled event hooks.
+
+        Disabled event hooks and those that fail to load are logged and skipped without
+        aborting the overall load.
+
+        Args:
+            ignore_enabled_event_hook_flag (bool): When `True`, bypasses the `enabled`
+                check in each event hook's manifest. Defaults to `False`.
+
+        Returns:
+            None
+        """
         self._logger.info("Loading framework event hooks...")
         retrieved, skipped, errored = (
             self.get_event_hooks_from_event_hook_project_folder_directories(
@@ -277,6 +439,11 @@ class EventHooksService:
 
     @log_and_propagate_error_on_service_method
     def unload_framework_event_hooks(self) -> None:
+        """Unloads all event hooks that were loaded from the framework's event hooks directory.
+
+        Returns:
+            None
+        """
         self._logger.info("Unloading framework event hooks...")
         unloaded_event_hooks = 0
         for event_hook in self.get_all_event_hooks():
@@ -297,6 +464,11 @@ class EventHooksService:
     async def reload_framework_event_hooks(
         self,
     ) -> None:
+        """Unloads all framework event hooks then reloads them from the event hooks directory.
+
+        Returns:
+            None
+        """
         self._logger.info("Reloading framework event hooks...")
         self.unload_framework_event_hooks()
         await self.load_framework_event_hooks()
@@ -306,6 +478,17 @@ class EventHooksService:
     def get_event_hook_by_event_hook_id(
         self, event_hook_id: str | uuid.UUID
     ) -> BaseEventHook:
+        """Returns a loaded event hook by its ID.
+
+        Args:
+            event_hook_id (str | uuid.UUID): The ID of the event hook to retrieve.
+
+        Returns:
+            BaseEventHook: The requested event hook.
+
+        Raises:
+            ComponentNotFoundError: If no event hook with the given ID is registered.
+        """
         event_hook = self._event_hook_registry_service.get_component_by_component_id(
             component_id=event_hook_id,
         )
@@ -314,6 +497,12 @@ class EventHooksService:
 
     @log_and_propagate_error_on_service_method
     def get_all_event_hooks(self) -> list[BaseEventHook]:
+        """Returns all currently loaded event hooks.
+
+        Returns:
+            list[BaseEventHook]: A list of all loaded event hooks. Empty if none are
+                loaded.
+        """
         event_hooks = self._event_hook_registry_service.get_all_components()
         self._logger.debug(
             "Retrieved all event hooks ({} event hook(s) retrieved)",
@@ -323,6 +512,11 @@ class EventHooksService:
 
     @log_and_propagate_error_on_service_method
     def get_all_event_types(self) -> list[EventType]:
+        """Returns all supported event types.
+
+        Returns:
+            list[EventType]: A list of all values from the `EventType` enum.
+        """
         event_types = list(EventType)
         self._logger.debug(
             "Retrieved all event types ({} event type(s) retrieved)",
@@ -332,6 +526,14 @@ class EventHooksService:
 
     @log_and_propagate_error_on_service_method
     def trigger_event(self, event: Event):
+        """Triggers an event, invoking `on_triggered` on all event hooks subscribed to its type.
+
+        Args:
+            event (Event): The event to trigger.
+
+        Returns:
+            None
+        """
         self._logger.debug("Triggered event: {}", event)
         for event_hook in self._event_hook_registry_service.get_all_components():
             if event.event_type in event_hook.event_types:

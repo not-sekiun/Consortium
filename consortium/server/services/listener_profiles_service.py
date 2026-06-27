@@ -59,6 +59,39 @@ class ListenerProfilesService:
         listener_profile_project_folder: pathlib.Path,
         ignore_enabled_listener_profile_flag: bool = False,
     ) -> ListenerProfile | None:
+        """Instantiates a listener profile from a project folder without registering it.
+
+        Disabled listener profiles (as indicated by `enabled: false` in their
+        `manifest.json`) are not instantiated unless
+        `ignore_enabled_listener_profile_flag` is `True`.
+
+        Args:
+            listener_profile_project_folder (pathlib.Path): Path to the directory
+                containing the listener profile project files and `manifest.json`.
+            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+                `enabled` check in the manifest. Defaults to `False`.
+
+        Returns:
+            ListenerProfile | None: The instantiated listener profile, or `None` if the
+                profile is disabled and the enabled check is not overridden.
+
+        Raises:
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the profile is incompatible
+                with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the profile.
+        """
         listener_profile = self._listener_profile_registry_service.get_component_from_component_project_folder(
             component_project_folder=listener_profile_project_folder,
             ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
@@ -87,6 +120,21 @@ class ListenerProfilesService:
         list[pathlib.Path],
         list[tuple[pathlib.Path, ListenerProfileLoadingError]] | None,
     ]:
+        """Recursively scans a directory for listener profile project folders and instantiates them.
+
+        Args:
+            directory (pathlib.Path): The directory to scan for listener profile project
+                folders.
+            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+                `enabled` check in each profile's manifest. Defaults to `False`.
+
+        Returns:
+            tuple[list[ListenerProfile], list[pathlib.Path], list[tuple[pathlib.Path, ListenerProfileLoadingError]] | None]:
+                A three-element tuple: (1) a list of successfully instantiated listener
+                profiles, (2) a list of paths skipped because the profile was disabled,
+                and (3) a list of `(path, error)` tuples for profiles that failed to
+                load.
+        """
         retrieved, skipped, errored = (
             self._listener_profile_registry_service.get_components_from_component_project_folder_directories(
                 directory=directory,
@@ -110,6 +158,17 @@ class ListenerProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def load_listener_profile(self, listener_profile: ListenerProfile) -> None:
+        """Registers and activates an already-instantiated listener profile.
+
+        After loading, the compatible agent type index for this listener profile is
+        updated.
+
+        Args:
+            listener_profile (ListenerProfile): The listener profile instance to load.
+
+        Returns:
+            None
+        """
         listener_profile = await self._listener_profile_registry_service.load_component(
             component=listener_profile,
         )
@@ -124,6 +183,39 @@ class ListenerProfilesService:
         listener_profile_project_folder: pathlib.Path,
         ignore_enabled_listener_profile_flag: bool = False,
     ) -> ListenerProfile | None:
+        """Loads a listener profile from a project folder, registering and activating it.
+
+        Disabled profiles are skipped unless `ignore_enabled_listener_profile_flag` is
+        `True`. After a successful load, the compatible agent type index for this
+        listener profile is updated.
+
+        Args:
+            listener_profile_project_folder (pathlib.Path): Path to the directory
+                containing the listener profile project files and `manifest.json`.
+            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+                `enabled` check in the manifest. Defaults to `False`.
+
+        Returns:
+            ListenerProfile | None: The loaded listener profile, or `None` if the
+                profile is disabled and the enabled check is not overridden.
+
+        Raises:
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the profile is incompatible
+                with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the profile.
+        """
         listener_profile = await self._listener_profile_registry_service.load_component_from_component_project_folder(
             component_project_folder=listener_profile_project_folder,
             ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
@@ -148,6 +240,19 @@ class ListenerProfilesService:
         self,
         listener_profile_id: str | uuid.UUID,
     ) -> None:
+        """Deactivates and deregisters a loaded listener profile by its ID.
+
+        Args:
+            listener_profile_id (str | uuid.UUID): The ID of the listener profile to
+                unload.
+
+        Returns:
+            None
+
+        Raises:
+            ComponentNotFoundError: If no listener profile with the given ID is
+                registered.
+        """
         listener_profile = await (
             self._listener_profile_registry_service.unload_component_by_component_id(
                 component_id=listener_profile_id,
@@ -162,6 +267,25 @@ class ListenerProfilesService:
         listener_profile_id: str | uuid.UUID,
         ignore_enabled_listener_profile_flag: bool = False,
     ) -> ListenerProfile:
+        """Unloads and reloads a listener profile from its original project folder.
+
+        If the profile is disabled after reload and `ignore_enabled_listener_profile_flag`
+        is `False`, the profile will only be unloaded, not reloaded.
+
+        Args:
+            listener_profile_id (str | uuid.UUID): The ID of the listener profile to
+                reload.
+            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+                `enabled` check in the manifest during reload. Defaults to `False`.
+
+        Returns:
+            ListenerProfile: The reloaded listener profile instance, or `None` if the
+                profile was disabled and the enabled check was not overridden.
+
+        Raises:
+            ComponentNotFoundError: If no listener profile with the given ID is
+                registered.
+        """
         listener_profile = await (
             self._listener_profile_registry_service.reload_component_by_component_id(
                 component_id=listener_profile_id,
@@ -189,6 +313,18 @@ class ListenerProfilesService:
         self,
         ignore_enabled_listener_profile_flag: bool = False,
     ) -> None:
+        """Scans the framework's listener profiles directory and loads all enabled profiles.
+
+        Disabled profiles and profiles that fail to load are logged and skipped without
+        aborting the overall load.
+
+        Args:
+            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+                `enabled` check in each profile's manifest. Defaults to `False`.
+
+        Returns:
+            None
+        """
         self._logger.info("Loading framework listener profiles...")
         retrieved, skipped, errored = (
             self.get_listener_profiles_from_listener_profile_project_folder_directories(
@@ -234,6 +370,11 @@ class ListenerProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def unload_framework_listener_profiles(self) -> None:
+        """Unloads all listener profiles that were loaded from the framework's profiles directory.
+
+        Returns:
+            None
+        """
         self._logger.info("Unloading framework listener profiles...")
         unloaded_listener_profiles = 0
         for listener_profile in self.get_all_listener_profiles():
@@ -251,6 +392,11 @@ class ListenerProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def reload_framework_listener_profiles(self) -> None:
+        """Unloads all framework listener profiles then reloads them from the profiles directory.
+
+        Returns:
+            None
+        """
         self._logger.info("Reloading framework listener profiles...")
         await self.unload_framework_listener_profiles()
         await self.load_framework_listener_profiles()
@@ -258,6 +404,12 @@ class ListenerProfilesService:
 
     @log_and_propagate_error_on_service_method
     def get_all_listener_profiles(self) -> list[ListenerProfile]:
+        """Returns all currently loaded listener profiles.
+
+        Returns:
+            list[ListenerProfile]: A list of all loaded listener profiles. Empty if
+                none are loaded.
+        """
         listener_profiles = self._listener_profile_registry_service.get_all_components()
         self._logger.debug(
             "Retrieved all listener profiles ({} retrieved)",
@@ -270,6 +422,19 @@ class ListenerProfilesService:
         self,
         listener_profile_id: str | uuid.UUID,
     ) -> ListenerProfile:
+        """Returns a loaded listener profile by its ID.
+
+        Args:
+            listener_profile_id (str | uuid.UUID): The ID of the listener profile to
+                retrieve.
+
+        Returns:
+            ListenerProfile: The requested listener profile.
+
+        Raises:
+            ComponentNotFoundError: If no listener profile with the given ID is
+                registered.
+        """
         listener_profile = (
             self._listener_profile_registry_service.get_component_by_component_id(
                 component_id=listener_profile_id,

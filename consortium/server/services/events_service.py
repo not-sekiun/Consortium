@@ -36,6 +36,21 @@ class EventsService:
         event_type: EventType,
         event_handler: Callable[[Event], Coroutine[Any, Any, None]],
     ) -> None:
+        """Registers an async event handler for the specified event type.
+
+        Args:
+            event_type (EventType): The event type to subscribe the handler to.
+            event_handler (Callable[[Event], Coroutine[Any, Any, None]]): An async
+                callable that accepts an `Event` and is invoked whenever the event type
+                is triggered.
+
+        Returns:
+            None
+
+        Raises:
+            EventHandlerAlreadyRegisteredError: If the same handler is already
+                registered for the given event type.
+        """
         if str(event_type) in self._event_handlers:
             if event_handler in self._event_handlers[str(event_type)]:
                 raise EventHandlerAlreadyRegisteredError
@@ -49,6 +64,20 @@ class EventsService:
         event_type: EventType,
         event_handler: Callable[[Event], Coroutine[None, None, None]],
     ) -> None:
+        """Removes a previously registered event handler from the specified event type.
+
+        Args:
+            event_type (EventType): The event type to unsubscribe the handler from.
+            event_handler (Callable[[Event], Coroutine[None, None, None]]): The async
+                callable to remove.
+
+        Returns:
+            None
+
+        Raises:
+            EventHandlerNotRegisteredError: If the handler is not currently registered
+                for the given event type.
+        """
         try:
             event_handlers = self._event_handlers[str(event_type)]
         except KeyError:
@@ -65,6 +94,16 @@ class EventsService:
         self,
         event_type: EventType,
     ) -> list[Callable[[EventType], Coroutine[None, None, None]]]:
+        """Returns all handlers currently registered for the specified event type.
+
+        Args:
+            event_type (EventType): The event type whose handlers to retrieve.
+
+        Returns:
+            list[Callable[[EventType], Coroutine[None, None, None]]]: A list of
+                registered handlers. Empty if no handlers are registered for the event
+                type.
+        """
         try:
             return self._event_handlers[event_type]
         except KeyError:
@@ -77,6 +116,16 @@ class EventsService:
         self,
         event_handler: Callable[[Event], Coroutine[Any, Any, None]],
     ) -> list[EventType]:
+        """Returns all event types that the given handler is currently registered for.
+
+        Args:
+            event_handler (Callable[[Event], Coroutine[Any, Any, None]]): The handler
+                to look up.
+
+        Returns:
+            list[EventType]: A list of event types the handler is subscribed to. Empty
+                if the handler is not registered for any event type.
+        """
         handled_events = []
         for event_type, handlers in self._event_handlers.items():
             if event_handler in handlers:
@@ -85,12 +134,35 @@ class EventsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_event_types(self) -> list[str]:
+        """Returns all supported event types.
+
+        Returns:
+            list[str]: A list of all values from the `EventType` enum.
+        """
         return list(EventType)
 
     @log_and_propagate_error_on_service_method
     async def trigger_event(
         self, event_type: EventType, message: str = "", data: JSON | None = None
     ) -> None:
+        """Triggers an event, invoking all handlers registered for the given event type.
+
+        Handlers are called sequentially. If any handler raises an exception, remaining
+        handlers still run, and all exceptions are collected and re-raised together as
+        an `ExceptionGroup`.
+
+        Args:
+            event_type (EventType): The type of event to trigger.
+            message (str): A human-readable description of the event.
+            data (JSON | None): Structured data payload associated with the event.
+                Defaults to an empty dict when `None`.
+
+        Returns:
+            None
+
+        Raises:
+            ExceptionGroup: If one or more event handlers raise exceptions.
+        """
         if str(event_type) not in self._event_handlers:
             return
         if data is None:

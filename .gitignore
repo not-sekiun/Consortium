@@ -19,3 +19,5 @@ CLAUDE.md
 .ruff_cache/
 tools/defaults.txt
 .coverage
+
+before_merging.txt

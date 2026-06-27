@@ -17,5 +17,12 @@ class ReleaseService:
 
     @cached_property
     def release(self):
+        """Loads and returns the release information from the release JSON file.
+
+        The result is cached after the first access so the file is only read once.
+
+        Returns:
+            ReleaseModel: A parsed model containing the release metadata (e.g. version).
+        """
         with self._release_json_file.open("r") as file:
             return ReleaseModel(**json.load(file))
