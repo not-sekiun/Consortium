@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentCapabilitiesError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilitiesError]
@@ -21,24 +20,19 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class AgentCapabilitiesError(BaseConsortiumError):
-    """
-    Base exception for all agent capabilities-related errors.
-    """
+    """Base exception for all agent capabilities-related errors."""
 
     code = "AGENT_CAPABILITIES_ERROR"
 
 
 class AgentCapabilitiesFrameworkError(AgentCapabilitiesError):
-    """
-    Base exception for all errors that occur within the agent capabilities framework.
-    """
+    """Base exception for all errors that occur within the agent capabilities framework."""
 
     code = "AGENT_CAPABILITIES_FRAMEWORK_ERROR"
 
 
 class AgentCapabilityConfigurationError(AgentCapabilitiesFrameworkError):
-    """
-    Base exception for all errors that occur during the configuration of a particular
+    """Base exception for all errors that occur during the configuration of a particular
     agent capability.
     """
 
@@ -48,8 +42,7 @@ class AgentCapabilityConfigurationError(AgentCapabilitiesFrameworkError):
 class InvalidAgentCapabilityConfigurationParameterTypeError(
     AgentCapabilityConfigurationError,
 ):
-    """
-    Raised when an agent capability's configuration parameter is not of the expected
+    """Raised when an agent capability's configuration parameter is not of the expected
     type during agent capability configuration.
     """
 
@@ -74,8 +67,7 @@ class InvalidAgentCapabilityConfigurationParameterTypeError(
 class MissingAgentCapabilityConfigurationParameterError(
     AgentCapabilityConfigurationError,
 ):
-    """
-    Raised when a required parameter is not declared in an agent capability's definition
+    """Raised when a required parameter is not declared in an agent capability's definition
     during agent capability configuration.
     """
 
@@ -93,8 +85,7 @@ class MissingAgentCapabilityConfigurationParameterError(
 
 
 class EmptyAgentCapabilityNameError(AgentCapabilitiesFrameworkError):
-    """
-    Raised when an empty name is provided in an agent capability's definition during
+    """Raised when an empty name is provided in an agent capability's definition during
     agent capability configuration.
     """
 
@@ -111,8 +102,7 @@ class EmptyAgentCapabilityNameError(AgentCapabilitiesFrameworkError):
 
 
 class DuplicateAgentCapabilityOptionNameError(AgentCapabilitiesFrameworkError):
-    """
-    Raised when duplicate option names are provided in an agent capability's definition
+    """Raised when duplicate option names are provided in an agent capability's definition
     during agent capability configuration.
     """
 
@@ -129,8 +119,7 @@ class DuplicateAgentCapabilityOptionNameError(AgentCapabilitiesFrameworkError):
 
 
 class CustomOSStringAlreadyRegisteredError(AgentCapabilitiesFrameworkError):
-    """
-    Raised when the provided custom OS string has already been registered in the agent
+    """Raised when the provided custom OS string has already been registered in the agent
     capabilities framework during agent capability configuration.
     """
 

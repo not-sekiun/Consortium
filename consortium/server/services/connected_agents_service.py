@@ -19,8 +19,7 @@ if TYPE_CHECKING:
 
 
 class ConnectedAgentsService:
-    """
-    A thin service wrapper around AgentsService that provides listener-scoped agent
+    """A thin service wrapper around AgentsService that provides listener-scoped agent
     operations. This service ensures that all agent operations are validated against
     the listener that owns this service instance, and automatically handles agent
     check-ins where appropriate.
@@ -48,8 +47,7 @@ class ConnectedAgentsService:
         return "ConnectedAgentsService()"
 
     def _validate_agent_connected_to_listener(self, agent_id: str | uuid.UUID) -> Agent:
-        """
-        Validate that an agent exists and is connected to this listener.
+        """Validate that an agent exists and is connected to this listener.
 
         Args:
             agent_id (str | uuid.UUID): The agent ID to validate.
@@ -90,8 +88,7 @@ class ConnectedAgentsService:
         hostname: str | None = None,
         agent_data: dict[str, Any] | None = None,
     ) -> Agent:
-        """
-        Register a new agent with this listener.
+        """Register a new agent with this listener.
 
         Args:
             payload_id (str | uuid.UUID | None): The payload ID of the payload that
@@ -146,8 +143,7 @@ class ConnectedAgentsService:
 
     @log_and_propagate_error_on_service_method
     def deregister_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
-        """
-        Deregister an agent connected to this listener. This removes the agent from
+        """Deregister an agent connected to this listener. This removes the agent from
         the system entirely.
 
         Args:
@@ -165,8 +161,7 @@ class ConnectedAgentsService:
 
     @log_and_propagate_error_on_service_method
     def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
-        """
-        Check in an agent connected to this listener. This updates the agent's last
+        """Check in an agent connected to this listener. This updates the agent's last
         check-in time and marks it as active.
 
         Args:
@@ -190,8 +185,7 @@ class ConnectedAgentsService:
         block: bool = False,
         timeout: float | None = None,
     ) -> list[TaskLaunchMessageModel]:
-        """
-        Get pending tasks for an agent connected to this listener. This method also
+        """Get pending tasks for an agent connected to this listener. This method also
         performs an automatic check-in for the agent.
 
         Args:
@@ -233,8 +227,7 @@ class ConnectedAgentsService:
         data: dict[str, Any] | None = None,
         payload: AsyncIterable[bytes] | bytes | None = None,
     ) -> None:
-        """
-        Submit a result from an agent connected to this listener. This method validates
+        """Submit a result from an agent connected to this listener. This method validates
         that the task exists and is running, performs an automatic check-in, and
         submits the result.
 
@@ -273,8 +266,7 @@ class ConnectedAgentsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_agents(self) -> list[Agent]:
-        """
-        Get all agents connected to this listener.
+        """Get all agents connected to this listener.
 
         Returns:
             list[Agent]: A list of all agents connected to this listener.
@@ -292,8 +284,7 @@ class ConnectedAgentsService:
 
     @log_and_propagate_error_on_service_method
     def get_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> Agent:
-        """
-        Get an agent by its agent ID, validating it is connected to this listener.
+        """Get an agent by its agent ID, validating it is connected to this listener.
 
         Args:
             agent_id (str | uuid.UUID): The agent ID of the agent to retrieve.

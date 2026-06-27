@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`C2TypesError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.C2TypesError]
@@ -23,32 +22,25 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class C2TypesError(BaseConsortiumError):
-    """
-    Base exception for all C2 types-related errors.
-    """
+    """Base exception for all C2 types-related errors."""
 
     code = "C2_TYPES_ERROR"
 
 
 class C2TypesFrameworkError(C2TypesError):
-    """
-    Base exception for all errors that occur within the C2 types framework.
-    """
+    """Base exception for all errors that occur within the C2 types framework."""
 
     code = "C2_TYPES_FRAMEWORK_ERROR"
 
 
 class ListenerTypeConfigurationError(C2TypesFrameworkError):
-    """
-    Base exception for all errors that occur when a listener type fails to be configured.
-    """
+    """Base exception for all errors that occur when a listener type fails to be configured."""
 
     code = "LISTENER_TYPE_CONFIGURATION_ERROR"
 
 
 class ListenerTypeConfigurationParameterTypeError(ListenerTypeConfigurationError):
-    """
-    Raised when a provided listener type parameter is not of the expected type during
+    """Raised when a provided listener type parameter is not of the expected type during
     listener type configuration.
     """
 
@@ -71,9 +63,7 @@ class ListenerTypeConfigurationParameterTypeError(ListenerTypeConfigurationError
 
 
 class EmptyListenerTypeNameError(ListenerTypeConfigurationError):
-    """
-    Raised when an empty name is provided for a listener type during configuration.
-    """
+    """Raised when an empty name is provided for a listener type during configuration."""
 
     code = "EMPTY_LISTENER_TYPE_NAME_ERROR"
 
@@ -86,16 +76,13 @@ class EmptyListenerTypeNameError(ListenerTypeConfigurationError):
 
 
 class AgentTypeConfigurationError(C2TypesFrameworkError):
-    """
-    Base exception for all errors that occur when an agent type fails to be configured.
-    """
+    """Base exception for all errors that occur when an agent type fails to be configured."""
 
     code = "AGENT_TYPE_CONFIGURATION_ERROR"
 
 
 class AgentTypeConfigurationParameterTypeError(AgentTypeConfigurationError):
-    """
-    Raised when a provided agent type parameter is not of the expected type during
+    """Raised when a provided agent type parameter is not of the expected type during
     agent type configuration.
     """
 
@@ -118,9 +105,7 @@ class AgentTypeConfigurationParameterTypeError(AgentTypeConfigurationError):
 
 
 class EmptyAgentTypeNameError(AgentTypeConfigurationError):
-    """
-    Raised when an empty name is provided for an agent type during configuration.
-    """
+    """Raised when an empty name is provided for an agent type during configuration."""
 
     code = "EMPTY_AGENT_TYPE_NAME_ERROR"
 
@@ -133,17 +118,13 @@ class EmptyAgentTypeNameError(AgentTypeConfigurationError):
 
 
 class C2TypesServiceError(C2TypesError):
-    """
-    Base exception for all errors that occur within the C2 types service.
-    """
+    """Base exception for all errors that occur within the C2 types service."""
 
     code = "C2_TYPES_SERVICE_ERROR"
 
 
 class ListenerTypeNotFoundError(C2TypesServiceError):
-    """
-    Raised when the requested listener type was not found in the C2 types service.
-    """
+    """Raised when the requested listener type was not found in the C2 types service."""
 
     code = "LISTENER_TYPE_NOT_FOUND_ERROR"
 
@@ -158,9 +139,7 @@ class ListenerTypeNotFoundError(C2TypesServiceError):
 
 
 class AgentTypeNotFoundError(C2TypesServiceError):
-    """
-    Raised when the requested agent type was not found in the C2 types service.
-    """
+    """Raised when the requested agent type was not found in the C2 types service."""
 
     code = "AGENT_TYPE_NOT_FOUND_ERROR"
 
@@ -174,8 +153,7 @@ class AgentTypeNotFoundError(C2TypesServiceError):
 
 
 class DuplicateAgentTypeNameError(C2TypesServiceError):
-    """
-    Raised when multiple distinct agent types with the same name are found in the C2
+    """Raised when multiple distinct agent types with the same name are found in the C2
     types service.
     """
 
@@ -199,8 +177,7 @@ class DuplicateAgentTypeNameError(C2TypesServiceError):
 
 
 class UnresolvableAgentTypeReferenceError(C2TypesServiceError):
-    """
-    Raised when an agent type reference cannot be resolved to a known agent type in
+    """Raised when an agent type reference cannot be resolved to a known agent type in
     the C2 types service.
     """
 

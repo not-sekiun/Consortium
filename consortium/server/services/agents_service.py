@@ -182,8 +182,7 @@ class AgentsService:
         block: bool = False,
         timeout: float | None = None,
     ) -> list[TaskLaunchMessageModel]:
-        """
-        Get pending task messages for an agent. This method retrieves task messages
+        """Get pending task messages for an agent. This method retrieves task messages
         that are queued for the agent and returns them as a list of
         `AgentTaskMessageModel` objects.
 
@@ -249,8 +248,7 @@ class AgentsService:
         data: dict[str, Any] | None = None,
         payload: AsyncIterable[bytes] | bytes | None = None,
     ) -> None:
-        """
-        Submit a result for a running task on an agent.
+        """Submit a result for a running task on an agent.
 
         Args:
             agent_id (str | uuid.UUID): The agent ID of the agent to submit the result

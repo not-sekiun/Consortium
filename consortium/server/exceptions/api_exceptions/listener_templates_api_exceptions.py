@@ -1,5 +1,4 @@
-"""
-Errors for the api endpoint /api/listener-templates.
+"""Errors for the api endpoint /api/listener-templates.
 - HTTPError
   - NotFoundError
     - ListenerTemplateNotFoundError: The requested listener template with the provided

@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`EventsError`][consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions.EventsError]
@@ -15,24 +14,19 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class EventsError(BaseConsortiumError):
-    """
-    Base exception for all events-related errors.
-    """
+    """Base exception for all events-related errors."""
 
     code = "EVENTS_ERROR"
 
 
 class EventsServiceError(EventsError):
-    """
-    Base exception for all errors that occur within the events service.
-    """
+    """Base exception for all errors that occur within the events service."""
 
     code = "EVENTS_SERVICE_ERROR"
 
 
 class EventHandlerAlreadyRegisteredError(EventsServiceError):
-    """
-    Raised when the provided event handler is already registered for the specified
+    """Raised when the provided event handler is already registered for the specified
     event type in the events service.
     """
 
@@ -49,8 +43,7 @@ class EventHandlerAlreadyRegisteredError(EventsServiceError):
 
 
 class EventHandlerNotRegisteredError(EventsServiceError):
-    """
-    Raised when the requested event handler is not registered for the specified event
+    """Raised when the requested event handler is not registered for the specified event
     type in the events service.
     """
 

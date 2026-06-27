@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`ComponentsError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentsError]
@@ -54,8 +53,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class ComponentsError(BaseConsortiumError):
-    """
-    Base exception for all components related errors.
+    """Base exception for all components related errors.
 
     All exceptions that inherit from `ComponentsError` define, `code`, `message`, and
     `detail` attributes. For brevity, `message` and `detail` are omitted within
@@ -73,9 +71,7 @@ class ComponentsError(BaseConsortiumError):
 
 
 class ComponentsFrameworkError(ComponentsError):
-    """
-    Base exception for all errors that occur within the components framework.
-    """
+    """Base exception for all errors that occur within the components framework."""
 
     code = "COMPONENTS_FRAMEWORK_ERROR"
 
@@ -106,8 +102,7 @@ class ComponentsFrameworkError(ComponentsError):
 
 
 class ComponentConfigurationError(ComponentsFrameworkError):
-    """
-    Base exception for all errors that occur during the configuration of a particular
+    """Base exception for all errors that occur during the configuration of a particular
     component.
     """
 
@@ -115,8 +110,7 @@ class ComponentConfigurationError(ComponentsFrameworkError):
 
 
 class InvalidComponentConfigurationParameterTypeError(ComponentConfigurationError):
-    """
-    Raised when a component's configuration parameter is not of the expected type during
+    """Raised when a component's configuration parameter is not of the expected type during
     component configuration.
     """
 
@@ -143,8 +137,7 @@ class InvalidComponentConfigurationParameterTypeError(ComponentConfigurationErro
 
 
 class MissingComponentConfigurationParameterError(ComponentConfigurationError):
-    """
-    Raised when a required parameter is not declared in a component's definition during
+    """Raised when a required parameter is not declared in a component's definition during
     component configuration.
     """
 
@@ -165,8 +158,7 @@ class MissingComponentConfigurationParameterError(ComponentConfigurationError):
 
 
 class EmptyComponentLabelError(ComponentConfigurationError):
-    """
-    Raised when an empty label is provided in a component's definition during component
+    """Raised when an empty label is provided in a component's definition during component
     configuration.
     """
 
@@ -184,8 +176,7 @@ class EmptyComponentLabelError(ComponentConfigurationError):
 
 
 class InvalidComponentVersionError(ComponentConfigurationError):
-    """
-    Raised when the component version string provided in the component's definition is not a
+    """Raised when the component version string provided in the component's definition is not a
     valid version string according to PEP 440 during component configuration.
     """
 
@@ -202,8 +193,7 @@ class InvalidComponentVersionError(ComponentConfigurationError):
 
 
 class InvalidFrameworkVersionSpecifierError(ComponentConfigurationError):
-    """
-    Raised when the framework version specifier string provided in the component's
+    """Raised when the framework version specifier string provided in the component's
     definition is not a valid version specifier string as defined in PEP 440 during
     component configuration.
     """
@@ -225,8 +215,7 @@ class InvalidFrameworkVersionSpecifierError(ComponentConfigurationError):
 
 
 class InvalidComponentDependencyVersionSpecifierError(ComponentConfigurationError):
-    """
-    Raised when a component dependency version specifier string provided in the component's
+    """Raised when a component dependency version specifier string provided in the component's
     definition is not a valid version specifier string as defined in PEP 440 during
     component configuration.
     """
@@ -252,8 +241,7 @@ class InvalidComponentDependencyVersionSpecifierError(ComponentConfigurationErro
 
 
 class ComponentOperationError(ComponentsFrameworkError):
-    """
-    Base exception for all errors that occur during the operation of a particular
+    """Base exception for all errors that occur during the operation of a particular
     component.
     """
 
@@ -261,9 +249,7 @@ class ComponentOperationError(ComponentsFrameworkError):
 
 
 class ComponentStartError(ComponentOperationError):
-    """
-    Raised when a component fails to start during component operation.
-    """
+    """Raised when a component fails to start during component operation."""
 
     code = "COMPONENT_START_ERROR"
 
@@ -283,8 +269,7 @@ class ComponentStartError(ComponentOperationError):
 
 
 class ComponentRuntimeError(ComponentOperationError):
-    """
-    Raised when a component encounters an unhandled error at runtime during component
+    """Raised when a component encounters an unhandled error at runtime during component
     operation.
     """
 
@@ -306,9 +291,7 @@ class ComponentRuntimeError(ComponentOperationError):
 
 
 class ComponentStopError(ComponentOperationError):
-    """
-    Raised when a component fails to stop during component operation.
-    """
+    """Raised when a component fails to stop during component operation."""
 
     code = "COMPONENT_STOP_ERROR"
 
@@ -328,8 +311,7 @@ class ComponentStopError(ComponentOperationError):
 
 
 class ComponentStateError(ComponentsFrameworkError):
-    """
-    Base exception for all errors that occur due to invalid component status during
+    """Base exception for all errors that occur due to invalid component status during
     component operation.
     """
 
@@ -337,8 +319,7 @@ class ComponentStateError(ComponentsFrameworkError):
 
 
 class ComponentNotRunningError(ComponentStateError):
-    """
-    Raised when an operation is attempted on a component that requires the component to
+    """Raised when an operation is attempted on a component that requires the component to
     already be running but the component is not running.
     """
 
@@ -358,8 +339,7 @@ class ComponentNotRunningError(ComponentStateError):
 
 
 class ComponentAlreadyRunningError(ComponentStateError):
-    """
-    Raised when an operation is attempted on a component that requires the component to not
+    """Raised when an operation is attempted on a component that requires the component to not
     already be started or running but the component is already started or running.
     """
 
@@ -379,9 +359,7 @@ class ComponentAlreadyRunningError(ComponentStateError):
 
 
 class ComponentsServiceError(ComponentsError):
-    """
-    Base exception for all errors that occur within the components service.
-    """
+    """Base exception for all errors that occur within the components service."""
 
     code = "COMPONENTS_SERVICE_ERROR"
 
@@ -404,16 +382,13 @@ class ComponentsServiceError(ComponentsError):
 
 
 class ComponentLoadingError(ComponentsServiceError):
-    """
-    Base exception for all errors that occur during the loading of a component.
-    """
+    """Base exception for all errors that occur during the loading of a component."""
 
     code = "COMPONENT_LOADING_ERROR"
 
 
 class InvalidComponentProjectManifestFileError(ComponentLoadingError):
-    """
-    Base exception for all errors that occur due to an invalid component project manifest
+    """Base exception for all errors that occur due to an invalid component project manifest
     `manifest.json` file during component loading.
     """
 
@@ -423,8 +398,7 @@ class InvalidComponentProjectManifestFileError(ComponentLoadingError):
 class InvalidComponentProjectManifestFileJSONError(
     InvalidComponentProjectManifestFileError,
 ):
-    """
-    Raised when the component project manifest file is not valid JSON during component
+    """Raised when the component project manifest file is not valid JSON during component
     loading.
     """
 
@@ -443,8 +417,7 @@ class InvalidComponentProjectManifestFileJSONError(
 class InvalidComponentProjectManifestFileSchemaError(
     InvalidComponentProjectManifestFileError,
 ):
-    """
-    Raised when the component project manifest file does not conform to the expected JSON
+    """Raised when the component project manifest file does not conform to the expected JSON
     schema during component loading.
     """
 
@@ -464,8 +437,7 @@ class InvalidComponentProjectManifestFileSchemaError(
 
 
 class InvalidComponentProjectPyProjectFileError(ComponentLoadingError):
-    """
-    Base exception for all errors that occur due to an invalid `pyproject.toml` file
+    """Base exception for all errors that occur due to an invalid `pyproject.toml` file
     during component loading.
     """
 
@@ -473,9 +445,7 @@ class InvalidComponentProjectPyProjectFileError(ComponentLoadingError):
 
 
 class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
-    """
-    Raised when the `pyproject.toml` file is not a valid TOML file during component loading.
-    """
+    """Raised when the `pyproject.toml` file is not a valid TOML file during component loading."""
 
     code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
@@ -489,8 +459,7 @@ class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
 
 
 class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError):
-    """
-    Raised when the `pyproject.toml` file contains an invalid dependency entry during
+    """Raised when the `pyproject.toml` file contains an invalid dependency entry during
     component loading.
     """
 
@@ -511,8 +480,7 @@ class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError)
 
 
 class InvalidComponentProjectFolderStructureError(ComponentLoadingError):
-    """
-    Base exception for all errors that occur due to an invalid component project folder
+    """Base exception for all errors that occur due to an invalid component project folder
     structure during component loading.
     """
 
@@ -522,8 +490,7 @@ class InvalidComponentProjectFolderStructureError(ComponentLoadingError):
 class ComponentProjectManifestFileNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
-    """
-    Raised when the component project manifest file is not found in the component project
+    """Raised when the component project manifest file is not found in the component project
     folder during component loading.
     """
 
@@ -543,8 +510,7 @@ class ComponentProjectManifestFileNotFoundError(
 class ComponentProjectEntryPointModuleNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
-    """
-    Raised when the component entry point module specified in the manifest is not found in
+    """Raised when the component entry point module specified in the manifest is not found in
     the component project folder during component loading.
     """
 
@@ -565,8 +531,7 @@ class ComponentProjectEntryPointModuleNotFoundError(
 
 
 class InvalidComponentProjectImplementationError(ComponentLoadingError):
-    """
-    Base exception for all errors that occur due to the component project not implementing
+    """Base exception for all errors that occur due to the component project not implementing
     the required interface during component loading.
     """
 
@@ -574,8 +539,7 @@ class InvalidComponentProjectImplementationError(ComponentLoadingError):
 
 
 class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationError):
-    """
-    Raised when the component symbol name specified in the manifest is not found in the
+    """Raised when the component symbol name specified in the manifest is not found in the
     component entry point module during component loading.
     """
 
@@ -603,8 +567,7 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
 
 
 class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError):
-    """
-    Raised when the component class does not implement the required interface during
+    """Raised when the component class does not implement the required interface during
     component loading.
     """
 
@@ -629,8 +592,7 @@ class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError)
 
 
 class InternalComponentProjectError(InvalidComponentProjectImplementationError):
-    """
-    Raised when an unhandled exception from within the component is raised during component
+    """Raised when an unhandled exception from within the component is raised during component
     loading.
     """
 
@@ -653,8 +615,7 @@ class InternalComponentProjectError(InvalidComponentProjectImplementationError):
 
 
 class IncompatibleComponentFrameworkVersionError(ComponentLoadingError):
-    """
-    Raised when a component's required framework version is incompatible with the current
+    """Raised when a component's required framework version is incompatible with the current
     framework version during component loading.
     """
 
@@ -680,8 +641,7 @@ class IncompatibleComponentFrameworkVersionError(ComponentLoadingError):
 
 
 class ComponentAlreadyRegisteredError(ComponentLoadingError):
-    """
-    Raised when a component with the same ID is already registered in the components service
+    """Raised when a component with the same ID is already registered in the components service
     during component loading.
     """
 
@@ -700,8 +660,7 @@ class ComponentAlreadyRegisteredError(ComponentLoadingError):
 
 
 class DuplicateComponentLabelError(ComponentLoadingError):
-    """
-    Raised when the label provided in the component's definition is already in use by
+    """Raised when the label provided in the component's definition is already in use by
     another component during component loading.
     """
 
@@ -722,8 +681,7 @@ class DuplicateComponentLabelError(ComponentLoadingError):
 
 
 class ComponentDependencyError(ComponentsServiceError):
-    """
-    Base exception for all errors that occur during the resolution of component
+    """Base exception for all errors that occur during the resolution of component
     dependencies.
     """
 
@@ -731,8 +689,7 @@ class ComponentDependencyError(ComponentsServiceError):
 
 
 class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
-    """
-    Raised when a third-party dependency required by a component is not installed during
+    """Raised when a third-party dependency required by a component is not installed during
     component dependency resolution.
     """
 
@@ -757,8 +714,7 @@ class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
 
 
 class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
-    """
-    Raised when a third-party dependency's installed version is incompatible with the
+    """Raised when a third-party dependency's installed version is incompatible with the
     version required by the component during component dependency resolution.
     """
 
@@ -788,8 +744,7 @@ class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
 
 
 class ComponentDependencyNotFoundError(ComponentDependencyError):
-    """
-    Raised when a component dependency required by the component is not found in the
+    """Raised when a component dependency required by the component is not found in the
     components service during component dependency resolution.
     """
 
@@ -814,8 +769,7 @@ class ComponentDependencyNotFoundError(ComponentDependencyError):
 
 
 class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
-    """
-    Raised when a component dependency's version is incompatible with the version required
+    """Raised when a component dependency's version is incompatible with the version required
     by the component during component dependency resolution.
     """
 
@@ -845,8 +799,7 @@ class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
 
 
 class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError):
-    """
-    Raised when a component depends on another component that itself has invalid dependencies
+    """Raised when a component depends on another component that itself has invalid dependencies
     during component dependency resolution.
     """
 
@@ -870,8 +823,7 @@ class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError
 
 
 class ComponentDependencyNotRunningError(ComponentDependencyError):
-    """
-    Raised when a component dependency required by the component is present but not currently
+    """Raised when a component dependency required by the component is present but not currently
     running during component dependency resolution.
     """
 
@@ -895,8 +847,7 @@ class ComponentDependencyNotRunningError(ComponentDependencyError):
 
 
 class ComponentNotFoundError(ComponentsServiceError):
-    """
-    Raised when the requested component with the provided component ID was not found in the
+    """Raised when the requested component with the provided component ID was not found in the
     components service.
     """
 

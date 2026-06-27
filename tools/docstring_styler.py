@@ -49,11 +49,41 @@ LIMITATIONS
 import argparse
 import ast
 import difflib
+import os
 import re
 import sys
 from pathlib import Path
 
 QUOTE_PREFIX_RE = re.compile(r'^([a-zA-Z]{0,2})("""|\'\'\')')
+
+GREEN = "\033[32m"
+RED = "\033[31m"
+CYAN = "\033[36m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
+
+def color_diff_line(line):
+    """Color a single unified-diff line the standard way: file headers bold,
+    hunk headers cyan, added lines green, removed lines red."""
+    if line.startswith("+++") or line.startswith("---"):
+        return BOLD + line + RESET
+    if line.startswith("@@"):
+        return CYAN + line + RESET
+    if line.startswith("+"):
+        return GREEN + line + RESET
+    if line.startswith("-"):
+        return RED + line + RESET
+    return line
+
+
+def use_color(choice):
+    if choice == "always":
+        return True
+    if choice == "never":
+        return False
+    # 'auto'
+    return sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
 
 
 class DocstringInfo:
@@ -198,7 +228,7 @@ def collect_files(path, recursive):
     return sorted(path.glob("*.py"))
 
 
-def process_file(path, convert_target, dry_run, stats):
+def process_file(path, convert_target, dry_run, stats, color=False):
     try:
         source = path.read_text(encoding="utf-8")
     except (UnicodeDecodeError, OSError) as e:
@@ -244,7 +274,11 @@ def process_file(path, convert_target, dry_run, stats):
             fromfile=str(path),
             tofile=f"{path} (converted)",
         )
-        sys.stdout.writelines(diff)
+        if color:
+            for line in diff:
+                sys.stdout.write(color_diff_line(line))
+        else:
+            sys.stdout.writelines(diff)
     else:
         path.write_text(new_source, encoding="utf-8")
         print(f"updated {path}")
@@ -275,6 +309,13 @@ def main():
         action="store_true",
         help="With --convert, print a unified diff instead of writing files.",
     )
+    parser.add_argument(
+        "--color",
+        choices=["auto", "always", "never"],
+        default="auto",
+        help="Color the --dry-run diff output (red removed / "
+        "green added). Default: auto-detect a terminal.",
+    )
     args = parser.parse_args()
 
     files = collect_files(args.path, args.recursive)
@@ -283,8 +324,9 @@ def main():
         sys.exit(1)
 
     stats = {"below": 0, "same": 0}
+    color = use_color(args.color)
     for f in files:
-        process_file(f, args.convert, args.dry_run, stats)
+        process_file(f, args.convert, args.dry_run, stats, color=color)
 
     if args.convert is None:
         total = stats["below"] + stats["same"]

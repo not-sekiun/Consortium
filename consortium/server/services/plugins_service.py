@@ -56,8 +56,7 @@ class PluginsService:
         plugin_project_folder: pathlib.Path,
         ignore_enabled_plugin_flag: bool = False,
     ) -> BasePlugin | None:
-        """
-        Retrieves a plugin instance from a specified plugin project folder.
+        """Retrieves a plugin instance from a specified plugin project folder.
 
         Plugins that are specified to be disabled in their `manifest.json` will not be
         loaded unless `ignore_enabled_plugin_flag` is set to `True`. Valid plugins are
@@ -123,8 +122,7 @@ class PluginsService:
         list[pathlib.Path],
         list[tuple[pathlib.Path, PluginLoadingError]],
     ]:
-        """
-        Retrieves all plugins from the specified directory containing plugin project folders.
+        """Retrieves all plugins from the specified directory containing plugin project folders.
 
         Plugins that are specified to be disabled in their `manifest.json` will not be
         loaded unless `ignore_enabled_plugin_flag` is set to `True`. Valid plugins are
@@ -177,8 +175,7 @@ class PluginsService:
         self,
         plugin: BasePlugin,
     ) -> None:
-        """
-        Registers a plugin instance with the framework.
+        """Registers a plugin instance with the framework.
 
         Each plugin instance is uniquely identified and referred to by its `plugin_id`.
         Registering a plugin will not start it. Plugins that are registered must have
@@ -208,8 +205,7 @@ class PluginsService:
         plugin_project_folder: pathlib.Path,
         ignore_enabled_plugin_flag: bool = False,
     ) -> BasePlugin | None:
-        """
-        Registers a plugin from the provided plugin project folder with the framework.
+        """Registers a plugin from the provided plugin project folder with the framework.
 
         If the plugin is disabled and the `ignore_enabled_plugin_project_flag` is set to False, the plugin will not be
         registered. On successful registration, the plugin is added to the internal
@@ -246,8 +242,7 @@ class PluginsService:
         ignore_enabled_plugin_flag: bool = False,
         timeout: int | None = 5,
     ) -> BasePlugin | None:
-        """
-        Loads a plugin from its project folder. The plugin is registered to the plugin
+        """Loads a plugin from its project folder. The plugin is registered to the plugin
         service and additionally started if its `autostart` attribute is set to True.
 
         This function integrates with the plugin registration mechanism and ensures
@@ -287,8 +282,7 @@ class PluginsService:
         timeout: int | None = 5,
         force_unload: bool = False,
     ) -> None:
-        """
-        Unloads a plugin identified by its `plugin_id`, stopping its execution if
+        """Unloads a plugin identified by its `plugin_id`, stopping its execution if
         necessary, and removing it from the internal plugin registry. The function
         ensures that the plugin is stopped either gracefully or forcibly based on the
         provided arguments. A timeout is used to wait for the plugin to stop, after
@@ -375,8 +369,7 @@ class PluginsService:
         unload_timeout: int | None = 5,
         force_unload: bool = False,
     ) -> BasePlugin | None:
-        """
-        Reloads a plugin by its plugin ID. This operation consists of unloading the
+        """Reloads a plugin by its plugin ID. This operation consists of unloading the
         plugin currently loaded and reloading it from the plugin project folder.
 
         Args:
@@ -617,8 +610,7 @@ class PluginsService:
         plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
-        """
-        Starts a plugin by its plugin id. The plugin must be registered to the
+        """Starts a plugin by its plugin id. The plugin must be registered to the
         service.
 
         Args:
@@ -659,8 +651,7 @@ class PluginsService:
         plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
-        """
-        Stops a plugin by its plugin id. The plugin must be registered to the
+        """Stops a plugin by its plugin id. The plugin must be registered to the
         service.
 
         Args:
@@ -688,8 +679,7 @@ class PluginsService:
         plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
-        """
-        Restart a plugin by its plugin id.
+        """Restart a plugin by its plugin id.
 
         Args:
             plugin_id (str): The plugin with the plugin id to restart.
@@ -726,8 +716,7 @@ class PluginsService:
         plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
-        """
-        Cancels a plugin by its plugin id. The plugin must be registered to the
+        """Cancels a plugin by its plugin id. The plugin must be registered to the
         service.
 
         Args:
@@ -750,8 +739,7 @@ class PluginsService:
 
     @log_and_propagate_error_on_service_method
     def get_plugin_by_plugin_id(self, plugin_id: str | uuid.UUID) -> BasePlugin:
-        """
-        Returns a plugin object by its plugin id. The plugin must be registered to the
+        """Returns a plugin object by its plugin id. The plugin must be registered to the
         service.
 
         Args:
@@ -771,8 +759,7 @@ class PluginsService:
 
     @log_and_propagate_error_on_service_method
     def get_plugins_by_label(self, label: str) -> list[BasePlugin]:
-        """
-        Returns all plugins loaded in the service that have the provided label.
+        """Returns all plugins loaded in the service that have the provided label.
 
         Args:
             label (str): The label to search for.
@@ -787,8 +774,7 @@ class PluginsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_plugins(self) -> list[BasePlugin]:
-        """
-        Returns a list of all plugins loaded in the service.
+        """Returns a list of all plugins loaded in the service.
 
         Returns:
             list[BasePlugin]: A list of all plugins loaded in the service.

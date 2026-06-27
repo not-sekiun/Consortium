@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
 """
@@ -8,8 +7,7 @@ from typing import Any
 
 
 class BaseConsortiumError(Exception):
-    """
-    Base exception for all errors that occur within Consortium.
+    """Base exception for all errors that occur within Consortium.
 
     These exceptions are raised either by Consortium's core framework components or by
     services built on top of those components and are broadly grouped into either

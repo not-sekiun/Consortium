@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`UserAccountsError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsError]
@@ -32,24 +31,19 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class UserAccountsError(BaseConsortiumError):
-    """
-    Base exception for all user account-related errors.
-    """
+    """Base exception for all user account-related errors."""
 
     code = "USER_ACCOUNTS_ERROR"
 
 
 class UserAccountsServiceError(UserAccountsError):
-    """
-    Base exception for all errors that occur within the user accounts service.
-    """
+    """Base exception for all errors that occur within the user accounts service."""
 
     code = "USER_ACCOUNTS_SERVICE_ERROR"
 
 
 class UserAccountNotFoundError(UserAccountsServiceError):
-    """
-    Base exception raised when the requested user account was not found in the user
+    """Base exception raised when the requested user account was not found in the user
     accounts service.
     """
 
@@ -57,8 +51,7 @@ class UserAccountNotFoundError(UserAccountsServiceError):
 
 
 class UserAccountIDNotFoundError(UserAccountNotFoundError):
-    """
-    Raised when the requested user account was not found by user account ID in the
+    """Raised when the requested user account was not found by user account ID in the
     user accounts service.
     """
 
@@ -80,8 +73,7 @@ class UserAccountIDNotFoundError(UserAccountNotFoundError):
 
 
 class UserAccountUsernameNotFoundError(UserAccountNotFoundError):
-    """
-    Raised when the requested user account was not found by username in the user
+    """Raised when the requested user account was not found by username in the user
     accounts service.
     """
 
@@ -100,8 +92,7 @@ class UserAccountUsernameNotFoundError(UserAccountNotFoundError):
 
 
 class UserAccountsFileError(UserAccountsServiceError):
-    """
-    Base exception for all errors that occur when accessing or processing the user
+    """Base exception for all errors that occur when accessing or processing the user
     accounts file.
     """
 
@@ -109,9 +100,7 @@ class UserAccountsFileError(UserAccountsServiceError):
 
 
 class UserAccountsFileNotFoundError(UserAccountsFileError):
-    """
-    Raised when the user accounts file does not exist at the specified filepath.
-    """
+    """Raised when the user accounts file does not exist at the specified filepath."""
 
     code = "USER_ACCOUNTS_FILE_NOT_FOUND_ERROR"
 
@@ -128,8 +117,7 @@ class UserAccountsFileNotFoundError(UserAccountsFileError):
 
 
 class UserAccountsFileAccessError(UserAccountsFileError):
-    """
-    Base exception for all errors that occur when the process lacks the required
+    """Base exception for all errors that occur when the process lacks the required
     permissions to access the user accounts file.
     """
 
@@ -137,9 +125,7 @@ class UserAccountsFileAccessError(UserAccountsFileError):
 
 
 class UserAccountsFileReadAccessError(UserAccountsFileAccessError):
-    """
-    Raised when the process does not have read permissions for the user accounts file.
-    """
+    """Raised when the process does not have read permissions for the user accounts file."""
 
     code = "USER_ACCOUNTS_FILE_READ_ACCESS_ERROR"
 
@@ -157,9 +143,7 @@ class UserAccountsFileReadAccessError(UserAccountsFileAccessError):
 
 
 class UserAccountsFileWriteAccessError(UserAccountsFileAccessError):
-    """
-    Raised when the process does not have write permissions for the user accounts file.
-    """
+    """Raised when the process does not have write permissions for the user accounts file."""
 
     code = "USER_ACCOUNTS_FILE_WRITE_ACCESS_ERROR"
 
@@ -177,9 +161,7 @@ class UserAccountsFileWriteAccessError(UserAccountsFileAccessError):
 
 
 class UserAccountsFilepathIsDirectoryError(UserAccountsFileError):
-    """
-    Raised when the user accounts filepath points to a directory instead of a file.
-    """
+    """Raised when the user accounts filepath points to a directory instead of a file."""
 
     code = "USER_ACCOUNTS_FILEPATH_IS_DIRECTORY_ERROR"
 
@@ -197,9 +179,7 @@ class UserAccountsFilepathIsDirectoryError(UserAccountsFileError):
 
 
 class UserAccountsFileIsNotJSONError(UserAccountsFileError):
-    """
-    Raised when the user accounts file does not contain valid JSON data.
-    """
+    """Raised when the user accounts file does not contain valid JSON data."""
 
     code = "USER_ACCOUNTS_FILE_IS_NOT_JSON_ERROR"
 
@@ -217,9 +197,7 @@ class UserAccountsFileIsNotJSONError(UserAccountsFileError):
 
 
 class UserAccountsFileSchemaError(UserAccountsFileError):
-    """
-    Raised when the user accounts file fails JSON schema validation.
-    """
+    """Raised when the user accounts file fails JSON schema validation."""
 
     code = "USER_ACCOUNTS_FILE_SCHEMA_ERROR"
 
@@ -240,8 +218,7 @@ class UserAccountsFileSchemaError(UserAccountsFileError):
 class UserAccountsFileContainsDuplicateUsernamesError(
     UserAccountsFileError,
 ):
-    """
-    Raised when the user accounts file contains multiple user account entries with
+    """Raised when the user accounts file contains multiple user account entries with
     the same username.
     """
 
@@ -262,9 +239,7 @@ class UserAccountsFileContainsDuplicateUsernamesError(
 
 
 class UserAccountAuthenticationError(UserAccountsServiceError):
-    """
-    Raised when a user account fails to authenticate due to invalid credentials.
-    """
+    """Raised when a user account fails to authenticate due to invalid credentials."""
 
     code = "USER_ACCOUNT_AUTHENTICATION_ERROR"
 
@@ -278,8 +253,7 @@ class UserAccountAuthenticationError(UserAccountsServiceError):
 
 
 class UserAccountManagementError(UserAccountsServiceError):
-    """
-    Base exception for all errors that occur during user account creation or
+    """Base exception for all errors that occur during user account creation or
     modification operations.
     """
 
@@ -287,8 +261,7 @@ class UserAccountManagementError(UserAccountsServiceError):
 
 
 class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
-    """
-    Raised when attempting to create or modify a user account with a username that is
+    """Raised when attempting to create or modify a user account with a username that is
     already in use by another user account.
     """
 
@@ -339,9 +312,7 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
 
 
 class EmptyUserAccountUsernameError(UserAccountManagementError):
-    """
-    Raised when attempting to create or modify a user account with an empty username.
-    """
+    """Raised when attempting to create or modify a user account with an empty username."""
 
     code = "EMPTY_USER_ACCOUNT_USERNAME_ERROR"
 
@@ -368,9 +339,7 @@ class EmptyUserAccountUsernameError(UserAccountManagementError):
 
 
 class EmptyUserAccountPasswordError(UserAccountManagementError):
-    """
-    Raised when attempting to create or modify a user account with an empty password.
-    """
+    """Raised when attempting to create or modify a user account with an empty password."""
 
     code = "EMPTY_USER_ACCOUNT_PASSWORD_ERROR"
 
@@ -397,8 +366,7 @@ class EmptyUserAccountPasswordError(UserAccountManagementError):
 
 
 class InvalidUserAccountRoleError(UserAccountManagementError):
-    """
-    Raised when attempting to create or modify a user account with an invalid role.
+    """Raised when attempting to create or modify a user account with an invalid role.
     Valid roles are 'ADMIN', 'OPERATOR', or 'SPECTATOR'.
     """
 

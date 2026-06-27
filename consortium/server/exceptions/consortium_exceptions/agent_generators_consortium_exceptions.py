@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentGeneratorsError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorsError]
@@ -224,8 +223,7 @@ class AgentGeneratorOperationError(
     comp_excs.ComponentOperationError,
     AgentGeneratorsFrameworkError,
 ):
-    """
-    Base exception for all errors that occur during the operation of a particular
+    """Base exception for all errors that occur during the operation of a particular
     agent generator.
     """
 
@@ -312,8 +310,7 @@ class AgentGeneratorStateError(
     AgentGeneratorsFrameworkError,
     comp_excs.ComponentStateError,
 ):
-    """
-    Base exception for all errors that occur due to invalid status transitions or
+    """Base exception for all errors that occur due to invalid status transitions or
     operations performed on an agent generator in an invalid status.
     """
 

@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`ListenerTemplatesError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplatesError]
@@ -33,17 +32,13 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class ListenerTemplatesError(BaseConsortiumError):
-    """
-    Base exception for all listener templates-related errors.
-    """
+    """Base exception for all listener templates-related errors."""
 
     code = "LISTENER_TEMPLATES_ERROR"
 
 
 class ListenerTemplatesFrameworkError(ListenerTemplatesError):
-    """
-    Base exception for all errors that occur within the listener templates framework.
-    """
+    """Base exception for all errors that occur within the listener templates framework."""
 
     code = "LISTENER_TEMPLATES_FRAMEWORK_ERROR"
 
@@ -52,8 +47,7 @@ class ListenerTemplateConfigurationError(
     comp_excs.ComponentConfigurationError,
     ListenerTemplatesFrameworkError,
 ):
-    """
-    Base exception for all errors that occur during the configuration of a particular
+    """Base exception for all errors that occur during the configuration of a particular
     listener template.
     """
 
@@ -66,8 +60,7 @@ class InvalidListenerTemplateConfigurationParameterTypeError(
     comp_excs.InvalidComponentConfigurationParameterTypeError,
     ListenerTemplateConfigurationError,
 ):
-    """
-    Raised when a listener template's configuration parameter is not of the expected
+    """Raised when a listener template's configuration parameter is not of the expected
     type during listener template configuration.
     """
 
@@ -90,8 +83,7 @@ class MissingListenerTemplateConfigurationParameterError(
     comp_excs.MissingComponentConfigurationParameterError,
     ListenerTemplateConfigurationError,
 ):
-    """
-    Raised when a required parameter is not declared in a listener template's definition
+    """Raised when a required parameter is not declared in a listener template's definition
     during listener template configuration.
     """
 
@@ -108,8 +100,7 @@ class EmptyListenerTemplateLabelError(
     comp_excs.EmptyComponentLabelError,
     ListenerTemplateConfigurationError,
 ):
-    """
-    Raised when an empty label is provided in a listener template's definition during
+    """Raised when an empty label is provided in a listener template's definition during
     listener template configuration.
     """
 
@@ -123,8 +114,7 @@ class InvalidListenerTemplateVersionError(
     comp_excs.InvalidComponentVersionError,
     ListenerTemplateConfigurationError,
 ):
-    """
-    Raised when the listener template version string provided in a listener template's
+    """Raised when the listener template version string provided in a listener template's
     definition is not a valid version string according to PEP 440 during listener template
     configuration.
     """
@@ -142,8 +132,7 @@ class InvalidFrameworkVersionSpecifierError(
     comp_excs.InvalidFrameworkVersionSpecifierError,
     ListenerTemplateConfigurationError,
 ):
-    """
-    Raised when the framework version specifier string provided in a listener template's
+    """Raised when the framework version specifier string provided in a listener template's
     definition is not a valid version specifier string as defined in PEP 440 during
     listener template configuration.
     """
@@ -165,8 +154,7 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
     comp_excs.InvalidComponentDependencyVersionSpecifierError,
     ListenerTemplateConfigurationError,
 ):
-    """
-    Raised when a listener template dependency version specifier string provided in a
+    """Raised when a listener template dependency version specifier string provided in a
     listener template's definition is not a valid version specifier string as defined in
     PEP 440 during listener template configuration.
     """
@@ -185,8 +173,7 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
 
 
 class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationError):
-    """
-    Raised when duplicate option names are provided in a listener template's definition
+    """Raised when duplicate option names are provided in a listener template's definition
     during listener template configuration.
     """
 
@@ -203,16 +190,13 @@ class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationErro
 
 
 class ListenerTemplateOptionError(ListenerTemplatesFrameworkError):
-    """
-    Base exception for all errors related to listener template options.
-    """
+    """Base exception for all errors related to listener template options."""
 
     code = "LISTENER_TEMPLATE_OPTION_ERROR"
 
 
 class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
-    """
-    Raised when a provided option name is not found in the listener template when
+    """Raised when a provided option name is not found in the listener template when
     attempting to create a listener from the listener template.
     """
 
@@ -229,8 +213,7 @@ class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
 
 
 class ListenerTemplateOptionValueValidationError(ListenerTemplateOptionError):
-    """
-    Raised when an invalid value is provided for a listener template option when
+    """Raised when an invalid value is provided for a listener template option when
     attempting to create a listener from the listener template.
     """
 
@@ -260,8 +243,7 @@ class ListenerTemplateOptionValueValidationError(ListenerTemplateOptionError):
 class MissingRequiredListenerTemplateOptionError(
     ListenerTemplateOptionError,
 ):
-    """
-    Raised when a required option is not provided when attempting to create a listener
+    """Raised when a required option is not provided when attempting to create a listener
     from the listener template.
     """
 
@@ -282,16 +264,13 @@ class MissingRequiredListenerTemplateOptionError(
 
 
 class ListenerTemplatesServiceError(ListenerTemplatesError):
-    """
-    Base exception for all errors that occur within the listener templates service.
-    """
+    """Base exception for all errors that occur within the listener templates service."""
 
     code = "LISTENER_TEMPLATES_SERVICE_ERROR"
 
 
 class ListenerTemplateNotFoundError(ListenerTemplatesServiceError):
-    """
-    Raised when the requested listener template was not found in the listener templates
+    """Raised when the requested listener template was not found in the listener templates
     service.
     """
 
@@ -299,8 +278,7 @@ class ListenerTemplateNotFoundError(ListenerTemplatesServiceError):
 
 
 class ListenerTemplateIDNotFoundError(ListenerTemplateNotFoundError):
-    """
-    Raised when the requested listener template with the provided listener template ID
+    """Raised when the requested listener template with the provided listener template ID
     was not found in the listener templates service.
     """
 
@@ -318,8 +296,7 @@ class ListenerTemplateIDNotFoundError(ListenerTemplateNotFoundError):
 
 
 class ListenerTemplateLabelNotFoundError(ListenerTemplateNotFoundError):
-    """
-    Raised when the requested listener template with the provided label was not found
+    """Raised when the requested listener template with the provided label was not found
     in the listener templates service.
     """
 

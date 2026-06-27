@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`ListenerProfilesError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfilesError]
@@ -40,8 +39,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class ListenerProfilesError(BaseConsortiumError):
-    """
-    Base exception for all listener profiles related errors.
+    """Base exception for all listener profiles related errors.
 
     All exceptions that inherit from `ListenerProfilesError` define, `code`, `message`, and
     `detail` attributes. For brevity, `message` and `detail` are omitted within
@@ -59,9 +57,7 @@ class ListenerProfilesError(BaseConsortiumError):
 
 
 class ListenerProfilesServiceError(ListenerProfilesError):
-    """
-    Base exception for all errors that occur within the listener profiles service.
-    """
+    """Base exception for all errors that occur within the listener profiles service."""
 
     code = "LISTENER_PROFILES_SERVICE_ERROR"
 
@@ -70,8 +66,7 @@ class ListenerProfileNotFoundError(
     ListenerProfilesServiceError,
     comp_excs.ComponentNotFoundError,
 ):
-    """
-    Raised when the requested listener profile with the provided listener profile ID was not
+    """Raised when the requested listener profile with the provided listener profile ID was not
     found in the listener profiles service.
     """
 
@@ -87,9 +82,7 @@ class ListenerProfileLoadingError(
     ListenerProfilesServiceError,
     comp_excs.ComponentLoadingError,
 ):
-    """
-    Base exception for all errors that occur during the loading of a listener profile.
-    """
+    """Base exception for all errors that occur during the loading of a listener profile."""
 
     code = "LISTENER_PROFILE_LOADING_ERROR"
 
@@ -100,8 +93,7 @@ class InvalidListenerProfileProjectManifestFileError(
     ListenerProfileLoadingError,
     comp_excs.InvalidComponentProjectManifestFileError,
 ):
-    """
-    Base exception for all errors that occur due to an invalid listener profile project
+    """Base exception for all errors that occur due to an invalid listener profile project
     manifest `manifest.json` file during listener profile loading.
     """
 
@@ -112,8 +104,7 @@ class InvalidListenerProfileProjectManifestFileJSONError(
     InvalidListenerProfileProjectManifestFileError,
     comp_excs.InvalidComponentProjectManifestFileJSONError,
 ):
-    """
-    Raised when the listener profile project manifest file is not valid JSON during
+    """Raised when the listener profile project manifest file is not valid JSON during
     listener profile loading.
     """
 
@@ -127,8 +118,7 @@ class InvalidListenerProfileProjectManifestFileSchemaError(
     InvalidListenerProfileProjectManifestFileError,
     comp_excs.InvalidComponentProjectManifestFileSchemaError,
 ):
-    """
-    Raised when the listener profile project manifest file does not conform to the expected
+    """Raised when the listener profile project manifest file does not conform to the expected
     JSON schema during listener profile loading.
     """
 
@@ -149,8 +139,7 @@ class InvalidListenerProfileProjectPyProjectFileError(
     ListenerProfileLoadingError,
     comp_excs.InvalidComponentProjectPyProjectFileError,
 ):
-    """
-    Base exception for all errors that occur due to an invalid `pyproject.toml` file
+    """Base exception for all errors that occur due to an invalid `pyproject.toml` file
     during listener profile loading.
     """
 
@@ -161,8 +150,7 @@ class InvalidListenerProfileProjectPyProjectFileTOMLError(
     ListenerProfileLoadingError,
     comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
 ):
-    """
-    Raised when the `pyproject.toml` file is not a valid TOML file during listener profile
+    """Raised when the `pyproject.toml` file is not a valid TOML file during listener profile
     loading.
     """
 
@@ -176,8 +164,7 @@ class InvalidListenerProfileProjectPyProjectFileDependencyError(
     ListenerProfileLoadingError,
     comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
 ):
-    """
-    Raised when the `pyproject.toml` file contains an invalid dependency entry during
+    """Raised when the `pyproject.toml` file contains an invalid dependency entry during
     listener profile loading.
     """
 
@@ -198,8 +185,7 @@ class InvalidListenerProfileProjectFolderStructureError(
     ListenerProfileLoadingError,
     comp_excs.InvalidComponentProjectFolderStructureError,
 ):
-    """
-    Base exception for all errors that occur due to an invalid listener profile project
+    """Base exception for all errors that occur due to an invalid listener profile project
     folder structure during listener profile loading.
     """
 
@@ -210,8 +196,7 @@ class ListenerProfileProjectManifestFileNotFoundError(
     InvalidListenerProfileProjectFolderStructureError,
     comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
-    """
-    Raised when the listener profile project manifest file is not found in the listener
+    """Raised when the listener profile project manifest file is not found in the listener
     profile project folder during listener profile loading.
     """
 
@@ -225,8 +210,7 @@ class ListenerProfileProjectEntryPointModuleNotFoundError(
     InvalidListenerProfileProjectFolderStructureError,
     comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
-    """
-    Raised when the listener profile entry point module specified in the manifest is not
+    """Raised when the listener profile entry point module specified in the manifest is not
     found in the listener profile project folder during listener profile loading.
     """
 
@@ -247,8 +231,7 @@ class InvalidListenerProfileProjectImplementationError(
     ListenerProfileLoadingError,
     comp_excs.InvalidComponentProjectImplementationError,
 ):
-    """
-    Base exception for all errors that occur due to the listener profile project not
+    """Base exception for all errors that occur due to the listener profile project not
     implementing the required interface during listener profile loading.
     """
 
@@ -259,8 +242,7 @@ class ListenerProfileProjectSymbolNotFoundError(
     InvalidListenerProfileProjectImplementationError,
     comp_excs.ComponentProjectSymbolNotFoundError,
 ):
-    """
-    Raised when the listener profile symbol name specified in the manifest is not found in
+    """Raised when the listener profile symbol name specified in the manifest is not found in
     the listener profile entry point module during listener profile loading.
     """
 
@@ -283,8 +265,7 @@ class ListenerProfileProjectInterfaceError(
     InvalidListenerProfileProjectImplementationError,
     comp_excs.ComponentProjectInterfaceError,
 ):
-    """
-    Raised when the listener profile class does not implement the required interface during
+    """Raised when the listener profile class does not implement the required interface during
     listener profile loading.
     """
 
@@ -305,8 +286,7 @@ class InternalListenerProfileProjectError(
     InvalidListenerProfileProjectImplementationError,
     comp_excs.InternalComponentProjectError,
 ):
-    """
-    Raised when an unhandled exception from within the listener profile is raised during
+    """Raised when an unhandled exception from within the listener profile is raised during
     listener profile loading.
     """
 
@@ -327,8 +307,7 @@ class IncompatibleListenerProfileFrameworkVersionError(
     ListenerProfileLoadingError,
     comp_excs.IncompatibleComponentFrameworkVersionError,
 ):
-    """
-    Raised when a listener profile's required framework version is incompatible with the
+    """Raised when a listener profile's required framework version is incompatible with the
     current framework version during listener profile loading.
     """
 
@@ -351,8 +330,7 @@ class ListenerProfileAlreadyRegisteredError(
     ListenerProfileLoadingError,
     comp_excs.ComponentAlreadyRegisteredError,
 ):
-    """
-    Raised when a listener profile with the same ID is already registered in the listener
+    """Raised when a listener profile with the same ID is already registered in the listener
     profiles service during listener profile loading.
     """
 
@@ -369,8 +347,7 @@ class DuplicateListenerProfileLabelError(
     ListenerProfileLoadingError,
     comp_excs.DuplicateComponentLabelError,
 ):
-    """
-    Raised when the label provided in the listener profile's definition is already in use by
+    """Raised when the label provided in the listener profile's definition is already in use by
     another listener profile during listener profile loading.
     """
 
@@ -387,8 +364,7 @@ class ListenerProfileDependencyError(
     ListenerProfilesServiceError,
     comp_excs.ComponentDependencyError,
 ):
-    """
-    Base exception for all errors that occur during the resolution of listener profile's
+    """Base exception for all errors that occur during the resolution of listener profile's
     dependencies.
     """
 
@@ -401,8 +377,7 @@ class ThirdPartyDependencyNotFoundError(
     ListenerProfileDependencyError,
     comp_excs.ThirdPartyDependencyNotFoundError,
 ):
-    """
-    Raised when a third-party dependency required by a listener profile is not installed
+    """Raised when a third-party dependency required by a listener profile is not installed
     during listener profile dependency resolution.
     """
 
@@ -423,8 +398,7 @@ class IncompatibleThirdPartyDependencyVersionError(
     ListenerProfileDependencyError,
     comp_excs.IncompatibleThirdPartyDependencyVersionError,
 ):
-    """
-    Raised when a third-party dependency's installed version is incompatible with the
+    """Raised when a third-party dependency's installed version is incompatible with the
     version required by the listener profile during listener profile dependency resolution.
     """
 
@@ -449,8 +423,7 @@ class ComponentDependencyNotFoundError(
     ListenerProfileDependencyError,
     comp_excs.ComponentDependencyNotFoundError,
 ):
-    """
-    Raised when a component dependency required by the listener profile is not found in the
+    """Raised when a component dependency required by the listener profile is not found in the
     components service during listener profile dependency resolution.
     """
 
@@ -471,8 +444,7 @@ class IncompatibleComponentDependencyVersionError(
     ListenerProfileDependencyError,
     comp_excs.IncompatibleComponentDependencyVersionError,
 ):
-    """
-    Raised when a component dependency's version is incompatible with the version required
+    """Raised when a component dependency's version is incompatible with the version required
     by the listener profile during listener profile dependency resolution.
     """
 
@@ -497,8 +469,7 @@ class ListenerProfileDependsOnInvalidComponentDependencyError(
     ListenerProfileDependencyError,
     comp_excs.ComponentDependsOnInvalidComponentDependencyError,
 ):
-    """
-    Raised when a listener profile depends on another component dependency that itself has
+    """Raised when a listener profile depends on another component dependency that itself has
     invalid dependencies during listener profile dependency resolution.
     """
 
@@ -519,8 +490,7 @@ class ComponentDependencyNotRunningError(
     ListenerProfileDependencyError,
     comp_excs.ComponentDependencyNotRunningError,
 ):
-    """
-    Raised when a component dependency required by the listener profile is present but not
+    """Raised when a component dependency required by the listener profile is present but not
     currently running during listener profile dependency resolution.
     """
 

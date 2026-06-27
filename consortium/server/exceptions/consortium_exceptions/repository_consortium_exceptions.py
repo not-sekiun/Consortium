@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`RepositoryError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryError]
@@ -28,24 +27,19 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class RepositoryError(BaseConsortiumError):
-    """
-    Base exception for all repository-related errors.
-    """
+    """Base exception for all repository-related errors."""
 
     code = "REPOSITORY_ERROR"
 
 
 class RepositoryServiceError(RepositoryError):
-    """
-    Base exception for all errors that occur within the repository service.
-    """
+    """Base exception for all errors that occur within the repository service."""
 
     code = "REPOSITORY_SERVICE_ERROR"
 
 
 class RepositoryResourceNotFoundError(RepositoryServiceError):
-    """
-    Raised when the requested repository resource was not found in the repository
+    """Raised when the requested repository resource was not found in the repository
     service.
     """
 
@@ -62,8 +56,7 @@ class RepositoryResourceNotFoundError(RepositoryServiceError):
 
 
 class RepositoryResourceAlreadyExistsError(RepositoryServiceError):
-    """
-    Raised when a repository resource with the provided resource ID already exists in
+    """Raised when a repository resource with the provided resource ID already exists in
     the repository service.
     """
 
@@ -81,8 +74,7 @@ class RepositoryResourceAlreadyExistsError(RepositoryServiceError):
 
 
 class InvalidRepositoryMetadataFileError(RepositoryServiceError):
-    """
-    Base exception for all errors that occur due to an invalid repository metadata
+    """Base exception for all errors that occur due to an invalid repository metadata
     `.repository.json` file.
     """
 
@@ -92,8 +84,7 @@ class InvalidRepositoryMetadataFileError(RepositoryServiceError):
 class InvalidRepositoryMetadataFileJSONError(
     InvalidRepositoryMetadataFileError,
 ):
-    """
-    Raised when the repository metadata file is not valid JSON during repository
+    """Raised when the repository metadata file is not valid JSON during repository
     metadata loading.
     """
 
@@ -114,8 +105,7 @@ class InvalidRepositoryMetadataFileJSONError(
 class InvalidRepositoryMetadataFileSchemaError(
     InvalidRepositoryMetadataFileError,
 ):
-    """
-    Raised when the repository metadata file does not conform to the expected JSON
+    """Raised when the repository metadata file does not conform to the expected JSON
     schema during repository metadata loading.
     """
 
@@ -137,8 +127,7 @@ class InvalidRepositoryMetadataFileSchemaError(
 
 
 class UnsyncedRepositoryMetadataFileError(InvalidRepositoryMetadataFileError):
-    """
-    Raised when the repository metadata file is out of sync with the actual contents
+    """Raised when the repository metadata file is out of sync with the actual contents
     of the repository directory.
     """
 
@@ -156,16 +145,13 @@ class UnsyncedRepositoryMetadataFileError(InvalidRepositoryMetadataFileError):
 
 
 class RepositoryFrameworkError(RepositoryError):
-    """
-    Base exception for all errors that occur within the repository framework.
-    """
+    """Base exception for all errors that occur within the repository framework."""
 
     code = "REPOSITORY_FRAMEWORK_ERROR"
 
 
 class RepositoryFileError(RepositoryFrameworkError):
-    """
-    Base exception for all errors that occur when performing operations on a repository
+    """Base exception for all errors that occur when performing operations on a repository
     file.
     """
 
@@ -173,8 +159,7 @@ class RepositoryFileError(RepositoryFrameworkError):
 
 
 class RepositoryFileAlreadyExistsError(RepositoryFileError):
-    """
-    Raised when attempting to perform an operation on a repository file that requires
+    """Raised when attempting to perform an operation on a repository file that requires
     the file to not exist but the file already exists on disk.
     """
 
@@ -188,8 +173,7 @@ class RepositoryFileAlreadyExistsError(RepositoryFileError):
 
 
 class RepositoryFileDoesNotExistError(RepositoryFileError):
-    """
-    Raised when attempting to perform an operation on a repository file that requires
+    """Raised when attempting to perform an operation on a repository file that requires
     the file to exist but the file does not exist on disk.
     """
 
@@ -203,8 +187,7 @@ class RepositoryFileDoesNotExistError(RepositoryFileError):
 
 
 class RepositoryDirectoryError(RepositoryFrameworkError):
-    """
-    Base exception for all errors that occur when performing operations on a repository
+    """Base exception for all errors that occur when performing operations on a repository
     directory.
     """
 
@@ -212,8 +195,7 @@ class RepositoryDirectoryError(RepositoryFrameworkError):
 
 
 class RepositoryDirectoryAlreadyExistsError(RepositoryDirectoryError):
-    """
-    Raised when attempting to perform an operation on a repository directory that
+    """Raised when attempting to perform an operation on a repository directory that
     requires the directory to not exist but the directory already exists on disk.
     """
 
@@ -227,8 +209,7 @@ class RepositoryDirectoryAlreadyExistsError(RepositoryDirectoryError):
 
 
 class RepositoryDirectoryDoesNotExistError(RepositoryDirectoryError):
-    """
-    Raised when attempting to perform an operation on a repository directory that
+    """Raised when attempting to perform an operation on a repository directory that
     requires the directory to exist but the directory does not exist on disk.
     """
 
@@ -242,8 +223,7 @@ class RepositoryDirectoryDoesNotExistError(RepositoryDirectoryError):
 
 
 class RelativePathOutsideRepositoryDirectoryError(RepositoryDirectoryError):
-    """
-    Raised when a relative path provided to a repository directory operation resolves
+    """Raised when a relative path provided to a repository directory operation resolves
     to a location outside of the repository directory.
     """
 
@@ -258,8 +238,7 @@ class RelativePathOutsideRepositoryDirectoryError(RepositoryDirectoryError):
 
 
 class RepositoryDirectoryRelativePathNotContainedError(RepositoryDirectoryError):
-    """
-    Raised when a relative path provided to a repository directory operation resolves
+    """Raised when a relative path provided to a repository directory operation resolves
     to a location that is not contained within the repository directory.
     """
 
@@ -274,8 +253,7 @@ class RepositoryDirectoryRelativePathNotContainedError(RepositoryDirectoryError)
 
 
 class InvalidRepositoryDirectoryArchiveFileFormatError(RepositoryDirectoryError):
-    """
-    Raised when an unsupported archive file format is provided when attempting to
+    """Raised when an unsupported archive file format is provided when attempting to
     create a repository directory from an archive file.
     """
 

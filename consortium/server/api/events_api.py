@@ -184,8 +184,7 @@ class _WebsocketManager:
         message: str,
         detail: Any | None = None,
     ) -> dict[str, Any]:
-        """
-        Convenience wrapper for the (common) case of a single error: builds
+        """Convenience wrapper for the (common) case of a single error: builds
         the one error object and wraps it in the same `errors` list shape
         that every other error response uses, so callers never need to know
         whether their failure is "a single error" or "multiple errors" -

@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentTemplatesError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplatesError]
@@ -34,17 +33,13 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class AgentTemplatesError(BaseConsortiumError):
-    """
-    Base exception for all agent templates-related errors.
-    """
+    """Base exception for all agent templates-related errors."""
 
     code = "AGENT_TEMPLATES_ERROR"
 
 
 class AgentTemplatesFrameworkError(AgentTemplatesError):
-    """
-    Base exception for all errors that occur within the agent templates framework.
-    """
+    """Base exception for all errors that occur within the agent templates framework."""
 
     code = "AGENT_TEMPLATES_FRAMEWORK_ERROR"
 
@@ -53,8 +48,7 @@ class AgentTemplateConfigurationError(
     comp_excs.ComponentConfigurationError,
     AgentTemplatesFrameworkError,
 ):
-    """
-    Base exception for all errors that occur during the configuration of a particular
+    """Base exception for all errors that occur during the configuration of a particular
     agent template.
     """
 
@@ -67,8 +61,7 @@ class InvalidAgentTemplateConfigurationParameterTypeError(
     comp_excs.InvalidComponentConfigurationParameterTypeError,
     AgentTemplateConfigurationError,
 ):
-    """
-    Raised when an agent template's configuration parameter is not of the expected
+    """Raised when an agent template's configuration parameter is not of the expected
     type during agent template configuration.
     """
 
@@ -91,8 +84,7 @@ class MissingAgentTemplateConfigurationParameterError(
     comp_excs.MissingComponentConfigurationParameterError,
     AgentTemplateConfigurationError,
 ):
-    """
-    Raised when a required parameter is not declared in an agent template's definition
+    """Raised when a required parameter is not declared in an agent template's definition
     during agent template configuration.
     """
 
@@ -109,8 +101,7 @@ class EmptyAgentTemplateLabelError(
     comp_excs.EmptyComponentLabelError,
     AgentTemplateConfigurationError,
 ):
-    """
-    Raised when an empty label is provided in an agent template's definition during
+    """Raised when an empty label is provided in an agent template's definition during
     agent template configuration.
     """
 
@@ -124,8 +115,7 @@ class InvalidAgentTemplateVersionError(
     comp_excs.InvalidComponentVersionError,
     AgentTemplateConfigurationError,
 ):
-    """
-    Raised when the agent template version string provided in an agent template's
+    """Raised when the agent template version string provided in an agent template's
     definition is not a valid version string according to PEP 440 during agent template
     configuration.
     """
@@ -143,8 +133,7 @@ class InvalidFrameworkVersionSpecifierError(
     comp_excs.InvalidFrameworkVersionSpecifierError,
     AgentTemplateConfigurationError,
 ):
-    """
-    Raised when the framework version specifier string provided in an agent template's
+    """Raised when the framework version specifier string provided in an agent template's
     definition is not a valid version specifier string as defined in PEP 440 during
     agent template configuration.
     """
@@ -166,8 +155,7 @@ class InvalidAgentTemplateDependencyVersionSpecifierError(
     comp_excs.InvalidComponentDependencyVersionSpecifierError,
     AgentTemplateConfigurationError,
 ):
-    """
-    Raised when an agent template dependency version specifier string provided in an
+    """Raised when an agent template dependency version specifier string provided in an
     agent template's definition is not a valid version specifier string as defined in
     PEP 440 during agent template configuration.
     """
@@ -186,8 +174,7 @@ class InvalidAgentTemplateDependencyVersionSpecifierError(
 
 
 class DuplicateAgentTemplateOptionNameError(AgentTemplateConfigurationError):
-    """
-    Raised when duplicate option names are provided in an agent template's definition
+    """Raised when duplicate option names are provided in an agent template's definition
     during agent template configuration.
     """
 
@@ -204,16 +191,13 @@ class DuplicateAgentTemplateOptionNameError(AgentTemplateConfigurationError):
 
 
 class AgentTemplateOptionError(AgentTemplatesFrameworkError):
-    """
-    Base exception for all errors related to agent template options.
-    """
+    """Base exception for all errors related to agent template options."""
 
     code = "AGENT_TEMPLATE_OPTION_ERROR"
 
 
 class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
-    """
-    Raised when a provided option name is not found in the agent template when
+    """Raised when a provided option name is not found in the agent template when
     attempting to create an agent generator from the agent template.
     """
 
@@ -231,8 +215,7 @@ class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
 
 
 class AgentTemplateOptionValueValidationError(AgentTemplateOptionError):
-    """
-    Raised when an invalid value is provided for an agent template option when
+    """Raised when an invalid value is provided for an agent template option when
     attempting to create an agent generator from the agent template.
     """
 
@@ -262,8 +245,7 @@ class AgentTemplateOptionValueValidationError(AgentTemplateOptionError):
 class MissingRequiredAgentTemplateOptionError(
     AgentTemplateOptionError,
 ):
-    """
-    Raised when a required option is not provided when attempting to create an agent
+    """Raised when a required option is not provided when attempting to create an agent
     generator from the agent template.
     """
 
@@ -281,16 +263,13 @@ class MissingRequiredAgentTemplateOptionError(
 
 
 class AgentTemplatesServiceError(AgentTemplatesError):
-    """
-    Base exception for all errors that occur within the agent templates service.
-    """
+    """Base exception for all errors that occur within the agent templates service."""
 
     code = "AGENT_TEMPLATES_SERVICE_ERROR"
 
 
 class AgentTemplateNotFoundError(AgentTemplatesServiceError):
-    """
-    Raised when the requested agent template was not found in the agent templates
+    """Raised when the requested agent template was not found in the agent templates
     service.
     """
 
@@ -298,8 +277,7 @@ class AgentTemplateNotFoundError(AgentTemplatesServiceError):
 
 
 class AgentTemplateIDNotFoundError(AgentTemplateNotFoundError):
-    """
-    Raised when the requested agent template with the provided agent template ID was
+    """Raised when the requested agent template with the provided agent template ID was
     not found in the agent templates service.
     """
 
@@ -316,8 +294,7 @@ class AgentTemplateIDNotFoundError(AgentTemplateNotFoundError):
 
 
 class AgentTemplateLabelNotFoundError(AgentTemplateNotFoundError):
-    """
-    Raised when the requested agent template with the provided label was not found in
+    """Raised when the requested agent template with the provided label was not found in
     the agent templates service.
     """
 

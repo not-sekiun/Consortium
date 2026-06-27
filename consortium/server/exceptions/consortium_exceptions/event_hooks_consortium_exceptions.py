@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`EventHooksError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHooksError]
@@ -51,8 +50,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class EventHooksError(BaseConsortiumError):
-    """
-    Base exception for all event hooks related errors.
+    """Base exception for all event hooks related errors.
 
     All exceptions that inherit from `EventHooksError` define, `code`, `message`, and
     `detail` attributes. For brevity, `message` and `detail` are omitted within
@@ -70,9 +68,7 @@ class EventHooksError(BaseConsortiumError):
 
 
 class EventHooksServiceError(EventHooksError):
-    """
-    Base exception for all errors that occur within the event hooks service.
-    """
+    """Base exception for all errors that occur within the event hooks service."""
 
     code = "EVENT_HOOKS_SERVICE_ERROR"
 
@@ -81,8 +77,7 @@ class EventHookNotFoundError(
     EventHooksServiceError,
     comp_excs.ComponentNotFoundError,
 ):
-    """
-    Raised when the requested event hook with the provided event hook ID was not found in the
+    """Raised when the requested event hook with the provided event hook ID was not found in the
     event hooks service.
     """
 
@@ -97,9 +92,7 @@ class EventHookLoadingError(
     EventHooksServiceError,
     comp_excs.ComponentLoadingError,
 ):
-    """
-    Base exception for all errors that occur during the loading of an event hook.
-    """
+    """Base exception for all errors that occur during the loading of an event hook."""
 
     code = "EVENT_HOOK_LOADING_ERROR"
     _COMPONENT_TYPE = "event hook"
@@ -109,8 +102,7 @@ class InvalidEventHookProjectManifestFileError(
     EventHookLoadingError,
     comp_excs.InvalidComponentProjectManifestFileError,
 ):
-    """
-    Base exception for all errors that occur due to an invalid event hook project manifest
+    """Base exception for all errors that occur due to an invalid event hook project manifest
     `manifest.json` file during event hook loading.
     """
 
@@ -121,8 +113,7 @@ class InvalidEventHookProjectManifestFileJSONError(
     InvalidEventHookProjectManifestFileError,
     comp_excs.InvalidComponentProjectManifestFileJSONError,
 ):
-    """
-    Raised when the event hook project manifest file is not valid JSON during event hook
+    """Raised when the event hook project manifest file is not valid JSON during event hook
     loading.
     """
 
@@ -136,8 +127,7 @@ class InvalidEventHookProjectManifestFileSchemaError(
     InvalidEventHookProjectManifestFileError,
     comp_excs.InvalidComponentProjectManifestFileSchemaError,
 ):
-    """
-    Raised when the event hook project manifest file does not conform to the expected JSON
+    """Raised when the event hook project manifest file does not conform to the expected JSON
     schema during event hook loading.
     """
 
@@ -154,8 +144,7 @@ class InvalidEventHookProjectPyProjectFileError(
     EventHookLoadingError,
     comp_excs.InvalidComponentProjectPyProjectFileError,
 ):
-    """
-    Base exception for all errors that occur due to an invalid `pyproject.toml` file
+    """Base exception for all errors that occur due to an invalid `pyproject.toml` file
     during event hook loading.
     """
 
@@ -166,9 +155,7 @@ class InvalidEventHookProjectPyProjectFileTOMLError(
     EventHookLoadingError,
     comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
 ):
-    """
-    Raised when the `pyproject.toml` file is not a valid TOML file during event hook loading.
-    """
+    """Raised when the `pyproject.toml` file is not a valid TOML file during event hook loading."""
 
     code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
@@ -180,8 +167,7 @@ class InvalidEventHookProjectPyProjectFileDependencyError(
     EventHookLoadingError,
     comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
 ):
-    """
-    Raised when the `pyproject.toml` file contains an invalid dependency entry during
+    """Raised when the `pyproject.toml` file contains an invalid dependency entry during
     event hook loading.
     """
 
@@ -198,8 +184,7 @@ class InvalidEventHookProjectFolderStructureError(
     EventHookLoadingError,
     comp_excs.InvalidComponentProjectFolderStructureError,
 ):
-    """
-    Base exception for all errors that occur due to an invalid event hook project folder
+    """Base exception for all errors that occur due to an invalid event hook project folder
     structure during event hook loading.
     """
 
@@ -210,8 +195,7 @@ class EventHookProjectManifestFileNotFoundError(
     InvalidEventHookProjectFolderStructureError,
     comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
-    """
-    Raised when the event hook project manifest file is not found in the event hook project
+    """Raised when the event hook project manifest file is not found in the event hook project
     folder during event hook loading.
     """
 
@@ -225,8 +209,7 @@ class EventHookProjectEntryPointModuleNotFoundError(
     InvalidEventHookProjectFolderStructureError,
     comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
-    """
-    Raised when the event hook entry point module specified in the manifest is not found in
+    """Raised when the event hook entry point module specified in the manifest is not found in
     the event hook project folder during event hook loading.
     """
 
@@ -243,8 +226,7 @@ class InvalidEventHookProjectImplementationError(
     EventHookLoadingError,
     comp_excs.InvalidComponentProjectImplementationError,
 ):
-    """
-    Base exception for all errors that occur due to the event hook project not implementing
+    """Base exception for all errors that occur due to the event hook project not implementing
     the required interface during event hook loading.
     """
 
@@ -255,8 +237,7 @@ class EventHookProjectSymbolNotFoundError(
     InvalidEventHookProjectImplementationError,
     comp_excs.ComponentProjectSymbolNotFoundError,
 ):
-    """
-    Raised when the event hook symbol name specified in the manifest is not found in the
+    """Raised when the event hook symbol name specified in the manifest is not found in the
     event hook entry point module during event hook loading.
     """
 
@@ -279,8 +260,7 @@ class EventHookProjectInterfaceError(
     InvalidEventHookProjectImplementationError,
     comp_excs.ComponentProjectInterfaceError,
 ):
-    """
-    Raised when the event hook class does not implement the required interface during
+    """Raised when the event hook class does not implement the required interface during
     event hook loading.
     """
 
@@ -301,8 +281,7 @@ class InternalEventHookProjectError(
     InvalidEventHookProjectImplementationError,
     comp_excs.InternalComponentProjectError,
 ):
-    """
-    Raised when an unhandled exception from within the event hook is raised during event hook
+    """Raised when an unhandled exception from within the event hook is raised during event hook
     loading.
     """
 
@@ -323,8 +302,7 @@ class IncompatibleEventHookFrameworkVersionError(
     EventHookLoadingError,
     comp_excs.IncompatibleComponentFrameworkVersionError,
 ):
-    """
-    Raised when an event hook's required framework version is incompatible with the current
+    """Raised when an event hook's required framework version is incompatible with the current
     framework version during event hook loading.
     """
 
@@ -347,8 +325,7 @@ class EventHookAlreadyRegisteredError(
     EventHookLoadingError,
     comp_excs.ComponentAlreadyRegisteredError,
 ):
-    """
-    Raised when an event hook with the same ID is already registered in the event hooks service
+    """Raised when an event hook with the same ID is already registered in the event hooks service
     during event hook loading.
     """
 
@@ -362,8 +339,7 @@ class DuplicateEventHookLabelError(
     EventHookLoadingError,
     comp_excs.DuplicateComponentLabelError,
 ):
-    """
-    Raised when the label provided in the event hook's definition is already in use by
+    """Raised when the label provided in the event hook's definition is already in use by
     another event hook during event hook loading.
     """
 
@@ -380,8 +356,7 @@ class EventHookDependencyError(
     EventHooksServiceError,
     comp_excs.ComponentDependencyError,
 ):
-    """
-    Base exception for all errors that occur during the resolution of event hook
+    """Base exception for all errors that occur during the resolution of event hook
     dependencies.
     """
 
@@ -393,8 +368,7 @@ class ThirdPartyDependencyNotFoundError(
     EventHookDependencyError,
     comp_excs.ThirdPartyDependencyNotFoundError,
 ):
-    """
-    Raised when a third-party dependency required by an event hook is not installed during
+    """Raised when a third-party dependency required by an event hook is not installed during
     event hook dependency resolution.
     """
 
@@ -415,8 +389,7 @@ class IncompatibleThirdPartyDependencyVersionError(
     EventHookDependencyError,
     comp_excs.IncompatibleThirdPartyDependencyVersionError,
 ):
-    """
-    Raised when a third-party dependency's installed version is incompatible with the
+    """Raised when a third-party dependency's installed version is incompatible with the
     version required by the event hook during event hook dependency resolution.
     """
 
@@ -441,8 +414,7 @@ class ComponentDependencyNotFoundError(
     EventHookDependencyError,
     comp_excs.ComponentDependencyNotFoundError,
 ):
-    """
-    Raised when an event hook dependency required by the event hook is not found in the event hooks
+    """Raised when an event hook dependency required by the event hook is not found in the event hooks
     service during event hook dependency resolution.
     """
 
@@ -463,8 +435,7 @@ class IncompatibleComponentDependencyVersionError(
     EventHookDependencyError,
     comp_excs.IncompatibleComponentDependencyVersionError,
 ):
-    """
-    Raised when an event hook dependency's version is incompatible with the version required
+    """Raised when an event hook dependency's version is incompatible with the version required
     by the event hook during event hook dependency resolution.
     """
 
@@ -489,8 +460,7 @@ class EventHookDependsOnInvalidComponentDependencyError(
     EventHookDependencyError,
     comp_excs.ComponentDependsOnInvalidComponentDependencyError,
 ):
-    """
-    Raised when an event hook depends on another event hook that itself has invalid dependencies
+    """Raised when an event hook depends on another event hook that itself has invalid dependencies
     during event hook dependency resolution.
     """
 
@@ -511,8 +481,7 @@ class ComponentDependencyNotRunningError(
     EventHookDependencyError,
     comp_excs.ComponentDependencyNotRunningError,
 ):
-    """
-    Raised when an event hook dependency required by the event hook is present but not currently
+    """Raised when an event hook dependency required by the event hook is present but not currently
     running during event hook dependency resolution.
     """
 
@@ -530,8 +499,7 @@ class ComponentDependencyNotRunningError(
 
 
 class EventHookOperationError(EventHooksServiceError):
-    """
-    Base exception for all errors that occur during the operation of a particular
+    """Base exception for all errors that occur during the operation of a particular
     event hook.
     """
 
@@ -539,9 +507,7 @@ class EventHookOperationError(EventHooksServiceError):
 
 
 class EventHookSetupError(EventHookOperationError):
-    """
-    Raised when an event hook fails to set up during event hook operation.
-    """
+    """Raised when an event hook fails to set up during event hook operation."""
 
     code = "EVENT_HOOK_SETUP_ERROR"
 
@@ -555,9 +521,7 @@ class EventHookSetupError(EventHookOperationError):
 
 
 class EventHookTeardownError(EventHookOperationError):
-    """
-    Raised when an event hook fails to tear down during event hook operation.
-    """
+    """Raised when an event hook fails to tear down during event hook operation."""
 
     code = "EVENT_HOOK_TEARDOWN_ERROR"
 
@@ -574,9 +538,7 @@ class EventHooksFrameworkError(
     comp_excs.ComponentsFrameworkError,
     EventHooksError,
 ):
-    """
-    Base exception for all errors that occur within the event hooks framework.
-    """
+    """Base exception for all errors that occur within the event hooks framework."""
 
     code = "EVENT_HOOKS_FRAMEWORK_ERROR"
 
@@ -587,8 +549,7 @@ class EventHookConfigurationError(
     comp_excs.ComponentConfigurationError,
     EventHooksFrameworkError,
 ):
-    """
-    Base exception for all errors that occur during the configuration of a particular
+    """Base exception for all errors that occur during the configuration of a particular
     event hook.
     """
 
@@ -599,8 +560,7 @@ class InvalidEventHookConfigurationParameterTypeError(
     comp_excs.InvalidComponentConfigurationParameterTypeError,
     EventHookConfigurationError,
 ):
-    """
-    Raised when an event hook's configuration parameter is not of the expected type during
+    """Raised when an event hook's configuration parameter is not of the expected type during
     event hook configuration.
     """
 
@@ -623,8 +583,7 @@ class MissingEventHookConfigurationParameterError(
     comp_excs.MissingComponentConfigurationParameterError,
     EventHookConfigurationError,
 ):
-    """
-    Raised when a required parameter is not declared in an event hook's definition during
+    """Raised when a required parameter is not declared in an event hook's definition during
     event hook configuration.
     """
 
@@ -641,8 +600,7 @@ class EmptyEventHookLabelError(
     comp_excs.EmptyComponentLabelError,
     EventHookConfigurationError,
 ):
-    """
-    Raised when an empty label is provided in an event hook's definition during event
+    """Raised when an empty label is provided in an event hook's definition during event
     hook configuration.
     """
 
@@ -656,8 +614,7 @@ class InvalidEventHookVersionError(
     comp_excs.InvalidComponentVersionError,
     EventHookConfigurationError,
 ):
-    """
-    Raised when the event hook version string provided in the event hook's definition
+    """Raised when the event hook version string provided in the event hook's definition
     is not a valid version string according to PEP 440 during event hook configuration.
     """
 
@@ -674,8 +631,7 @@ class InvalidFrameworkVersionSpecifierError(
     comp_excs.InvalidFrameworkVersionSpecifierError,
     EventHookConfigurationError,
 ):
-    """
-    Raised when the framework version specifier string provided in the event hook's
+    """Raised when the framework version specifier string provided in the event hook's
     definition is not a valid version specifier string as defined in PEP 440 during
     event hook configuration.
     """
@@ -693,8 +649,7 @@ class InvalidEventHookDependencyVersionSpecifierError(
     comp_excs.InvalidComponentDependencyVersionSpecifierError,
     EventHookConfigurationError,
 ):
-    """
-    Raised when an event hook dependency version specifier string provided in the event hook's
+    """Raised when an event hook dependency version specifier string provided in the event hook's
     definition is not a valid version specifier string as defined in PEP 440 during
     event hook configuration.
     """

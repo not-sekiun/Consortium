@@ -1,5 +1,4 @@
-"""
-Exception hierarchy:
+"""Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`OptionsError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionsError]
@@ -26,20 +25,15 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 
 
 class OptionsError(BaseConsortiumError):
-    """
-    Base exception for all options-related errors.
-    """
+    """Base exception for all options-related errors."""
 
 
 class OptionsFrameworkError(OptionsError):
-    """
-    Base exception for all errors that occur within the options framework.
-    """
+    """Base exception for all errors that occur within the options framework."""
 
 
 class OptionValueValidationError(OptionsFrameworkError):
-    """
-    Raised when a provided value for an option fails data validation when setting the
+    """Raised when a provided value for an option fails data validation when setting the
     value through the option's `set_option_value()` method or when explicitly validating
     the value through the option's `validate_option_value()` method.
     """
@@ -49,15 +43,13 @@ class OptionValueValidationError(OptionsFrameworkError):
 
 
 class OptionConfigurationError(OptionsFrameworkError):
-    """
-    Base exception for all errors that occur during the configuration of a particular
+    """Base exception for all errors that occur during the configuration of a particular
     option.
     """
 
 
 class InvalidOptionConfigurationParameterTypeError(OptionConfigurationError):
-    """
-    Raised when a parameter provided to configure an option is not of the expected type
+    """Raised when a parameter provided to configure an option is not of the expected type
     during option configuration.
     """
 
@@ -83,9 +75,7 @@ class InvalidOptionConfigurationParameterTypeError(OptionConfigurationError):
 
 
 class EmptyOptionNameError(OptionConfigurationError):
-    """
-    Raised when an empty name is provided for an option during option configuration.
-    """
+    """Raised when an empty name is provided for an option during option configuration."""
 
     def __init__(self, option_filepath: str):
         super().__init__(
@@ -95,8 +85,7 @@ class EmptyOptionNameError(OptionConfigurationError):
 
 
 class InvalidDefaultValueError(OptionConfigurationError):
-    """
-    Raised when the default value provided to an option through its `default_value`
+    """Raised when the default value provided to an option through its `default_value`
     parameter fails data validation through the option's `validate_value()` method
     during option configuration.
     """
@@ -115,8 +104,7 @@ class InvalidDefaultValueError(OptionConfigurationError):
 
 
 class InvalidValidatingRegexError(OptionConfigurationError):
-    """
-    Raised when the `validating_regex` regex string provided for validating an option's
+    """Raised when the `validating_regex` regex string provided for validating an option's
     value is not a valid regex pattern that can be compiled during option configuration.
     """
 
@@ -134,8 +122,7 @@ class InvalidValidatingRegexError(OptionConfigurationError):
 
 
 class InvalidOptionValueLengthRangeError(OptionConfigurationError):
-    """
-    Raised when the `minimum_length` parameter provided for an option is greater than
+    """Raised when the `minimum_length` parameter provided for an option is greater than
     the `maximum_length` parameter, resulting in an invalid range of string value
     lengths during option configuration.
     """
@@ -154,8 +141,7 @@ class InvalidOptionValueLengthRangeError(OptionConfigurationError):
 
 
 class InvalidOptionValueLengthBoundError(OptionConfigurationError):
-    """
-    Raised when the `minimum_length` or `maximum_length` parameter provided for an
+    """Raised when the `minimum_length` or `maximum_length` parameter provided for an
     option specifying the max_length of the string value is less than zero during option
     configuration.
     """
@@ -174,8 +160,7 @@ class InvalidOptionValueLengthBoundError(OptionConfigurationError):
 
 
 class InvalidOptionValueRangeError(OptionConfigurationError):
-    """
-    Raised when the `less_than` or `less_than_or_equal_to` parameter provided for an
+    """Raised when the `less_than` or `less_than_or_equal_to` parameter provided for an
     option is greater than the `greater_than` or `greater_than_or_equal_to` parameter,
     resulting in an invalid range of numeric values during option configuration.
     """
@@ -234,8 +219,7 @@ class InvalidOptionValueRangeError(OptionConfigurationError):
 
 
 class InvalidOptionIterableLengthRangeError(OptionConfigurationError):
-    """
-    Raised when the `minimum_elements` parameter provided for an option is greater than
+    """Raised when the `minimum_elements` parameter provided for an option is greater than
     the `maximum_elements` parameter, resulting in an invalid range of iterable element
     counts during option configuration.
     """
@@ -254,8 +238,7 @@ class InvalidOptionIterableLengthRangeError(OptionConfigurationError):
 
 
 class InvalidOptionIterableLengthBoundError(OptionConfigurationError):
-    """
-    Raised when the `minimum_elements` or `maximum_elements` parameter provided for an
+    """Raised when the `minimum_elements` or `maximum_elements` parameter provided for an
     option specifying the number of elements in the iterable value is less than zero
     during option configuration.
     """
@@ -274,8 +257,7 @@ class InvalidOptionIterableLengthBoundError(OptionConfigurationError):
 
 
 class EmptyAvailableValuesError(OptionConfigurationError):
-    """
-    Raised when the set of available values provided through the `available_values`
+    """Raised when the set of available values provided through the `available_values`
     parameter is empty during option configuration.
     """
 
