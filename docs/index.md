@@ -5,7 +5,9 @@ hide:
     - footer
 ---
 
-<img alt="Consortium logo" src="assets/banner_dark_mode.png" style="display: block; margin: 0 auto; width: 50%">
+![Consortium Logo](assets/banner_light_mode.png#only-light){ width="75%" }
+![Consortium Logo](assets/banner_dark_mode.png#only-dark){ width="75%" }
+{ style="text-align: center;" }
 
 <p style="text-align: center;"><i>A modern C2 framework with a focus on extensibility</i></p>
 
