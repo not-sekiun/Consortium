@@ -32,7 +32,7 @@ from consortium.server.exceptions.consortium_exceptions.plugins_consortium_excep
     PluginStopError,
 )
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.utils import construct_services_namespace_object
+from consortium.server.utils import construct_services_dataclass
 
 
 class _PluginModel(ComponentMetadataModel):
@@ -70,9 +70,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         cls.plugin_project_folder = pathlib.Path(
             sys.modules[cls.__module__].__file__,
         ).parents[0]
-        cls.services = construct_services_namespace_object(
-            server_singletons=server_singletons
-        )
+        cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         try:
             cls._validate_metadata()

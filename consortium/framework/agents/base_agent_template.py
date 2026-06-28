@@ -42,7 +42,7 @@ from consortium.server.exceptions.consortium_exceptions.agent_templates_consorti
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
 )
-from consortium.server.utils import construct_services_namespace_object
+from consortium.server.utils import construct_services_dataclass
 
 Options = (
     SingleValueOption
@@ -93,9 +93,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             sys.modules[cls.__module__].__file__,
         ).parents[0]
         cls.compatible_listener_types = cls.compatible_listener_types or set()
-        cls.services = construct_services_namespace_object(
-            server_singletons=server_singletons
-        )
+        cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         try:
             cls._validate_metadata()

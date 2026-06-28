@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from consortium.server.services.agent_profiles_service import AgentProfilesService
     from consortium.server.services.agent_templates_service import AgentTemplatesService
     from consortium.server.services.agents_service import AgentsService
+    from consortium.server.services.authorization_service import AuthorizationService
     from consortium.server.services.c2_types_service import C2TypesService
     from consortium.server.services.consortium_paths_service import (
         ConsortiumPathsService,
@@ -92,6 +93,7 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
 @dataclass(frozen=True)
 class Services:
     logging_service: LoggingService | None
+    authorization_service: AuthorizationService
     consortium_paths_service: ConsortiumPathsService
     release_service: ReleaseService
     events_service: EventsService
@@ -112,10 +114,11 @@ class Services:
     plugins_service: PluginsService
 
 
-def construct_services_namespace_object(
+def construct_services_dataclass(
     server_singletons: types.ModuleType,
 ) -> Services:
     return Services(
+        authorization_service=server_singletons.authorization_service,
         logging_service=server_singletons.logging_service,
         consortium_paths_service=server_singletons.consortium_paths_service,
         release_service=server_singletons.release_service,

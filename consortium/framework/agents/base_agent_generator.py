@@ -42,7 +42,7 @@ from consortium.server.exceptions.consortium_exceptions.components_consortium_ex
     ComponentStopError,
 )
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.utils import construct_services_namespace_object
+from consortium.server.utils import construct_services_dataclass
 
 if TYPE_CHECKING:
     # This is used for type checking BaseAgentGeneratorBuildStep another runtime import
@@ -95,9 +95,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
                     method_name=method_name,
                 )
 
-        cls.services = construct_services_namespace_object(
-            server_singletons=server_singletons
-        )
+        cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         expected_attrs_and_types_map = get_type_hints(cls)
 
@@ -341,9 +339,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 method_name="on_running",
             )
 
-        cls.services = construct_services_namespace_object(
-            server_singletons=server_singletons
-        )
+        cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         if not hasattr(cls, "agent_generator_build_steps"):
             raise MissingAgentGeneratorConfigurationParameterError(

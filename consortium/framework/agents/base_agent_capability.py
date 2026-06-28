@@ -31,7 +31,7 @@ from consortium.server.objects.mitre_attack_objects import (
     # MitreAttackTechniqueID,
     resolve_mitre_attack_technique_id,
 )
-from consortium.server.utils import construct_services_namespace_object
+from consortium.server.utils import construct_services_dataclass
 
 if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
@@ -127,9 +127,7 @@ class BaseAgentCapability(_AgentCommunicator):
         cls.supported_oses = cls.supported_oses or {SupportedOS.ANY}
         cls.authors = cls.authors or set()
         cls.mitre_attack_techniques = cls.mitre_attack_techniques or set()
-        cls.services = construct_services_namespace_object(
-            server_singletons=server_singletons
-        )
+        cls.services = construct_services_dataclass(server_singletons=server_singletons)
         try:
             _BaseAgentCapabilityModel(
                 name=cls.name,

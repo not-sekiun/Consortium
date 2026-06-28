@@ -29,7 +29,7 @@ from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exc
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.connected_agents_service import ConnectedAgentsService
-from consortium.server.utils import construct_services_namespace_object
+from consortium.server.utils import construct_services_dataclass
 
 if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
@@ -156,9 +156,7 @@ class BaseListener(ComponentLifeCycle):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
-        cls.services = construct_services_namespace_object(
-            server_singletons=server_singletons
-        )
+        cls.services = construct_services_dataclass(server_singletons=server_singletons)
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
