@@ -16,6 +16,8 @@ from consortium.framework.agents.agent_outcomes import (
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
+    Deny,
+    Drop,
     SupportedOS,
 )
 from consortium.framework.options import (
@@ -36,7 +38,12 @@ class _TaskMessageHandlerProtocol(Protocol):
         agent: Agent,
         task_message: TaskLaunchMessageModel,
         context: SimpleNamespace,
-    ) -> TaskLaunchMessageModel | Awaitable[TaskLaunchMessageModel]: ...
+    ) -> (
+        TaskLaunchMessageModel
+        | Drop
+        | Deny
+        | Awaitable[TaskLaunchMessageModel | Drop | Deny]
+    ): ...
 
 
 class _ResultMessageHandlerProtocol(Protocol):
@@ -77,27 +84,33 @@ def request_response_capability(
     result_handler: _ResultMessageHandlerProtocol | None = None,
     timeout_handler: _TimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
-    async def _execute(self, task_message: TaskLaunchMessageModel) -> Success | Failure:
-        context = SimpleNamespace()
+    async def _on_launch(
+        self, task_message: TaskLaunchMessageModel
+    ) -> TaskLaunchMessageModel | Drop | Deny:
+        self._rrc_context = SimpleNamespace()
+        context = self._rrc_context
 
         if resolve_timeout:
-            send_and_recv_timeout = resolve_timeout(
+            context.recv_timeout = resolve_timeout(
                 task_message=task_message, context=context
             )
         else:
-            send_and_recv_timeout = timeout
+            context.recv_timeout = timeout
 
         if task_handler:
-            task_message = task_handler(
+            result = task_handler(
                 agent=self.agent, task_message=task_message, context=context
             )
-            if asyncio.iscoroutine(task_message):
-                task_message = await task_message
+            if asyncio.iscoroutine(result):
+                result = await result
+            return result
+        return task_message
+
+    async def _on_execute(self) -> Success | Failure:
+        context = self._rrc_context
 
         try:
-            result_message = await self.send_and_recv_from_agent(
-                task_message=task_message, timeout=send_and_recv_timeout
-            )
+            result_message = await self.recv_from_agent(timeout=context.recv_timeout)
         except TimeoutError:
             if timeout_handler:
                 result_message = timeout_handler(agent=self.agent, context=context)
@@ -143,6 +156,7 @@ def request_response_capability(
             "mitre_attack_techniques": mitre_attack_techniques,
             "supported_oses": supported_oses,
             "validating_function": validating_function,
-            "execute": _execute,
+            "on_launch": _on_launch,
+            "on_execute": _on_execute,
         },
     )

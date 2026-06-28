@@ -15,6 +15,8 @@ from consortium.framework.agents.agent_message_models import (
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
+    Deny,
+    Drop,
     SupportedOS,
 )
 from consortium.framework.options import (
@@ -83,41 +85,45 @@ def sequential_request_response_capability(
     result_handler: _SequentialResultMessagesHandlerProtocol | None = None,
     timeout_handler: _SequentialTimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
-    async def _execute(
+    async def _on_launch(
         self, task_message: TaskLaunchMessageModel
-    ) -> TaskOutputMessageModel:
-        context = SimpleNamespace()
+    ) -> TaskLaunchMessageModel | Drop | Deny:
+        self._src_context = SimpleNamespace()
+        context = self._src_context
 
-        index = 0
         if iterations is not None:
-            max_iterations = iterations
+            context.max_iterations = iterations
         elif resolve_iterations:
-            max_iterations = resolve_iterations(
+            context.max_iterations = resolve_iterations(
                 task_message=task_message, context=context
             )
         else:
-            max_iterations = None
+            context.max_iterations = None
 
-        while max_iterations is None or index < max_iterations:
+        if task_handler:
+            result = task_handler(
+                agent=self.agent, task_message=task_message, context=context
+            )
+            if asyncio.iscoroutine(result):
+                result = await result
+            return result
+        return task_message
+
+    async def _on_execute(self) -> TaskOutputMessageModel:
+        context = self._src_context
+        current_message = self.launch_message
+        index = 0
+
+        while context.max_iterations is None or index < context.max_iterations:
             if resolve_timeout:
-                send_and_recv_timeout = resolve_timeout(
-                    task_message=task_message, context=context
+                recv_timeout = resolve_timeout(
+                    task_message=current_message, context=context
                 )
             else:
-                send_and_recv_timeout = timeout
-
-            if task_handler:
-                task_message = task_handler(
-                    agent=self.agent, task_message=task_message, context=context
-                )
-                if asyncio.iscoroutine(task_message):
-                    task_message = await task_message
+                recv_timeout = timeout
 
             try:
-                result_message = await self.send_and_recv_from_agent(
-                    task_message=task_message,
-                    timeout=send_and_recv_timeout,
-                )
+                result_message = await self.recv_from_agent(timeout=recv_timeout)
             except TimeoutError:
                 if timeout_handler:
                     timeout_tuple = timeout_handler(agent=self.agent, context=context)
@@ -129,8 +135,17 @@ def sequential_request_response_capability(
                         if result_message is None:
                             raise  # Do not continue, no message to report, so raise error
                         return result_message  # Do not continue, return a message to report
-                    else:
-                        continue  # Continue, whether we have a message to report or not we continue
+                    # Resend current message and try again
+                    if task_handler:
+                        current_message = task_handler(
+                            agent=self.agent,
+                            task_message=current_message,
+                            context=context,
+                        )
+                        if asyncio.iscoroutine(current_message):
+                            current_message = await current_message
+                    await self.send_to_agent(task_message=current_message)
+                    continue
                 else:
                     raise
 
@@ -146,6 +161,19 @@ def sequential_request_response_capability(
                     return result_message
             else:
                 return result_message
+
+            index += 1
+
+            # Prepare and send the next message before looping back to recv
+            if task_handler:
+                current_message = task_handler(
+                    agent=self.agent,
+                    task_message=current_message,
+                    context=context,
+                )
+                if asyncio.iscoroutine(current_message):
+                    current_message = await current_message
+            await self.send_to_agent(task_message=current_message)
 
         raise RuntimeError(
             "Maximum iterations reached without returning a final result message."
@@ -163,6 +191,7 @@ def sequential_request_response_capability(
             "supported_oses": supported_oses,
             "mitre_attack_techniques": mitre_attack_techniques,
             "validating_function": validating_function,
-            "execute": _execute,
+            "on_launch": _on_launch,
+            "on_execute": _on_execute,
         },
     )

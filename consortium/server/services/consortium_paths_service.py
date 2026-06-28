@@ -27,6 +27,9 @@ class ConsortiumPathsService:
         self.user_accounts_json_file = (
             self.consortium_root / "data" / "server" / "user_accounts.json"
         )
+        self.role_permissions_json_file = (
+            self.consortium_root / "data" / "server" / "role_permissions.json"
+        )
 
         # Data directory paths
         self.server_logs_directory = self.consortium_root / "data" / "server" / "logs"

@@ -4,6 +4,7 @@ from consortium.server.services.agent_generators_service import AgentGeneratorsS
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.agents_service import AgentsService
+from consortium.server.services.authorization_service import AuthorizationService
 from consortium.server.services.c2_types_service import C2TypesService
 from consortium.server.services.consortium_paths_service import ConsortiumPathsService
 from consortium.server.services.event_hooks_service import EventHooksService
@@ -35,6 +36,17 @@ logging_service: None | LoggingService = None
 # server startup if certain critical paths do not exist and auto create other paths
 # if they are missing.
 consortium_paths_service = ConsortiumPathsService()
+
+# The authorization service is instantiated immediately after consortium_paths_service
+# so that role permissions are available as early as possible for the user accounts
+# service
+authorization_service = AuthorizationService(
+    role_permissions_json_file=consortium_paths_service.role_permissions_json_file
+)
+user_accounts_service = UserAccountsService(
+    user_accounts_json_file=consortium_paths_service.user_accounts_json_file,
+    authorization_service=authorization_service,
+)
 
 # The event hooks, listener profiles, agent profiles, and plugins services need the
 # server release service to be dependency injected into them when checking their '
@@ -115,9 +127,6 @@ assets_service = RepositoryService(
 )
 artifacts_service = RepositoryService(
     repository_directory_path=consortium_paths_service.artifacts_directory,
-)
-user_accounts_service = UserAccountsService(
-    user_accounts_json_file=consortium_paths_service.user_accounts_json_file,
 )
 users_service = UsersService(events_service=events_service)
 

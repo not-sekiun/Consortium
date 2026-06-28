@@ -1,7 +1,5 @@
 from pydantic import BaseModel
 
-from consortium.server.objects.user_account_objects import UserRole
-
 
 class PasswordUpdateRequestDataModel(BaseModel):
     old_password: str
@@ -16,4 +14,4 @@ class UpdateOwnUserAccountRequestDataModel(BaseModel):
 class UpdateUserAccountByUserAccountIDRequestDataModel(BaseModel):
     username: str | None = None
     password: str | None = None
-    role: UserRole | None = None
+    role: str | None = None

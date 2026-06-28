@@ -1,12 +1,7 @@
 from pathlib import Path
 
-from consortium.framework.agents import Failure, Success
-from consortium.framework.agents.agent_message_models import (
-    TaskLaunchMessageModel,
-)
-from consortium.framework.agents.base_agent_capability import (
-    BaseAgentCapability,
-)
+from consortium.framework.agents import Deny, Failure, Success, TaskLaunchMessageModel
+from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 from consortium.framework.options import SingleValueOption
 
 
@@ -76,32 +71,33 @@ class UploadCapability(BaseAgentCapability):
     }
     mitre_attack_techniques = {"T1105"}
 
-    # FIXME: What the fuck is this bullshit
-    async def execute(
-        self,
-        task_message: TaskLaunchMessageModel,
-    ) -> Success | Failure | None:
+    async def on_launch(
+        self, task_message: TaskLaunchMessageModel
+    ) -> TaskLaunchMessageModel | Deny:
         source = Path(task_message.arguments["source"])
-        chunk_size = task_message.arguments["chunk_size"]
-        recursive = task_message.arguments["recursive"]
-        ignore_empty_dirs = task_message.arguments["ignore_empty_dirs"]
-        compression_level = task_message.arguments["compression_level"]
-
         if not source.exists():
-            return Failure(
-                message=f"Failed to start upload. Path '{source}' does not exist."
+            return Deny(
+                reason=f"Failed to start upload. Path '{source}' does not exist."
             )
 
-        # Remove source from arguments before sending, agent doesn't need it
-        task_args = {
+        self._source = source
+        self._chunk_size = task_message.arguments["chunk_size"]
+        self._recursive = task_message.arguments["recursive"]
+        self._ignore_empty_dirs = task_message.arguments["ignore_empty_dirs"]
+        self._compression_level = task_message.arguments["compression_level"]
+
+        # Strip server-side-only args before sending to agent
+        task_message.arguments = {
             "destination": task_message.arguments["destination"],
             "expand": task_message.arguments["expand"],
             "overwrite": task_message.arguments["overwrite"],
         }
-        task_message.arguments = task_args
+        return task_message
 
+    # FIXME: What the fuck is this bullshit
+    async def on_execute(self) -> Success | Failure | None:
         # Wait for agent to signal ready
-        ready_response = await self.send_and_recv_from_agent(task_message=task_message)
+        ready_response = await self.recv_from_agent()
         if not ready_response.success:
             return Failure(task_output_message=ready_response)
 
@@ -110,15 +106,15 @@ class UploadCapability(BaseAgentCapability):
 
         # def send_chunk(chunk_type, **kwargs):
         #     return self.send_upload_chunk_to_agent(
-        #         task_id=task_message.task_id,
+        #         task_id=self.launch_message.task_id,
         #         chunk_data={"type": chunk_type, **kwargs},
         #     )
         #
         # def stream_file_chunks(file_path):
         #     with open(file_path, mode="rb") as file:
-        #         while chunk := file.read(chunk_size):
-        #             if compression_level:
-        #                 chunk = zlib.compress(chunk, level=compression_level)
+        #         while chunk := file.read(self._chunk_size):
+        #             if self._compression_level:
+        #                 chunk = zlib.compress(chunk, level=self._compression_level)
         #                 send_chunk(
         #                     "chunk",
         #                     chunk=base64.b64encode(chunk).decode(),
@@ -127,21 +123,21 @@ class UploadCapability(BaseAgentCapability):
         #             else:
         #                 send_chunk("chunk", chunk=base64.b64encode(chunk).decode())
         #
-        # if source.is_file():
+        # if self._source.is_file():
         #     # Single file upload
-        #     await send_chunk("file", path=source.name, size=source.stat().st_size)
-        #     stream_file_chunks(source)
+        #     await send_chunk("file", path=self._source.name, size=self._source.stat().st_size)
+        #     stream_file_chunks(self._source)
         #     await send_chunk("end_of_file")
         #     await send_chunk("end_of_upload")
         # else:
         #     # Directory upload
-        #     await send_chunk("directory", path=source.name)
+        #     await send_chunk("directory", path=self._source.name)
         #
-        #     for item in source.rglob("*") if recursive else source.iterdir():
-        #         relative_path = str(item.relative_to(source))
+        #     for item in self._source.rglob("*") if self._recursive else self._source.iterdir():
+        #         relative_path = str(item.relative_to(self._source))
         #
         #         if item.is_dir():
-        #             if ignore_empty_dirs and not any(item.iterdir()):
+        #             if self._ignore_empty_dirs and not any(item.iterdir()):
         #                 continue
         #             await send_chunk("directory_entry", path=relative_path)
         #         elif item.is_file():
@@ -153,7 +149,7 @@ class UploadCapability(BaseAgentCapability):
         #             stream_file_chunks(item)
         #             await send_chunk("end_of_file")
         #
-        #         if not recursive and item.is_dir():
+        #         if not self._recursive and item.is_dir():
         #             continue
         #
         #     await send_chunk("end_of_directory")

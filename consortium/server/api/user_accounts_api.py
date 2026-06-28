@@ -25,7 +25,7 @@ from consortium.server.models.request_data_models import (
     UpdateUserAccountByUserAccountIDRequestDataModel,
 )
 from consortium.server.models.user_account_models import UserAccountModel
-from consortium.server.objects.user_account_objects import UserPermissions, UserRole
+from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
 
@@ -173,7 +173,7 @@ async def get_user_account_by_user_account_id(
 async def create_user_account(
     username: Annotated[str, Body()],
     password: Annotated[str, Body()],
-    role: Annotated[UserRole, Body()],
+    role: Annotated[str, Body()],
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.CREATE_USER_ACCOUNT)),

@@ -69,18 +69,18 @@ class DownloadCapability(BaseAgentCapability):
     }
     mitre_attack_techniques = {"T1041", "T1005", "T1560.002"}
 
+    async def on_launch(
+        self, task_message: TaskLaunchMessageModel
+    ) -> TaskLaunchMessageModel:
+        # Remove `destination` before sending — it is a server-side concern only
+        task_message.arguments.pop("destination", None)
+        return task_message
+
     # TODO: Make download actually write artifacts via artifacts service and
     #  emit_artifact should properly log this event with reference to the artifact
     #  created
-    async def execute(
-        self,
-        task_message: TaskLaunchMessageModel,
-    ) -> Success | Failure | None:
-        # Remove `destination` argument before sending task because it is not needed by
-        # the agent
-        task_message.arguments.pop("destination", None)
-
-        header = await self.send_and_recv_from_agent(task_message=task_message)
+    async def on_execute(self) -> Success | Failure | None:
+        header = await self.recv_from_agent()
         if not header.success:
             return Failure(task_output_message=header)
 

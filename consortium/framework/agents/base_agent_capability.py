@@ -84,6 +84,15 @@ class _BaseAgentCapabilityModel(BaseModel):
     validating_function: Callable[[dict[str, JsonValue]], None] | None
 
 
+class Drop:
+    pass
+
+
+class Deny:
+    def __init__(self, reason: str = ""):
+        self.reason = reason
+
+
 class BaseAgentCapability(_AgentCommunicator):
     name: str
     description: str = ""
@@ -100,8 +109,8 @@ class BaseAgentCapability(_AgentCommunicator):
     ] = None
     mitre_attack_techniques: set[str] | None = None  # set[MitreAttackTechniqueID]
     validating_function: Callable[[dict[str, JsonValue]], None] | None = None
+    launch_message: TaskLaunchMessageModel | None = None
 
-    # TODO: Deprecate global task messages queue in favor of per capability queues.
     def __init__(self, agent: Agent, task: AgentTask):
         super().__init__(agent=agent, task=task)
 
@@ -245,18 +254,32 @@ class BaseAgentCapability(_AgentCommunicator):
             event_type=AgentTaskEventType.ARTIFACT, message=message, data=data or {}
         )
 
-    async def execute(
+    async def on_launch(
         self,
         task_message: TaskLaunchMessageModel,
-    ) -> Success | Failure | None:
-        task_output_message = await self.send_and_recv_from_agent(
-            task_message=task_message,
-        )
+    ) -> TaskLaunchMessageModel | Drop | Deny:
+        return task_message
+
+    async def on_execute(self) -> Success | Failure | None:
+        task_output_message = await self.recv_from_agent()
         return (
             Success(task_output_message=task_output_message)
             if task_output_message.success
             else Failure(task_output_message=task_output_message)
         )
+
+    async def execute(
+        self,
+        task_message: TaskLaunchMessageModel,
+    ) -> Success | Failure | None:
+        result = await self.on_launch(task_message)
+        if isinstance(result, Drop):
+            return None
+        if isinstance(result, Deny):
+            return Failure(message=result.reason)
+        self.launch_message = result
+        await self.agent.send_task_message(task_message=self.launch_message)
+        return await self.on_execute()
 
     @classmethod
     def to_json(cls) -> dict[str, Any]:

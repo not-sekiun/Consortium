@@ -25,7 +25,7 @@ from consortium.server.exceptions.consortium_exceptions.user_accounts_consortium
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.models.user_account_models import UserAccountModel
-from consortium.server.objects.user_account_objects import UserRole
+from consortium.server.services.authorization_service import AuthorizationService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
@@ -33,8 +33,13 @@ from consortium.server.utils import (
 
 
 class UserAccountsService:
-    def __init__(self, user_accounts_json_file: pathlib.Path):
+    def __init__(
+        self,
+        user_accounts_json_file: pathlib.Path,
+        authorization_service: AuthorizationService,
+    ) -> None:
         self._user_accounts_json_file = user_accounts_json_file
+        self._authorization_service = authorization_service
         self._user_accounts = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -114,7 +119,7 @@ class UserAccountsService:
         self,
         username: str,
         password: str,
-        role: UserRole,
+        role: str,
     ) -> UserAccountModel:
         """Creates a new user account and adds it to the in-memory registry.
 
@@ -122,7 +127,7 @@ class UserAccountsService:
             username (str): The username for the new account. Must be non-empty and
                 unique.
             password (str): The password for the new account. Must be non-empty.
-            role (UserRole): The role to assign to the new account.
+            role (str): The role to assign to the new account.
 
         Returns:
             UserAccountModel: The newly created user account.
@@ -130,7 +135,7 @@ class UserAccountsService:
         Raises:
             EmptyUserAccountUsernameError: If `username` is empty.
             EmptyUserAccountPasswordError: If `password` is empty.
-            InvalidUserAccountRoleError: If `role` is not a valid `UserRole` value.
+            InvalidUserAccountRoleError: If `role` is not a valid user role value.
             UserAccountUsernameAlreadyExistsError: If an account with the given username
                 already exists.
         """
@@ -138,7 +143,7 @@ class UserAccountsService:
             raise EmptyUserAccountUsernameError._during_user_account_creation()
         if not password:
             raise EmptyUserAccountPasswordError._during_user_account_creation()
-        if role not in UserRole:
+        if role not in self._authorization_service.get_all_roles():
             raise InvalidUserAccountRoleError._during_user_account_creation(role=role)
         for user_account in self.get_all_user_accounts():
             if user_account.username == username:
@@ -162,7 +167,7 @@ class UserAccountsService:
         user_account_id: str | uuid.UUID,
         username: str | None = None,
         password: str | None = None,
-        role: UserRole | None = None,
+        role: str | None = None,
     ) -> UserAccountModel:
         """Updates a user account's username, password, and/or role.
 
@@ -174,7 +179,7 @@ class UserAccountsService:
                 changed.
             password (str | None): The new password. When `None`, the password is not
                 changed.
-            role (UserRole | None): The new role. When `None`, the role is not changed.
+            role (str | None): The new role. When `None`, the role is not changed.
 
         Returns:
             UserAccountModel: The updated user account.
@@ -183,7 +188,7 @@ class UserAccountsService:
             UserAccountIDNotFoundError: If no user account with the given ID exists.
             EmptyUserAccountUsernameError: If `username` is an empty string.
             EmptyUserAccountPasswordError: If `password` is an empty string.
-            InvalidUserAccountRoleError: If `role` is not a valid `UserRole` value.
+            InvalidUserAccountRoleError: If `role` is not a valid user role value.
             UserAccountUsernameAlreadyExistsError: If an account with the given username
                 already exists.
         """
@@ -227,7 +232,7 @@ class UserAccountsService:
                 password,
             )
         if role is not None:
-            if role not in UserRole:
+            if role not in self._authorization_service.get_all_roles():
                 raise InvalidUserAccountRoleError._during_user_account_modification(
                     role=role,
                     user_account_str=str(user_account),

@@ -28,6 +28,66 @@ from consortium.server.utils import (
 
 
 class RepositoryService:
+    _REPOSITORY_METADATA_JSON_SCHEMA = {
+        "type": "object",
+        "patternProperties": {
+            "^[a-z0-9]+$": {
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "resource_id": {"type": "string"},
+                            "name": {"type": ["string", "null"]},
+                            "description": {"type": "string"},
+                            "size": {"type": ["integer", "null"]},
+                            "exists_on_disk": {"type": "boolean"},
+                            "md5_checksum": {"type": ["string", "null"]},
+                            "datetime_created": {"type": "string"},
+                            "datetime_modified": {"type": "string"},
+                            "is_directory": {"type": "boolean"},
+                        },
+                        "required": [
+                            "resource_id",
+                            "name",
+                            "description",
+                            "size",
+                            "exists_on_disk",
+                            "md5_checksum",
+                            "datetime_created",
+                            "datetime_modified",
+                            "is_directory",
+                        ],
+                        "additionalProperties": False,
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "resource_id": {"type": "string"},
+                            "name": {"type": ["string", "null"]},
+                            "description": {"type": "string"},
+                            "size": {"type": ["integer", "null"]},
+                            "exists_on_disk": {"type": "boolean"},
+                            "datetime_created": {"type": "string"},
+                            "datetime_modified": {"type": "string"},
+                            "is_directory": {"type": "boolean"},
+                        },
+                        "required": [
+                            "resource_id",
+                            "name",
+                            "description",
+                            "size",
+                            "exists_on_disk",
+                            "datetime_created",
+                            "datetime_modified",
+                            "is_directory",
+                        ],
+                        "additionalProperties": False,
+                    },
+                ],
+            },
+        },
+    }
+
     def __init__(self, repository_directory_path: pathlib.Path):
         self.repository_directory_path = repository_directory_path
         self._logger = logger.bind(
@@ -68,65 +128,6 @@ class RepositoryService:
             UnsyncedRepositoryMetadataFileError: If a resource recorded in the metadata
                 file does not exist on disk.
         """
-        repository_metadata_json_schema = {
-            "type": "object",
-            "patternProperties": {
-                "^[a-z0-9]+$": {
-                    "anyOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "resource_id": {"type": "string"},
-                                "name": {"type": ["string", "null"]},
-                                "description": {"type": "string"},
-                                "size": {"type": ["integer", "null"]},
-                                "exists_on_disk": {"type": "boolean"},
-                                "md5_checksum": {"type": ["string", "null"]},
-                                "datetime_created": {"type": "string"},
-                                "datetime_modified": {"type": "string"},
-                                "is_directory": {"type": "boolean"},
-                            },
-                            "required": [
-                                "resource_id",
-                                "name",
-                                "description",
-                                "size",
-                                "exists_on_disk",
-                                "md5_checksum",
-                                "datetime_created",
-                                "datetime_modified",
-                                "is_directory",
-                            ],
-                            "additionalProperties": False,
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "resource_id": {"type": "string"},
-                                "name": {"type": ["string", "null"]},
-                                "description": {"type": "string"},
-                                "size": {"type": ["integer", "null"]},
-                                "exists_on_disk": {"type": "boolean"},
-                                "datetime_created": {"type": "string"},
-                                "datetime_modified": {"type": "string"},
-                                "is_directory": {"type": "boolean"},
-                            },
-                            "required": [
-                                "resource_id",
-                                "name",
-                                "description",
-                                "size",
-                                "exists_on_disk",
-                                "datetime_created",
-                                "datetime_modified",
-                                "is_directory",
-                            ],
-                            "additionalProperties": False,
-                        },
-                    ],
-                },
-            },
-        }
         if not self._repository_metadata_file_path.exists():
             self.save_repository_metadata()
         else:
@@ -135,7 +136,7 @@ class RepositoryService:
                     repository_metadata = json.load(file)
                     jsonschema.validate(
                         repository_metadata,
-                        repository_metadata_json_schema,
+                        self._REPOSITORY_METADATA_JSON_SCHEMA,
                     )
                 except json.JSONDecodeError:
                     raise InvalidRepositoryMetadataFileJSONError(

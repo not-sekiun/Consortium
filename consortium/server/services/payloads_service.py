@@ -35,6 +35,22 @@ from consortium.server.utils import (
 
 
 class PayloadsService:
+    _PAYLOADS_METADATA_JSON_SCHEMA = {
+        "type": "object",
+        "patternProperties": {
+            "^[a-z0-9]+$": {
+                "type": "object",
+                "properties": {
+                    "agent_template": {"type": "string"},
+                    "build_parameters": {"type": "object"},
+                    "payload_data": {"type": "object"},
+                },
+                "required": ["agent_template", "build_parameters", "payload_data"],
+                "additionalProperties": False,
+            },
+        },
+    }
+
     def __init__(
         self,
         events_service: EventsService,
@@ -98,21 +114,6 @@ class PayloadsService:
             InvalidPayloadsMetadataFileSchemaError: If the metadata file does not follow
                 the expected schema.
         """
-        payloads_metadata_json_schema = {
-            "type": "object",
-            "patternProperties": {
-                "^[a-z0-9]+$": {
-                    "type": "object",
-                    "properties": {
-                        "agent_template": {"type": "string"},
-                        "build_parameters": {"type": "object"},
-                        "payload_data": {"type": "object"},
-                    },
-                    "required": ["agent_template", "build_parameters", "payload_data"],
-                    "additionalProperties": False,
-                },
-            },
-        }
         if not self._payloads_metadata_file_path.exists():
             self.save_payloads_metadata()
         else:
@@ -120,7 +121,7 @@ class PayloadsService:
                 try:
                     payloads_metadata = json.load(file)
                     jsonschema.validate(
-                        payloads_metadata, payloads_metadata_json_schema
+                        payloads_metadata, self._PAYLOADS_METADATA_JSON_SCHEMA
                     )
                 except json.JSONDecodeError:
                     raise InvalidPayloadsMetadataFileJSONError(

@@ -232,6 +232,8 @@ class Server:
         self.status = ServerStatus.RUNNING
 
         # Setup all services and emit startup event.
+        # Load all role permission configurations and user accounts
+        server_singletons.authorization_service.load_server_role_permissions()
         server_singletons.user_accounts_service.load_framework_user_accounts()
         # Load listener and agent profiles before running the C2 type resolution so
         # that any profiles that register custom listener/agent types are accounted for.
@@ -253,7 +255,7 @@ class Server:
         # Trigger the server start event after all services have been started.
         await server_singletons.events_service.trigger_event(
             event_type=EventType.START_SERVER,
-            message="Started Server",
+            message="Started server",
         )
 
     async def start_server(self) -> None:
