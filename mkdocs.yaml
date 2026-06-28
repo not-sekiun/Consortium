@@ -77,6 +77,8 @@ nav:
         - reference/services/agent-profile-loader-service-reference.md
         - reference/services/agent-profiles-service-reference.md
         - reference/services/agent-templates-service-reference.md
+        - reference/services/artifacts-service-reference.md
+        - reference/services/assets-service-reference.md
         - reference/services/authorization-service-reference.md
         - reference/services/c2-types-service-reference.md
         - reference/services/connected-agents-service-reference.md
