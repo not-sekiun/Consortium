@@ -6,9 +6,10 @@ import pathlib
 from pydantic import ValidationError
 
 import consortium.server.server_reloader as server_reloader
+import consortium.server.server_singletons as server_singletons
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
-from consortium.server.services.logging_service import LoggingService
+from consortium.server.server import Server
 
 
 async def _start_server(arguments: argparse.Namespace) -> None:
@@ -105,10 +106,10 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         )
         return
 
-    logging_service = LoggingService()
-
     try:
-        logging_service.configure_default_logging(logging_config=logging_config)
+        server_singletons.logging_service.configure_default_logging(
+            logging_config=logging_config
+        )
     # Loguru raises `ValueError` for invalid rotation and retention values.
     except ValueError as exc:
         print(
@@ -117,16 +118,8 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         )
         return
 
-    # We are importing both Server and server_singletons within the function here
-    # because we need to configure the logger first. server_singletons contains services
-    # that run at import time and automatically log output at import time. The server
-    # object contains further imports that themselves reference server_singletons too.
-    import consortium.server.server_singletons as server_singletons
-    from consortium.server.server import Server
-
     # Configure server and create a reference to it in the server singletons module.
     server_singletons.server = Server(server_config=server_config)
-    server_singletons.logging_service = logging_service
     await server_singletons.server.start_server()
 
 

@@ -31,7 +31,7 @@ class MockBlockingCapability(BaseAgentCapability):
 
     async def execute(self, task_message: TaskLaunchMessageModel) -> Success | None:
         try:
-            await asyncio.sleep(10)
+            await asyncio.sleep(3)
         except asyncio.CancelledError:
             return None
         return Success(message="mock success")

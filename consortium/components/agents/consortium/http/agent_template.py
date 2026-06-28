@@ -52,8 +52,9 @@ class AgentTemplate(BaseAgentTemplate):
     label = "consortium.agents.consortium_http.eula"
     name = "Consortium HTTP Eula Agent"
     description = (
-        "The canonical Consortium agent, eula, written in Python 3 that communicates "
-        "over the HTTP transport with its associated HTTP listener."
+        "The canonical Consortium Python agent, Eula, written in pure python that "
+        "communicates over the HTTP transport with its associated HTTP listener. This "
+        "agent supports running on Python 3.6+ without any external dependencies."
     )
     version = "0.1.0"
     compatible_framework_version = ">=0.1.0"

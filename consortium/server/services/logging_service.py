@@ -1,4 +1,5 @@
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -26,11 +27,13 @@ class SinkInfo:
 class LoggingService:
     def __init__(self):
         logger.remove()  # Remove all default loggers.
+
         self._sinks: dict[str, SinkInfo] = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self.logging_config = LoggingConfigModel()
+        self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:
         return "Logging Service"
@@ -39,7 +42,7 @@ class LoggingService:
         return "LoggingService()"
 
     @staticmethod
-    def _log_formatter(record):
+    def _log_formatter(record) -> str:
         logger_type_to_color_str_map = {
             LoggerType.LISTENER_LOGGER: "<bold><blue>",
             LoggerType.AGENT_LOGGER: "<bold><red>",
@@ -59,12 +62,17 @@ class LoggingService:
         else:
             color = logger_type_to_color_str_map.get(logger_type, "<dim><white>")
 
+        logger_name = record["extra"].get("logger_name") or record["name"]
+
+        # logger_name is resolved here rather than via {extra[logger_name]} in the
+        # format string to avoid a KeyError when logging without a bound logger_name.
         # Can't use f-string here because of the loguru syntax. Also, we need to add
         # the newline character at the end of the string for formatter functions.
         return (
             "<dim><white>{time:YYYY-MM-DDTHH:mm:ss.SSSZ}</></> <level>{level:<8}</> "
             + color
-            + "{extra[logger_name]}</></>: {message}\n{exception}"
+            + logger_name
+            + "</></>: {message}\n{exception}"
         )
 
     def add_sink(
@@ -72,8 +80,7 @@ class LoggingService:
         sink: Any,
         level: str,
         label: str,
-        *,
-        format=None,
+        format: str | Callable[[Any], str] | None = None,
         is_server_default: bool = False,
         **kwargs,
     ) -> int:
@@ -135,7 +142,16 @@ class LoggingService:
         sink_info = self._sinks.pop(label)
         logger.remove(sink_info.handler_id)
 
-    def modify_sink(self, label: str, *, sink: Any = _UNSET, **overrides) -> None:
+    def remove_all_sinks(self) -> None:
+        """Removes all registered log sinks.
+
+        Returns:
+            None
+        """
+        for label in list(self._sinks.keys()):
+            self.remove_sink(label)
+
+    def modify_sink(self, label: str, sink: Any = _UNSET, **overrides) -> None:
         """Modifies an existing log sink in-place by rebuilding it with updated parameters.
 
         Because loguru provides no update API, the existing sink is torn down and
@@ -197,6 +213,14 @@ class LoggingService:
         """
         self.logging_config = logging_config
 
+        # Find all server default sinks and remove them first.
+        for label in [
+            sink_label
+            for sink_label, sink in self._sinks.items()
+            if sink.is_server_default
+        ]:
+            self.remove_sink(label)
+
         # Set display colors per log level.
         logger.level("TRACE", color="<dim><magenta>")
         logger.level("DEBUG", color="<bold><cyan>")
@@ -219,11 +243,9 @@ class LoggingService:
                 sink=logging_config.log_file,
                 level=logging_config.level,
                 label="file",
-                format="{time:YYYY-MM-DDTHH:mm:ss.SSSZ} {level:<8} {extra[logger_name]}: {message}",
+                format=self._log_formatter,
                 colorize=False,
                 rotation=logging_config.rotation,
                 retention=logging_config.retention,
                 is_server_default=True,
             )
-
-        self._logger.debug("Started {}", self)

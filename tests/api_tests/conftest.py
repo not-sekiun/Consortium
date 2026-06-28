@@ -8,7 +8,6 @@ import consortium.server.server_singletons as server_singletons
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server import Server
-from consortium.server.server_logging import configure_logger
 
 _MOCK_LISTENER_LABELS = {"consortium.listeners.mock_1", "consortium.listeners.mock_2"}
 _MOCK_AGENT_LABELS = {"consortium.agents.mock_1", "consortium.agents.mock_2"}
@@ -66,8 +65,8 @@ def configure_logging():
         / "logs"
         / "{time:YYYY-MM-DDTHH-mm-ss}.test.log"
     )
-    configure_logger(
-        LoggingConfigModel(
+    server_singletons.logging_service.configure_default_logging(
+        logging_config=LoggingConfigModel(
             level="WARNING",
             log_file=log_file,
             rotation=None,

