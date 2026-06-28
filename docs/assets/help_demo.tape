@@ -1,7 +1,8 @@
 Output help_demo.gif
 Set Theme "GruvboxDarkHard"
+Set Padding 24
 
-Set FontSize 12 
+Set FontSize 24 
 Set Width 1200
 Set Height 600
 
