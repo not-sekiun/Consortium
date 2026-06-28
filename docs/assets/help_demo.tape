@@ -8,12 +8,11 @@ Set Height 600
 
 Type@0s "uv run consortium.py client"
 Enter
-Sleep 1s
+Sleep 2s
 
 Type@0.1s listeners
 Enter
-Sleep 1s 
-
+Sleep 2s 
 
 Type@0.1s help
 Enter
