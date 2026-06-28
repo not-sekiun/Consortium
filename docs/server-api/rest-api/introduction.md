@@ -8,7 +8,7 @@ default, the server binds at `http://localhost:9999`.
 
 !!! note
     The websocket events API is **not** covered here. See the
-    [Events Websockets API](../../events-websockets-api/introduction.md) documentation.
+    [Events Websockets API](../events-websockets-api/introduction.md) documentation.
 
 ## Authentication
 
