@@ -2,7 +2,6 @@ import random
 import string
 import traceback
 
-from loguru import logger
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.formatted_text.html import HTML
@@ -12,7 +11,6 @@ from prompt_toolkit.styles import Style
 from rich.pretty import pprint
 
 from consortium.framework.plugins import BasePlugin
-from consortium.server.server_logging import log_formatter
 
 
 class _ServicesMethodsCompleter(Completer):
@@ -148,23 +146,31 @@ class Plugin(BasePlugin):
             "API methods.",
         )
 
-        # FIXME: Consider providing a dedicated logger service to interact with logging,
-        #  might be useful to send logs remotely or do custom things with them. Log
-        #  index 2 is always stdout due to how server_logging sets up the loggers.
-        #  This is brittle. fix it.
-        # Remove the current stdout logger and patch it with `StdoutProxy` to prevent
-        # loguru from messing with prompt_toolkit's stdout handling. Retain the current
-        # log configuration.
-        logger.remove(2)
-        # FIXME: Weird bug: logger.remove(2) removes the stdout logger so when logger.add
-        #  errors out we see no output.
-        logging_config = self.services.logging_service.logging_config
-        logger.add(
-            StdoutProxy(raw=True),
-            format=log_formatter,
-            level=logging_config.level,
-            colorize=logging_config.colorize,
-        )
+        sinks = self.services.logging_service.get_all_sinks()
+        for sink in sinks:
+            if sink.is_server_default and sink.label == "stdout":
+                self.services.logging_service.modify_sink(
+                    label=sink.label,
+                    sink=StdoutProxy(raw=True),
+                )
+
+        # # FIXME: Consider providing a dedicated logger service to interact with logging,
+        # #  might be useful to send logs remotely or do custom things with them. Log
+        # #  index 2 is always stdout due to how server_logging sets up the loggers.
+        # #  This is brittle. fix it.
+        # # Remove the current stdout logger and patch it with `StdoutProxy` to prevent
+        # # loguru from messing with prompt_toolkit's stdout handling. Retain the current
+        # # log configuration.
+        # logger.remove(2)
+        # # FIXME: Weird bug: logger.remove(2) removes the stdout logger so when logger.add
+        # #  errors out we see no output.
+        # logging_config = self.services.logging_service.logging_config
+        # logger.add(
+        #     StdoutProxy(raw=True),
+        #     format=log_formatter,
+        #     level=logging_config.level,
+        #     colorize=logging_config.colorize,
+        # )
 
     async def on_running(self) -> None:
         # Construct completions dict. The keys are the symbols of every service in

@@ -46,7 +46,7 @@ app_logger.warning("Server started - warning message")
 # ---------------------------------------------------------------------------
 section("2. Inspect registered sinks")
 
-for info in service.get_sinks():
+for info in service.get_all_sinks():
     print(
         f"  label={info.label!r:12}  level={info.level:<8}  "
         f"server_default={info.is_server_default}  handler_id={info.handler_id}"
@@ -90,7 +90,7 @@ service.add_sink(
 )
 
 print("  Registered sinks after plugin add:")
-for info in service.get_sinks():
+for info in service.get_all_sinks():
     print(f"    label={info.label!r:16}  server_default={info.is_server_default}")
 
 # ---------------------------------------------------------------------------
@@ -100,12 +100,12 @@ section("5. Modify stdout level to ERROR at runtime")
 
 print(
     "  Before modify - stdout level:",
-    next(i for i in service.get_sinks() if i.label == "stdout").level,
+    next(i for i in service.get_all_sinks() if i.label == "stdout").level,
 )
 service.modify_sink("stdout", level="ERROR")
 print(
     "  After modify  - stdout level:",
-    next(i for i in service.get_sinks() if i.label == "stdout").level,
+    next(i for i in service.get_all_sinks() if i.label == "stdout").level,
 )
 
 app_logger.info("This info message is now suppressed on stdout")
@@ -118,7 +118,7 @@ section("6. Redirect plugin sinks to a central buffer")
 
 central = io.StringIO()
 
-for info in service.get_sinks():
+for info in service.get_all_sinks():
     if not info.is_server_default:
         service.modify_sink(info.label, sink=central, colorize=False)
         print(f"  Redirected {info.label!r} -> central buffer")
@@ -135,7 +135,7 @@ for line in central.getvalue().splitlines():
 section("7. Remove the plugin stderr sink")
 
 service.remove_sink("plugin_stderr")
-labels = [i.label for i in service.get_sinks()]
+labels = [i.label for i in service.get_all_sinks()]
 print(f"  Remaining sinks: {labels}")
 
 # ---------------------------------------------------------------------------

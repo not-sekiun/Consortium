@@ -477,7 +477,7 @@ class UserAccountsService:
                 {
                     "username": user_account.username,
                     "password": user_account.password,
-                    "role": user_account.role.value,
+                    "role": user_account.role,
                 },
             )
 

@@ -7,6 +7,7 @@ from loguru import logger
 from consortium.server.models.logging_models import LoggerType, LoggingConfigModel
 
 # Sentinel used to distinguish "not passed" from None in modify_sink's sink argument.
+# TODO: Transition to using Sentinel() in python 3.15
 _UNSET = object()
 
 
@@ -29,6 +30,7 @@ class LoggingService:
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
+        self.logging_config = LoggingConfigModel()
 
     def __str__(self) -> str:
         return "Logging Service"
@@ -170,7 +172,7 @@ class LoggingService:
         info.level = new_kwargs.get("level", info.level)
         info.sink_kwargs = new_kwargs
 
-    def get_sinks(self) -> list[SinkInfo]:
+    def get_all_sinks(self) -> list[SinkInfo]:
         """Returns all currently registered log sinks.
 
         Returns:
@@ -193,6 +195,8 @@ class LoggingService:
         Returns:
             None
         """
+        self.logging_config = logging_config
+
         # Set display colors per log level.
         logger.level("TRACE", color="<dim><magenta>")
         logger.level("DEBUG", color="<bold><cyan>")

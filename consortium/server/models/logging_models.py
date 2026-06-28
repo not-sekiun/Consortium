@@ -13,11 +13,11 @@ class LoggingConfigModel(BaseModel):
         "WARNING",
         "ERROR",
         "CRITICAL",
-    ]
-    log_file: str | None
-    rotation: str | int | None
-    retention: str | int | None
-    colorize: bool
+    ] = "INFO"
+    log_file: str | None = None
+    rotation: str | int | None = None
+    retention: str | int | None = None
+    colorize: bool = True
 
 
 # Provide a custom logger type to color mapping. So that we can specially highlight log

@@ -30,7 +30,6 @@ from consortium.server.exceptions.consortium_exceptions.users_consortium_excepti
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_dependencies import AuthorizeUserRequest
 from consortium.server.server_jwt_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
@@ -49,6 +48,7 @@ router = APIRouter(
 
 _events_service = server_singletons.events_service
 _users_service = server_singletons.users_service
+_authorization_service = server_singletons.authorization_service
 
 _logger = logger.bind(
     logger_name="Websocket Events API",
@@ -435,12 +435,8 @@ async def websocket_endpoint(
         )
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
 
-    # TODO: Abstract the process of authorizing users, creating roles, and editing role
-    #  permissions. For now we use this hack to check permissions specifically for this
-    #  websocket endpoint.
-    if (
-        UserPermissions.USE_EVENTS_WEBSOCKET
-        not in AuthorizeUserRequest.ROLE_PERMISSIONS[user.role]
+    if not _authorization_service.has_permission(
+        user.role, UserPermissions.USE_EVENTS_WEBSOCKET
     ):
         _logger.debug(
             f"Rejected WebSocket connection attempt because the user '{user}' had "
