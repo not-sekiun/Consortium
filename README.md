@@ -170,6 +170,8 @@ its arguments, type `help <command>`.
 3. Command help: To get comprehensive help for a specific command, including examples on
 how to use it, type `<command> --help` or `<command> -h`.
 
+<br>
+
 ![Client help demo](docs/assets/help_demo.gif)
 
 ## Contributing
