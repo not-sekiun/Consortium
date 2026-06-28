@@ -1,22 +1,27 @@
 Output help_demo.gif
+Set Theme "GruvboxDarkHard"
 
-Set FontSize 46
+Set FontSize 12 
 Set Width 1200
 Set Height 600
 
-Type "uv run consortium.py client"
+Type@0s "uv run consortium.py client"
 Enter
+Sleep 1s
 
-Type listeners
+Type@0.1s listeners
 Enter
+Sleep 1s 
 
-Type help
+
+Type@0.1s help
 Enter
 Sleep 2s
 
-Type help rename
+Type@0.1s help rename
 Enter
 Sleep 2s
 
-Type "alias --help"
-Sleep 3s
+Type@0.1s "alias --help"
+Enter
+Sleep 2s
