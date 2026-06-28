@@ -1,9 +1,9 @@
-After making a websocket connection, the server will wait for the client to send
-commands to it. The only time the server will send data to the client unprompted is
-when a client is subscribed to an event, and that event fires on the server. All
-messages sent over the websocket are sent as formatted strings of JSON data.
+After connecting, the server waits for the client to send action commands. The server
+only pushes data unprompted when a subscribed event fires. All messages over the
+websocket are JSON strings.
 
 ## Message Flow
+
 ``` mermaid
 sequenceDiagram
     participant C as Client
@@ -21,54 +21,91 @@ sequenceDiagram
     WS-->>C: Event A JSON data sent
 ```
 
-The message flow is simple. Take note however, that:
+Key behaviors:
 
-1. Events can come back to you at any moment in any order. You should be prepared to
-handle this.
-2. The first message received from the websocket _immediately after_ sending an action
-command will always be some form of action command response. You do not have to worry
-about scenarios in which a subscribed event is sent to you before the server returns a
-response to your action command.
-3. Each websocket connection is treated as a separate entity. This means that the same
-client can open and close websockets to the events API independently where each
-websocket is subscribed to different events.
+1. Events can arrive at any time in any order. Build your client to handle this.
+2. The first message after sending an action command is always the response to that
+command. A subscribed event will never arrive before its subscription response.
+3. Each websocket connection is independent. The same client can open multiple
+connections, each with its own set of subscriptions.
+4. When a connection closes, all its subscriptions are automatically cleaned up.
 
-## The Action Commands JSON Format
-Action commands are pieces of structured JSON strings that are sent to the events API
-over a websocket connection to interact with it. They follow this structure
+## Action Command Format
 
 ```json title="Action command"
 {
   "action": "ACTION_COMMAND_STRING",
-  "events": ["EVENT_TYPE_1", "EVENT_TYPE_2", "EVENT_TYPE_3"]
+  "events": ["EVENT_TYPE_1", "EVENT_TYPE_2"]
 }
 ```
 
+| Key      | Description                                                                                          |
+|----------|------------------------------------------------------------------------------------------------------|
+| `action` | The action to perform. **Required**.                                                                 |
+| `events` | List of event type strings. Required for `subscribe`/`unsubscribe`, must be omitted for all others. |
+
 !!! note
+    When `events` is not required, **omit the field entirely** — do not pass an empty list.
 
-    The events field is required or not required depending on the type of action being
-    performed. When it is not required, it **must be _entirely omitted_ from the JSON
-    data**. Do not provide an empty list.
+| Action                    | Description                                                  | `events` required? |
+|---------------------------|--------------------------------------------------------------|--------------------|
+| `subscribe`               | Subscribe this connection to one or more events.             | Yes                |
+| `unsubscribe`             | Unsubscribe this connection from one or more events.         | Yes                |
+| `get_subscribed_events`   | Get all events this connection is subscribed to.             | No                 |
+| `get_unsubscribed_events` | Get all events this connection is not subscribed to.         | No                 |
+| `get_all_events`          | Get all events the API supports.                             | No                 |
 
+## Server Responses
 
-| Key      | Descripton                                                                                                                                  |
-|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `action` | A string specifying the type of action to perform for the API. This field is **required**.                                                      |
-| `events` | A list of strings specifying the events to perform the specified action on. This field is **optional** depending on the action being performed. |
+Every action command receives exactly one response. See [Server Messages](server-messages.md)
+for the full schema. Check the `success` field to determine whether the command succeeded.
 
-The below are the types of action commands supported by the events API.
+**Success**
 
-| Action Command            | Description                                                                        | Events field required? |
-|---------------------------|------------------------------------------------------------------------------------|------------------------|
-| `subscribe`               | Subscribe to events to be notified of for the current websocket.                   | Yes                    |
-| `unsubscribe`             | Unsubscribe to events to be notified of for the current websocket.                 | Yes                    |
-| `get_subscribed_events`   | Get the strings of all the events that the current websocket is subscribed to.     | No                     |
-| `get_unsubscribed_events` | Get the strings of all the events that the current websocket is not subscribed to. | No                     |
-| `get_all_events`          | Get the strings of all the available events that events API supports.              | No                     |
+```json title="Success response"
+{
+  "type": "response",
+  "success": true,
+  "message": "Successfully subscribed to the provided events.",
+  "data": null
+}
+```
 
+**Error**
 
-And here are all the supported events. The events when provided in the `events` field
-list must be provided in uppercase, _ad verbatim_ to how they are formatted here.
+```json title="Error response"
+{
+  "type": "response",
+  "success": false,
+  "errors": [
+    {
+      "code": "INVALID_EVENT_TYPE_ERROR",
+      "message": "Failed to subscribe to event. The provided event type 'BAD_EVENT' does not exist.",
+      "detail": {"event": "BAD_EVENT"}
+    }
+  ]
+}
+```
+
+`errors` may contain multiple objects if a batch command fails on more than one item.
+
+## Error Codes
+
+| Code                                | When it occurs                                               |
+|-------------------------------------|--------------------------------------------------------------|
+| `INVALID_MESSAGE_FORMAT_ERROR`      | The action command JSON is malformed or missing required fields. |
+| `INVALID_EVENT_TYPE_ERROR`          | An event string does not match any known event type.         |
+| `ALREADY_SUBSCRIBED_TO_EVENT_ERROR` | `subscribe` was called for an event already subscribed to.   |
+| `NOT_SUBSCRIBED_TO_EVENT_ERROR`     | `unsubscribe` was called for an event not subscribed to.     |
+
+!!! warning
+    `subscribe` and `unsubscribe` validate **all** events in the list before applying
+    any changes. If any event fails validation the entire command is rejected, no
+    subscriptions are changed.
+
+## Available Events
+
+Event strings must be provided in uppercase exactly as shown.
 
 | Event          | Description                      |
 |----------------|----------------------------------|
@@ -76,28 +113,218 @@ list must be provided in uppercase, _ad verbatim_ to how they are formatted here
 | `STOP_SERVER`  | Triggers when the server stops.  |
 
 !!! warning
+    The events list is not finalized and will change.
 
-    The supported events are still incomplete and may change in the future.
+## Subscribing to Events
 
-We will build on the script from the
-[previous section](authentication.md#putting-it-all-together) to subscribe to events to
-be notified of.
+Building on the script from [authentication](authentication.md#putting-it-all-together):
 
-## Subscribing to events
+```py title="subscribe_to_events.py"
+import asyncio
+import json
 
-## Responding to events
-Due to the nature of the events systems in the framework, events will arrive
-arbitrarily in any order over the websocket depending on when they fire. A system must
-be created to resolve events to the correct event handlers.
+import requests
+import websockets
 
-There are two common ways to resolve events.
+USERNAME = "admin"
+PASSWORD = "admin"
+AUTHORIZATION_URL = "http://localhost:9999/api/login"
+EVENTS_API_URL = "ws://localhost:9999/api/events"
 
-1. Creating separate websockets per event. Everytime you subscribe to a new event,
-create a new websocket connection. This guarantees that all events received per
-websocket will always be of the same event.
-2. Creating an event handler dispatch system. Use a single websocket and continuously
-read responses from it, depending on what is read, dispatch it to the correct function.
 
-Option 1 is simpler but more resource intensive as more connections need to be opened,
-option 2 is more complex due to the event handler resolution system but more resource
-efficient.
+def get_jwt(username: str, password: str, authorization_url: str) -> str:
+    response = requests.post(
+        authorization_url, data={"username": username, "password": password}
+    )
+    return response.json()["access_token"]
+
+
+async def main() -> None:
+    jwt = get_jwt(USERNAME, PASSWORD, AUTHORIZATION_URL)
+
+    async with websockets.connect(
+        EVENTS_API_URL, extra_headers={"Authorization": f"Bearer {jwt}"}
+    ) as ws:
+        await ws.send(json.dumps({
+            "action": "subscribe",
+            "events": ["START_SERVER", "STOP_SERVER"],
+        }))
+        response = json.loads(await ws.recv())
+
+        if not response["success"]:
+            for error in response["errors"]:
+                print(f"Error: {error['code']} — {error['message']}")
+            return
+
+        print("Subscribed. Waiting for events...")
+        async for raw_message in ws:
+            message = json.loads(raw_message)
+            if message["type"] == "event":
+                print(f"Event received: {message}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Unsubscribing from Events
+
+```py title="unsubscribe_example.py"
+await ws.send(json.dumps({
+    "action": "unsubscribe",
+    "events": ["START_SERVER"],
+}))
+response = json.loads(await ws.recv())
+
+if response["success"]:
+    print("Unsubscribed successfully.")
+else:
+    for error in response["errors"]:
+        print(f"Error: {error['code']} - {error['message']}")
+```
+
+## Querying Subscriptions
+
+```py title="query_subscriptions.py"
+# All events the API supports
+await ws.send(json.dumps({"action": "get_all_events"}))
+all_events = json.loads(await ws.recv())["data"]
+print("All events:", all_events)  # e.g. ["START_SERVER", "STOP_SERVER"]
+
+# Events this connection is subscribed to
+await ws.send(json.dumps({"action": "get_subscribed_events"}))
+subscribed = json.loads(await ws.recv())["data"]
+print("Subscribed:", subscribed)
+
+# Events this connection is not subscribed to
+await ws.send(json.dumps({"action": "get_unsubscribed_events"}))
+not_subscribed = json.loads(await ws.recv())["data"]
+print("Not subscribed:", not_subscribed)
+```
+
+## Responding to Events
+
+Events arrive on the same websocket as action command responses, so your receive loop
+must distinguish between them using the `type` field (`"event"` vs `"response"`). There
+are two common approaches.
+
+### Approach 1: One websocket per event type
+
+Open a separate connection for each event. Every message on that connection is
+guaranteed to be the subscribed event — no routing logic needed.
+
+```py title="one_ws_per_event.py"
+import asyncio
+import json
+
+import requests
+import websockets
+
+USERNAME = "admin"
+PASSWORD = "admin"
+AUTHORIZATION_URL = "http://localhost:9999/api/login"
+EVENTS_API_URL = "ws://localhost:9999/api/events"
+
+
+def get_jwt(username: str, password: str, authorization_url: str) -> str:
+    return requests.post(
+        authorization_url, data={"username": username, "password": password}
+    ).json()["access_token"]
+
+
+async def listen_for_event(jwt: str, event_type: str) -> None:
+    async with websockets.connect(
+        EVENTS_API_URL, extra_headers={"Authorization": f"Bearer {jwt}"}
+    ) as ws:
+        await ws.send(json.dumps({"action": "subscribe", "events": [event_type]}))
+        await ws.recv()  # discard subscription response
+        async for raw_message in ws:
+            message = json.loads(raw_message)
+            if message["type"] == "event":
+                print(f"[{event_type}] {message}")
+
+
+async def main() -> None:
+    jwt = get_jwt(USERNAME, PASSWORD, AUTHORIZATION_URL)
+    await asyncio.gather(
+        listen_for_event(jwt, "START_SERVER"),
+        listen_for_event(jwt, "STOP_SERVER"),
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Approach 2: Single websocket with a dispatcher
+
+Use one connection and route incoming events to handlers by event type. More efficient
+when subscribing to many events.
+
+```py title="event_dispatcher.py"
+import asyncio
+import json
+from collections.abc import Callable
+
+import requests
+import websockets
+
+USERNAME = "admin"
+PASSWORD = "admin"
+AUTHORIZATION_URL = "http://localhost:9999/api/login"
+EVENTS_API_URL = "ws://localhost:9999/api/events"
+
+EventHandler = Callable[[dict], None]
+
+
+def get_jwt(username: str, password: str, authorization_url: str) -> str:
+    return requests.post(
+        authorization_url, data={"username": username, "password": password}
+    ).json()["access_token"]
+
+
+def on_start_server(event: dict) -> None:
+    print("Server started:", event)
+
+
+def on_stop_server(event: dict) -> None:
+    print("Server stopped:", event)
+
+
+async def listen(jwt: str, handlers: dict[str, EventHandler]) -> None:
+    async with websockets.connect(
+        EVENTS_API_URL, extra_headers={"Authorization": f"Bearer {jwt}"}
+    ) as ws:
+        await ws.send(json.dumps({
+            "action": "subscribe",
+            "events": list(handlers.keys()),
+        }))
+        await ws.recv()  # discard subscription response
+
+        async for raw_message in ws:
+            message = json.loads(raw_message)
+            if message["type"] != "event":
+                continue
+            # The field that identifies the event type within the payload depends on
+            # the event. Refer to the specific event's documentation.
+            event_type = message.get("event_type")
+            handler = handlers.get(event_type)
+            if handler:
+                handler(message)
+
+
+async def main() -> None:
+    jwt = get_jwt(USERNAME, PASSWORD, AUTHORIZATION_URL)
+    await listen(jwt, {
+        "START_SERVER": on_start_server,
+        "STOP_SERVER": on_stop_server,
+    })
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+Approach 1 is simpler and appropriate for a small number of events. Approach 2 scales
+better when subscribing to many events or when the overhead of multiple connections
+matters.

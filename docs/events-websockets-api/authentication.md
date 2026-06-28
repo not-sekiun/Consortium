@@ -49,7 +49,8 @@ if __name__ == "__main__":
 ```
 
 1. `requests` is a third party library, install it from
-[PyPI](https://pypi.org/project/requests/) with preferred package manager of choice.
+[PyPI](https://pypi.org/project/requests/) with your preferred package manager of
+choice.
 2. By default, the server binds at `0.0.0.0:9999` and includes an admin account with
 the username `admin` and password `admin`. Change these constants to fit your
 configuration appropriately.
@@ -61,7 +62,6 @@ separated with dots. Here's mine (don't bother, its already invalid now):
 ```plaintext title="What you should see in your terminal"
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MGNkMmE1YS1jMGYyLTQ5OGUtYjljZC1hY2M5NzgxOGE5OWMiLCJpYXQiOjE3MjM0MjIyMjMsImV4cCI6MTcyMzUwODYyM30.fHSHPilgfR29D2Rpoyv6zX-FMqP88eJy-W1noIj0OCI
 ```
-
 
 !!! warning
 
@@ -112,19 +112,19 @@ if __name__ == "__main__":
 
 You will receive no messages from the websocket endpoint until (at the very least) you
 subscribe to an endpoint. So your script should just exit without doing anything. A
-failed attempt will be met with a websocket exception very ambiguously claiming that
-the websocket connection was rejected.
+failed attempt will be met with a websocket exception claiming that the websocket
+connection was rejected.
 
 ```plaintext title="Failed connection attempt"
 websockets.exceptions.InvalidStatusCode: server rejected WebSocket connection: HTTP 403
 ```
-
+[introduction.md](introduction.md)
 If this happens, double-check your JSON Web Token and the URL you are connecting to. If
 you want more information about what _exactly_ failed you have to start the server in
 debug mode by running the server with the `-d` or `--debug` flag.
 
 ```shell title="Start the server in debug mode"
-poetry run python consortium.py -d
+uv run python consortium.py -d
 ```
 
 ## Putting it all together

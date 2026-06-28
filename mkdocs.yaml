@@ -67,6 +67,7 @@ nav:
       - events-websockets-api/introduction.md
       - events-websockets-api/authentication.md
       - events-websockets-api/sending-action-commands.md
+      - events-websockets-api/server-messages.md
     - REST API:
       - rest-api/introduction.md
   - Reference:
