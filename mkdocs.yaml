@@ -64,12 +64,12 @@ nav:
 #    - manual/introduction.md
   - Server API:
     - Events Websockets API:
-      - events-websockets-api/introduction.md
-      - events-websockets-api/authentication.md
-      - events-websockets-api/sending-action-commands.md
-      - events-websockets-api/server-messages.md
+      - server-api/events-websockets-api/introduction.md
+      - server-api/events-websockets-api/authentication.md
+      - server-api/events-websockets-api/sending-action-commands.md
+      - server-api/events-websockets-api/server-messages.md
     - REST API:
-      - rest-api/introduction.md
+      - server-api/rest-api/introduction.md
   - Reference:
       - Services:
         - reference/services/agents-service-reference.md

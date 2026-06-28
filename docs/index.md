@@ -46,7 +46,7 @@ listeners and agents.
 
     ---
 
-    - Look through the [Server API](rest-api/) to script your own automations and
+    - Look through the [Server API](server-api/rest-api/) to script your own automations and
     write your own clients.
     - Learn how to develop your own [listeners](manual/listeners.md) and
     [agents](manual/agents.md) for the framework to customize it to your needs.
