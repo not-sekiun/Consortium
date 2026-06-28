@@ -15,8 +15,6 @@ from consortium.framework.agents.agent_message_models import (
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
-    Deny,
-    Drop,
     SupportedOS,
 )
 from consortium.framework.options import (
@@ -87,7 +85,7 @@ def sequential_request_response_capability(
 ) -> type[BaseAgentCapability]:
     async def _on_launch(
         self, task_message: TaskLaunchMessageModel
-    ) -> TaskLaunchMessageModel | Drop | Deny:
+    ) -> TaskLaunchMessageModel | None:
         self._src_context = SimpleNamespace()
         context = self._src_context
 

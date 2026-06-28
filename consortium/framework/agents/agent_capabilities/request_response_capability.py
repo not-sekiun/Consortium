@@ -16,8 +16,6 @@ from consortium.framework.agents.agent_outcomes import (
 )
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
-    Deny,
-    Drop,
     SupportedOS,
 )
 from consortium.framework.options import (
@@ -38,12 +36,7 @@ class _TaskMessageHandlerProtocol(Protocol):
         agent: Agent,
         task_message: TaskLaunchMessageModel,
         context: SimpleNamespace,
-    ) -> (
-        TaskLaunchMessageModel
-        | Drop
-        | Deny
-        | Awaitable[TaskLaunchMessageModel | Drop | Deny]
-    ): ...
+    ) -> TaskLaunchMessageModel | None | Awaitable[TaskLaunchMessageModel | None]: ...
 
 
 class _ResultMessageHandlerProtocol(Protocol):
@@ -86,7 +79,7 @@ def request_response_capability(
 ) -> type[BaseAgentCapability]:
     async def _on_launch(
         self, task_message: TaskLaunchMessageModel
-    ) -> TaskLaunchMessageModel | Drop | Deny:
+    ) -> TaskLaunchMessageModel | None:
         self._rrc_context = SimpleNamespace()
         context = self._rrc_context
 

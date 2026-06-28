@@ -1,7 +1,10 @@
 from pathlib import Path
 
-from consortium.framework.agents import Deny, Failure, Success, TaskLaunchMessageModel
+from consortium.framework.agents import Failure, Success, TaskLaunchMessageModel
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
+from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+    AgentCapabilityLaunchError,
+)
 from consortium.framework.options import SingleValueOption
 
 
@@ -73,11 +76,11 @@ class UploadCapability(BaseAgentCapability):
 
     async def on_launch(
         self, task_message: TaskLaunchMessageModel
-    ) -> TaskLaunchMessageModel | Deny:
+    ) -> TaskLaunchMessageModel:
         source = Path(task_message.arguments["source"])
         if not source.exists():
-            return Deny(
-                reason=f"Failed to start upload. Path '{source}' does not exist."
+            raise AgentCapabilityLaunchError(
+                message=f"Failed to start upload. Path '{source}' does not exist."
             )
 
         self._source = source

@@ -8,7 +8,7 @@ from loguru import logger
 from pydantic import UUID4, BaseModel, JsonValue, ValidationError
 
 from consortium.framework._components import State
-from consortium.framework.agents import BaseAgentCapability
+from consortium.framework.agents import BaseAgentCapability, TaskInputMessageModel
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
@@ -16,12 +16,12 @@ from consortium.framework.agents.agent_message_models import (
 from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.event_hooks import EventType
 from consortium.framework.exceptions.agent_capabilties_framework_exception import (
-    AgentCapabilityRuntimeError as AgentCapabilityRuntimeFrameworkError,
+    AgentCapabilityExecutionError as AgentCapabilityExecutionFrameworkError,
 )
 from consortium.framework.listeners import BaseListener
 from consortium.server import server_singletons as server_singletons
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
-    AgentCapabilityRuntimeError,
+    AgentCapabilityExecutionError,
 )
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentCapabilityNotFoundError,
@@ -351,7 +351,9 @@ class Agent:
         )
 
     async def send_task_message(
-        self, task_message: TaskLaunchMessageModel, timeout: float | None = None
+        self,
+        task_message: TaskLaunchMessageModel | TaskInputMessageModel,
+        timeout: float | None = None,
     ) -> None:
         if timeout is None:
             await self._task_messages_queue.put(task_message)
@@ -562,13 +564,11 @@ class Agent:
                         data=task_outcome.data,
                     )
                 elif isinstance(task_outcome, Failure):
-                    # TODO: Decide on a standard way for Failure to communicate message
-                    #  and data as compared to `AgentCapabilityRuntimeFrameworkError`
-                    #  also figure out whether transition_to_failed() should take an
-                    #  error parameter. Should failures represent themselves through a
-                    #  "falsely" constructed `AgentCapabilityRuntimeError`?
+                    # Failure is the standard deliberate failure path — returned by
+                    # on_execute to report a task failure to the operator, or by
+                    # execute() when on_launch raises AgentCapabilityDeniedError.
                     task.status._transition_to_failed(
-                        error=AgentCapabilityRuntimeError(
+                        error=AgentCapabilityExecutionError(
                             agent_capability_name=agent_capability.name,
                             error_message=task_outcome.message,
                             detail=task_outcome.data,
@@ -580,6 +580,8 @@ class Agent:
                         data=task_outcome.data,
                     )
                 elif task_outcome is None:
+                    # None = `on_launch` silently dropped the task (returned None).
+                    # No status transition — task remains in its current state.
                     pass
                 else:
                     self.logger.warning(
@@ -590,10 +592,10 @@ class Agent:
                         task,
                         task_outcome,
                     )
-            except AgentCapabilityRuntimeFrameworkError as exc:
+            except AgentCapabilityExecutionFrameworkError as exc:
                 task.status._transition_to_failed(error=exc)
                 # TODO: Decide on what to append in this case and how data should be
-                #  communicated via `AgentCapabilityRuntimeFrameworkError` and where
+                #  communicated via `AgentCapabilityExecutionFrameworkError` and where
                 #  the exception should live
                 task.append_event(
                     event_type=AgentTaskEventType.FAILURE,
@@ -611,7 +613,7 @@ class Agent:
                     str(exc),
                 )
                 task.status._transition_to_errored(
-                    error=AgentCapabilityRuntimeError(
+                    error=AgentCapabilityExecutionError(
                         agent_capability_name=agent_capability.name,
                         error_message=(
                             "An unhandled exception was raised during execution. "

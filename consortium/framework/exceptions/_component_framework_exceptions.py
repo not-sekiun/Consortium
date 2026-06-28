@@ -1,4 +1,4 @@
-from typing import Any
+from pydantic import JsonValue
 
 from consortium.framework.exceptions.base_framework_exception import (
     BaseRaiseOnlyFrameworkException,
@@ -9,7 +9,7 @@ class ComponentStartError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
         message: str = "",
-        detail: Any = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -21,7 +21,7 @@ class ComponentRuntimeError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
         message: str = "",
-        detail: Any = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -33,7 +33,7 @@ class ComponentStopError(BaseRaiseOnlyFrameworkException):
     def __init__(
         self,
         message: str = "",
-        detail: Any = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,

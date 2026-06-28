@@ -22,14 +22,9 @@ class _AgentCommunicator:
         # demultiplex messages coming in from the listener.
         self.result_messages_queue = asyncio.Queue()
 
-    # TODO: Decide if we want `send_to_agent` to only send TaskInputMessageModels right
-    #  now to prevent duplicate sending of `TaskLaunchMessageModels` same with
-    #  `send_and_recv_from_agent`
     async def send_to_agent(
         self,
         task_message: TaskLaunchMessageModel | TaskInputMessageModel | None = None,
-        command: str | None = None,
-        arguments: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
         timeout: int | float | None = None,
@@ -39,24 +34,17 @@ class _AgentCommunicator:
                 task_message=task_message,
                 timeout=timeout,
             )
-        else:
-            if command is None:
-                command = self.task.command
-            if arguments is None:
-                arguments = {}
-            if data is None:
-                data = {}
-            task_message = TaskLaunchMessageModel(
-                task_id=self.task.task_id,
-                command=command,
-                arguments=arguments,
-                data=data,
-                payload=payload,
-            )
-            await self.agent.send_task_message(
-                task_message=task_message,
-                timeout=timeout,
-            )
+            return
+
+        if data is None:
+            data = {}
+        task_message = TaskInputMessageModel(
+            task_id=self.task.task_id, data=data, payload=payload
+        )
+        await self.agent.send_task_message(
+            task_message=task_message,
+            timeout=timeout,
+        )
 
     async def recv_from_agent(
         self,
@@ -64,6 +52,7 @@ class _AgentCommunicator:
     ) -> TaskOutputMessageModel:
         if timeout is None:
             return await self.result_messages_queue.get()
+
         return await asyncio.wait_for(
             self.result_messages_queue.get(),
             timeout=timeout,
@@ -72,8 +61,6 @@ class _AgentCommunicator:
     async def send_and_recv_from_agent(
         self,
         task_message: TaskLaunchMessageModel | TaskInputMessageModel | None = None,
-        command: str | None = None,
-        arguments: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
         timeout: int | float | None = None,
@@ -81,19 +68,15 @@ class _AgentCommunicator:
         if timeout is None:
             await self.send_to_agent(
                 task_message=task_message,
-                command=command,
-                arguments=arguments,
                 data=data,
                 payload=payload,
             )
             return await self.recv_from_agent()
-        else:
-            async with asyncio.timeout(timeout):
-                await self.send_to_agent(
-                    task_message=task_message,
-                    command=command,
-                    arguments=arguments,
-                    data=data,
-                    payload=payload,
-                )
-                return await self.recv_from_agent()
+
+        async with asyncio.timeout(timeout):
+            await self.send_to_agent(
+                task_message=task_message,
+                data=data,
+                payload=payload,
+            )
+            return await self.recv_from_agent()

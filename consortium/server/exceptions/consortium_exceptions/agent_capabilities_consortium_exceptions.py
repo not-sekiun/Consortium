@@ -134,8 +134,8 @@ class CustomOSStringAlreadyRegisteredError(AgentCapabilitiesFrameworkError):
         )
 
 
-class AgentCapabilityRuntimeError(AgentCapabilitiesFrameworkError):
-    code = "AGENT_CAPABILITY_RUNTIME_ERROR"
+class AgentCapabilityExecutionError(AgentCapabilitiesFrameworkError):
+    code = "AGENT_CAPABILITY_EXECUTION_ERROR"
 
     def __init__(
         self, agent_capability_name: str, error_message: str, detail: Any = None

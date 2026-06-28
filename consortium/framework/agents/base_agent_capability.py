@@ -13,6 +13,9 @@ from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
 )
 from consortium.framework.agents.agent_outcomes import Failure, Success
+from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+    AgentCapabilityLaunchError,
+)
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
@@ -82,15 +85,6 @@ class _BaseAgentCapabilityModel(BaseModel):
     ]
     mitre_attack_techniques: set[str]  # set[MitreAttackTechniqueID]
     validating_function: Callable[[dict[str, JsonValue]], None] | None
-
-
-class Drop:
-    pass
-
-
-class Deny:
-    def __init__(self, reason: str = ""):
-        self.reason = reason
 
 
 class BaseAgentCapability(_AgentCommunicator):
@@ -255,7 +249,7 @@ class BaseAgentCapability(_AgentCommunicator):
     async def on_launch(
         self,
         task_message: TaskLaunchMessageModel,
-    ) -> TaskLaunchMessageModel | Drop | Deny:
+    ) -> TaskLaunchMessageModel | None:
         return task_message
 
     async def on_execute(self) -> Success | Failure | None:
@@ -270,11 +264,12 @@ class BaseAgentCapability(_AgentCommunicator):
         self,
         task_message: TaskLaunchMessageModel,
     ) -> Success | Failure | None:
-        result = await self.on_launch(task_message)
-        if isinstance(result, Drop):
+        try:
+            result = await self.on_launch(task_message)
+        except AgentCapabilityLaunchError as exc:
+            return Failure(message=exc.message)
+        if result is None:
             return None
-        if isinstance(result, Deny):
-            return Failure(message=result.reason)
         self.launch_message = result
         await self.agent.send_task_message(task_message=self.launch_message)
         return await self.on_execute()

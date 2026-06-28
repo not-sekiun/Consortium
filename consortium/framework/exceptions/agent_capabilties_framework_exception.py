@@ -1,26 +1,30 @@
+from pydantic import JsonValue
+
 from consortium.framework.exceptions.base_framework_exception import (
     BaseRaiseOnlyFrameworkException,
 )
 
 
-# TODO: Consider removing
-class AgentCapabilityTaskingError(BaseRaiseOnlyFrameworkException):
+class AgentCapabilityLaunchError(BaseRaiseOnlyFrameworkException):
+    """Raise this exception from `on_launch` to deliberately deny a task from starting
+    and report failure to the operator."""
+
     def __init__(
         self,
-        message: str = "An error occurred while attempting to task the agent.",
-        detail: str = None,
+        message: str = "An error occurred while launching the agent capability.",
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
-        super().__init__(
-            message=message,
-            detail=detail,
-        )
+        super().__init__(message=message, detail=detail)
 
 
-class AgentCapabilityRuntimeError(BaseRaiseOnlyFrameworkException):
+class AgentCapabilityExecutionError(BaseRaiseOnlyFrameworkException):
+    """Raise this exception from `on_execute` to deliberately stop an executing agent
+    capability and report failure to the operator."""
+
     def __init__(
         self,
-        message: str = "An error occurred while running the agent capability.",
-        detail: str = None,
+        message: str = "An error occurred while executing the agent capability.",
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,

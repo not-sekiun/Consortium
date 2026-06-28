@@ -1,8 +1,7 @@
-import uuid
 from collections.abc import AsyncIterable
 from typing import Annotated
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, JsonValue
+from pydantic import UUID4, BaseModel, BeforeValidator, ConfigDict, JsonValue
 
 
 class Payload:
@@ -81,7 +80,7 @@ class TaskLaunchMessageModel(BaseModel):
     Model representing a task launch message sent to an agent.
 
     Attributes:
-        task_id (uuid.UUID): Unique identifier for the task.
+        task_id (UUID4): Unique identifier for the task.
         command (str): The command to be executed by the agent.
         arguments (dict[str, JsonValue]): Arguments required for the command, must be
             JSON-serializable.
@@ -93,7 +92,7 @@ class TaskLaunchMessageModel(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    task_id: uuid.UUID
+    task_id: UUID4
     command: str
     arguments: dict[str, JsonValue] = {}
     data: dict[str, JsonValue] = {}
@@ -116,13 +115,18 @@ class TaskInputMessageModel(BaseModel):
     Model representing a task input message sent to an agent.
 
     Attributes:
-        task_id (uuid.UUID): Unique identifier for the associated task.
+        task_id (UUID4): Unique identifier for the associated task.
         data (dict[str, JsonValue]): Additional data related to the task, must be
             JSON-serializable.
+        payload (Payload | None): Optional binary payload
+            associated with the task.
     """
 
-    task_id: uuid.UUID
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    task_id: UUID4
     data: dict[str, JsonValue] = {}
+    payload: Annotated[Payload | None, BeforeValidator(_wrap_payload)] = None
 
     def to_json(self):
         """
@@ -139,7 +143,7 @@ class TaskOutputMessageModel(BaseModel):
     Model representing a task output message sent from an agent.
 
     Attributes:
-        task_id (uuid.UUID): Unique identifier for the associated task.
+        task_id (UUID4): Unique identifier for the associated task.
         success (bool): Indicates if the task was successful.
         message (str): A message providing additional information about the result.
         data (dict[str, JsonValue]): Additional data related to the result, must be
@@ -150,7 +154,7 @@ class TaskOutputMessageModel(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    task_id: uuid.UUID
+    task_id: UUID4
     success: bool
     message: str = ""
     data: dict[str, JsonValue] = {}

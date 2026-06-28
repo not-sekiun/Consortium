@@ -1,4 +1,4 @@
-from typing import Any
+from pydantic import JsonValue
 
 
 class BaseFrameworkException(Exception):
@@ -29,7 +29,10 @@ class BaseRaiseOnlyFrameworkException(BaseFrameworkException):
             the calling framework.
     """
 
-    def __init__(self, message: str, detail: Any = None):
+    def __init__(self, message: str, detail: dict[str, JsonValue] | None = None):
+        if detail is None:
+            detail = {}
+
         self.message = message
         self.detail = detail
 

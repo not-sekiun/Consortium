@@ -13,8 +13,6 @@ from consortium.framework.agents.agent_message_models import (
 from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
-    Deny,
-    Drop,
     SupportedOS,
 )
 from consortium.framework.agents.base_agent_generator import (
@@ -23,6 +21,9 @@ from consortium.framework.agents.base_agent_generator import (
 )
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.agents.base_agent_type import BaseAgentType
+from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+    AgentCapabilityLaunchError,
+)
 
 __all__ = [
     "BaseAgentGenerator",
@@ -33,8 +34,7 @@ __all__ = [
     "request_response_capability",
     "sequential_request_response_capability",
     "SupportedOS",
-    "Drop",
-    "Deny",
+    "AgentCapabilityLaunchError",
     "Success",
     "Failure",
     "Payload",

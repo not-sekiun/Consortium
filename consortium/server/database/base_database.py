@@ -1,15 +1,12 @@
 # from abc import ABC, abstractmethod
-# from typing import Generic, TypeVar
-#
-# Entry = TypeVar("Entry")
 #
 #
-# class BaseDatabase(ABC, Generic[Entry]):
+# class BaseDatabase[DatabaseEntry](ABC):
 #     @abstractmethod
-#     def get_entry_by_id(self, entry_id: str) -> Entry: ...
+#     def get_entry_by_id(self, entry_id: str) -> DatabaseEntry: ...
 #
 #     @abstractmethod
-#     def get_all_entries(self) -> list[Entry]: ...
+#     def get_all_entries(self) -> list[DatabaseEntry]: ...
 #
 #     @abstractmethod
-#     def insert_entry(self, entry: Entry) -> str: ...
+#     def insert_entry(self, entry: DatabaseEntry) -> str: ...
