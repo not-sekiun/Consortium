@@ -161,76 +161,16 @@ Alternatively, to host and view this documentation locally, refer back to
 
 ### Client Documentation
 
-To view all commands for a particular interpreter in the client type `help`.
+There are several ways to get help information and command documentation within the
+client.
+1. General help menu: To view all commands for a particular interpreter in the client
+type `help`.
+2. Command summary: To view the summary for a specific command, which includes all of
+its arguments, type `help <command>`.
+3. Command help: To get comprehensive help for a specific command, including examples on
+how to use it, type `<command> --help` or `<command> -h`.
 
-```shell
-Consortium (Home) > help
-                                                                         Help Menu
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Command                   ┃ Description                                                                                                                  ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ agents                    │ Switch to the agents interpreter, the interface for managing and controlling connected agents.                               │
-│ banner                    │ Display a banner with information and branding about the Consortium framework.                                               │
-│ clear                     │ Clear the terminal screen.                                                                                                   │
-│ connect                   │ Create a new client session to a Consortium server using a configuration file or by manually specifying connection details.  │
-│ disconnect                │ Disconnect the current client session or a specific client session from a Consortium server                                  │
-│ exit                      │ Close the Consortium client and exit the program.                                                                            │
-│ generators                │ Switch to the generators interpreter, the interface for creating and managing the generation of agent payloads.              │
-│ help                      │ Display the help summary of a specific command or display the help menu listing all available commands for the current       │
-│                           │ interpreter.                                                                                                                 │
-│ home                      │ Return to the home interpreter, the main control interface of the Consortium framework.                                      │
-│ info_client_session       │ Display detailed information for the current client session or for a specific client session.                                │
-│ interact_client_session   │ Choose a specific client session to interact with that is associated with a specific user account logged into a specific     │
-│                           │ Consortium server.                                                                                                           │
-│ list_client_sessions      │ List basic information for all current client sessions to a Consortium server.                                               │
-│ listeners                 │ Switch to the listeners interpreter, the interface for creating and managing listeners.                                      │
-│ redescribe_client_session │ Change the description of the current client session or a specific client session.                                           │
-│ rename_client_session     │ Rename the current client session or a specific client session.                                                              │
-└───────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-To view the summary for a specific command, which includes all of its arguments, type
-`help <command>`.
-
-```shell
-Consortium (Home) > help connect
-description: Create a new client connection to a Consortium server using a configuration file or by manually specifying connection details.
-usage: connect [-h] [-c [CONFIG_FILEPATH]] [-rh HOSTNAME/IP] [-rp PORT] [-u USERNAME] [-p PASSWORD]
-```
-
-To get comprehensive help for a specific command, including examples on how to use it,
-type `<command> --help` or `<command> -h`.
-
-> [!Note]
-> The portion of the example behind the `#` is a comment that is not part of the
-> command.
-
-```shell
-Consortium (Home) > connect --help
-usage: connect [-h] [-c [CONFIG_FILEPATH]] [-rh HOSTNAME/IP] [-rp PORT] [-u USERNAME] [-p PASSWORD]
-
-Create a new client session to a Consortium server using a configuration file or by manually specifying connection details.
-
-options:
-  -h, --help            show this help message and exit
-  -c [CONFIG_FILEPATH], --config [CONFIG_FILEPATH]
-                        The filepath to a configuration JSON file containing the client settings specifying the remote host, remote port, username, and
-                        password to use when connecting to the Consortium server. If not provided, the default filepath to the configuration file is used.
-  -rh HOSTNAME/IP, --remote-host HOSTNAME/IP
-                        The remote hostname or IP address of the Consortium server to connect to.
-  -rp PORT, --remote-port PORT
-                        The port of the Consortium server to connect to.
-  -u USERNAME, --username USERNAME
-                        The username of the account to login to when connecting to the Consortium server.
-  -p PASSWORD, --password PASSWORD
-                        The password of the account to login to when connecting to the Consortium server.
-
-Examples:
-  connect -c  # Connect using the default filepath to the client configuration file.
-  connect -c path/to/client_config.json  # Connect using a custom configuration file.
-  connect -u username -p password -rh server.com -rp 1234  # Connect through manually provided connection details.
-
-```
+![Client help demo](docs/assets/help_demo.gif)
 
 ## Contributing
 
