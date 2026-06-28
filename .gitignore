@@ -22,3 +22,7 @@ tools/defaults.txt
 
 before_merging.txt
 agent.exe
+agent.py
+test_agents/
+demo_logging_service.py
+test.py
