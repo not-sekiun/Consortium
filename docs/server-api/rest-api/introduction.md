@@ -6,6 +6,9 @@ default, the server binds at `http://localhost:9999`.
 | `http://localhost:9999/docs`     | Swagger UI: interactive reference. |
 | `http://localhost:9999/redoc`    | ReDoc: readable reference.         |
 
+To prevent server fingerprinting or information leakage, the documentation pages are
+**only accessible via `localhost`** external clients cannot access them.
+
 !!! note
     The websocket events API is **not** covered here. See the
     [Events Websockets API](../events-websockets-api/introduction.md) documentation.
@@ -42,7 +45,8 @@ To quickly retrieve a token from the command line:
 
 1. Open `http://localhost:9999/docs`.
 2. Click the **Authorize** button (top right).
-3. Paste your token into the **Bearer** field and click **Authorize**.
+3. Input your `username` and `password` in the top 2 form fields you can ignore the
+`client_id` and `client_secret`
 
 All subsequent requests made through the UI will include the token automatically.
 
