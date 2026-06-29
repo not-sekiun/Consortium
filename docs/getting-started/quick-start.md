@@ -269,4 +269,4 @@ server is demonstrated below.
 </script>
 
 For more information about using the client, refer to the [Client section of the
-Manual](../manual/client/introduction.md).
+Manual](../client/introduction.md).

@@ -50,7 +50,6 @@ theme:
   favicon: assets/favicon.png
 
 nav:
-#  - Exceptions: test.md
   - Home: index.md
 #  - About:
 #    - about/features.md
@@ -60,8 +59,7 @@ nav:
     - getting-started/installation.md
     - getting-started/updating.md
     - getting-started/quick-start.md
-#  - Manual:
-#    - manual/introduction.md
+  - Client Usage:
   - Server API:
     - Events Websockets API:
       - server-api/events-websockets-api/introduction.md
@@ -70,7 +68,9 @@ nav:
       - server-api/events-websockets-api/server-messages.md
     - REST API:
       - server-api/rest-api/introduction.md
+  - Framework:
   - Reference:
+      - Framework:
       - Services:
         - reference/services/agents-service-reference.md
         - reference/services/agent-file-manager-service-reference.md
