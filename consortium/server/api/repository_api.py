@@ -167,6 +167,11 @@ def create_upload_resource_endpoint(
                 file_extension = directory_archive_file_format
                 file_name = file.filename
             else:
+                # Edge case where a file (`UploadFile) is uploaded with no specified
+                # filename. This can happen if the file is uploaded through a multipart
+                # form with no filename parameter.
+                if file.filename is None:
+                    raise api_excs.RepositoryDirectoryArchiveFileFormatNotSpecifiedError
                 # The file extension returned by `os.path.splitext()` as the second element
                 # of the tuple is the file extension WITH the leading period.
                 file_name, file_extension = os.path.splitext(file.filename)
