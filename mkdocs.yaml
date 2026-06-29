@@ -128,7 +128,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.tabbed:
-      alternate_style: true # Recommended for MkDocs Material
+      alternate_style: true
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

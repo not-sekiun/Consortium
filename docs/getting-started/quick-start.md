@@ -256,13 +256,16 @@ server is demonstrated below.
 
 <div id="disconnected-interpreter-demo"></div>
 <script>
-  window.onload = function(){
-    AsciinemaPlayer.create(
-      "/asciinema/disconnected_interpreter_demo.cast",
-      document.getElementById("disconnected-interpreter-demo"),
-      {theme: 'gruvbox-dark', autoPlay: true, loop: false},
-    );
-  }
+  document$.subscribe(function(){
+    var el = document.getElementById("disconnected-interpreter-demo");
+    if (el && !el.hasChildNodes()) {
+      AsciinemaPlayer.create(
+        "/asciinema/disconnected_interpreter_demo.cast",
+        el,
+        {theme: 'gruvbox-dark', autoPlay: true, loop: false},
+      );
+    }
+  });
 </script>
 
 For more information about using the client, refer to the [Client section of the
