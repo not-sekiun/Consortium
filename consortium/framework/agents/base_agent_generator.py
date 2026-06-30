@@ -58,10 +58,28 @@ class _BaseAgentGeneratorBuildStepModel(BaseModel):
 
 
 class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
+    """A single step in an agent generator's build pipeline.
+
+    Subclasses implement build() to perform one discrete stage of the agent creation
+    process (compilation, signing, packaging, uploading, etc.). Steps run sequentially
+    within a BaseAgentGenerator and share a mutable SimpleNamespace environment so
+    earlier steps can pass state (file paths, keys, metadata, etc.) to later ones.
+
+    Attributes:
+        name (str): Unique display name for this build step. Required.
+        description (str): Human-readable explanation of what this step does.
+    """
+
     name: str
     description: str = ""
 
     def __init__(self, agent_templates_payload_service: AgentTemplatesPayloadsService):
+        """Initialize the build step with a reference to the agent templates payload service.
+
+        Args:
+            agent_templates_payload_service: Service providing storage and retrieval of
+                payload artifacts produced or consumed by this build step.
+        """
         self.agent_generator_build_step_id = uuid.uuid4()
         self.datetime_started = None
         self.datetime_stopped = None
@@ -136,34 +154,61 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
 
     @property
     def time_elapsed_in_seconds(self) -> float | None:
+        """Wall-clock duration of the most recent run in seconds.
+
+        Returns:
+            Elapsed seconds between start and stop, or None if the step has not
+            completed or was never started.
+        """
         if self.datetime_started and self.datetime_stopped:
             return (self.datetime_stopped - self.datetime_started).total_seconds()
         return None
 
-    async def build(self, parameters: dict) -> None: ...
+    async def build(self, parameters: dict) -> None:
+        """Execute the build logic for this step.
+
+        Override to implement the step's discrete unit of work. The shared environment
+        namespace is accessible via self.environment, and agent_templates_payload_service
+        is available for storing build artifacts.
+
+        Args:
+            parameters: The generator's configuration parameters passed through from
+                the owning BaseAgentGenerator instance.
+        """
+        ...
 
     @final
     async def on_started(self) -> None:
+        """Record the build step start timestamp when the step transitions to running."""
         self.datetime_started = datetime.now()
 
     @final
     async def on_running(self) -> None:
+        """Delegate execution to the build() method with the current parameters."""
         await self.build(parameters=self.parameters)
 
     @final
     async def on_completed(self) -> None:
+        """Record the build step completion timestamp when the step finishes successfully."""
         self.datetime_stopped = datetime.now()
 
     @final
     async def on_stopped(self) -> None:
+        """Record the build step stop timestamp when the step is halted before completion."""
         self.datetime_stopped = datetime.now()
 
     @final
     async def on_cancelled(self) -> None:
+        """Record the build step cancellation timestamp when the step is cancelled."""
         self.datetime_stopped = datetime.now()
 
     @final
     async def on_errored(self, error: AgentGeneratorBuildStepRuntimeError) -> None:
+        """Record the build step error timestamp and log the error when the step fails.
+
+        Args:
+            error: The structured runtime error describing the build failure.
+        """
         self.datetime_stopped = datetime.now()
         self.logger.error(error)
 
@@ -172,6 +217,13 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         exc: Exception,
         fatal_context: ComponentLifeCycleFatalContext,
     ) -> None:
+        """Hook invoked when an unrecoverable error occurs in the build step lifecycle.
+
+        Args:
+            exc: The underlying exception that triggered the fatal transition.
+            fatal_context: The lifecycle phase (starting, running, stopping, etc.)
+                during which the fatal error occurred.
+        """
         ctx_to_str_map = {
             ComponentLifeCycleFatalContext.START: "starting",
             ComponentLifeCycleFatalContext.RUNNING: "running",
@@ -191,6 +243,17 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         parameters: dict,
         environment: types.SimpleNamespace,
     ) -> None:
+        """Start this build step with the provided parameters and environment, blocking until done.
+
+        This is the entry point called by BaseAgentGenerator during pipeline execution.
+        It injects the shared environment and parameter set before starting the component
+        lifecycle.
+
+        Args:
+            parameters: Key-value configuration parameters forwarded from the generator.
+            environment: Shared namespace that allows steps to read and write state
+                across the pipeline.
+        """
         # Override `environment` set during initialization to the ones provided by the
         # AgentGenerator.
         self.environment = environment
@@ -199,12 +262,19 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         await self.wait_until_stopped()
 
     def reset(self) -> None:
+        """Reset timing state and status so the step can be reused in a subsequent generator run."""
         self.datetime_started = None
         self.datetime_stopped = None
         self.parameters = {}
         super().reset()
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the build step's current state to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the step ID, name, description, start and stop
+            timestamps, elapsed time in seconds, and current lifecycle status.
+        """
         return {
             "agent_generator_build_step_id": str(self.agent_generator_build_step_id),
             "name": self.name,
@@ -220,6 +290,12 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         }
 
     def to_json_reference(self) -> dict[str, str]:
+        """Serialize a compact reference to this build step.
+
+        Returns:
+            A dictionary containing only the step ID and name, suitable for embedding
+            as a lightweight foreign key reference in other JSON objects.
+        """
         return {
             "agent_generator_build_step_id": str(self.agent_generator_build_step_id),
             "name": self.name,
@@ -265,6 +341,19 @@ class _BaseAgentGeneratorModel(BaseModel):
 
 
 class BaseAgentGenerator(ComponentLifeCycle):
+    """Orchestrates a pipeline of build steps to produce a deployable agent payload.
+
+    Subclasses declare a list of BaseAgentGeneratorBuildStep classes that are
+    instantiated and executed sequentially at run time. A shared SimpleNamespace
+    environment allows earlier steps to pass state (file paths, signing keys,
+    compiled artifacts, etc.) to later ones.
+
+    Attributes:
+        agent_generator_build_steps (list[type[BaseAgentGeneratorBuildStep]]): Ordered
+            sequence of build step classes. Declared at the class level and converted
+            to instances in __init__.
+    """
+
     agent_generator_build_steps: list[type[BaseAgentGeneratorBuildStep]] = None
 
     def __init__(
@@ -273,6 +362,15 @@ class BaseAgentGenerator(ComponentLifeCycle):
         description: str = "",
         parameters: dict[str, Any] | None = None,
     ) -> None:
+        """Create a new agent generator instance with the given name, description, and parameters.
+
+        Args:
+            name: Human-readable label for this generator run, used in log messages
+                and serialized output.
+            description: Optional longer description of what this particular run produces.
+            parameters: Key-value configuration values passed to each build step. Must
+                satisfy the options declared by the owning agent template.
+        """
         # See starred Claude code conversation "circular import in agent framework"
         # for framework registry module fix
         from consortium.server.services.agent_templates_payloads_service import (
@@ -376,12 +474,25 @@ class BaseAgentGenerator(ComponentLifeCycle):
             f")"
         )
 
-    async def on_started(self) -> None: ...
+    async def on_started(self) -> None:
+        """Hook invoked before build steps begin executing.
 
-    async def on_completed(self) -> None: ...
+        Override to perform any initialization that must complete before the build
+        pipeline starts, such as preparing directories or acquiring external resources.
+        """
+        ...
+
+    async def on_completed(self) -> None:
+        """Hook invoked after all build steps finish successfully.
+
+        Override to perform cleanup, notifications, or post-processing after a
+        successful build.
+        """
+        ...
 
     @final
     async def on_running(self) -> None:
+        """Drive the build pipeline by resetting and executing each build step in sequence."""
         # Reset each build step before running them in case the agent generator is
         # started more than once.
         for agent_generator_build_step in self.agent_generator_build_steps:
@@ -417,11 +528,26 @@ class BaseAgentGenerator(ComponentLifeCycle):
             if self.stop_event.is_set():
                 break
 
-    async def on_stopped(self) -> None: ...
+    async def on_stopped(self) -> None:
+        """Hook invoked when the generator is stopped before all steps complete.
 
-    async def on_cancelled(self) -> None: ...
+        Override to clean up resources that were allocated before the generator was halted.
+        """
+        ...
+
+    async def on_cancelled(self) -> None:
+        """Hook invoked when the generator run is cancelled externally.
+
+        Override to clean up resources when the build is aborted mid-pipeline.
+        """
+        ...
 
     async def on_errored(self, error: AgentGeneratorRuntimeError) -> None:
+        """Hook invoked when a runtime error occurs during execution.
+
+        Args:
+            error: The structured runtime error describing what failed and why.
+        """
         self.logger.error(error)
 
     async def on_fatal(
@@ -429,6 +555,13 @@ class BaseAgentGenerator(ComponentLifeCycle):
         exc: Exception,
         fatal_context: ComponentLifeCycleFatalContext,
     ) -> None:
+        """Hook invoked when an unrecoverable error occurs in the generator lifecycle.
+
+        Args:
+            exc: The underlying exception that triggered the fatal transition.
+            fatal_context: The lifecycle phase (starting, running, stopping, etc.)
+                during which the fatal error occurred.
+        """
         ctx_to_str_map = {
             ComponentLifeCycleFatalContext.START: "starting",
             ComponentLifeCycleFatalContext.RUNNING: "running",
@@ -444,6 +577,12 @@ class BaseAgentGenerator(ComponentLifeCycle):
         )
 
     async def start(self) -> None:
+        """Start the agent generator and begin executing its build pipeline.
+
+        Raises:
+            AgentGeneratorAlreadyRunningError: If the generator is already in a running state.
+            AgentGeneratorStartError: If the generator fails to start due to a lifecycle error.
+        """
         try:
             await super().start()
         except ComponentAlreadyRunningError:
@@ -458,6 +597,14 @@ class BaseAgentGenerator(ComponentLifeCycle):
             ) from None
 
     async def stop(self) -> None:
+        """Stop the generator and interrupt the currently executing build step.
+
+        Also attempts to stop the active build step if one is running.
+
+        Raises:
+            AgentGeneratorNotRunningError: If the generator is not currently running.
+            AgentGeneratorStopError: If the generator fails to stop cleanly.
+        """
         try:
             await super().stop()
         except ComponentNotRunningError:
@@ -481,6 +628,11 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 pass
 
     async def cancel(self) -> None:
+        """Cancel the agent generator run.
+
+        Raises:
+            AgentGeneratorNotRunningError: If the generator is not currently running.
+        """
         try:
             await super().cancel()
         except ComponentNotRunningError:
@@ -489,6 +641,13 @@ class BaseAgentGenerator(ComponentLifeCycle):
             ) from None
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the generator's current state to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the generator ID, name, description, parameters,
+            status, creation timestamp, build step states, agent type, compatible
+            listener types, and a reference to the creating agent template.
+        """
         return {
             "agent_generator_id": str(self.agent_generator_id),
             "name": self.name,
@@ -516,6 +675,12 @@ class BaseAgentGenerator(ComponentLifeCycle):
         }
 
     def to_json_reference(self) -> dict[str, str]:
+        """Serialize a compact reference to this generator.
+
+        Returns:
+            A dictionary containing only the generator ID and name, suitable for
+            embedding as a lightweight foreign key reference in other JSON objects.
+        """
         return {
             "agent_generator_id": str(self.agent_generator_id),
             "name": self.name,

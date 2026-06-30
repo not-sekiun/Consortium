@@ -42,6 +42,14 @@ if TYPE_CHECKING:
 
 
 class SupportedOS(StrEnum):
+    """Operating system identifiers for declaring capability platform compatibility.
+
+    Use these values in BaseAgentCapability.supported_oses to restrict which platforms
+    a capability can run on. ANY indicates universal compatibility with no restrictions.
+    The DESKTOP and MOBILE class attributes provide pre-built sets of related OS values
+    for convenience.
+    """
+
     WINDOWS = "WINDOWS"
     LINUX = "LINUX"
     MACOS = "MACOS"
@@ -60,6 +68,12 @@ SupportedOS.MOBILE = {SupportedOS.ANDROID, SupportedOS.IOS}
 
 
 class AgentLifecycle(StrEnum):
+    """Lifecycle stages at which a capability can be configured to trigger.
+
+    Used to indicate when during an agent's registration and check-in lifecycle
+    a particular action should be performed.
+    """
+
     ON_REGISTERED = "ON_REGISTERED"
     ON_CHECKED_IN = "ON_CHECKED_IN"
 
@@ -88,6 +102,33 @@ class _BaseAgentCapabilityModel(BaseModel):
 
 
 class BaseAgentCapability(_AgentCommunicator):
+    """Base class for all agent capabilities that define executable commands.
+
+    Subclasses declare capability metadata as class attributes (name, description,
+    options, etc.) and override on_launch and on_execute to control how the command
+    is transmitted to the agent and how the response is processed. The framework
+    validates all class attributes at subclass definition time via __init_subclass__.
+
+    Attributes:
+        name (str): Unique command identifier used to route incoming task messages.
+            Required and must be non-empty.
+        description (str): Human-readable explanation of what this capability does.
+        authors (set[str]): Identifiers for the capability's authors.
+        requires_admin (bool): Whether elevated privileges are required on the target
+            system to execute this capability.
+        supported_oses (set[SupportedOS]): Platforms this capability supports.
+            Defaults to {SupportedOS.ANY} if not declared.
+        is_atomic (bool): Whether this capability maps to a single MITRE ATT&CK step.
+        options (set[...]): Configuration options accepted by this capability. Declared
+            as a set at the class level; converted to a name-keyed dict at definition time.
+        mitre_attack_techniques (set[str]): MITRE ATT&CK technique IDs associated with
+            this capability. Resolved to MitreAttackTechnique objects at definition time.
+        validating_function: Optional single-argument callable that validates the full
+            resolved option set before execution.
+        launch_message (TaskLaunchMessageModel | None): The message sent to the agent on
+            the most recent execute() call; set by execute() after on_launch completes.
+    """
+
     name: str
     description: str = ""
     authors: set[str] = None
@@ -106,6 +147,12 @@ class BaseAgentCapability(_AgentCommunicator):
     launch_message: TaskLaunchMessageModel | None = None
 
     def __init__(self, agent: Agent, task: AgentTask):
+        """Initialize the capability with the agent and task context for this execution.
+
+        Args:
+            agent: The agent instance this capability is executing against.
+            task: The task record that tracks the execution lifecycle and event stream.
+        """
         super().__init__(agent=agent, task=task)
 
     def __init_subclass__(cls, **kwargs):
@@ -222,26 +269,60 @@ class BaseAgentCapability(_AgentCommunicator):
         message: str | None = None,
         data: dict[str, Any] | None = None,
     ):
+        """Report a partial progress update for the currently running task.
+
+        Args:
+            percent_complete: Completion percentage as a value from 0.0 to 100.0.
+            message: Optional human-readable status message to accompany the update.
+            data: Optional structured data to include with the progress event.
+        """
         self.task.update_progress(
             percent_complete=percent_complete, message=message, data=data
         )
 
     def emit_success(self, message: str, data: dict[str, Any] | None = None):
+        """Emit a SUCCESS event on the current task's event stream.
+
+        Args:
+            message: Human-readable description of the successful action or result.
+            data: Optional structured data to include with the event.
+        """
         self.task.append_event(
             event_type=AgentTaskEventType.SUCCESS, message=message, data=data or {}
         )
 
     def emit_info(self, message: str, data: dict[str, Any] | None = None):
+        """Emit an INFO event on the current task's event stream.
+
+        Args:
+            message: Human-readable informational message to record.
+            data: Optional structured data to include with the event.
+        """
         self.task.append_event(
             event_type=AgentTaskEventType.INFO, message=message, data=data or {}
         )
 
     def emit_failure(self, message: str, data: dict[str, Any] | None = None):
+        """Emit a FAILURE event on the current task's event stream.
+
+        Args:
+            message: Human-readable description of the failure condition.
+            data: Optional structured diagnostic data to include with the event.
+        """
         self.task.append_event(
             event_type=AgentTaskEventType.FAILURE, message=message, data=data or {}
         )
 
     def emit_artifact(self, message: str, data: dict[str, Any] | None = None):
+        """Emit an ARTIFACT event on the current task's event stream.
+
+        Used to signal that the capability has produced a file, binary blob, or
+        other collectible output associated with this task.
+
+        Args:
+            message: Human-readable description or filename of the artifact.
+            data: Optional structured metadata to attach to the artifact event.
+        """
         self.task.append_event(
             event_type=AgentTaskEventType.ARTIFACT, message=message, data=data or {}
         )
@@ -250,9 +331,30 @@ class BaseAgentCapability(_AgentCommunicator):
         self,
         task_message: TaskLaunchMessageModel,
     ) -> TaskLaunchMessageModel | None:
+        """Hook called before the task message is transmitted to the agent.
+
+        Override to mutate or enrich the launch message prior to sending, or return
+        None to abort the launch without transmitting a message.
+
+        Args:
+            task_message: The task launch message prepared by the caller, containing
+                the command, arguments, data, and any attached payload.
+
+        Returns:
+            The (possibly modified) task message to send, or None to cancel the launch.
+        """
         return task_message
 
     async def on_execute(self) -> Success | Failure | None:
+        """Hook called after the task message has been sent to process the agent's response.
+
+        Override to implement custom response handling logic. The default implementation
+        waits for a single reply from the agent and wraps it in a Success or Failure.
+
+        Returns:
+            A Success wrapping the agent's response on success, a Failure on failure,
+            or None if no response is expected.
+        """
         task_output_message = await self.recv_from_agent()
         return (
             Success(task_output_message=task_output_message)
@@ -264,6 +366,19 @@ class BaseAgentCapability(_AgentCommunicator):
         self,
         task_message: TaskLaunchMessageModel,
     ) -> Success | Failure | None:
+        """Dispatch the task to the agent and return the execution outcome.
+
+        Calls on_launch to allow pre-send mutation, transmits the (possibly modified)
+        message to the agent, then calls on_execute to await and process the response.
+
+        Args:
+            task_message: The fully populated task launch message to dispatch, including
+                the command, arguments, data, and any binary payload.
+
+        Returns:
+            A Success or Failure wrapping the agent's response, or None if on_launch
+            cancelled the launch by returning None.
+        """
         try:
             result = await self.on_launch(task_message)
         except AgentCapabilityLaunchError as exc:
@@ -276,6 +391,13 @@ class BaseAgentCapability(_AgentCommunicator):
 
     @classmethod
     def to_json(cls) -> dict[str, Any]:
+        """Serialize the capability's class-level metadata to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the capability name, description, authors, options
+            (with their validation schemas), MITRE ATT&CK techniques, supported OSes,
+            admin requirement flag, and any validating function documentation.
+        """
         return {
             "name": cls.name,
             "description": cls.description,

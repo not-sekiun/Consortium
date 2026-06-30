@@ -5,15 +5,26 @@ from pydantic import UUID4, BaseModel, BeforeValidator, ConfigDict, JsonValue
 
 
 class Payload:
-    """
-    Represents a binary payload that can be either a complete byte sequence or an
-    asynchronous stream of byte chunks.
+    """Binary payload that wraps either a complete byte sequence or an async stream of byte chunks.
+
+    Provides a unified interface for both in-memory bytes and streaming data so that
+    callers do not need to branch on the data source type.
 
     Attributes:
-        is_stream (bool): Indicates whether the payload is an asynchronous stream.
+        is_stream (bool): True if the payload is backed by an async iterable rather
+            than an in-memory byte sequence.
     """
 
     def __init__(self, payload: AsyncIterable[bytes] | bytes | bytearray):
+        """Initialize the payload from a byte sequence or async iterable.
+
+        Args:
+            payload: The source data. Accepts a complete in-memory byte sequence
+                (bytes or bytearray) or an async iterable of byte chunks for streaming.
+
+        Raises:
+            TypeError: If payload is not bytes, bytearray, or AsyncIterable[bytes].
+        """
         if isinstance(payload, bytes):
             self._payload = payload
             self.is_stream = False
@@ -28,18 +39,23 @@ class Payload:
 
     @property
     def data(self) -> bytes:
-        """
-        Returns the entire payload as bytes if it is not an asynchronous streamn.
-        Raises an error if the payload is an asynchronous stream.
+        """The complete payload as bytes for non-streaming payloads.
+
+        Raises:
+            ValueError: If the payload is backed by an async stream; use load() instead.
         """
         if self.is_stream:
             raise ValueError("Payload is a stream. cannot retrieve bytes directly.")
         return self._payload
 
     async def load(self) -> bytes:
-        """
-        Asynchronously loads the entire payload stream into memory and returns it as
-        bytes. If the payload is not a stream, returns the bytes directly.
+        """Load the entire payload into memory and return it as a byte sequence.
+
+        Buffers the full stream into a single byte sequence for streaming payloads,
+        or returns the in-memory bytes directly for non-streaming payloads.
+
+        Returns:
+            The complete payload as a contiguous byte sequence.
         """
         if self.is_stream:
             chunks = bytearray()
@@ -76,18 +92,21 @@ def _wrap_payload(v):
 
 
 class TaskLaunchMessageModel(BaseModel):
-    """
-    Model representing a task launch message sent to an agent.
+    """Message sent to an agent to initiate a new task execution.
+
+    Carries the task identity, the command name, and any structured arguments and
+    data the capability needs. An optional binary payload can accompany the message
+    for capabilities that require file or binary input.
 
     Attributes:
-        task_id (UUID4): Unique identifier for the task.
-        command (str): The command to be executed by the agent.
-        arguments (dict[str, JsonValue]): Arguments required for the command, must be
-            JSON-serializable.
-        data (dict[str, JsonValue]): Additional data related to the task, must be
-            JSON-serializable.
-        payload (Payload | None): Optional binary payload
-            associated with the task.
+        task_id (UUID4): Unique identifier for the task being launched.
+        command (str): The name of the capability command the agent should execute.
+        arguments (dict[str, JsonValue]): Command arguments required to execute the
+            capability. Must be JSON-serializable.
+        data (dict[str, JsonValue]): Supplementary data associated with the task.
+            Must be JSON-serializable.
+        payload (Payload | None): Optional binary payload accompanying the task,
+            such as a file to be processed by the agent.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -98,9 +117,12 @@ class TaskLaunchMessageModel(BaseModel):
     data: dict[str, JsonValue] = {}
     payload: Annotated[Payload | None, BeforeValidator(_wrap_payload)] = None
 
-    def to_json(self):
-        """
-        Serialize the `TaskLaunchMessageModel` to a JSON-compatible dictionary.
+    def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the message to a JSON-compatible dictionary, excluding the binary payload.
+
+        Returns:
+            A dictionary containing task_id, command, arguments, and data. The payload
+            field is omitted since binary data is not JSON-serializable.
         """
         return {
             "task_id": str(self.task_id),
@@ -111,15 +133,17 @@ class TaskLaunchMessageModel(BaseModel):
 
 
 class TaskInputMessageModel(BaseModel):
-    """
-    Model representing a task input message sent to an agent.
+    """Message sent to an agent to provide additional input to a running task.
+
+    Used when a task requires interactive or incremental input after the initial
+    launch message has been sent.
 
     Attributes:
-        task_id (UUID4): Unique identifier for the associated task.
-        data (dict[str, JsonValue]): Additional data related to the task, must be
-            JSON-serializable.
-        payload (Payload | None): Optional binary payload
-            associated with the task.
+        task_id (UUID4): Unique identifier of the task receiving the input.
+        data (dict[str, JsonValue]): Structured input data for the running task.
+            Must be JSON-serializable.
+        payload (Payload | None): Optional binary payload accompanying the input,
+            such as a file chunk or continuation data.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -129,8 +153,11 @@ class TaskInputMessageModel(BaseModel):
     payload: Annotated[Payload | None, BeforeValidator(_wrap_payload)] = None
 
     def to_json(self):
-        """
-        Serialize the `TaskInputMessageModel` to a JSON-compatible dictionary.
+        """Serialize the message to a JSON-compatible dictionary, excluding the binary payload.
+
+        Returns:
+            A dictionary containing the task_id and data. The payload field is omitted
+            since binary data is not JSON-serializable.
         """
         return {
             "task_id": str(self.task_id),
@@ -139,17 +166,19 @@ class TaskInputMessageModel(BaseModel):
 
 
 class TaskOutputMessageModel(BaseModel):
-    """
-    Model representing a task output message sent from an agent.
+    """Message sent from an agent reporting the result of a completed task.
+
+    Carries whether the task succeeded, a human-readable result summary, and any
+    structured output data or binary artifacts produced during execution.
 
     Attributes:
-        task_id (UUID4): Unique identifier for the associated task.
-        success (bool): Indicates if the task was successful.
-        message (str): A message providing additional information about the result.
-        data (dict[str, JsonValue]): Additional data related to the result, must be
-            JSON-serializable.
-        payload (Payload | None): Optional binary payload
-            associated with the task.
+        task_id (UUID4): Unique identifier of the task that produced this output.
+        success (bool): True if the task completed successfully, False on failure.
+        message (str): Human-readable summary of the task result or error description.
+        data (dict[str, JsonValue]): Structured output data from the task.
+            Must be JSON-serializable.
+        payload (Payload | None): Optional binary artifact produced by the task,
+            such as a captured file or command output blob.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -161,8 +190,11 @@ class TaskOutputMessageModel(BaseModel):
     payload: Annotated[Payload | None, BeforeValidator(_wrap_payload)] = None
 
     def to_json(self):
-        """
-        Serialize the `TaskOutputMessageModel` to a JSON-compatible dictionary.
+        """Serialize the message to a JSON-compatible dictionary, excluding the binary payload.
+
+        Returns:
+            A dictionary containing task_id, success, message, and data. The payload
+            field is omitted since binary data is not JSON-serializable.
         """
         return {
             "task_id": str(self.task_id),

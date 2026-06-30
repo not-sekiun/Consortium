@@ -40,6 +40,34 @@ class _PluginModel(ComponentMetadataModel):
 
 
 class BasePlugin(ComponentMetadata, ComponentLifeCycle):
+    """Base class for implementing custom server plugins in the Consortium framework.
+
+    Plugins run as long-lived background components alongside the server, performing
+    tasks such as integrating with external services, scheduling work, or augmenting
+    server behavior. All custom plugins must inherit from this class and implement
+    the required lifecycle hook methods.
+
+    Attributes:
+        plugin_id (uuid.UUID): Unique framework-wide identifier for this plugin
+            instance, generated as a UUID4.
+        name (str): Human-readable name for identifying this plugin.
+        description (str): Brief description of the plugin's purpose and functionality.
+        version (Version): Version of this plugin, specified as a PEP 440 version string.
+        compatible_framework_version (SpecifierSet): Framework version specifier defining
+            which versions of Consortium this plugin is compatible with.
+        authors (set[str]): Set of authors associated with this plugin.
+        component_dependencies (set[str]): Version-pinned dependencies on other framework
+            components, defined using PEP 440 specifiers.
+        third_party_dependencies (set[str]): Third-party library dependencies required
+            for this plugin to function.
+        autostart (bool): Whether the framework should start this plugin automatically
+            on server startup. Defaults to True.
+        environment (SimpleNamespace): Namespace for storing plugin-specific state shared
+            across lifecycle hook calls without naming conflicts.
+        logger (loguru.Logger): Plugin-specific logger instance, automatically tagged
+            with the plugin's name and ID for easy identification in logs.
+    """
+
     _METADATA_MODEL = _PluginModel
 
     _COMPONENT_METADATA_EXCEPTION_MAP = {
@@ -103,17 +131,36 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             f")"
         )
 
-    async def on_started(self) -> None: ...
+    async def on_started(self) -> None:
+        """Called once immediately after the plugin enters the running state."""
+        ...
 
-    async def on_running(self) -> None: ...
+    async def on_running(self) -> None:
+        """Called on each iteration of the plugin's main loop while running."""
+        ...
 
-    async def on_stopped(self) -> None: ...
+    async def on_stopped(self) -> None:
+        """Called once after the plugin has been successfully stopped."""
+        ...
 
-    async def on_completed(self) -> None: ...
+    async def on_completed(self) -> None:
+        """Called when the plugin's main loop exits normally without being stopped."""
+        ...
 
-    async def on_cancelled(self) -> None: ...
+    async def on_cancelled(self) -> None:
+        """Called once after the plugin run has been cancelled."""
+        ...
 
     async def on_errored(self, error: PluginRuntimeError) -> None:
+        """Called when a runtime error occurs during the plugin's execution.
+
+        Override to add custom error handling or alerting logic in addition to or
+        instead of the default error logging.
+
+        Args:
+            error: The runtime error describing what went wrong during plugin
+                execution, including the error message and any diagnostic detail.
+        """
         self.logger.error(error)
 
     async def on_fatal(
@@ -121,6 +168,16 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         exc: Exception,
         fatal_context: ComponentLifeCycleFatalContext,
     ) -> None:
+        """Called when an unhandled exception causes the plugin to terminate fatally.
+
+        Override to add custom alerting or cleanup logic when a fatal failure occurs.
+        The default implementation logs the full traceback at error level.
+
+        Args:
+            exc: The unhandled exception that triggered the fatal shutdown.
+            fatal_context: The lifecycle phase during which the fatal exception
+                occurred (starting, running, stopping, cancelling, or error handling).
+        """
         ctx_to_str_map = {
             ComponentLifeCycleFatalContext.START: "starting",
             ComponentLifeCycleFatalContext.RUNNING: "running",
@@ -136,6 +193,12 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         )
 
     async def start(self) -> None:
+        """Start the plugin and begin executing its main loop.
+
+        Raises:
+            PluginAlreadyRunningError: If the plugin is already in a running state.
+            PluginStartError: If the plugin fails to start due to a lifecycle error.
+        """
         try:
             await super().start()
         except comp_excs.ComponentAlreadyRunningError:
@@ -150,6 +213,12 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             ) from None
 
     async def stop(self) -> None:
+        """Stop the plugin and exit its main loop.
+
+        Raises:
+            PluginNotRunningError: If the plugin is not currently running.
+            PluginStopError: If the plugin fails to stop cleanly.
+        """
         try:
             await super().stop()
         except comp_excs.ComponentNotRunningError:
@@ -164,6 +233,11 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             ) from None
 
     async def cancel(self) -> None:
+        """Cancel the plugin run immediately.
+
+        Raises:
+            PluginNotRunningError: If the plugin is not currently running.
+        """
         try:
             await super().cancel()
         except comp_excs.ComponentNotRunningError:
@@ -172,6 +246,12 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             ) from None
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the plugin's metadata and current state to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the plugin ID, label, name, description, version,
+            framework compatibility, authors, dependencies, autostart flag, and status.
+        """
         return {
             "plugin_id": str(self.plugin_id),
             "label": self.label,
@@ -187,6 +267,12 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         }
 
     def to_json_reference(self) -> dict[str, str]:
+        """Serialize a compact reference to this plugin.
+
+        Returns:
+            A dictionary containing only the plugin ID, label, and name, suitable
+            for embedding as a lightweight foreign key reference in other JSON objects.
+        """
         return {
             "plugin_id": str(self.plugin_id),
             "label": self.label,

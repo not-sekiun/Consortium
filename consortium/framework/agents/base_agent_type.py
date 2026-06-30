@@ -21,6 +21,21 @@ class _BaseAgentTypeModel(BaseModel):
 
 
 class BaseAgentType:
+    """Defines the set of capabilities available to a specific category of agent.
+
+    An agent type groups related BaseAgentCapability classes under a shared name,
+    allowing the framework to route incoming task commands to the correct capability
+    implementation. Declare agent_capabilities at the class level; the framework
+    converts the set into a name-keyed dictionary at class definition time for fast
+    lookup during task dispatch.
+
+    Attributes:
+        name (str): Unique identifier for this agent type. Required and must be non-empty.
+        agent_capabilities (set[type[BaseAgentCapability]] | None): The capability
+            classes this agent type exposes. Converted to a name-keyed dict at class
+            definition time.
+    """
+
     name: str
     agent_capabilities: set[type[BaseAgentCapability]] | None = None
 
@@ -65,6 +80,12 @@ class BaseAgentType:
         )
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the agent type and its capabilities to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the agent type name and a nested mapping of each
+            capability name to its serialized JSON representation.
+        """
         return {
             "name": self.name,
             "agent_capabilities": {

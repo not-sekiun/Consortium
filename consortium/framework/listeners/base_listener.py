@@ -33,6 +33,10 @@ from consortium.server.utils import construct_services_dataclass
 
 if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
+    from consortium.framework.listeners.base_listener_type import BaseListenerType
+    from consortium.framework.listeners.base_listener_template import (
+        BaseListenerTemplate,
+    )
 
 
 class _BaseListenerParametersModel(BaseModel):
@@ -45,20 +49,17 @@ class _BaseListenerParametersModel(BaseModel):
 
 
 class BaseListener(ComponentLifeCycle):
-    """
-    Base class for implementing custom listeners in the Consortium framework.
+    """Base class for implementing custom listeners in the Consortium framework.
 
     Listeners manage the complete lifecycle of connected agents, including registration,
     check-ins, task distribution, and result collection. All custom listeners must
     inherit from this class and implement the required base listener hook methods.
 
     Attributes:
-        listener_id (uuid.UUID): Unique framework-wide identifier for a particular
-            listener instance, generated as a UUID4.
-        name (str): Human-readable name for the listener. This is not used as a unique
-            identifier within the framework.
-        description (str): Brief description of the listener's purpose and
-            functionality.
+        listener_id (uuid.UUID): Unique framework-wide identifier for this listener
+            instance, generated as a UUID4.
+        name (str): Human-readable name for identifying this listener instance.
+        description (str): Brief description of the listener's purpose and functionality.
         endpoint (str): Network endpoint identifier, typically a socket address, that
             uniquely identifies where this listener can be reached.
         listener_type (BaseListenerType): Type descriptor that defines which agent types
@@ -66,20 +67,20 @@ class BaseListener(ComponentLifeCycle):
         parameters (dict[str, Any]): Configuration parameters used to customize the
             listener's behavior. Available parameters are defined in the associated
             listener template.
-        status (ListenerStatus): Current listener status and any error information if
-            the listener has encountered issues.
-        datetime_created (datetime): Timestamp for when a particular listener instance
+        datetime_created (datetime): Timestamp recording when this listener instance
             was created.
-        environment (SimpleNamespace): Namespace for storing listener-specific variables
-            that can be shared between user-defined methods without naming conflicts.
-        connected_agents_service (ConnectedAgentsService): Internal manager for handling connected agents'
-            lifecycles and operations.
+        environment (SimpleNamespace): Namespace for storing listener-specific state
+            shared between user-defined methods without naming conflicts.
+        connected_agents_service (ConnectedAgentsService): Internal manager for handling
+            the lifecycles and operations of agents connected to this listener.
         logger (loguru.Logger): Listener-specific logger instance, automatically tagged
             with the listener's name and ID for easy identification in logs.
-        creating_listener_template (BaseListenerTemplate | None): Reference to the
-            listener template that created this instance. Set automatically during
-            creation through a template.
+        creating_listener_template (BaseListenerTemplate): Reference to the listener
+            template that created this instance. Set automatically during creation.
     """
+
+    creating_listener_template: BaseListenerTemplate
+    listener_type: BaseListenerType
 
     def __init__(
         self,
@@ -88,8 +89,7 @@ class BaseListener(ComponentLifeCycle):
         endpoint: str = "",
         parameters: dict[str, Any] | None = None,
     ) -> None:
-        """
-        Initialize a listener instance with the specified configuration.
+        """Initialize a listener instance with the specified configuration.
 
         While this constructor can be called directly, it is strongly recommended to
         create listeners through their associated listener templates. Templates ensure
@@ -174,19 +174,44 @@ class BaseListener(ComponentLifeCycle):
 
     @property
     def connected_agents(self) -> list[Agent]:
+        """All agents currently connected to this listener.
+
+        Returns:
+            A list of Agent instances that have registered with and are actively
+            managed by this listener.
+        """
         return self.connected_agents_service.get_all_agents()
 
-    async def on_started(self) -> None: ...
+    async def on_started(self) -> None:
+        """Called once immediately after the listener enters the running state."""
+        ...
 
-    async def on_running(self) -> None: ...
+    async def on_running(self) -> None:
+        """Called on each iteration of the listener's main loop while running."""
+        ...
 
-    async def on_completed(self) -> None: ...
+    async def on_completed(self) -> None:
+        """Called when the listener's main loop exits normally without being stopped."""
+        ...
 
-    async def on_stopped(self) -> None: ...
+    async def on_stopped(self) -> None:
+        """Called once after the listener has been successfully stopped."""
+        ...
 
-    async def on_cancelled(self) -> None: ...
+    async def on_cancelled(self) -> None:
+        """Called once after the listener run has been cancelled."""
+        ...
 
     async def on_errored(self, error: ListenerRuntimeError) -> None:
+        """Called when a runtime error occurs during the listener's execution.
+
+        Override to add custom error handling or alerting logic in addition to or
+        instead of the default error logging.
+
+        Args:
+            error: The runtime error describing what went wrong during listener
+                execution, including the error message and any diagnostic detail.
+        """
         self.logger.error(error)
 
     async def on_fatal(
@@ -194,6 +219,16 @@ class BaseListener(ComponentLifeCycle):
         exc: Exception,
         fatal_context: ComponentLifeCycleFatalContext,
     ) -> None:
+        """Called when an unhandled exception causes the listener to terminate fatally.
+
+        Override to add custom alerting or cleanup logic when a fatal failure occurs.
+        The default implementation logs the full traceback at error level.
+
+        Args:
+            exc: The unhandled exception that triggered the fatal shutdown.
+            fatal_context: The lifecycle phase during which the fatal exception
+                occurred (starting, running, stopping, cancelling, or error handling).
+        """
         ctx_to_str_map = {
             ComponentLifeCycleFatalContext.START: "starting",
             ComponentLifeCycleFatalContext.RUNNING: "running",
@@ -209,6 +244,12 @@ class BaseListener(ComponentLifeCycle):
         )
 
     async def start(self) -> None:
+        """Start the listener and begin accepting agent connections.
+
+        Raises:
+            ListenerAlreadyRunningError: If the listener is already in a running state.
+            ListenerStartError: If the listener fails to start due to a lifecycle error.
+        """
         try:
             await super().start()
         except ComponentAlreadyRunningError:
@@ -223,6 +264,12 @@ class BaseListener(ComponentLifeCycle):
             ) from None
 
     async def stop(self) -> None:
+        """Stop the listener and cease accepting new agent connections.
+
+        Raises:
+            ListenerNotRunningError: If the listener is not currently running.
+            ListenerStopError: If the listener fails to stop cleanly.
+        """
         try:
             await super().stop()
         except ComponentNotRunningError:
@@ -237,6 +284,11 @@ class BaseListener(ComponentLifeCycle):
             ) from None
 
     async def cancel(self) -> None:
+        """Cancel the listener run immediately.
+
+        Raises:
+            ListenerNotRunningError: If the listener is not currently running.
+        """
         try:
             await super().cancel()
         except ComponentNotRunningError:
@@ -245,6 +297,13 @@ class BaseListener(ComponentLifeCycle):
             ) from None
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the listener's current state to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the listener ID, name, description, endpoint,
+            listener type, parameters, status, creation timestamp, connected agents
+            as references, and the creating listener template as a reference.
+        """
         return {
             "listener_id": str(self.listener_id),
             "name": self.name,
@@ -263,6 +322,12 @@ class BaseListener(ComponentLifeCycle):
         }
 
     def to_json_reference(self) -> dict[str, str]:
+        """Serialize a compact reference to this listener.
+
+        Returns:
+            A dictionary containing only the listener ID and name, suitable for
+            embedding as a lightweight foreign key reference in other JSON objects.
+        """
         return {
             "listener_id": str(self.listener_id),
             "name": self.name,

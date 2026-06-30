@@ -14,6 +14,19 @@ class _BaseListenerTypeModel(BaseModel):
 
 
 class BaseListenerType:
+    """Defines the category of agents compatible with a specific listener implementation.
+
+    A listener type groups listeners under a shared name, allowing the framework to
+    determine which agent types can connect through a particular listener. Declare
+    name at the class level; the framework validates it at class definition time.
+
+    Attributes:
+        name (str): Unique identifier for this listener type. Required and must be
+            non-empty.
+        registered_compatible_agent_types (set): Agent type names that have been
+            registered as compatible with this listener type at runtime.
+    """
+
     name: str
 
     def __init_subclass__(cls, **kwargs):
@@ -55,6 +68,12 @@ class BaseListenerType:
         )
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the listener type to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the listener type name and the set of agent type
+            names that are registered as compatible with this listener type.
+        """
         return {
             "name": self.name,
             "registered_compatible_agent_types": list(

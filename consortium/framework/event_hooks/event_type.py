@@ -2,6 +2,13 @@ from enum import StrEnum
 
 
 class EventType(StrEnum):
+    """Framework-wide event identifiers used to subscribe event hooks to specific occurrences.
+
+    Use these values in BaseEventHook.event_types to declare which events the hook
+    should be triggered by. Events cover server lifecycle, listener and agent generator
+    state changes, agent activity, user sessions, and resource (payload, asset, artifact)
+    CRUD operations.
+    """
     START_SERVER = "START_SERVER"
     STOP_SERVER = "STOP_SERVER"
 
@@ -32,17 +39,19 @@ class EventType(StrEnum):
     USER_LOGGED_OUT = "USER_LOGGED_OUT"
 
     PAYLOAD_CREATED = "PAYLOAD_CREATED"
-    PAYLOAD_UPDATED = "PAYLOAD_UPDATED"
     PAYLOAD_DELETED = "PAYLOAD_DELETED"
+
+    ASSET_CREATED = "ASSET_CREATED"
+    ASSET_DELETED = "ASSET_DELETED"
+
+    ARTIFACT_CREATED = "ARTIFACT_CREATED"
+    ARTIFACT_DELETED = "ARTIFACT_DELETED"
+
 
     # TODO: Implement the rest of these events
     LISTENER_RUNTIME_ERRORED = "LISTENER_RUNTIME_ERRORED"
     AGENT_GENERATOR_RUNTIME_ERRORED = "AGENT_GENERATOR_RUNTIME_ERRORED"
 
-    ASSET_CREATED = "ASSET_CREATED"
     ASSET_UPDATED = "ASSET_UPDATED"
-    ASSET_DELETED = "ASSET_DELETED"
-
-    ARTIFACT_CREATED = "ARTIFACT_CREATED"
     ARTIFACT_UPDATED = "ARTIFACT_UPDATED"
-    ARTIFACT_DELETED = "ARTIFACT_DELETED"
+    PAYLOAD_UPDATED = "PAYLOAD_UPDATED"

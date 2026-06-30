@@ -30,8 +30,7 @@ class _EventHookModel(ComponentMetadataModel):
 
 
 class BaseEventHook(ComponentMetadata):
-    """
-    Base class for implementing custom event hooks in the Consortium framework.
+    """Base class for implementing custom event hooks in the Consortium framework.
 
     Event hooks allow components to react to specific framework events by executing
     user-defined logic. All custom event hooks must inherit from this class and
@@ -40,24 +39,23 @@ class BaseEventHook(ComponentMetadata):
     Attributes:
         event_hook_id (uuid.UUID): Unique framework-wide identifier for this event
             hook instance, generated as a UUID4.
-        name (str): Human-readable name for the event hook. This is not used as a
-            unique identifier within the framework.
+        name (str): Human-readable name for identifying this event hook.
         description (str): Brief description of the event hook's purpose and
             functionality.
         authors (set[str]): Set of authors associated with this event hook.
         version (Version): Version of the event hook, specified using a valid PEP 440
             version string.
         compatible_framework_version (SpecifierSet): Framework version specifier
-            defining the versions of Consortium this event hook is compatible with.
-        event_types (set[EventType]): Set of events that this hook subscribes to and
-            will be triggered by.
+            defining which versions of Consortium this event hook is compatible with.
+        event_types (set[EventType]): Set of event types that this hook subscribes to
+            and will be triggered by.
         component_dependencies (set[str]): Version-pinned dependencies on other
             framework components, defined using PEP 440 specifiers.
         third_party_dependencies (set[str]): Third-party library dependencies required
             for this event hook to function.
         event_hook_project_folder (Path): Filesystem path to the project directory
             containing this event hook's source code.
-        environment (SimpleNamespace): Namespace for storing hook-specific status shared
+        environment (SimpleNamespace): Namespace for storing hook-specific state shared
             across event invocations without naming conflicts.
         services (SimpleNamespace): Namespace providing programmatic access to
             server-level framework services.
@@ -130,29 +128,37 @@ class BaseEventHook(ComponentMetadata):
         )
 
     async def on_setup(self) -> None:
-        """
-        Executed once when the event hook is initialized. Use this method to perform
-        any setup or resource allocation required before handling events.
+        """Called once when the event hook is initialized.
+
+        Override to perform any setup or resource allocation required before
+        the hook begins handling events.
         """
 
     async def on_triggered(self, event: Event) -> None:
-        """
-        Executed whenever one of the subscribed events occurs. Implement custom
-        logic here to process the event and perform any related actions.
+        """Called whenever one of the subscribed event types fires.
+
+        Override to implement custom logic for processing the event and performing
+        any related actions.
+
         Args:
-            event (Event): The event object containing details about the triggered
-            event
+            event: The event object carrying details about what occurred, including
+                the event type and any associated payload data.
         """
 
     async def on_teardown(self) -> None:
-        """
-        Executed when the event hook is being shut down. Use this method to
-        release resources or perform cleanup operations.
+        """Called when the event hook is being shut down.
+
+        Override to release resources or perform cleanup operations before the
+        hook stops receiving events.
         """
 
     def to_json(self) -> dict[str, JsonValue]:
-        """
-        Return a JSON-serializable representation of the event hook's metadata,
+        """Serialize the event hook's metadata to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the event hook ID, label, name, description,
+            authors, version, framework compatibility, component dependencies,
+            subscribed event types, and third-party dependencies.
         """
         return {
             "event_hook_id": str(self.event_hook_id),
@@ -168,9 +174,11 @@ class BaseEventHook(ComponentMetadata):
         }
 
     def to_json_reference(self) -> dict[str, str]:
-        """
-        Return a JSON-serializable reference representation of the event hook's
-        metadata.
+        """Serialize a compact reference to this event hook.
+
+        Returns:
+            A dictionary containing only the event hook ID, label, and name, suitable
+            for embedding as a lightweight foreign key reference in other JSON objects.
         """
         return {
             "event_hook_id": str(self.event_hook_id),

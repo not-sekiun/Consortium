@@ -66,6 +66,27 @@ class _AgentTemplateModel(ComponentMetadataModel):
 
 
 class BaseAgentTemplate(ComponentMetadata, ABC):
+    """Abstract base class for agent templates that govern agent generator creation.
+
+    An agent template declares the configuration schema (options, validating function),
+    the generator class, agent type, and compatible listener types for a family of
+    agent generators. It validates and constructs BaseAgentGenerator instances from
+    user-supplied parameters, filling in defaults and running cross-field validation
+    before instantiation.
+
+    Attributes:
+        agent_generator (type[BaseAgentGenerator]): The generator class that this
+            template instantiates when creating a new agent generator.
+        agent_type (type[BaseAgentType]): The agent type that identifies which
+            capabilities the generated agent supports.
+        compatible_listener_types (set[str]): Names of listener types that agents
+            generated from this template can connect through.
+        options (set[Options]): Configuration options accepted when creating a generator
+            from this template. Converted to a name-keyed dict at class definition time.
+        validating_function: Optional single-argument callable that validates the full
+            set of resolved option values before generator creation.
+    """
+
     _METADATA_MODEL = _AgentTemplateModel
 
     _COMPONENT_METADATA_EXCEPTION_MAP = {
@@ -164,11 +185,17 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         self,
         parameters: dict[str, Primitive | PrimitiveCollection],
     ) -> str:
-        """
-        Function to resolve the name of a newly created agent generator.
+        """Resolve the display name for a newly created agent generator.
 
-        This name can be a default hard-coded value, randomly generated or computed
-        from its provided set of parameters (typically from a 'name' parameter).
+        The name may be a hard-coded default, randomly generated, or derived from one
+        of the provided parameters (for example, a dedicated 'name' option).
+
+        Args:
+            parameters: The resolved option values provided at generator creation time,
+                keyed by option name.
+
+        Returns:
+            The display name to assign to the new agent generator instance.
         """
 
     def create_agent_generator(
@@ -177,12 +204,30 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         description: str = "",
         parameters: dict[str, Primitive | PrimitiveCollection] | None = None,
     ) -> BaseAgentGenerator:
-        """
-        Create an agent generator instance from this agent template using the provided
-        `name`, `description` and configuration `parameters`.
+        """Create an agent generator instance from this template using the given configuration.
 
-        If a name is not provided, it will be resolved from the agent template's
-        `resolve_name_endpoint` method.
+        Validates all supplied parameters against the declared options, fills in defaults
+        for omitted optional options, runs the optional validating_function, then
+        instantiates the agent generator. If name is not provided it is resolved via
+        resolve_agent_generator_name.
+
+        Args:
+            name: Display name for the new generator. If None, the name is derived from
+                the parameters using resolve_agent_generator_name.
+            description: Optional human-readable description for this generator run.
+            parameters: Option values that configure the generator, keyed by option name.
+                Missing required options raise an error; missing optional options are
+                filled with their declared default values.
+
+        Returns:
+            A new BaseAgentGenerator instance configured with the provided parameters.
+
+        Raises:
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from parameters.
+            AgentTemplateOptionNotFoundError: If parameters contains an unknown option name.
+            AgentTemplateOptionValueValidationError: If an option value fails type or
+                constraint validation.
         """
         if parameters is None:
             parameters = {}
@@ -240,8 +285,12 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         )
 
     def to_json(self) -> dict[str, JsonValue]:
-        """
-        Convert the agent template metadata to a JSON serializable dictionary.
+        """Serialize the agent template's full metadata to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the template ID, label, name, description, version,
+            framework compatibility, authors, dependencies, agent type, compatible
+            listener types, options, and any validating function documentation.
         """
         return {
             "agent_template_id": str(self.agent_template_id),
@@ -266,8 +315,11 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         }
 
     def to_json_reference(self) -> dict[str, str]:
-        """
-        Convert the agent template to a JSON serializable reference dictionary.
+        """Serialize a compact reference to this agent template.
+
+        Returns:
+            A dictionary containing only the template ID, label, and name, suitable
+            for embedding as a lightweight foreign key reference in other JSON objects.
         """
         return {
             "agent_template_id": str(self.agent_template_id),

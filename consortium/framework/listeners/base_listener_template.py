@@ -65,6 +65,24 @@ class _ListenerTemplateModel(ComponentMetadataModel):
 
 
 class BaseListenerTemplate(ComponentMetadata, ABC):
+    """Abstract base class for listener templates that govern listener creation.
+
+    A listener template declares the configuration schema (options, validating function),
+    the listener class, and the listener type for a family of listeners. It validates
+    and constructs BaseListener instances from user-supplied parameters, filling in
+    defaults and running cross-field validation before instantiation.
+
+    Attributes:
+        listener (type[BaseListener]): The listener class this template instantiates
+            when creating a new listener.
+        listener_type (type[BaseListenerType]): The listener type that identifies
+            which agent types are compatible with listeners created from this template.
+        options (set[Options]): Configuration options accepted when creating a listener
+            from this template. Converted to a name-keyed dict at class definition time.
+        validating_function: Optional single-argument callable that validates the full
+            set of resolved option values before listener creation.
+    """
+
     _METADATA_MODEL = _ListenerTemplateModel
 
     _COMPONENT_METADATA_EXCEPTION_MAP = {
@@ -162,11 +180,17 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         self,
         parameters: dict[str, Primitive | PrimitiveCollection],
     ) -> str:
-        """
-        Function to resolve the name of a newly created listener.
+        """Resolve the display name for a newly created listener.
 
-        This name can be a default hard-coded value, randomly generated or computed
-        from its provided set of parameters (typically from a 'name' parameter).
+        The name may be a hard-coded default, randomly generated, or derived from one
+        of the provided parameters (for example, a dedicated 'name' option).
+
+        Args:
+            parameters: The resolved option values provided at listener creation time,
+                keyed by option name.
+
+        Returns:
+            The display name to assign to the new listener instance.
         """
 
     @abstractmethod
@@ -174,12 +198,17 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         self,
         parameters: dict[str, Primitive | PrimitiveCollection],
     ) -> str:
-        """
-        Function to resolve the endpoint of a newly created listener from the provided
-        set of parameters.
+        """Resolve the network endpoint for a newly created listener from the given parameters.
 
-        An endpoint is a string that uniquely identifies the address that a listener
-        can be reached at. E.g. http://127.0.0.1:8000/check-in
+        An endpoint is a string that uniquely identifies the address the listener can be
+        reached at (for example, "http://127.0.0.1:8000/check-in").
+
+        Args:
+            parameters: The resolved option values provided at listener creation time,
+                keyed by option name.
+
+        Returns:
+            The network endpoint string to assign to the new listener instance.
         """
 
     def create_listener(
@@ -188,14 +217,31 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         description: str = "",
         parameters: dict[str, Primitive | PrimitiveCollection] | None = None,
     ) -> BaseListener:
-        """
-        Create a listener instance from this listener template using the provided
-        `name`, `description` and configuration `parameters`.
+        """Create a listener instance from this template using the given configuration.
 
-        If a name is not provided, it will be resolved from the listener template's
-        `resolve_name_endpoint` method.
-        """
+        Validates all supplied parameters against the declared options, fills in defaults
+        for omitted optional options, runs the optional validating_function, then
+        instantiates the listener. If name is not provided it is resolved via
+        resolve_listener_name.
 
+        Args:
+            name: Display name for the new listener. If None, the name is derived from
+                the parameters using resolve_listener_name.
+            description: Optional human-readable description for this listener instance.
+            parameters: Option values that configure the listener, keyed by option name.
+                Missing required options raise an error; missing optional options are
+                filled with their declared default values.
+
+        Returns:
+            A new BaseListener instance configured with the provided parameters.
+
+        Raises:
+            MissingRequiredListenerTemplateOptionError: If a required option is absent
+                from parameters.
+            ListenerTemplateOptionNotFoundError: If parameters contains an unknown option name.
+            ListenerTemplateOptionValueValidationError: If an option value fails type or
+                constraint validation.
+        """
         if parameters is None:
             parameters = {}
 
@@ -253,8 +299,12 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         )
 
     def to_json(self) -> dict[str, JsonValue]:
-        """
-        Convert the listener template metadata to a JSON serializable dictionary.
+        """Serialize the listener template's full metadata to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the template ID, label, name, description, version,
+            framework compatibility, authors, dependencies, listener type, options,
+            and any validating function documentation.
         """
         return {
             "listener_template_id": str(self.listener_template_id),
@@ -278,8 +328,11 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         }
 
     def to_json_reference(self) -> dict[str, str]:
-        """
-        Convert the listener template to a JSON serializable reference dictionary.
+        """Serialize a compact reference to this listener template.
+
+        Returns:
+            A dictionary containing only the template ID, label, and name, suitable
+            for embedding as a lightweight foreign key reference in other JSON objects.
         """
         return {
             "listener_template_id": str(self.listener_template_id),
