@@ -354,7 +354,7 @@ class DuplicatePluginLabelError(
 
     def __init__(self, plugin_str: str, label: str):
         super().__init__(
-            component=plugin_str,
+            component_str=plugin_str,
             label=label,
         )
 

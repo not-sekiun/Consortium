@@ -347,7 +347,7 @@ class DuplicateEventHookLabelError(
 
     def __init__(self, event_hook_str: str, label: str):
         super().__init__(
-            component=event_hook_str,
+            component_str=event_hook_str,
             label=label,
         )
 

@@ -18,8 +18,10 @@ from consortium.server.api.agent_templates_api import (
     router as agent_templates_api_router,
 )
 from consortium.server.api.agents_api import router as agents_api_router
-from consortium.server.api.artifacts_api import router as artifacts_api_router
-from consortium.server.api.assets_api import router as assets_api_router
+from consortium.server.api.repository_apis.artifacts_api import (
+    router as artifacts_api_router,
+)
+from consortium.server.api.repository_apis.assets_api import router as assets_api_router
 from consortium.server.api.events_api import router as events_api_router
 from consortium.server.api.listener_templates_api import (
     router as listener_templates_api_router,
@@ -27,7 +29,9 @@ from consortium.server.api.listener_templates_api import (
 from consortium.server.api.listeners_api import router as listeners_api_router
 from consortium.server.api.login_api import router as login_api_router
 from consortium.server.api.logout_api import router as logout_api_router
-from consortium.server.api.payloads_api import router as payloads_api_router
+from consortium.server.api.repository_apis.payloads_api import (
+    router as payloads_api_router,
+)
 from consortium.server.api.server_api import router as server_api_router
 from consortium.server.api.user_accounts_api import router as user_accounts_api_router
 from consortium.server.api.users_api import router as users_api_router

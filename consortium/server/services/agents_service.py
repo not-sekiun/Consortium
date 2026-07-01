@@ -263,8 +263,11 @@ class AgentsService:
         Raises:
             AgentNotFoundError: Raised if the agent with the specified agent ID is not
                 found.
-            AgentResultHasNoCorrespondingTaskError: Raised if the task ID does not
-                correspond to a running task for this agent.
+
+        Note:
+            A result whose task ID does not correspond to a running task (the task
+            completed, timed out or was deleted) is a benign lifecycle race, it is
+            logged and dropped rather than raised.
 
         Returns:
             None

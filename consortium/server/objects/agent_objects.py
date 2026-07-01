@@ -28,7 +28,6 @@ from consortium.server.exceptions.consortium_exceptions.agents_consortium_except
     AgentCapabilityOptionNotFoundError,
     AgentCapabilityOptionValueValidationError,
     AgentCreationParameterTypeError,
-    AgentResultHasNoCorrespondingTaskError,
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
     MissingRequiredAgentCapabilityOptionError,
@@ -366,28 +365,58 @@ class Agent:
     async def get_next_task_message(
         self, timeout: float | None = None
     ) -> TaskLaunchMessageModel | None:
-        try:
-            if timeout == 0:
-                message = self._task_messages_queue.get_nowait()
-            elif timeout is None:
-                message = await self._task_messages_queue.get()
-            else:
-                message = await asyncio.wait_for(
-                    self._task_messages_queue.get(), timeout
-                )
+        while True:
+            try:
+                if timeout == 0:
+                    message = self._task_messages_queue.get_nowait()
+                elif timeout is None:
+                    message = await self._task_messages_queue.get()
+                else:
+                    message = await asyncio.wait_for(
+                        self._task_messages_queue.get(), timeout
+                    )
+            except asyncio.QueueEmpty:
+                return None
+            except TimeoutError:
+                return None
 
-            # A task may emit one or more task messages. The first time a task message
-            # is fetched for a task we mark the task as running if it is not already
-            # running.
-            task = self.get_task_by_task_id(task_id=message.task_id)
-            if task.status.state != AgentTaskState.RUNNING:
-                task.status.state = AgentTaskState.RUNNING
+            # A popped message may be orphaned: its task could have been deleted, or the
+            # task may have already reached a terminal state while still QUEUED (it
+            # completed before its launch message was ever popped). Such a message is
+            # stale, discard it and fetch the next one rather than resurrecting a task
+            # that is gone or already finished.
+            try:
+                task = self.get_task_by_task_id(task_id=message.task_id)
+            except AgentTaskNotFoundError:
+                self.logger.debug(
+                    "Agent {} discarded an orphaned task message for an unknown or "
+                    "deleted task '{}'.",
+                    self,
+                    message.task_id,
+                )
+                continue
+
+            if task.status.state in (
+                AgentTaskState.SUCCEEDED,
+                AgentTaskState.FAILED,
+                AgentTaskState.ERRORED,
+            ):
+                self.logger.warning(
+                    "Agent {} discarded an orphaned message for task {} that already "
+                    "completed with status {} without ever being acknowledged.",
+                    self,
+                    task,
+                    task.status,
+                )
+                continue
+
+            # A task may emit one or more task messages. The first time a message is
+            # fetched for a task we transition it to RUNNING, this is the point at which
+            # the agent has acknowledged and picked up the task.
+            if task.status.state == AgentTaskState.QUEUED:
+                task.status._transition_to_running()
                 task.datetime_started = datetime.now()
             return message
-        except asyncio.QueueEmpty:
-            return None
-        except TimeoutError:
-            return None
 
     def get_all_tasks(
         self,
@@ -450,33 +479,50 @@ class Agent:
 
     async def dispatch_task_output_message(
         self, task_output_message: TaskOutputMessageModel
-    ) -> None:
+    ) -> bool:
+        task_id = str(task_output_message.task_id)
+
+        # Results can legitimately arrive late: the task may have completed, timed out or
+        # been deleted between being tasked and the agent posting its result. These are
+        # benign lifecycle races, not caller errors, so we drop the stale result and log
+        # it rather than raising and pushing the burden of an unrecoverable condition
+        # onto the caller and ultimately the remote agent.
         try:
             task = self.get_task_by_task_id(task_id=task_output_message.task_id)
         except AgentTaskNotFoundError:
-            raise AgentResultHasNoCorrespondingTaskError(
-                corresponding_task_id=str(task_output_message.task_id),
-                agent_str=str(self),
-            ) from None
+            self.logger.warning(
+                "Agent {} received a result for task '{}' that does not exist (it may "
+                "have been deleted). Dropping the result.",
+                self,
+                task_id,
+            )
+            return False
 
         if task.status.state != AgentTaskState.RUNNING:
             self.logger.warning(
-                "Agent received a result for task {} that does exist with status {} but "
-                "is not currently running.",
+                "Agent {} received a result for task {} with status {} that is not "
+                "running. Dropping the result.",
+                self,
                 task,
                 task.status,
             )
-            # TODO: Possibly make this error different to differentiate the error
-            #  conditions
-            raise AgentResultHasNoCorrespondingTaskError(
-                corresponding_task_id=str(task_output_message.task_id),
-                agent_str=str(self),
-            )
+            return False
 
-        agent_capability = self._running_agent_capabilities[
-            str(task_output_message.task_id)
-        ]
+        # A running task should always have a live capability tracked for it. If it does
+        # not the capability finished or was torn down concurrently, drop and log rather
+        # than raising a KeyError out of the dispatch path.
+        agent_capability = self._running_agent_capabilities.get(task_id)
+        if agent_capability is None:
+            self.logger.warning(
+                "Agent {} received a result for running task {} but no running "
+                "capability is tracked for it. Dropping the result.",
+                self,
+                task,
+            )
+            return False
+
         await agent_capability.result_messages_queue.put(task_output_message)
+        return True
 
     def mark_as_active(self) -> None:
         self._status = AgentStatus.ACTIVE
@@ -557,6 +603,19 @@ class Agent:
                 # Upon returning without raising an error check the `task_outcome` to
                 # see if it is present or not and emit the final event based on that
                 if isinstance(task_outcome, Success):
+                    # A task reporting Success while still QUEUED means it completed
+                    # without the agent ever popping its launch message (never
+                    # transitioned through RUNNING). This is allowed for now but is
+                    # likely a capability bug, warn so it can be investigated.
+                    if task.status.state == AgentTaskState.QUEUED:
+                        self.logger.warning(
+                            "Agent {} completed task {} to SUCCESS but the task never "
+                            "left QUEUED, its launch message was never popped so it was "
+                            "never acknowledged by the agent nor transitioned through "
+                            "RUNNING.",
+                            self,
+                            task,
+                        )
                     task.status._transition_to_succeeded()
                     task.append_event(
                         event_type=AgentTaskEventType.SUCCESS,
@@ -612,20 +671,34 @@ class Agent:
                     exc.__class__.__name__,
                     str(exc),
                 )
-                task.status._transition_to_errored(
-                    error=AgentCapabilityExecutionError(
-                        agent_capability_name=agent_capability.name,
-                        error_message=(
-                            "An unhandled exception was raised during execution. "
-                            f"{exc.__class__.__name__}: {exc}"
-                        ),
+                # Guard the terminal transition, this is the last-resort error handler
+                # running inside a fire-and-forget asyncio task. If the transition itself
+                # raises (for example an illegal state transition) we must swallow and
+                # log it rather than let a fresh exception escape the task uncaught.
+                try:
+                    task.status._transition_to_errored(
+                        error=AgentCapabilityExecutionError(
+                            agent_capability_name=agent_capability.name,
+                            error_message=(
+                                "An unhandled exception was raised during execution. "
+                                f"{exc.__class__.__name__}: {exc}"
+                            ),
+                        )
                     )
-                )
-                # TODO: Decide on what to append in this case
-                task.append_event(
-                    event_type=AgentTaskEventType.FAILURE,
-                    message=str(exc),
-                )
+                    # TODO: Decide on what to append in this case
+                    task.append_event(
+                        event_type=AgentTaskEventType.FAILURE,
+                        message=str(exc),
+                    )
+                except Exception as transition_exc:
+                    self.logger.error(
+                        "Agent {} failed to transition task {} to ERRORED while handling "
+                        "an unhandled capability exception. {}: {}",
+                        self,
+                        task,
+                        transition_exc.__class__.__name__,
+                        str(transition_exc),
+                    )
 
             # Upon returning from the task's execution method we can remove the agent
             # capability as it is now no longer considered to be running and update the

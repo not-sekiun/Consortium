@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import BinaryIO, Literal, TextIO
 
 import jsonschema
-from loguru import logger
 
 from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
     InvalidRepositoryMetadataFileJSONError,
@@ -16,15 +15,11 @@ from consortium.server.exceptions.consortium_exceptions.repository_consortium_ex
     ResourceIDReservationNotFoundError,
     UnsyncedRepositoryMetadataFileError,
 )
-from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
 )
-from consortium.server.utils import (
-    log_and_propagate_error_on_service_method,
-    normalize_uuid,
-)
+from consortium.server.utils import normalize_uuid
 
 
 class RepositoryService:
@@ -90,15 +85,8 @@ class RepositoryService:
 
     def __init__(self, repository_directory_path: pathlib.Path):
         self.repository_directory_path = repository_directory_path
-        self._logger = logger.bind(
-            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
-        )
         self._repository_resources = {}
         self._reserved_resource_ids = set()
-        # The repository metadata file is a JSON file that contains the metadata of all
-        # the files that are stored on the file system. This is just a JSON dump of the
-        # file system metadata that is stored in memory. This allows us to persistently
-        # store and reload this information when the server is restarted.
         self._repository_metadata_file_path = (
             repository_directory_path / ".repository.json"
         )
@@ -109,7 +97,6 @@ class RepositoryService:
     def __repr__(self) -> str:
         return f"RepositoryService(repository_directory_path={self.repository_directory_path!r})"
 
-    @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
         """Loads repository resource metadata from the repository metadata JSON file on disk.
 
@@ -226,7 +213,6 @@ class RepositoryService:
                         repository_file
                     )
 
-    @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
         """Writes the current in-memory repository resource metadata to disk as JSON.
 
@@ -240,13 +226,7 @@ class RepositoryService:
         with self._repository_metadata_file_path.open(mode="w") as file:
             data = json.dumps(repository_metadata_json, indent=4)
             file.write(data)
-        self._logger.debug(
-            "Saved repository metadata to {} ({} byte(s) written)",
-            str(self._repository_metadata_file_path),
-            len(data),
-        )
 
-    @log_and_propagate_error_on_service_method
     def reserve_resource_id(self) -> uuid.UUID:
         """Generates and reserves a resource ID to be claimed during resource creation.
 
@@ -259,10 +239,8 @@ class RepositoryService:
         """
         resource_id = uuid.uuid4()
         self._reserved_resource_ids.add(str(resource_id))
-        self._logger.debug("Reserved resource ID '{}'", str(resource_id))
         return resource_id
 
-    @log_and_propagate_error_on_service_method
     def create_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
@@ -312,16 +290,11 @@ class RepositoryService:
         )
         repository_file.resource_id = unique_resource_id
         self._repository_resources[str(repository_file.resource_id)] = repository_file
-        self._logger.debug(
-            "Created repository file: {!r}",
-            repository_file,
-        )
 
         self.save_repository_metadata()
 
         return repository_file
 
-    @log_and_propagate_error_on_service_method
     def add_file(
         self,
         path: pathlib.Path | str,
@@ -382,13 +355,11 @@ class RepositoryService:
         )
         repository_file.resource_id = unique_resource_id
         self._repository_resources[str(repository_file.resource_id)] = repository_file
-        self._logger.debug("Added repository file: {!r}", repository_file)
 
         self.save_repository_metadata()
 
         return repository_file
 
-    @log_and_propagate_error_on_service_method
     def create_directory(
         self,
         content: bytes | BinaryIO | str | pathlib.Path | None = None,
@@ -443,16 +414,11 @@ class RepositoryService:
         self._repository_resources[str(repository_directory.resource_id)] = (
             repository_directory
         )
-        self._logger.debug(
-            "Created repository directory: {!r}",
-            repository_directory,
-        )
 
         self.save_repository_metadata()
 
         return repository_directory
 
-    @log_and_propagate_error_on_service_method
     def add_directory(
         self,
         path: pathlib.Path | str,
@@ -513,13 +479,11 @@ class RepositoryService:
         self._repository_resources[str(repository_directory.resource_id)] = (
             repository_directory
         )
-        self._logger.debug("Added repository directory: {!r}", repository_directory)
 
         self.save_repository_metadata()
 
         return repository_directory
 
-    @log_and_propagate_error_on_service_method
     def delete_resource_by_resource_id(
         self,
         resource_id: str | uuid.UUID,
@@ -543,16 +507,9 @@ class RepositoryService:
 
         repository_resource.delete()
         del self._repository_resources[resource_id]
-        resource_type = "directory" if repository_resource.is_directory else "file"
-        self._logger.debug(
-            "Deleted repository resource {} {}",
-            resource_type,
-            str(repository_resource),
-        )
 
         self.save_repository_metadata()
 
-    @log_and_propagate_error_on_service_method
     def get_all_resources(
         self,
     ) -> list[RepositoryFile | RepositoryDirectory]:
@@ -562,14 +519,8 @@ class RepositoryService:
             list[RepositoryFile | RepositoryDirectory]: A list of all repository
                 resources. Empty if none have been created.
         """
-        repository_resources = list(self._repository_resources.values())
-        self._logger.debug(
-            "Retrieved all repository resources ({} resource(s) retrieved)",
-            len(repository_resources),
-        )
-        return repository_resources
+        return list(self._repository_resources.values())
 
-    @log_and_propagate_error_on_service_method
     def get_resource_by_resource_id(
         self,
         resource_id: str | uuid.UUID,
@@ -594,8 +545,4 @@ class RepositoryService:
                 resource_id=resource_id,
             ) from None
 
-        self._logger.debug(
-            "Retrieved repository resource: {!r}",
-            repository_resource,
-        )
         return repository_resource

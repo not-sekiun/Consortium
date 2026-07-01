@@ -69,6 +69,20 @@ nav:
     - REST API:
       - server-api/rest-api/introduction.md
   - Framework:
+    - Listeners:
+      - framework/listeners/overview.md
+      - framework/listeners/listener-type.md
+      - framework/listeners/listener-template.md
+      - framework/listeners/listener.md
+      - framework/listeners/complete-listener-profile.md
+    - Agents:
+      - framework/agents/overview.md
+      - framework/agents/agent-capabilities.md
+      - framework/agents/agent-type.md
+      - framework/agents/agent-template.md
+      - framework/agents/agent-generator.md
+      - framework/agents/complete-agent-profile.md
+      - framework/agents/agent-protocol.md
   - Reference:
       - Framework:
       - Services:

@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import FileResponse
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.api.repository_api import (
+from consortium.server.api.repository_apis._repository_api_factory import (
     create_delete_resource_by_resource_id_endpoint,
     create_download_resource_by_resource_id_endpoint,
     create_get_all_resources_endpoint,
@@ -24,7 +24,7 @@ from consortium.server.exceptions.consortium_exceptions import (
     payloads_consortium_exceptions as payload_excs,
     repository_consortium_exceptions as consortium_excs,
 )
-from consortium.server.models.payload_models import PayloadModel
+from consortium.server.models.repository_models import PayloadModel
 from consortium.server.objects.user_account_objects import UserPermissions
 
 router = APIRouter(

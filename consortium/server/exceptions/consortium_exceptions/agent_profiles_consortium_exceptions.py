@@ -355,7 +355,7 @@ class DuplicateAgentProfileLabelError(
 
     def __init__(self, agent_profile_str: str, label: str):
         super().__init__(
-            component=agent_profile_str,
+            component_str=agent_profile_str,
             label=label,
         )
 

@@ -9,6 +9,7 @@ class EventType(StrEnum):
     state changes, agent activity, user sessions, and resource (payload, asset, artifact)
     CRUD operations.
     """
+
     START_SERVER = "START_SERVER"
     STOP_SERVER = "STOP_SERVER"
 
@@ -46,7 +47,6 @@ class EventType(StrEnum):
 
     ARTIFACT_CREATED = "ARTIFACT_CREATED"
     ARTIFACT_DELETED = "ARTIFACT_DELETED"
-
 
     # TODO: Implement the rest of these events
     LISTENER_RUNTIME_ERRORED = "LISTENER_RUNTIME_ERRORED"

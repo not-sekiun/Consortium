@@ -673,9 +673,9 @@ class DuplicateComponentLabelError(ComponentLoadingError):
         "$COMPONENT_TYPE$ or that the $COMPONENT_TYPE$ you are registering has a unique label."
     )
 
-    def __init__(self, component: str, label: str):
+    def __init__(self, component_str: str, label: str):
         super().__init__(
-            component=component,
+            component_str=component_str,
             label=label,
         )
 

@@ -355,7 +355,7 @@ class DuplicateListenerProfileLabelError(
 
     def __init__(self, listener_profile_str: str, label: str):
         super().__init__(
-            component=listener_profile_str,
+            component_str=listener_profile_str,
             label=label,
         )
 

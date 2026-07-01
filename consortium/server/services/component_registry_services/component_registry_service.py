@@ -165,7 +165,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
             if component.label
         ]:
             raise DuplicateComponentLabelError(
-                component=str(component),
+                component_str=str(component),
                 label=component.label,
             )
         self._component_loader_service.validate_component_component_dependencies(

@@ -49,7 +49,7 @@ def create_get_all_resources_endpoint(
         ],
     ):
         return [
-            response_model_class(**repository_resource.to_json())
+            response_model_class.model_validate(repository_resource.to_json())
             for repository_resource in get_all_resources_handler()
         ]
 
@@ -77,7 +77,7 @@ def create_get_resource_by_resource_id_endpoint(
                 consortium_exception=exc,
             ) from None
 
-        return response_model_class(**repository_resource.to_json())
+        return response_model_class.model_validate(repository_resource.to_json())
 
     return get_repository_resource_by_resource_id
 
@@ -139,6 +139,7 @@ def create_upload_resource_endpoint(
     create_file_handler: Callable[..., Any],
     create_directory_handler: Callable[..., Any],
     upload_resource_permission: UserPermissions,
+    response_model_class: type[RepositoryResourceModel] = RepositoryResourceModel,
 ) -> Callable:
     # Define this function synchronously because writing large files to disk in an
     # async function causes event loop issues. This will signal to FastAPI that this
@@ -220,9 +221,7 @@ def create_upload_resource_endpoint(
                 description=description if description else "",
             )
 
-        return RepositoryResourceModel(
-            **resource.to_json(),
-        )
+        return response_model_class.model_validate(resource.to_json())
 
     return upload_repository_resource
 

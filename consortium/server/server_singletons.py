@@ -4,6 +4,8 @@ from consortium.server.services.agent_generators_service import AgentGeneratorsS
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.agents_service import AgentsService
+from consortium.server.services.artifacts_service import ArtifactsService
+from consortium.server.services.assets_service import AssetsService
 from consortium.server.services.authorization_service import AuthorizationService
 from consortium.server.services.c2_types_service import C2TypesService
 from consortium.server.services.consortium_paths_service import ConsortiumPathsService
@@ -121,11 +123,17 @@ payloads_service = PayloadsService(
 )
 
 # These services are instantiated independent of other services.
-assets_service = RepositoryService(
-    repository_directory_path=consortium_paths_service.assets_directory,
+assets_service = AssetsService(
+    events_service=events_service,
+    repository_service=RepositoryService(
+        repository_directory_path=consortium_paths_service.assets_directory,
+    ),
 )
-artifacts_service = RepositoryService(
-    repository_directory_path=consortium_paths_service.artifacts_directory,
+artifacts_service = ArtifactsService(
+    events_service=events_service,
+    repository_service=RepositoryService(
+        repository_directory_path=consortium_paths_service.artifacts_directory,
+    ),
 )
 users_service = UsersService(events_service=events_service)
 

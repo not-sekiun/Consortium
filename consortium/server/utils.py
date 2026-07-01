@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from consortium.server.services.agent_profiles_service import AgentProfilesService
     from consortium.server.services.agent_templates_service import AgentTemplatesService
     from consortium.server.services.agents_service import AgentsService
+    from consortium.server.services.artifacts_service import ArtifactsService
+    from consortium.server.services.assets_service import AssetsService
     from consortium.server.services.authorization_service import AuthorizationService
     from consortium.server.services.c2_types_service import C2TypesService
     from consortium.server.services.consortium_paths_service import (
@@ -38,7 +40,6 @@ if TYPE_CHECKING:
     from consortium.server.services.payloads_service import PayloadsService
     from consortium.server.services.plugins_service import PluginsService
     from consortium.server.services.release_service import ReleaseService
-    from consortium.server.services.repository_service import RepositoryService
     from consortium.server.services.user_accounts_service import UserAccountsService
     from consortium.server.services.users_service import UsersService
 
@@ -107,8 +108,8 @@ class Services:
     c2_types_service: C2TypesService
     agents_service: AgentsService
     payloads_service: PayloadsService
-    assets_service: RepositoryService
-    artifacts_service: RepositoryService
+    assets_service: AssetsService
+    artifacts_service: ArtifactsService
     user_accounts_service: UserAccountsService
     users_service: UsersService
     plugins_service: PluginsService

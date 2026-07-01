@@ -245,8 +245,6 @@ class ConnectedAgentsService:
                 to this listener.
             AgentTaskNotFoundError: Raised if the task ID does not correspond to a
                 running task for this agent.
-            AgentResultHasNoCorrespondingTaskError: Raised if the result cannot be
-                matched to a running task.
 
         Returns:
             None

@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import FileResponse
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.api.repository_api import (
+from consortium.server.api.repository_apis._repository_api_factory import (
     create_delete_resource_by_resource_id_endpoint,
     create_download_resource_by_resource_id_endpoint,
     create_get_all_resources_endpoint,
@@ -25,7 +25,7 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 from consortium.server.exceptions.consortium_exceptions import (
     repository_consortium_exceptions as consortium_excs,
 )
-from consortium.server.models.repository_models import RepositoryResourceModel
+from consortium.server.models.repository_models import AssetModel
 from consortium.server.objects.user_account_objects import UserPermissions
 
 router = APIRouter(
@@ -67,24 +67,26 @@ _unprocessable_entity_error = UnprocessableEntityError(
 router.add_api_route(
     path="/all",
     endpoint=create_get_all_resources_endpoint(
-        get_all_resources_handler=_assets_service.get_all_resources,
+        get_all_resources_handler=_assets_service.get_all_assets,
         get_all_resources_permission=UserPermissions.READ_ALL_ASSETS,
+        response_model_class=AssetModel,
     ),
     methods=["GET"],
     responses={
-        200: {"model": list[RepositoryResourceModel]},
+        200: {"model": list[AssetModel]},
     },
     name="Get All Assets",
 )
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_get_resource_by_resource_id_endpoint(
-        get_resource_by_resource_id_handler=_assets_service.get_resource_by_resource_id,
+        get_resource_by_resource_id_handler=_assets_service.get_asset_by_asset_id,
         get_resource_by_resource_id_permission=UserPermissions.READ_ASSET_BY_ASSET_ID,
+        response_model_class=AssetModel,
     ),
     methods=["GET"],
     responses={
-        200: {"model": RepositoryResourceModel},
+        200: {"model": AssetModel},
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
@@ -98,7 +100,7 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_delete_resource_by_resource_id_endpoint(
-        delete_resource_by_resource_id_handler=_assets_service.delete_resource_by_resource_id,
+        delete_resource_by_resource_id_handler=_assets_service.delete_asset_by_asset_id,
         delete_resource_by_resource_id_permission=UserPermissions.DELETE_ASSET_BY_ASSET_ID,
     ),
     methods=["DELETE"],
@@ -118,7 +120,7 @@ router.add_api_route(
 router.add_api_route(
     path="/download/{resource_id}",
     endpoint=create_download_resource_by_resource_id_endpoint(
-        get_resource_by_resource_id_handler=_assets_service.get_resource_by_resource_id,
+        get_resource_by_resource_id_handler=_assets_service.get_asset_by_asset_id,
         download_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_ASSETS,
     ),
     methods=["GET"],
@@ -140,10 +142,11 @@ router.add_api_route(
         create_file_handler=_assets_service.create_file,
         create_directory_handler=_assets_service.create_directory,
         upload_resource_permission=UserPermissions.UPLOAD_ASSETS,
+        response_model_class=AssetModel,
     ),
     methods=["POST"],
     responses={
-        200: {"model": RepositoryResourceModel},
+        200: {"model": AssetModel},
         415: {
             "model": _resource_directory_archive_file_format_not_specified_error.to_pydantic_model()
             | _invalid_resource_directory_archive_file_format_error.to_pydantic_model()

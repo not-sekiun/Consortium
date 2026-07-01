@@ -17,7 +17,17 @@ from consortium.server.models.agent_task_models import (
 #  more reusable across different objects this is some dogshit code
 class AgentTaskStatus:
     _VALID_STATE_TRANSITIONS = {
-        AgentTaskState.QUEUED: {AgentTaskState.RUNNING},
+        # A task can reach a terminal state directly from QUEUED when it never gets
+        # acknowledged by the agent (denied at launch, timed out before pickup, dropped
+        # or completed server side). RUNNING remains a distinct milestone meaning the
+        # agent popped the launch message, `datetime_started` being None discriminates a
+        # task that never ran from one that ran and finished.
+        AgentTaskState.QUEUED: {
+            AgentTaskState.RUNNING,
+            AgentTaskState.SUCCEEDED,
+            AgentTaskState.FAILED,
+            AgentTaskState.ERRORED,
+        },
         AgentTaskState.RUNNING: {
             AgentTaskState.SUCCEEDED,
             AgentTaskState.FAILED,

@@ -57,3 +57,6 @@ ignore = ["E501", "COM812"]
 combine-as-imports = true
 force-wrap-aliases = true
 known-first-party = ["consortium"]
+
+[tool.coverage.report]
+sort = "Cover"

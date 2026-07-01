@@ -27,6 +27,7 @@ from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_e
     InvalidEventHookProjectManifestFileSchemaError,
     InvalidEventHookProjectPyProjectFileDependencyError,
     InvalidEventHookProjectPyProjectFileError,
+    InvalidEventHookProjectPyProjectFileTOMLError,
     ThirdPartyDependencyNotFoundError,
 )
 from consortium.server.services.component_loader_services.component_loader_service import (
@@ -46,6 +47,7 @@ class EventHookRegistryService(
         comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidEventHookProjectManifestFileJSONError,
         comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidEventHookProjectManifestFileSchemaError,
         comp_excs.InvalidComponentProjectPyProjectFileError: InvalidEventHookProjectPyProjectFileError,
+        comp_excs.InvalidComponentProjectPyProjectFileTOMLError: InvalidEventHookProjectPyProjectFileTOMLError,
         comp_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
         comp_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
         comp_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidEventHookProjectPyProjectFileDependencyError,
