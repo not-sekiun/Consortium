@@ -59,7 +59,6 @@ nav:
     - getting-started/installation.md
     - getting-started/updating.md
     - getting-started/quick-start.md
-  - Client Usage:
   - Server API:
     - Events Websockets API:
       - server-api/events-websockets-api/introduction.md
@@ -83,8 +82,14 @@ nav:
       - framework/agents/agent-generator.md
       - framework/agents/complete-agent-profile.md
       - framework/agents/agent-protocol.md
+    - Plugins:
+      - framework/plugins/overview.md
+      - framework/plugins/building-a-plugin.md
+    - Event Hooks:
+        - framework/event-hooks/overview.md
+        - framework/event-hooks/building-an-event-hook.md
+        - framework/event-hooks/event-types.md
   - Reference:
-      - Framework:
       - Services:
         - reference/services/agents-service-reference.md
         - reference/services/agent-file-manager-service-reference.md
