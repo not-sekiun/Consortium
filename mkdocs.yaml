@@ -83,11 +83,26 @@ nav:
       - framework/agents/complete-agent-profile.md
       - framework/agents/agent-protocol.md
     - Plugins:
-      - framework/plugins/overview.md
-      - framework/plugins/building-a-plugin.md
+      - framework/plugins/plugins-overview.md
+      - Building a Plugin:
+        - framework/plugins/building-a-plugin/project-setup.md
+        - framework/plugins/building-a-plugin/plugin-metadata.md
+        - framework/plugins/building-a-plugin/plugin-startup.md
+        - framework/plugins/building-a-plugin/plugin-running-loop.md
+        - framework/plugins/building-a-plugin/plugin-shutdown.md
+        - framework/plugins/building-a-plugin/plugin-error-handling.md
+        - framework/plugins/building-a-plugin/plugin-conventions.md
+        - framework/plugins/building-a-plugin/complete-plugin-example.md
     - Event Hooks:
-        - framework/event-hooks/overview.md
-        - framework/event-hooks/building-an-event-hook.md
+        - framework/event-hooks/event-hooks-overview.md
+        - Building an Event Hook:
+          - framework/event-hooks/building-an-event-hook/project-setup.md
+          - framework/event-hooks/building-an-event-hook/event-hook-metadata.md
+          - framework/event-hooks/building-an-event-hook/event-hook-setup.md
+          - framework/event-hooks/building-an-event-hook/event-hook-triggering.md
+          - framework/event-hooks/building-an-event-hook/event-hook-teardown.md
+          - framework/event-hooks/building-an-event-hook/event-hook-conventions.md
+          - framework/event-hooks/building-an-event-hook/complete-event-hook-example.md
         - framework/event-hooks/event-types.md
   - Reference:
       - Services:

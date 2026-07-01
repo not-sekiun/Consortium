@@ -1,4 +1,4 @@
-# Plugins
+# Plugins Overview
 
 A plugin is a persistent background component that runs continuously alongside the
 Consortium server for the duration of its lifetime. Plugins are the right tool for tasks
@@ -87,22 +87,25 @@ dependencies = [
 
 A plugin moves through these states in order:
 
-```
-INITIALIZED
-  -> STARTED       (on_started running)
-  -> RUNNING       (on_running running)
-  -> STOPPING      (stop() called, on_stopped running)
-  -> STOPPED       (clean shutdown)
-
-  or
-
-  -> COMPLETED     (on_running returned naturally without stop() being called)
-  -> CANCELLED     (cancel() called, on_cancelled running)
-  -> ERRORED       (PluginRuntimeError raised from on_running)
-  -> FATAL         (unhandled exception escaped any hook method)
+```mermaid
+stateDiagram-v2
+    [*] --> INITIALIZED
+    INITIALIZED --> STARTED : on_started() running
+    STARTED --> RUNNING : on_running() running
+    RUNNING --> STOPPING : stop() called
+    STOPPING --> STOPPED : on_stopped() running
+    RUNNING --> COMPLETED : on_running() returned (stop() not called)
+    RUNNING --> CANCELLED : cancel() called
+    RUNNING --> ERRORED : PluginRuntimeError raised
 ```
 
-`self.status.state` holds the current state as a string.
+`self.status.state` holds the current state as a string. This covers the core runtime
+loop; a couple of transitions are omitted from the diagram for clarity:
+
+- Any state can transition to `FATAL` if an unhandled exception escapes a lifecycle
+  hook.
+- `COMPLETED`, `STOPPED`, `CANCELLED`, `ERRORED`, and `FATAL` are all terminal states
+  that a listener can be restarted from, back to `INITIALIZED` or `STARTED`.
 
 ## Real-world examples
 

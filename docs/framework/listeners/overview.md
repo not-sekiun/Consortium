@@ -76,22 +76,31 @@ The entry point class must be named `ListenerTemplate` by convention.
 
 A listener shares the same lifecycle state machine as plugins:
 
-```
-INITIALIZED
-  -> STARTED       (on_started running)
-  -> RUNNING       (on_running running)
-  -> STOPPING      (stop() called, on_stopped running)
-  -> STOPPED       (clean shutdown)
-
-  or
-
-  -> COMPLETED     (on_running returned without stop() being called)
-  -> CANCELLED     (cancel() called)
-  -> ERRORED       (ListenerRuntimeError raised from on_running)
-  -> FATAL         (unhandled exception from any hook)
+```mermaid
+stateDiagram-v2
+    [*] --> INITIALIZED
+    INITIALIZED --> STARTED : on_started() running
+    STARTED --> RUNNING : on_running() running
+    RUNNING --> STOPPING : stop() called
+    STOPPING --> STOPPED : on_stopped() running
+    RUNNING --> COMPLETED : on_running() returned (stop() not called)
+    RUNNING --> CANCELLED : cancel() called
+    RUNNING --> ERRORED : ListenerRuntimeError raised
 ```
 
-`self.status.state` holds the current state string.
+`self.status.state` holds the current state string. This covers the core runtime loop;
+a couple of transitions are omitted from the diagram for clarity:
+
+- Any state can transition to `FATAL` if an unhandled exception escapes a lifecycle
+  hook.
+- `COMPLETED`, `STOPPED`, `CANCELLED`, `ERRORED`, and `FATAL` are all terminal states
+  that a listener can be restarted from, back to `INITIALIZED` or `STARTED`.
+
+`ERRORED` and `FATAL` are the only states that carry an error; transitions into them
+must supply a `ComponentRuntimeError`, and transitions into any other state must not.
+Valid transitions are enforced by `Status._transition_to_state()` in
+`consortium/framework/_components/_component_status.py`; any other transition raises
+an `AssertionError`.
 
 ## The agent-listener protocol
 

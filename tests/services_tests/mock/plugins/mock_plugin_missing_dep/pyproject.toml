@@ -1,0 +1,2 @@
+[project]
+dependencies = ["nonexistent-package-xyz12345>=1.0"]
