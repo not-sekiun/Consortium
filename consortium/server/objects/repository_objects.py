@@ -26,6 +26,7 @@ class RepositoryFile:
         path: pathlib.Path | str,
         name: str | None = None,
         description: str = "",
+        data: dict[str, JsonValue] | None = None,
     ):
         if isinstance(path, str):
             path = pathlib.Path(path)
@@ -36,6 +37,7 @@ class RepositoryFile:
         self.path = path
         self.datetime_created = datetime.now()
         self.is_directory = False
+        self.data = data if data is not None else {}
 
     def __str__(self) -> str:
         return f"'{self.path}' ({self.resource_id})"
@@ -45,7 +47,8 @@ class RepositoryFile:
             f"RepositoryFile("
             f"path={self.path!r}, "
             f"name={self.name!r}, "
-            f"description={self.description!r}"
+            f"description={self.description!r}, "
+            f"data={self.data!r}"
             f")"
         )
 
@@ -89,6 +92,7 @@ class RepositoryFile:
         exist_ok: bool = False,
         name: str | None = None,
         description: str = "",
+        data: dict[str, JsonValue] | None = None,
     ):
         if isinstance(path, str):
             path = pathlib.Path(path)
@@ -118,7 +122,7 @@ class RepositoryFile:
             # content is None (or unsupported type) -> empty file, text mode
             path.touch()
 
-        return cls(path=path, name=name, description=description)
+        return cls(path=path, name=name, description=description, data=data)
 
     def read(
         self,
@@ -183,6 +187,7 @@ class RepositoryDirectory:
         path: pathlib.Path | str,
         name: str | None = None,
         description: str = "",
+        data: dict[str, JsonValue] | None = None,
     ):
         if isinstance(path, str):
             path = pathlib.Path(path)
@@ -193,6 +198,7 @@ class RepositoryDirectory:
         self.path = path
         self.datetime_created = datetime.now()
         self.is_directory = True
+        self.data = data if data is not None else {}
 
     def __str__(self) -> str:
         if self.name is None:
@@ -205,6 +211,7 @@ class RepositoryDirectory:
             f"path={self.path!r}, "
             f"name={self.name!r}, "
             f"description={self.description!r}"
+            f"data={self.data!r}"
             f")"
         )
 
@@ -212,12 +219,13 @@ class RepositoryDirectory:
     def create(
         cls,
         path: pathlib.Path | str,
-        content: bytes | BinaryIO | str | pathlib.Path = None,
+        content: bytes | BinaryIO | str | pathlib.Path | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"]
         | None = None,
+        exist_ok: bool = False,
         name: str | None = None,
         description: str = "",
-        exist_ok: bool = False,
+        data: dict[str, JsonValue] | None = None,
     ):
         if isinstance(path, str):
             path = pathlib.Path(path)
@@ -269,7 +277,7 @@ class RepositoryDirectory:
                     archive_file_format=archive_file_format
                 ) from None
 
-        return cls(path=path, name=name, description=description)
+        return cls(path=path, name=name, description=description, data=data)
 
     @property
     def exists_on_disk(self) -> bool:

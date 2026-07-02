@@ -1,17 +1,18 @@
+from pydantic import JsonValue
+
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.framework.framework_types import JSON
 
 
 class Event:
     def __init__(
         self,
         event_type: EventType,
-        message: str,
-        data: JSON,
+        message: str = "",
+        data: dict[str, JsonValue] | None = None,
     ):
         self.event_type = event_type
         self.message = message
-        self.data = data
+        self.data = data if data is not None else {}
 
     def __str__(self) -> str:
         return str(self.event_type)

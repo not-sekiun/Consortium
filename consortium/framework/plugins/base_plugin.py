@@ -5,7 +5,7 @@ import types
 import uuid
 
 import loguru
-from pydantic.config import JsonValue
+from pydantic import JsonValue
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._components import (

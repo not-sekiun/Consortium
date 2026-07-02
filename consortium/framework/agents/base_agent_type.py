@@ -1,8 +1,7 @@
 import sys
 from typing import get_type_hints
 
-from pydantic import BaseModel, ConfigDict, ValidationError
-from pydantic.config import JsonValue
+from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (

@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import BinaryIO, Literal, TextIO
 
 import jsonschema
+from pydantic import JsonValue
 
 from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
     InvalidRepositoryMetadataFileJSONError,
@@ -244,9 +245,10 @@ class RepositoryService:
     def create_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
+        resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
         description: str = "",
-        resource_id: str | uuid.UUID | None = None,
+        data: dict[str, JsonValue] | None = None,
     ) -> RepositoryFile:
         """Creates and persists a new file resource in the repository.
 
@@ -260,6 +262,8 @@ class RepositoryService:
             description (str): An optional description for the file.
             resource_id (str | uuid.UUID | None): A previously reserved ID to assign to
                 this resource. When `None`, a new ID is generated automatically.
+            data (dict[str, JsonValue]): Optional additional metadata to associate with
+                the file resource.
 
         Returns:
             RepositoryFile: The newly created repository file resource.
@@ -287,6 +291,7 @@ class RepositoryService:
             content=content,
             name=name if name else str(unique_resource_id),
             description=description,
+            data=data,
         )
         repository_file.resource_id = unique_resource_id
         self._repository_resources[str(repository_file.resource_id)] = repository_file
@@ -298,10 +303,11 @@ class RepositoryService:
     def add_file(
         self,
         path: pathlib.Path | str,
+        copy: bool = False,
+        resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
         description: str = "",
-        resource_id: str | uuid.UUID | None = None,
-        copy: bool = False,
+        data: dict[str, JsonValue] | None = None,
     ) -> RepositoryFile:
         """Registers an existing file on disk into the repository.
 
@@ -312,14 +318,16 @@ class RepositoryService:
 
         Args:
             path (pathlib.Path | str): Path to the existing file to register.
-            name (str | None): A human-readable name for the file. When `None`,
-                the original filename is used.
-            description (str): An optional description for the file.
-            resource_id (str | uuid.UUID | None): A previously reserved ID to
-                assign to this resource. When `None`, a new ID is generated.
             copy (bool): When `False` (default) the source file is moved into the
                 repository. When `True` the source file is copied and the original
                 is left in place.
+            resource_id (str | uuid.UUID | None): A previously reserved ID to
+                assign to this resource. When `None`, a new ID is generated.
+            name (str | None): A human-readable name for the file. When `None`,
+                the original filename is used.
+            description (str): An optional description for the file.
+            data (dict[str, JsonValue]): Optional additional metadata to associate with
+                the file resource.
 
         Returns:
             RepositoryFile: The newly registered repository file resource.
@@ -352,6 +360,7 @@ class RepositoryService:
             path=dest_path,
             name=name if name else path.name,
             description=description,
+            data=data,
         )
         repository_file.resource_id = unique_resource_id
         self._repository_resources[str(repository_file.resource_id)] = repository_file
@@ -365,9 +374,10 @@ class RepositoryService:
         content: bytes | BinaryIO | str | pathlib.Path | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"]
         | None = None,
+        resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
         description: str = "",
-        resource_id: str | uuid.UUID | None = None,
+        data: dict[str, JsonValue] | None = None,
     ) -> RepositoryDirectory:
         """Creates and persists a new directory resource in the repository.
 
@@ -381,11 +391,13 @@ class RepositoryService:
             archive_file_format (Literal["zip", "tar", "gztar", "bztar", "xztar"] |
                 None): The archive format to use when extracting `content`. Must be set
                 when `content` is provided.
+            resource_id (str | uuid.UUID | None): A previously reserved ID to assign to
+                this resource. When `None`, a new ID is generated automatically.
             name (str | None): A human-readable name for the directory. When `None`,
                 the resource UUID is used as the name.
             description (str): An optional description for the directory.
-            resource_id (str | uuid.UUID | None): A previously reserved ID to assign to
-                this resource. When `None`, a new ID is generated automatically.
+            data (dict[str, JsonValue]): Optional additional metadata to associate with
+                the directory resource.
 
         Returns:
             RepositoryDirectory: The newly created repository directory resource.
@@ -409,6 +421,7 @@ class RepositoryService:
             archive_file_format=archive_file_format,
             name=name if name else str(unique_resource_id),
             description=description,
+            data=data,
         )
         repository_directory.resource_id = unique_resource_id
         self._repository_resources[str(repository_directory.resource_id)] = (
@@ -422,10 +435,11 @@ class RepositoryService:
     def add_directory(
         self,
         path: pathlib.Path | str,
+        copy: bool = False,
+        resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
         description: str = "",
-        resource_id: str | uuid.UUID | None = None,
-        copy: bool = False,
+        data: dict[str, JsonValue] | None = None,
     ) -> RepositoryDirectory:
         """Registers an existing directory on disk into the repository.
 
@@ -436,14 +450,16 @@ class RepositoryService:
 
         Args:
             path (pathlib.Path | str): Path to the existing directory to register.
-            name (str | None): A human-readable name for the directory. When
-                `None`, the original directory name is used.
-            description (str): An optional description for the directory.
-            resource_id (str | uuid.UUID | None): A previously reserved ID to
-                assign to this resource. When `None`, a new ID is generated.
             copy (bool): When `False` (default) the source directory is moved into
                 the repository. When `True` the source directory is copied and the
                 original is left in place.
+            resource_id (str | uuid.UUID | None): A previously reserved ID to
+                assign to this resource. When `None`, a new ID is generated.
+            name (str | None): A human-readable name for the directory. When
+                `None`, the original directory name is used.
+            description (str): An optional description for the directory.
+            data (dict[str, JsonValue]): Optional additional metadata to associate with
+                the directory resource.
 
         Returns:
             RepositoryDirectory: The newly registered repository directory resource.
@@ -474,6 +490,7 @@ class RepositoryService:
             path=dest_path,
             name=name if name else path.name,
             description=description,
+            data=data,
         )
         repository_directory.resource_id = unique_resource_id
         self._repository_resources[str(repository_directory.resource_id)] = (
