@@ -95,7 +95,7 @@ def test_load_repository_metadata_unsynced_file_raises(
 ):
     import uuid
 
-    resource_id = str(uuid.uuid4()).replace("-", "")[:32]
+    resource_id = str(uuid.uuid4())
     metadata = {
         resource_id: {
             "resource_id": resource_id,
@@ -107,6 +107,7 @@ def test_load_repository_metadata_unsynced_file_raises(
             "datetime_created": "2024-01-01T00:00:00",
             "datetime_modified": "2024-01-01T00:00:00",
             "is_directory": False,
+            "data": {},
         }
     }
     (repo_dir / ".repository.json").write_text(json.dumps(metadata))

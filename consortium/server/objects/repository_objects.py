@@ -73,7 +73,7 @@ class RepositoryFile:
         with self.path.open(mode="rb") as file:
             md5_hash = hashlib.md5()
             while True:
-                chunk = file.read(self._default_chunk_size)
+                chunk = file.read(_DEFAULT_CHUNK_SIZE)
                 if not chunk:
                     break
                 md5_hash.update(chunk)
