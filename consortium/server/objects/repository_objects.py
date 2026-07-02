@@ -18,10 +18,10 @@ from consortium.server.exceptions.consortium_exceptions.repository_consortium_ex
     RepositoryFileDoesNotExistError,
 )
 
+_DEFAULT_CHUNK_SIZE = 64000  # 64 KB, mimics shutil.copyfileobj default chunk size
+
 
 class RepositoryFile:
-    _default_chunk_size = 64000  # 64 KB, mimics shutil.copyfileobj default chunk size
-
     # TODO: Add parameter validation
     def __init__(
         self,
@@ -105,14 +105,14 @@ class RepositoryFile:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         if hasattr(content, "read"):
-            first_chunk = content.read(cls._default_chunk_size)
+            first_chunk = content.read(_DEFAULT_CHUNK_SIZE)
             is_binary = isinstance(first_chunk, bytes)
             mode = "wb" if is_binary else "w"
             enc = None if is_binary else encoding
             with path.open(mode=mode, encoding=enc) as file:
                 if first_chunk:
                     file.write(first_chunk)
-                while chunk := content.read(cls._default_chunk_size):
+                while chunk := content.read(_DEFAULT_CHUNK_SIZE):
                     file.write(chunk)
         elif isinstance(content, bytes):
             with path.open(mode="wb") as file:
@@ -256,7 +256,7 @@ class RepositoryDirectory:
                 with tempfile.TemporaryDirectory() as temp_dir_path:
                     temp_file = pathlib.Path(temp_dir_path) / "archive"
                     with temp_file.open("wb") as file:
-                        while chunk := content.read(cls._default_chunk_size):
+                        while chunk := content.read(_DEFAULT_CHUNK_SIZE):
                             file.write(chunk)
                     shutil.unpack_archive(
                         filename=temp_file,
