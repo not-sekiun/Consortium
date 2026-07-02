@@ -46,12 +46,13 @@ listeners and agents.
 
     ---
 
-    - Look through the [Server API](server-api/rest-api/) to script your own automations and
-    write your own clients.
-    - Learn how to develop your own [listeners](manual/listeners.md) and
-    [agents](manual/agents.md) for the framework to customize it to your needs.
-    - Extend the framework even further by developing your own
-    [plugins](manual/plugins.md) or [event hooks](manual/event-hooks.md)
+    - Look through the [Server REST API](server-api/rest-api) or 
+    [Server Events Websockets API](server-api/events-websockets-api) to script 
+    automations and write custom clients.
+    - Develop custom [listeners](framework/listeners/listeners-overview.md) and
+    [agents](framework/agents/agents-overview.md) for the framework.
+    - Extend the framework further through writing
+    [plugins](framework/plugins/plugins-overview.md) or [event hooks](framework/event-hooks/event-hooks-overview.md)
 
 -   __Advanced__
 

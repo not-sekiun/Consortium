@@ -1,4 +1,4 @@
-# Listeners
+# Listeners Overview
 
 A listener is a persistent, server-side network component that manages the full lifecycle
 of connected agents: accepting their initial registration, handing them tasks queued by
