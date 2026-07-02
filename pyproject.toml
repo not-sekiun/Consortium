@@ -39,6 +39,10 @@ agents = [
 ]
 event-hooks = []
 
+[tool.ruff]
+extend-exclude = [
+    "tests/services_tests/mock/plugins/mock_plugin_bad_toml",
+]  # Get ruff to ignore a deliberately malformed toml file
 
 [tool.ruff.lint]
 select = [
