@@ -2,9 +2,8 @@ import asyncio
 import json
 import pathlib
 import uuid
-from collections.abc import Generator
 from functools import wraps
-from typing import IO, Any, BinaryIO, Literal
+from typing import Any, BinaryIO, Literal, TextIO
 
 import jsonschema
 from loguru import logger
@@ -236,7 +235,7 @@ class PayloadsService:
         self,
         agent_template_id: str | uuid.UUID,
         build_parameters: dict[str, Any],
-        content: str | bytes | IO | Generator[bytes] | Generator[str],
+        content: str | bytes | TextIO | BinaryIO,
         payload_data: dict[str, Any] | None = None,
         payload_id: str | uuid.UUID | None = None,
         name: str | None = None,
@@ -253,7 +252,7 @@ class PayloadsService:
                 associate with the payload.
             build_parameters (dict[str, Any]): Parameters used to build the agent
                 generator from the template (validated against the template).
-            content (str | bytes | IO | Generator[bytes] | Generator[str]): The file
+            content (str | bytes | TextIO | BinaryIO): The file
                 content to write to the repository.
             payload_data (dict[str, Any] | None): Arbitrary metadata attached to the
                 payload. When `None`, no extra metadata is stored.
@@ -409,7 +408,7 @@ class PayloadsService:
         self,
         agent_template_id: str | uuid.UUID,
         build_parameters: dict[str, Any],
-        content: bytes | Generator[bytes] | BinaryIO,
+        content: bytes | BinaryIO,
         payload_data: dict[str, Any] | None = None,
         payload_id: str | uuid.UUID | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"] = "zip",
@@ -427,7 +426,7 @@ class PayloadsService:
                 associate with the payload.
             build_parameters (dict[str, Any]): Parameters used to build the agent
                 generator from the template (validated against the template).
-            content (bytes | Generator[bytes] | BinaryIO): The archive content to
+            content (bytes | BinaryIO): The archive content to
                 extract into the repository directory.
             payload_data (dict[str, Any] | None): Arbitrary metadata attached to the
                 payload. When `None`, no extra metadata is stored.

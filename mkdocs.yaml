@@ -70,9 +70,9 @@ nav:
   - Framework:
     - Listeners:
       - framework/listeners/listeners-overview.md
-      - framework/listeners/building-a-listner-profile/listener-type.md
-      - framework/listeners/building-a-listner-profile/listener-template.md
-      - framework/listeners/building-a-listner-profile/listener.md
+      - framework/listeners/building-a-listener-profile/listener-type.md
+      - framework/listeners/building-a-listener-profile/listener-template.md
+      - framework/listeners/building-a-listener-profile/listener.md
       - framework/listeners/complete-listener-profile.md
     - Agents:
       - framework/agents/agents-overview.md
