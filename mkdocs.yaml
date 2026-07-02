@@ -4,6 +4,7 @@ site_description:
   Consortium is a programming language agnostic, and networking
   protocol agnostic command and control (C2) framework that is designed to be
   collaborative, highly extensible, and modular
+site_url: https://not-sekiun.github.io/Consortium/
 
 repo_url: https://github.com/not-sekiun/PyIris
 repo_name: not-sekiun/Consortium
