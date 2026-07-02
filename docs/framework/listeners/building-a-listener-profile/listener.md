@@ -1,4 +1,4 @@
-# BaseListener
+# Listener
 
 `BaseListener` is where the network server lives. It inherits from `ComponentLifeCycle`
 and is responsible for implementing the agent-listener protocol: accepting registrations,

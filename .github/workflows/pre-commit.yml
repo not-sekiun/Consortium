@@ -1,0 +1,17 @@
+name: Pre-commit
+
+on:
+  push:
+    branches: [ main, framework-restructure ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: pre-commit/action@v3.0.1

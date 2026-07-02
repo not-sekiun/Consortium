@@ -20,6 +20,8 @@ from consortium.server.exceptions.consortium_exceptions.repository_consortium_ex
 
 
 class RepositoryFile:
+    _default_chunk_size = 64000  # 64 KB, mimics shutil.copyfileobj default chunk size
+
     # TODO: Add parameter validation
     def __init__(
         self,
@@ -71,7 +73,7 @@ class RepositoryFile:
         with self.path.open(mode="rb") as file:
             md5_hash = hashlib.md5()
             while True:
-                chunk = file.read(4096)
+                chunk = file.read(self._default_chunk_size)
                 if not chunk:
                     break
                 md5_hash.update(chunk)
@@ -103,14 +105,14 @@ class RepositoryFile:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         if hasattr(content, "read"):
-            first_chunk = content.read(4096)
+            first_chunk = content.read(cls._default_chunk_size)
             is_binary = isinstance(first_chunk, bytes)
             mode = "wb" if is_binary else "w"
             enc = None if is_binary else encoding
             with path.open(mode=mode, encoding=enc) as file:
                 if first_chunk:
                     file.write(first_chunk)
-                while chunk := content.read(4096):
+                while chunk := content.read(cls._default_chunk_size):
                     file.write(chunk)
         elif isinstance(content, bytes):
             with path.open(mode="wb") as file:
@@ -182,6 +184,8 @@ class RepositoryFile:
 
 
 class RepositoryDirectory:
+    _default_chunk_size = 64000  # 64 KB, mimics shutil.copyfileobj default chunk size
+
     # TODO: Add parameter validation
     def __init__(
         self,
@@ -252,7 +256,7 @@ class RepositoryDirectory:
                 with tempfile.TemporaryDirectory() as temp_dir_path:
                     temp_file = pathlib.Path(temp_dir_path) / "archive"
                     with temp_file.open("wb") as file:
-                        while chunk := content.read(4096):
+                        while chunk := content.read(cls._default_chunk_size):
                             file.write(chunk)
                     shutil.unpack_archive(
                         filename=temp_file,
