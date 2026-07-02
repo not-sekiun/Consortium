@@ -27,7 +27,9 @@ class RepositoryService:
     _REPOSITORY_METADATA_JSON_SCHEMA = {
         "type": "object",
         "patternProperties": {
-            "^[a-z0-9]+$": {
+            # Regex to validate UUIDs of any version. Canonically we use UUIDv4 but may
+            # consider migrating to v7 in the future
+            "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$": {
                 "anyOf": [
                     {
                         "type": "object",
@@ -41,6 +43,7 @@ class RepositoryService:
                             "datetime_created": {"type": "string"},
                             "datetime_modified": {"type": "string"},
                             "is_directory": {"type": "boolean"},
+                            "data": {"type": "object"},
                         },
                         "required": [
                             "resource_id",
@@ -52,6 +55,7 @@ class RepositoryService:
                             "datetime_created",
                             "datetime_modified",
                             "is_directory",
+                            "data",
                         ],
                         "additionalProperties": False,
                     },
@@ -66,6 +70,7 @@ class RepositoryService:
                             "datetime_created": {"type": "string"},
                             "datetime_modified": {"type": "string"},
                             "is_directory": {"type": "boolean"},
+                            "data": {"type": "object"},
                         },
                         "required": [
                             "resource_id",
@@ -76,12 +81,14 @@ class RepositoryService:
                             "datetime_created",
                             "datetime_modified",
                             "is_directory",
+                            "data",
                         ],
                         "additionalProperties": False,
                     },
                 ],
             },
         },
+        "additionalProperties": False,
     }
 
     def __init__(self, repository_directory_path: pathlib.Path):
@@ -188,6 +195,7 @@ class RepositoryService:
                         repository_resource_json["datetime_created"],
                     )
                     repository_directory.is_directory = True
+                    repository_directory.data = repository_resource_json["data"]
                     self._repository_resources[repository_directory.resource_id] = (
                         repository_directory
                     )
@@ -210,6 +218,7 @@ class RepositoryService:
                         repository_resource_json["datetime_created"],
                     )
                     repository_file.is_directory = False
+                    repository_file.data = repository_resource_json["data"]
                     self._repository_resources[repository_file.resource_id] = (
                         repository_file
                     )
