@@ -2,6 +2,9 @@ import pathlib
 import uuid
 
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
+from consortium.framework.exceptions import (
+    event_hooks_framework_exceptions as event_hook_framework_excs,
+)
 from consortium.server.exceptions.consortium_exceptions import (
     components_consortium_exceptions as comp_excs,
 )
@@ -102,10 +105,20 @@ class EventHookRegistryService(
             )
         try:
             await component.on_setup()
+        except event_hook_framework_excs.EventHookSetupError as exc:
+            raise EventHookSetupError(
+                event_hook_str=str(component),
+                error_message=exc.message,
+                detail=exc.detail,
+            ) from None
         except Exception as exc:
             raise EventHookSetupError(
                 event_hook_str=str(component),
-                error_message=str(exc),
+                error_message=(
+                    f"An unhandled exception was raised while setting up. "
+                    f"{type(exc).__name__}: {exc}"
+                ),
+                detail={"type": type(exc).__name__, "message": str(exc)},
             ) from exc
         return component
 
@@ -116,10 +129,20 @@ class EventHookRegistryService(
     ) -> BaseEventHook:
         try:
             await component.on_teardown()
+        except event_hook_framework_excs.EventHookTeardownError as exc:
+            raise EventHookTeardownError(
+                event_hook_str=str(component),
+                error_message=exc.message,
+                detail=exc.detail,
+            ) from None
         except Exception as exc:
             raise EventHookTeardownError(
                 event_hook_str=str(component),
-                error_message=str(exc),
+                error_message=(
+                    f"An unhandled exception was raised while tearing down. "
+                    f"{type(exc).__name__}: {exc}"
+                ),
+                detail={"type": type(exc).__name__, "message": str(exc)},
             ) from None
         for event_type in component.event_types:
             self._events_service.deregister_event_handler_from_event_type(

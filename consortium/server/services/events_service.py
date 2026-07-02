@@ -5,7 +5,13 @@ from loguru import logger
 
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.framework.exceptions import (
+    event_hooks_framework_exceptions as event_hook_framework_excs,
+)
 from consortium.framework.framework_types import JSON
+from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
+    EventHookTriggerError,
+)
 from consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions import (
     EventHandlerAlreadyRegisteredError,
     EventHandlerNotRegisteredError,
@@ -149,7 +155,11 @@ class EventsService:
 
         Handlers are called sequentially. If any handler raises an exception, remaining
         handlers still run, and all exceptions are collected and re-raised together as
-        an `ExceptionGroup`.
+        an `ExceptionGroup`. Event hooks that raise `EventHookTriggerError` (the
+        framework-level signal from `consortium.framework.exceptions`) from
+        `on_triggered()` have that error remapped to the consortium-level
+        `EventHookTriggerError` before being collected, preserving the original
+        `message` and `detail`.
 
         Args:
             event_type (EventType): The type of event to trigger.
@@ -177,6 +187,16 @@ class EventsService:
         for event_handler in self._event_handlers[str(event.event_type)]:
             try:
                 await event_handler(event)
+            except event_hook_framework_excs.EventHookTriggerError as exc:
+                errors.append(
+                    EventHookTriggerError(
+                        event_hook_str=str(
+                            getattr(event_handler, "__self__", event_handler)
+                        ),
+                        error_message=exc.message,
+                        detail=exc.detail,
+                    )
+                )
             except Exception as exc:
                 errors.append(exc)
 

@@ -30,6 +30,7 @@
                 - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.ComponentDependencyNotRunningError]
             - [`EventHookOperationError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookOperationError]
                 - [`EventHookSetupError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookSetupError]
+                - [`EventHookTriggerError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookTriggerError]
                 - [`EventHookTeardownError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookTeardownError]
         - [`EventHooksFrameworkError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHooksFrameworkError]
             - [`EventHookConfigurationError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookConfigurationError]
@@ -40,6 +41,8 @@
                 - [`InvalidFrameworkVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidFrameworkVersionSpecifierError]
                 - [`InvalidEventHookDependencyVersionSpecifierError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookDependencyVersionSpecifierError]
 """
+
+from typing import Any
 
 from consortium.server.exceptions.consortium_exceptions import (
     components_consortium_exceptions as comp_excs,
@@ -511,12 +514,30 @@ class EventHookSetupError(EventHookOperationError):
 
     code = "EVENT_HOOK_SETUP_ERROR"
 
-    def __init__(self, event_hook_str: str, error_message: str):
+    def __init__(self, event_hook_str: str, error_message: str, detail: Any = None):
         super().__init__(
             message=(
                 f"Failed to load event hook '{event_hook_str}'. An error occurred "
                 f"while the event hook was setting up: {error_message}"
             ),
+            detail=detail,
+        )
+
+
+class EventHookTriggerError(EventHookOperationError):
+    """Raised when an event hook fails while handling a triggered event during event
+    hook operation.
+    """
+
+    code = "EVENT_HOOK_TRIGGER_ERROR"
+
+    def __init__(self, event_hook_str: str, error_message: str, detail: Any = None):
+        super().__init__(
+            message=(
+                f"Event hook '{event_hook_str}' failed while handling a triggered "
+                f"event: {error_message}"
+            ),
+            detail=detail,
         )
 
 
@@ -525,12 +546,13 @@ class EventHookTeardownError(EventHookOperationError):
 
     code = "EVENT_HOOK_TEARDOWN_ERROR"
 
-    def __init__(self, event_hook_str: str, error_message: str):
+    def __init__(self, event_hook_str: str, error_message: str, detail: Any = None):
         super().__init__(
             message=(
                 f"Failed to unload event hook '{event_hook_str}'. An error occurred "
                 f"while the event hook was tearing down: {error_message}"
             ),
+            detail=detail,
         )
 
 

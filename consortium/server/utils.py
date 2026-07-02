@@ -61,7 +61,7 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
                 exc,
             )
         else:
-            logger.opt(ansi=True, exception=exc).critical(
+            logger.opt(colors=True, exception=exc).critical(
                 "<white><RED><bold>Unhandled exception in `{}.{}`. {}: {}</></></>",
                 type(instance).__name__,
                 func_name,

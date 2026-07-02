@@ -60,27 +60,27 @@ nav:
     - getting-started/updating.md
     - getting-started/quick-start.md
   - Server API:
+    - REST API:
+      - server-api/rest-api/introduction.md
     - Events Websockets API:
       - server-api/events-websockets-api/introduction.md
       - server-api/events-websockets-api/authentication.md
       - server-api/events-websockets-api/sending-action-commands.md
       - server-api/events-websockets-api/server-messages.md
-    - REST API:
-      - server-api/rest-api/introduction.md
   - Framework:
     - Listeners:
-      - framework/listeners/overview.md
-      - framework/listeners/listener-type.md
-      - framework/listeners/listener-template.md
-      - framework/listeners/listener.md
+      - framework/listeners/listeners-overview.md
+      - framework/listeners/building-a-listner-profile/listener-type.md
+      - framework/listeners/building-a-listner-profile/listener-template.md
+      - framework/listeners/building-a-listner-profile/listener.md
       - framework/listeners/complete-listener-profile.md
     - Agents:
-      - framework/agents/overview.md
-      - framework/agents/agent-capabilities.md
-      - framework/agents/agent-type.md
-      - framework/agents/agent-template.md
-      - framework/agents/agent-generator.md
-      - framework/agents/complete-agent-profile.md
+      - framework/agents/agents-overview.md
+      - framework/agents/building-an-agent-profile/agent-capabilities.md
+      - framework/agents/building-an-agent-profile/agent-type.md
+      - framework/agents/building-an-agent-profile/agent-template.md
+      - framework/agents/building-an-agent-profile/agent-generator.md
+      - framework/agents/building-an-agent-profile/complete-agent-profile.md
       - framework/agents/agent-protocol.md
     - Plugins:
       - framework/plugins/plugins-overview.md

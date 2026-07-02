@@ -34,6 +34,7 @@ class EventHooksService:
         consortium_root: pathlib.Path,
     ) -> None:
         self._event_hooks_directory = event_hooks_directory
+        self._events_service = events_service
         self._event_hook_loader_service = EventHookLoaderService(
             consortium_root=consortium_root,
             release_service=release_service,
@@ -525,16 +526,28 @@ class EventHooksService:
         return event_types
 
     @log_and_propagate_error_on_service_method
-    def trigger_event(self, event: Event):
-        """Triggers an event, invoking `on_triggered` on all event hooks subscribed to its type.
+    async def trigger_event(self, event: Event) -> None:
+        """Triggers an event, invoking every handler registered for its type.
+
+        This is a convenience wrapper around `EventsService.trigger_event` for callers
+        already working with the event hooks service. It delegates entirely to the
+        events service so event hooks and any other registered handlers (for example,
+        websocket subscribers) are notified through the same code path.
 
         Args:
             event (Event): The event to trigger.
 
         Returns:
             None
+
+        Raises:
+            ExceptionGroup: If one or more registered handlers raise exceptions. Event
+                hooks that raise `EventHookTriggerError` from `on_triggered()` are
+                represented in the group as the consortium-level `EventHookTriggerError`.
         """
         self._logger.debug("Triggered event: {}", event)
-        for event_hook in self._event_hook_registry_service.get_all_components():
-            if event.event_type in event_hook.event_types:
-                event_hook.on_triggered(event)
+        await self._events_service.trigger_event(
+            event_type=event.event_type,
+            message=event.message,
+            data=event.data,
+        )

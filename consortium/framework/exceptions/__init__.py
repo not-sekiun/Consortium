@@ -7,6 +7,11 @@ from consortium.framework.exceptions.agent_generators_framework_exceptions impor
     AgentGeneratorStartError,
     AgentGeneratorStopError,
 )
+from consortium.framework.exceptions.event_hooks_framework_exceptions import (
+    EventHookSetupError,
+    EventHookTeardownError,
+    EventHookTriggerError,
+)
 from consortium.framework.exceptions.listeners_framework_exceptions import (
     ListenerRuntimeError,
     ListenerStartError,
@@ -29,6 +34,10 @@ __all__ = [
     "AgentGeneratorStartError",
     "AgentGeneratorBuildStepRuntimeError",
     "AgentGeneratorStopError",
+    # Event Hooks
+    "EventHookSetupError",
+    "EventHookTriggerError",
+    "EventHookTeardownError",
     # Listeners
     "ListenerStartError",
     "ListenerRuntimeError",
