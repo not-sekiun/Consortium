@@ -22,6 +22,7 @@ REPOSITORY_RESOURCE_JSON_SCHEMA = {
         "datetime_modified": {"type": "string"},
         "md5_checksum": {"type": ["string", "null"]},
         "is_directory": {"type": "boolean"},
+        "data": {"type": "object"},
     },
     "required": [
         "asset_id",
@@ -33,6 +34,7 @@ REPOSITORY_RESOURCE_JSON_SCHEMA = {
         "datetime_modified",
         "md5_checksum",
         "is_directory",
+        "data",
     ],
 }
 ALL_RESOURCES_JSON_SCHEMA = {

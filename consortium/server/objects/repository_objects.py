@@ -177,6 +177,7 @@ class RepositoryFile:
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_modified": self.datetime_modified.isoformat(),
             "is_directory": self.is_directory,
+            "data": self.data,
         }
 
 
@@ -334,4 +335,5 @@ class RepositoryDirectory:
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_modified": self.datetime_modified.isoformat(),
             "is_directory": self.is_directory,
+            "data": self.data,
         }

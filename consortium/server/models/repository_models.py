@@ -15,6 +15,7 @@ class _ResourceModel(BaseModel):
     datetime_modified: datetime
     md5_checksum: str | None
     is_directory: bool
+    data: dict[str, JsonValue]
 
 
 class RepositoryResourceModel(_ResourceModel):

@@ -4,7 +4,7 @@
   Fix this and update
   the appropriate documentation
 - Asset and artifact endpoints raise generic ResourceErrors while payloads wraps and
-  reraises payloaderrors
+  reraises payload errors
   behaviour is inconsistent determine if we should fix it given that we already
   committed to asset and artifact id
 - tests load framework default plugins and event hooks should probably disable that
