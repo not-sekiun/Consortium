@@ -32,11 +32,11 @@ from consortium.server.services.connected_agents_service import ConnectedAgentsS
 from consortium.server.utils import construct_services_dataclass
 
 if TYPE_CHECKING:
-    from consortium.server.objects.agent_objects import Agent
-    from consortium.framework.listeners.base_listener_type import BaseListenerType
     from consortium.framework.listeners.base_listener_template import (
         BaseListenerTemplate,
     )
+    from consortium.framework.listeners.base_listener_type import BaseListenerType
+    from consortium.server.objects.agent_objects import Agent
 
 
 class _BaseListenerParametersModel(BaseModel):

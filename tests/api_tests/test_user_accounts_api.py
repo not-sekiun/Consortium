@@ -343,7 +343,10 @@ async def test_update_user_account_by_user_account_id(admin_client, client):
                 ),
                 expected_json_schema=USER_ACCOUNT_JSON_SCHEMA,
                 expected_status_code=200,
-                validator_function=lambda r, u=new_username, p=new_password, ro=new_role: (
+                validator_function=lambda r,
+                u=new_username,
+                p=new_password,
+                ro=new_role: (
                     r.json()["username"] == u
                     and r.json()["password"] == p
                     and r.json()["role"] == ro

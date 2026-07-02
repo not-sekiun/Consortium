@@ -93,7 +93,7 @@ def shell_capability(task_id, arguments, connection):
         output = f"Executed command '{command}' blind."
     else:
         try:
-            output = subprocess.run(
+            output = subprocess.run(  # noqa: UP022
                 command,
                 shell=True,
                 stdout=subprocess.PIPE,
