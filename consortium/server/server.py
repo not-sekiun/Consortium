@@ -246,7 +246,7 @@ class Server:
         server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles()
         # Load repository metadata before loading payloads metadata because the payloads
         # metadata depends on repository information.
-        server_singletons.payloads_service._repository_service.load_repository_metadata()
+        server_singletons.payloads_service.load_repository_metadata()
         server_singletons.payloads_service.load_payloads_metadata()
         # assets and artifacts repository services can load repository metadata in any
         # order as they do not depend on any other service.

@@ -1,1 +1,4 @@
-{"entry_point": "nonexistent_module:Plugin", "enabled": true}
+{
+    "entry_point": "nonexistent_module:Plugin",
+    "enabled": true
+}

@@ -13,7 +13,7 @@ pytestmark = pytest.mark.anyio
 REPOSITORY_RESOURCE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "resource_id": {"type": "string"},
+        "asset_id": {"type": "string"},
         "name": {"type": ["string", "null"]},
         "description": {"type": "string"},
         "size": {"type": ["integer", "null"]},
@@ -24,7 +24,7 @@ REPOSITORY_RESOURCE_JSON_SCHEMA = {
         "is_directory": {"type": "boolean"},
     },
     "required": [
-        "resource_id",
+        "asset_id",
         "name",
         "description",
         "size",
@@ -218,8 +218,8 @@ async def test_upload_file_asset_returns_200(admin_client):
         expected_json_schema=REPOSITORY_RESOURCE_JSON_SCHEMA,
         expected_status_code=200,
     )
-    resource_id = response.json()["resource_id"]
-    await admin_client.delete(f"/api/assets/{resource_id}")
+    asset_id = response.json()["asset_id"]
+    await admin_client.delete(f"/api/assets/{asset_id}")
 
 
 async def test_upload_directory_asset_without_extension_returns_415(admin_client):

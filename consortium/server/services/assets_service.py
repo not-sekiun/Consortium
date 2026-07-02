@@ -52,14 +52,15 @@ class AssetsService:
         return asset_id
 
     @log_and_propagate_error_on_service_method
-    def create_file(
+    async def create_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
         name: str | None = None,
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
     ) -> RepositoryFile:
-        asset = self._repository_service.create_file(
+        asset = await asyncio.to_thread(
+            self._repository_service.create_file,
             content=content,
             name=name,
             description=description,
@@ -76,7 +77,7 @@ class AssetsService:
         return asset
 
     @log_and_propagate_error_on_service_method
-    def add_file(
+    async def add_file(
         self,
         path: pathlib.Path | str,
         name: str | None = None,
@@ -84,7 +85,8 @@ class AssetsService:
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
     ) -> RepositoryFile:
-        asset = self._repository_service.add_file(
+        asset = await asyncio.to_thread(
+            self._repository_service.add_file,
             path=path,
             name=name,
             description=description,
@@ -102,7 +104,7 @@ class AssetsService:
         return asset
 
     @log_and_propagate_error_on_service_method
-    def create_directory(
+    async def create_directory(
         self,
         content: bytes | BinaryIO | str | pathlib.Path | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"]
@@ -111,7 +113,8 @@ class AssetsService:
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
     ) -> RepositoryDirectory:
-        asset = self._repository_service.create_directory(
+        asset = await asyncio.to_thread(
+            self._repository_service.create_directory,
             content=content,
             archive_file_format=archive_file_format,
             name=name,
@@ -129,7 +132,7 @@ class AssetsService:
         return asset
 
     @log_and_propagate_error_on_service_method
-    def add_directory(
+    async def add_directory(
         self,
         path: pathlib.Path | str,
         name: str | None = None,
@@ -137,7 +140,8 @@ class AssetsService:
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
     ) -> RepositoryDirectory:
-        asset = self._repository_service.add_directory(
+        asset = await asyncio.to_thread(
+            self._repository_service.add_directory,
             path=path,
             name=name,
             description=description,
@@ -155,13 +159,16 @@ class AssetsService:
         return asset
 
     @log_and_propagate_error_on_service_method
-    def delete_asset_by_asset_id(self, asset_id: str | uuid.UUID) -> None:
+    async def delete_asset_by_asset_id(self, asset_id: str | uuid.UUID) -> None:
         # Snapshot JSON before deletion since to_json() reads from disk
         asset = self._repository_service.get_resource_by_resource_id(
             resource_id=asset_id
         )
         asset_json = asset.to_json()
-        self._repository_service.delete_resource_by_resource_id(resource_id=asset_id)
+        await asyncio.to_thread(
+            self._repository_service.delete_resource_by_resource_id,
+            resource_id=asset_id,
+        )
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.ASSET_DELETED,

@@ -1,1 +1,4 @@
-{"entry_point": "plugin:NotAPlugin", "enabled": true}
+{
+    "entry_point": "plugin:NotAPlugin",
+    "enabled": true
+}

@@ -9,6 +9,11 @@ class ServerConfigModel(BaseModel):
     remote_host_whitelist: list[str]
     remote_host_blacklist: list[str]
     server_header: str | None
+    # TODO: Implement in server and add as an option to config file
+    # load_framework_plugins: bool = True
+    # load_framework_listener_profiles: bool = True
+    # load_framework_agent_profiles: bool = True
+    # load_framework_event_hooks: bool = True
 
 
 # `datetime_released` is None in the case whereby the projected datetime of a

@@ -6,6 +6,7 @@
 # implements all of, or a subset of the functionality described here. This is done by
 # importing each factory function as required and adding its output to the router
 # object.
+import inspect
 import os
 import pathlib
 import shutil
@@ -141,10 +142,7 @@ def create_upload_resource_endpoint(
     upload_resource_permission: UserPermissions,
     response_model_class: type[RepositoryResourceModel] = RepositoryResourceModel,
 ) -> Callable:
-    # Define this function synchronously because writing large files to disk in an
-    # async function causes event loop issues. This will signal to FastAPI that this
-    # endpoint should be run in a threadpool.
-    def upload_repository_resource(
+    async def upload_repository_resource(
         _: Annotated[
             None,
             Depends(
@@ -212,6 +210,8 @@ def create_upload_resource_endpoint(
                     name=name if name else file.filename,
                     description=description if description else "",
                 )
+                if inspect.isawaitable(resource):
+                    resource = await resource
             except consortium_excs.InvalidRepositoryDirectoryArchiveFileFormatError:
                 raise api_excs.InvalidRepositoryDirectoryArchiveFileFormatError() from None
         else:
@@ -220,6 +220,8 @@ def create_upload_resource_endpoint(
                 name=name if name else file.filename,
                 description=description if description else "",
             )
+            if inspect.isawaitable(resource):
+                resource = await resource
 
         return response_model_class.model_validate(resource.to_json())
 
@@ -242,7 +244,9 @@ def create_delete_resource_by_resource_id_endpoint(
         ],
     ):
         try:
-            delete_resource_by_resource_id_handler(str(resource_id))
+            result = delete_resource_by_resource_id_handler(str(resource_id))
+            if inspect.isawaitable(result):
+                await result
         except consortium_excs.RepositoryResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,

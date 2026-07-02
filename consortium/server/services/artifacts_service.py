@@ -52,14 +52,15 @@ class ArtifactsService:
         return artifact_id
 
     @log_and_propagate_error_on_service_method
-    def create_file(
+    async def create_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
         name: str | None = None,
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
     ) -> RepositoryFile:
-        artifact = self._repository_service.create_file(
+        artifact = await asyncio.to_thread(
+            self._repository_service.create_file,
             content=content,
             name=name,
             description=description,
@@ -76,7 +77,7 @@ class ArtifactsService:
         return artifact
 
     @log_and_propagate_error_on_service_method
-    def add_file(
+    async def add_file(
         self,
         path: pathlib.Path | str,
         name: str | None = None,
@@ -84,7 +85,8 @@ class ArtifactsService:
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
     ) -> RepositoryFile:
-        artifact = self._repository_service.add_file(
+        artifact = await asyncio.to_thread(
+            self._repository_service.add_file,
             path=path,
             name=name,
             description=description,
@@ -102,7 +104,7 @@ class ArtifactsService:
         return artifact
 
     @log_and_propagate_error_on_service_method
-    def create_directory(
+    async def create_directory(
         self,
         content: bytes | BinaryIO | str | pathlib.Path | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"]
@@ -111,7 +113,8 @@ class ArtifactsService:
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
     ) -> RepositoryDirectory:
-        artifact = self._repository_service.create_directory(
+        artifact = await asyncio.to_thread(
+            self._repository_service.create_directory,
             content=content,
             archive_file_format=archive_file_format,
             name=name,
@@ -129,7 +132,7 @@ class ArtifactsService:
         return artifact
 
     @log_and_propagate_error_on_service_method
-    def add_directory(
+    async def add_directory(
         self,
         path: pathlib.Path | str,
         name: str | None = None,
@@ -137,7 +140,8 @@ class ArtifactsService:
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
     ) -> RepositoryDirectory:
-        artifact = self._repository_service.add_directory(
+        artifact = await asyncio.to_thread(
+            self._repository_service.add_directory,
             path=path,
             name=name,
             description=description,
@@ -155,13 +159,18 @@ class ArtifactsService:
         return artifact
 
     @log_and_propagate_error_on_service_method
-    def delete_artifact_by_artifact_id(self, artifact_id: str | uuid.UUID) -> None:
+    async def delete_artifact_by_artifact_id(
+        self, artifact_id: str | uuid.UUID
+    ) -> None:
         # Snapshot JSON before deletion since to_json() reads from disk
         artifact = self._repository_service.get_resource_by_resource_id(
             resource_id=artifact_id
         )
         artifact_json = artifact.to_json()
-        self._repository_service.delete_resource_by_resource_id(resource_id=artifact_id)
+        await asyncio.to_thread(
+            self._repository_service.delete_resource_by_resource_id,
+            resource_id=artifact_id,
+        )
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.ARTIFACT_DELETED,

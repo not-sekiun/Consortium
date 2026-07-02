@@ -92,7 +92,7 @@ class AgentFileManagerService:
         # asset = self.get_asset_by_asset_id(asset_id)
         # return asset.read()
 
-    def write_artifact(self, data: bytes) -> None:
+    async def write_artifact(self, data: bytes) -> None:
         """Writes raw bytes as a new artifact in the agent's artifact directory.
 
         Args:
@@ -105,9 +105,11 @@ class AgentFileManagerService:
             NotImplementedError: This method is not yet implemented.
         """
         if not self._agent_artifacts_folder:
-            self._agent_artifacts_folder = self._artifacts_service.create_directory(
-                name=str(self._agent.agent_id),
-                parent_directory_id=None,
+            self._agent_artifacts_folder = (
+                await self._artifacts_service.create_directory(
+                    name=str(self._agent.agent_id),
+                    parent_directory_id=None,
+                )
             )
 
         raise NotImplementedError
