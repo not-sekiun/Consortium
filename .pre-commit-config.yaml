@@ -10,6 +10,7 @@ repos:
         args: ['--maxkb=1000']  # Increase limit to 1MB to accommodate the distilled MITRE ATT&CK data JSON file
       - id: pretty-format-json
         args: ["--autofix", "--no-sort-keys", "--indent=4"]
+        exclude: ^tests/services_tests/mock/plugins/mock_plugin_bad_json/manifest\.json$  # Exclude deliberately malformed JSON file for tests
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.8
     hooks:

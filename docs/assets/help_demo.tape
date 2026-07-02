@@ -2,7 +2,7 @@ Output help_demo.gif
 Set Theme "GruvboxDarkHard"
 Set Padding 18
 
-Set FontSize 18 
+Set FontSize 18
 Set Width 1200
 Set Height 600
 
@@ -12,7 +12,7 @@ Sleep 2s
 
 Type@0.1s listeners
 Enter
-Sleep 2s 
+Sleep 2s
 
 Type@0.1s help
 Enter

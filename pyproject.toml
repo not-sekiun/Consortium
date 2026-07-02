@@ -43,6 +43,7 @@ event-hooks = []
 extend-exclude = [
     "tests/services_tests/mock/plugins/mock_plugin_bad_toml",
 ]  # Get ruff to ignore a deliberately malformed toml file
+force-exclude = true  # pre-commit on a fresh run will force pass the excluded file so we need to force exclude
 
 [tool.ruff.lint]
 select = [

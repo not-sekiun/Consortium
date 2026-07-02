@@ -1,4 +1,4 @@
 {
-  "entry_point": "event_hook:EventHook",
-  "enabled": true
+    "entry_point": "event_hook:EventHook",
+    "enabled": true
 }
