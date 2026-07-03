@@ -12,9 +12,9 @@ Create a directory for the plugin under `consortium/components/plugins/`:
 
 ```
 consortium/components/plugins/agent_report/
-    manifest.json
-    plugin.py
-    config.json
+├── manifest.json
+├── plugin.py
+└── config.json
 ```
 
 `manifest.json` points the component loader at the plugin class. The entry point format

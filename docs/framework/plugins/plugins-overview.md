@@ -58,8 +58,8 @@ directory must contain at minimum two files:
 
 ```
 consortium/components/plugins/my_plugin/
-    manifest.json
-    plugin.py
+├── manifest.json
+└── plugin.py
 ```
 
 `manifest.json` tells the framework where to find the plugin class and whether to load it:

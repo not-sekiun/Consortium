@@ -21,3 +21,4 @@ move payloads onto using the datafield entirely getting rid of payload metadata 
 again update docstrings and tests
 implement a user_account field for assets using the data field for who created the
 asset (none for system/plugins) again update tests and docstrings
+asciinema not working in live docs.

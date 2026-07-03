@@ -54,10 +54,10 @@ Each listener profile lives in its own directory under
 
 ```
 consortium/components/listeners/my_listener/
-    manifest.json
-    listener_type.py
-    listener_template.py
-    listener.py
+├── manifest.json
+├── listener_type.py
+├── listener_template.py
+└── listener.py
 ```
 
 `manifest.json` points the loader at the entry class and controls whether the profile

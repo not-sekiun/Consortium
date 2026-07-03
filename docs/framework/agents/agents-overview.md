@@ -49,10 +49,10 @@ Each agent profile lives in its own directory under `consortium/components/agent
 
 ```
 consortium/components/agents/my_agent/
-    manifest.json
-    agent_type.py      (declares capabilities and the AgentType)
-    agent_template.py  (declares the AgentTemplate)
-    agent_generator.py (declares the AgentGenerator and its build steps)
+├── manifest.json
+├── agent_type.py      (declares capabilities and the AgentType)
+├── agent_template.py  (declares the AgentTemplate)
+└── agent_generator.py (declares the AgentGenerator and its build steps)
 ```
 
 `manifest.json` points the loader at the entry class:

@@ -71,17 +71,20 @@ nav:
   - Framework:
     - Listeners:
       - framework/listeners/listeners-overview.md
-      - framework/listeners/building-a-listener-profile/listener-type.md
-      - framework/listeners/building-a-listener-profile/listener-template.md
-      - framework/listeners/building-a-listener-profile/listener.md
-      - framework/listeners/building-a-listener-profile/complete-listener-profile.md
+      - Building a Listener Profile:
+        - framework/listeners/building-a-listener-profile/listener-type.md
+        - framework/listeners/building-a-listener-profile/listener-template.md
+        - framework/listeners/building-a-listener-profile/listener.md
+        - framework/listeners/building-a-listener-profile/complete-listener-profile.md
     - Agents:
       - framework/agents/agents-overview.md
-      - framework/agents/building-an-agent-profile/agent-capabilities.md
-      - framework/agents/building-an-agent-profile/agent-type.md
-      - framework/agents/building-an-agent-profile/agent-template.md
-      - framework/agents/building-an-agent-profile/agent-generator.md
-      - framework/agents/building-an-agent-profile/complete-agent-profile.md
+      - Building an Agent Profile:
+        - framework/agents/building-an-agent-profile/agent-capabilities.md
+        - framework/agents/building-an-agent-profile/agent-type.md
+        - framework/agents/building-an-agent-profile/agent-template.md
+        - framework/agents/building-an-agent-profile/agent-generator.md
+        - framework/agents/building-an-agent-profile/complete-agent-profile.md
+      - Building an Agent:
       - framework/agents/agent-protocol.md
     - Plugins:
       - framework/plugins/plugins-overview.md

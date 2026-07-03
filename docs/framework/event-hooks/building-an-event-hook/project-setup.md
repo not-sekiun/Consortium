@@ -12,8 +12,8 @@ Create a directory under `consortium/components/event_hooks/`:
 
 ```
 consortium/components/event_hooks/agent_activity_tracker/
-    manifest.json
-    event_hook.py
+├── manifest.json
+└── event_hook.py
 ```
 
 `manifest.json` points the component loader at the entry class. The entry point format
