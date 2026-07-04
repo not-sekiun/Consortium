@@ -15,7 +15,6 @@ from consortium.framework.agents import (
 )
 from consortium.framework.options import SingleValueOption
 
-
 info_capability = request_response_capability(
     name="info",
     description="Return basic system information from the agent.",
@@ -129,7 +128,7 @@ class AgentTemplate(BaseAgentTemplate):
     authors = {"Your Name"}
 
     agent_generator = AgentGenerator
-    agent_type      = AgentType
+    agent_type = AgentType
     compatible_listener_types = {"tcp_json"}
 
     options = {

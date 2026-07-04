@@ -40,7 +40,8 @@ Contrast this with `asyncio.sleep()`, which would keep the plugin unresponsive t
 requests for the full interval duration. The `stop_event.wait()` with timeout pattern is
 the idiomatic choice for any periodic plugin.
 
-For plugins that do not need a timer and simply need to stay alive until stopped (such as
+For plugins that do not need a timer and simply need to stay alive until stopped (such
+as
 `persistent_listeners` or `persistent_agent_generators`), the minimal form is:
 
 ```python

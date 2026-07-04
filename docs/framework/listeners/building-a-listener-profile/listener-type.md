@@ -9,10 +9,10 @@ Before writing any code, create the directory and manifest for your profile:
 
 ```
 consortium/components/listeners/tcp_json/
-    manifest.json
-    listener_type.py
-    listener_template.py
-    listener.py
+├── manifest.json
+├── listener_type.py
+├── listener_template.py
+└── listener.py
 ```
 
 `manifest.json` tells the loader where the profile entry class lives:

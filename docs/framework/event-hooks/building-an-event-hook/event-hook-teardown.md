@@ -19,7 +19,8 @@ async def on_teardown(self) -> None:
 ```
 
 `self.event_hook_project_folder` is a `pathlib.Path` pointing to the directory that
-contains your event hook's source files. Use it exactly like `self.plugin_project_folder`
+contains your event hook's source files. Use it exactly like
+`self.plugin_project_folder`
 in plugins.
 
 ## Signalling teardown failures

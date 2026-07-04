@@ -1,6 +1,7 @@
 # Plugin Shutdown
 
-`on_stopped()` is called when `stop()` is invoked from outside the plugin. The stop_event
+`on_stopped()` is called when `stop()` is invoked from outside the plugin. The
+stop_event
 is set before `on_stopped()` is called, so any `await self.stop_event.wait()` in the
 running loop will have already unblocked. Use `on_stopped()` for final cleanup: flushing
 buffers, closing connections, writing final state to disk.
@@ -40,5 +41,6 @@ async def on_completed(self) -> None:
     pass
 ```
 
-Continue to [Plugin Error Handling](plugin-error-handling.md) to handle runtime and fatal
+Continue to [Plugin Error Handling](plugin-error-handling.md) to handle runtime and
+fatal
 errors.

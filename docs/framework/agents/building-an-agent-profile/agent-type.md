@@ -39,10 +39,10 @@ up capabilities by name from this dict.
 
 ## Required attributes
 
-| Attribute | Type | Required | Description |
-|---|---|---|---|
-| `name` | `str` | Yes | Unique type identifier across the installation |
-| `agent_capabilities` | `set` | Yes | All capabilities this agent type supports |
+| Attribute            | Type  | Required | Description                                    |
+|----------------------|-------|----------|------------------------------------------------|
+| `name`               | `str` | Yes      | Unique type identifier across the installation |
+| `agent_capabilities` | `set` | Yes      | All capabilities this agent type supports      |
 
 `name` must be non-empty and unique. The framework validates this at class definition
 time.

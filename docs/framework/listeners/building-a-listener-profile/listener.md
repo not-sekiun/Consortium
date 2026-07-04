@@ -1,7 +1,8 @@
 # Listener
 
 `BaseListener` is where the network server lives. It inherits from `ComponentLifeCycle`
-and is responsible for implementing the agent-listener protocol: accepting registrations,
+and is responsible for implementing the agent-listener protocol: accepting
+registrations,
 delivering tasks, and receiving results. All three obligations are fulfilled through
 `self.connected_agents_service`.
 
@@ -51,21 +52,21 @@ When a registered agent polls for pending work:
 ```python
 task_messages = await self.connected_agents_service.get_next_agent_task_messages_by_agent_id(
     agent_id=agent_id,
-    count=None,    # None returns all pending tasks
-    block=False,   # False returns immediately even if the queue is empty
+    count=None,  # None returns all pending tasks
+    block=False,  # False returns immediately even if the queue is empty
 )
 ```
 
 This call also records an automatic check-in for the agent. Each returned object is a
 `TaskLaunchMessageModel`:
 
-| Field | Type | Description |
-|---|---|---|
-| `task_id` | `uuid.UUID` | Unique task identifier; the agent echoes this back in every result message |
-| `command` | `str` | Capability name (matches `BaseAgentCapability.name`) |
-| `arguments` | `dict` | Validated arguments from the operator |
-| `data` | `dict` | Additional unvalidated data attached by the capability |
-| `payload` | `Payload \| None` | Binary payload sent along with the task |
+| Field       | Type              | Description                                                                |
+|-------------|-------------------|----------------------------------------------------------------------------|
+| `task_id`   | `uuid.UUID`       | Unique task identifier; the agent echoes this back in every result message |
+| `command`   | `str`             | Capability name (matches `BaseAgentCapability.name`)                       |
+| `arguments` | `dict`            | Validated arguments from the operator                                      |
+| `data`      | `dict`            | Additional unvalidated data attached by the capability                     |
+| `payload`   | `Payload \| None` | Binary payload sent along with the task                                    |
 
 Serialize for transmission with `task_message.to_json()`. Binary payloads are excluded
 from `to_json()` and require an out-of-band channel (multipart encoding, base64, etc.).
@@ -77,11 +78,11 @@ When an agent submits a completed task result:
 ```python
 await self.connected_agents_service.submit_result_by_agent_id(
     agent_id=agent_id,
-    task_id=task_id,       # must match a running task for this agent
+    task_id=task_id,  # must match a running task for this agent
     success=True,
     message="Command executed successfully.",
     data={"stdout": "...", "stderr": ""},
-    payload=raw_bytes,     # optional binary output
+    payload=raw_bytes,  # optional binary output
 )
 ```
 
@@ -176,76 +177,79 @@ The three protocol handlers dispatch from a per-session loop:
 
 ```python
     async def _handle_session(self, reader, writer, remote_addr):
-        while True:
-            line = await reader.readline()
-            if not line:
-                break
-            try:
-                message = json.loads(line)
-            except json.JSONDecodeError:
-                writer.write(b'{"error": "invalid json"}\n')
-                await writer.drain()
-                continue
-
-            msg_type = message.get("type")
-            if msg_type == "register":
-                await self._handle_registration(message, writer, remote_addr)
-            elif msg_type == "check_in":
-                await self._handle_check_in(message, writer)
-            elif msg_type == "result":
-                await self._handle_result(message, writer)
-            else:
-                writer.write(b'{"error": "unknown message type"}\n')
-                await writer.drain()
-
-    async def _handle_registration(self, message, writer, remote_addr):
+    while True:
+        line = await reader.readline()
+        if not line:
+            break
         try:
-            agent = self.connected_agents_service.register_agent(
-                payload_id=message.get("payload_id"),
-                agent_type=message.get("agent_type"),
-                endpoint=remote_addr,
-                remote_host_address=remote_addr,
-                user=message.get("user"),
-                is_admin=message.get("is_admin"),
-                os=message.get("os"),
-                hostname=message.get("hostname"),
-            )
-        except AgentTypeResolutionError:
-            writer.write(b'{"error": "unauthorized"}\n')
+            message = json.loads(line)
+        except json.JSONDecodeError:
+            writer.write(b'{"error": "invalid json"}\n')
             await writer.drain()
-            return
-        writer.write((json.dumps({"agent_id": str(agent.agent_id)}) + "\n").encode())
-        await writer.drain()
+            continue
 
-    async def _handle_check_in(self, message, writer):
-        try:
-            tasks = await self.connected_agents_service.get_next_agent_task_messages_by_agent_id(
-                agent_id=message.get("agent_id", ""),
-                count=None,
-                block=False,
-            )
-        except AgentNotFoundError:
-            writer.write(b'{"error": "unauthorized"}\n')
+        msg_type = message.get("type")
+        if msg_type == "register":
+            await self._handle_registration(message, writer, remote_addr)
+        elif msg_type == "check_in":
+            await self._handle_check_in(message, writer)
+        elif msg_type == "result":
+            await self._handle_result(message, writer)
+        else:
+            writer.write(b'{"error": "unknown message type"}\n')
             await writer.drain()
-            return
-        writer.write((json.dumps([t.to_json() for t in tasks]) + "\n").encode())
-        await writer.drain()
 
-    async def _handle_result(self, message, writer):
-        try:
-            await self.connected_agents_service.submit_result_by_agent_id(
-                agent_id=message.get("agent_id", ""),
-                task_id=message["task_id"],
-                success=message["success"],
-                message=message.get("message", ""),
-                data=message.get("data", {}),
-            )
-        except (AgentNotFoundError, KeyError):
-            writer.write(b'{"error": "unauthorized"}\n')
-            await writer.drain()
-            return
-        writer.write(b'{"ok": true}\n')
+
+async def _handle_registration(self, message, writer, remote_addr):
+    try:
+        agent = self.connected_agents_service.register_agent(
+            payload_id=message.get("payload_id"),
+            agent_type=message.get("agent_type"),
+            endpoint=remote_addr,
+            remote_host_address=remote_addr,
+            user=message.get("user"),
+            is_admin=message.get("is_admin"),
+            os=message.get("os"),
+            hostname=message.get("hostname"),
+        )
+    except AgentTypeResolutionError:
+        writer.write(b'{"error": "unauthorized"}\n')
         await writer.drain()
+        return
+    writer.write((json.dumps({"agent_id": str(agent.agent_id)}) + "\n").encode())
+    await writer.drain()
+
+
+async def _handle_check_in(self, message, writer):
+    try:
+        tasks = await self.connected_agents_service.get_next_agent_task_messages_by_agent_id(
+            agent_id=message.get("agent_id", ""),
+            count=None,
+            block=False,
+        )
+    except AgentNotFoundError:
+        writer.write(b'{"error": "unauthorized"}\n')
+        await writer.drain()
+        return
+    writer.write((json.dumps([t.to_json() for t in tasks]) + "\n").encode())
+    await writer.drain()
+
+
+async def _handle_result(self, message, writer):
+    try:
+        await self.connected_agents_service.submit_result_by_agent_id(
+            agent_id=message.get("agent_id", ""),
+            task_id=message["task_id"],
+            success=message["success"],
+            message=message.get("message", ""),
+            data=message.get("data", {}),
+        )
+    except (AgentNotFoundError, KeyError):
+        writer.write(b'{"error": "unauthorized"}\n')
+        await writer.drain()
+        return
+    writer.write(b'{"ok": true}\n')
+    await writer.drain()
 ```
 
 ### on_stopped and on_cancelled
@@ -257,15 +261,16 @@ initialising, so guard attribute access with `hasattr`:
 
 ```python
     async def on_stopped(self) -> None:
-        if hasattr(self.environment, "server"):
-            self.environment.server.close()
-            await self.environment.server.wait_closed()
-        self.logger.info("TCP JSON Listener stopped.")
+    if hasattr(self.environment, "server"):
+        self.environment.server.close()
+        await self.environment.server.wait_closed()
+    self.logger.info("TCP JSON Listener stopped.")
 
-    async def on_cancelled(self) -> None:
-        # stop() may have been called before on_running() stored the server
-        if hasattr(self.environment, "server"):
-            self.environment.server.close()
+
+async def on_cancelled(self) -> None:
+    # stop() may have been called before on_running() stored the server
+    if hasattr(self.environment, "server"):
+        self.environment.server.close()
 ```
 
 ### Error handling
@@ -284,23 +289,23 @@ indicating which phase failed.
 
 ## What lives on self
 
-| Attribute | Type | Description |
-|---|---|---|
-| `self.listener_id` | `uuid.UUID` | Unique identifier for this listener instance |
-| `self.name` | `str` | Display name set at creation time |
-| `self.description` | `str` | Description set at creation time |
-| `self.endpoint` | `str` | Network endpoint derived by `resolve_listener_endpoint` |
-| `self.listener_type` | `BaseListenerType` | Type descriptor (class attribute) |
-| `self.parameters` | `dict` | Resolved option values from the template |
-| `self.datetime_created` | `datetime` | Creation timestamp |
-| `self.environment` | `SimpleNamespace` | Mutable runtime state; use this instead of instance attributes |
-| `self.connected_agents_service` | `ConnectedAgentsService` | Agent lifecycle interface |
-| `self.connected_agents` | `list[Agent]` | Property: agents currently connected to this listener |
-| `self.stop_event` | `asyncio.Event` | Set when `stop()` is called from outside |
-| `self.status` | `Status` | Lifecycle status; `.state` holds the current state string |
-| `self.logger` | `loguru.Logger` | Listener-scoped logger |
-| `self.services` | namespace | All framework services |
-| `self.creating_listener_template` | `BaseListenerTemplate` | Template that created this instance (class attribute) |
+| Attribute                         | Type                     | Description                                                    |
+|-----------------------------------|--------------------------|----------------------------------------------------------------|
+| `self.listener_id`                | `uuid.UUID`              | Unique identifier for this listener instance                   |
+| `self.name`                       | `str`                    | Display name set at creation time                              |
+| `self.description`                | `str`                    | Description set at creation time                               |
+| `self.endpoint`                   | `str`                    | Network endpoint derived by `resolve_listener_endpoint`        |
+| `self.listener_type`              | `BaseListenerType`       | Type descriptor (class attribute)                              |
+| `self.parameters`                 | `dict`                   | Resolved option values from the template                       |
+| `self.datetime_created`           | `datetime`               | Creation timestamp                                             |
+| `self.environment`                | `SimpleNamespace`        | Mutable runtime state; use this instead of instance attributes |
+| `self.connected_agents_service`   | `ConnectedAgentsService` | Agent lifecycle interface                                      |
+| `self.connected_agents`           | `list[Agent]`            | Property: agents currently connected to this listener          |
+| `self.stop_event`                 | `asyncio.Event`          | Set when `stop()` is called from outside                       |
+| `self.status`                     | `Status`                 | Lifecycle status; `.state` holds the current state string      |
+| `self.logger`                     | `loguru.Logger`          | Listener-scoped logger                                         |
+| `self.services`                   | namespace                | All framework services                                         |
+| `self.creating_listener_template` | `BaseListenerTemplate`   | Template that created this instance (class attribute)          |
 
 Do not set runtime state as direct instance attributes. Use `self.environment` so that
 `on_stopped` and `on_cancelled` can access it without risking `AttributeError` from
@@ -308,15 +313,15 @@ partially initialised state.
 
 ## ConnectedAgentsService methods
 
-| Method | Sync/Async | Description |
-|---|---|---|
-| `register_agent(payload_id=..., agent_type=..., ...)` | sync | Create an agent record; supply either `payload_id` or `agent_type` |
-| `get_next_agent_task_messages_by_agent_id(agent_id, count, block)` | async | Return pending tasks; auto check-in |
-| `submit_result_by_agent_id(agent_id, task_id, success, message, data, payload)` | async | Forward a result to the capability; auto check-in |
-| `deregister_agent_by_agent_id(agent_id)` | sync | Remove the agent from the framework entirely |
-| `check_in_agent_by_agent_id(agent_id)` | sync | Manual check-in without task retrieval |
-| `get_all_agents()` | sync | All agents connected to this listener |
-| `get_agent_by_agent_id(agent_id)` | sync | Look up a single agent; validates it belongs to this listener |
+| Method                                                                          | Sync/Async | Description                                                        |
+|---------------------------------------------------------------------------------|------------|--------------------------------------------------------------------|
+| `register_agent(payload_id=..., agent_type=..., ...)`                           | sync       | Create an agent record; supply either `payload_id` or `agent_type` |
+| `get_next_agent_task_messages_by_agent_id(agent_id, count, block)`              | async      | Return pending tasks; auto check-in                                |
+| `submit_result_by_agent_id(agent_id, task_id, success, message, data, payload)` | async      | Forward a result to the capability; auto check-in                  |
+| `deregister_agent_by_agent_id(agent_id)`                                        | sync       | Remove the agent from the framework entirely                       |
+| `check_in_agent_by_agent_id(agent_id)`                                          | sync       | Manual check-in without task retrieval                             |
+| `get_all_agents()`                                                              | sync       | All agents connected to this listener                              |
+| `get_agent_by_agent_id(agent_id)`                                               | sync       | Look up a single agent; validates it belongs to this listener      |
 
 `get_next_agent_task_messages_by_agent_id` and `submit_result_by_agent_id` are the only
 async methods. All others are synchronous.

@@ -1,6 +1,7 @@
 # Listeners Overview
 
-A listener is a persistent, server-side network component that manages the full lifecycle
+A listener is a persistent, server-side network component that manages the full
+lifecycle
 of connected agents: accepting their initial registration, handing them tasks queued by
 the operator, and receiving the results they submit. Listeners run as long-lived
 background components alongside the server.
@@ -10,11 +11,11 @@ background components alongside the server.
 Every listener is defined as a **listener profile**: three cooperating classes that must
 be written together and loaded as a unit.
 
-| Class | Base | Role |
-|---|---|---|
-| `ListenerType` | `BaseListenerType` | Names the transport family; declares which agent types can connect |
-| `ListenerTemplate` | `BaseListenerTemplate` | Configuration schema and factory; creates `Listener` instances |
-| `Listener` | `BaseListener` | The running network server; handles the agent wire protocol |
+| Class              | Base                   | Role                                                               |
+|--------------------|------------------------|--------------------------------------------------------------------|
+| `ListenerType`     | `BaseListenerType`     | Names the transport family; declares which agent types can connect |
+| `ListenerTemplate` | `BaseListenerTemplate` | Configuration schema and factory; creates `Listener` instances     |
+| `Listener`         | `BaseListener`         | The running network server; handles the agent wire protocol        |
 
 The profile is declared by `ListenerTemplate`, which points at both the `Listener` class
 it creates and the `ListenerType` that names the transport:
@@ -22,7 +23,7 @@ it creates and the `ListenerType` that names the transport:
 ```python
 class ListenerTemplate(BaseListenerTemplate):
     ...
-    listener      = Listener      # class to instantiate
+    listener = Listener  # class to instantiate
     listener_type = ListenerType  # transport family tag
 ```
 
@@ -35,6 +36,7 @@ it can connect through:
 ```python
 # In an agent template:
 compatible_listener_types = {"my_tcp_json"}
+
 
 # In the listener type that agent connects to:
 class ListenerType(BaseListenerType):
@@ -65,8 +67,8 @@ is loaded:
 
 ```json
 {
-    "entry_point": "listener_template:ListenerTemplate",
-    "enabled": true
+  "entry_point": "listener_template:ListenerTemplate",
+  "enabled": true
 }
 ```
 

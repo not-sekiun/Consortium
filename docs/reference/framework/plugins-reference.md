@@ -1,0 +1,3 @@
+# Plugins
+
+::: consortium.framework.plugins

@@ -1,10 +1,10 @@
 The REST API is automatically documented using [OpenAPI](https://www.openapis.org/). By
 default, the server binds at `http://localhost:9999`.
 
-| URL                              | Description                        |
-|----------------------------------|------------------------------------|
-| `http://localhost:9999/docs`     | Swagger UI: interactive reference. |
-| `http://localhost:9999/redoc`    | ReDoc: readable reference.         |
+| URL                           | Description                        |
+|-------------------------------|------------------------------------|
+| `http://localhost:9999/docs`  | Swagger UI: interactive reference. |
+| `http://localhost:9999/redoc` | ReDoc: readable reference.         |
 
 To prevent server fingerprinting or information leakage, the documentation pages are
 **only accessible via `localhost`** external clients cannot access them.
@@ -46,7 +46,7 @@ To quickly retrieve a token from the command line:
 1. Open `http://localhost:9999/docs`.
 2. Click the **Authorize** button (top right).
 3. Input your `username` and `password` in the top 2 form fields you can ignore the
-`client_id` and `client_secret`
+   `client_id` and `client_secret`
 
 All subsequent requests made through the UI will include the token automatically.
 
@@ -88,6 +88,6 @@ if __name__ == "__main__":
 ```
 
 1. By default the server includes an admin account with username `admin` and password
-`admin`. Change these constants to match your configuration.
+   `admin`. Change these constants to match your configuration.
 2. Use the same `session` object for all subsequent requests — the `Authorization`
-header is set once and reused automatically.
+   header is set once and reused automatically.

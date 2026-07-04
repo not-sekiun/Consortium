@@ -1,8 +1,10 @@
 # Features
 
 ## 1. "C2 framework"
+
 At its core, Consortium is a _C2 framework_. For the uninitiated (if so, welcome!), a C2
-framework is a set of tools or software used by adversaries (hackers, pen-testers, state sponsored entities) to
+framework is a set of tools or software used by adversaries (hackers, pen-testers, state
+sponsored entities) to
 maintain control over a remote system they already have initial access to.
 
 As a framework, Consortium provides users with a set of software tools that makes it
@@ -17,6 +19,7 @@ think of it as a C2 _application_ that is built on top of an underlying
 _software framework_.
 
 ## 2. "Programming language agnostic, and networking protocol agnostic"
+
 **Networking protocol agnostic** - As a software framework, Consortium imposes no
 limitations on the types of listeners and agents that can be used. This means that
 listeners and agents can be used in the framework that communicate over any networking
@@ -28,6 +31,7 @@ the framework allows you to remotely hook in listeners and agents written in any
 arbitrary language to the framework over its server's API.
 
 ## 3. "Designed to be collaborative, highly extensible, and modular"
+
 **Collaborative** - Consortium adopts a server-client model to allow collaboration.
 The server manages all C2 related activities while multiple clients can simply connect
 to the same server to perform C2 related operations together.

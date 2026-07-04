@@ -2,7 +2,8 @@
 
 `AgentTemplate` is the configuration schema and factory for `AgentGenerator` instances.
 Its structure mirrors `ListenerTemplate`: it declares options, validates parameters, and
-links the profile's generator and type together. It also declares which listener families
+links the profile's generator and type together. It also declares which listener
+families
 the generated agent can connect through.
 
 ## Required class attributes
@@ -88,7 +89,8 @@ options = {
 }
 ```
 
-Cross-field validation uses the same `validating_function` pattern as `ListenerTemplate`.
+Cross-field validation uses the same `validating_function` pattern as
+`ListenerTemplate`.
 
 ## resolve_agent_generator_name
 

@@ -30,7 +30,8 @@ reverse-DNS style string that is unique across your entire Consortium installati
 
 `compatible_framework_version` is a
 [PEP 440 version specifier](https://peps.python.org/pep-0440/). The framework checks
-this at load time and refuses to load a plugin whose specifier does not cover the running
+this at load time and refuses to load a plugin whose specifier does not cover the
+running
 framework version. Use `">=0.1.0"` for broad compatibility or pin tightly when your
 plugin depends on a specific framework API.
 

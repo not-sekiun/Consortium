@@ -62,7 +62,8 @@ See below for what to do if `config_path` does not exist.
 Raise `EventHookSetupError` from `on_setup()` to signal that the event hook cannot be
 set up. This aborts registration: the event hook is not loaded, `on_triggered()` is
 never called for it, and the registry surfaces the failure as an `EventHookSetupError`
-(from `consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions`)
+(from
+`consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions`)
 carrying your `message` and any structured `detail` you provide.
 
 ```python

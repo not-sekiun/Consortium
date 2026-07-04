@@ -37,30 +37,28 @@ listeners and agents.
     ---
 
     - [Install Consortium](getting-started/installation.md) and get the framework
-    [up and running](getting-started/quick-start.md) as quickly as possible.
-    - Learn about the [basic concepts](about/) and [features](about/features.md)
-    that are unique to the framework.
-    - Explore the [high level usage](manual/) of the framework.
+      [up and running](getting-started/quick-start.md) as quickly as possible.
+    - Explore the high level usage of the framework through the 
+      [Consortium client](client/client-overview.md).
 
 -   __Usage__
 
     ---
 
     - Look through the [Server REST API](server-api/rest-api) or
-    [Server Events Websockets API](server-api/events-websockets-api) to script
-    automations and write custom clients.
+      [Server Events Websockets API](server-api/events-websockets-api) to script
+      automations and write custom clients.
     - Develop custom [listeners](framework/listeners/listeners-overview.md) and
-    [agents](framework/agents/agents-overview.md) for the framework.
+      [agents](framework/agents/agents-overview.md) for the framework.
     - Extend the framework further through writing
-    [plugins](framework/plugins/plugins-overview.md) or [event hooks](framework/event-hooks/event-hooks-overview.md)
+      [plugins](framework/plugins/plugins-overview.md)
+      or [event hooks](framework/event-hooks/event-hooks-overview.md)
 
 -   __Advanced__
 
     ---
 
-    - Look through the [API reference](reference/) for detailed information on
-    the framework components.
-    - [Contribute to the core framework code](about/contributing.md) or help
-    [improve the documentation](about/contributing.md).
+    - Look through the [API reference](reference/reference-overview.md) for more
+      information on working with framework components.
 
 </div>

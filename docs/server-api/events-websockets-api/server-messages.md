@@ -17,12 +17,12 @@ Sent in reply to every action command. Always check `success` before reading fur
 }
 ```
 
-| Field     | Type             | Description                                                                                                                                         |
-|-----------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| `type`    | `"response"`     | Always `"response"` for action command replies.                                                                                                     |
-| `success` | `true`           | Indicates the command succeeded.                                                                                                                    |
-| `message` | string           | Human-readable summary of the outcome.                                                                                                              |
-| `data`    | array or `null`  | A list of event type strings for `get_all_events`, `get_subscribed_events`, and `get_unsubscribed_events`. `null` for all other action commands. |
+| Field     | Type            | Description                                                                                                                                      |
+|-----------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| `type`    | `"response"`    | Always `"response"` for action command replies.                                                                                                  |
+| `success` | `true`          | Indicates the command succeeded.                                                                                                                 |
+| `message` | string          | Human-readable summary of the outcome.                                                                                                           |
+| `data`    | array or `null` | A list of event type strings for `get_all_events`, `get_subscribed_events`, and `get_unsubscribed_events`. `null` for all other action commands. |
 
 ### Error
 
@@ -40,19 +40,19 @@ Sent in reply to every action command. Always check `success` before reading fur
 }
 ```
 
-| Field     | Type         | Description                                                                 |
-|-----------|--------------|-----------------------------------------------------------------------------|
-| `type`    | `"response"` | Always `"response"` for action command replies.                             |
-| `success` | `false`      | Indicates the command failed.                                               |
-| `errors`  | array        | One or more error objects. Batch commands may return multiple entries.      |
+| Field     | Type         | Description                                                            |
+|-----------|--------------|------------------------------------------------------------------------|
+| `type`    | `"response"` | Always `"response"` for action command replies.                        |
+| `success` | `false`      | Indicates the command failed.                                          |
+| `errors`  | array        | One or more error objects. Batch commands may return multiple entries. |
 
 Each error object:
 
-| Field     | Type              | Description                                                                                                     |
-|-----------|-------------------|-----------------------------------------------------------------------------------------------------------------|
-| `code`    | string            | Machine-readable error code. See the [error codes table](sending-action-commands.md#error-codes).              |
-| `message` | string            | Human-readable description of the error.                                                                        |
-| `detail`  | object or `null`  | Additional context about the failure, e.g. `{"event": "BAD_EVENT"}` when an unrecognized event is provided.   |
+| Field     | Type             | Description                                                                                                 |
+|-----------|------------------|-------------------------------------------------------------------------------------------------------------|
+| `code`    | string           | Machine-readable error code. See the [error codes table](sending-action-commands.md#error-codes).           |
+| `message` | string           | Human-readable description of the error.                                                                    |
+| `detail`  | object or `null` | Additional context about the failure, e.g. `{"event": "BAD_EVENT"}` when an unrecognized event is provided. |
 
 ## Event (`type: "event"`)
 

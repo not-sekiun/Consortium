@@ -8,11 +8,11 @@ behavior.
 
 ## Plugins vs event hooks
 
-| | Plugin | Event Hook |
-|---|---|---|
-| Execution model | Continuous async loop | Called on each matching event |
-| Lifecycle | started, running, stopped, cancelled, errored, fatal | setup, triggered (N times), teardown |
-| Use case | Periodic work, long-running integrations | Reacting to discrete framework events |
+|                 | Plugin                                               | Event Hook                            |
+|-----------------|------------------------------------------------------|---------------------------------------|
+| Execution model | Continuous async loop                                | Called on each matching event         |
+| Lifecycle       | started, running, stopped, cancelled, errored, fatal | setup, triggered (N times), teardown  |
+| Use case        | Periodic work, long-running integrations             | Reacting to discrete framework events |
 
 Use a plugin when your task needs its own background loop. Use an event hook when your
 logic is a direct response to something the framework emitted.
@@ -20,7 +20,8 @@ logic is a direct response to something the framework emitted.
 ## How plugins run
 
 When the server starts, the framework instantiates each enabled plugin and calls
-`start()`. The start sequence runs `on_started()` synchronously (blocking the start call),
+`start()`. The start sequence runs `on_started()` synchronously (blocking the start
+call),
 then schedules `on_running()` as a concurrent asyncio Task. The plugin runs until the
 server shuts down, at which point `stop()` is called.
 
@@ -47,7 +48,7 @@ must be started manually through the REST API.
 ```python
 class Plugin(BasePlugin):
     ...
-    autostart = True   # started with the server (default)
+    autostart = True  # started with the server (default)
     autostart = False  # must be started manually via the API
 ```
 
@@ -62,12 +63,13 @@ consortium/components/plugins/my_plugin/
 └── plugin.py
 ```
 
-`manifest.json` tells the framework where to find the plugin class and whether to load it:
+`manifest.json` tells the framework where to find the plugin class and whether to load
+it:
 
 ```json
 {
-    "entry_point": "plugin:Plugin",
-    "enabled": true
+  "entry_point": "plugin:Plugin",
+  "enabled": true
 }
 ```
 
@@ -117,6 +119,7 @@ loop; a couple of transitions are omitted from the diagram for clarity:
   `on_started` and runs its prompt loop inside `on_running`, giving operators direct
   Python access to all framework services.
 
-- `consortium/components/plugins/auto_updater/` performs a one-shot check in `on_running`
+- `consortium/components/plugins/auto_updater/` performs a one-shot check in
+  `on_running`
   and exits naturally (triggering `on_completed`), demonstrating plugins that do not
   need a persistent loop.

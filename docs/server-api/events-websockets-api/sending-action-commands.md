@@ -25,9 +25,9 @@ Key behaviors:
 
 1. Events can arrive at any time in any order. Build your client to handle this.
 2. The first message after sending an action command is always the response to that
-command. A subscribed event will never arrive before its subscription response.
+   command. A subscribed event will never arrive before its subscription response.
 3. Each websocket connection is independent. The same client can open multiple
-connections, each with its own set of subscriptions.
+   connections, each with its own set of subscriptions.
 4. When a connection closes, all its subscriptions are automatically cleaned up.
 
 ## Action Command Format
@@ -39,26 +39,28 @@ connections, each with its own set of subscriptions.
 }
 ```
 
-| Key      | Description                                                                                          |
-|----------|------------------------------------------------------------------------------------------------------|
-| `action` | The action to perform. **Required**.                                                                 |
+| Key      | Description                                                                                         |
+|----------|-----------------------------------------------------------------------------------------------------|
+| `action` | The action to perform. **Required**.                                                                |
 | `events` | List of event type strings. Required for `subscribe`/`unsubscribe`, must be omitted for all others. |
 
 !!! note
     When `events` is not required, **omit the field entirely** — do not pass an empty list.
 
-| Action                    | Description                                                  | `events` required? |
-|---------------------------|--------------------------------------------------------------|--------------------|
-| `subscribe`               | Subscribe this connection to one or more events.             | Yes                |
-| `unsubscribe`             | Unsubscribe this connection from one or more events.         | Yes                |
-| `get_subscribed_events`   | Get all events this connection is subscribed to.             | No                 |
-| `get_unsubscribed_events` | Get all events this connection is not subscribed to.         | No                 |
-| `get_all_events`          | Get all events the API supports.                             | No                 |
+| Action                    | Description                                          | `events` required? |
+|---------------------------|------------------------------------------------------|--------------------|
+| `subscribe`               | Subscribe this connection to one or more events.     | Yes                |
+| `unsubscribe`             | Unsubscribe this connection from one or more events. | Yes                |
+| `get_subscribed_events`   | Get all events this connection is subscribed to.     | No                 |
+| `get_unsubscribed_events` | Get all events this connection is not subscribed to. | No                 |
+| `get_all_events`          | Get all events the API supports.                     | No                 |
 
 ## Server Responses
 
-Every action command receives exactly one response. See [Server Messages](server-messages.md)
-for the full schema. Check the `success` field to determine whether the command succeeded.
+Every action command receives exactly one response.
+See [Server Messages](server-messages.md)
+for the full schema. Check the `success` field to determine whether the command
+succeeded.
 
 **Success**
 
@@ -91,12 +93,12 @@ for the full schema. Check the `success` field to determine whether the command 
 
 ## Error Codes
 
-| Code                                | When it occurs                                               |
-|-------------------------------------|--------------------------------------------------------------|
+| Code                                | When it occurs                                                   |
+|-------------------------------------|------------------------------------------------------------------|
 | `INVALID_MESSAGE_FORMAT_ERROR`      | The action command JSON is malformed or missing required fields. |
-| `INVALID_EVENT_TYPE_ERROR`          | An event string does not match any known event type.         |
-| `ALREADY_SUBSCRIBED_TO_EVENT_ERROR` | `subscribe` was called for an event already subscribed to.   |
-| `NOT_SUBSCRIBED_TO_EVENT_ERROR`     | `unsubscribe` was called for an event not subscribed to.     |
+| `INVALID_EVENT_TYPE_ERROR`          | An event string does not match any known event type.             |
+| `ALREADY_SUBSCRIBED_TO_EVENT_ERROR` | `subscribe` was called for an event already subscribed to.       |
+| `NOT_SUBSCRIBED_TO_EVENT_ERROR`     | `unsubscribe` was called for an event not subscribed to.         |
 
 !!! warning
     `subscribe` and `unsubscribe` validate **all** events in the list before applying

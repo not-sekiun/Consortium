@@ -129,7 +129,8 @@ binary payloads it does so via an additional channel (multipart, base64 encoding
 
 **Response on failure (401 Unauthorized)**
 
-The agent should treat this as a de-registration signal and either reconnect (re-register)
+The agent should treat this as a de-registration signal and either reconnect (
+re-register)
 or exit, depending on its configuration.
 
 ---
@@ -226,11 +227,11 @@ When implementing an agent for a custom listener, ensure the agent:
 - [ ] Re-registers if the server responds with 401 Unauthorized to a check-in
 - [ ] Polls for tasks at a configurable interval (with optional jitter)
 - [ ] Executes each received task concurrently or sequentially (depending on the
-      capability)
+  capability)
 - [ ] Submits a result for every task received, even on failure
 - [ ] Echoes back the `task_id` from the task message in every result message
 - [ ] Handles multi-message exchanges by submitting multiple results with the same
-      `task_id` until the server capability signals completion
+  `task_id` until the server capability signals completion
 - [ ] Disconnects gracefully when the listener stops sending responses
 
 ---

@@ -1,7 +1,8 @@
 # Plugin Startup
 
 `on_started()` is called once immediately after the status transitions to `STARTED`,
-before the main loop Task is scheduled. This is where you perform one-time setup: loading
+before the main loop Task is scheduled. This is where you perform one-time setup:
+loading
 configuration files, opening connections, and initialising state in `self.environment`.
 
 ```python
@@ -47,7 +48,8 @@ class Plugin(BasePlugin):
 ## Signalling errors: PluginStartError
 
 The framework uses exceptions to communicate from hook methods back to the lifecycle
-engine. Raising `PluginStartError` from `on_started()` aborts the start sequence cleanly:
+engine. Raising `PluginStartError` from `on_started()` aborts the start sequence
+cleanly:
 the plugin's status reverts to `INITIALIZED` and the error is surfaced to whoever called
 `start()`. This is the correct way to signal that a plugin cannot start.
 

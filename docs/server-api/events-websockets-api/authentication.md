@@ -19,6 +19,7 @@ this:
 Where `JWT` is the JSON Web Token as a string.
 
 ## Authenticating with the REST API
+
 In the example below, we use the `requests` library to authenticate with the REST API
 and receive a JSON Web Token.
 
@@ -49,11 +50,11 @@ if __name__ == "__main__":
 ```
 
 1. `requests` is a third party library, install it from
-[PyPI](https://pypi.org/project/requests/) with your preferred package manager of
-choice.
+   [PyPI](https://pypi.org/project/requests/) with your preferred package manager of
+   choice.
 2. By default, the server binds at `0.0.0.0:9999` and includes an admin account with
-the username `admin` and password `admin`. Change these constants to fit your
-configuration appropriately.
+   the username `admin` and password `admin`. Change these constants to fit your
+   configuration appropriately.
 
 If all goes well you should see the JSON Web Token printed to the console. It should
 look like a long string of random alphanumeric characters with 3 distinct segments
@@ -64,19 +65,18 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MGNkMmE1YS1jMGYyLTQ5OGUtYjljZC1
 ```
 
 !!! warning
-
     The JSON web token is what controls your access to the events API. Even if someone
     were not to know your username and password, they could still access the events API
     (and **every other** API endpoint that you have the relevant permissions for) if
     they had your JWT token. **Keep it secure**.
 
 ## Connecting to the websocket endpoint
+
 Now that you have a valid JSON Web Token you can connect to the websocket endpoint at
 `ws://localhost:9999/api/events`. The initial request to that endpoint must be made
 with the JSON Web Token present in the Authorization header.
 
 !!! note
-
     The OAuth 2.0 format for including JSON Web Tokens in the Authorization header is
     to _precede_ the JSON Web Token with the string `Bearer ` (including the space)
     like so:
@@ -118,6 +118,7 @@ connection was rejected.
 ```plaintext title="Failed connection attempt"
 websockets.exceptions.InvalidStatusCode: server rejected WebSocket connection: HTTP 403
 ```
+
 [introduction.md](introduction.md)
 If this happens, double-check your JSON Web Token and the URL you are connecting to. If
 you want more information about what _exactly_ failed you have to start the server in

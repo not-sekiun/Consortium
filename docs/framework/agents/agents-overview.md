@@ -3,25 +3,26 @@
 An agent profile defines everything the framework needs to generate an agent payload and
 handle its commands once deployed. A profile is made up of four cooperating classes that
 cover two distinct concerns: how to **build** the agent (the generator and its build
-steps), and what the agent can **do** once running (the agent type and its capabilities).
+steps), and what the agent can **do** once running (the agent type and its
+capabilities).
 
 ## Agent profile components
 
-| Class | Base | Role |
-|---|---|---|
-| `AgentType` | `BaseAgentType` | Names the agent family; groups all its executable capabilities |
-| `AgentCapability` | `BaseAgentCapability` | A single command the agent can execute |
-| `AgentTemplate` | `BaseAgentTemplate` | Configuration schema and factory; creates `AgentGenerator` instances |
-| `AgentGenerator` | `BaseAgentGenerator` | Orchestrates a pipeline of `AgentGeneratorBuildStep` classes to produce the deployable agent payload |
-| `AgentGeneratorBuildStep` | `BaseAgentGeneratorBuildStep` | One discrete stage in the build pipeline |
+| Class                     | Base                          | Role                                                                                                 |
+|---------------------------|-------------------------------|------------------------------------------------------------------------------------------------------|
+| `AgentType`               | `BaseAgentType`               | Names the agent family; groups all its executable capabilities                                       |
+| `AgentCapability`         | `BaseAgentCapability`         | A single command the agent can execute                                                               |
+| `AgentTemplate`           | `BaseAgentTemplate`           | Configuration schema and factory; creates `AgentGenerator` instances                                 |
+| `AgentGenerator`          | `BaseAgentGenerator`          | Orchestrates a pipeline of `AgentGeneratorBuildStep` classes to produce the deployable agent payload |
+| `AgentGeneratorBuildStep` | `BaseAgentGeneratorBuildStep` | One discrete stage in the build pipeline                                                             |
 
 The template links everything together:
 
 ```python
 class AgentTemplate(BaseAgentTemplate):
     ...
-    agent_generator = AgentGenerator   # class that builds the payload
-    agent_type      = AgentType        # capabilities the generated agent exposes
+    agent_generator = AgentGenerator  # class that builds the payload
+    agent_type = AgentType  # capabilities the generated agent exposes
     compatible_listener_types = {"tcp_json"}  # listener types it can connect through
 ```
 
@@ -37,6 +38,7 @@ strings. The framework uses this set to:
 # Listener type (from listener profile)
 class ListenerType(BaseListenerType):
     name = "tcp_json"
+
 
 # Agent template (from agent profile) -- links to the listener type by name
 class AgentTemplate(BaseAgentTemplate):
@@ -59,8 +61,8 @@ consortium/components/agents/my_agent/
 
 ```json
 {
-    "entry_point": "agent_template:AgentTemplate",
-    "enabled": true
+  "entry_point": "agent_template:AgentTemplate",
+  "enabled": true
 }
 ```
 

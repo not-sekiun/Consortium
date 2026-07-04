@@ -22,8 +22,8 @@ is `<module>:<class>`. The class must be named `Plugin` by convention:
 
 ```json
 {
-    "entry_point": "plugin:Plugin",
-    "enabled": true
+  "entry_point": "plugin:Plugin",
+  "enabled": true
 }
 ```
 
@@ -31,7 +31,7 @@ is `<module>:<class>`. The class must be named `Plugin` by convention:
 
 ```json
 {
-    "interval_seconds": 30
+  "interval_seconds": 30
 }
 ```
 

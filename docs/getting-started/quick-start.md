@@ -9,7 +9,8 @@ uv run consortium.py server
 ```
 
 This will start the server on the default socket address of `0.0.0.0:9999`. Anyone can
-now attempt to connect to the server through the [client](#consortium-client-quick-start).
+now attempt to connect to the server through
+the [client](#consortium-client-quick-start).
 
 ### Configuring the Consortium Server
 
@@ -117,13 +118,13 @@ logs.
 }
 ```
 
-| Field       | Description                                                                                                                                                                     | Default Value                   |
-|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
-| `level`     | The minimum logging level for messages to be logged. Can be one of: `TRACE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`, or `SUCCESS`.                                     | `"INFO"`                        |
-| `log_file`  | The file path where log files will be written. Supports dynamic placeholders like `{time}` for timestamps.                                                                      | `"data/server/logs/{time}.log"` |
-| `rotation`  | The condition for rotating log files. Can be a file size (e.g., `"10 MB"`), a time period (e.g., `"1 day"`), a specific time (e.g., `"00:00"`), or `null` to disable rotation.  | `null`                          |
-| `retention` | The number of log files to retain before deletion, or a time period (e.g., `"1 week"`). Can be an integer or string, or `null` to keep all logs indefinitely.                   | `1`                             |
-| `colorize`  | Whether to enable colorized output in the terminal/console. Set to `true` to enable colored log messages in stdout, or `false` to disable.                                      | `true`                          |
+| Field       | Description                                                                                                                                                                    | Default Value                   |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| `level`     | The minimum logging level for messages to be logged. Can be one of: `TRACE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`, or `SUCCESS`.                                    | `"INFO"`                        |
+| `log_file`  | The file path where log files will be written. Supports dynamic placeholders like `{time}` for timestamps.                                                                     | `"data/server/logs/{time}.log"` |
+| `rotation`  | The condition for rotating log files. Can be a file size (e.g., `"10 MB"`), a time period (e.g., `"1 day"`), a specific time (e.g., `"00:00"`), or `null` to disable rotation. | `null`                          |
+| `retention` | The number of log files to retain before deletion, or a time period (e.g., `"1 week"`). Can be an integer or string, or `null` to keep all logs indefinitely.                  | `1`                             |
+| `colorize`  | Whether to enable colorized output in the terminal/console. Set to `true` to enable colored log messages in stdout, or `false` to disable.                                     | `true`                          |
 
 To pass a custom logging configuration file from another file location, use the
 `-l/--logging-config` flag when starting the server.
@@ -133,9 +134,9 @@ uv run consortium.py server -l path/to/custom_logging_config.json
 ```
 
 ??? note "More on logging configuration"
-    Internally Consortium uses the `Loguru` logging library. For more information about
-    the logging configuration options, refer to the
-    [Loguru documentation](https://loguru.readthedocs.io/en/stable/api/logger.html#configuration).
+Internally Consortium uses the `Loguru` logging library. For more information about
+the logging configuration options, refer to the
+[Loguru documentation](https://loguru.readthedocs.io/en/stable/api/logger.html#configuration).
 
 ## Consortium Client Quick Start
 
@@ -171,12 +172,12 @@ server is hosted if you are running the client and server on different machines.
 }
 ```
 
-| Field         | Description                                                                        | Default Value  |
-|---------------|------------------------------------------------------------------------------------|----------------|
-| `username`    | The username of the user that the client will use to authenticate with the server. | `"admin"`      |
-| `password`    | The password of the user that the client will use to authenticate with the server. | `"admin"`      |
-| `remote_host` | The remote host IP address that the client will connect to.                        | `"127.0.0.1"`  |
-| `remote_port` | The remote host port that the client will connect to.                              | `9999`         |
+| Field         | Description                                                                        | Default Value |
+|---------------|------------------------------------------------------------------------------------|---------------|
+| `username`    | The username of the user that the client will use to authenticate with the server. | `"admin"`     |
+| `password`    | The password of the user that the client will use to authenticate with the server. | `"admin"`     |
+| `remote_host` | The remote host IP address that the client will connect to.                        | `"127.0.0.1"` |
+| `remote_port` | The remote host port that the client will connect to.                              | `9999`        |
 
 To pass a custom client configuration file from another file location, use the
 `-c/--config` flag when starting the client.
@@ -269,4 +270,4 @@ server is demonstrated below.
 </script>
 
 For more information about using the client, refer to the [Client section of the
-Manual](../client/introduction.md).
+Manual](../client/client-overview.md).

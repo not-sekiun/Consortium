@@ -21,8 +21,8 @@ is `<module>:<class>`. The class must be named `EventHook` by convention:
 
 ```json
 {
-    "entry_point": "event_hook:EventHook",
-    "enabled": true
+  "entry_point": "event_hook:EventHook",
+  "enabled": true
 }
 ```
 

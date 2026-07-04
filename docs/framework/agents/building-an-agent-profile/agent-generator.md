@@ -75,10 +75,10 @@ runtime.
 Use `self.agent_templates_payload_service` to store build artifacts for later retrieval
 via the REST API:
 
-| Method | Description |
-|---|---|
-| `create_payload_file(build_parameters, content, name)` | Create a new text file in the payload store; `content` is a string |
-| `add_payload_file(build_parameters, path, name)` | Copy an existing file from `path` (a `pathlib.Path`) into the payload store |
+| Method                                                 | Description                                                                 |
+|--------------------------------------------------------|-----------------------------------------------------------------------------|
+| `create_payload_file(build_parameters, content, name)` | Create a new text file in the payload store; `content` is a string          |
+| `add_payload_file(build_parameters, path, name)`       | Copy an existing file from `path` (a `pathlib.Path`) into the payload store |
 
 Both methods require `build_parameters` (the full parameters dict) to tag the artifact
 with its provenance. Stored artifacts are retrievable via the REST API after the build
@@ -142,46 +142,46 @@ would cause all steps to fail.
 
 ### Generator lifecycle hooks
 
-| Hook | When it fires | Override for |
-|---|---|---|
-| `on_started()` | Before build steps begin | Pre-build validation; fail fast with `AgentGeneratorStartError` |
-| `on_running()` | **@final** -- do not override | Drives the step pipeline automatically |
-| `on_completed()` | After all steps succeed | Post-build notifications, cleanup |
-| `on_stopped()` | When stopped before all steps complete | Resource cleanup on early halt |
-| `on_cancelled()` | When cancelled externally | Resource cleanup on abort |
-| `on_errored(error)` | `AgentGeneratorRuntimeError` raised | Custom error handling |
-| `on_fatal(exc, fatal_context)` | Unhandled exception in any hook | Last-resort alerting |
+| Hook                           | When it fires                          | Override for                                                    |
+|--------------------------------|----------------------------------------|-----------------------------------------------------------------|
+| `on_started()`                 | Before build steps begin               | Pre-build validation; fail fast with `AgentGeneratorStartError` |
+| `on_running()`                 | **@final** -- do not override          | Drives the step pipeline automatically                          |
+| `on_completed()`               | After all steps succeed                | Post-build notifications, cleanup                               |
+| `on_stopped()`                 | When stopped before all steps complete | Resource cleanup on early halt                                  |
+| `on_cancelled()`               | When cancelled externally              | Resource cleanup on abort                                       |
+| `on_errored(error)`            | `AgentGeneratorRuntimeError` raised    | Custom error handling                                           |
+| `on_fatal(exc, fatal_context)` | Unhandled exception in any hook        | Last-resort alerting                                            |
 
 ## What lives on self
 
 ### BaseAgentGeneratorBuildStep
 
-| Attribute | Type | Description |
-|---|---|---|
-| `self.name` | `str` | Step name (class attribute) |
-| `self.agent_generator_build_step_id` | `uuid.UUID` | Unique ID for this step instance |
-| `self.parameters` | `dict` | Generator parameters forwarded from the owning generator |
-| `self.environment` | `SimpleNamespace` | Shared namespace across all steps in one run |
-| `self.working_directory` | `pathlib.Path` | Directory containing this step's source file |
-| `self.agent_templates_payload_service` | `AgentTemplatesPayloadsService` | Storage for build artifacts |
-| `self.logger` | `loguru.Logger` | Step-scoped logger |
-| `self.datetime_started` | `datetime \| None` | Set when the step starts |
-| `self.datetime_stopped` | `datetime \| None` | Set when the step ends |
-| `self.time_elapsed_in_seconds` | `float \| None` | Property: wall-clock duration of the most recent run |
+| Attribute                              | Type                            | Description                                              |
+|----------------------------------------|---------------------------------|----------------------------------------------------------|
+| `self.name`                            | `str`                           | Step name (class attribute)                              |
+| `self.agent_generator_build_step_id`   | `uuid.UUID`                     | Unique ID for this step instance                         |
+| `self.parameters`                      | `dict`                          | Generator parameters forwarded from the owning generator |
+| `self.environment`                     | `SimpleNamespace`               | Shared namespace across all steps in one run             |
+| `self.working_directory`               | `pathlib.Path`                  | Directory containing this step's source file             |
+| `self.agent_templates_payload_service` | `AgentTemplatesPayloadsService` | Storage for build artifacts                              |
+| `self.logger`                          | `loguru.Logger`                 | Step-scoped logger                                       |
+| `self.datetime_started`                | `datetime \| None`              | Set when the step starts                                 |
+| `self.datetime_stopped`                | `datetime \| None`              | Set when the step ends                                   |
+| `self.time_elapsed_in_seconds`         | `float \| None`                 | Property: wall-clock duration of the most recent run     |
 
 ### BaseAgentGenerator
 
-| Attribute | Type | Description |
-|---|---|---|
-| `self.agent_generator_id` | `uuid.UUID` | Unique identifier for this generator instance |
-| `self.name` | `str` | Display name set at creation time |
-| `self.description` | `str` | Description set at creation time |
-| `self.parameters` | `dict` | Resolved option values from the template |
-| `self.agent_generator_build_steps` | `list` | Step class list declared at class level |
-| `self.environment` | `SimpleNamespace` | Shared mutable namespace across all steps |
-| `self.datetime_created` | `datetime` | Creation timestamp |
-| `self.stop_event` | `asyncio.Event` | Set when `stop()` is called |
-| `self.status` | `Status` | Lifecycle status |
-| `self.logger` | `loguru.Logger` | Generator-scoped logger |
-| `self.services` | namespace | All framework services |
-| `self.creating_agent_template` | `BaseAgentTemplate` | Template that created this generator (class attribute) |
+| Attribute                          | Type                | Description                                            |
+|------------------------------------|---------------------|--------------------------------------------------------|
+| `self.agent_generator_id`          | `uuid.UUID`         | Unique identifier for this generator instance          |
+| `self.name`                        | `str`               | Display name set at creation time                      |
+| `self.description`                 | `str`               | Description set at creation time                       |
+| `self.parameters`                  | `dict`              | Resolved option values from the template               |
+| `self.agent_generator_build_steps` | `list`              | Step class list declared at class level                |
+| `self.environment`                 | `SimpleNamespace`   | Shared mutable namespace across all steps              |
+| `self.datetime_created`            | `datetime`          | Creation timestamp                                     |
+| `self.stop_event`                  | `asyncio.Event`     | Set when `stop()` is called                            |
+| `self.status`                      | `Status`            | Lifecycle status                                       |
+| `self.logger`                      | `loguru.Logger`     | Generator-scoped logger                                |
+| `self.services`                    | namespace           | All framework services                                 |
+| `self.creating_agent_template`     | `BaseAgentTemplate` | Template that created this generator (class attribute) |

@@ -13,11 +13,11 @@ async def on_triggered(self, event) -> None:
 
 ## The Event object
 
-| Attribute | Type | Description |
-|---|---|---|
-| `event.event_type` | `EventType` | The event identifier that fired |
-| `event.message` | `str` | Human-readable description of what happened |
-| `event.data` | `dict` | Structured data payload (contents vary by event type) |
+| Attribute          | Type        | Description                                           |
+|--------------------|-------------|-------------------------------------------------------|
+| `event.event_type` | `EventType` | The event identifier that fired                       |
+| `event.message`    | `str`       | Human-readable description of what happened           |
+| `event.data`       | `dict`      | Structured data payload (contents vary by event type) |
 
 `event.to_json()` returns `{"event_type": str, "message": str, "data": dict}`.
 
@@ -67,7 +67,8 @@ async def on_triggered(self, event) -> None:
 Be careful when using `create_task()` from a hook: the task runs independently and any
 exception it raises will not be caught by the events service, so it will not be
 reported as an `EventHookTriggerError` (see below). Wrap the body in a try/except if the
-task can fail, and raise `EventHookTriggerError` from within that try/except if you still
+task can fail, and raise `EventHookTriggerError` from within that try/except if you
+still
 want the failure reported through the framework.
 
 ## Signalling trigger failures

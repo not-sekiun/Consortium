@@ -32,7 +32,8 @@ back to the instance that produced it.
 
 ## Options
 
-Options declare the parameters an operator must supply when creating a listener instance.
+Options declare the parameters an operator must supply when creating a listener
+instance.
 They are validated when `create_listener()` is called. Declare them as a set assigned
 to the `options` class attribute:
 
@@ -72,13 +73,13 @@ Options with a `default_value` are filled in automatically when missing.
 
 ### Available option types
 
-| Option class | Value type | Key constraints |
-|---|---|---|
-| `SingleValueOption` | `str`, `int`, `float`, `bool` | `greater_than`, `less_than`, `minimum_length`, `maximum_length`, `validating_regex`, `validating_function` |
-| `ListValueOption` | List of primitive | `allow_duplicates`, `validating_regex`, `validating_function` per element |
-| `ChoiceValueOption` | One of a set of strings | `available_values` |
-| `DictionaryValueOption` | `dict[str, primitive]` | `value_type` for all values |
-| `ToggleableChoicesValueOption` | Subset of declared choices | `available_values` |
+| Option class                   | Value type                    | Key constraints                                                                                            |
+|--------------------------------|-------------------------------|------------------------------------------------------------------------------------------------------------|
+| `SingleValueOption`            | `str`, `int`, `float`, `bool` | `greater_than`, `less_than`, `minimum_length`, `maximum_length`, `validating_regex`, `validating_function` |
+| `ListValueOption`              | List of primitive             | `allow_duplicates`, `validating_regex`, `validating_function` per element                                  |
+| `ChoiceValueOption`            | One of a set of strings       | `available_values`                                                                                         |
+| `DictionaryValueOption`        | `dict[str, primitive]`        | `value_type` for all values                                                                                |
+| `ToggleableChoicesValueOption` | Subset of declared choices    | `available_values`                                                                                         |
 
 ## Cross-field validation
 

@@ -219,11 +219,11 @@ arguments based on the agent's known state, or aborting a task that cannot proce
 `on_execute()` is called after the initial message has been sent. Use the inherited
 communication methods to exchange messages with the agent:
 
-| Method | Direction | Notes |
-|---|---|---|
-| `await self.recv_from_agent(timeout=None)` | Agent -> server | Blocks until the next `TaskOutputMessageModel` arrives for this task |
-| `await self.send_to_agent(data={}, payload=b"")` | Server -> agent | Sends a `TaskInputMessageModel` for multi-turn exchanges |
-| `await self.send_and_recv_from_agent(data={})` | Round trip | Shorthand: send then immediately await reply |
+| Method                                           | Direction       | Notes                                                                |
+|--------------------------------------------------|-----------------|----------------------------------------------------------------------|
+| `await self.recv_from_agent(timeout=None)`       | Agent -> server | Blocks until the next `TaskOutputMessageModel` arrives for this task |
+| `await self.send_to_agent(data={}, payload=b"")` | Server -> agent | Sends a `TaskInputMessageModel` for multi-turn exchanges             |
+| `await self.send_and_recv_from_agent(data={})`   | Round trip      | Shorthand: send then immediately await reply                         |
 
 `recv_from_agent` blocks until the agent submits a result with the matching `task_id`.
 Call it once per expected message. For multi-message exchanges the agent must submit
@@ -234,25 +234,25 @@ multiple results with the same `task_id` until the exchange is complete.
 Use these methods to record structured output into the task's event stream. They can be
 called from `on_execute()` at any point:
 
-| Method | When to use |
-|---|---|
+| Method                                                  | When to use                                                                               |
+|---------------------------------------------------------|-------------------------------------------------------------------------------------------|
 | `self.update_progress(percent_complete, message, data)` | Ephemeral progress update; overwrites the current status without adding a permanent event |
-| `self.emit_success(message, data)` | Emit a SUCCESS event visible in the task timeline |
-| `self.emit_info(message, data)` | Emit an INFO event |
-| `self.emit_failure(message, data)` | Emit a FAILURE event |
-| `self.emit_artifact(message, data)` | Signal that the capability produced a collectible output (file, screenshot, etc.) |
+| `self.emit_success(message, data)`                      | Emit a SUCCESS event visible in the task timeline                                         |
+| `self.emit_info(message, data)`                         | Emit an INFO event                                                                        |
+| `self.emit_failure(message, data)`                      | Emit a FAILURE event                                                                      |
+| `self.emit_artifact(message, data)`                     | Signal that the capability produced a collectible output (file, screenshot, etc.)         |
 
 ## TaskOutputMessageModel
 
 The object returned by `recv_from_agent()`:
 
-| Field | Type | Description |
-|---|---|---|
-| `task_id` | `uuid.UUID` | Must match the task ID sent to the agent |
-| `success` | `bool` | Whether the agent considers the response successful |
-| `message` | `str` | Human-readable result description |
-| `data` | `dict` | Structured result payload |
-| `payload` | `Payload \| None` | Optional binary output |
+| Field     | Type              | Description                                         |
+|-----------|-------------------|-----------------------------------------------------|
+| `task_id` | `uuid.UUID`       | Must match the task ID sent to the agent            |
+| `success` | `bool`            | Whether the agent considers the response successful |
+| `message` | `str`             | Human-readable result description                   |
+| `data`    | `dict`            | Structured result payload                           |
+| `payload` | `Payload \| None` | Optional binary output                              |
 
 `payload.data` returns the raw bytes synchronously. Use `await payload.load()` for
 streamed payloads.
@@ -270,20 +270,20 @@ return Failure(task_output_message=header)   # wrap an existing message model
 
 ## What lives on self
 
-| Attribute | Type | Description |
-|---|---|---|
-| `self.name` | `str` | Capability name (class attribute; routes task dispatch) |
-| `self.description` | `str` | Human-readable description |
-| `self.authors` | `set[str]` | Author identifiers |
-| `self.requires_admin` | `bool` | Whether elevated privileges are required |
-| `self.supported_oses` | `set[SupportedOS]` | Platform restrictions |
-| `self.is_atomic` | `bool` | Whether this maps to a single MITRE ATT&CK step |
-| `self.options` | `dict` | Name-keyed option definitions (converted from set at class definition) |
-| `self.mitre_attack_techniques` | `list` | Resolved MITRE ATT&CK technique objects |
-| `self.launch_message` | `TaskLaunchMessageModel \| None` | The message sent on the most recent `execute()` call |
-| `self.agent` | `Agent` | The agent this execution is running against |
-| `self.task` | `AgentTask` | The task record tracking this execution |
-| `self.services` | namespace | All framework services |
+| Attribute                      | Type                             | Description                                                            |
+|--------------------------------|----------------------------------|------------------------------------------------------------------------|
+| `self.name`                    | `str`                            | Capability name (class attribute; routes task dispatch)                |
+| `self.description`             | `str`                            | Human-readable description                                             |
+| `self.authors`                 | `set[str]`                       | Author identifiers                                                     |
+| `self.requires_admin`          | `bool`                           | Whether elevated privileges are required                               |
+| `self.supported_oses`          | `set[SupportedOS]`               | Platform restrictions                                                  |
+| `self.is_atomic`               | `bool`                           | Whether this maps to a single MITRE ATT&CK step                        |
+| `self.options`                 | `dict`                           | Name-keyed option definitions (converted from set at class definition) |
+| `self.mitre_attack_techniques` | `list`                           | Resolved MITRE ATT&CK technique objects                                |
+| `self.launch_message`          | `TaskLaunchMessageModel \| None` | The message sent on the most recent `execute()` call                   |
+| `self.agent`                   | `Agent`                          | The agent this execution is running against                            |
+| `self.task`                    | `AgentTask`                      | The task record tracking this execution                                |
+| `self.services`                | namespace                        | All framework services                                                 |
 
 `SupportedOS` is a `StrEnum` with values `WINDOWS`, `LINUX`, `MACOS`, `ANDROID`, `IOS`,
 and `ANY`. The class attributes `SupportedOS.DESKTOP` and `SupportedOS.MOBILE` are

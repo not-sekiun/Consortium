@@ -108,7 +108,8 @@ patterns:
   `stop_event` in `on_running`, and serialises live state in `on_stopped`. The canonical
   example of a plugin that bridges server restarts.
 
-- `persistent_agent_generators/plugin.py` - the same pattern applied to agent generators.
+- `persistent_agent_generators/plugin.py` - the same pattern applied to agent
+  generators.
 
 - `debug_console/plugin.py` - uses `on_started` to configure logging, then runs an
   interactive prompt loop in `on_running`. Demonstrates blocking with a prompt rather

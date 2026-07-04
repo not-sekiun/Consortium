@@ -36,20 +36,20 @@ def _format_agent_line(agent) -> str:
 
 Every plugin instance has these attributes:
 
-| Attribute | Type | Description |
-|---|---|---|
-| `self.plugin_id` | `uuid.UUID` | Unique identifier for this plugin instance |
-| `self.name` | `str` | Display name from the class attribute |
-| `self.label` | `str` | Stable label from the class attribute |
-| `self.description` | `str` | Description from the class attribute |
-| `self.version` | `Version` | Parsed version from the `version` class attribute |
-| `self.autostart` | `bool` | Whether this plugin starts with the server |
-| `self.status` | `Status` | Current lifecycle status, with `.state` for the state string |
-| `self.stop_event` | `asyncio.Event` | Set when `stop()` is called |
-| `self.environment` | `SimpleNamespace` | Mutable runtime state namespace |
-| `self.services` | `SimpleNamespace` | Framework services namespace |
-| `self.logger` | `loguru.Logger` | Plugin-scoped logger |
-| `self.plugin_project_folder` | `pathlib.Path` | Path to this plugin's source directory |
+| Attribute                    | Type              | Description                                                  |
+|------------------------------|-------------------|--------------------------------------------------------------|
+| `self.plugin_id`             | `uuid.UUID`       | Unique identifier for this plugin instance                   |
+| `self.name`                  | `str`             | Display name from the class attribute                        |
+| `self.label`                 | `str`             | Stable label from the class attribute                        |
+| `self.description`           | `str`             | Description from the class attribute                         |
+| `self.version`               | `Version`         | Parsed version from the `version` class attribute            |
+| `self.autostart`             | `bool`            | Whether this plugin starts with the server                   |
+| `self.status`                | `Status`          | Current lifecycle status, with `.state` for the state string |
+| `self.stop_event`            | `asyncio.Event`   | Set when `stop()` is called                                  |
+| `self.environment`           | `SimpleNamespace` | Mutable runtime state namespace                              |
+| `self.services`              | `SimpleNamespace` | Framework services namespace                                 |
+| `self.logger`                | `loguru.Logger`   | Plugin-scoped logger                                         |
+| `self.plugin_project_folder` | `pathlib.Path`    | Path to this plugin's source directory                       |
 
 Do not set attributes directly on `self` for runtime state. Use `self.environment`
 instead. Framework-managed attributes like `self.stop_event` and `self.status` should
