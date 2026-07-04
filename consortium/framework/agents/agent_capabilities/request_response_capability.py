@@ -77,6 +77,39 @@ def request_response_capability(
     result_handler: _ResultMessageHandlerProtocol | None = None,
     timeout_handler: _TimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
+    """Build an agent capability that sends one task message and awaits a single response.
+
+    This is a factory that returns a new BaseAgentCapability subclass wired up with the
+    supplied metadata and handlers, saving you from writing a full capability class for
+    the common request-then-response pattern. The optional handlers let you hook into
+    each phase: task_handler mutates the outgoing message, result_handler post-processes
+    the agent's reply, and timeout_handler supplies a fallback result if the agent does
+    not respond in time.
+
+    Args:
+        name: Unique command name used to route task messages to this capability.
+        description: Human-readable explanation of what the capability does.
+        options: Configuration options the capability accepts, declared as a set.
+        authors: Identifiers for the capability's authors.
+        requires_admin: Whether the capability requires elevated privileges on the target.
+        supported_oses: Platforms the capability supports. Defaults to any platform.
+        mitre_attack_techniques: MITRE ATT&CK technique IDs associated with the capability.
+        validating_function: Optional callable that validates the full resolved option set.
+        timeout: Seconds to wait for the agent's response before timing out. Ignored if
+            resolve_timeout is provided.
+        resolve_timeout: Optional callable that computes the response timeout dynamically
+            from the launch message and context, overriding timeout.
+        task_handler: Optional callable invoked before the message is sent, returning the
+            message to transmit or None to cancel the launch. May be sync or async.
+        result_handler: Optional callable invoked with the agent's response, returning the
+            (possibly modified) output message. May be sync or async.
+        timeout_handler: Optional callable invoked when the response times out, returning
+            an output message to report instead of raising. May be sync or async.
+
+    Returns:
+        A new BaseAgentCapability subclass implementing the request-response behavior.
+    """
+
     async def _on_launch(
         self, task_message: TaskLaunchMessageModel
     ) -> TaskLaunchMessageModel | None:

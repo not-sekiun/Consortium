@@ -52,10 +52,6 @@ theme:
 
 nav:
   - Home: index.md
-#  - About:
-#    - about/features.md
-#    - about/motivation.md
-#    - about/history.md
   - Getting Started:
     - getting-started/installation.md
     - getting-started/updating.md
@@ -84,7 +80,6 @@ nav:
         - framework/agents/building-an-agent-profile/agent-template.md
         - framework/agents/building-an-agent-profile/agent-generator.md
         - framework/agents/building-an-agent-profile/complete-agent-profile.md
-      - Building an Agent:
       - framework/agents/agent-protocol.md
     - Plugins:
       - framework/plugins/plugins-overview.md
@@ -108,7 +103,31 @@ nav:
           - framework/event-hooks/building-an-event-hook/event-hook-conventions.md
           - framework/event-hooks/building-an-event-hook/complete-event-hook-example.md
         - framework/event-hooks/event-types.md
+  - Client:
+    - client/client-overview.md
+    - Client Sessions:
+      - client/client-sessions/managing-client-sessions.md
+    - Listeners:
+      - client/listeners/setting-up-listeners.md
+      - client/listeners/using-listener-templates.md
+    - Agent Generators:
+      - client/agent-generators/setting-up-agent-generators.md
+      - client/agent-generators/using-agent-templates.md
+      - client/agent-generators/managing-payloads.md
+    - Agents:
+      - client/agents/tasking-agents.md
+      - client/agents/managing-assets.md
+    - client/aliases-and-resource-files.md
   - Reference:
+      - reference/reference-overview.md
+      - Framework:
+        - reference/framework/agents-reference.md
+        - reference/framework/agent-generator-utilities-reference.md
+        - reference/framework/listeners-reference.md
+        - reference/framework/options-reference.md
+        - reference/framework/plugins-reference.md
+        - reference/framework/event-hooks-reference.md
+        - reference/framework/framework-types-reference.md
       - Services:
         - reference/services/agents-service-reference.md
         - reference/services/agent-file-manager-service-reference.md
@@ -197,7 +216,7 @@ plugins:
           show_signature_annotations: true
           show_symbol_type_heading: true
           show_symbol_type_toc: true
-          parameter_headings: true
+          parameter_headings: false
           show_source: false
           filters:
           - '!^_'

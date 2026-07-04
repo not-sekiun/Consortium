@@ -83,6 +83,44 @@ def sequential_request_response_capability(
     result_handler: _SequentialResultMessagesHandlerProtocol | None = None,
     timeout_handler: _SequentialTimeoutHandlerProtocol | None = None,
 ) -> type[BaseAgentCapability]:
+    """Build an agent capability that exchanges a sequence of messages over several rounds.
+
+    This is a factory that returns a new BaseAgentCapability subclass for interactions
+    that require more than a single request-response exchange, such as chunked transfers
+    or multi-step protocols. It repeatedly sends a message and awaits a reply until a
+    handler signals completion or the iteration limit is reached. The result_handler and
+    timeout_handler each return a (message, should_continue) tuple: returning False stops
+    the loop and reports that message, while True sends the next message and continues.
+
+    Args:
+        name: Unique command name used to route task messages to this capability.
+        description: Human-readable explanation of what the capability does.
+        options: Configuration options the capability accepts, declared as a set.
+        authors: Identifiers for the capability's authors.
+        requires_admin: Whether the capability requires elevated privileges on the target.
+        supported_oses: Platforms the capability supports. Defaults to any platform.
+        mitre_attack_techniques: MITRE ATT&CK technique IDs associated with the capability.
+        validating_function: Optional callable that validates the full resolved option set.
+        timeout: Seconds to wait for each response before timing out. Ignored if
+            resolve_timeout is provided.
+        resolve_timeout: Optional callable that computes each round's response timeout
+            dynamically from the current message and context, overriding timeout.
+        iterations: Fixed maximum number of message exchanges. Ignored if
+            resolve_iterations is provided; if neither is set the loop runs until a
+            handler stops it.
+        resolve_iterations: Optional callable that computes the maximum number of
+            exchanges dynamically from the launch message and context.
+        task_handler: Optional callable invoked before each message is sent, returning the
+            message to transmit. May be sync or async.
+        result_handler: Optional callable invoked with each response, returning a
+            (message, should_continue) tuple. May be sync or async.
+        timeout_handler: Optional callable invoked when a response times out, returning a
+            (message, should_continue) tuple. May be sync or async.
+
+    Returns:
+        A new BaseAgentCapability subclass implementing the sequential exchange behavior.
+    """
+
     async def _on_launch(
         self, task_message: TaskLaunchMessageModel
     ) -> TaskLaunchMessageModel | None:

@@ -1,3 +1,14 @@
+"""A collection of ready-made validating functions for option values.
+
+Each function follows the validating function contract expected by the options
+framework: it takes the option's value as its single argument and returns None if the
+value is valid, or raises
+[`OptionValueValidationError`][consortium.framework.exceptions.options_framework_exceptions.OptionValueValidationError]
+if it is not. Pass one of these to the `validating_function` parameter of an option to
+enforce the corresponding constraint, for example requiring that a value be a valid IP
+address or an existing filesystem path.
+"""
+
 import ipaddress
 import pathlib
 import re
