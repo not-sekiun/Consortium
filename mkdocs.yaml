@@ -68,9 +68,15 @@ nav:
     - Listeners:
       - framework/listeners/listeners-overview.md
       - Building a Listener Profile:
+        - framework/listeners/building-a-listener-profile/project-setup.md
         - framework/listeners/building-a-listener-profile/listener-type.md
         - framework/listeners/building-a-listener-profile/listener-template.md
-        - framework/listeners/building-a-listener-profile/listener.md
+        - framework/listeners/building-a-listener-profile/listener-protocol.md
+        - framework/listeners/building-a-listener-profile/listener-startup.md
+        - framework/listeners/building-a-listener-profile/listener-running-loop.md
+        - framework/listeners/building-a-listener-profile/listener-shutdown.md
+        - framework/listeners/building-a-listener-profile/listener-error-handling.md
+        - framework/listeners/building-a-listener-profile/listener-conventions.md
         - framework/listeners/building-a-listener-profile/complete-listener-profile.md
     - Agents:
       - framework/agents/agents-overview.md
