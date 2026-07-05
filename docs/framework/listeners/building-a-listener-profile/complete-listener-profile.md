@@ -1,7 +1,8 @@
 # Complete Listener Profile
 
-Bringing all three files together for the TCP JSON Listener. This is the full source
-for a minimal but complete listener profile.
+Here are the three files of the TCP JSON Listener combining every concept covered in
+[Project Setup](project-setup.md) through [Listener Conventions](listener-conventions.md).
+This is the full source for a minimal but complete listener profile.
 
 ## listener_type.py
 
