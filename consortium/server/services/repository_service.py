@@ -30,62 +30,35 @@ class RepositoryService:
             # Regex to validate UUIDs of any version. Canonically we use UUIDv4 but may
             # consider migrating to v7 in the future
             "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$": {
-                "anyOf": [
-                    {
-                        "type": "object",
-                        "properties": {
-                            "resource_id": {"type": "string"},
-                            "name": {"type": ["string", "null"]},
-                            "description": {"type": "string"},
-                            "size": {"type": ["integer", "null"]},
-                            "exists_on_disk": {"type": "boolean"},
-                            "md5_checksum": {"type": ["string", "null"]},
-                            "datetime_created": {"type": "string"},
-                            "datetime_modified": {"type": "string"},
-                            "is_directory": {"type": "boolean"},
-                            "data": {"type": "object"},
-                        },
-                        "required": [
-                            "resource_id",
-                            "name",
-                            "description",
-                            "size",
-                            "exists_on_disk",
-                            "md5_checksum",
-                            "datetime_created",
-                            "datetime_modified",
-                            "is_directory",
-                            "data",
-                        ],
-                        "additionalProperties": False,
-                    },
-                    {
-                        "type": "object",
-                        "properties": {
-                            "resource_id": {"type": "string"},
-                            "name": {"type": ["string", "null"]},
-                            "description": {"type": "string"},
-                            "size": {"type": ["integer", "null"]},
-                            "exists_on_disk": {"type": "boolean"},
-                            "datetime_created": {"type": "string"},
-                            "datetime_modified": {"type": "string"},
-                            "is_directory": {"type": "boolean"},
-                            "data": {"type": "object"},
-                        },
-                        "required": [
-                            "resource_id",
-                            "name",
-                            "description",
-                            "size",
-                            "exists_on_disk",
-                            "datetime_created",
-                            "datetime_modified",
-                            "is_directory",
-                            "data",
-                        ],
-                        "additionalProperties": False,
-                    },
+                "type": "object",
+                "properties": {
+                    "resource_id": {"type": "string"},
+                    "name": {"type": ["string", "null"]},
+                    "description": {"type": "string"},
+                    "size": {"type": ["integer", "null"]},
+                    "exists_on_disk": {"type": "boolean"},
+                    # skip storing the md5 checksum as metadata since its an
+                    # expensive computation and not necessary, checksums are used
+                    # client side for download integrity
+                    "md5_checksum": {"type": "null"},
+                    "datetime_created": {"type": "string"},
+                    "datetime_modified": {"type": "string"},
+                    "is_directory": {"type": "boolean"},
+                    "data": {"type": "object"},
+                },
+                "required": [
+                    "resource_id",
+                    "name",
+                    "description",
+                    "size",
+                    "exists_on_disk",
+                    "md5_checksum",
+                    "datetime_created",
+                    "datetime_modified",
+                    "is_directory",
+                    "data",
                 ],
+                "additionalProperties": False,
             },
         },
         "additionalProperties": False,
@@ -112,9 +85,6 @@ class RepositoryService:
         `save_repository_metadata`. Resources listed in the metadata but missing from
         disk raise an error rather than being silently skipped.
 
-        Returns:
-            None
-
         Raises:
             InvalidRepositoryMetadataFileJSONError: If the metadata file contains
                 invalid JSON.
@@ -125,103 +95,80 @@ class RepositoryService:
         """
         if not self._repository_metadata_file_path.exists():
             self.save_repository_metadata()
-        else:
-            with self._repository_metadata_file_path.open(mode="r") as file:
-                try:
-                    repository_metadata = json.load(file)
-                    jsonschema.validate(
-                        repository_metadata,
-                        self._REPOSITORY_METADATA_JSON_SCHEMA,
-                    )
-                except json.JSONDecodeError:
-                    raise InvalidRepositoryMetadataFileJSONError(
-                        repository_directory=str(self.repository_directory_path),
-                    ) from None
-                except jsonschema.ValidationError as exc:
-                    raise InvalidRepositoryMetadataFileSchemaError(
-                        repository_directory=str(self.repository_directory_path),
-                        json_schema_error_message=str(exc),
-                    ) from None
+            return
 
-            # Pre-pass: verify all resources actually exist on disk before populating
-            # self._repository_resources, so a failure never leaves the registry in a
-            # partially-populated state. Checks real filesystem presence rather than
-            # trusting the metadata file's own exists_on_disk boolean.
-            unsynced_resource_ids = []
-            for _, repository_resource_json in repository_metadata.items():
-                resource_id = repository_resource_json["resource_id"]
-                if repository_resource_json["is_directory"]:
-                    resource_path = self.repository_directory_path / resource_id
-                else:
-                    name = repository_resource_json.get("name")
-                    ext = os.path.splitext(name)[1] if name else ""
-                    resource_path = (
-                        self.repository_directory_path / f"{resource_id}{ext}"
-                    )
-                if not resource_path.exists():
-                    unsynced_resource_ids.append(resource_id)
-            if unsynced_resource_ids:
-                raise UnsyncedRepositoryMetadataFileError(
-                    repository_directory_path=str(self.repository_directory_path),
-                    unsynced_resource_ids=unsynced_resource_ids,
+        with self._repository_metadata_file_path.open(mode="r") as file:
+            try:
+                repository_metadata = json.load(file)
+                jsonschema.validate(
+                    repository_metadata,
+                    self._REPOSITORY_METADATA_JSON_SCHEMA,
                 )
+            except json.JSONDecodeError:
+                raise InvalidRepositoryMetadataFileJSONError(
+                    repository_directory=str(self.repository_directory_path),
+                ) from None
+            except jsonschema.ValidationError as exc:
+                raise InvalidRepositoryMetadataFileSchemaError(
+                    repository_directory=str(self.repository_directory_path),
+                    json_schema_error_message=str(exc),
+                ) from None
 
-            # The repository service does some special preprocessing for files or
-            # directories that are registered to it. It takes the original path and sets
-            # that as the name of the repository file or directory and then renames the
-            # new repository file or directory to its file or directory ID. This means
-            # that the metadata file that stores the ID also stores its actual path
-            # in the repository directory because all repository entities are stored at
-            # the root of the repository directory.
-            for (
-                _,
-                repository_resource_json,
-            ) in repository_metadata.items():
-                if repository_resource_json["is_directory"]:
-                    repository_directory = RepositoryDirectory(
-                        path=self.repository_directory_path
-                        / repository_resource_json["resource_id"],
-                    )
-                    # Manually reconstruct repository directory from metadata
-                    # information.
-                    repository_directory.resource_id = repository_resource_json[
-                        "resource_id"
-                    ]
-                    repository_directory.name = repository_resource_json["resource_id"]
-                    repository_directory.description = repository_resource_json[
-                        "description"
-                    ]
-                    repository_directory.datetime_created = datetime.fromisoformat(
-                        repository_resource_json["datetime_created"],
-                    )
-                    repository_directory.is_directory = True
-                    repository_directory.data = repository_resource_json["data"]
-                    self._repository_resources[repository_directory.resource_id] = (
-                        repository_directory
-                    )
-                else:
-                    # Manually reconstruct repository file from metadata information.
-                    repository_file = RepositoryFile(
-                        # Take into account the old file extension from the originally
-                        # provided file name.
-                        path=self.repository_directory_path
-                        / f"{repository_resource_json['resource_id']}{os.path.splitext(repository_resource_json['name'])[1] if repository_resource_json['name'] else ''}",
-                    )
-                    repository_file.resource_id = repository_resource_json[
-                        "resource_id"
-                    ]
-                    repository_file.name = repository_resource_json["name"]
-                    repository_file.description = repository_resource_json[
-                        "description"
-                    ]
-                    repository_file.datetime_created = datetime.fromisoformat(
-                        repository_resource_json["datetime_created"],
-                    )
-                    repository_file.is_directory = False
-                    repository_file.data = repository_resource_json["data"]
-                    self._repository_resources[repository_file.resource_id] = (
-                        repository_file
-                    )
+        # Pre-pass: verify all resources actually exist on disk before populating
+        # self._repository_resources, so a failure never leaves the registry in a
+        # partially-populated state. Checks real filesystem presence rather than
+        # trusting the metadata file's own exists_on_disk boolean.
+        unsynced_resource_ids = []
+        for resource_json in repository_metadata.values():
+            resource_id = resource_json["resource_id"]
+            if resource_json["is_directory"]:
+                resource_path = self.repository_directory_path / resource_id
+            else:
+                name = resource_json.get("name")
+                ext = os.path.splitext(name)[1] if name else ""
+                resource_path = self.repository_directory_path / f"{resource_id}{ext}"
+            if not resource_path.exists():
+                unsynced_resource_ids.append(resource_id)
+        if unsynced_resource_ids:
+            raise UnsyncedRepositoryMetadataFileError(
+                repository_directory_path=str(self.repository_directory_path),
+                unsynced_resource_ids=unsynced_resource_ids,
+            )
+
+        # On registration the service creates each resource in memory and renames it to
+        # its UUID from disk and records the original path as the name, so everything lives at the
+        # repository root keyed by ID. Reconstruction reverses that: build the object at
+        # <root>/<id> (+ original extension for files) and restore its metadata fields.
+        # md5_checksum is ignored, it's computed fresh on retrieval, never trusted from
+        # disk.
+        for resource_json in repository_metadata.values():
+            resource_id = resource_json["resource_id"]
+
+            if resource_json["is_directory"]:
+                resource = RepositoryDirectory(
+                    path=self.repository_directory_path / resource_id,
+                )
+                resource.name = resource_id
+            else:
+                ext = (
+                    os.path.splitext(resource_json["name"])[1]
+                    if resource_json["name"]
+                    else ""
+                )
+                resource = RepositoryFile(
+                    path=self.repository_directory_path / f"{resource_id}{ext}",
+                )
+                resource.name = resource_json["name"]
+
+            resource.resource_id = resource_id
+            resource.description = resource_json["description"]
+            resource.datetime_created = datetime.fromisoformat(
+                resource_json["datetime_created"],
+            )
+            resource.is_directory = resource_json["is_directory"]
+            resource.data = resource_json["data"]
+
+            self._repository_resources[resource.resource_id] = resource
 
     def save_repository_metadata(self) -> None:
         """Writes the current in-memory repository resource metadata to disk as JSON.
