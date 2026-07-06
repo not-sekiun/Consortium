@@ -41,6 +41,13 @@ class RepositoryFile:
         self.is_directory = False
         self.data = data if data is not None else {}
 
+        # Create a hash tracking the tuple (size, datetime_modified) as a fingerprint
+        # to check to see if a file has been recently modified.
+        self._cached_modified_fingerprint = None
+        # Store md5 checksum and only update when `force_checksum_refresh` is set or a
+        # file modification is detected via the self._cached_modified_fingerprint
+        self._cached_md5_checksum = None
+
     def __str__(self) -> str:
         return f"'{self.path}' ({self.resource_id})"
 
@@ -53,6 +60,11 @@ class RepositoryFile:
             f"data={self.data!r}"
             f")"
         )
+
+    def _compute_modified_fingerprint(self) -> str:
+        return hashlib.md5(
+            repr((self.size, self.datetime_modified)).encode()
+        ).hexdigest()
 
     @property
     def exists_on_disk(self) -> bool:
@@ -67,23 +79,32 @@ class RepositoryFile:
         return self.path.stat().st_size
 
     @property
-    def md5_checksum(self) -> str | None:
+    def datetime_modified(self) -> datetime | None:
         if not self.exists_on_disk:
-            raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
+            return None
+        return datetime.fromtimestamp(self.path.stat().st_mtime)
+
+    def compute_md5_checksum(self, force_checksum_refresh: bool = False) -> str | None:
+        current_fingerprint = self._compute_modified_fingerprint()
+        if (
+            current_fingerprint == self._cached_modified_fingerprint
+            and not force_checksum_refresh
+        ):
+            return self._cached_md5_checksum
+
+        if not self.exists_on_disk:
+            self._cached_md5_checksum = None
+            self._cached_modified_fingerprint = current_fingerprint
+            return None
+
         with self.path.open(mode="rb") as file:
             md5_hash = hashlib.md5()
-            while True:
-                chunk = file.read(_DEFAULT_CHUNK_SIZE)
-                if not chunk:
-                    break
+            while chunk := file.read(_DEFAULT_CHUNK_SIZE):
                 md5_hash.update(chunk)
-            return md5_hash.hexdigest()
 
-    @property
-    def datetime_modified(self) -> datetime:
-        if not self.exists_on_disk:
-            raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
-        return datetime.fromtimestamp(self.path.stat().st_mtime)
+        self._cached_md5_checksum = md5_hash.hexdigest()
+        self._cached_modified_fingerprint = current_fingerprint
+        return self._cached_md5_checksum
 
     @classmethod
     def create(
@@ -132,6 +153,9 @@ class RepositoryFile:
         encoding: str = "utf-8",
         chunk_size: int | None = None,
     ) -> str | bytes | Generator[str | bytes]:
+        if not self.exists_on_disk:
+            raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
+
         mode = "rb" if binary else "r"
         encoding = None if binary else encoding
 
@@ -168,24 +192,28 @@ class RepositoryFile:
             raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
         self.path.unlink()
 
-    def to_json(self) -> dict[str, JsonValue]:
+    def to_json(self, force_checksum_refresh: bool = False) -> dict[str, JsonValue]:
+        dt_modified = self.datetime_modified
+
         return {
             "resource_id": str(self.resource_id),
             "name": self.name,
             "description": self.description,
             "size": self.size,
             "exists_on_disk": self.exists_on_disk,
-            "md5_checksum": self.md5_checksum,
             "datetime_created": self.datetime_created.isoformat(),
-            "datetime_modified": self.datetime_modified.isoformat(),
+            "datetime_modified": dt_modified.isoformat()
+            if dt_modified is not None
+            else None,
             "is_directory": self.is_directory,
+            "md5_checksum": self.compute_md5_checksum(
+                force_checksum_refresh=force_checksum_refresh
+            ),
             "data": self.data,
         }
 
 
 class RepositoryDirectory:
-    _default_chunk_size = 64000  # 64 KB, mimics shutil.copyfileobj default chunk size
-
     # TODO: Add parameter validation
     def __init__(
         self,
@@ -205,6 +233,14 @@ class RepositoryDirectory:
         self.is_directory = True
         self.data = data if data is not None else {}
 
+        # Create a hash tracking the concatenated sorted by relative path tuple
+        # (relative path, size, datetime_modified) for every file and empty directory
+        # as a fingerprint to check to see if the directory has been recently modified.
+        self._cached_modified_fingerprint = None
+        # Store md5 checksum and only update when `force_checksum_refresh` is set or a
+        # directory modification is detected via the self._cached_modified_fingerprint
+        self._cached_md5_checksum = None
+
     def __str__(self) -> str:
         if self.name is None:
             return f"'' ({self.resource_id})"
@@ -219,6 +255,73 @@ class RepositoryDirectory:
             f"data={self.data!r}"
             f")"
         )
+
+    def _compute_modified_fingerprint(self) -> str:
+        if not self.exists_on_disk:
+            return hashlib.md5(repr(None).encode()).hexdigest()
+
+        file_info_list = []
+        # Walk paths in sorted order for consistent fingerprinting
+        for file in sorted(self.path.glob("**/*")):
+            if file.is_file():
+                file_info_list.append(
+                    (
+                        str(file.relative_to(self.path)),
+                        file.stat().st_size,
+                        file.stat().st_mtime,
+                    )
+                )
+            elif file.is_dir() and not any(file.iterdir()):
+                # Include empty directories in the fingerprint
+                file_info_list.append((str(file.relative_to(self.path)), 0, None))
+
+        return hashlib.md5(repr(file_info_list).encode()).hexdigest()
+
+    @property
+    def exists_on_disk(self) -> bool:
+        return self.path.exists()
+
+    @property
+    def size(self) -> int | None:
+        if not self.exists_on_disk:
+            return None
+        return sum(
+            file.stat().st_size for file in self.path.glob("**/*") if file.is_file()
+        )
+
+    @property
+    def datetime_modified(self) -> datetime | None:
+        if not self.exists_on_disk:
+            return None
+        return datetime.fromtimestamp(self.path.stat().st_mtime)
+
+    def compute_md5_checksum(self, force_checksum_refresh: bool = False) -> str | None:
+        current_fingerprint = self._compute_modified_fingerprint()
+        if (
+            current_fingerprint == self._cached_modified_fingerprint
+            and not force_checksum_refresh
+        ):
+            return self._cached_md5_checksum
+
+        if not self.exists_on_disk:
+            self._cached_md5_checksum = None
+            self._cached_modified_fingerprint = current_fingerprint
+            return None
+
+        md5_hash = hashlib.md5()
+        # Walk paths in sorted order for consistent hash generation
+        for file in sorted(self.path.glob("**/*")):
+            # Always update with relative path first capturing relative paths
+            md5_hash.update(repr(file.relative_to(self.path)).encode())
+            # Next add file content if it is a file
+            if file.is_file():
+                with file.open("rb") as f:
+                    while chunk := f.read(_DEFAULT_CHUNK_SIZE):
+                        md5_hash.update(chunk)
+
+        self._cached_md5_checksum = md5_hash.hexdigest()
+        self._cached_modified_fingerprint = current_fingerprint
+        return self._cached_md5_checksum
 
     @classmethod
     def create(
@@ -249,7 +352,7 @@ class RepositoryDirectory:
             shutil.copytree(
                 src=content,
                 dst=path,
-                dirs_exist_ok=exist_ok,
+                dirs_exist_ok=True,
             )
         elif hasattr(content, "read"):
             try:
@@ -270,7 +373,7 @@ class RepositoryDirectory:
         elif isinstance(content, (str, bytes)):
             try:
                 with tempfile.TemporaryDirectory() as temp_dir_path:
-                    temp_file = pathlib.Path(temp_dir_path) / name
+                    temp_file = pathlib.Path(temp_dir_path) / "archive"
                     temp_file.write_bytes(content)
                     shutil.unpack_archive(
                         filename=temp_file,
@@ -283,28 +386,6 @@ class RepositoryDirectory:
                 ) from None
 
         return cls(path=path, name=name, description=description, data=data)
-
-    @property
-    def exists_on_disk(self) -> bool:
-        return self.path.exists()
-
-    @property
-    def size(self) -> int | None:
-        if not self.exists_on_disk:
-            raise RepositoryDirectoryDoesNotExistError(
-                repository_directory_str=str(self),
-            )
-        return sum(
-            file.stat().st_size for file in self.path.glob("**/*") if file.is_file()
-        )
-
-    @property
-    def datetime_modified(self) -> datetime:
-        if not self.exists_on_disk:
-            raise RepositoryDirectoryDoesNotExistError(
-                repository_directory_str=str(self)
-            )
-        return datetime.fromtimestamp(self.path.stat().st_mtime)
 
     def delete(self) -> None:
         if not self.exists_on_disk:
@@ -320,7 +401,11 @@ class RepositoryDirectory:
         if isinstance(relative_path, str):
             relative_path = pathlib.Path(relative_path)
 
-        if not (self.path / relative_path).resolve().relative_to(self.path.resolve()):
+        if (
+            not (self.path / relative_path)
+            .resolve()
+            .is_relative_to(self.path.resolve())
+        ):
             raise RepositoryDirectoryRelativePathNotContainedError(
                 relative_path=str(relative_path),
                 repository_directory_str=str(self),
@@ -328,16 +413,22 @@ class RepositoryDirectory:
 
         return (self.path / relative_path).resolve()
 
-    def to_json(self) -> dict[str, JsonValue]:
+    def to_json(self, force_checksum_refresh: bool = False) -> dict[str, JsonValue]:
+        dt_modified = self.datetime_modified
+
         return {
             "resource_id": str(self.resource_id),
             "name": self.name,
             "description": self.description,
             "size": self.size,
             "exists_on_disk": self.exists_on_disk,
-            "md5_checksum": None,
+            "md5_checksum": self.compute_md5_checksum(
+                force_checksum_refresh=force_checksum_refresh
+            ),
             "datetime_created": self.datetime_created.isoformat(),
-            "datetime_modified": self.datetime_modified.isoformat(),
+            "datetime_modified": dt_modified.isoformat()
+            if dt_modified is not None
+            else None,
             "is_directory": self.is_directory,
             "data": self.data,
         }
