@@ -39,6 +39,7 @@ class RepositoryFile:
         self.name = name if name else str(self.resource_id)
         self.description = description
         self.path = path
+        self.extension = self.path.suffix  # includes the leading period
         self.datetime_created = datetime.now()
         self.is_directory = False
         self.data = data if data is not None else {}
@@ -192,7 +193,9 @@ class RepositoryFile:
             raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
         self.path.unlink()
 
-    def to_json(self, force_checksum_refresh: bool = False) -> dict[str, JsonValue]:
+    def to_json(
+        self, include_checksum: bool = False, force_checksum_refresh: bool = False
+    ) -> dict[str, JsonValue]:
         dt_modified = self.datetime_modified
 
         return {
@@ -200,6 +203,7 @@ class RepositoryFile:
             "name": self.name,
             "description": self.description,
             "size": self.size,
+            "extension": self.extension,
             "exists_on_disk": self.exists_on_disk,
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_modified": dt_modified.isoformat()
@@ -208,7 +212,9 @@ class RepositoryFile:
             "is_directory": self.is_directory,
             "md5_checksum": self.compute_md5_checksum(
                 force_checksum_refresh=force_checksum_refresh
-            ),
+            )
+            if include_checksum
+            else None,
             "data": self.data,
         }
 
@@ -229,6 +235,9 @@ class RepositoryDirectory:
         self.name = name
         self.description = description
         self.path = path
+        # Directories don't have an extension but we keep extension as `None` to be
+        # symmetric with `RepositoryFile` for JSON serialization.
+        self.extension = None
         self.datetime_created = datetime.now()
         self.is_directory = True
         self.data = data if data is not None else {}
@@ -415,7 +424,7 @@ class RepositoryDirectory:
                 raise InvalidRepositoryDirectoryArchiveFileFormatError(
                     archive_file_format=archive_file_format
                 ) from None
-        elif isinstance(content, (str, bytes)):
+        elif isinstance(content, bytes):
             try:
                 with tempfile.TemporaryDirectory() as temp_dir_path:
                     temp_file = pathlib.Path(temp_dir_path) / "archive"
@@ -447,7 +456,7 @@ class RepositoryDirectory:
             relative_path = pathlib.Path(relative_path)
 
         resolved = (self.path / relative_path).resolve()
-        if not resolved.relative_to(self.path.resolve()):
+        if not resolved.is_relative_to(self.path.resolve()):
             raise RepositoryDirectoryRelativePathNotContainedError(
                 relative_path=str(relative_path),
                 repository_directory_str=str(self),
@@ -455,7 +464,9 @@ class RepositoryDirectory:
 
         return resolved
 
-    def to_json(self, force_checksum_refresh: bool = False) -> dict[str, JsonValue]:
+    def to_json(
+        self, include_checksum: bool = False, force_checksum_refresh: bool = False
+    ) -> dict[str, JsonValue]:
         dt_modified = self.datetime_modified
 
         return {
@@ -463,10 +474,13 @@ class RepositoryDirectory:
             "name": self.name,
             "description": self.description,
             "size": self.size,
+            "extension": self.extension,
             "exists_on_disk": self.exists_on_disk,
             "md5_checksum": self.compute_md5_checksum(
                 force_checksum_refresh=force_checksum_refresh
-            ),
+            )
+            if include_checksum
+            else None,
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_modified": dt_modified.isoformat()
             if dt_modified is not None

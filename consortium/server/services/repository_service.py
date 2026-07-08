@@ -36,8 +36,10 @@ class RepositoryService:
                     "name": {"type": ["string", "null"]},
                     "description": {"type": "string"},
                     "size": {"type": ["integer", "null"]},
+                    # Always null for RepositoryDirectories
+                    "extension": {"type": ["string", "null"]},
                     "exists_on_disk": {"type": "boolean"},
-                    # skip storing the md5 checksum as metadata since its an
+                    # skip storing the md5 checksum as metadata since it's an
                     # expensive computation and not necessary, checksums are used
                     # client side for download integrity
                     "md5_checksum": {"type": "null"},
@@ -51,6 +53,7 @@ class RepositoryService:
                     "name",
                     "description",
                     "size",
+                    "extension",
                     "exists_on_disk",
                     "md5_checksum",
                     "datetime_created",
@@ -66,7 +69,7 @@ class RepositoryService:
 
     def __init__(self, repository_directory_path: pathlib.Path):
         self.repository_directory_path = repository_directory_path
-        self._repository_resources = {}
+        self._resources = {}
         self._reserved_resource_ids = set()
         self._repository_metadata_file_path = (
             repository_directory_path / ".repository.json"
@@ -114,53 +117,65 @@ class RepositoryService:
                     json_schema_error_message=str(exc),
                 ) from None
 
-        # Pre-pass: verify all resources actually exist on disk before populating
-        # self._repository_resources, so a failure never leaves the registry in a
+        # Pre-pass check and verify all resources actually exist on disk before
+        # populating `self._resources`, so a failure never leaves the registry in a
         # partially-populated state. Checks real filesystem presence rather than
-        # trusting the metadata file's own exists_on_disk boolean.
+        # trusting the metadata file's own `exists_on_disk` boolean.
         unsynced_resource_ids = []
+        resource_id_to_path_and_metadata_map: dict[
+            str, tuple[pathlib.Path, dict[str, JsonValue]]
+        ] = {}
         for resource_json in repository_metadata.values():
             resource_id = resource_json["resource_id"]
             if resource_json["is_directory"]:
                 resource_path = self.repository_directory_path / resource_id
             else:
-                name = resource_json.get("name")
-                ext = os.path.splitext(name)[1] if name else ""
-                resource_path = self.repository_directory_path / f"{resource_id}{ext}"
+                extension = resource_json["extension"]
+                if extension is None:
+                    raise InvalidRepositoryMetadataFileSchemaError(
+                        repository_directory=str(self.repository_directory_path),
+                        json_schema_error_message=(
+                            "Repository metadata file contains a file resource with a "
+                            "null extension, which is invalid. All file resources must "
+                            "have a non-null extension."
+                        ),
+                    ) from None
+                resource_path = (
+                    self.repository_directory_path / f"{resource_id}{extension}"
+                )
             if not resource_path.exists():
                 unsynced_resource_ids.append(resource_id)
+            else:
+                resource_id_to_path_and_metadata_map[resource_id] = (
+                    resource_path,
+                    resource_json,
+                )
         if unsynced_resource_ids:
             raise UnsyncedRepositoryMetadataFileError(
                 repository_directory_path=str(self.repository_directory_path),
                 unsynced_resource_ids=unsynced_resource_ids,
             )
 
-        # On registration the service creates each resource in memory and renames it to
-        # its UUID from disk and records the original path as the name, so everything lives at the
-        # repository root keyed by ID. Reconstruction reverses that: build the object at
-        # <root>/<id> (+ original extension for files) and restore its metadata fields.
-        # md5_checksum is ignored, it's computed fresh on retrieval, never trusted from
-        # disk.
-        for resource_json in repository_metadata.values():
-            resource_id = resource_json["resource_id"]
-
+        # After the pre-pass validated all the metadata and computed and validated the
+        # actual expected paths to find the resources we load them into the repository
+        for resource_id, (
+            resource_path,
+            resource_json,
+        ) in resource_id_to_path_and_metadata_map.items():
             if resource_json["is_directory"]:
                 resource = RepositoryDirectory(
-                    path=self.repository_directory_path / resource_id,
+                    path=resource_path,
                 )
-                resource.name = resource_id
             else:
-                ext = (
-                    os.path.splitext(resource_json["name"])[1]
-                    if resource_json["name"]
-                    else ""
-                )
                 resource = RepositoryFile(
-                    path=self.repository_directory_path / f"{resource_id}{ext}",
+                    path=resource_path,
                 )
-                resource.name = resource_json["name"]
 
+            # `resource_id` is generated at instantiation time so we need to override
+            # it with the saved `resource_id` which also correlates to the actual path
+            # on disk
             resource.resource_id = resource_id
+            resource.name = resource_json["name"]
             resource.description = resource_json["description"]
             resource.datetime_created = datetime.fromisoformat(
                 resource_json["datetime_created"],
@@ -168,7 +183,7 @@ class RepositoryService:
             resource.is_directory = resource_json["is_directory"]
             resource.data = resource_json["data"]
 
-            self._repository_resources[resource.resource_id] = resource
+            self._resources[resource.resource_id] = resource
 
     def save_repository_metadata(self) -> None:
         """Writes the current in-memory repository resource metadata to disk as JSON.
@@ -177,8 +192,8 @@ class RepositoryService:
             None
         """
         repository_metadata_json = {
-            resource_id: repository_resource.to_json()
-            for resource_id, repository_resource in self._repository_resources.items()
+            resource_id: resource.to_json()
+            for resource_id, resource in self._resources.items()
         }
         with self._repository_metadata_file_path.open(mode="w") as file:
             data = json.dumps(repository_metadata_json, indent=4)
@@ -250,7 +265,7 @@ class RepositoryService:
             data=data,
         )
         repository_file.resource_id = unique_resource_id
-        self._repository_resources[str(repository_file.resource_id)] = repository_file
+        self._resources[str(repository_file.resource_id)] = repository_file
 
         self.save_repository_metadata()
 
@@ -262,6 +277,7 @@ class RepositoryService:
         copy: bool = False,
         resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
+        extension: str | None = None,
         description: str = "",
         data: dict[str, JsonValue] | None = None,
     ) -> RepositoryFile:
@@ -279,8 +295,13 @@ class RepositoryService:
                 is left in place.
             resource_id (str | uuid.UUID | None): A previously reserved ID to
                 assign to this resource. When `None`, a new ID is generated.
-            name (str | None): A human-readable name for the file. When `None`,
-                the original filename is used.
+            name (str | None): A human-readable display name for the file. Purely
+                cosmetic — never affects how the file is stored on disk. When
+                `None`, the original filename is used.
+            extension (str | None): Overrides the file's on-disk extension,
+                e.g. `".csv"`. Use this to deliberately reinterpret a file's type
+                on ingest. When `None` (default), the source file's own extension
+                (`path.suffix`) is used and behavior is unchanged from before.
             description (str): An optional description for the file.
             data (dict[str, JsonValue]): Optional additional metadata to associate with
                 the file resource.
@@ -304,9 +325,12 @@ class RepositoryService:
         else:
             unique_resource_id = uuid.uuid4()
 
-        dest_path = (
-            self.repository_directory_path / f"{unique_resource_id}{path.suffix}"
-        )
+        # `extension=None` means the `RepositoryFile` inherits its `extension` from the
+        # source file. An explicit extension is an intentional caller decision to
+        # reinterpret the file's type.
+        ext = extension if extension is not None else path.suffix
+        dest_path = self.repository_directory_path / f"{unique_resource_id}{ext}"
+
         if copy:
             shutil.copy2(str(path), dest_path)
         else:
@@ -319,7 +343,7 @@ class RepositoryService:
             data=data,
         )
         repository_file.resource_id = unique_resource_id
-        self._repository_resources[str(repository_file.resource_id)] = repository_file
+        self._resources[str(repository_file.resource_id)] = repository_file
 
         self.save_repository_metadata()
 
@@ -380,9 +404,7 @@ class RepositoryService:
             data=data,
         )
         repository_directory.resource_id = unique_resource_id
-        self._repository_resources[str(repository_directory.resource_id)] = (
-            repository_directory
-        )
+        self._resources[str(repository_directory.resource_id)] = repository_directory
 
         self.save_repository_metadata()
 
@@ -449,9 +471,7 @@ class RepositoryService:
             data=data,
         )
         repository_directory.resource_id = unique_resource_id
-        self._repository_resources[str(repository_directory.resource_id)] = (
-            repository_directory
-        )
+        self._resources[str(repository_directory.resource_id)] = repository_directory
 
         self.save_repository_metadata()
 
@@ -474,12 +494,13 @@ class RepositoryService:
         Raises:
             RepositoryResourceNotFoundError: If no resource with the given ID exists.
         """
-        repository_resource = self.get_resource_by_resource_id(
+        resource_id = normalize_uuid(resource_id)
+
+        resource = self.get_resource_by_resource_id(
             resource_id=resource_id,
         )
-
-        repository_resource.delete()
-        del self._repository_resources[resource_id]
+        resource.delete()
+        del self._resources[resource_id]
 
         self.save_repository_metadata()
 
@@ -492,7 +513,7 @@ class RepositoryService:
             list[RepositoryFile | RepositoryDirectory]: A list of all repository
                 resources. Empty if none have been created.
         """
-        return list(self._repository_resources.values())
+        return list(self._resources.values())
 
     def get_resource_by_resource_id(
         self,
@@ -512,10 +533,10 @@ class RepositoryService:
         resource_id = normalize_uuid(resource_id)
 
         try:
-            repository_resource = self._repository_resources[resource_id]
+            resource = self._resources[resource_id]
         except KeyError:
             raise RepositoryResourceNotFoundError(
                 resource_id=resource_id,
             ) from None
 
-        return repository_resource
+        return resource
