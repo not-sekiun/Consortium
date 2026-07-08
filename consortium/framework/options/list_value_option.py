@@ -283,7 +283,7 @@ class ListValueOption(BaseOption[list[Primitive]]):
 
     def to_json(
         self,
-    ) -> dict[str, str | bool | list[Primitive] | None]:
+    ) -> dict[str, Primitive | list[Primitive] | None]:
         return {
             "name": self.name,
             "description": self.description,
