@@ -13,6 +13,18 @@ from consortium.client.commands.agents_interpreter_commands.agent_list import (
 from consortium.client.commands.agents_interpreter_commands.agent_rename import (
     AgentRenameCommand,
 )
+from consortium.client.commands.agents_interpreter_commands.artifact_download import (
+    ArtifactDownloadCommand,
+)
+from consortium.client.commands.agents_interpreter_commands.artifact_info import (
+    ArtifactInfoCommand,
+)
+from consortium.client.commands.agents_interpreter_commands.artifact_list import (
+    ArtifactListCommand,
+)
+from consortium.client.commands.agents_interpreter_commands.artifact_remove import (
+    ArtifactRemoveCommand,
+)
 from consortium.client.commands.agents_interpreter_commands.asset_download import (
     AssetDownloadCommand,
 )
@@ -21,6 +33,9 @@ from consortium.client.commands.agents_interpreter_commands.asset_info import (
 )
 from consortium.client.commands.agents_interpreter_commands.asset_list import (
     AssetListCommand,
+)
+from consortium.client.commands.agents_interpreter_commands.asset_remove import (
+    AssetRemoveCommand,
 )
 from consortium.client.commands.agents_interpreter_commands.asset_upload import (
     AssetUploadCommand,
@@ -43,9 +58,14 @@ AGENTS_INTERPRETER_COMMANDS = [
     AgentInteractCommand(),
     AgentListCommand(),
     AssetListCommand(),
+    AssetRemoveCommand(),
+    AssetUploadCommand(),
+    ArtifactDownloadCommand(),
+    ArtifactInfoCommand(),
+    ArtifactListCommand(),
+    ArtifactRemoveCommand(),
     TaskListCommand(),
     AgentDescribeCommand(),
     AgentRenameCommand(),
-    AssetUploadCommand(),
     WatchCommand(),
 ]

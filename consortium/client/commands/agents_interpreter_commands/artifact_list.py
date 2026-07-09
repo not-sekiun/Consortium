@@ -13,16 +13,16 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console
 
 
-class AssetListCommand(BaseConnectedCommand):
-    name = "as-list"
-    description = "List all assets along with their essential information"
+class ArtifactListCommand(BaseConnectedCommand):
+    name = "ar-list"
+    description = "List all artifacts along with their essential information"
     epilog = format_argparse_epilog(
         """
         Examples:
-          as-list
+          ar-list
         """,
     )
-    group = "Asset Management Commands"
+    group = "Artifact Management Commands"
 
     async def run(
         self,
@@ -32,24 +32,24 @@ class AssetListCommand(BaseConnectedCommand):
             _ = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            assets = await rest_api.get_all_assets()
+            artifacts = await rest_api.get_all_artifacts()
 
-            table = Table(title="Assets", highlight=True)
-            table.add_column("Asset ID")
+            table = Table(title="Artifacts", highlight=True)
+            table.add_column("Artifact ID")
             table.add_column("Name")
-            table.add_column("Uploaded By")
+            table.add_column("Produced By")
             table.add_column("Type")
             table.add_column("Size")
-            for asset in assets:
-                size = asset["size"]
-                # An asset is "just" a resource with metadata: the uploading user
-                # account is carried in the `data` field.
-                user_account = (asset["data"] or {}).get("user_account")
+            for artifact in artifacts:
+                size = artifact["size"]
+                # An artifact is "just" a resource with metadata: the producing agent is
+                # carried in the `data` field.
+                agent = (artifact["data"] or {}).get("agent")
                 table.add_row(
-                    asset["resource_id"],
-                    asset["name"],
-                    user_account["username"] if user_account else "N/A",
-                    "DIRECTORY" if asset["is_directory"] else "FILE",
+                    artifact["resource_id"],
+                    artifact["name"],
+                    agent["name"] if agent else "N/A",
+                    "DIRECTORY" if artifact["is_directory"] else "FILE",
                     format_size_bytes_as_human_readable_str(size_bytes=size)
                     if size is not None
                     else "N/A",

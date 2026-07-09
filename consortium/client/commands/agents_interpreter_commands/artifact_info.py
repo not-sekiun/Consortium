@@ -16,21 +16,21 @@ from consortium.client.utils.formatter_utils import (
 from consortium.client.utils.printer_utils import console
 
 
-class AssetInfoCommand(BaseConnectedCommand):
-    name = "as-info"
-    description = "Display information about an asset by its ID"
+class ArtifactInfoCommand(BaseConnectedCommand):
+    name = "ar-info"
+    description = "Display information about an artifact by its resource ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          as-info 123e4567-e89b-12d3-a456-42661417400
+          ar-info 123e4567-e89b-12d3-a456-42661417400
         """,
     )
-    group = "Asset Management Commands"
+    group = "Artifact Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "asset_id",
-            help="ID of the asset to display information for.",
+            "artifact_id",
+            help="Resource ID of the artifact to display information for.",
             nargs=1,
         )
 
@@ -42,47 +42,48 @@ class AssetInfoCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            asset = await rest_api.get_asset_by_asset_id(
-                asset_id=parsed_args.asset_id[0],
+            artifact = await rest_api.get_artifact_by_artifact_id(
+                artifact_id=parsed_args.artifact_id[0],
             )
-            # An asset is "just" a repository resource with attached metadata. The
+            # An artifact is "just" a repository resource with attached metadata. The
             # resource fields describe the file/directory on disk while the `data` field
-            # holds the asset specific metadata (for example the uploading user account).
-            size = asset["size"]
-            metadata = asset["data"] or {}
-            user_account = metadata.get("user_account")
+            # holds the artifact specific metadata (for example the producing agent).
+            size = artifact["size"]
+            metadata = artifact["data"] or {}
+            agent = metadata.get("agent")
 
-            table = Table(title="Asset Information", highlight=True)
+            table = Table(title="Artifact Information", highlight=True)
             table.add_column("Information")
             table.add_column("Data")
-            table.add_row("Resource ID", str(asset["resource_id"]))
-            table.add_row("Name", str(asset["name"]))
-            table.add_row("Description", str(asset["description"]))
-            table.add_row("Extension", str(asset["extension"]))
+            table.add_row("Resource ID", str(artifact["resource_id"]))
+            table.add_row("Name", str(artifact["name"]))
+            table.add_row("Description", str(artifact["description"]))
+            table.add_row("Extension", str(artifact["extension"]))
             table.add_row(
                 "Size",
                 f"{size} B ({format_size_bytes_as_human_readable_str(size_bytes=size)})"
                 if size is not None
                 else "N/A",
             )
-            table.add_row("Exists on disk", str(asset["exists_on_disk"]))
-            table.add_row("MD5 Checksum", str(asset["md5_checksum"]))
+            table.add_row("Exists on disk", str(artifact["exists_on_disk"]))
+            table.add_row("MD5 Checksum", str(artifact["md5_checksum"]))
             table.add_row(
                 "Datetime Created",
                 format_datetime_as_human_readable_str(
-                    datetime_str=asset["datetime_created"], include_elapsed_time=True
+                    datetime_str=artifact["datetime_created"], include_elapsed_time=True
                 ),
             )
             table.add_row(
                 "Datetime Modified",
                 format_datetime_as_human_readable_str(
-                    datetime_str=asset["datetime_modified"], include_elapsed_time=True
+                    datetime_str=artifact["datetime_modified"],
+                    include_elapsed_time=True,
                 ),
             )
-            table.add_row("Type", "DIRECTORY" if asset["is_directory"] else "FILE")
+            table.add_row("Type", "DIRECTORY" if artifact["is_directory"] else "FILE")
             table.add_row(
-                "Uploaded By",
-                user_account["username"] if user_account else "N/A",
+                "Produced By Agent",
+                f"{agent['name']} ({agent['agent_id']})" if agent else "N/A",
             )
             console.print(table, "")
         except SystemExit:

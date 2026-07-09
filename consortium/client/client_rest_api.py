@@ -530,6 +530,16 @@ class RestAPI:
             url=f"{self._api_base_url}/assets/all",
         )
 
+    @_requires_authentication
+    async def delete_asset_by_asset_id(
+        self,
+        asset_id: str,
+    ) -> None:
+        return await self._make_api_request(
+            method="DELETE",
+            url=f"{self._api_base_url}/assets/{asset_id}",
+        )
+
     # Wrapper methods for the /api/assets API endpoint.
     async def get_asset_by_asset_id(
         self,
@@ -579,6 +589,47 @@ class RestAPI:
             },
         )
         return await response.json()
+
+    # Wrapper methods for the /api/artifacts API endpoint.
+    @_requires_authentication
+    async def get_all_artifacts(
+        self,
+    ) -> list[dict[str, Any]]:
+        return await self._make_api_request(
+            method="GET",
+            url=f"{self._api_base_url}/artifacts/all",
+        )
+
+    @_requires_authentication
+    async def get_artifact_by_artifact_id(
+        self,
+        artifact_id: str,
+    ) -> dict[str, Any]:
+        return await self._make_api_request(
+            method="GET",
+            url=f"{self._api_base_url}/artifacts/{artifact_id}",
+        )
+
+    @_requires_authentication
+    async def delete_artifact_by_artifact_id(
+        self,
+        artifact_id: str,
+    ) -> None:
+        return await self._make_api_request(
+            method="DELETE",
+            url=f"{self._api_base_url}/artifacts/{artifact_id}",
+        )
+
+    async def download_artifact_by_artifact_id(
+        self,
+        artifact_id: str,
+        maximum_chunk_size: int = 1024,
+    ) -> AsyncGenerator[bytes]:
+        response = await self._aiohttp_client_session.get(
+            f"{self._api_base_url}/artifacts/download/{artifact_id}",
+        )
+        async for chunk in response.content.iter_chunked(maximum_chunk_size):
+            yield chunk
 
     # Wrapper methods for the /api/payloads API endpoint.
     @_requires_authentication

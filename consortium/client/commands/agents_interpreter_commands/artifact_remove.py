@@ -6,27 +6,25 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
-from consortium.client.utils.formatter_utils import (
-    format_argparse_epilog,
-)
+from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-class AssetRemoveCommand(BaseConnectedCommand):
-    name = "as-rm"
-    description = "Delete an asset by its ID"
+class ArtifactRemoveCommand(BaseConnectedCommand):
+    name = "ar-rm"
+    description = "Delete an artifact by its resource ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          as-rm 123e4567-e89b-12d3-a456-42661417400
+          ar-rm 123e4567-e89b-12d3-a456-42661417400
         """,
     )
-    group = "Asset Management Commands"
+    group = "Artifact Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "asset_id",
-            help="ID of the asset to be removed.",
+            "artifact_id",
+            help="Resource ID of the artifact to be removed.",
             nargs=1,
         )
 
@@ -38,10 +36,10 @@ class AssetRemoveCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await rest_api.delete_asset_by_asset_id(
-                asset_id=parsed_args.asset_id[0],
+            await rest_api.delete_artifact_by_artifact_id(
+                artifact_id=parsed_args.artifact_id[0],
             )
-            print_success(f"Deleted asset '{parsed_args.asset_id[0]}'")
+            print_success(f"Deleted artifact '{parsed_args.artifact_id[0]}'")
         except SystemExit:
             pass
 
