@@ -43,18 +43,18 @@ rapidly develop their own highly customized listeners and agents.
 
 ## Features
 
-- **Asynchronous multiplayer/multiserver support** - Multiple clients can connect to
+- **Asynchronous multiplayer/multiserver support**: Multiple clients can connect to
 the same server to perform all C2 related operations, including the sharing of agent
 sessions. Control RBAC permissions via user roles.
-- **High extensibility and automation, externally and natively** - Programmatic
+- **High extensibility and automation, externally and natively**: Programmatic
 automation is possible through the server's **REST API** or **websockets events API**.
-Alternatively, users can write **plugins** and **event hooks** that interact _directly_ with
-the server's internal services.
-- **Language-agnostic modular listener-agent design** - Consortium ships with its own listeners and
-agents. **Custom listeners and agents** can be added to the framework. Agents can
-be written in any language while listeners can be written in python to _natively
-interact with the server_, or written in a different language to interact with the
-server _through its REST API_.
+Alternatively, users can write **plugins** and **event hooks** that interact _directly_
+with the server's internal services.
+- **Language-agnostic modular listener-agent design**: Consortium ships with its own
+listeners and agents. **Custom listeners and agents** can be added to the framework.
+Agents can be written in any language while listeners can be written in python to
+_natively interact with the server_, or written in a different language to interact
+with the server _through its REST API_.
 
 ## Quickstart
 
