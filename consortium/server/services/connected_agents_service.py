@@ -47,18 +47,6 @@ class ConnectedAgentsService:
         return "ConnectedAgentsService()"
 
     def _validate_agent_connected_to_listener(self, agent_id: str | uuid.UUID) -> Agent:
-        """Validate that an agent exists and is connected to this listener.
-
-        Args:
-            agent_id (str | uuid.UUID): The agent ID to validate.
-
-        Raises:
-            AgentNotFoundError: Raised if the agent does not exist or is not connected
-                to this listener.
-
-        Returns:
-            Agent: The validated agent object.
-        """
         agent = self._agents_service.get_agent_by_agent_id(agent_id=agent_id)
         connected_listener = agent.connected_listener
         if (
@@ -91,27 +79,24 @@ class ConnectedAgentsService:
         """Register a new agent with this listener.
 
         Args:
-            payload_id (str | uuid.UUID | None): The payload ID of the payload that
-                the agent is using to connect to the listener.
-            agent_type (BaseAgentType | None): The agent type of the agent to be
-                registered.
-            name (str | None): The human-readable name of the agent.
-            description (str): A description of the agent.
-            endpoint (str): A human-readable representation of the network endpoint
-                that uniquely identifies the agent.
-            user (str | None): The name of the user account that the agent is running
-                on.
-            is_admin (bool | None): Whether the agent is running with administrator
-                privileges.
-            os (str | None): The operating system of the agent.
-            version (str | None): The version of the operating system.
-            arch (str | None): The architecture of the system.
-            pid (int | None): The process ID of the agent.
-            locale (str | None): The locale of the system.
-            remote_host_address (str | None): The remote host address of the agent.
-            local_host_address (str | None): The local host address of the agent.
-            hostname (str | None): The hostname of the system.
-            agent_data (dict[str, Any] | None): Additional data from the agent.
+            payload_id: The payload ID of the payload that the agent is using to
+                connect to the listener.
+            agent_type: The agent type of the agent to be registered.
+            name: The human-readable name of the agent.
+            description: A description of the agent.
+            endpoint: A human-readable representation of the network endpoint that
+                uniquely identifies the agent.
+            user: The name of the user account that the agent is running on.
+            is_admin: Whether the agent is running with administrator privileges.
+            os: The operating system of the agent.
+            version: The version of the operating system.
+            arch: The architecture of the system.
+            pid: The process ID of the agent.
+            locale: The locale of the system.
+            remote_host_address: The remote host address of the agent.
+            local_host_address: The local host address of the agent.
+            hostname: The hostname of the system.
+            agent_data: Additional data from the agent.
 
         Raises:
             AgentTypeResolutionError: Raised if the agent type cannot be resolved from
@@ -119,7 +104,7 @@ class ConnectedAgentsService:
             AgentCreationParameterTypeError: Raised if a parameter has an invalid type.
 
         Returns:
-            Agent: The registered agent object.
+            The registered agent object.
         """
         return self._agents_service.register_agent(
             listener_id=self._listener_id,
@@ -147,14 +132,11 @@ class ConnectedAgentsService:
         the system entirely.
 
         Args:
-            agent_id (str | uuid.UUID): The agent ID of the agent to deregister.
+            agent_id: The agent ID of the agent to deregister.
 
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
-
-        Returns:
-            None
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
         self._agents_service.deregister_agent_by_agent_id(agent_id=agent_id)
@@ -165,14 +147,11 @@ class ConnectedAgentsService:
         check-in time and marks it as active.
 
         Args:
-            agent_id (str | uuid.UUID): The agent ID of the agent to check in.
+            agent_id: The agent ID of the agent to check in.
 
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
-
-        Returns:
-            None
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
         self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
@@ -189,24 +168,23 @@ class ConnectedAgentsService:
         performs an automatic check-in for the agent.
 
         Args:
-            agent_id (str | uuid.UUID): The agent ID of the agent to get tasks for.
-            count (int | None): The number of tasks to retrieve. If None, retrieves
-                all available tasks. If 1, retrieves a single task. If > 1, retrieves
-                up to that many tasks.
-            block (bool): If True, blocks until at least one task is available.
+            agent_id: The agent ID of the agent to get tasks for.
+            count: The number of tasks to retrieve. If None, retrieves all available
+                tasks. If 1, retrieves a single task. If > 1, retrieves up to that
+                many tasks.
+            block: If True, blocks until at least one task is available.
                 If False, returns immediately with whatever tasks are available
                 (may be empty). Defaults to False.
-            timeout (float | None): Maximum time in seconds to block waiting for tasks.
-                Only applies when block=True. If None, blocks indefinitely.
-                If 0, equivalent to block=False.
+            timeout: Maximum time in seconds to block waiting for tasks. Only applies
+                when block=True. If None, blocks indefinitely. If 0, equivalent to
+                block=False.
 
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
 
         Returns:
-            list[TaskLaunchMessageModel]: A list of task message objects. Returns an
-                empty list if no tasks are available and block=False.
+            A list of task message objects, or an empty list if none are available.
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
         self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
@@ -232,22 +210,18 @@ class ConnectedAgentsService:
         submits the result.
 
         Args:
-            agent_id (str | uuid.UUID): The agent ID of the agent submitting the result.
-            task_id (str | uuid.UUID): The task ID that this result corresponds to.
-            success (bool): Whether the task was successful.
-            message (str): A message describing the result.
-            data (dict[str, Any]): The result data.
-            payload (AsyncIterable[bytes] | bytes | None): An optional binary payload
-                associated with the result.
+            agent_id: The agent ID of the agent submitting the result.
+            task_id: The task ID that this result corresponds to.
+            success: Whether the task was successful.
+            message: A message describing the result.
+            data: The result data.
+            payload: An optional binary payload associated with the result.
 
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
             AgentTaskNotFoundError: Raised if the task ID does not correspond to a
                 running task for this agent.
-
-        Returns:
-            None
         """
         agent = self._validate_agent_connected_to_listener(agent_id=agent_id)
         # Validate the task ID corresponds to a running task before submitting
@@ -267,7 +241,7 @@ class ConnectedAgentsService:
         """Get all agents connected to this listener.
 
         Returns:
-            list[Agent]: A list of all agents connected to this listener.
+            A list of all agents connected to this listener.
         """
         all_agents = self._agents_service.get_all_agents()
         connected_agents = []
@@ -285,13 +259,13 @@ class ConnectedAgentsService:
         """Get an agent by its agent ID, validating it is connected to this listener.
 
         Args:
-            agent_id (str | uuid.UUID): The agent ID of the agent to retrieve.
+            agent_id: The agent ID of the agent to retrieve.
 
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
 
         Returns:
-            Agent: The agent with the specified agent ID.
+            The agent with the specified agent ID.
         """
         return self._validate_agent_connected_to_listener(agent_id=agent_id)

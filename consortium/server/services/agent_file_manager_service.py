@@ -24,8 +24,7 @@ class AgentFileManagerService:
         """Returns all asset resources available to the agent.
 
         Returns:
-            list[RepositoryFile | RepositoryDirectory]: A list of all asset resources.
-                Empty if none have been uploaded.
+            A list of all asset resources. Empty if none have been uploaded.
         """
         return self._assets_service.get_all_assets()
 
@@ -36,10 +35,10 @@ class AgentFileManagerService:
         """Returns a single asset resource by its ID.
 
         Args:
-            asset_id (str | uuid.UUID): The ID of the asset resource to retrieve.
+            asset_id: The ID of the asset resource to retrieve.
 
         Returns:
-            RepositoryFile | RepositoryDirectory: The requested asset resource.
+            The requested asset resource.
 
         Raises:
             RepositoryResourceNotFoundError: If no asset with the given ID exists.
@@ -52,8 +51,7 @@ class AgentFileManagerService:
         """Returns all artifact resources produced by agents.
 
         Returns:
-            list[RepositoryFile | RepositoryDirectory]: A list of all artifact
-                resources. Empty if none have been created.
+            A list of all artifact resources. Empty if none have been created.
         """
         return self._artifacts_service.get_all_artifacts()
 
@@ -64,10 +62,10 @@ class AgentFileManagerService:
         """Returns a single artifact resource by its ID.
 
         Args:
-            artifact_id (str | uuid.UUID): The ID of the artifact resource to retrieve.
+            artifact_id: The ID of the artifact resource to retrieve.
 
         Returns:
-            RepositoryFile | RepositoryDirectory: The requested artifact resource.
+            The requested artifact resource.
 
         Raises:
             RepositoryResourceNotFoundError: If no artifact with the given ID exists.
@@ -80,10 +78,10 @@ class AgentFileManagerService:
         """Reads the raw bytes of an asset resource by its ID.
 
         Args:
-            asset_id (str): The ID of the asset to read.
+            asset_id: The ID of the asset to read.
 
         Returns:
-            bytes: The raw byte content of the asset.
+            The raw byte content of the asset.
 
         Raises:
             NotImplementedError: This method is not yet implemented.
@@ -96,10 +94,10 @@ class AgentFileManagerService:
         """Writes raw bytes as a new artifact in the agent's artifact directory.
 
         Args:
-            data (bytes): The raw bytes to write as the artifact.
+            data: The raw bytes to write as the artifact.
 
         Returns:
-            None
+            Nothing.
 
         Raises:
             NotImplementedError: This method is not yet implemented.

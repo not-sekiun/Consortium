@@ -38,10 +38,10 @@ class UsersService:
         """Returns a currently logged-in user by their user ID.
 
         Args:
-            user_id (str | uuid.UUID): The ID of the user to retrieve.
+            user_id: The ID of the user to retrieve.
 
         Returns:
-            User: The user with the specified ID.
+            The user with the specified ID.
 
         Raises:
             UserIDNotFoundError: If no logged-in user with the given ID exists.
@@ -61,10 +61,10 @@ class UsersService:
         """Returns a currently logged-in user by their access token.
 
         Args:
-            access_token (str): The JWT subject string used as the access token.
+            access_token: The JWT subject string used as the access token.
 
         Returns:
-            User: The user whose access token matches.
+            The user whose access token matches.
 
         Raises:
             UserAccessTokenNotFoundError: If no logged-in user has the given access
@@ -83,8 +83,7 @@ class UsersService:
         """Returns all currently logged-in users.
 
         Returns:
-            list[User]: A list of all active user sessions. Empty if no users are
-                logged in.
+            A list of all active user sessions. Empty if no users are logged in.
         """
         all_users = list(self._users.values())
         self._logger.debug(
@@ -102,11 +101,11 @@ class UsersService:
         """Updates the display name of a logged-in user.
 
         Args:
-            display_name (str): The new display name to set.
-            user_id (str | uuid.UUID): The ID of the user to update.
+            display_name: The new display name to set.
+            user_id: The ID of the user to update.
 
         Returns:
-            User: The updated user.
+            The updated user.
 
         Raises:
             UserIDNotFoundError: If no logged-in user with the given ID exists.
@@ -130,11 +129,11 @@ class UsersService:
         Emits a `USER_LOGGED_IN` event after successful login.
 
         Args:
-            username (str): The username of the account to authenticate.
-            password (str): The password of the account to authenticate.
+            username: The username of the account to authenticate.
+            password: The password of the account to authenticate.
 
         Returns:
-            User: The newly created user session.
+            The newly created user session.
 
         Raises:
             UserAccountNotFoundError: If no account with the given username exists.
@@ -166,10 +165,7 @@ class UsersService:
         Emits a `USER_LOGGED_OUT` event after successful logout.
 
         Args:
-            user_id (str | uuid.UUID): The ID of the user session to end.
-
-        Returns:
-            None
+            user_id: The ID of the user session to end.
 
         Raises:
             UserIDNotFoundError: If no logged-in user with the given ID exists.

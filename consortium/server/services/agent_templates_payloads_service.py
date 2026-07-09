@@ -46,7 +46,7 @@ class AgentTemplatesPayloadsService:
     @wraps(PayloadsService.reserve_payload_id)
     @log_and_propagate_error_on_service_method
     def reserve_payload_id(self) -> uuid.UUID:
-        """See [PayloadsService.reserve_payload_id][consortium.server.services.payloads_service.PayloadsService.reserve_payload_id]."""
+        """See `PayloadsService.reserve_payload_id`."""
         return self._payloads_service.reserve_payload_id()
 
     @log_and_propagate_error_on_service_method
@@ -65,20 +65,19 @@ class AgentTemplatesPayloadsService:
         ID bound to this service so the caller does not need to supply it.
 
         Args:
-            build_parameters (dict[str, Any]): Parameters used to build the agent
-                generator from the bound agent template (validated against the template).
-            content (str | bytes | IO | Generator[bytes] | Generator[str]): The file
-                content to write to the repository.
-            payload_data (dict[str, Any] | None): Arbitrary metadata attached to the
-                payload. When `None`, no extra metadata is stored.
-            payload_id (str | uuid.UUID | None): A previously reserved ID to assign to
-                this payload. When `None`, a new ID is generated automatically.
-            name (str | None): A human-readable name for the payload file. When `None`,
-                the resource UUID is used.
-            description (str): An optional description for the payload.
+            build_parameters: Parameters used to build the agent generator from the
+                bound agent template (validated against the template).
+            content: The file content to write to the repository.
+            payload_data: Arbitrary metadata attached to the payload. When `None`, no
+                extra metadata is stored.
+            payload_id: A previously reserved ID to assign to this payload. When
+                `None`, a new ID is generated automatically.
+            name: A human-readable name for the payload file. When `None`, the
+                resource UUID is used.
+            description: An optional description for the payload.
 
         Returns:
-            Payload: The created payload.
+            The created payload.
 
         Raises:
             AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
@@ -112,22 +111,21 @@ class AgentTemplatesPayloadsService:
         template ID bound to this service so the caller does not need to supply it.
 
         Args:
-            build_parameters (dict[str, Any]): Parameters used to build the agent
-                generator from the bound agent template (validated against the template).
-            content (bytes | Generator[bytes] | BinaryIO): The archive content to
-                extract into the repository directory.
-            payload_data (dict[str, Any] | None): Arbitrary metadata attached to the
-                payload. When `None`, no extra metadata is stored.
-            payload_id (str | uuid.UUID | None): A previously reserved ID to assign to
-                this payload. When `None`, a new ID is generated automatically.
-            archive_file_format (Literal["zip", "tar", "gztar", "bztar", "xztar"]): The
-                format of the archive to extract. Defaults to `"zip"`.
-            name (str | None): A human-readable name for the payload directory. When
-                `None`, the resource UUID is used.
-            description (str): An optional description for the payload.
+            build_parameters: Parameters used to build the agent generator from the
+                bound agent template (validated against the template).
+            content: The archive content to extract into the repository directory.
+            payload_data: Arbitrary metadata attached to the payload. When `None`, no
+                extra metadata is stored.
+            payload_id: A previously reserved ID to assign to this payload. When
+                `None`, a new ID is generated automatically.
+            archive_file_format: The format of the archive to extract. Defaults to
+                `"zip"`.
+            name: A human-readable name for the payload directory. When `None`, the
+                resource UUID is used.
+            description: An optional description for the payload.
 
         Returns:
-            Payload: The created payload.
+            The created payload.
 
         Raises:
             AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
@@ -162,29 +160,27 @@ class AgentTemplatesPayloadsService:
         ID bound to this service so the caller does not need to supply it.
 
         Args:
-            build_parameters (dict[str, Any]): Parameters used to build the agent
-                generator from the bound agent template (validated against the
-                template).
-            path (pathlib.Path | str): Path to the existing file to register.
-            payload_data (dict[str, Any] | None): Arbitrary metadata attached to
-                the payload. When `None`, no extra metadata is stored.
-            payload_id (str | uuid.UUID | None): A previously reserved ID to
-                assign to this payload. When `None`, a new ID is generated.
-            name (str | None): A human-readable name for the payload file. When
-                `None`, the original filename is used.
-            description (str): An optional description for the payload.
-            copy (bool): When `False` (default) the source file is moved into the
-                repository. When `True` the source file is copied and the original
-                is left in place.
+            build_parameters: Parameters used to build the agent generator from the
+                bound agent template (validated against the template).
+            path: Path to the existing file to register.
+            payload_data: Arbitrary metadata attached to the payload. When `None`,
+                no extra metadata is stored.
+            payload_id: A previously reserved ID to assign to this payload. When
+                `None`, a new ID is generated.
+            name: A human-readable name for the payload file. When `None`, the
+                original filename is used.
+            description: An optional description for the payload.
+            copy: When `False` (default) the source file is moved into the repository.
+                When `True` the source file is copied and the original is left in
+                place.
 
         Returns:
-            Payload: The registered payload.
+            The registered payload.
 
         Raises:
-            AgentTemplateNotFoundError: If the bound agent template ID no longer
-                exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but
-                has no corresponding reservation.
+            AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
+            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+                corresponding reservation.
         """
         return self._payloads_service.add_payload_file(
             agent_template_id=self._agent_template_id,
@@ -208,35 +204,34 @@ class AgentTemplatesPayloadsService:
         description: str = "",
         copy: bool = False,
     ) -> Payload:
-        """Registers an existing directory on disk as a payload for the bound agent template.
+        """Registers an existing directory on disk as a payload for the bound agent
+        template.
 
         Forwards to `PayloadsService.add_payload_directory`, injecting the agent
         template ID bound to this service so the caller does not need to supply it.
 
         Args:
-            build_parameters (dict[str, Any]): Parameters used to build the agent
-                generator from the bound agent template (validated against the
-                template).
-            path (pathlib.Path | str): Path to the existing directory to register.
-            payload_data (dict[str, Any] | None): Arbitrary metadata attached to
-                the payload. When `None`, no extra metadata is stored.
-            payload_id (str | uuid.UUID | None): A previously reserved ID to
-                assign to this payload. When `None`, a new ID is generated.
-            name (str | None): A human-readable name for the payload directory.
-                When `None`, the original directory name is used.
-            description (str): An optional description for the payload.
-            copy (bool): When `False` (default) the source directory is moved into
-                the repository. When `True` the source directory is copied and the
-                original is left in place.
+            build_parameters: Parameters used to build the agent generator from the
+                bound agent template (validated against the template).
+            path: Path to the existing directory to register.
+            payload_data: Arbitrary metadata attached to the payload. When `None`,
+                no extra metadata is stored.
+            payload_id: A previously reserved ID to assign to this payload. When
+                `None`, a new ID is generated.
+            name: A human-readable name for the payload directory. When `None`, the
+                original directory name is used.
+            description: An optional description for the payload.
+            copy: When `False` (default) the source directory is moved into the
+                repository. When `True` the source directory is copied and the original
+                is left in place.
 
         Returns:
-            Payload: The registered payload.
+            The registered payload.
 
         Raises:
-            AgentTemplateNotFoundError: If the bound agent template ID no longer
-                exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but
-                has no corresponding reservation.
+            AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
+            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+                corresponding reservation.
         """
         return self._payloads_service.add_payload_directory(
             agent_template_id=self._agent_template_id,
@@ -253,16 +248,17 @@ class AgentTemplatesPayloadsService:
     def delete_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> None:
         """Deletes a payload's repository resource and its associated metadata.
 
-        Forwards to `PayloadsService.delete_payload_by_payload_id`. A `PAYLOAD_DELETED`
-        event is only emitted when both the metadata and the repository resource existed
-        prior to deletion. If only one side exists, a warning is logged and the orphaned
-        side is cleaned up without emitting an event.
+        Forwards to `PayloadsService.delete_payload_by_payload_id`. A
+        `PAYLOAD_DELETED` event is only emitted when both the metadata and the
+        repository resource existed prior to deletion. If only one side exists, a
+        warning is logged and the orphaned side is cleaned up without emitting an
+        event.
 
         Args:
-            payload_id (str | uuid.UUID): The ID of the payload to delete.
+            payload_id: The ID of the payload to delete.
 
         Returns:
-            None
+            Nothing.
 
         Raises:
             PayloadNotFoundError: If neither payload metadata nor a matching repository
@@ -275,7 +271,7 @@ class AgentTemplatesPayloadsService:
     @wraps(PayloadsService.get_payload_by_payload_id)
     @log_and_propagate_error_on_service_method
     def get_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> Payload:
-        """See [PayloadsService.get_payload_id][consortium.server.services.payloads_service.PayloadsService.get_payload_id]."""
+        """See `PayloadsService.get_payload_by_payload_id`."""
         return self._payloads_service.get_payload_by_payload_id(
             payload_id=payload_id,
         )
@@ -283,5 +279,5 @@ class AgentTemplatesPayloadsService:
     @wraps(PayloadsService.get_all_payloads)
     @log_and_propagate_error_on_service_method
     def get_all_payloads(self) -> list[Payload]:
-        """See [PayloadsService.get_all_payloads][consortium.server.services.payloads_service.get_all_payloads]."""
+        """See `PayloadsService.get_all_payloads`."""
         return self._payloads_service.get_all_payloads()

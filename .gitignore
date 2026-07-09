@@ -19,6 +19,7 @@ CLAUDE.md
 .ruff_cache/
 tools/defaults.txt
 .coverage
+.hypothesis/
 
 before_merging.txt
 agent.exe

@@ -62,7 +62,7 @@ class AuthorizationService:
             path: Absolute path to the role permissions JSON file to load.
 
         Returns:
-            dict[str, list[str]]: The validated role-to-permissions mapping.
+            The validated role-to-permissions mapping.
 
         Raises:
             InvalidRolePermissionsFileJSONError: If the file is not valid JSON.
@@ -106,9 +106,6 @@ class AuthorizationService:
             path: Absolute path to write the role permissions JSON file to.
             role_permissions: Mapping of role name -> list of permission strings
                 to persist.
-
-        Returns:
-            None
         """
         with path.open(mode="w") as file:
             data = json.dumps(role_permissions, indent=4)
@@ -150,8 +147,6 @@ class AuthorizationService:
         Calls `save_role_permissions_to_path` with the path supplied at
         construction time and the current in-memory state.
 
-        Returns:
-            None
         """
         serialisable = {
             role: sorted(permissions)
@@ -169,7 +164,7 @@ class AuthorizationService:
         """Returns a copy of the current role-to-permissions mapping.
 
         Returns:
-            dict[str, set[str]]: Mapping of role name -> set of permission strings.
+            Mapping of role name -> set of permission strings.
         """
         return {
             role: set(permissions)
@@ -183,7 +178,7 @@ class AuthorizationService:
             role: The name of the role to look up.
 
         Returns:
-            set[str]: The permissions assigned to the role.
+            The permissions assigned to the role.
 
         Raises:
             RoleNotFoundError: If no role with the given name exists.
@@ -201,9 +196,6 @@ class AuthorizationService:
             permissions: Initial permissions to assign. When ``None``, the role
                 starts with no permissions.
 
-        Returns:
-            None
-
         Raises:
             RoleAlreadyExistsError: If a role with the given name already exists.
         """
@@ -217,9 +209,6 @@ class AuthorizationService:
 
         Args:
             role: The name of the role to delete.
-
-        Returns:
-            None
 
         Raises:
             RoleNotFoundError: If no role with the given name exists.
@@ -235,9 +224,6 @@ class AuthorizationService:
         Args:
             role: The name of the role to update.
             permissions: The complete new set of permissions for the role.
-
-        Returns:
-            None
 
         Raises:
             RoleNotFoundError: If no role with the given name exists.
@@ -258,9 +244,6 @@ class AuthorizationService:
             role: The name of the role to modify.
             permission: The permission string to add.
 
-        Returns:
-            None
-
         Raises:
             RoleNotFoundError: If no role with the given name exists.
             PermissionAlreadyInRoleError: If the permission is already assigned
@@ -279,9 +262,6 @@ class AuthorizationService:
         Args:
             role: The name of the role to modify.
             permission: The permission string to remove.
-
-        Returns:
-            None
 
         Raises:
             RoleNotFoundError: If no role with the given name exists.
@@ -305,7 +285,7 @@ class AuthorizationService:
             permission: The permission string to test for.
 
         Returns:
-            bool: `True` if the role exists and holds the permission.
+            `True` if the role exists and holds the permission.
         """
         permissions = self._role_permissions.get(str(role))
         if permissions is None:

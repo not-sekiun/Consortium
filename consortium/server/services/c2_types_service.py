@@ -44,8 +44,8 @@ class C2TypesService:
         """Returns all unique listener types across all loaded listener profiles.
 
         Returns:
-            list[BaseListenerType]: A deduplicated list of all listener types. Empty if
-                no listener profiles are loaded.
+            A deduplicated list of all listener types. Empty if no listener profiles
+            are loaded.
         """
         listener_types = []
         for (
@@ -64,10 +64,10 @@ class C2TypesService:
         """Returns a listener type by its name.
 
         Args:
-            listener_type_name (str): The name of the listener type to retrieve.
+            listener_type_name: The name of the listener type to retrieve.
 
         Returns:
-            BaseListenerType: The matching listener type.
+            The matching listener type.
 
         Raises:
             ListenerTypeNotFoundError: If no listener type with the given name is
@@ -87,8 +87,8 @@ class C2TypesService:
         """Returns all unique agent types across all loaded agent profiles.
 
         Returns:
-            list[BaseAgentType]: A deduplicated list of all agent types. Empty if no
-                agent profiles are loaded.
+            A deduplicated list of all agent types. Empty if no agent profiles are
+            loaded.
         """
         agent_types = []
         for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
@@ -105,10 +105,10 @@ class C2TypesService:
         """Returns an agent type by its name.
 
         Args:
-            agent_type_name (str): The name of the agent type to retrieve.
+            agent_type_name: The name of the agent type to retrieve.
 
         Returns:
-            BaseAgentType: The matching agent type.
+            The matching agent type.
 
         Raises:
             AgentTypeNotFoundError: If no agent type with the given name is registered.
@@ -126,17 +126,18 @@ class C2TypesService:
     def get_compatible_listener_types_from_agent_type_name(
         self, agent_type_name: str
     ) -> list[str]:
-        """Returns the names of all listener types compatible with the specified agent type.
+        """Returns the names of all listener types compatible with the specified
+        agent type.
 
         Compatibility is determined by the `compatible_listener_types` attribute of the
         agent type.
 
         Args:
-            agent_type_name (str): The name of the agent type to look up.
+            agent_type_name: The name of the agent type to look up.
 
         Returns:
-            list[str]: A deduplicated list of compatible listener type names. Empty if
-                the agent type is not registered or has no compatible listener types.
+            A deduplicated list of compatible listener type names. Empty if the agent
+            type is not registered or has no compatible listener types.
         """
         compatible_listener_types = []
         for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
@@ -156,19 +157,21 @@ class C2TypesService:
     def get_registered_compatible_agent_types_from_listener_type_name(
         self, listener_type_name: str
     ) -> list[str]:
-        """Returns the names of all registered agent types compatible with the specified listener type.
+        """Returns the names of all registered agent types compatible with the
+        specified listener type.
 
-        This is the reverse index of `get_compatible_listener_types_from_agent_type_name`
-        and reflects which agent types have declared compatibility with the given
-        listener type and are currently registered.
+        This is the reverse index of
+        `get_compatible_listener_types_from_agent_type_name` and reflects which
+        agent types have declared compatibility with the given listener type and
+        are currently registered.
 
         Args:
-            listener_type_name (str): The name of the listener type to look up.
+            listener_type_name: The name of the listener type to look up.
 
         Returns:
-            list[str]: A deduplicated list of compatible registered agent type names.
-                Empty if the listener type is not registered or has no compatible agent
-                types registered.
+            A deduplicated list of compatible registered agent type names. Empty if
+            the listener type is not registered or has no compatible agent types
+            registered.
         """
         compatible_agent_types = []
         for (
@@ -193,11 +196,11 @@ class C2TypesService:
         """Returns whether an agent type with the given name is currently registered.
 
         Args:
-            agent_type_name (str): The name of the agent type to check.
+            agent_type_name: The name of the agent type to check.
 
         Returns:
-            bool: `True` if an agent type with the given name is registered, `False`
-                otherwise.
+            `True` if an agent type with the given name is registered, `False`
+            otherwise.
         """
         for agent_type in self.get_all_agent_types():
             if str(agent_type.name) == agent_type_name:
@@ -217,11 +220,11 @@ class C2TypesService:
         """Returns whether a listener type with the given name is currently registered.
 
         Args:
-            listener_type_name (str): The name of the listener type to check.
+            listener_type_name: The name of the listener type to check.
 
         Returns:
-            bool: `True` if a listener type with the given name is registered, `False`
-                otherwise.
+            `True` if a listener type with the given name is registered, `False`
+            otherwise.
         """
         for listener_type in self.get_all_listener_types():
             if str(listener_type.name) == listener_type_name:
@@ -245,12 +248,12 @@ class C2TypesService:
         """Returns whether the specified agent type and listener type are compatible.
 
         Args:
-            agent_type_name (str): The name of the agent type to check.
-            listener_type_name (str): The name of the listener type to check.
+            agent_type_name: The name of the agent type to check.
+            listener_type_name: The name of the listener type to check.
 
         Returns:
-            bool: `True` if the agent type declares the listener type as compatible,
-                `False` otherwise.
+            `True` if the agent type declares the listener type as compatible,
+            `False` otherwise.
 
         Raises:
             AgentTypeNotFoundError: If no agent type with the given name is registered.

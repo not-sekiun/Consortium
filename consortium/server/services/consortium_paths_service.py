@@ -6,6 +6,40 @@ from consortium.server.models.logging_models import LoggerType
 
 
 class ConsortiumPathsService:
+    """Central registry of the filesystem paths the server depends on.
+
+    Resolves and holds every well-known file and directory path relative to the
+    consortium project root, so that other services resolve paths through this single
+    service rather than recomputing them. On construction, it validates that the user
+    accounts file exists and auto-creates any missing expected directories, aborting
+    server startup if a path is in an unrecoverable status.
+
+    Attributes:
+        consortium_root: The project root directory, resolved as the ancestor three
+            levels above this service's module file.
+        release_json_file: The release metadata JSON file under `data`.
+        server_config_json_file: The server configuration JSON file under `data/server`.
+        logging_config_json_file: The logging configuration JSON file under
+            `data/server`.
+        user_accounts_json_file: The user accounts JSON file under `data/server`. Its
+            existence is validated at startup.
+        role_permissions_json_file: The role permissions JSON file under `data/server`.
+        server_logs_directory: The directory under `data/server` where server log files
+            are written.
+        assets_directory: The directory under `data/server` where asset resources are
+            stored.
+        artifacts_directory: The directory under `data/server` where artifact resources
+            are stored.
+        payloads_directory: The directory under `data/server` where payload resources
+            are stored.
+        components_directory: The `consortium/components` directory holding user-created
+            components that extend the framework.
+        listeners_directory: The listeners subdirectory of the components directory.
+        agents_directory: The agents subdirectory of the components directory.
+        plugins_directory: The plugins subdirectory of the components directory.
+        event_hooks_directory: The event hooks subdirectory of the components directory.
+    """
+
     def __init__(self):
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -14,37 +48,49 @@ class ConsortiumPathsService:
         # This service is located at
         # consortium/server/services/consortium_paths_service.py, so the consortium
         # root is three levels up relative to it.
-        self.consortium_root = pathlib.Path(__file__).resolve().parents[3]
+        self.consortium_root: pathlib.Path = pathlib.Path(__file__).resolve().parents[3]
 
         # Data file paths
-        self.release_json_file = self.consortium_root / "data" / "release.json"
-        self.server_config_json_file = (
+        self.release_json_file: pathlib.Path = (
+            self.consortium_root / "data" / "release.json"
+        )
+        self.server_config_json_file: pathlib.Path = (
             self.consortium_root / "data" / "server" / "server_config.json"
         )
-        self.logging_config_json_file = (
+        self.logging_config_json_file: pathlib.Path = (
             self.consortium_root / "data" / "server" / "logging_config.json"
         )
-        self.user_accounts_json_file = (
+        self.user_accounts_json_file: pathlib.Path = (
             self.consortium_root / "data" / "server" / "user_accounts.json"
         )
-        self.role_permissions_json_file = (
+        self.role_permissions_json_file: pathlib.Path = (
             self.consortium_root / "data" / "server" / "role_permissions.json"
         )
 
         # Data directory paths
-        self.server_logs_directory = self.consortium_root / "data" / "server" / "logs"
-        self.assets_directory = self.consortium_root / "data" / "server" / "assets"
-        self.artifacts_directory = (
+        self.server_logs_directory: pathlib.Path = (
+            self.consortium_root / "data" / "server" / "logs"
+        )
+        self.assets_directory: pathlib.Path = (
+            self.consortium_root / "data" / "server" / "assets"
+        )
+        self.artifacts_directory: pathlib.Path = (
             self.consortium_root / "data" / "server" / "artifacts"
         )
-        self.payloads_directory = self.consortium_root / "data" / "server" / "payloads"
+        self.payloads_directory: pathlib.Path = (
+            self.consortium_root / "data" / "server" / "payloads"
+        )
 
         # Component directory paths
-        self.components_directory = self.consortium_root / "consortium" / "components"
-        self.listeners_directory = self.components_directory / "listeners"
-        self.agents_directory = self.components_directory / "agents"
-        self.plugins_directory = self.components_directory / "plugins"
-        self.event_hooks_directory = self.components_directory / "event_hooks"
+        self.components_directory: pathlib.Path = (
+            self.consortium_root / "consortium" / "components"
+        )
+        self.listeners_directory: pathlib.Path = self.components_directory / "listeners"
+        self.agents_directory: pathlib.Path = self.components_directory / "agents"
+        self.plugins_directory: pathlib.Path = self.components_directory / "plugins"
+        self.event_hooks_directory: pathlib.Path = (
+            self.components_directory / "event_hooks"
+        )
 
         # These two methods will raise exceptions that are not subclasses of
         # `BaseConsortiumErrors` if there are issues with the paths that prevent

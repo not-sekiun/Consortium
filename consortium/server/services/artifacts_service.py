@@ -70,12 +70,31 @@ class ArtifactsService:
     @wraps(RepositoryService.load_repository_metadata)
     @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
+        """Loads the artifacts repository metadata from disk into memory.
+
+        Delegates to the underlying repository service, reconstructing the in-memory
+        record of every tracked artifact from the repository metadata file. If the
+        metadata file does not yet exist an empty one is created.
+
+        Raises:
+            InvalidRepositoryMetadataFileJSONError: If the metadata file contains
+                invalid JSON.
+            InvalidRepositoryMetadataFileSchemaError: If the metadata file does not
+                follow the expected schema.
+            UnsyncedRepositoryMetadataFileError: If a resource recorded in the metadata
+                file does not exist on disk.
+        """
         self._repository_service.load_repository_metadata()
         self._logger.debug("Loaded artifacts repository metadata")
 
     @wraps(RepositoryService.save_repository_metadata)
     @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
+        """Persists the current in-memory artifacts repository metadata to disk.
+
+        Delegates to the underlying repository service, writing the metadata for every
+        tracked artifact to the repository metadata file as JSON.
+        """
         self._repository_service.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method

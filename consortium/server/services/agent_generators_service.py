@@ -5,7 +5,6 @@ from typing import Any
 
 from loguru import logger
 
-# from consortium.framework.agents.agent_generator_objects import AgentGeneratorState
 from consortium.framework._components._component_status import State
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.event_hooks.event_type import EventType

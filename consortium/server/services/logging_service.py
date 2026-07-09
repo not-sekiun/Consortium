@@ -89,18 +89,19 @@ class LoggingService:
         All additional keyword arguments are forwarded directly to `loguru.logger.add`.
 
         Args:
-            sink (Any): The sink target (e.g. `sys.stdout`, a file path, or a callable).
-            level (str): The minimum log level for this sink (e.g. `"DEBUG"`,
-                `"INFO"`).
-            label (str): A unique label for identifying and referencing this sink.
+            sink: The sink target, for example `sys.stdout`, a file path, or a
+                callable.
+            level: The minimum log level for this sink, for example `"DEBUG"` or
+                `"INFO"`.
+            label: A unique label for identifying and referencing this sink.
             format: A loguru format string or callable. When `None`, the service's
                 default formatter is used.
-            is_server_default (bool): When `True`, marks this sink as a server-default
-                sink. Defaults to `False`.
+            is_server_default: When `True`, marks this sink as a server-default sink.
+                Defaults to `False`.
             **kwargs: Additional keyword arguments passed to `loguru.logger.add`.
 
         Returns:
-            int: The handler ID returned by `loguru.logger.add`.
+            The handler ID returned by `loguru.logger.add`.
 
         Raises:
             ValueError: If a sink with the given label is already registered.
@@ -129,10 +130,7 @@ class LoggingService:
         """Removes a registered log sink by its label.
 
         Args:
-            label (str): The label of the sink to remove.
-
-        Returns:
-            None
+            label: The label of the sink to remove.
 
         Raises:
             KeyError: If no sink with the given label is registered.
@@ -143,30 +141,24 @@ class LoggingService:
         logger.remove(sink_info.handler_id)
 
     def remove_all_sinks(self) -> None:
-        """Removes all registered log sinks.
-
-        Returns:
-            None
-        """
+        """Removes all registered log sinks."""
         for label in list(self._sinks.keys()):
             self.remove_sink(label)
 
     def modify_sink(self, label: str, sink: Any = _UNSET, **overrides) -> None:
-        """Modifies an existing log sink in-place by rebuilding it with updated parameters.
+        """Modifies an existing log sink in-place by rebuilding it with updated
+        parameters.
 
         Because loguru provides no update API, the existing sink is torn down and
         reconstructed with the merged configuration. Successive calls layer correctly
         because `SinkInfo.sink_kwargs` is kept up to date after each modification.
 
         Args:
-            label (str): The label of the sink to modify.
-            sink (Any): A replacement sink target. When omitted, the existing sink
-                target is preserved.
-            **overrides: Any additional loguru `logger.add` keyword arguments to update.
+            label: The label of the sink to modify.
+            sink: A replacement sink target. When omitted, the existing sink target is
+                preserved.
+            **overrides: Additional loguru `logger.add` keyword arguments to update.
                 Provided values are merged over the existing sink kwargs.
-
-        Returns:
-            None
 
         Raises:
             KeyError: If no sink with the given label is registered.
@@ -192,24 +184,22 @@ class LoggingService:
         """Returns all currently registered log sinks.
 
         Returns:
-            list[SinkInfo]: A list of `SinkInfo` objects for all registered sinks.
-                Empty if none have been added.
+            A list of `SinkInfo` objects for all registered sinks, or an empty list if
+            none have been added.
         """
         return list(self._sinks.values())
 
     def configure_default_logging(self, logging_config: LoggingConfigModel) -> None:
-        """Configures default log level colors and registers the server's default sinks.
+        """Configures default log level colors and registers the server's default
+        sinks.
 
         Sets display colors for each log level and adds a `stdout` sink. A file sink is
         also added when `logging_config.log_file` is not `None`.
 
         Args:
-            logging_config (LoggingConfigModel): The logging configuration model
-                specifying the log level, colorize flag, and optional log file path,
-                rotation policy, and retention policy.
-
-        Returns:
-            None
+            logging_config: The logging configuration model specifying the log level,
+                colorize flag, and optional log file path, rotation policy, and
+                retention policy.
         """
         self.logging_config = logging_config
 

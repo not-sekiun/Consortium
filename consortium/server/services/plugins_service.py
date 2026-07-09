@@ -56,42 +56,37 @@ class PluginsService:
         plugin_project_folder: pathlib.Path,
         ignore_enabled_plugin_flag: bool = False,
     ) -> BasePlugin | None:
-        """Retrieves a plugin instance from a specified plugin project folder.
+        """Instantiates a plugin from a project folder without registering it.
 
-        Plugins that are specified to be disabled in their `manifest.json` will not be
-        loaded unless `ignore_enabled_plugin_flag` is set to `True`. Valid plugins are
-        instantiated and returned.
+        Disabled plugins (as indicated by `enabled: false` in their `manifest.json`)
+        are not instantiated unless `ignore_enabled_plugin_flag` is `True`.
 
         Args:
-            plugin_project_folder (pathlib.Path): The path of the folder containing the
-                plugin project.
-            ignore_enabled_plugin_flag (bool): If `True`, the method bypasses the
-                enabled status check in the plugin project manifest.
+            plugin_project_folder: Path to the directory containing the plugin
+                project files and `manifest.json`.
+            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+                the manifest. Defaults to `False`.
 
         Returns:
-            BasePlugin | None: An instance of the plugin if successfully retrieved, or
-                `None` if the plugin is disabled and the enabled check is not
-                overridden.
+            The instantiated plugin, or `None` if the plugin is disabled and the
+            enabled check is not overridden.
 
         Raises:
-            PluginProjectManifestFileNotFoundError: If the plugin project manifest
-                file, `plugin_project_manifest.json`, is missing.
-            InvalidPluginProjectManifestFileJSONError: If the manifest file,
-                `plugin_project_manifest.json`, contains invalid JSON.
-            InvalidPluginProjectManifestFileSchemaError: If the manifest file
-                `plugin_project_manifest.json` doesn't follow the expected schema.
-            PluginProjectPluginFileNotFoundError: If the file specified in the plugin
-                manifest, `plugin_project_manifest.json`, cannot be found.
-            PluginProjectSymbolNotFoundError: If the symbol specified in the plugin
-                manifest, `plugin_project_manifest.json`, is not found in the specified
-                file.
-            PluginProjectInterfaceError: If the plugin class does not correctly inherit
-                from the [`BasePlugin`][consortium.framework.plugins.base_plugin.BasePlugin]
-                class.
-            IncompatiblePluginFrameworkVersionError: If the plugin is incompatible with
-                the current framework version.
-            InternalPluginProjectError: If an unhandled exception is raised within the
-                plugin while initializing the plugin.
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
+                with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the plugin.
         """
         plugin = (
             self._plugin_registry_service.get_component_from_component_project_folder(
@@ -122,33 +117,21 @@ class PluginsService:
         list[pathlib.Path],
         list[tuple[pathlib.Path, PluginLoadingError]],
     ]:
-        """Retrieves all plugins from the specified directory containing plugin project folders.
+        """Recursively scans a directory for plugin project folders and instantiates them.
 
-        Plugins that are specified to be disabled in their `manifest.json` will not be
-        loaded unless `ignore_enabled_plugin_flag` is set to `True`. Valid plugins are
-        instantiated and returned.
+        Disabled plugins (as indicated by `enabled: false` in their `manifest.json`)
+        are skipped unless `ignore_enabled_plugin_flag` is `True`. Plugins that fail to
+        load are collected in the returned error list rather than aborting the scan.
 
         Args:
-            directory (pathlib.Path): The path of the directory containing plugin
-                project folders.
-            ignore_enabled_plugin_flag (bool): If `True`, the method bypasses the
-                enabled status check in the plugin project manifests.
+            directory: The directory to scan for plugin project folders.
+            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+                each plugin's manifest. Defaults to `False`.
 
         Returns:
-            tuple[list[BasePlugin], list[pathlib.Path], list[tuple[pathlib.Path, PluginLoadingError]]: A tuple containing three elements.
-
-                1. A list of successfully retrieved plugin instances.
-
-                2. A list of `pathlib.Path` objects representing the plugin project
-                folders that were skipped because the plugins were disabled.
-
-                3. A list of tuples, each containing a `pathlib.Path` object representing
-                the plugin project folder that failed to load and the corresponding
-                `PluginsError`
-
-        Raises:
-            PluginsError: See [get_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.get_plugin_from_plugin_project_folder]
-                for possible exceptions raised during plugin retrieval.
+            A three-element tuple: (1) a list of successfully instantiated plugins, (2)
+            a list of paths skipped because the plugin was disabled, and (3) a list of
+            `(path, error)` tuples for plugins that failed to load.
         """
         retrieved, skipped, errored = (
             self._plugin_registry_service.get_components_from_component_project_folder_directories(
@@ -175,26 +158,25 @@ class PluginsService:
         self,
         plugin: BasePlugin,
     ) -> None:
-        """Registers a plugin instance with the framework.
+        """Registers an already-instantiated plugin with the service.
 
-        Each plugin instance is uniquely identified and referred to by its `plugin_id`.
-        Registering a plugin will not start it. Plugins that are registered must have
-        unique labels.
+        Each plugin is uniquely identified by its `plugin_id`. Registration validates
+        that the plugin's ID and label are unique and that all of its declared component
+        dependencies are satisfied. Registering a plugin does not start it.
 
         Args:
-            plugin (BasePlugin): The plugin instance to register. It must have a unique
-            `plugin_id` and conform to the `BasePlugin` interface. The plugin's `label`
-            must be unique across all registered plugins.
+            plugin: The plugin instance to register.
 
         Raises:
-            PluginAlreadyRegisteredError: If a plugin with the same `plugin_id` is
-                already registered.
-            DuplicatePluginLabelError: If a plugin with the same `label` attribute is
-                already registered.
-            PluginDependencyNotFoundError: If the plugin depends on another plugin that
-                is not registered.
-            IncompatiblePluginDependencyVersionError: If the plugin depends on another
-                plugin that is registered but has an incompatible version.
+            ComponentAlreadyRegisteredError: If a plugin with the same ID is already
+                registered.
+            DuplicateComponentLabelError: If a plugin with the same label is already
+                registered.
+            ComponentDependencyNotFoundError: If the plugin declares a dependency on
+                another component that is not registered.
+            IncompatibleComponentDependencyVersionError: If the plugin declares a
+                dependency on a registered component whose version does not satisfy the
+                required specifier.
         """
         self._plugin_registry_service.register_component(component=plugin)
         self._logger.debug("Registered plugin: {!r}", plugin)
@@ -205,28 +187,46 @@ class PluginsService:
         plugin_project_folder: pathlib.Path,
         ignore_enabled_plugin_flag: bool = False,
     ) -> BasePlugin | None:
-        """Registers a plugin from the provided plugin project folder with the framework.
+        """Instantiates and registers a plugin from a project folder.
 
-        If the plugin is disabled and the `ignore_enabled_plugin_project_flag` is set to False, the plugin will not be
-        registered. On successful registration, the plugin is added to the internal
-        plugin registry. Note that this method does not start the plugin; it only
-        registers it.
+        Disabled plugins are skipped unless `ignore_enabled_plugin_flag` is `True`.
+        This method registers the plugin but does not start it.
 
         Args:
-            plugin_project_folder (pathlib.Path): The path to the folder containing the
-                plugin project from which the plugin is to be registered.
-            ignore_enabled_plugin_flag (bool): Specifies whether to ignore the
-                flag indicating whether the plugin is enabled in the provided project.
-                Defaults to False.
+            plugin_project_folder: Path to the directory containing the plugin project
+                files and `manifest.json`.
+            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+                the manifest. Defaults to `False`.
 
         Returns:
-            BasePlugin | None: Returns the registered plugin instance if the plugin is
-            successfully registered; otherwise, returns None.
+            The registered plugin, or `None` if the plugin is disabled and the enabled
+            check is not overridden.
 
         Raises:
-            `PluginsError`: See [get_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.get_plugin_from_plugin_project_folder]
-                and [register_plugin][consortium.server.services.plugins_service.PluginsService.register_plugin]
-                for possible exceptions raised during plugin registration.
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
+                with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the plugin.
+            ComponentAlreadyRegisteredError: If a plugin with the same ID is already
+                registered.
+            DuplicateComponentLabelError: If a plugin with the same label is already
+                registered.
+            ComponentDependencyNotFoundError: If the plugin declares a dependency on
+                another component that is not registered.
+            IncompatibleComponentDependencyVersionError: If the plugin declares a
+                dependency on a registered component whose version does not satisfy the
+                required specifier.
         """
         plugin = self._plugin_registry_service.register_component_from_component_project_folder(
             component_project_folder=plugin_project_folder,
@@ -242,29 +242,41 @@ class PluginsService:
         ignore_enabled_plugin_flag: bool = False,
         timeout: int | None = 5,
     ) -> BasePlugin | None:
-        """Loads a plugin from its project folder. The plugin is registered to the plugin
-        service and additionally started if its `autostart` attribute is set to True.
+        """Loads a plugin from a project folder, registering it and starting it if it autostarts.
 
-        This function integrates with the plugin registration mechanism and ensures
-        that any plugin meeting the specified requirements is properly initialized
-        and prepared for further usage.
+        Disabled plugins are skipped unless `ignore_enabled_plugin_flag` is `True`.
+        After registration, the plugin is started when its `autostart` attribute is
+        `True`.
 
         Args:
-            plugin_project_folder (pathlib.Path): The directory path where the plugin's
-                project files are stored.
-            ignore_enabled_plugin_flag (bool): Optional flag indicating whether the
-                'enabled' status of the plugin should be ignored. Defaults to False.
-            timeout (int): The maximum time in seconds to wait for the plugin to start.
+            plugin_project_folder: Path to the directory containing the plugin project
+                files and `manifest.json`.
+            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+                the manifest. Defaults to `False`.
+            timeout: The maximum number of seconds to wait for the plugin to start when
+                it autostarts. When `None`, waits indefinitely. Defaults to 5.
 
         Returns:
-            BasePlugin | None: Returns the loaded plugin instance if successful, or
-            None if the plugin is disabled or cannot be loaded.
+            The loaded plugin, or `None` if the plugin is disabled and the enabled
+            check is not overridden.
 
         Raises:
-            `PluginsError`: See [get_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.get_plugin_from_plugin_project_folder]
-                and [register_plugin][consortium.server.services.plugins_service.PluginsService.register_plugin]
-                for possible exceptions raised during plugin loading.
-            `PluginStartError`: If the plugin fails to start.
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
+                with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the plugin.
+            PluginStartError: If the plugin autostarts but fails to start.
         """
         plugin = await self._plugin_registry_service.load_component_from_component_project_folder(
             component_project_folder=plugin_project_folder,
@@ -282,28 +294,26 @@ class PluginsService:
         timeout: int | None = 5,
         force_unload: bool = False,
     ) -> None:
-        """Unloads a plugin identified by its `plugin_id`, stopping its execution if
-        necessary, and removing it from the internal plugin registry. The function
-        ensures that the plugin is stopped either gracefully or forcibly based on the
-        provided arguments. A timeout is used to wait for the plugin to stop, after
-        which it will be forcibly stopped if specified before being unloaded.
+        """Stops (if running) and deregisters a loaded plugin by its ID.
+
+        A running plugin is stopped before it is removed from the registry. A plugin
+        that does not stop within `timeout` is either forcibly cancelled (when
+        `force_unload` is `True`) or causes the unload to fail (when `force_unload` is
+        `False`).
 
         Args:
-            plugin_id: The unique identifier of the plugin to be unloaded.
-            force_unload: Whether to forcibly unload the plugin if it fails to stop
-                within the timeout period. Default is False.
-            timeout: The maximum duration in seconds to wait for the plugin to stop
-                gracefully. If set to None, it will wait indefinitely. Default is 5
-                seconds.
-
-        Returns:
-            None
+            plugin_id: The ID of the plugin to unload.
+            timeout: The maximum number of seconds to wait for the plugin to stop. When
+                `None`, waits indefinitely. Defaults to 5.
+            force_unload: When `True`, a plugin that fails to stop cleanly within
+                `timeout` is forcibly cancelled and still unloaded. When `False`
+                (default), a failure to stop cleanly aborts the unload.
 
         Raises:
-            InternalPluginStopError: If the plugin fails to stop and force_unload is set
-                to False due to internal errors.
-            PluginStopTimeoutError: If the plugin fails to stop within the specified
-                timeout, and force_unload is set to False.
+            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginStopError: If the plugin fails to stop and `force_unload` is `False`.
+            PluginStopTimeoutError: If the plugin does not stop within `timeout` and
+                `force_unload` is `False`.
         """
         plugin = await self._plugin_registry_service.unload_component_by_component_id(
             component_id=plugin_id,
@@ -316,50 +326,6 @@ class PluginsService:
         self._logger.info("Unloaded plugin: {}", plugin)
         self._logger.debug("Unloaded plugin: {!r}", plugin)
 
-        # # This call will implicitly do a check to see if the plugin id is valid or not
-        # # so we do not need to check it again.
-        # plugin = self.get_plugin_by_plugin_id(plugin_id)
-        #
-        # if plugin.status.status == State.RUNNING:
-        #     try:
-        #         await plugin.stop()
-        #     except BaseFrameworkException as exc:
-        #         if not force_unload:
-        #             raise exc
-        #     except Exception as exc:
-        #         if not force_unload:
-        #             raise exc
-        #
-        #     # Ensure that the stop plugin event has been set before proceeding to wait
-        #     # on the timeout.
-        #     await plugin.stop_event.wait()
-        #     if timeout is None:
-        #         while plugin.status.status == State.RUNNING:
-        #             await asyncio.sleep(1)
-        #     else:
-        #         # Every second check if the plugin has stopped and break early if it
-        #         # has.
-        #         for _ in range(timeout):
-        #             if plugin.status.status != State.RUNNING:
-        #                 break
-        #             await asyncio.sleep(1)
-        #
-        #     # Check the status after the timeout and determine if we forcefully need to
-        #     # cancel the plugin.
-        #     if plugin.status.status != State.STOPPED:
-        #         if not force_unload:
-        #             raise PluginStopTimeoutError(plugin_str=str(plugin))
-        #         else:
-        #             self.logger.warning(
-        #                 f"Forcing plugin cancellation for plugin {plugin} because its "
-        #                 f"timeout exceeded the specified duration: {timeout} second(s)",
-        #             )
-        #             await plugin.cancel()
-        #
-        # del self._plugins[plugin_id]
-        # self.logger.info("Unloaded plugin: {}", plugin)
-        # self.logger.debug("Unloaded plugin: {!r}", plugin)
-
     @log_and_propagate_error_on_service_method
     async def reload_plugin_by_plugin_id(
         self,
@@ -369,28 +335,52 @@ class PluginsService:
         unload_timeout: int | None = 5,
         force_unload: bool = False,
     ) -> BasePlugin | None:
-        """Reloads a plugin by its plugin ID. This operation consists of unloading the
-        plugin currently loaded and reloading it from the plugin project folder.
+        """Unloads a plugin then reloads it from its original project folder.
+
+        The plugin is stopped and deregistered, then loaded again from the project
+        folder it was originally loaded from, starting it again if it autostarts. If the
+        plugin is disabled after reload and `ignore_enabled_plugin_flag` is `False`, the
+        plugin will only be unloaded, not reloaded.
 
         Args:
-            plugin_id: The unique identifier of the plugin to be reloaded.
-            ignore_enabled_plugin_flag: A flag indicating whether to ignore the
-                enabled plugin status during the reloading process. Defaults to False.
-            load_timeout: The maximum duration in seconds to wait for the plugin to
-            unload_timeout: The maximum duration in seconds to wait for the plugin to
-                unload. If set to None, it will wait indefinitely.
-            force_unload: Whether to forcibly unload the plugin if it fails to stop
-                within the timeout period.
+            plugin_id: The ID of the plugin to reload.
+            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+                the manifest during reload. Defaults to `False`.
+            load_timeout: The maximum number of seconds to wait for the plugin to start
+                when it autostarts on reload. When `None`, waits indefinitely. Defaults
+                to 5.
+            unload_timeout: The maximum number of seconds to wait for the plugin to stop
+                during unload. When `None`, waits indefinitely. Defaults to 5.
+            force_unload: When `True`, a plugin that fails to stop cleanly within
+                `unload_timeout` is forcibly cancelled during the unload step. When
+                `False` (default), a failure to stop cleanly aborts the reload.
 
         Returns:
-            BasePlugin: The reloaded plugin instance if successful, or None if the
-                plugin is disabled and the enabled check is not overridden.
+            The reloaded plugin, or `None` if the plugin is disabled and the enabled
+            check is not overridden.
 
         Raises:
-            See [get_plugin_by_plugin_id][consortium.server.services.plugins_service.PluginsService.get_plugin_by_plugin_id],
-            [unload_plugin_by_plugin_id][consortium.server.services.plugins_service.PluginsService.unload_plugin_by_plugin_id]
-            and [load_plugin_from_plugin_project_folder][consortium.server.services.plugins_service.PluginsService.load_plugin_from_plugin_project_folder]
-            for possible exceptions raised during the unload and load processes.
+            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginStopError: If the plugin fails to stop during unload and
+                `force_unload` is `False`.
+            PluginStopTimeoutError: If the plugin does not stop within `unload_timeout`
+                and `force_unload` is `False`.
+            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+                invalid JSON.
+            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema.
+            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found.
+            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+                is not found.
+            ComponentProjectInterfaceError: If the class does not inherit from the
+                expected base class.
+            IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
+                with the current framework version.
+            InternalComponentProjectError: If an unhandled exception occurs while
+                loading the plugin.
+            PluginStartError: If the reloaded plugin autostarts but fails to start.
         """
         plugin = await self._plugin_registry_service.reload_component_by_component_id(
             component_id=plugin_id,
@@ -408,27 +398,24 @@ class PluginsService:
         self._logger.debug("Reloaded plugin: {!r}", plugin)
         return plugin
 
-        # plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
-        # plugin_project_folder = plugin.plugin_project_folder
-        # await self.unload_plugin_by_plugin_id(
-        #     plugin_id=plugin_id,
-        #     timeout=unload_timeout,
-        #     force_unload=force_unload,
-        # )
-        # plugin = await self.load_plugin_from_plugin_project_folder(
-        #     plugin_project_folder=plugin_project_folder,
-        #     ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
-        #     timeout=load_timeout,
-        # )
-        # self.logger.info("Reloaded plugin: {}", plugin)
-        # self.logger.debug("Reloaded plugin: {!r}", plugin)
-        # return plugin
-
     @log_and_propagate_error_on_service_method
     async def load_framework_plugins(
         self,
         ignore_enabled_plugin_flag: bool = False,
     ) -> None:
+        """Discovers and loads all plugins from the framework's plugins directory.
+
+        Every plugin project folder under the framework plugins directory is discovered,
+        resolved into a dependency-respecting load order, then registered and (when the
+        plugin has `autostart` set) started. Disabled plugins are skipped unless
+        `ignore_enabled_plugin_flag` is set. Discovery errors, unresolved dependencies,
+        circular dependencies, and per-plugin load failures are logged rather than
+        raised so that a single bad plugin does not abort loading the rest.
+
+        Args:
+            ignore_enabled_plugin_flag: When `True`, plugins are loaded even if they are
+                marked as disabled. When `False` (default), disabled plugins are skipped.
+        """
         self._logger.info("Loading framework plugins...")
         retrieved, skipped, errored = (
             self.get_plugins_from_plugin_project_folder_directories(
@@ -505,6 +492,19 @@ class PluginsService:
         force_unload: bool = False,
         timeout: None | int = 5,
     ) -> None:
+        """Unloads every loaded plugin that lives under the framework plugins directory.
+
+        Each matching plugin is unloaded concurrently. Failures to unload individual
+        plugins are logged rather than raised so that one failing plugin does not prevent
+        the others from being unloaded.
+
+        Args:
+            force_unload: When `True`, plugins are unloaded even if they do not stop
+                cleanly within `timeout`. When `False` (default), an unclean stop causes
+                that plugin's unload to fail.
+            timeout: The number of seconds to wait for each plugin to stop before its
+                unload is considered to have timed out. When `None`, waits indefinitely.
+        """
         self._logger.info("Unloading framework plugins...")
 
         number_of_unloaded_plugins = 0
@@ -546,6 +546,24 @@ class PluginsService:
         timeout: None | int = 5,
         ignore_enabled_plugin_flag: bool = False,
     ) -> None:
+        """Unloads all currently loaded plugins and reloads them from disk.
+
+        Every currently loaded plugin is unloaded concurrently, then the framework
+        plugins directory is rescanned and any plugin project folder that is not already
+        loaded (for example one that failed to unload) is loaded again. Per-plugin unload
+        and load failures are logged rather than raised so that one failing plugin does
+        not prevent the others from being reloaded.
+
+        Args:
+            force_reload: When `True`, plugins are unloaded even if they do not stop
+                cleanly within `timeout` before being loaded again. When `False`
+                (default), an unclean stop causes that plugin's unload to fail.
+            timeout: The number of seconds to wait for each plugin to stop before its
+                unload is considered to have timed out. When `None`, waits indefinitely.
+            ignore_enabled_plugin_flag: When `True`, plugins are loaded even if they are
+                marked as disabled. When `False` (default), disabled plugins are skipped
+                when reloading.
+        """
         self._logger.info("Reloading framework plugins...")
 
         unload_plugin_tasks = []
@@ -576,7 +594,7 @@ class PluginsService:
         # to find all plugin project folders. If a plugin project folder is found that
         # is not already loaded (it failed to unload), load it.
         for plugin_project_folder in self._plugins_directory.rglob("*"):
-            if plugin_project_folder.name != "plugin_project_manifest.json":
+            if plugin_project_folder.name != "manifest.json":
                 continue
             plugin_loaded = False
             for plugin in self.get_all_plugins():
@@ -610,32 +628,17 @@ class PluginsService:
         plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
-        """Starts a plugin by its plugin id. The plugin must be registered to the
-        service.
+        """Starts a loaded plugin by its ID.
 
         Args:
-            plugin_id (str): The plugin id to start.
-            blocking (bool): If True, the method will block and wait until the plugin is
-                stopped. If False, the method will return immediately after starting
-                the plugin.
+            plugin_id: The ID of the plugin to start.
+            blocking: When `True`, blocks until the plugin has finished starting. When
+                `False` (default), returns immediately after starting the plugin.
 
         Raises:
-            PluginNotFoundError: If the plugin id is not found in the service.
-            IncompatibleThirdPartyDependencyVersionError: If the plugin requires a
-                third party dependency that has a version not compatible with the one
-                installed in the framework.
-            ThirdPartyDependencyNotFoundError: If the plugin requires a third party
-                dependency that is not installed in the framework.
-            IncompatiblePluginDependencyVersionError: If the plugin requires another
-                plugin to be installed that has a version not compatible with the one
-                installed in the framework.
-            PluginDependencyNotFoundError: If the plugin requires another plugin that
-                is not installed in the framework.
-            PluginDependencyNotRunningError: If the plugin requires another plugin that
-                is installed and of the appropriate version but is not currently
-                running.
+            ComponentNotFoundError: If no plugin with the given ID is registered.
             PluginAlreadyRunningError: If the plugin is already running.
-            PluginStartError: If the plugin failed to start for any reason.
+            PluginStartError: If the plugin fails to start.
         """
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
         await plugin.start()
@@ -651,19 +654,17 @@ class PluginsService:
         plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
-        """Stops a plugin by its plugin id. The plugin must be registered to the
-        service.
+        """Stops a loaded plugin by its ID.
 
         Args:
-            plugin_id (str): The plugin id to stop.
-            blocking (bool): If True, the method will block and wait until the plugin is
-                stopped. If False, the method will return immediately after stopping
-                the plugin.
+            plugin_id: The ID of the plugin to stop.
+            blocking: When `True`, blocks until the plugin has finished stopping. When
+                `False` (default), returns immediately after stopping the plugin.
 
         Raises:
-            PluginNotFoundError: If the plugin id is not found in the service.
-            PluginStopError: If the plugin failed to stop for any reason.
+            ComponentNotFoundError: If no plugin with the given ID is registered.
             PluginNotRunningError: If the plugin is not running.
+            PluginStopError: If the plugin fails to stop.
         """
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
         await plugin.stop()
@@ -679,18 +680,26 @@ class PluginsService:
         plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
-        """Restart a plugin by its plugin id.
+        """Restarts a loaded plugin by its ID, stopping it and then starting it again.
+
+        When `blocking` is `False`, the stop-then-start sequence runs in a background
+        task, so any error raised while stopping or starting the plugin is not
+        propagated to the caller.
 
         Args:
-            plugin_id (str): The plugin with the plugin id to restart.
-            blocking (bool): Whether the method should block and wait until the plugin
-                is stopped and then started again or return immediately after
-                attempting to restart the plugin.
+            plugin_id: The ID of the plugin to restart.
+            blocking: When `True`, blocks until the plugin has stopped and started
+                again. When `False` (default), schedules the restart in the background
+                and returns immediately.
 
         Raises:
-            See [stop_plugin_by_plugin_id][consortium.server.services.plugins_service.PluginsService.stop_plugin_by_plugin_id]
-            and [start_plugin_by_plugin_id][consortium.server.services.plugins_service.PluginsService.start_plugin_by_plugin_id]
-            for possible exceptions raised during stopping and starting the plugin.
+            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginNotRunningError: If `blocking` is `True` and the plugin is not running
+                when the restart attempts to stop it.
+            PluginStopError: If `blocking` is `True` and the plugin fails to stop.
+            PluginAlreadyRunningError: If `blocking` is `True` and the plugin is already
+                running when the restart attempts to start it.
+            PluginStartError: If `blocking` is `True` and the plugin fails to start.
         """
 
         async def _restart_plugin():
@@ -716,17 +725,15 @@ class PluginsService:
         plugin_id: str | uuid.UUID,
         blocking: bool = False,
     ) -> None:
-        """Cancels a plugin by its plugin id. The plugin must be registered to the
-        service.
+        """Cancels a loaded plugin by its ID.
 
         Args:
-            plugin_id (str): The plugin id to cancel.
-            blocking (bool): If True, the method will block and wait until the plugin is
-                cancelled. If False, the method will return immediately after
-                cancelling the plugin.
+            plugin_id: The ID of the plugin to cancel.
+            blocking: When `True`, blocks until the plugin has been cancelled. When
+                `False` (default), returns immediately after cancelling the plugin.
 
         Raises:
-            PluginNotFoundError: If the plugin id is not found in the service.
+            ComponentNotFoundError: If no plugin with the given ID is registered.
             PluginNotRunningError: If the plugin is not running.
         """
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
@@ -739,17 +746,16 @@ class PluginsService:
 
     @log_and_propagate_error_on_service_method
     def get_plugin_by_plugin_id(self, plugin_id: str | uuid.UUID) -> BasePlugin:
-        """Returns a plugin object by its plugin id. The plugin must be registered to the
-        service.
+        """Returns a loaded plugin by its ID.
 
         Args:
-            plugin_id (str | uuid.UUID): The plugin id to search for.
+            plugin_id: The ID of the plugin to retrieve.
 
         Returns:
-            BasePlugin: The plugin object if found.
+            The requested plugin.
 
         Raises:
-            PluginNotFoundError: If the plugin id is not found in the service.
+            ComponentNotFoundError: If no plugin with the given ID is registered.
         """
         plugin = self._plugin_registry_service.get_component_by_component_id(
             component_id=plugin_id,
@@ -759,16 +765,13 @@ class PluginsService:
 
     @log_and_propagate_error_on_service_method
     def get_plugins_by_label(self, label: str) -> list[BasePlugin]:
-        """Returns all plugins loaded in the service that have the provided label.
+        """Returns all loaded plugins with the given label.
 
         Args:
-            label (str): The label to search for.
+            label: The label to filter by.
 
         Returns:
-            list[BasePlugin]: The list of plugins, if found.
-
-        Raises:
-            PluginLabelNotFoundError: If the plugin label is not found in the service.
+            All loaded plugins whose label matches. Empty if none match.
         """
         return self._plugin_registry_service.get_components_by_label(label=label)
 
@@ -777,7 +780,7 @@ class PluginsService:
         """Returns a list of all plugins loaded in the service.
 
         Returns:
-            list[BasePlugin]: A list of all plugins loaded in the service.
+            A list of all plugins loaded in the service.
         """
         plugins = self._plugin_registry_service.get_all_components()
         self._logger.debug(

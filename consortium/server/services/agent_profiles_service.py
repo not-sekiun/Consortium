@@ -132,9 +132,9 @@ class AgentProfilesService:
 
         Returns:
             A three-element tuple: (1) a list of successfully instantiated agent
-                profiles, (2) a list of paths skipped because the profile was disabled,
-                and (3) a list of `(path, error)` tuples for profiles that failed to
-                load.
+            profiles, (2) a list of paths skipped because the profile was disabled,
+            and (3) a list of `(path, error)` tuples for profiles that failed to
+            load.
         """
         retrieved, skipped, errored = (
             self._agent_profile_registry_service.get_components_from_component_project_folder_directories(

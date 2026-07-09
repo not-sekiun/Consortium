@@ -41,14 +41,14 @@ class ListenerTemplatesService:
         self,
         listener_template_id: str | uuid.UUID,
     ) -> BaseListenerTemplate:
-        """Returns a listener template by its ID, searching across all loaded listener profiles.
+        """Returns a listener template by its ID, searching across all loaded
+        listener profiles.
 
         Args:
-            listener_template_id (str | uuid.UUID): The ID of the listener template to
-                retrieve.
+            listener_template_id: The ID of the listener template to retrieve.
 
         Returns:
-            BaseListenerTemplate: The requested listener template.
+            The requested listener template.
 
         Raises:
             ListenerTemplateIDNotFoundError: If no listener template with the given ID
@@ -76,13 +76,14 @@ class ListenerTemplatesService:
         self,
         label: str,
     ) -> BaseListenerTemplate:
-        """Returns a listener template by its label, searching across all loaded listener profiles.
+        """Returns a listener template by its label, searching across all loaded
+        listener profiles.
 
         Args:
-            label (str): The label of the listener template to retrieve.
+            label: The label of the listener template to retrieve.
 
         Returns:
-            BaseListenerTemplate: The requested listener template.
+            The requested listener template.
 
         Raises:
             ListenerTemplateLabelNotFoundError: If no listener template with the given
@@ -108,8 +109,7 @@ class ListenerTemplatesService:
         """Returns all listener templates across all loaded listener profiles.
 
         Returns:
-            list[BaseListenerTemplate]: A list of all available listener templates.
-                Empty if no listener profiles are loaded.
+            A list of all available listener templates, empty if none are loaded.
         """
         all_listener_templates = [
             listener_profile.listener_template

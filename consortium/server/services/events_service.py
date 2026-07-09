@@ -45,13 +45,9 @@ class EventsService:
         """Registers an async event handler for the specified event type.
 
         Args:
-            event_type (EventType): The event type to subscribe the handler to.
-            event_handler (Callable[[Event], Coroutine[Any, Any, None]]): An async
-                callable that accepts an `Event` and is invoked whenever the event type
-                is triggered.
-
-        Returns:
-            None
+            event_type: The event type to subscribe the handler to.
+            event_handler: An async callable that accepts an `Event` and is invoked
+                whenever the event type is triggered.
 
         Raises:
             EventHandlerAlreadyRegisteredError: If the same handler is already
@@ -73,12 +69,8 @@ class EventsService:
         """Removes a previously registered event handler from the specified event type.
 
         Args:
-            event_type (EventType): The event type to unsubscribe the handler from.
-            event_handler (Callable[[Event], Coroutine[None, None, None]]): The async
-                callable to remove.
-
-        Returns:
-            None
+            event_type: The event type to unsubscribe the handler from.
+            event_handler: The async callable to remove.
 
         Raises:
             EventHandlerNotRegisteredError: If the handler is not currently registered
@@ -103,12 +95,11 @@ class EventsService:
         """Returns all handlers currently registered for the specified event type.
 
         Args:
-            event_type (EventType): The event type whose handlers to retrieve.
+            event_type: The event type whose handlers to retrieve.
 
         Returns:
-            list[Callable[[EventType], Coroutine[None, None, None]]]: A list of
-                registered handlers. Empty if no handlers are registered for the event
-                type.
+            A list of registered handlers. Empty if no handlers are registered for the
+            event type.
         """
         try:
             return self._event_handlers[event_type]
@@ -125,12 +116,11 @@ class EventsService:
         """Returns all event types that the given handler is currently registered for.
 
         Args:
-            event_handler (Callable[[Event], Coroutine[Any, Any, None]]): The handler
-                to look up.
+            event_handler: The handler to look up.
 
         Returns:
-            list[EventType]: A list of event types the handler is subscribed to. Empty
-                if the handler is not registered for any event type.
+            A list of event types the handler is subscribed to. Empty if the handler is
+            not registered for any event type.
         """
         handled_events = []
         for event_type, handlers in self._event_handlers.items():
@@ -143,7 +133,7 @@ class EventsService:
         """Returns all supported event types.
 
         Returns:
-            list[str]: A list of all values from the `EventType` enum.
+            A list of all values from the `EventType` enum.
         """
         return list(EventType)
 
@@ -162,13 +152,10 @@ class EventsService:
         `message` and `detail`.
 
         Args:
-            event_type (EventType): The type of event to trigger.
-            message (str): A human-readable description of the event.
-            data (JSON | None): Structured data payload associated with the event.
-                Defaults to an empty dict when `None`.
-
-        Returns:
-            None
+            event_type: The type of event to trigger.
+            message: A human-readable description of the event.
+            data: Structured data payload associated with the event. Defaults to an
+                empty dict when `None`.
 
         Raises:
             ExceptionGroup: If one or more event handlers raise exceptions.

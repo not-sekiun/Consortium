@@ -71,16 +71,45 @@ class AssetsService:
     @wraps(RepositoryService.load_repository_metadata)
     @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
+        """Loads the assets repository metadata from disk into memory.
+
+        Delegates to the underlying repository service, reconstructing the in-memory
+        record of every tracked asset from the repository metadata file. If the metadata
+        file does not yet exist an empty one is created.
+
+        Raises:
+            InvalidRepositoryMetadataFileJSONError: If the metadata file contains
+                invalid JSON.
+            InvalidRepositoryMetadataFileSchemaError: If the metadata file does not
+                follow the expected schema.
+            UnsyncedRepositoryMetadataFileError: If a resource recorded in the metadata
+                file does not exist on disk.
+        """
         self._repository_service.load_repository_metadata()
         self._logger.debug("Loaded assets repository metadata")
 
     @wraps(RepositoryService.save_repository_metadata)
     @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
+        """Persists the current in-memory assets repository metadata to disk.
+
+        Delegates to the underlying repository service, writing the metadata for every
+        tracked asset to the repository metadata file as JSON.
+        """
         self._repository_service.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
     def reserve_asset_id(self) -> uuid.UUID:
+        """Reserves and returns a new asset ID without creating any asset.
+
+        The returned ID can later be passed as `resource_id` to one of the asset
+        creation methods to claim it. Reserving an ID up front lets a caller learn the
+        asset's ID before its file or directory exists on disk (for example to embed the
+        ID inside the content that will be stored).
+
+        Returns:
+            The freshly reserved asset ID, unique across the repository.
+        """
         asset_id = self._repository_service.reserve_resource_id()
         self._logger.debug("Reserved asset ID '{}'", str(asset_id))
         return asset_id
@@ -94,6 +123,36 @@ class AssetsService:
         resource_id: str | uuid.UUID | None = None,
         user_account_id: str | uuid.UUID | None = None,
     ) -> RepositoryFile:
+        """Creates a new asset file from in-memory or streamed content.
+
+        The content is written to a new file on disk in the assets repository and an
+        `ASSET_CREATED` event is emitted. When a `user_account_id` is supplied the
+        uploading user account is resolved and recorded against the asset for
+        attribution.
+
+        Args:
+            content: The content to write into the new asset file, supplied either
+                directly as text/bytes or as an open text/binary stream to read the
+                content from.
+            name: A human-readable display name for the asset. When `None`, the asset's
+                generated UUID is used as its name.
+            description: A short human-readable description of the asset. Defaults to an
+                empty string when omitted.
+            resource_id: A previously reserved asset ID to claim for this asset. When
+                `None`, a new ID is generated automatically.
+            user_account_id: The ID of the user account that uploaded this asset,
+                recorded for attribution. When `None`, the asset is stored with no
+                uploading user account.
+
+        Returns:
+            The newly created asset file resource.
+
+        Raises:
+            UserAccountIDNotFoundError: If `user_account_id` is provided but no user
+                account with that ID exists.
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
+                corresponding reservation.
+        """
         asset = await asyncio.to_thread(
             self._repository_service.create_file,
             content=content,
@@ -122,6 +181,37 @@ class AssetsService:
         copy: bool = False,
         user_account_id: str | uuid.UUID | None = None,
     ) -> RepositoryFile:
+        """Registers an existing file on disk as an asset.
+
+        Unlike `create_asset_file`, no new content is written: the file at `path` is
+        moved (or copied when `copy=True`) into the assets repository, registered as a
+        resource, and an `ASSET_CREATED` event is emitted. When a `user_account_id` is
+        supplied the uploading user account is resolved and recorded for attribution.
+
+        Args:
+            path: Filesystem path to the existing file to ingest as an asset.
+            name: A human-readable display name for the asset. When `None`, the original
+                filename is used.
+            description: A short human-readable description of the asset. Defaults to an
+                empty string when omitted.
+            resource_id: A previously reserved asset ID to claim for this asset. When
+                `None`, a new ID is generated automatically.
+            copy: When `False` (default) the source file is moved into the repository,
+                leaving nothing at the original path. When `True` the source file is
+                copied and the original is left in place.
+            user_account_id: The ID of the user account that uploaded this asset,
+                recorded for attribution. When `None`, the asset is stored with no
+                uploading user account.
+
+        Returns:
+            The newly registered asset file resource.
+
+        Raises:
+            UserAccountIDNotFoundError: If `user_account_id` is provided but no user
+                account with that ID exists.
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
+                corresponding reservation.
+        """
         asset = await asyncio.to_thread(
             self._repository_service.add_file,
             path=path,
@@ -152,6 +242,39 @@ class AssetsService:
         resource_id: str | uuid.UUID | None = None,
         user_account_id: str | uuid.UUID | None = None,
     ) -> RepositoryDirectory:
+        """Creates a new asset directory, optionally populated from an archive.
+
+        An empty directory is created on disk in the assets repository, or, when
+        `content` and `archive_file_format` are provided, the archive content is
+        extracted into it. An `ASSET_CREATED` event is emitted. When a `user_account_id`
+        is supplied the uploading user account is resolved and recorded for attribution.
+
+        Args:
+            content: Archive content to extract into the new directory, supplied as raw
+                bytes, an open binary stream, or a path to an archive file. When `None`,
+                an empty directory is created.
+            archive_file_format: The archive format used to interpret `content` when
+                extracting. Must be set whenever `content` is provided; ignored when
+                `content` is `None`.
+            name: A human-readable display name for the asset. When `None`, the asset's
+                generated UUID is used as its name.
+            description: A short human-readable description of the asset. Defaults to an
+                empty string when omitted.
+            resource_id: A previously reserved asset ID to claim for this asset. When
+                `None`, a new ID is generated automatically.
+            user_account_id: The ID of the user account that uploaded this asset,
+                recorded for attribution. When `None`, the asset is stored with no
+                uploading user account.
+
+        Returns:
+            The newly created asset directory resource.
+
+        Raises:
+            UserAccountIDNotFoundError: If `user_account_id` is provided but no user
+                account with that ID exists.
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
+                corresponding reservation.
+        """
         asset = await asyncio.to_thread(
             self._repository_service.create_directory,
             content=content,
@@ -181,6 +304,38 @@ class AssetsService:
         copy: bool = False,
         user_account_id: str | uuid.UUID | None = None,
     ) -> RepositoryDirectory:
+        """Registers an existing directory on disk as an asset.
+
+        Unlike `create_asset_directory`, no new directory is created: the directory at
+        `path` is moved (or copied when `copy=True`) into the assets repository,
+        registered as a resource, and an `ASSET_CREATED` event is emitted. When a
+        `user_account_id` is supplied the uploading user account is resolved and recorded
+        for attribution.
+
+        Args:
+            path: Filesystem path to the existing directory to ingest as an asset.
+            name: A human-readable display name for the asset. When `None`, the original
+                directory name is used.
+            description: A short human-readable description of the asset. Defaults to an
+                empty string when omitted.
+            resource_id: A previously reserved asset ID to claim for this asset. When
+                `None`, a new ID is generated automatically.
+            copy: When `False` (default) the source directory is moved into the
+                repository, leaving nothing at the original path. When `True` the source
+                directory is copied and the original is left in place.
+            user_account_id: The ID of the user account that uploaded this asset,
+                recorded for attribution. When `None`, the asset is stored with no
+                uploading user account.
+
+        Returns:
+            The newly registered asset directory resource.
+
+        Raises:
+            UserAccountIDNotFoundError: If `user_account_id` is provided but no user
+                account with that ID exists.
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
+                corresponding reservation.
+        """
         asset = await asyncio.to_thread(
             self._repository_service.add_directory,
             path=path,
@@ -202,6 +357,18 @@ class AssetsService:
 
     @log_and_propagate_error_on_service_method
     async def delete_asset_by_asset_id(self, asset_id: str | uuid.UUID) -> None:
+        """Deletes an asset from disk and the repository.
+
+        The asset's metadata is snapshotted before removal so it can be carried on the
+        emitted `ASSET_DELETED` event, then the resource is deleted from disk and
+        deregistered.
+
+        Args:
+            asset_id: The ID of the asset to delete.
+
+        Raises:
+            RepositoryResourceNotFoundError: If no asset with the given ID exists.
+        """
         # Snapshot JSON before deletion since to_json() reads from disk
         asset = self._repository_service.get_resource_by_resource_id(
             resource_id=asset_id
@@ -222,6 +389,12 @@ class AssetsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_assets(self) -> list[RepositoryFile | RepositoryDirectory]:
+        """Returns every asset currently tracked by the assets service.
+
+        Returns:
+            A list of all asset resources, covering both file and directory assets.
+                Empty if no assets exist.
+        """
         assets = self._repository_service.get_all_resources()
         self._logger.debug(
             "Retrieved all assets ({} asset(s) retrieved)",
@@ -234,6 +407,18 @@ class AssetsService:
         self,
         asset_id: str | uuid.UUID,
     ) -> RepositoryFile | RepositoryDirectory:
+        """Returns a single asset by its ID.
+
+        Args:
+            asset_id: The ID of the asset to retrieve.
+
+        Returns:
+            The requested asset resource, either a file or a directory depending on how
+                it was created.
+
+        Raises:
+            RepositoryResourceNotFoundError: If no asset with the given ID exists.
+        """
         asset = self._repository_service.get_resource_by_resource_id(
             resource_id=asset_id
         )

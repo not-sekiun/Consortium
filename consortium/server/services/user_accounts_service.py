@@ -60,10 +60,10 @@ class UserAccountsService:
         """Returns a user account by its ID.
 
         Args:
-            user_account_id (str | uuid.UUID): The ID of the user account to retrieve.
+            user_account_id: The ID of the user account to retrieve.
 
         Returns:
-            UserAccountModel: The requested user account.
+            The requested user account.
 
         Raises:
             UserAccountIDNotFoundError: If no user account with the given ID exists.
@@ -85,10 +85,10 @@ class UserAccountsService:
         """Returns a user account by its username.
 
         Args:
-            username (str): The username of the account to retrieve.
+            username: The username of the account to retrieve.
 
         Returns:
-            UserAccountModel: The requested user account.
+            The requested user account.
 
         Raises:
             UserAccountUsernameNotFoundError: If no user account with the given username
@@ -105,7 +105,7 @@ class UserAccountsService:
         """Returns all registered user accounts.
 
         Returns:
-            list[UserAccountModel]: A list of all user accounts. Empty if none exist.
+            A list of all user accounts. Empty if none exist.
         """
         all_user_accounts = list(self._user_accounts.values())
         self._logger.debug(
@@ -124,13 +124,13 @@ class UserAccountsService:
         """Creates a new user account and adds it to the in-memory registry.
 
         Args:
-            username (str): The username for the new account. Must be non-empty and
+            username: The username for the new account. Must be non-empty and
                 unique.
-            password (str): The password for the new account. Must be non-empty.
-            role (str): The role to assign to the new account.
+            password: The password for the new account. Must be non-empty.
+            role: The role to assign to the new account.
 
         Returns:
-            UserAccountModel: The newly created user account.
+            The newly created user account.
 
         Raises:
             EmptyUserAccountUsernameError: If `username` is empty.
@@ -174,15 +174,13 @@ class UserAccountsService:
         Only fields that are not `None` are updated.
 
         Args:
-            user_account_id (str | uuid.UUID): The ID of the user account to update.
-            username (str | None): The new username. When `None`, the username is not
-                changed.
-            password (str | None): The new password. When `None`, the password is not
-                changed.
-            role (str | None): The new role. When `None`, the role is not changed.
+            user_account_id: The ID of the user account to update.
+            username: The new username. When `None`, the username is not changed.
+            password: The new password. When `None`, the password is not changed.
+            role: The new role. When `None`, the role is not changed.
 
         Returns:
-            UserAccountModel: The updated user account.
+            The updated user account.
 
         Raises:
             UserAccountIDNotFoundError: If no user account with the given ID exists.
@@ -256,10 +254,7 @@ class UserAccountsService:
         """Deletes a user account from the in-memory registry.
 
         Args:
-            user_account_id (str | uuid.UUID): The ID of the user account to delete.
-
-        Returns:
-            None
+            user_account_id: The ID of the user account to delete.
 
         Raises:
             UserAccountIDNotFoundError: If no user account with the given ID exists.
@@ -282,11 +277,11 @@ class UserAccountsService:
         """Validates a username and password against registered user accounts.
 
         Args:
-            username (str): The username to authenticate.
-            password (str): The password to validate.
+            username: The username to authenticate.
+            password: The password to validate.
 
         Returns:
-            UserAccountModel: The authenticated user account.
+            The authenticated user account.
 
         Raises:
             UserAccountAuthenticationError: If the username does not exist or the
@@ -317,10 +312,10 @@ class UserAccountsService:
         registers each parsed account.
 
         Args:
-            user_accounts_filepath (Path): Path to the JSON file to read accounts from.
+            user_accounts_filepath: Path to the JSON file to read accounts from.
 
         Returns:
-            list[UserAccountModel]: The list of user accounts loaded from the file.
+            The list of user accounts loaded from the file.
 
         Raises:
             UserAccountsFileNotFoundError: If the file does not exist.
@@ -354,10 +349,10 @@ class UserAccountsService:
         itself.
 
         Args:
-            user_accounts_filepath (Path): Path to the JSON file to read accounts from.
+            user_accounts_filepath: Path to the JSON file to read accounts from.
 
         Returns:
-            list[UserAccountModel]: The list of parsed user accounts.
+            The list of parsed user accounts.
 
         Raises:
             UserAccountsFileNotFoundError: If the file does not exist.
@@ -453,10 +448,10 @@ class UserAccountsService:
         """Serializes and writes all registered user accounts to a JSON file.
 
         Args:
-            user_accounts_filepath (Path): Path to the file to write accounts to.
+            user_accounts_filepath: Path to the file to write accounts to.
 
         Returns:
-            int: The number of bytes written.
+            The number of bytes written.
 
         Raises:
             UserAccountsFilepathIsDirectoryError: If the path points to a directory.
@@ -505,8 +500,8 @@ class UserAccountsService:
         a boolean indicating success or failure.
 
         Returns:
-            bool: `True` if accounts were loaded successfully, `False` if a
-                `UserAccountsServiceError` occurred.
+            `True` if accounts were loaded successfully, `False` if a
+            `UserAccountsServiceError` occurred.
         """
         self._logger.debug("Loading framework user accounts...")
 
@@ -534,8 +529,8 @@ class UserAccountsService:
         boolean indicating success or failure.
 
         Returns:
-            bool: `True` if accounts were reloaded successfully, `False` if a
-                `UserAccountsServiceError` occurred.
+            `True` if accounts were reloaded successfully, `False` if a
+            `UserAccountsServiceError` occurred.
         """
         self._logger.debug("Reloading framework user accounts...")
 
@@ -567,8 +562,8 @@ class UserAccountsService:
         boolean indicating success or failure.
 
         Returns:
-            bool: `True` if accounts were written successfully, `False` if a
-                `UserAccountsServiceError` occurred.
+            `True` if accounts were written successfully, `False` if a
+            `UserAccountsServiceError` occurred.
         """
         self._logger.debug("Writing framework user accounts...")
 

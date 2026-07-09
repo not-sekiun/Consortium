@@ -40,17 +40,18 @@ class AgentTemplatesService:
         self,
         agent_template_id: str | uuid.UUID,
     ) -> BaseAgentTemplate:
-        """Returns an agent template by its ID, searching across all loaded agent profiles.
+        """Returns an agent template by its ID, searching across all loaded agent
+        profiles.
 
         Args:
-            agent_template_id (str | uuid.UUID): The ID of the agent template to
-                retrieve.
+            agent_template_id: The ID of the agent template to retrieve.
 
         Returns:
-            BaseAgentTemplate: The requested agent template.
+            The requested agent template.
 
         Raises:
-            AgentTemplateIDNotFoundError: If no agent template with the given ID is found.
+            AgentTemplateIDNotFoundError: If no agent template with the given ID is
+                found.
         """
         agent_template_id = normalize_uuid(agent_template_id)
 
@@ -71,13 +72,14 @@ class AgentTemplatesService:
 
     @log_and_propagate_error_on_service_method
     def get_agent_template_by_label(self, label: str) -> BaseAgentTemplate:
-        """Returns an agent template by its label, searching across all loaded agent profiles.
+        """Returns an agent template by its label, searching across all loaded
+        agent profiles.
 
         Args:
-            label (str): The label of the agent template to retrieve.
+            label: The label of the agent template to retrieve.
 
         Returns:
-            BaseAgentTemplate: The requested agent template.
+            The requested agent template.
 
         Raises:
             AgentTemplateLabelNotFoundError: If no agent template with the given label
@@ -103,8 +105,8 @@ class AgentTemplatesService:
         """Returns all agent templates across all loaded agent profiles.
 
         Returns:
-            list[BaseAgentTemplate]: A list of all available agent templates. Empty if
-                no agent profiles are loaded.
+            A list of all available agent templates. Empty if no agent profiles are
+            loaded.
         """
         all_agent_templates = [
             agent_profile.agent_template
