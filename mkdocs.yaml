@@ -123,6 +123,7 @@ nav:
     - Agents:
       - client/agents/tasking-agents.md
       - client/agents/managing-assets.md
+      - client/agents/managing-artifacts.md
     - client/aliases-and-resource-files.md
   - Reference:
       - reference/reference-overview.md

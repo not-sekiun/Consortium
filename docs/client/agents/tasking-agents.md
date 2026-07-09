@@ -6,10 +6,9 @@ its listener and checks in. From that point you manage and task it from the clie
 interpreters are involved:
 
 - The **Agents** interpreter (prompt `Consortium (Agents)`) lists all agents, inspects
-  their tasks, and manages assets.
+  their tasks, and manages assets and artifacts.
 - The **Interact Agent** interpreter (prompt `Consortium (Agents: <name>)`) scopes you
-  to a
-  single agent so you can task it through its capabilities.
+  to a single agent so you can task it through its capabilities.
 
 Switch into the Agents interpreter from any connected interpreter with the `agents`
 command.
