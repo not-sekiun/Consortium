@@ -19,13 +19,13 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 from consortium.server.server_dependencies import is_user_logged_in
 
 
-# there isn't a good way to add exception handlers from a separate file, so this is a
+# There isn't a good way to add exception handlers from a separate file, so this is a
 # decent workaround (https://github.com/tiangolo/fastapi/discussions/7738)
 def register_server_exception_handlers(app: FastAPI) -> None:
-    # This exception handler handles the HTTPExceptions that the FastAPI framework
+    # This exception handler handles the `HTTPExceptions` that the FastAPI framework
     # raises internally on its own to ensure that they conform to our specifications. To
-    # handle HTTPExceptions raised by FastAPI we need to use the Starlette HTTPException
-    # class instead of the FastAPI HTTPException class
+    # handle `HTTPExceptions` raised by FastAPI we need to use the Starlette 
+    # `HTTPException` class instead of the FastAPI `HTTPException` class
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_exception_handler(
         request: Request,
@@ -49,6 +49,7 @@ def register_server_exception_handlers(app: FastAPI) -> None:
             return JSONResponse(
                 status_code=exc.status_code,
                 content=error_code_map[exc.status_code].to_json(),
+                headers=exc.headers,
             )
         else:
             raise ValueError(f"Unhandled FastAPI HTTPException: {exc}")

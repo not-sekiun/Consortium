@@ -12,7 +12,6 @@ from consortium.server.exceptions.api_exceptions import (
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerError,
     MethodNotAllowedError,
-    UnauthorizedError,
 )
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
     InvalidUUIDError,
@@ -30,7 +29,7 @@ from consortium.server.server_dependencies import (
 router = APIRouter(
     prefix="/api/logout",
     responses={
-        401: {"model": UnauthorizedError().to_pydantic_model()},
+        401: {"description": "Unauthorized"},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },

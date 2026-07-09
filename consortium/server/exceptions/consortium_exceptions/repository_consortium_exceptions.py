@@ -10,6 +10,7 @@
                 - [`InvalidRepositoryMetadataFileJSONError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileJSONError]
                 - [`InvalidRepositoryMetadataFileSchemaError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileSchemaError]
                 - [`UnsyncedRepositoryMetadataFileError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.UnsyncedRepositoryMetadataFileError]
+                - [`InvalidRepositoryMetadataDataSchemaError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataDataSchemaError]
         - [`RepositoryFrameworkError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryFrameworkError]
             - [`RepositoryFileError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryFileError]
                 - [`RepositoryFileAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryFileAlreadyExistsError]
@@ -170,6 +171,36 @@ class UnsyncedRepositoryMetadataFileError(InvalidRepositoryMetadataFileError):
             detail={
                 "repository_directory_path": repository_directory_path,
                 "unsynced_resource_ids": unsynced_resource_ids,
+            },
+        )
+
+
+class InvalidRepositoryMetadataDataSchemaError(InvalidRepositoryMetadataFileError):
+    """Raised when the `data` field of a repository resource in the repository metadata
+    file does not conform to the expected JSON schema during repository metadata
+    loading.
+    """
+
+    code = "INVALID_REPOSITORY_METADATA_DATA_SCHEMA_ERROR"
+
+    def __init__(
+        self,
+        repository_directory: str,
+        resource_id: str,
+        json_schema_error_message: str,
+    ):
+        super().__init__(
+            message=(
+                "Failed to load the repository metadata file "
+                "`.repository.json` from the repository directory "
+                f"'{repository_directory}'. The `data` field of the repository resource "
+                f"with resource ID '{resource_id}' does not conform to the expected "
+                f"JSON schema. {json_schema_error_message}"
+            ),
+            detail={
+                "repository_directory": repository_directory,
+                "resource_id": resource_id,
+                "json_schema_error_message": json_schema_error_message,
             },
         )
 

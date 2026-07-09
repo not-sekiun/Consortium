@@ -29,7 +29,8 @@ from consortium.server.models.repository_models import (
     RepositoryResourceModel,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_dependencies import AuthorizeUserRequest
+from consortium.server.objects.user_objects import User
+from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
 
 
 def create_get_all_resources_endpoint(
@@ -149,6 +150,12 @@ def create_upload_resource_endpoint(
                 AuthorizeUserRequest(upload_resource_permission),
             ),
         ],
+        # The uploading user is resolved here so that the REST API layer can attribute
+        # the uploaded resource to the user account that uploaded it. This is the only
+        # place where a resource's uploading user account is auto populated. Currently
+        # only the assets API exposes an upload endpoint, whose create handlers accept a
+        # `user_account_id`.
+        uploading_user: Annotated[User, Depends(get_current_user)],
         file: UploadFile,
         name: str | None = Form(default=None),
         description: str | None = Form(default=None),
@@ -209,6 +216,7 @@ def create_upload_resource_endpoint(
                     archive_file_format=file_format_to_format_string[file_extension],
                     name=name if name else file.filename,
                     description=description if description else "",
+                    user_account_id=uploading_user.user_account.user_account_id,
                 )
                 if inspect.isawaitable(resource):
                     resource = await resource
@@ -219,6 +227,7 @@ def create_upload_resource_endpoint(
                 content=file.file,
                 name=name if name else file.filename,
                 description=description if description else "",
+                user_account_id=uploading_user.user_account.user_account_id,
             )
             if inspect.isawaitable(resource):
                 resource = await resource

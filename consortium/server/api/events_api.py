@@ -20,7 +20,6 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
-    UnauthorizedError,
 )
 from consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions import (
     EventHandlerNotRegisteredError,
@@ -38,7 +37,7 @@ from consortium.server.server_jwt_config import (
 router = APIRouter(
     prefix="/api/events",
     responses={
-        401: {"model": UnauthorizedError().to_pydantic_model()},
+        401: {"description": "Unauthorized"},
         403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},

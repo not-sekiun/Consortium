@@ -4,9 +4,6 @@ from fastapi import APIRouter, Depends, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.api_exceptions.http_exceptions import (
-    UnauthorizedError,
-)
 from consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions import (
     UserAccountAuthenticationError,
 )
@@ -15,7 +12,7 @@ from consortium.server.models.user_models import JSONWebTokenModel
 router = APIRouter(
     prefix="/api/login",
     responses={
-        401: {"model": UnauthorizedError().to_pydantic_model()},
+        401: {"description": "Unauthorized"},
     },
     tags=["Login API"],
 )
