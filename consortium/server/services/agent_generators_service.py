@@ -60,11 +60,11 @@ class AgentGeneratorsService:
         """Returns an agent generator by its ID.
 
         Args:
-            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+            agent_generator_id: The ID of the agent generator to
                 retrieve.
 
         Returns:
-            BaseAgentGenerator: The requested agent generator.
+            The requested agent generator.
 
         Raises:
             AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
@@ -89,7 +89,7 @@ class AgentGeneratorsService:
         """Returns all agent generators currently held by the service.
 
         Returns:
-            list[BaseAgentGenerator]: A list of all agent generators. Empty if none exist.
+            A list of all agent generators. Empty if none exist.
         """
         all_agent_generators = list(self._agent_generators.values())
         self._logger.debug(
@@ -111,16 +111,16 @@ class AgentGeneratorsService:
         Emits an `AGENT_GENERATOR_CREATED` event.
 
         Args:
-            agent_template_id (str | uuid.UUID): The ID of the agent template to create
+            agent_template_id: The ID of the agent template to create
                 the agent generator from.
-            parameters (dict[str, Any]): Build parameters to pass to the agent template
+            parameters: Build parameters to pass to the agent template
                 when creating the agent generator.
-            name (str | None): An optional display name for the new agent generator.
+            name: An optional display name for the new agent generator.
                 If omitted, the name is derived from the template.
-            description (str): An optional description for the new agent generator.
+            description: An optional description for the new agent generator.
 
         Returns:
-            BaseAgentGenerator: The newly created agent generator instance.
+            The newly created agent generator instance.
 
         Raises:
             AgentTemplateIDNotFoundError: If no agent template with the given ID is found.
@@ -170,10 +170,7 @@ class AgentGeneratorsService:
         a template. Emits an `AGENT_GENERATOR_ADDED` event.
 
         Args:
-            agent_generator (BaseAgentGenerator): The agent generator instance to add.
-
-        Returns:
-            None
+            agent_generator: The agent generator instance to add.
 
         Raises:
             AgentGeneratorAlreadyExistsError: If an agent generator with the same ID is
@@ -215,11 +212,8 @@ class AgentGeneratorsService:
         be running; stop it first before removing.
 
         Args:
-            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+            agent_generator_id: The ID of the agent generator to
                 remove.
-
-        Returns:
-            None
 
         Raises:
             AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
@@ -264,17 +258,17 @@ class AgentGeneratorsService:
         Emits an `AGENT_GENERATOR_UPDATED` event when at least one field changes.
 
         Args:
-            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+            agent_generator_id: The ID of the agent generator to
                 update.
-            name (str | None): The new display name. When `None`, the name is not
+            name: The new display name. When `None`, the name is not
                 changed.
-            description (str | None): The new description. When `None`, the description
+            description: The new description. When `None`, the description
                 is not changed.
-            parameters (dict[str, Any] | None): A partial or full mapping of parameter
+            parameters: A partial or full mapping of parameter
                 names to new values. When `None`, parameters are not changed.
 
         Returns:
-            BaseAgentGenerator: The updated agent generator instance.
+            The updated agent generator instance.
 
         Raises:
             AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
@@ -440,13 +434,10 @@ class AgentGeneratorsService:
         Emits an `AGENT_GENERATOR_STARTED` event after starting.
 
         Args:
-            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+            agent_generator_id: The ID of the agent generator to
                 start.
-            blocking (bool): If `True`, waits until the agent generator has fully
+            blocking: If `True`, waits until the agent generator has fully
                 started before returning. Defaults to `False`.
-
-        Returns:
-            None
 
         Raises:
             AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
@@ -478,13 +469,10 @@ class AgentGeneratorsService:
         Emits an `AGENT_GENERATOR_STOPPED` event after stopping.
 
         Args:
-            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+            agent_generator_id: The ID of the agent generator to
                 stop.
-            blocking (bool): If `True`, waits until the agent generator has fully
+            blocking: If `True`, waits until the agent generator has fully
                 stopped before returning. Defaults to `False`.
-
-        Returns:
-            None
 
         Raises:
             AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
@@ -517,13 +505,10 @@ class AgentGeneratorsService:
         its current operation cleanly. Emits an `AGENT_GENERATOR_CANCELLED` event.
 
         Args:
-            agent_generator_id (str | uuid.UUID): The ID of the agent generator to
+            agent_generator_id: The ID of the agent generator to
                 cancel.
-            blocking (bool): If `True`, waits until the agent generator has fully
+            blocking: If `True`, waits until the agent generator has fully
                 stopped before returning. Defaults to `False`.
-
-        Returns:
-            None
 
         Raises:
             AgentGeneratorNotFoundError: If no agent generator with the given ID exists.

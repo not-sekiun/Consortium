@@ -4,8 +4,6 @@ from pydantic import UUID4, BaseModel, JsonValue
 
 from consortium.server.models.agent_models import AgentReferenceModel
 from consortium.server.models.agent_template_models import AgentTemplateModel
-from consortium.server.models.c2_type_models import AgentTypeModel
-from consortium.server.models.user_account_models import UserAccountReferenceModel
 
 
 class RepositoryResourceModel(BaseModel):
@@ -27,7 +25,7 @@ class AssetDataModel(BaseModel):
     # of the REST API (for example directly by a plugin) that do not attribute an
     # uploading user account, as well as legacy resources whose `data` field predates
     # this attribution, still validate.
-    user_account: UserAccountReferenceModel | None = None
+    user_account: str | None = None
 
 
 class AssetModel(RepositoryResourceModel):
@@ -48,20 +46,16 @@ class ArtifactModel(RepositoryResourceModel):
     data: ArtifactDataModel
 
 
-class PayloadModel(RepositoryResourceModel):
-    payload_id: UUID4
-    agent_type: AgentTypeModel
-    agent_template: AgentTemplateModel
-    build_parameters: dict[str, JsonValue]
-    payload_data: dict[str, JsonValue]
-
-
 class PayloadDataModel(BaseModel):
-    agent_type: AgentTypeModel
     agent_template: AgentTemplateModel
     build_parameters: dict[str, JsonValue]
     payload_data: dict[str, JsonValue]
 
 
-class PayloadModel2(RepositoryResourceModel):
+class PayloadModel(RepositoryResourceModel):
+    # payload_id: UUID4
+    # agent_type: AgentTypeModel
+    # agent_template: AgentTemplateModel
+    # build_parameters: dict[str, JsonValue]
+    # payload_data: dict[str, JsonValue]
     data: PayloadDataModel

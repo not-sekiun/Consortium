@@ -1,20 +1,18 @@
 import asyncio
-import json
 import pathlib
 import uuid
 from functools import wraps
 from typing import Any, BinaryIO, Literal, TextIO
 
-import jsonschema
 from loguru import logger
+from pydantic import JsonValue
 
+from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.event_hooks import EventType
 from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplateNotFoundError,
 )
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
-    InvalidPayloadsMetadataFileJSONError,
-    InvalidPayloadsMetadataFileSchemaError,
     PayloadIDReservationNotFoundError,
     PayloadNotFoundError,
 )
@@ -34,22 +32,6 @@ from consortium.server.utils import (
 
 
 class PayloadsService:
-    _PAYLOADS_METADATA_JSON_SCHEMA = {
-        "type": "object",
-        "patternProperties": {
-            "^[a-z0-9]+$": {
-                "type": "object",
-                "properties": {
-                    "agent_template": {"type": "string"},
-                    "build_parameters": {"type": "object"},
-                    "payload_data": {"type": "object"},
-                },
-                "required": ["agent_template", "build_parameters", "payload_data"],
-                "additionalProperties": False,
-            },
-        },
-    }
-
     def __init__(
         self,
         events_service: EventsService,
@@ -63,10 +45,7 @@ class PayloadsService:
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
-        self._payloads_metadata_file_path = (
-            self._repository_service.repository_directory_path / ".payloads.json"
-        )
-        self._payloads = {}
+        # self._payloads = {}
         self._logger.debug("Started {}", self)
 
     def __str__(self) -> str:
@@ -74,6 +53,22 @@ class PayloadsService:
 
     def __repr__(self) -> str:
         return f"PayloadsService(repository_service={self._repository_service!r})"
+
+    @staticmethod
+    def _build_payload_resource_data(
+        agent_template: BaseAgentTemplate,
+        build_parameters: dict[str, JsonValue],
+        payload_data: dict[str, JsonValue] | None,
+    ) -> dict[str, JsonValue]:
+        # Each payload's metadata (the agent template label, build parameters and
+        # arbitrary payload data) is persisted in the `data` field of its repository
+        # resource. The repository service writes this to its `.repository.json`
+        # metadata file, so no separate payloads metadata file is required.
+        return {
+            "agent_template": str(agent_template.label),
+            "build_parameters": build_parameters,
+            "payload_data": payload_data if payload_data is not None else {},
+        }
 
     # @wraps copies function docstring information over to avoid rewriting it, used for
     # boilerplate forwarding methods that don't do anything meaningfully different. We
@@ -85,6 +80,7 @@ class PayloadsService:
     def load_repository_metadata(self) -> None:
         """See [`RepositoryService.load_repository_metadata`][consortium.server.services.repository_service.RepositoryService.load_repository_metadata]."""
         self._repository_service.load_repository_metadata()
+        self._logger.debug("Loaded payloads repository metadata")
 
     @wraps(RepositoryService.save_repository_metadata)
     @log_and_propagate_error_on_service_method
@@ -94,125 +90,80 @@ class PayloadsService:
 
     @log_and_propagate_error_on_service_method
     def load_payloads_metadata(self) -> None:
-        """Loads payload metadata from the `.payloads.json` file in the repository directory.
+        """Reconstructs in-memory payloads from the repository resource metadata.
 
-        If the metadata file does not yet exist, it is created by calling
-        `save_payloads_metadata`. Payloads whose corresponding repository resource or
-        agent template cannot be found are logged as warnings and skipped.
+        Each payload's metadata (agent template label, build parameters and payload
+        data) is stored in the `data` field of its repository resource, which the
+        repository service persists in its `.repository.json` metadata file. This method
+        iterates over the resources tracked by the repository service and rebuilds the
+        corresponding payloads. Resources whose `data` field is missing the expected
+        payload fields, or whose agent template cannot be found, are logged as warnings
+        and skipped.
 
         Note that `self.load_repository_metadata` must be called before this method or
-        else the service will not be able to find any of the files that are on disk to
-        register them as payloads.
-
-        Returns:
-            None
-
-        Raises:
-            InvalidPayloadsMetadataFileJSONError: If the metadata file contains invalid
-                JSON.
-            InvalidPayloadsMetadataFileSchemaError: If the metadata file does not follow
-                the expected schema.
+        else the repository resources (and their `data` fields) will not be available to
+        reconstruct payloads from.
         """
-        if not self._payloads_metadata_file_path.exists():
-            self.save_payloads_metadata()
-        else:
-            with self._payloads_metadata_file_path.open(mode="r") as file:
-                try:
-                    payloads_metadata = json.load(file)
-                    jsonschema.validate(
-                        payloads_metadata, self._PAYLOADS_METADATA_JSON_SCHEMA
+        resources = self._repository_service.get_all_resources()
+        loaded_count = 0
+        skipped_count = 0
+        for resource in resources:
+            payload_id = str(resource.resource_id)
+            try:
+                agent_template_label = resource.data["agent_template"]
+                build_parameters = resource.data["build_parameters"]
+                payload_data = resource.data["payload_data"]
+            except KeyError, TypeError:
+                self._logger.warning(
+                    "Skipping loading payload with payload ID (resource ID) '{}' "
+                    "because its repository resource metadata is missing the expected "
+                    "payload fields ('{}', '{}', '{}') in its `data` field.",
+                    payload_id,
+                    "agent_template",
+                    "build_parameters",
+                    "payload_data",
+                )
+                skipped_count += 1
+                continue
+            try:
+                agent_template = (
+                    self._agent_templates_service.get_agent_template_by_label(
+                        label=agent_template_label,
                     )
-                except json.JSONDecodeError:
-                    raise InvalidPayloadsMetadataFileJSONError(
-                        repository_directory=str(self.repository_directory_path),
-                    ) from None
-                except jsonschema.ValidationError as exc:
-                    raise InvalidPayloadsMetadataFileSchemaError(
-                        repository_directory=str(self.repository_directory_path),
-                        json_schema_error_message=str(exc),
-                    ) from None
-                loaded_count = 0
-                skipped_count = 0
-                for payload_id, payload_metadata in payloads_metadata.items():
-                    try:
-                        resource = self._repository_service.get_resource_by_resource_id(
-                            resource_id=payload_id,
-                        )
-                        agent_template = (
-                            self._agent_templates_service.get_agent_template_by_label(
-                                label=payload_metadata["agent_template"],
-                            )
-                        )
-                        self._payloads[payload_id] = Payload(
-                            resource=resource,
-                            agent_template=agent_template,
-                            build_parameters=payload_metadata["build_parameters"],
-                            payload_data=payload_metadata["payload_data"],
-                        )
-                        loaded_count += 1
-                    except RepositoryResourceNotFoundError:
-                        self._logger.warning(
-                            "Skipping loading payload with payload ID (resource ID) '{}' "
-                            "from payloads metadata file because the corresponding "
-                            "resource was not found in the payloads repository. Check "
-                            "that the payload ID points to a resource in the "
-                            "repository with the same resource ID.",
-                            payload_id,
-                        )
-                        skipped_count += 1
-                        continue
-                    except AgentTemplateNotFoundError:
-                        self._logger.warning(
-                            "Skipping loading payload with payload ID (resource ID) '{}' "
-                            "from the `.payloads.json` metadata file because the "
-                            "corresponding agent template '{}' was not found. Check "
-                            "that the corresponding agent template is loaded.",
-                            payload_id,
-                            payload_metadata["agent_template"],
-                        )
-                        skipped_count += 1
-                        continue
-                if payloads_metadata and loaded_count == 0:
-                    self._logger.error(
-                        "Failed to load any payloads from the payloads metadata file "
-                        "({} entr{} found, all skipped). This may indicate that the "
-                        "repository service or agent templates have not been loaded yet, "
-                        "or that the metadata is fully stale.",
-                        len(payloads_metadata),
-                        "ies" if len(payloads_metadata) != 1 else "y",
-                    )
-                elif skipped_count > 0:
-                    self._logger.warning(
-                        "Loaded {}/{} payload(s) from the payloads metadata file "
-                        "({} skipped due to missing resources or agent templates).",
-                        loaded_count,
-                        loaded_count + skipped_count,
-                        skipped_count,
-                    )
-
-    @log_and_propagate_error_on_service_method
-    def save_payloads_metadata(self) -> None:
-        """Writes the current in-memory payload metadata to the `.payloads.json` file on disk.
-
-        Returns:
-            None
-        """
-        payloads_metadata_json = {
-            payload_id: {
-                "agent_template": str(payload.agent_template.label),
-                "build_parameters": payload.build_parameters,
-                "payload_data": payload.payload_data,
-            }
-            for payload_id, payload in self._payloads.items()
-        }
-        with self._payloads_metadata_file_path.open(mode="w") as file:
-            data = json.dumps(payloads_metadata_json, indent=4)
-            file.write(data)
-        self._logger.debug(
-            "Saved payloads metadata to {} ({} byte(s) written)",
-            str(self._payloads_metadata_file_path),
-            len(data),
-        )
+                )
+            except AgentTemplateNotFoundError:
+                self._logger.warning(
+                    "Skipping loading payload with payload ID (resource ID) '{}' "
+                    "because the corresponding agent template '{}' was not found. Check "
+                    "that the corresponding agent template is loaded.",
+                    payload_id,
+                    agent_template_label,
+                )
+                skipped_count += 1
+                continue
+            self._payloads[payload_id] = Payload(
+                resource=resource,
+                agent_template=agent_template,
+                build_parameters=build_parameters,
+                payload_data=payload_data,
+            )
+            loaded_count += 1
+        if resources and loaded_count == 0:
+            self._logger.error(
+                "Failed to load any payloads from the repository metadata "
+                "({} resource(s) found, all skipped). This may indicate that the "
+                "repository service or agent templates have not been loaded yet, or "
+                "that the repository metadata is fully stale.",
+                len(resources),
+            )
+        elif skipped_count > 0:
+            self._logger.warning(
+                "Loaded {}/{} payload(s) from the repository metadata "
+                "({} skipped due to missing payload metadata or agent templates).",
+                loaded_count,
+                loaded_count + skipped_count,
+                skipped_count,
+            )
 
     @log_and_propagate_error_on_service_method
     def reserve_payload_id(self) -> uuid.UUID:
@@ -224,7 +175,7 @@ class PayloadsService:
         or `create_payload_directory`.
 
         Returns:
-            uuid.UUID: The reserved payload ID.
+            The reserved payload ID.
         """
         payload_id = self._repository_service.reserve_resource_id()
         self._logger.debug("Reserved payload ID '{}'", str(payload_id))
@@ -248,22 +199,22 @@ class PayloadsService:
         `reserve_payload_id`. Emits a `PAYLOAD_CREATED` event.
 
         Args:
-            agent_template_id (str | uuid.UUID): The ID of the agent template to
+            agent_template_id: The ID of the agent template to
                 associate with the payload.
-            build_parameters (dict[str, Any]): Parameters used to build the agent
+            build_parameters: Parameters used to build the agent
                 generator from the template (validated against the template).
-            content (str | bytes | TextIO | BinaryIO): The file
+            content: The file
                 content to write to the repository.
-            payload_data (dict[str, Any] | None): Arbitrary metadata attached to the
+            payload_data: Arbitrary metadata attached to the
                 payload. When `None`, no extra metadata is stored.
-            payload_id (str | uuid.UUID | None): A previously reserved ID to assign to
+            payload_id: A previously reserved ID to assign to
                 this payload. When `None`, a new ID is generated automatically.
-            name (str | None): A human-readable name for the payload file. When `None`,
+            name: A human-readable name for the payload file. When `None`,
                 the resource UUID is used.
-            description (str): An optional description for the payload.
+            description: An optional description for the payload.
 
         Returns:
-            Payload: The created payload.
+            The created payload.
 
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID exists.
@@ -286,6 +237,11 @@ class PayloadsService:
                 name=name,
                 description=description,
                 resource_id=payload_id,
+                data=self._build_payload_resource_data(
+                    agent_template=agent_template,
+                    build_parameters=build_parameters,
+                    payload_data=payload_data,
+                ),
             )
         except ResourceIDReservationNotFoundError:
             raise PayloadIDReservationNotFoundError(
@@ -299,7 +255,6 @@ class PayloadsService:
             payload_data=payload_data,
         )
         self._payloads[str(payload.payload_id)] = payload
-        self.save_payloads_metadata()
 
         asyncio.create_task(
             self._events_service.trigger_event(
@@ -335,24 +290,24 @@ class PayloadsService:
         Emits a `PAYLOAD_CREATED` event.
 
         Args:
-            agent_template_id (str | uuid.UUID): The ID of the agent template to
+            agent_template_id: The ID of the agent template to
                 associate with the payload.
-            build_parameters (dict[str, Any]): Parameters used to build the agent
+            build_parameters: Parameters used to build the agent
                 generator from the template (validated against the template).
-            path (pathlib.Path | str): Path to the existing file to register.
-            payload_data (dict[str, Any] | None): Arbitrary metadata attached to
+            path: Path to the existing file to register.
+            payload_data: Arbitrary metadata attached to
                 the payload. When `None`, no extra metadata is stored.
-            payload_id (str | uuid.UUID | None): A previously reserved ID to
+            payload_id: A previously reserved ID to
                 assign to this payload. When `None`, a new ID is generated.
-            name (str | None): A human-readable name for the payload file. When
+            name: A human-readable name for the payload file. When
                 `None`, the original filename is used.
-            description (str): An optional description for the payload.
-            copy (bool): When `False` (default) the source file is moved into the
+            description: An optional description for the payload.
+            copy: When `False` (default) the source file is moved into the
                 repository. When `True` the source file is copied and the original
                 is left in place.
 
         Returns:
-            Payload: The registered payload.
+            The registered payload.
 
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID
@@ -375,6 +330,11 @@ class PayloadsService:
                 description=description,
                 resource_id=payload_id,
                 copy=copy,
+                data=self._build_payload_resource_data(
+                    agent_template=agent_template,
+                    build_parameters=build_parameters,
+                    payload_data=payload_data,
+                ),
             )
         except ResourceIDReservationNotFoundError:
             raise PayloadIDReservationNotFoundError(
@@ -388,7 +348,6 @@ class PayloadsService:
             payload_data=payload_data,
         )
         self._payloads[str(payload.payload_id)] = payload
-        self.save_payloads_metadata()
 
         asyncio.create_task(
             self._events_service.trigger_event(
@@ -422,24 +381,24 @@ class PayloadsService:
         `reserve_payload_id`. Emits a `PAYLOAD_CREATED` event.
 
         Args:
-            agent_template_id (str | uuid.UUID): The ID of the agent template to
+            agent_template_id: The ID of the agent template to
                 associate with the payload.
-            build_parameters (dict[str, Any]): Parameters used to build the agent
+            build_parameters: Parameters used to build the agent
                 generator from the template (validated against the template).
-            content (bytes | BinaryIO): The archive content to
+            content: The archive content to
                 extract into the repository directory.
-            payload_data (dict[str, Any] | None): Arbitrary metadata attached to the
+            payload_data: Arbitrary metadata attached to the
                 payload. When `None`, no extra metadata is stored.
-            payload_id (str | uuid.UUID | None): A previously reserved ID to assign to
+            payload_id: A previously reserved ID to assign to
                 this payload. When `None`, a new ID is generated automatically.
-            archive_file_format (Literal["zip", "tar", "gztar", "bztar", "xztar"]): The
+            archive_file_format: The
                 format of the archive to extract. Defaults to `"zip"`.
-            name (str | None): A human-readable name for the payload directory. When
+            name: A human-readable name for the payload directory. When
                 `None`, the resource UUID is used.
-            description (str): An optional description for the payload.
+            description: An optional description for the payload.
 
         Returns:
-            Payload: The created payload.
+            The created payload.
 
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID exists.
@@ -463,6 +422,11 @@ class PayloadsService:
                 name=name,
                 description=description,
                 resource_id=payload_id,
+                data=self._build_payload_resource_data(
+                    agent_template=agent_template,
+                    build_parameters=build_parameters,
+                    payload_data=payload_data,
+                ),
             )
         except ResourceIDReservationNotFoundError:
             raise PayloadIDReservationNotFoundError(
@@ -476,7 +440,6 @@ class PayloadsService:
             payload_data=payload_data,
         )
         self._payloads[str(payload.payload_id)] = payload
-        self.save_payloads_metadata()
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
@@ -512,24 +475,24 @@ class PayloadsService:
         `PAYLOAD_CREATED` event.
 
         Args:
-            agent_template_id (str | uuid.UUID): The ID of the agent template to
+            agent_template_id: The ID of the agent template to
                 associate with the payload.
-            build_parameters (dict[str, Any]): Parameters used to build the agent
+            build_parameters: Parameters used to build the agent
                 generator from the template (validated against the template).
-            path (pathlib.Path | str): Path to the existing directory to register.
-            payload_data (dict[str, Any] | None): Arbitrary metadata attached to
+            path: Path to the existing directory to register.
+            payload_data: Arbitrary metadata attached to
                 the payload. When `None`, no extra metadata is stored.
-            payload_id (str | uuid.UUID | None): A previously reserved ID to
+            payload_id: A previously reserved ID to
                 assign to this payload. When `None`, a new ID is generated.
-            name (str | None): A human-readable name for the payload directory.
+            name: A human-readable name for the payload directory.
                 When `None`, the original directory name is used.
-            description (str): An optional description for the payload.
-            copy (bool): When `False` (default) the source directory is moved into
+            description: An optional description for the payload.
+            copy: When `False` (default) the source directory is moved into
                 the repository. When `True` the source directory is copied and the
                 original is left in place.
 
         Returns:
-            Payload: The registered payload.
+            The registered payload.
 
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID
@@ -552,6 +515,11 @@ class PayloadsService:
                 description=description,
                 resource_id=payload_id,
                 copy=copy,
+                data=self._build_payload_resource_data(
+                    agent_template=agent_template,
+                    build_parameters=build_parameters,
+                    payload_data=payload_data,
+                ),
             )
         except ResourceIDReservationNotFoundError:
             raise PayloadIDReservationNotFoundError(
@@ -565,7 +533,6 @@ class PayloadsService:
             payload_data=payload_data,
         )
         self._payloads[str(payload.payload_id)] = payload
-        self.save_payloads_metadata()
 
         asyncio.create_task(
             self._events_service.trigger_event(
@@ -589,10 +556,7 @@ class PayloadsService:
         warning is logged and the orphaned side is cleaned up without emitting an event.
 
         Args:
-            payload_id (str | uuid.UUID): The ID of the payload to delete.
-
-        Returns:
-            None
+            payload_id: The ID of the payload to delete.
 
         Raises:
             PayloadNotFoundError: If neither payload metadata nor a matching repository
@@ -644,8 +608,10 @@ class PayloadsService:
                 resource_id=payload_id
             )
         if payload_exists:
+            # The payload metadata lives in the resource's `data` field, so deleting the
+            # repository resource above already removed it from the repository metadata
+            # file. Here we only need to drop the in-memory payload entry.
             self._payloads.pop(payload_id)
-            self.save_payloads_metadata()
             self._logger.debug(
                 "Deleted payload metadata for payload with ID '{}'", payload_id
             )
@@ -667,10 +633,10 @@ class PayloadsService:
         """Returns a payload by its ID.
 
         Args:
-            payload_id (str | uuid.UUID): The ID of the payload to retrieve.
+            payload_id: The ID of the payload to retrieve.
 
         Returns:
-            Payload: The requested payload.
+            The requested payload.
 
         Raises:
             PayloadNotFoundError: If no payload with the given ID exists.
@@ -694,7 +660,7 @@ class PayloadsService:
         """Returns all currently loaded payloads.
 
         Returns:
-            list[Payload]: A list of all payloads. Empty if none have been created.
+            A list of all payloads. Empty if none have been created.
         """
         payloads = list(self._payloads.values())
         self._logger.debug(

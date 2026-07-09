@@ -1,12 +1,15 @@
 import asyncio
 import pathlib
 import uuid
-from typing import BinaryIO, Literal, TextIO
+from functools import wraps
+from typing import TYPE_CHECKING, BinaryIO, Literal, TextIO
 
 from loguru import logger
+from pydantic import JsonValue
 
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.models.logging_models import LoggerType
+from consortium.server.models.user_account_models import UserAccountReferenceModel
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
@@ -15,15 +18,22 @@ from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
+if TYPE_CHECKING:
+    from consortium.server.services.user_accounts_service import UserAccountsService
+
 
 class AssetsService:
     def __init__(
         self,
         events_service: EventsService,
         repository_service: RepositoryService,
+        user_accounts_service: UserAccountsService,
     ):
         self._events_service = events_service
         self._repository_service = repository_service
+        # The user accounts service is used to resolve a user account ID into a stored
+        # user account reference when attributing an uploading user account to an asset.
+        self._user_accounts_service = user_accounts_service
         self.repository_directory_path = repository_service.repository_directory_path
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -36,11 +46,35 @@ class AssetsService:
     def __repr__(self) -> str:
         return f"AssetsService(repository_service={self._repository_service!r})"
 
+    def _build_asset_resource_data(
+        self,
+        user_account_id: str | uuid.UUID | None,
+    ) -> dict[str, JsonValue]:
+        # Attribution of an uploading user account is optional. When no user account ID
+        # is provided (for example an asset created directly by a plugin) the reference
+        # is stored as `None`. This data is persisted in the `data` field of the asset's
+        # repository resource and validated against `AssetDataModel` at the API boundary.
+        if user_account_id is None:
+            return {"user_account": None}
+
+        user_account = self._user_accounts_service.get_user_account_by_user_account_id(
+            user_account_id=user_account_id,
+        )
+        user_account_reference = UserAccountReferenceModel(
+            user_account_id=user_account.user_account_id,
+            username=user_account.username,
+        )
+        return {
+            "user_account": user_account_reference.model_dump(mode="json"),
+        }
+
+    @wraps(RepositoryService.load_repository_metadata)
     @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
         self._repository_service.load_repository_metadata()
         self._logger.debug("Loaded assets repository metadata")
 
+    @wraps(RepositoryService.save_repository_metadata)
     @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
         self._repository_service.save_repository_metadata()
@@ -52,12 +86,13 @@ class AssetsService:
         return asset_id
 
     @log_and_propagate_error_on_service_method
-    async def create_file(
+    async def create_asset_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
         name: str | None = None,
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
+        user_account_id: str | uuid.UUID | None = None,
     ) -> RepositoryFile:
         asset = await asyncio.to_thread(
             self._repository_service.create_file,
@@ -65,6 +100,7 @@ class AssetsService:
             name=name,
             description=description,
             resource_id=resource_id,
+            data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
         asyncio.create_task(
             self._events_service.trigger_event(
@@ -77,13 +113,14 @@ class AssetsService:
         return asset
 
     @log_and_propagate_error_on_service_method
-    async def add_file(
+    async def add_asset_file(
         self,
         path: pathlib.Path | str,
         name: str | None = None,
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
+        user_account_id: str | uuid.UUID | None = None,
     ) -> RepositoryFile:
         asset = await asyncio.to_thread(
             self._repository_service.add_file,
@@ -92,6 +129,7 @@ class AssetsService:
             description=description,
             resource_id=resource_id,
             copy=copy,
+            data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
         asyncio.create_task(
             self._events_service.trigger_event(
@@ -104,7 +142,7 @@ class AssetsService:
         return asset
 
     @log_and_propagate_error_on_service_method
-    async def create_directory(
+    async def create_asset_directory(
         self,
         content: bytes | BinaryIO | str | pathlib.Path | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"]
@@ -112,6 +150,7 @@ class AssetsService:
         name: str | None = None,
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
+        user_account_id: str | uuid.UUID | None = None,
     ) -> RepositoryDirectory:
         asset = await asyncio.to_thread(
             self._repository_service.create_directory,
@@ -120,6 +159,7 @@ class AssetsService:
             name=name,
             description=description,
             resource_id=resource_id,
+            data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
         asyncio.create_task(
             self._events_service.trigger_event(
@@ -132,13 +172,14 @@ class AssetsService:
         return asset
 
     @log_and_propagate_error_on_service_method
-    async def add_directory(
+    async def add_asset_directory(
         self,
         path: pathlib.Path | str,
         name: str | None = None,
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
+        user_account_id: str | uuid.UUID | None = None,
     ) -> RepositoryDirectory:
         asset = await asyncio.to_thread(
             self._repository_service.add_directory,
@@ -147,6 +188,7 @@ class AssetsService:
             description=description,
             resource_id=resource_id,
             copy=copy,
+            data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
         asyncio.create_task(
             self._events_service.trigger_event(

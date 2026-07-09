@@ -24,7 +24,6 @@ _DEFAULT_CHUNK_SIZE = 64000  # 64 KB, mimics shutil.copyfileobj default chunk si
 
 
 class RepositoryFile:
-    # TODO: Add parameter validation
     def __init__(
         self,
         path: pathlib.Path | str,
@@ -161,10 +160,13 @@ class RepositoryFile:
         encoding = None if binary else encoding
 
         if chunk_size is not None:
+            # Rebind `chunk_size` to `size` so type checker won't complain about it
+            # being nullable
+            size = chunk_size
 
             def chunk_iterator():
                 with self.path.open(mode=mode, encoding=encoding) as file:
-                    while chunk := file.read(chunk_size):
+                    while chunk := file.read(size):
                         yield chunk
 
             return chunk_iterator()
@@ -220,7 +222,6 @@ class RepositoryFile:
 
 
 class RepositoryDirectory:
-    # TODO: Add parameter validation
     def __init__(
         self,
         path: pathlib.Path | str,

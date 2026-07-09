@@ -88,7 +88,7 @@ def test_load_repository_metadata(service: AssetsService, repo_dir: pathlib.Path
 
 async def test_save_repository_metadata(service: AssetsService, repo_dir: pathlib.Path):
     with patch("asyncio.create_task"):
-        await service.create_file(content="x", name="x.txt")
+        await service.create_asset_file(content="x", name="x.txt")
     service.save_repository_metadata()
     import json
 
@@ -113,21 +113,21 @@ def test_reserve_asset_id_returns_uuid(service: AssetsService):
 
 async def test_create_file_returns_repository_file(service: AssetsService):
     with patch("asyncio.create_task"):
-        asset = await service.create_file(content="hello", name="hello.txt")
+        asset = await service.create_asset_file(content="hello", name="hello.txt")
     assert asset.resource_id is not None
     assert asset.name == "hello.txt"
 
 
 async def test_create_file_fires_asset_created_event(service: AssetsService):
     with patch("asyncio.create_task") as mock_task:
-        await service.create_file(content="data")
+        await service.create_asset_file(content="data")
     assert mock_task.called
 
 
 async def test_create_file_with_reserved_id(service: AssetsService):
     aid = service.reserve_asset_id()
     with patch("asyncio.create_task"):
-        asset = await service.create_file(content="reserved", resource_id=aid)
+        asset = await service.create_asset_file(content="reserved", resource_id=aid)
     assert str(asset.resource_id) == str(aid)
 
 
@@ -141,7 +141,7 @@ async def test_create_file_without_user_account_id_stores_null_reference(
     user_accounts_service: MagicMock,
 ):
     with patch("asyncio.create_task"):
-        asset = await service.create_file(content="anon", name="anon.txt")
+        asset = await service.create_asset_file(content="anon", name="anon.txt")
     assert asset.data == {"user_account": None}
     user_accounts_service.get_user_account_by_user_account_id.assert_not_called()
 
@@ -156,7 +156,7 @@ async def test_create_file_with_user_account_id_stores_reference(
         username="uploader",
     )
     with patch("asyncio.create_task"):
-        asset = await service.create_file(
+        asset = await service.create_asset_file(
             content="owned",
             name="owned.txt",
             user_account_id=user_account_id,
@@ -181,7 +181,7 @@ async def test_add_file_moves_source(service: AssetsService, tmp_path: pathlib.P
     src = tmp_path / "src.txt"
     src.write_text("content")
     with patch("asyncio.create_task"):
-        asset = await service.add_file(path=src)
+        asset = await service.add_asset_file(path=src)
     assert not src.exists()
     assert asset.resource_id is not None
 
@@ -190,7 +190,7 @@ async def test_add_file_copy_mode(service: AssetsService, tmp_path: pathlib.Path
     src = tmp_path / "src.txt"
     src.write_text("content")
     with patch("asyncio.create_task"):
-        await service.add_file(path=src, copy=True)
+        await service.add_asset_file(path=src, copy=True)
     assert src.exists()
 
 
@@ -203,13 +203,13 @@ async def test_create_directory_creates_dir(
     service: AssetsService, repo_dir: pathlib.Path
 ):
     with patch("asyncio.create_task"):
-        asset = await service.create_directory(name="mydir")
+        asset = await service.create_asset_directory(name="mydir")
     assert (repo_dir / str(asset.resource_id)).is_dir()
 
 
 async def test_create_directory_fires_event(service: AssetsService):
     with patch("asyncio.create_task") as mock_task:
-        await service.create_directory()
+        await service.create_asset_directory()
     assert mock_task.called
 
 
@@ -224,7 +224,7 @@ async def test_add_directory_moves_source(
     src = tmp_path / "srcdir"
     src.mkdir()
     with patch("asyncio.create_task"):
-        asset = await service.add_directory(path=src)
+        asset = await service.add_asset_directory(path=src)
     assert not src.exists()
     assert asset.resource_id is not None
 
@@ -233,7 +233,7 @@ async def test_add_directory_copy_mode(service: AssetsService, tmp_path: pathlib
     src = tmp_path / "srcdir2"
     src.mkdir()
     with patch("asyncio.create_task"):
-        await service.add_directory(path=src, copy=True)
+        await service.add_asset_directory(path=src, copy=True)
     assert src.exists()
 
 
@@ -244,7 +244,7 @@ async def test_add_directory_copy_mode(service: AssetsService, tmp_path: pathlib
 
 async def test_delete_asset_removes_resource(service: AssetsService):
     with patch("asyncio.create_task"):
-        asset = await service.create_file(content="bye", name="bye.txt")
+        asset = await service.create_asset_file(content="bye", name="bye.txt")
     asset_id = str(asset.resource_id)
     with patch("asyncio.create_task"):
         await service.delete_asset_by_asset_id(asset_id=asset_id)
@@ -253,7 +253,7 @@ async def test_delete_asset_removes_resource(service: AssetsService):
 
 async def test_delete_asset_fires_deleted_event(service: AssetsService):
     with patch("asyncio.create_task"):
-        asset = await service.create_file(content="bye", name="bye.txt")
+        asset = await service.create_asset_file(content="bye", name="bye.txt")
     asset_id = str(asset.resource_id)
     with patch("asyncio.create_task") as mock_task:
         await service.delete_asset_by_asset_id(asset_id=asset_id)
@@ -277,8 +277,8 @@ def test_get_all_assets_empty(service: AssetsService):
 
 async def test_get_all_assets_returns_all(service: AssetsService):
     with patch("asyncio.create_task"):
-        await service.create_file(content="a", name="a.txt")
-        await service.create_file(content="b", name="b.txt")
+        await service.create_asset_file(content="a", name="a.txt")
+        await service.create_asset_file(content="b", name="b.txt")
     assert len(service.get_all_assets()) == 2
 
 
@@ -289,7 +289,7 @@ async def test_get_all_assets_returns_all(service: AssetsService):
 
 async def test_get_asset_by_asset_id_success(service: AssetsService):
     with patch("asyncio.create_task"):
-        asset = await service.create_file(content="find me", name="find.txt")
+        asset = await service.create_asset_file(content="find me", name="find.txt")
     found = service.get_asset_by_asset_id(asset_id=str(asset.resource_id))
     assert str(found.resource_id) == str(asset.resource_id)
 

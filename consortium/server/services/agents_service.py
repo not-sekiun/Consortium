@@ -67,26 +67,45 @@ class AgentsService:
         """Registers a new agent and emits an `AGENT_REGISTERED` event.
 
         Args:
-            listener_id: The ID of the listener this agent is connecting through.
-            payload_id: The ID of the payload that generated this agent, if any.
-            agent_type: The agent type classification object for this agent.
-            name: A human-readable display name for the agent.
-            description: A short description of the agent.
-            endpoint: A human-readable string identifying the agent's network endpoint.
-            user: The OS username the agent process is running as.
-            is_admin: Whether the agent is running with administrator or root privileges.
-            os: The name of the operating system.
-            version: The version of the operating system.
-            arch: The CPU architecture of the host system.
-            pid: The process ID of the agent.
-            locale: The locale string of the host system.
-            remote_host_address: The IP address the agent connected from.
-            local_host_address: The local IP address of the agent's host.
-            hostname: The hostname of the agent's host.
-            agent_data: Arbitrary key-value pairs carrying agent-specific metadata.
+            listener_id: The ID of the listener this agent is
+                connecting through.
+            payload_id: The ID of the payload that generated
+                this agent. When `None`, the agent is not attributed to any payload.
+            agent_type: The agent type classification object
+                describing this agent's capabilities and command set. When `None`, the
+                agent has no associated type.
+            name: A human-readable display name for the agent. When `None`,
+                a name is derived from the agent's identity later.
+            description: A short human-readable description of the agent. Defaults
+                to an empty string when omitted.
+            endpoint: A human-readable string identifying the agent's network
+                endpoint. Defaults to an empty string when omitted.
+            user: The OS username the agent process is running as. When
+                `None`, the running user is unknown.
+            is_admin: Whether the agent is running with administrator or
+                root privileges. When `None`, the privilege level is unknown.
+            os: The name of the host operating system (for example
+                "Windows"). When `None`, the OS is unknown.
+            version: The version string of the host operating system. When
+                `None`, the version is unknown.
+            arch: The CPU architecture of the host system (for example
+                "x86_64"). When `None`, the architecture is unknown.
+            pid: The process ID of the agent on its host. When `None`, the
+                PID is unknown.
+            locale: The locale string of the host system (for example
+                "en_US"). When `None`, the locale is unknown.
+            remote_host_address: The IP address the agent connected from,
+                as seen by the server. When `None`, the remote address is unknown.
+            local_host_address: The local IP address of the agent's host as
+                seen by the agent itself. When `None`, the local address is unknown.
+            hostname: The hostname of the agent's host. When `None`, the
+                hostname is unknown.
+            agent_data: Arbitrary key-value pairs carrying
+                agent-specific metadata not covered by the other fields. When `None`, no
+                extra metadata is stored.
 
         Returns:
-            Agent: The newly registered agent instance.
+            The newly registered agent instance.
         """
         agent = Agent(
             listener_id=listener_id,
@@ -126,10 +145,7 @@ class AgentsService:
         """Removes a registered agent from the service and emits an `AGENT_DEREGISTERED` event.
 
         Args:
-            agent_id (str | uuid.UUID): The ID of the agent to deregister.
-
-        Returns:
-            None
+            agent_id: The ID of the agent to deregister.
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
@@ -154,10 +170,7 @@ class AgentsService:
         Emits an `AGENT_CHECKED_IN` event.
 
         Args:
-            agent_id (str | uuid.UUID): The ID of the agent checking in.
-
-        Returns:
-            None
+            agent_id: The ID of the agent checking in.
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
@@ -187,14 +200,14 @@ class AgentsService:
         `AgentTaskMessageModel` objects.
 
         Args:
-            agent_id (str | uuid.UUID): The agent ID of the agent to get tasks for.
-            count (int | None): The number of tasks to retrieve. If None, retrieves
+            agent_id: The agent ID of the agent to get tasks for.
+            count: The number of tasks to retrieve. If None, retrieves
                 all available tasks. If 1, retrieves a single task. If > 1, retrieves
                 up to that many tasks.
-            block (bool): If True, blocks until at least one task is available.
+            block: If True, blocks until at least one task is available.
                 If False, returns immediately with whatever tasks are available
                 (may be empty). Defaults to False.
-            timeout (float | None): Maximum time in seconds to block waiting for tasks.
+            timeout: Maximum time in seconds to block waiting for tasks.
                 Only applies when block=True. If None, blocks indefinitely.
                 If 0, equivalent to block=False.
 
@@ -203,7 +216,7 @@ class AgentsService:
                 found.
 
         Returns:
-            list[TaskLaunchMessageModel]: A list of task messages. Returns an empty list
+            A list of task messages. Returns an empty list
                 if no tasks are available and block=False.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
@@ -251,13 +264,13 @@ class AgentsService:
         """Submit a result for a running task on an agent.
 
         Args:
-            agent_id (str | uuid.UUID): The agent ID of the agent to submit the result
+            agent_id: The agent ID of the agent to submit the result
                 for.
-            task_id (str | uuid.UUID): The task ID of the task to submit the result for.
-            success (bool): Whether the task was successful.
-            message (str): A message describing the result.
-            data (dict[str, Any]): The result data.
-            payload (AsyncIterable[bytes] | bytes | None): Optional binary payload
+            task_id: The task ID of the task to submit the result for.
+            success: Whether the task was successful.
+            message: A message describing the result.
+            data: The result data.
+            payload: Optional binary payload
                 associated with the result.
 
         Raises:
@@ -268,9 +281,6 @@ class AgentsService:
             A result whose task ID does not correspond to a running task (the task
             completed, timed out or was deleted) is a benign lifecycle race, it is
             logged and dropped rather than raised.
-
-        Returns:
-            None
         """
         if data is None:
             data = {}
@@ -295,10 +305,10 @@ class AgentsService:
         """Returns a registered agent by its ID.
 
         Args:
-            agent_id (str | uuid.UUID): The ID of the agent to retrieve.
+            agent_id: The ID of the agent to retrieve.
 
         Returns:
-            Agent: The agent with the specified ID.
+            The agent with the specified ID.
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
@@ -318,7 +328,7 @@ class AgentsService:
         """Returns all registered agents.
 
         Returns:
-            list[Agent]: A list of all registered agents. Empty if none are registered.
+            A list of all registered agents. Empty if none are registered.
         """
         all_agents = list(self._agents.values())
         self._logger.debug(
@@ -334,11 +344,11 @@ class AgentsService:
         """Returns all tasks across every registered agent, optionally filtered by state.
 
         Args:
-            status (AgentTaskState | None): When provided, only tasks in this state are
+            status: When provided, only tasks in this state are
                 returned. When `None`, all tasks regardless of state are returned.
 
         Returns:
-            list[AgentTask]: A list of matching tasks. Empty if no tasks match.
+            A list of matching tasks. Empty if no tasks match.
         """
         all_tasks = []
         for agent in self._agents.values():
@@ -361,10 +371,10 @@ class AgentsService:
         """Returns a task by its ID, searching across all registered agents.
 
         Args:
-            task_id (str | uuid.UUID): The ID of the task to retrieve.
+            task_id: The ID of the task to retrieve.
 
         Returns:
-            AgentTask: The task with the specified ID.
+            The task with the specified ID.
 
         Raises:
             AgentTaskNotFoundError: If no task with the given ID exists on any agent.
@@ -390,12 +400,12 @@ class AgentsService:
         """Returns all tasks for a specific agent, optionally filtered by state.
 
         Args:
-            agent_id (str | uuid.UUID): The ID of the agent whose tasks to retrieve.
-            status (AgentTaskState | None): When provided, only tasks in this state are
+            agent_id: The ID of the agent whose tasks to retrieve.
+            status: When provided, only tasks in this state are
                 returned. When `None`, all tasks regardless of state are returned.
 
         Returns:
-            list[AgentTask]: A list of matching tasks. Empty if no tasks match.
+            A list of matching tasks. Empty if no tasks match.
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
@@ -426,11 +436,11 @@ class AgentsService:
         """Returns a specific task belonging to a specific agent.
 
         Args:
-            agent_id (str | uuid.UUID): The ID of the agent that owns the task.
-            task_id (str | uuid.UUID): The ID of the task to retrieve.
+            agent_id: The ID of the agent that owns the task.
+            task_id: The ID of the task to retrieve.
 
         Returns:
-            AgentTask: The requested task.
+            The requested task.
 
         Raises:
             AgentNotFoundError: If no agent with the given agent ID is registered.
@@ -455,12 +465,12 @@ class AgentsService:
         """Queues a command for execution on the specified agent and emits an `AGENT_TASKED` event.
 
         Args:
-            agent_id (str | uuid.UUID): The ID of the agent to task.
-            command (str): The name of the command to execute on the agent.
-            arguments (dict[str, Any]): The arguments to pass along with the command.
+            agent_id: The ID of the agent to task.
+            command: The name of the command to execute on the agent.
+            arguments: The arguments to pass along with the command.
 
         Returns:
-            AgentTask: The newly created task object representing the queued command.
+            The newly created task object representing the queued command.
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
@@ -495,14 +505,14 @@ class AgentsService:
         for a field leaves it unchanged.
 
         Args:
-            agent_id (str | uuid.UUID): The ID of the agent to update.
-            name (str | None): The new display name for the agent. When `None`, the
+            agent_id: The ID of the agent to update.
+            name: The new display name for the agent. When `None`, the
                 name is not changed.
-            description (str | None): The new description for the agent. When `None`,
+            description: The new description for the agent. When `None`,
                 the description is not changed.
 
         Returns:
-            Agent: The updated agent instance.
+            The updated agent instance.
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
@@ -567,8 +577,8 @@ class AgentsService:
         """Deletes a queued (not yet dispatched) task from the specified agent's task queue.
 
         Args:
-            agent_id (str | uuid.UUID): The ID of the agent that owns the task.
-            task_id (str | uuid.UUID): The ID of the queued task to delete.
+            agent_id: The ID of the agent that owns the task.
+            task_id: The ID of the queued task to delete.
 
         Returns:
             None

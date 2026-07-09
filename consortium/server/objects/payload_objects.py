@@ -18,18 +18,18 @@ from consortium.server.objects.repository_objects import (
 class _PayloadParametersModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    resource: RepositoryFile | RepositoryDirectory
     agent_template: BaseAgentTemplate
     build_parameters: dict[str, JsonValue]
-    resource: RepositoryFile | RepositoryDirectory
     payload_data: dict[str, JsonValue]
 
 
 class Payload:
     def __init__(
         self,
+        resource: RepositoryFile | RepositoryDirectory,
         agent_template: BaseAgentTemplate,
         build_parameters: dict[str, Any],
-        resource: RepositoryFile | RepositoryDirectory,
         payload_data: dict[str, Any] | None = None,
     ):
         if payload_data is None:
@@ -100,6 +100,7 @@ class Payload:
 
     def to_json(self) -> dict[str, JsonValue]:
         return {
+            "resource_id": str(self.payload_id),
             "payload_id": str(self.payload_id),
             "name": self.name,
             "description": self.description,
@@ -114,4 +115,5 @@ class Payload:
             "agent_template": self.agent_template.to_json(),
             "build_parameters": self.build_parameters,
             "payload_data": self.payload_data,
+            "data": self.resource.data,
         }

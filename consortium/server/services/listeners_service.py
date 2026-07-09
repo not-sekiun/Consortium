@@ -60,10 +60,10 @@ class ListenersService:
         """Returns a registered listener by its ID.
 
         Args:
-            listener_id (str | uuid.UUID): The ID of the listener to retrieve.
+            listener_id: The ID of the listener to retrieve.
 
         Returns:
-            BaseListener: The requested listener.
+            The requested listener.
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
@@ -82,7 +82,7 @@ class ListenersService:
         """Returns all registered listeners.
 
         Returns:
-            list[BaseListener]: A list of all registered listeners. Empty if none exist.
+            A list of all registered listeners. Empty if none exist.
         """
         all_listeners = list(self._listeners.values())
         self._logger.debug(
@@ -106,14 +106,14 @@ class ListenersService:
         Args:
             listener_template_id (str | uuid.UUID): The ID of the listener template to
                 use.
-            parameters (dict[str, Any]): The parameters to pass to the listener
+            parameters: The parameters to pass to the listener
                 template when creating the listener.
-            name (str | None): An optional display name for the new listener. If
+            name: An optional display name for the new listener. If
                 omitted, the name is derived from the template.
-            description (str): An optional description for the new listener.
+            description: An optional description for the new listener.
 
         Returns:
-            BaseListener: The newly created and registered listener instance.
+            The newly created and registered listener instance.
 
         Raises:
             ListenerTemplateIDNotFoundError: If no listener template with the given ID
@@ -149,10 +149,7 @@ class ListenersService:
         method accepts a pre-built listener instance. Emits a `LISTENER_ADDED` event.
 
         Args:
-            listener (BaseListener): The listener instance to add.
-
-        Returns:
-            None
+            listener: The listener instance to add.
 
         Raises:
             ListenerAlreadyExistsError: If a listener with the same ID is already
@@ -179,10 +176,7 @@ class ListenersService:
         The listener must not be currently running. Emits a `LISTENER_REMOVED` event.
 
         Args:
-            listener_id (str | uuid.UUID): The ID of the listener to remove.
-
-        Returns:
-            None
+            listener_id: The ID of the listener to remove.
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
@@ -221,16 +215,16 @@ class ListenersService:
         Emits a `LISTENER_UPDATED` event when at least one field changes.
 
         Args:
-            listener_id (str | uuid.UUID): The ID of the listener to update.
-            name (str | None): The new display name. When `None`, the name is not
+            listener_id: The ID of the listener to update.
+            name: The new display name. When `None`, the name is not
                 changed.
-            description (str | None): The new description. When `None`, the description
+            description: The new description. When `None`, the description
                 is not changed.
-            parameters (dict[str, Any] | None): A partial or full mapping of parameter
+            parameters: A partial or full mapping of parameter
                 names to new values. When `None`, parameters are not changed.
 
         Returns:
-            BaseListener: The updated listener instance.
+            The updated listener instance.
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
@@ -385,12 +379,12 @@ class ListenersService:
         Emits a `LISTENER_STARTED` event after starting.
 
         Args:
-            listener_id (str | uuid.UUID): The ID of the listener to start.
-            blocking (bool): If `True`, waits until the listener has fully started
+            listener_id: The ID of the listener to start.
+            blocking: If `True`, waits until the listener has fully started
                 before returning. Defaults to `False`.
 
         Returns:
-            BaseListener: The started listener instance.
+            The started listener instance.
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
@@ -420,12 +414,12 @@ class ListenersService:
         Emits a `LISTENER_STOPPED` event after stopping.
 
         Args:
-            listener_id (str | uuid.UUID): The ID of the listener to stop.
-            blocking (bool): If `True`, waits until the listener has fully stopped
+            listener_id: The ID of the listener to stop.
+            blocking: If `True`, waits until the listener has fully stopped
                 before returning. Defaults to `False`.
 
         Returns:
-            BaseListener: The stopped listener instance.
+            The stopped listener instance.
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
@@ -456,12 +450,12 @@ class ListenersService:
         current operation cleanly. Emits a `LISTENER_CANCELLED` event.
 
         Args:
-            listener_id (str | uuid.UUID): The ID of the listener to cancel.
-            blocking (bool): If `True`, waits until the listener has fully stopped
+            listener_id: The ID of the listener to cancel.
+            blocking: If `True`, waits until the listener has fully stopped
                 before returning. Defaults to `False`.
 
         Returns:
-            BaseListener: The cancelled listener instance.
+            The cancelled listener instance.
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.

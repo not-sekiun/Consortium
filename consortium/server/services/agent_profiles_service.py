@@ -69,13 +69,13 @@ class AgentProfilesService:
         is `True`.
 
         Args:
-            agent_profile_project_folder (pathlib.Path): Path to the directory
+            agent_profile_project_folder: Path to the directory
                 containing the agent profile project files and `manifest.json`.
-            ignore_enabled_agent_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_agent_profile_flag: When `True`, bypasses the
                 `enabled` check in the manifest. Defaults to `False`.
 
         Returns:
-            AgentProfile | None: The instantiated agent profile, or `None` if the
+            The instantiated agent profile, or `None` if the
                 profile is disabled and the enabled check is not overridden.
 
         Raises:
@@ -125,14 +125,13 @@ class AgentProfilesService:
         """Recursively scans a directory for agent profile project folders and instantiates them.
 
         Args:
-            directory (pathlib.Path): The directory to scan for agent profile project
+            directory: The directory to scan for agent profile project
                 folders.
-            ignore_enabled_agent_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_agent_profile_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
 
         Returns:
-            tuple[list[AgentProfile], list[pathlib.Path], list[tuple[pathlib.Path, AgentProfileLoadingError]] | None]:
-                A three-element tuple: (1) a list of successfully instantiated agent
+            A three-element tuple: (1) a list of successfully instantiated agent
                 profiles, (2) a list of paths skipped because the profile was disabled,
                 and (3) a list of `(path, error)` tuples for profiles that failed to
                 load.
@@ -165,10 +164,7 @@ class AgentProfilesService:
         compatible agent type index for listener profiles is updated.
 
         Args:
-            agent_profile (AgentProfile): The agent profile instance to load.
-
-        Returns:
-            None
+            agent_profile: The agent profile instance to load.
         """
         agent_profile = await self._agent_profile_registry_service.load_component(
             component=agent_profile,
@@ -190,13 +186,13 @@ class AgentProfilesService:
         type index for listener profiles are updated.
 
         Args:
-            agent_profile_project_folder (pathlib.Path): Path to the directory
+            agent_profile_project_folder: Path to the directory
                 containing the agent profile project files and `manifest.json`.
-            ignore_enabled_agent_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_agent_profile_flag: When `True`, bypasses the
                 `enabled` check in the manifest. Defaults to `False`.
 
         Returns:
-            AgentProfile | None: The loaded agent profile, or `None` if the profile is
+            The loaded agent profile, or `None` if the profile is
                 disabled and the enabled check is not overridden.
 
         Raises:
@@ -245,10 +241,7 @@ class AgentProfilesService:
         updated to reflect the removal.
 
         Args:
-            agent_profile_id (str | uuid.UUID): The ID of the agent profile to unload.
-
-        Returns:
-            None
+            agent_profile_id: The ID of the agent profile to unload.
 
         Raises:
             ComponentNotFoundError: If no agent profile with the given ID is registered.
@@ -276,12 +269,12 @@ class AgentProfilesService:
         unloaded, not reloaded.
 
         Args:
-            agent_profile_id (str | uuid.UUID): The ID of the agent profile to reload.
-            ignore_enabled_agent_profile_flag (bool): When `True`, bypasses the
+            agent_profile_id: The ID of the agent profile to reload.
+            ignore_enabled_agent_profile_flag: When `True`, bypasses the
                 `enabled` check in the manifest during reload. Defaults to `False`.
 
         Returns:
-            AgentProfile: The reloaded agent profile instance, or `None` if the profile
+            The reloaded agent profile instance, or `None` if the profile
                 was disabled and the enabled check was not overridden.
 
         Raises:
@@ -319,11 +312,8 @@ class AgentProfilesService:
         aborting the overall load.
 
         Args:
-            ignore_enabled_agent_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_agent_profile_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
-
-        Returns:
-            None
         """
         self._logger.info("Loading framework agent profiles...")
         retrieved, skipped, errored = (
@@ -370,11 +360,7 @@ class AgentProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def unload_framework_agent_profiles(self) -> None:
-        """Unloads all agent profiles that were loaded from the framework's profiles directory.
-
-        Returns:
-            None
-        """
+        """Unloads all agent profiles that were loaded from the framework's profiles directory."""
         self._logger.info("Unloading framework agent profiles...")
         unloaded_agent_profiles = 0
         for agent_profile in self.get_all_agent_profiles():
@@ -392,11 +378,7 @@ class AgentProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def reload_framework_agent_profiles(self) -> None:
-        """Unloads all framework agent profiles then reloads them from the profiles directory.
-
-        Returns:
-            None
-        """
+        """Unloads all framework agent profiles then reloads them from the profiles directory."""
         self._logger.info("Reloading framework agent profiles...")
         await self.unload_framework_agent_profiles()
         await self.load_framework_agent_profiles()
@@ -407,7 +389,7 @@ class AgentProfilesService:
         """Returns all currently loaded agent profiles.
 
         Returns:
-            list[AgentProfile]: A list of all loaded agent profiles. Empty if none are
+            A list of all loaded agent profiles. Empty if none are
                 loaded.
         """
         agent_profiles = self._agent_profile_registry_service.get_all_components()
@@ -424,10 +406,10 @@ class AgentProfilesService:
         """Returns a loaded agent profile by its ID.
 
         Args:
-            agent_profile_id (str | uuid.UUID): The ID of the agent profile to retrieve.
+            agent_profile_id: The ID of the agent profile to retrieve.
 
         Returns:
-            AgentProfile: The requested agent profile.
+            The requested agent profile.
 
         Raises:
             ComponentNotFoundError: If no agent profile with the given ID is registered.

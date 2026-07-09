@@ -1,5 +1,10 @@
 from typing import TYPE_CHECKING
 
+from consortium.server.models.repository_models import (
+    ArtifactDataModel,
+    AssetDataModel,
+    PayloadDataModel,
+)
 from consortium.server.services.agent_generators_service import AgentGeneratorsService
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.services.agent_templates_service import AgentTemplatesService
@@ -117,23 +122,30 @@ agents_service = AgentsService(
 payloads_service = PayloadsService(
     events_service=events_service,
     repository_service=RepositoryService(
-        repository_directory_path=consortium_paths_service.payloads_directory
+        repository_directory_path=consortium_paths_service.payloads_directory,
+        data_model=PayloadDataModel,
     ),
     agent_templates_service=agent_templates_service,
 )
 
-# These services are instantiated independent of other services.
+# The assets service relies on the user accounts service to resolve an uploading user
+# account ID into a stored user account reference, and the artifacts service relies on
+# the agents service to resolve a producing agent ID into a stored agent reference.
 assets_service = AssetsService(
     events_service=events_service,
     repository_service=RepositoryService(
         repository_directory_path=consortium_paths_service.assets_directory,
+        data_model=AssetDataModel,
     ),
+    user_accounts_service=user_accounts_service,
 )
 artifacts_service = ArtifactsService(
     events_service=events_service,
     repository_service=RepositoryService(
         repository_directory_path=consortium_paths_service.artifacts_directory,
+        data_model=ArtifactDataModel,
     ),
+    agents_service=agents_service,
 )
 users_service = UsersService(events_service=events_service)
 

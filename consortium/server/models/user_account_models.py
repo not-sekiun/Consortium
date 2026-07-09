@@ -11,3 +11,8 @@ class UserAccountModel(BaseModel):
 
     def __str__(self) -> str:
         return f"'{self.username}' ({self.user_account_id})"
+
+
+class UserAccountReferenceModel(BaseModel):
+    user_account_id: UUID4
+    username: str

@@ -32,3 +32,9 @@ class AgentModel(BaseModel):
     status: AgentStatus
     connected_listener: ConnectedListenerReferenceModel | None
     agent_data: dict[str, Any] | None
+
+
+class AgentReferenceModel(BaseModel):
+    agent_id: str
+    name: str
+    agent_type: AgentTypeModel

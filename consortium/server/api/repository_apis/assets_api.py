@@ -138,8 +138,8 @@ router.add_api_route(
 router.add_api_route(
     path="/upload",
     endpoint=create_upload_resource_endpoint(
-        create_file_handler=_assets_service.create_file,
-        create_directory_handler=_assets_service.create_directory,
+        create_file_handler=_assets_service.create_asset_file,
+        create_directory_handler=_assets_service.create_asset_directory,
         upload_resource_permission=UserPermissions.UPLOAD_ASSETS,
         response_model_class=AssetModel,
     ),

@@ -7,9 +7,10 @@ from datetime import datetime
 from typing import BinaryIO, Literal, TextIO
 
 import jsonschema
-from pydantic import JsonValue
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+    InvalidRepositoryMetadataDataSchemaError,
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,
     RepositoryResourceNotFoundError,
@@ -67,8 +68,13 @@ class RepositoryService:
         "additionalProperties": False,
     }
 
-    def __init__(self, repository_directory_path: pathlib.Path):
+    def __init__(
+        self,
+        repository_directory_path: pathlib.Path,
+        data_model: type[BaseModel] | None = None,
+    ):
         self.repository_directory_path = repository_directory_path
+        self._data_model = data_model
         self._resources = {}
         self._reserved_resource_ids = set()
         self._repository_metadata_file_path = (
@@ -116,6 +122,17 @@ class RepositoryService:
                     repository_directory=str(self.repository_directory_path),
                     json_schema_error_message=str(exc),
                 ) from None
+
+            if self._data_model is not None:
+                for resource_id, resource_data in repository_metadata.items():
+                    try:
+                        self._data_model.model_validate_json(resource_data["data"])
+                    except ValidationError as exc:
+                        raise InvalidRepositoryMetadataDataSchemaError(
+                            repository_directory=str(self.repository_directory_path),
+                            resource_id=resource_id,
+                            json_schema_error_message=exc.message,
+                        ) from None
 
         # Pre-pass check and verify all resources actually exist on disk before
         # populating `self._resources`, so a failure never leaves the registry in a
@@ -186,11 +203,7 @@ class RepositoryService:
             self._resources[resource.resource_id] = resource
 
     def save_repository_metadata(self) -> None:
-        """Writes the current in-memory repository resource metadata to disk as JSON.
-
-        Returns:
-            None
-        """
+        """Writes the current in-memory repository resource metadata to disk as JSON."""
         repository_metadata_json = {
             resource_id: resource.to_json()
             for resource_id, resource in self._resources.items()
@@ -207,7 +220,7 @@ class RepositoryService:
         file or directory is created (e.g., to embed the ID in the file content).
 
         Returns:
-            uuid.UUID: The reserved resource ID.
+            The reserved resource ID.
         """
         resource_id = uuid.uuid4()
         self._reserved_resource_ids.add(str(resource_id))
@@ -227,17 +240,17 @@ class RepositoryService:
         file extension (if provided). Metadata is persisted after creation.
 
         Args:
-            content (str | bytes | TextIO | BinaryIO): The file content to write.
-            name (str | None): A human-readable name for the file. When `None`, the
+            content: The file content to write.
+            name: A human-readable name for the file. When `None`, the
                 resource UUID is used as the name.
-            description (str): An optional description for the file.
-            resource_id (str | uuid.UUID | None): A previously reserved ID to assign to
+            description: An optional description for the file.
+            resource_id: A previously reserved ID to assign to
                 this resource. When `None`, a new ID is generated automatically.
-            data (dict[str, JsonValue]): Optional additional metadata to associate with
+            data: Optional additional metadata to associate with
                 the file resource.
 
         Returns:
-            RepositoryFile: The newly created repository file resource.
+            The newly created repository file resource.
 
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
@@ -289,25 +302,25 @@ class RepositoryService:
         registration.
 
         Args:
-            path (pathlib.Path | str): Path to the existing file to register.
-            copy (bool): When `False` (default) the source file is moved into the
+            path: Path to the existing file to register.
+            copy: When `False` (default) the source file is moved into the
                 repository. When `True` the source file is copied and the original
                 is left in place.
-            resource_id (str | uuid.UUID | None): A previously reserved ID to
+            resource_id: A previously reserved ID to
                 assign to this resource. When `None`, a new ID is generated.
-            name (str | None): A human-readable display name for the file. Purely
+            name: A human-readable display name for the file. Purely
                 cosmetic — never affects how the file is stored on disk. When
                 `None`, the original filename is used.
-            extension (str | None): Overrides the file's on-disk extension,
+            extension: Overrides the file's on-disk extension,
                 e.g. `".csv"`. Use this to deliberately reinterpret a file's type
                 on ingest. When `None` (default), the source file's own extension
                 (`path.suffix`) is used and behavior is unchanged from before.
-            description (str): An optional description for the file.
-            data (dict[str, JsonValue]): Optional additional metadata to associate with
+            description: An optional description for the file.
+            data: Optional additional metadata to associate with
                 the file resource.
 
         Returns:
-            RepositoryFile: The newly registered repository file resource.
+            The newly registered repository file resource.
 
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but
@@ -366,21 +379,20 @@ class RepositoryService:
         creation.
 
         Args:
-            content (bytes | BinaryIO | str | pathlib.Path | None): Archive content to
+            content: Archive content to
                 extract into the directory, or `None` to create an empty directory.
-            archive_file_format (Literal["zip", "tar", "gztar", "bztar", "xztar"] |
-                None): The archive format to use when extracting `content`. Must be set
-                when `content` is provided.
-            resource_id (str | uuid.UUID | None): A previously reserved ID to assign to
+            archive_file_format: The archive format to use when extracting `content`.
+                Must be set when `content` is provided.
+            resource_id: A previously reserved ID to assign to
                 this resource. When `None`, a new ID is generated automatically.
-            name (str | None): A human-readable name for the directory. When `None`,
+            name: A human-readable name for the directory. When `None`,
                 the resource UUID is used as the name.
-            description (str): An optional description for the directory.
-            data (dict[str, JsonValue]): Optional additional metadata to associate with
+            description: An optional description for the directory.
+            data: Optional additional metadata to associate with
                 the directory resource.
 
         Returns:
-            RepositoryDirectory: The newly created repository directory resource.
+            The newly created repository directory resource.
 
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
@@ -427,20 +439,20 @@ class RepositoryService:
         after registration.
 
         Args:
-            path (pathlib.Path | str): Path to the existing directory to register.
-            copy (bool): When `False` (default) the source directory is moved into
+            path: Path to the existing directory to register.
+            copy: When `False` (default) the source directory is moved into
                 the repository. When `True` the source directory is copied and the
                 original is left in place.
-            resource_id (str | uuid.UUID | None): A previously reserved ID to
+            resource_id: A previously reserved ID to
                 assign to this resource. When `None`, a new ID is generated.
-            name (str | None): A human-readable name for the directory. When
+            name: A human-readable name for the directory. When
                 `None`, the original directory name is used.
-            description (str): An optional description for the directory.
-            data (dict[str, JsonValue]): Optional additional metadata to associate with
+            description: An optional description for the directory.
+            data: Optional additional metadata to associate with
                 the directory resource.
 
         Returns:
-            RepositoryDirectory: The newly registered repository directory resource.
+            The newly registered repository directory resource.
 
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but
@@ -486,10 +498,7 @@ class RepositoryService:
         Metadata is persisted after deletion.
 
         Args:
-            resource_id (str | uuid.UUID): The ID of the resource to delete.
-
-        Returns:
-            None
+            resource_id: The ID of the resource to delete.
 
         Raises:
             RepositoryResourceNotFoundError: If no resource with the given ID exists.
@@ -510,8 +519,7 @@ class RepositoryService:
         """Returns all resources currently tracked by the repository service.
 
         Returns:
-            list[RepositoryFile | RepositoryDirectory]: A list of all repository
-                resources. Empty if none have been created.
+            A list of all repository resources. Empty if none have been created.
         """
         return list(self._resources.values())
 
@@ -522,10 +530,10 @@ class RepositoryService:
         """Returns a repository resource by its ID.
 
         Args:
-            resource_id (str | uuid.UUID): The ID of the resource to retrieve.
+            resource_id: The ID of the resource to retrieve.
 
         Returns:
-            RepositoryFile | RepositoryDirectory: The requested repository resource.
+            The requested repository resource.
 
         Raises:
             RepositoryResourceNotFoundError: If no resource with the given ID exists.

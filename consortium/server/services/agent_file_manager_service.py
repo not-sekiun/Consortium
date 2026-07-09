@@ -105,10 +105,14 @@ class AgentFileManagerService:
             NotImplementedError: This method is not yet implemented.
         """
         if not self._agent_artifacts_folder:
+            # The agent file manager service always attributes artifacts it creates to
+            # its owning agent by threading the agent ID through to the artifacts service,
+            # which resolves it into a stored agent reference.
             self._agent_artifacts_folder = (
-                await self._artifacts_service.create_directory(
+                await self._artifacts_service.create_asset_directory(
                     name=str(self._agent.agent_id),
                     parent_directory_id=None,
+                    agent_id=self._agent.agent_id,
                 )
             )
 

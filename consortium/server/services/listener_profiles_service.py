@@ -66,13 +66,13 @@ class ListenerProfilesService:
         `ignore_enabled_listener_profile_flag` is `True`.
 
         Args:
-            listener_profile_project_folder (pathlib.Path): Path to the directory
+            listener_profile_project_folder: Path to the directory
                 containing the listener profile project files and `manifest.json`.
-            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_listener_profile_flag: When `True`, bypasses the
                 `enabled` check in the manifest. Defaults to `False`.
 
         Returns:
-            ListenerProfile | None: The instantiated listener profile, or `None` if the
+            The instantiated listener profile, or `None` if the
                 profile is disabled and the enabled check is not overridden.
 
         Raises:
@@ -123,14 +123,13 @@ class ListenerProfilesService:
         """Recursively scans a directory for listener profile project folders and instantiates them.
 
         Args:
-            directory (pathlib.Path): The directory to scan for listener profile project
+            directory: The directory to scan for listener profile project
                 folders.
-            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_listener_profile_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
 
         Returns:
-            tuple[list[ListenerProfile], list[pathlib.Path], list[tuple[pathlib.Path, ListenerProfileLoadingError]] | None]:
-                A three-element tuple: (1) a list of successfully instantiated listener
+            A three-element tuple: (1) a list of successfully instantiated listener
                 profiles, (2) a list of paths skipped because the profile was disabled,
                 and (3) a list of `(path, error)` tuples for profiles that failed to
                 load.
@@ -164,10 +163,7 @@ class ListenerProfilesService:
         updated.
 
         Args:
-            listener_profile (ListenerProfile): The listener profile instance to load.
-
-        Returns:
-            None
+            listener_profile: The listener profile instance to load.
         """
         listener_profile = await self._listener_profile_registry_service.load_component(
             component=listener_profile,
@@ -190,13 +186,13 @@ class ListenerProfilesService:
         listener profile is updated.
 
         Args:
-            listener_profile_project_folder (pathlib.Path): Path to the directory
+            listener_profile_project_folder: Path to the directory
                 containing the listener profile project files and `manifest.json`.
-            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_listener_profile_flag: When `True`, bypasses the
                 `enabled` check in the manifest. Defaults to `False`.
 
         Returns:
-            ListenerProfile | None: The loaded listener profile, or `None` if the
+            The loaded listener profile, or `None` if the
                 profile is disabled and the enabled check is not overridden.
 
         Raises:
@@ -243,11 +239,8 @@ class ListenerProfilesService:
         """Deactivates and deregisters a loaded listener profile by its ID.
 
         Args:
-            listener_profile_id (str | uuid.UUID): The ID of the listener profile to
+            listener_profile_id: The ID of the listener profile to
                 unload.
-
-        Returns:
-            None
 
         Raises:
             ComponentNotFoundError: If no listener profile with the given ID is
@@ -273,13 +266,13 @@ class ListenerProfilesService:
         is `False`, the profile will only be unloaded, not reloaded.
 
         Args:
-            listener_profile_id (str | uuid.UUID): The ID of the listener profile to
+            listener_profile_id: The ID of the listener profile to
                 reload.
-            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_listener_profile_flag: When `True`, bypasses the
                 `enabled` check in the manifest during reload. Defaults to `False`.
 
         Returns:
-            ListenerProfile: The reloaded listener profile instance, or `None` if the
+            The reloaded listener profile instance, or `None` if the
                 profile was disabled and the enabled check was not overridden.
 
         Raises:
@@ -319,11 +312,8 @@ class ListenerProfilesService:
         aborting the overall load.
 
         Args:
-            ignore_enabled_listener_profile_flag (bool): When `True`, bypasses the
+            ignore_enabled_listener_profile_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
-
-        Returns:
-            None
         """
         self._logger.info("Loading framework listener profiles...")
         retrieved, skipped, errored = (
@@ -370,11 +360,7 @@ class ListenerProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def unload_framework_listener_profiles(self) -> None:
-        """Unloads all listener profiles that were loaded from the framework's profiles directory.
-
-        Returns:
-            None
-        """
+        """Unloads all listener profiles that were loaded from the framework's profiles directory."""
         self._logger.info("Unloading framework listener profiles...")
         unloaded_listener_profiles = 0
         for listener_profile in self.get_all_listener_profiles():
@@ -392,11 +378,7 @@ class ListenerProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def reload_framework_listener_profiles(self) -> None:
-        """Unloads all framework listener profiles then reloads them from the profiles directory.
-
-        Returns:
-            None
-        """
+        """Unloads all framework listener profiles then reloads them from the profiles directory."""
         self._logger.info("Reloading framework listener profiles...")
         await self.unload_framework_listener_profiles()
         await self.load_framework_listener_profiles()
@@ -407,7 +389,7 @@ class ListenerProfilesService:
         """Returns all currently loaded listener profiles.
 
         Returns:
-            list[ListenerProfile]: A list of all loaded listener profiles. Empty if
+            A list of all loaded listener profiles. Empty if
                 none are loaded.
         """
         listener_profiles = self._listener_profile_registry_service.get_all_components()
@@ -425,11 +407,11 @@ class ListenerProfilesService:
         """Returns a loaded listener profile by its ID.
 
         Args:
-            listener_profile_id (str | uuid.UUID): The ID of the listener profile to
+            listener_profile_id: The ID of the listener profile to
                 retrieve.
 
         Returns:
-            ListenerProfile: The requested listener profile.
+            The requested listener profile.
 
         Raises:
             ComponentNotFoundError: If no listener profile with the given ID is

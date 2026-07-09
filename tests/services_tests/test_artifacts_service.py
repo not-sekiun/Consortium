@@ -90,7 +90,7 @@ async def test_save_repository_metadata(
     service: ArtifactsService, repo_dir: pathlib.Path
 ):
     with patch("asyncio.create_task"):
-        await service.create_file(content="x", name="x.txt")
+        await service.create_artifact_file(content="x", name="x.txt")
     service.save_repository_metadata()
     import json
 
@@ -115,7 +115,7 @@ def test_reserve_artifact_id_returns_uuid(service: ArtifactsService):
 
 async def test_create_file_returns_repository_file(service: ArtifactsService):
     with patch("asyncio.create_task"):
-        artifact = await service.create_file(content="hello", name="hello.txt")
+        artifact = await service.create_artifact_file(content="hello", name="hello.txt")
     assert artifact.resource_id is not None
     assert artifact.name == "hello.txt"
 
@@ -124,14 +124,16 @@ async def test_create_file_fires_artifact_created_event(
     service: ArtifactsService, events_service: MagicMock
 ):
     with patch("asyncio.create_task") as mock_task:
-        await service.create_file(content="data")
+        await service.create_artifact_file(content="data")
     assert mock_task.called
 
 
 async def test_create_file_with_reserved_id(service: ArtifactsService):
     aid = service.reserve_artifact_id()
     with patch("asyncio.create_task"):
-        artifact = await service.create_file(content="reserved", resource_id=aid)
+        artifact = await service.create_artifact_file(
+            content="reserved", resource_id=aid
+        )
     assert str(artifact.resource_id) == str(aid)
 
 
@@ -145,7 +147,7 @@ async def test_create_file_without_agent_id_stores_null_reference(
     agents_service: MagicMock,
 ):
     with patch("asyncio.create_task"):
-        artifact = await service.create_file(content="anon", name="anon.txt")
+        artifact = await service.create_artifact_file(content="anon", name="anon.txt")
     assert artifact.data == {"agent": None}
     agents_service.get_agent_by_agent_id.assert_not_called()
 
@@ -165,7 +167,7 @@ async def test_create_file_with_agent_id_stores_reference(
     agents_service.get_agent_by_agent_id.return_value = mock_agent
 
     with patch("asyncio.create_task"):
-        artifact = await service.create_file(
+        artifact = await service.create_artifact_file(
             content="owned",
             name="owned.txt",
             agent_id=agent_id,
@@ -189,7 +191,7 @@ async def test_add_file_moves_source(service: ArtifactsService, tmp_path: pathli
     src = tmp_path / "src.txt"
     src.write_text("content")
     with patch("asyncio.create_task"):
-        artifact = await service.add_file(path=src)
+        artifact = await service.add_artifact_file(path=src)
     assert not src.exists()
     assert artifact.resource_id is not None
 
@@ -198,7 +200,7 @@ async def test_add_file_copy_mode(service: ArtifactsService, tmp_path: pathlib.P
     src = tmp_path / "src.txt"
     src.write_text("content")
     with patch("asyncio.create_task"):
-        await service.add_file(path=src, copy=True)
+        await service.add_artifact_file(path=src, copy=True)
     assert src.exists()
 
 
@@ -211,13 +213,13 @@ async def test_create_directory_creates_dir(
     service: ArtifactsService, repo_dir: pathlib.Path
 ):
     with patch("asyncio.create_task"):
-        artifact = await service.create_directory(name="mydir")
+        artifact = await service.create_artifact_directory(name="mydir")
     assert (repo_dir / str(artifact.resource_id)).is_dir()
 
 
 async def test_create_directory_fires_event(service: ArtifactsService):
     with patch("asyncio.create_task") as mock_task:
-        await service.create_directory(name="d")
+        await service.create_artifact_directory(name="d")
     assert mock_task.called
 
 
@@ -232,7 +234,7 @@ async def test_add_directory_moves_source(
     src = tmp_path / "srcdir"
     src.mkdir()
     with patch("asyncio.create_task"):
-        artifact = await service.add_directory(path=src)
+        artifact = await service.add_artifact_directory(path=src)
     assert not src.exists()
     assert artifact.resource_id is not None
 
@@ -243,7 +245,7 @@ async def test_add_directory_copy_mode(
     src = tmp_path / "srcdir2"
     src.mkdir()
     with patch("asyncio.create_task"):
-        await service.add_directory(path=src, copy=True)
+        await service.add_artifact_directory(path=src, copy=True)
     assert src.exists()
 
 
@@ -254,7 +256,7 @@ async def test_add_directory_copy_mode(
 
 async def test_delete_artifact_removes_resource(service: ArtifactsService):
     with patch("asyncio.create_task"):
-        artifact = await service.create_file(content="bye", name="bye.txt")
+        artifact = await service.create_artifact_file(content="bye", name="bye.txt")
     artifact_id = str(artifact.resource_id)
     with patch("asyncio.create_task"):
         await service.delete_artifact_by_artifact_id(artifact_id=artifact_id)
@@ -263,7 +265,7 @@ async def test_delete_artifact_removes_resource(service: ArtifactsService):
 
 async def test_delete_artifact_fires_deleted_event(service: ArtifactsService):
     with patch("asyncio.create_task"):
-        artifact = await service.create_file(content="bye", name="bye.txt")
+        artifact = await service.create_artifact_file(content="bye", name="bye.txt")
     artifact_id = str(artifact.resource_id)
     with patch("asyncio.create_task") as mock_task:
         await service.delete_artifact_by_artifact_id(artifact_id=artifact_id)
@@ -287,8 +289,8 @@ def test_get_all_artifacts_empty(service: ArtifactsService):
 
 async def test_get_all_artifacts_returns_all(service: ArtifactsService):
     with patch("asyncio.create_task"):
-        await service.create_file(content="a", name="a.txt")
-        await service.create_file(content="b", name="b.txt")
+        await service.create_artifact_file(content="a", name="a.txt")
+        await service.create_artifact_file(content="b", name="b.txt")
     assert len(service.get_all_artifacts()) == 2
 
 
@@ -299,7 +301,9 @@ async def test_get_all_artifacts_returns_all(service: ArtifactsService):
 
 async def test_get_artifact_by_artifact_id_success(service: ArtifactsService):
     with patch("asyncio.create_task"):
-        artifact = await service.create_file(content="find me", name="find.txt")
+        artifact = await service.create_artifact_file(
+            content="find me", name="find.txt"
+        )
     found = service.get_artifact_by_artifact_id(artifact_id=str(artifact.resource_id))
     assert str(found.resource_id) == str(artifact.resource_id)
 
