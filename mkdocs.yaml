@@ -57,6 +57,7 @@ nav:
     - getting-started/updating.md
     - getting-started/quick-start.md
   - Server API:
+    - server-api/server-overview.md
     - REST API:
       - server-api/rest-api/introduction.md
     - Events Websockets API:

@@ -45,9 +45,9 @@ listeners and agents.
 
     ---
 
-    - Look through the [Server REST API](server-api/rest-api) or
-      [Server Events Websockets API](server-api/events-websockets-api) to script
-      automations and write custom clients.
+    - Look through the [Server REST API](server-api/rest-api/introduction.md) or
+      [Server Events Websockets API](server-api/events-websockets-api/introduction.md)
+      to script automations and write custom clients.
     - Develop custom [listeners](framework/listeners/listeners-overview.md) and
       [agents](framework/agents/agents-overview.md) for the framework.
 

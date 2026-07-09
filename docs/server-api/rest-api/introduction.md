@@ -45,8 +45,8 @@ To quickly retrieve a token from the command line:
 
 1. Open `http://localhost:9999/docs`.
 2. Click the **Authorize** button (top right).
-3. Input your `username` and `password` in the top 2 form fields you can ignore the
-   `client_id` and `client_secret`
+3. Input your `username` and `password` in the top 2 form fields. You can ignore the
+   `client_id` and `client_secret` fields.
 
 All subsequent requests made through the UI will include the token automatically.
 
