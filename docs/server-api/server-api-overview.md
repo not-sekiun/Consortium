@@ -1,4 +1,4 @@
-# Server Overview
+# Server API Overview
 
 The server exposes its functionality to clients through two complementary interfaces: a
 request/response REST API and a push-based events websockets API. Together they let you
