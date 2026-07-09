@@ -132,6 +132,9 @@ class Server:
         await self._server_shutdown_procedure()
 
     async def _server_shutdown_procedure(self) -> None:
+        if self.status == ServerStatus.SHUTTING_DOWN:
+            return
+
         self._logger.info("Shutting down server...")
         self.status = ServerStatus.SHUTTING_DOWN
 
@@ -227,6 +230,9 @@ class Server:
         self.status = ServerStatus.STOPPED
 
     async def _server_startup_procedure(self) -> None:
+        if self.status == ServerStatus.RUNNING:
+            return
+
         server_release = server_singletons.release_service.release
         self._logger.info(
             f"Starting server (v{server_release.version} ({server_release.codename}) "
