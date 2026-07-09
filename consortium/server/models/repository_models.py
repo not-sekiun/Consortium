@@ -2,8 +2,15 @@ from datetime import datetime
 
 from pydantic import UUID4, BaseModel, JsonValue
 
-from consortium.server.models.agent_models import AgentReferenceModel
-from consortium.server.models.agent_template_models import AgentTemplateModel
+from consortium.server.models.agent_models import AgentModel, AgentReferenceModel
+from consortium.server.models.agent_template_models import (
+    AgentTemplateModel,
+    PersistentAgentTemplateReferenceModel,
+)
+from consortium.server.models.user_account_models import (
+    LiveUserAccountReferenceModel,
+    PersistentUserAccountReferenceModel,
+)
 
 
 class RepositoryResourceModel(BaseModel):
@@ -21,41 +28,47 @@ class RepositoryResourceModel(BaseModel):
 
 
 class AssetDataModel(BaseModel):
-    # `user_account` is nullable and defaults to `None` so that assets created outside
-    # of the REST API (for example directly by a plugin) that do not attribute an
-    # uploading user account, as well as legacy resources whose `data` field predates
-    # this attribution, still validate.
-    user_account: str | None = None
+    # `user_account` holds the immutable point-in-time reference recorded at upload. It
+    # is nullable and defaults to `None` so that assets created outside of the REST API
+    # (for example directly by a plugin) that do not attribute an uploading account, as
+    # well as legacy resources whose `data` field predates this attribution, still
+    # validate.
+    user_account: PersistentUserAccountReferenceModel | None = None
+    # `resolved_user_account` is the live, read-time resolution of `user_account` added
+    # by the `Asset` wrapper's `to_json`. It is never persisted (the repository stores
+    # only the reference above) and is `None` when the uploading account cannot be
+    # resolved (no attribution, or the account was deleted after upload).
+    resolved_user_account: LiveUserAccountReferenceModel | None = None
 
 
 class AssetModel(RepositoryResourceModel):
-    # asset_id: UUID4 = Field(validation_alias="resource_id")
     data: AssetDataModel
 
 
 class ArtifactDataModel(BaseModel):
-    # `agent` is nullable and defaults to `None` so that artifacts created outside of the
-    # agent file manager service (for example directly by a plugin) that do not attribute
-    # a producing agent, as well as legacy resources whose `data` field predates this
+    # `agent` holds the immutable point-in-time reference recorded at creation. It is
+    # nullable and defaults to `None` so that artifacts created outside of the agent file
+    # manager service (for example directly by a plugin) that do not attribute a
+    # producing agent, as well as legacy resources whose `data` field predates this
     # attribution, still validate.
     agent: AgentReferenceModel | None = None
+    # `resolved_agent` is the live, read-time resolution of `agent` added by the
+    # `Artifact` wrapper's `to_json`. It is never persisted (the repository stores only
+    # the reference above) and is `None` when the producing agent cannot be resolved (no
+    # attribution, or the agent was deleted after creation).
+    resolved_agent: AgentModel | None = None
 
 
 class ArtifactModel(RepositoryResourceModel):
-    # artifact_id: UUID4 = Field(validation_alias="resource_id")
     data: ArtifactDataModel
 
 
 class PayloadDataModel(BaseModel):
-    agent_template: AgentTemplateModel
+    agent_template: PersistentAgentTemplateReferenceModel
     build_parameters: dict[str, JsonValue]
     payload_data: dict[str, JsonValue]
+    resolved_agent_template: AgentTemplateModel | None
 
 
 class PayloadModel(RepositoryResourceModel):
-    # payload_id: UUID4
-    # agent_type: AgentTypeModel
-    # agent_template: AgentTemplateModel
-    # build_parameters: dict[str, JsonValue]
-    # payload_data: dict[str, JsonValue]
     data: PayloadDataModel

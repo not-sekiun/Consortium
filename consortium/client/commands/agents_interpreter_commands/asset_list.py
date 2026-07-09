@@ -35,7 +35,7 @@ class AssetListCommand(BaseConnectedCommand):
             assets = await rest_api.get_all_assets()
 
             table = Table(title="Assets", highlight=True)
-            table.add_column("Asset ID")
+            table.add_column("Resource ID")
             table.add_column("Name")
             table.add_column("Uploaded By")
             table.add_column("Type")
@@ -43,12 +43,29 @@ class AssetListCommand(BaseConnectedCommand):
             for asset in assets:
                 size = asset["size"]
                 # An asset is "just" a resource with metadata: the uploading user
-                # account is carried in the `data` field.
+                # account is carried in the `data` field. The stored reference records
+                # only the username as of upload; the live `resolved_user_account`
+                # (when present) supplies the account's current ID and proves it still
+                # exists, while its absence means the account has since been deleted.
                 user_account = (asset["data"] or {}).get("user_account")
+                resolved_user_account = (asset["data"] or {}).get(
+                    "resolved_user_account"
+                )
+                if user_account is None:
+                    uploaded_by = "N/A"
+                elif resolved_user_account is not None:
+                    uploaded_by = (
+                        f"{user_account['username']} "
+                        f"({resolved_user_account['user_account_id']})"
+                    )
+                else:
+                    uploaded_by = (
+                        f"{user_account['username']} [account no longer exists]"
+                    )
                 table.add_row(
                     asset["resource_id"],
                     asset["name"],
-                    user_account["username"] if user_account else "N/A",
+                    uploaded_by,
                     "DIRECTORY" if asset["is_directory"] else "FILE",
                     format_size_bytes_as_human_readable_str(size_bytes=size)
                     if size is not None

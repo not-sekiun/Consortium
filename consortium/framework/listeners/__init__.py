@@ -15,9 +15,9 @@ Listeners exchange task messages with agents using
 """
 
 from consortium.framework.agents.agent_message_models import (
+    TaskInputMessageModel,
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
-    TaskInputMessageModel,
 )
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate

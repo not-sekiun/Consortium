@@ -49,8 +49,28 @@ class AssetInfoCommand(BaseConnectedCommand):
             # resource fields describe the file/directory on disk while the `data` field
             # holds the asset specific metadata (for example the uploading user account).
             size = asset["size"]
-            metadata = asset["data"] or {}
-            user_account = metadata.get("user_account")
+            # The stored `user_account` reference is an immutable point-in-time record of
+            # the uploading account (its username and role as of upload). It deliberately
+            # does not persist a user account ID, since those are reissued across restarts.
+            # The live `resolved_user_account` (when present) supplies the account's
+            # current ID, proving it still exists; its absence means the account that
+            # uploaded the asset has since been deleted.
+            user_account = asset["data"]["user_account"]
+            resolved_user_account = asset["data"]["resolved_user_account"]
+
+            if user_account is None:
+                uploaded_by = "N/A"
+            elif resolved_user_account is not None:
+                uploaded_by = (
+                    f"{user_account['username']} "
+                    f"({resolved_user_account['user_account_id']}) "
+                    f"with role '{user_account['role']}'"
+                )
+            else:
+                uploaded_by = (
+                    f"{user_account['username']} with role '{user_account['role']}' "
+                    f"[account no longer exists]"
+                )
 
             table = Table(title="Asset Information", highlight=True)
             table.add_column("Information")
@@ -80,10 +100,7 @@ class AssetInfoCommand(BaseConnectedCommand):
                 ),
             )
             table.add_row("Type", "DIRECTORY" if asset["is_directory"] else "FILE")
-            table.add_row(
-                "Uploaded By",
-                user_account["username"] if user_account else "N/A",
-            )
+            table.add_row("Uploaded By", uploaded_by)
             console.print(table, "")
         except SystemExit:
             pass

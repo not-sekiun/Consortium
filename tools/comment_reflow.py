@@ -23,13 +23,34 @@ import tokenize
 # Prefixes (checked after stripping leading "#" and whitespace, lowercased)
 # that mark a comment as machine-meaningful and therefore untouchable.
 DIRECTIVE_PREFIXES = (
-    "type:", "noqa", "pragma", "pylint:", "mypy:", "flake8:",
-    "fmt:", "yapf:", "isort:", "nosec", "coding:", "coding=",
+    "type:",
+    "noqa",
+    "pragma",
+    "pylint:",
+    "mypy:",
+    "flake8:",
+    "fmt:",
+    "yapf:",
+    "isort:",
+    "nosec",
+    "coding:",
+    "coding=",
 )
 
-DEFAULT_EXCLUDES = {".git", ".hg", ".svn", "__pycache__", ".venv",
-                    "venv", "node_modules", ".mypy_cache", ".tox",
-                    ".pytest_cache", "build", "dist"}
+DEFAULT_EXCLUDES = {
+    ".git",
+    ".hg",
+    ".svn",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "node_modules",
+    ".mypy_cache",
+    ".tox",
+    ".pytest_cache",
+    "build",
+    "dist",
+}
 
 
 def split_comment(s):
@@ -66,8 +87,7 @@ def find_standalone_comments(source, lines):
             if lines[row - 1][:col].strip() != "":
                 continue
             hashes, text = split_comment(tok.string)
-            found[row] = (col, hashes, text,
-                          is_directive(tok.string, row), text == "")
+            found[row] = (col, hashes, text, is_directive(tok.string, row), text == "")
     except tokenize.TokenError:
         return None
     except SyntaxError:
@@ -79,15 +99,18 @@ def find_standalone_comments(source, lines):
 def group_blocks(standalone):
     # Group reflowable rows into blocks of consecutive rows sharing the
     # same indent column and hash count.
-    reflowable = [r for r in sorted(standalone)
-                  if not standalone[r][3] and not standalone[r][4]]
+    reflowable = [
+        r for r in sorted(standalone) if not standalone[r][3] and not standalone[r][4]
+    ]
     blocks, cur = [], []
     for r in reflowable:
         if cur:
             pcol, phash = standalone[cur[-1]][0], standalone[cur[-1]][1]
-            contiguous = (r == cur[-1] + 1
-                          and standalone[r][0] == pcol
-                          and standalone[r][1] == phash)
+            contiguous = (
+                r == cur[-1] + 1
+                and standalone[r][0] == pcol
+                and standalone[r][1] == phash
+            )
             if not contiguous:
                 blocks.append(cur)
                 cur = []
@@ -123,9 +146,9 @@ def reflow_source(source, max_len):
         # Flatten to words so any internal whitespace runs collapse to
         # single spaces on output.
         text = " ".join(w for r in block for w in standalone[r][2].split())
-        wrapped = textwrap.wrap(text, width=width,
-                                break_long_words=False,
-                                break_on_hyphens=False)
+        wrapped = textwrap.wrap(
+            text, width=width, break_long_words=False, break_on_hyphens=False
+        )
         new_lines = [indent + marker + w for w in wrapped]
         if new_lines != [lines[r - 1] for r in block]:
             changed = True
@@ -180,7 +203,7 @@ def colorize_diff(diff_lines):
 
 def process_file(path, max_len, in_place, show_diff, color):
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             source = f.read()
     except (UnicodeDecodeError, OSError) as e:
         print(f"skip {path}: {e}", file=sys.stderr)
@@ -192,8 +215,12 @@ def process_file(path, max_len, in_place, show_diff, color):
 
     if show_diff:
         diff = difflib.unified_diff(
-            source.splitlines(), new_source.splitlines(),
-            fromfile=path, tofile=path, lineterm="")
+            source.splitlines(),
+            new_source.splitlines(),
+            fromfile=path,
+            tofile=path,
+            lineterm="",
+        )
         if color:
             diff = colorize_diff(diff)
         print("\n".join(diff))
@@ -206,28 +233,52 @@ def process_file(path, max_len, in_place, show_diff, color):
 def build_parser():
     p = argparse.ArgumentParser(
         description="Reflow over-long '#' comments to a max line length, "
-                    "merging short follow-on lines. Docstrings, string "
-                    "literals, inline comments and directives are ignored.")
+        "merging short follow-on lines. Docstrings, string "
+        "literals, inline comments and directives are ignored."
+    )
     p.add_argument("path", help="File or directory to process.")
-    p.add_argument("-l", "--max-line-length", type=int, default=88,
-                   help="Maximum line length (default: 88).")
-    p.add_argument("-i", "--in-place", action="store_true",
-                   help="Rewrite files. Default is a dry run.")
-    p.add_argument("-e", "--extensions", default=".py",
-                   help="Comma-separated extensions to scan (default: .py).")
-    p.add_argument("-x", "--exclude", default="",
-                   help="Comma-separated extra directory names to skip.")
-    p.add_argument("-q", "--quiet", action="store_true",
-                   help="Suppress the per-file diff output.")
-    p.add_argument("--color", choices=("auto", "always", "never"), default="auto",
-                   help="Colorize diff output (default: auto).")
+    p.add_argument(
+        "-l",
+        "--max-line-length",
+        type=int,
+        default=88,
+        help="Maximum line length (default: 88).",
+    )
+    p.add_argument(
+        "-i",
+        "--in-place",
+        action="store_true",
+        help="Rewrite files. Default is a dry run.",
+    )
+    p.add_argument(
+        "-e",
+        "--extensions",
+        default=".py",
+        help="Comma-separated extensions to scan (default: .py).",
+    )
+    p.add_argument(
+        "-x",
+        "--exclude",
+        default="",
+        help="Comma-separated extra directory names to skip.",
+    )
+    p.add_argument(
+        "-q", "--quiet", action="store_true", help="Suppress the per-file diff output."
+    )
+    p.add_argument(
+        "--color",
+        choices=("auto", "always", "never"),
+        default="auto",
+        help="Colorize diff output (default: auto).",
+    )
     return p
 
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
-    extensions = {e if e.startswith(".") else "." + e
-                  for e in args.extensions.split(",") if e}
+    extensions = {
+        e if e.startswith(".") else "." + e for e in args.extensions.split(",") if e
+    }
     excludes = DEFAULT_EXCLUDES | {d for d in args.exclude.split(",") if d}
     show_diff = not args.quiet
     color = args.color == "always" or (args.color == "auto" and sys.stdout.isatty())

@@ -11,10 +11,7 @@ from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.models.agent_models import AgentReferenceModel
 from consortium.server.models.c2_type_models import AgentTypeModel
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.objects.repository_objects import (
-    RepositoryDirectory,
-    RepositoryFile,
-)
+from consortium.server.objects.artifact_objects import Artifact
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
 from consortium.server.utils import log_and_propagate_error_on_service_method
@@ -121,7 +118,7 @@ class ArtifactsService:
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
         agent_id: str | uuid.UUID | None = None,
-    ) -> RepositoryFile:
+    ) -> Artifact:
         """Creates a new artifact file from in-memory or streamed content.
 
         The content is written to a new file on disk in the artifacts repository and an
@@ -167,7 +164,7 @@ class ArtifactsService:
             )
         )
         self._logger.debug("Created artifact file: {!r}", artifact)
-        return artifact
+        return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
     async def add_artifact_file(
@@ -178,7 +175,7 @@ class ArtifactsService:
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
         agent_id: str | uuid.UUID | None = None,
-    ) -> RepositoryFile:
+    ) -> Artifact:
         """Registers an existing file on disk as an artifact.
 
         Unlike `create_artifact_file`, no new content is written: the file at `path` is
@@ -228,7 +225,7 @@ class ArtifactsService:
             )
         )
         self._logger.debug("Added artifact file: {!r}", artifact)
-        return artifact
+        return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
     async def create_artifact_directory(
@@ -240,7 +237,7 @@ class ArtifactsService:
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
         agent_id: str | uuid.UUID | None = None,
-    ) -> RepositoryDirectory:
+    ) -> Artifact:
         """Creates a new artifact directory, optionally populated from an archive.
 
         An empty directory is created on disk in the artifacts repository, or, when
@@ -292,7 +289,7 @@ class ArtifactsService:
             )
         )
         self._logger.debug("Created artifact directory: {!r}", artifact)
-        return artifact
+        return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
     async def add_artifact_directory(
@@ -303,7 +300,7 @@ class ArtifactsService:
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
         agent_id: str | uuid.UUID | None = None,
-    ) -> RepositoryDirectory:
+    ) -> Artifact:
         """Registers an existing directory on disk as an artifact.
 
         Unlike `create_artifact_directory`, no new directory is created: the directory at
@@ -354,7 +351,7 @@ class ArtifactsService:
             )
         )
         self._logger.debug("Added artifact directory: {!r}", artifact)
-        return artifact
+        return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
     async def delete_artifact_by_artifact_id(
@@ -391,25 +388,28 @@ class ArtifactsService:
         self._logger.debug("Deleted artifact: {}", str(artifact_id))
 
     @log_and_propagate_error_on_service_method
-    def get_all_artifacts(self) -> list[RepositoryFile | RepositoryDirectory]:
+    def get_all_artifacts(self) -> list[Artifact]:
         """Returns every artifact currently tracked by the artifacts service.
 
         Returns:
-            A list of all artifact resources, covering both file and directory
-                artifacts. Empty if no artifacts exist.
+            A list of all artifacts, covering both file and directory artifacts, each
+                wrapping its repository resource. Empty if no artifacts exist.
         """
         artifacts = self._repository_service.get_all_resources()
         self._logger.debug(
             "Retrieved all artifacts ({} artifact(s) retrieved)",
             len(artifacts),
         )
-        return artifacts
+        return [
+            Artifact(resource=artifact, agents_service=self._agents_service)
+            for artifact in artifacts
+        ]
 
     @log_and_propagate_error_on_service_method
     def get_artifact_by_artifact_id(
         self,
         artifact_id: str | uuid.UUID,
-    ) -> RepositoryFile | RepositoryDirectory:
+    ) -> Artifact:
         """Returns a single artifact by its ID.
 
         Args:
@@ -426,4 +426,4 @@ class ArtifactsService:
             resource_id=artifact_id
         )
         self._logger.debug("Retrieved artifact: {!r}", artifact)
-        return artifact
+        return Artifact(resource=artifact, agents_service=self._agents_service)

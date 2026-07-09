@@ -168,7 +168,7 @@ def format_size_bytes_as_human_readable_str(size_bytes: int):
         size_bytes_float /= 1024
         i += 1
 
-    return f"{size_bytes:.2f} {units[i]}"
+    return f"{size_bytes_float:.2f} {units[i]}"
 
 
 def format_seconds_as_human_readable_str(seconds: float) -> str:

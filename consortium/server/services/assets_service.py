@@ -9,11 +9,10 @@ from pydantic import JsonValue
 
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.models.user_account_models import UserAccountReferenceModel
-from consortium.server.objects.repository_objects import (
-    RepositoryDirectory,
-    RepositoryFile,
+from consortium.server.models.user_account_models import (
+    PersistentUserAccountReferenceModel,
 )
+from consortium.server.objects.asset_objects import Asset
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
 from consortium.server.utils import log_and_propagate_error_on_service_method
@@ -60,9 +59,9 @@ class AssetsService:
         user_account = self._user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-        user_account_reference = UserAccountReferenceModel(
-            user_account_id=user_account.user_account_id,
+        user_account_reference = PersistentUserAccountReferenceModel(
             username=user_account.username,
+            role=user_account.role,
         )
         return {
             "user_account": user_account_reference.model_dump(mode="json"),
@@ -122,7 +121,7 @@ class AssetsService:
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
         user_account_id: str | uuid.UUID | None = None,
-    ) -> RepositoryFile:
+    ) -> Asset:
         """Creates a new asset file from in-memory or streamed content.
 
         The content is written to a new file on disk in the assets repository and an
@@ -169,7 +168,7 @@ class AssetsService:
             )
         )
         self._logger.debug("Created asset file: {!r}", asset)
-        return asset
+        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
     async def add_asset_file(
@@ -180,7 +179,7 @@ class AssetsService:
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
         user_account_id: str | uuid.UUID | None = None,
-    ) -> RepositoryFile:
+    ) -> Asset:
         """Registers an existing file on disk as an asset.
 
         Unlike `create_asset_file`, no new content is written: the file at `path` is
@@ -229,7 +228,7 @@ class AssetsService:
             )
         )
         self._logger.debug("Added asset file: {!r}", asset)
-        return asset
+        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
     async def create_asset_directory(
@@ -241,7 +240,7 @@ class AssetsService:
         description: str = "",
         resource_id: str | uuid.UUID | None = None,
         user_account_id: str | uuid.UUID | None = None,
-    ) -> RepositoryDirectory:
+    ) -> Asset:
         """Creates a new asset directory, optionally populated from an archive.
 
         An empty directory is created on disk in the assets repository, or, when
@@ -292,7 +291,7 @@ class AssetsService:
             )
         )
         self._logger.debug("Created asset directory: {!r}", asset)
-        return asset
+        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
     async def add_asset_directory(
@@ -303,7 +302,7 @@ class AssetsService:
         resource_id: str | uuid.UUID | None = None,
         copy: bool = False,
         user_account_id: str | uuid.UUID | None = None,
-    ) -> RepositoryDirectory:
+    ) -> Asset:
         """Registers an existing directory on disk as an asset.
 
         Unlike `create_asset_directory`, no new directory is created: the directory at
@@ -353,7 +352,7 @@ class AssetsService:
             )
         )
         self._logger.debug("Added asset directory: {!r}", asset)
-        return asset
+        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
     async def delete_asset_by_asset_id(self, asset_id: str | uuid.UUID) -> None:
@@ -388,25 +387,28 @@ class AssetsService:
         self._logger.debug("Deleted asset: {}", str(asset_id))
 
     @log_and_propagate_error_on_service_method
-    def get_all_assets(self) -> list[RepositoryFile | RepositoryDirectory]:
+    def get_all_assets(self) -> list[Asset]:
         """Returns every asset currently tracked by the assets service.
 
         Returns:
-            A list of all asset resources, covering both file and directory assets.
-                Empty if no assets exist.
+            A list of all assets, covering both file and directory assets, each wrapping
+                its repository resource. Empty if no assets exist.
         """
         assets = self._repository_service.get_all_resources()
         self._logger.debug(
             "Retrieved all assets ({} asset(s) retrieved)",
             len(assets),
         )
-        return assets
+        return [
+            Asset(resource=asset, user_accounts_service=self._user_accounts_service)
+            for asset in assets
+        ]
 
     @log_and_propagate_error_on_service_method
     def get_asset_by_asset_id(
         self,
         asset_id: str | uuid.UUID,
-    ) -> RepositoryFile | RepositoryDirectory:
+    ) -> Asset:
         """Returns a single asset by its ID.
 
         Args:
@@ -423,4 +425,4 @@ class AssetsService:
             resource_id=asset_id
         )
         self._logger.debug("Retrieved asset: {!r}", asset)
-        return asset
+        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)

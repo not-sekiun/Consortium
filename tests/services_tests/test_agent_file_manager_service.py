@@ -78,38 +78,113 @@ def test_get_artifact_by_artifact_id_delegates(service):
     )
 
 
-def test_read_asset_raises_not_implemented(service):
-    svc, _, _ = service
-    with pytest.raises(NotImplementedError):
+def test_read_asset_by_asset_id_delegates_to_asset_read(service):
+    svc, assets, _ = service
+    asset_id = uuid.uuid4()
+    asset = MagicMock()
+    asset.is_directory = False
+    asset.read.return_value = b"asset content"
+    assets.get_asset_by_asset_id.return_value = asset
+
+    result = svc.read_asset_by_asset_id(asset_id=asset_id, binary=True, chunk_size=1024)
+
+    assert result == b"asset content"
+    assets.get_asset_by_asset_id.assert_called_once_with(asset_id=asset_id)
+    asset.read.assert_called_once_with(binary=True, encoding="utf-8", chunk_size=1024)
+
+
+def test_read_asset_by_asset_id_defaults_to_text_full_read(service):
+    svc, assets, _ = service
+    asset_id = uuid.uuid4()
+    asset = MagicMock()
+    asset.is_directory = False
+    asset.read.return_value = "asset content"
+    assets.get_asset_by_asset_id.return_value = asset
+
+    result = svc.read_asset_by_asset_id(asset_id=asset_id)
+
+    assert result == "asset content"
+    asset.read.assert_called_once_with(binary=False, encoding="utf-8", chunk_size=None)
+
+
+def test_read_asset_by_asset_id_raises_on_directory(service):
+    svc, assets, _ = service
+    asset = MagicMock()
+    asset.is_directory = True
+    assets.get_asset_by_asset_id.return_value = asset
+
+    with pytest.raises(IsADirectoryError):
         svc.read_asset_by_asset_id(asset_id="some_id")
 
+    asset.read.assert_not_called()
 
-async def test_write_artifact_creates_directory_then_raises(service, mock_agent):
+
+async def test_create_artifact_file_attributes_owning_agent(service, mock_agent):
     svc, _, artifacts = service
-    mock_dir = MagicMock()
-    artifacts.create_directory = AsyncMock(return_value=mock_dir)
+    expected = MagicMock()
+    artifacts.create_artifact_file = AsyncMock(return_value=expected)
 
-    with pytest.raises(NotImplementedError):
-        await svc.write_artifact(data=b"some bytes")
+    result = await svc.create_artifact_file(
+        content=b"bytes", name="report", description="a report"
+    )
 
-    artifacts.create_directory.assert_called_once_with(
-        name=str(mock_agent.agent_id),
-        parent_directory_id=None,
+    assert result == expected
+    artifacts.create_artifact_file.assert_awaited_once_with(
+        content=b"bytes",
+        name="report",
+        description="a report",
         agent_id=mock_agent.agent_id,
     )
-    assert svc._agent_artifacts_folder == mock_dir
 
 
-async def test_write_artifact_skips_create_on_second_call(service, mock_agent):
+async def test_add_artifact_file_attributes_owning_agent(service, mock_agent):
     svc, _, artifacts = service
-    artifacts.create_directory = AsyncMock(return_value=MagicMock())
+    expected = MagicMock()
+    artifacts.add_artifact_file = AsyncMock(return_value=expected)
 
-    # First call: directory is created, then NotImplementedError
-    with pytest.raises(NotImplementedError):
-        await svc.write_artifact(data=b"first")
+    result = await svc.add_artifact_file(path="/tmp/out.bin", copy=True)
 
-    # Second call: directory already set, create_directory NOT called again
-    with pytest.raises(NotImplementedError):
-        await svc.write_artifact(data=b"second")
+    assert result == expected
+    artifacts.add_artifact_file.assert_awaited_once_with(
+        path="/tmp/out.bin",
+        name=None,
+        description="",
+        copy=True,
+        agent_id=mock_agent.agent_id,
+    )
 
-    artifacts.create_directory.assert_called_once()
+
+async def test_create_artifact_directory_attributes_owning_agent(service, mock_agent):
+    svc, _, artifacts = service
+    expected = MagicMock()
+    artifacts.create_artifact_directory = AsyncMock(return_value=expected)
+
+    result = await svc.create_artifact_directory(
+        content=b"archive", archive_file_format="zip", name="bundle"
+    )
+
+    assert result == expected
+    artifacts.create_artifact_directory.assert_awaited_once_with(
+        content=b"archive",
+        archive_file_format="zip",
+        name="bundle",
+        description="",
+        agent_id=mock_agent.agent_id,
+    )
+
+
+async def test_add_artifact_directory_attributes_owning_agent(service, mock_agent):
+    svc, _, artifacts = service
+    expected = MagicMock()
+    artifacts.add_artifact_directory = AsyncMock(return_value=expected)
+
+    result = await svc.add_artifact_directory(path="/tmp/outdir")
+
+    assert result == expected
+    artifacts.add_artifact_directory.assert_awaited_once_with(
+        path="/tmp/outdir",
+        name=None,
+        description="",
+        copy=False,
+        agent_id=mock_agent.agent_id,
+    )

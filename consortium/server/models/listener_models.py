@@ -4,16 +4,13 @@ from pydantic import BaseModel
 
 from consortium.server.models.c2_type_models import ListenerTypeModel
 from consortium.server.models.component_models import StatusModel
+from consortium.server.models.listener_template_models import (
+    ListenerTemplateReferenceModel,
+)
 
 
 class ConnectedAgentReferenceModel(BaseModel):
     agent_id: str
-    name: str
-
-
-class CreatingListenerTemplateReferenceModel(BaseModel):
-    listener_template_id: str
-    label: str
     name: str
 
 
@@ -27,4 +24,4 @@ class ListenerModel(BaseModel):
     status: StatusModel
     datetime_created: str
     connected_agents: list[ConnectedAgentReferenceModel]
-    creating_listener_template: CreatingListenerTemplateReferenceModel
+    creating_listener_template: ListenerTemplateReferenceModel

@@ -10,10 +10,7 @@ from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
 
-# An asset/artifact is "just" a repository resource with metadata, so the resource
-# fields are shared across the assets, artifacts and payloads response schemas. Resources
-# are identified by `resource_id` and carry their type specific metadata in `data`.
-REPOSITORY_RESOURCE_JSON_SCHEMA = {
+ASSET_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "resource_id": {"type": "string"},
@@ -26,7 +23,28 @@ REPOSITORY_RESOURCE_JSON_SCHEMA = {
         "datetime_modified": {"type": "string"},
         "md5_checksum": {"type": ["string", "null"]},
         "is_directory": {"type": "boolean"},
-        "data": {"type": "object"},
+        "data": {
+            "type": "object",
+            "properties": {
+                "user_account": {
+                    "type": "object",
+                    "properties": {
+                        "username": {"type": "string"},
+                        "role": {"type": "string"},
+                    },
+                    "required": ["username", "role"],
+                },
+                "resolved_user_account": {
+                    "type": ["object", "null"],
+                    "properties": {
+                        "user_account_id": {"type": "string"},
+                        "username": {"type": "string"},
+                        "role": {"type": "string"},
+                    },
+                },
+            },
+            "required": ["user_account", "resolved_user_account"],
+        },
     },
     "required": [
         "resource_id",
@@ -44,7 +62,7 @@ REPOSITORY_RESOURCE_JSON_SCHEMA = {
 }
 ALL_RESOURCES_JSON_SCHEMA = {
     "type": "array",
-    "items": REPOSITORY_RESOURCE_JSON_SCHEMA,
+    "items": ASSET_JSON_SCHEMA,
 }
 RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA = {
     "type": "object",
@@ -222,7 +240,7 @@ async def test_upload_file_asset_returns_200(admin_client):
     )
     validate_response(
         test_response=response,
-        expected_json_schema=REPOSITORY_RESOURCE_JSON_SCHEMA,
+        expected_json_schema=ASSET_JSON_SCHEMA,
         expected_status_code=200,
     )
     asset_id = response.json()["resource_id"]

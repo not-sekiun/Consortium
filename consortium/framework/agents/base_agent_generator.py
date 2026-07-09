@@ -665,13 +665,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
             "compatible_listener_types": list(self.compatible_listener_types),
             # `creating_agent_template` is assigned to the agent generator class by the
             # agent profile loader at load time.
-            "creating_agent_template": {
-                "agent_template_id": str(
-                    self.creating_agent_template.agent_template_id,
-                ),
-                "label": self.creating_agent_template.label,
-                "name": self.creating_agent_template.name,
-            },
+            "creating_agent_template": self.creating_agent_template.to_json_reference(),
         }
 
     def to_json_reference(self) -> dict[str, str]:

@@ -250,12 +250,12 @@ class Server:
         await server_singletons.listener_profiles_service.load_framework_listener_profiles()
         await server_singletons.agent_profiles_service.load_framework_agent_profiles()
         server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles()
-        # Load repository metadata before loading payloads metadata because the payloads
-        # metadata depends on repository information.
+        # Payloads, assets and artifacts repository services can load repository metadata
+        # in any order as they do not depend on any other service. Payloads are
+        # reconstructed lazily from their repository resources (each resource's `data`
+        # field carries the payload metadata), so only the repository metadata needs
+        # loading here.
         server_singletons.payloads_service.load_repository_metadata()
-        server_singletons.payloads_service.load_payloads_metadata()
-        # assets and artifacts repository services can load repository metadata in any
-        # order as they do not depend on any other service.
         server_singletons.assets_service.load_repository_metadata()
         server_singletons.artifacts_service.load_repository_metadata()
         await server_singletons.event_hooks_service.load_framework_event_hooks()

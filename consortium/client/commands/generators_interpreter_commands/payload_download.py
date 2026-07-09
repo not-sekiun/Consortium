@@ -86,7 +86,7 @@ class PayloadDownloadCommand(BaseConnectedCommand):
 
             print_info(
                 f"Downloading payload {'directory' if payload['is_directory'] else 'file'} "
-                f"'{payload['name']}' ({payload['payload_id']}) to '{output_file_path}'..."
+                f"'{payload['name']}' ({payload['resource_id']}) to '{output_file_path}'..."
             )
             with Progress() as progress:
                 downloading_task = progress.add_task(

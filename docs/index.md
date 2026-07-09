@@ -38,7 +38,7 @@ listeners and agents.
 
     - [Install Consortium](getting-started/installation.md) and get the framework
       [up and running](getting-started/quick-start.md) as quickly as possible.
-    - Explore the high level usage of the framework through the 
+    - Explore the high level usage of the framework through the
       [Consortium client](client/client-overview.md).
 
 -   __Usage__

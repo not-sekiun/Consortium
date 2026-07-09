@@ -8,12 +8,13 @@ from consortium.client.models.interpreter_signal_models import (
     InterpreterSignal,
 )
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
+from consortium.client.utils.agent_command_utils import display_agent_info
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
     format_size_bytes_as_human_readable_str,
 )
-from consortium.client.utils.printer_utils import console
+from consortium.client.utils.printer_utils import console, print_warning
 
 
 class ArtifactInfoCommand(BaseConnectedCommand):
@@ -23,6 +24,7 @@ class ArtifactInfoCommand(BaseConnectedCommand):
         """
         Examples:
           ar-info 123e4567-e89b-12d3-a456-42661417400
+          ar-info 123e4567-e89b-12d3-a456-42661417400 --verbose  # Display agent information
         """,
     )
     group = "Artifact Management Commands"
@@ -32,6 +34,12 @@ class ArtifactInfoCommand(BaseConnectedCommand):
             "artifact_id",
             help="Resource ID of the artifact to display information for.",
             nargs=1,
+        )
+        parser.add_argument(
+            "-v",
+            "--verbose",
+            help="Display verbose information about the agent that uploaded the artifact.",
+            action="store_true",
         )
 
     async def run(
@@ -49,8 +57,8 @@ class ArtifactInfoCommand(BaseConnectedCommand):
             # resource fields describe the file/directory on disk while the `data` field
             # holds the artifact specific metadata (for example the producing agent).
             size = artifact["size"]
-            metadata = artifact["data"] or {}
-            agent = metadata.get("agent")
+            agent = artifact["data"]["agent"]
+            resolved_agent = artifact["data"]["resolved_agent"]
 
             table = Table(title="Artifact Information", highlight=True)
             table.add_column("Information")
@@ -83,9 +91,25 @@ class ArtifactInfoCommand(BaseConnectedCommand):
             table.add_row("Type", "DIRECTORY" if artifact["is_directory"] else "FILE")
             table.add_row(
                 "Produced By Agent",
-                f"{agent['name']} ({agent['agent_id']})" if agent else "N/A",
+                f"{agent['name']} ({agent['agent_id']}) of type '{agent['agent_type']}'"
+                if agent
+                else "N/A",
             )
             console.print(table, "")
+
+            if parsed_args.verbose:
+                # The producing agent reference stored on an artifact is an immutable
+                # point-in-time tag; the agent it names may since have been deleted.
+                # `resolved_agent` is the live resolution of that reference (or None when
+                # it can no longer be resolved), so guard for its absence and inform the
+                # user rather than rendering an empty table.
+                if resolved_agent is not None:
+                    display_agent_info(agent=resolved_agent, verbose=False)
+                else:
+                    print_warning(
+                        "The agent that produced this artifact no longer exists; "
+                        "its detailed information cannot be displayed."
+                    )
         except SystemExit:
             pass
 

@@ -5,12 +5,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
+from consortium.framework.event_hooks import EventType
 from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplateLabelNotFoundError,
 )
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
     PayloadNotFoundError,
 )
+from consortium.server.objects.payload_objects import Payload
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.payloads_service import PayloadsService
@@ -54,16 +56,39 @@ def service(
     )
 
 
-def _make_mock_payload(payload_id: str | None = None) -> MagicMock:
-    # Build a mock Payload with the minimum attributes accessed by PayloadsService
-    p = MagicMock()
-    p.payload_id = uuid.UUID(payload_id) if payload_id else uuid.uuid4()
-    p.agent_template = MagicMock()
-    p.agent_template.label = "test.label"
-    p.build_parameters = {}
-    p.payload_data = {}
-    p.to_json.return_value = {"payload_id": str(p.payload_id)}
-    return p
+def _create_payload_resource(
+    repo_service: RepositoryService,
+    *,
+    label: str = "test.label",
+    name: str = "Test Template",
+    build_parameters: dict | None = None,
+    payload_data: dict | None = None,
+):
+    # A payload is "just" a repository resource whose `data` field carries the payload
+    # metadata (an immutable point-in-time reference to the generating agent template,
+    # the build parameters and arbitrary payload data). This mirrors what the payloads
+    # service persists via `_build_payload_resource_data`.
+    return repo_service.create_file(
+        content="payload",
+        name="p.bin",
+        data={
+            "agent_template": {"label": label, "name": name},
+            "build_parameters": build_parameters
+            if build_parameters is not None
+            else {},
+            "payload_data": payload_data if payload_data is not None else {},
+        },
+    )
+
+
+def _make_agent_template(
+    label: str = "test.label", name: str = "Test Template"
+) -> MagicMock:
+    agent_template = MagicMock(spec=BaseAgentTemplate)
+    agent_template.label = label
+    agent_template.name = name
+    agent_template.agent_type = MagicMock()
+    return agent_template
 
 
 # ---------------------------------------------------------------------------
@@ -102,85 +127,6 @@ def test_save_repository_metadata_delegates(
 
 
 # ---------------------------------------------------------------------------
-# load_payloads_metadata
-# ---------------------------------------------------------------------------
-
-
-def test_load_payloads_metadata_empty_repository_leaves_payloads_empty(
-    service: PayloadsService,
-):
-    # No repository resources means no payloads to reconstruct and no separate
-    # payloads metadata file is created.
-    service.load_repository_metadata()
-    service.load_payloads_metadata()
-    assert service.get_all_payloads() == []
-    assert not (service.repository_directory_path / ".payloads.json").exists()
-
-
-def test_load_payloads_metadata_rebuilds_payloads_from_resource_data(
-    service: PayloadsService,
-    repo_service: RepositoryService,
-    agent_templates_service: MagicMock,
-):
-    # A payload's metadata is persisted in the `data` field of its repository resource
-    with patch("asyncio.create_task"):
-        resource = repo_service.create_file(
-            content="payload",
-            name="p.bin",
-            data={
-                "agent_template": "test.label",
-                "build_parameters": {"foo": "bar"},
-                "payload_data": {"baz": 1},
-            },
-        )
-    payload_id = str(resource.resource_id)
-
-    agent_template = MagicMock(spec=BaseAgentTemplate)
-    agent_template.label = "test.label"
-    agent_template.agent_type = MagicMock()
-    agent_templates_service.get_agent_template_by_label.return_value = agent_template
-
-    service.load_payloads_metadata()
-
-    payload = service.get_payload_by_payload_id(payload_id=payload_id)
-    assert payload.build_parameters == {"foo": "bar"}
-    assert payload.payload_data == {"baz": 1}
-    assert payload.agent_template is agent_template
-
-
-def test_load_payloads_metadata_skips_resource_missing_payload_fields(
-    service: PayloadsService, repo_service: RepositoryService
-):
-    # A resource whose `data` field lacks the expected payload keys is skipped
-    with patch("asyncio.create_task"):
-        repo_service.create_file(content="not a payload", name="x.bin")
-    service.load_payloads_metadata()
-    assert service.get_all_payloads() == []
-
-
-def test_load_payloads_metadata_skips_resource_with_missing_agent_template(
-    service: PayloadsService,
-    repo_service: RepositoryService,
-    agent_templates_service: MagicMock,
-):
-    with patch("asyncio.create_task"):
-        repo_service.create_file(
-            content="payload",
-            name="p.bin",
-            data={
-                "agent_template": "missing.label",
-                "build_parameters": {},
-                "payload_data": {},
-            },
-        )
-    agent_templates_service.get_agent_template_by_label.side_effect = (
-        AgentTemplateLabelNotFoundError(label="missing.label")
-    )
-    service.load_payloads_metadata()
-    assert service.get_all_payloads() == []
-
-
-# ---------------------------------------------------------------------------
 # reserve_payload_id
 # ---------------------------------------------------------------------------
 
@@ -199,15 +145,78 @@ def test_reserve_payload_id_can_be_used_in_create(service: PayloadsService):
 
 
 # ---------------------------------------------------------------------------
+# create_payload_file
+# ---------------------------------------------------------------------------
+
+
+def test_create_payload_file_persists_reference_and_metadata(
+    service: PayloadsService, agent_templates_service: MagicMock
+):
+    agent_template = _make_agent_template()
+    agent_templates_service.get_agent_template_by_agent_template_id.return_value = (
+        agent_template
+    )
+
+    with patch("asyncio.create_task"):
+        payload = service.create_payload_file(
+            agent_template_id="ignored-by-mock",
+            build_parameters={"foo": "bar"},
+            content="payload-bytes",
+            payload_data={"baz": 1},
+        )
+
+    # The generating agent template is stored as an immutable point-in-time reference
+    # (label and name only), not its ID.
+    assert payload.data["agent_template"] == {
+        "label": "test.label",
+        "name": "Test Template",
+    }
+    assert payload.data["build_parameters"] == {"foo": "bar"}
+    assert payload.data["payload_data"] == {"baz": 1}
+
+    # The payload is derived from the repository, so it is immediately retrievable.
+    assert len(service.get_all_payloads()) == 1
+    fetched = service.get_payload_by_payload_id(payload_id=str(payload.resource_id))
+    assert fetched.resource_id == payload.resource_id
+
+
+def test_create_payload_file_emits_payload_created_event(
+    service: PayloadsService,
+    events_service: MagicMock,
+    agent_templates_service: MagicMock,
+):
+    agent_templates_service.get_agent_template_by_agent_template_id.return_value = (
+        _make_agent_template()
+    )
+    with patch("asyncio.create_task"):
+        service.create_payload_file(
+            agent_template_id="ignored-by-mock",
+            build_parameters={},
+            content="payload-bytes",
+        )
+    events_service.trigger_event.assert_called_once()
+    assert (
+        events_service.trigger_event.call_args.kwargs["event_type"]
+        == EventType.PAYLOAD_CREATED
+    )
+
+
+# ---------------------------------------------------------------------------
 # get_payload_by_payload_id
 # ---------------------------------------------------------------------------
 
 
-def test_get_payload_by_payload_id_success(service: PayloadsService):
-    p = _make_mock_payload()
-    service._payloads[str(p.payload_id)] = p
-    found = service.get_payload_by_payload_id(payload_id=str(p.payload_id))
-    assert found is p
+def test_get_payload_by_payload_id_success(
+    service: PayloadsService, repo_service: RepositoryService
+):
+    resource = _create_payload_resource(
+        repo_service, build_parameters={"foo": "bar"}, payload_data={"baz": 1}
+    )
+    payload = service.get_payload_by_payload_id(payload_id=str(resource.resource_id))
+    assert isinstance(payload, Payload)
+    assert payload.resource_id == resource.resource_id
+    assert payload.data["build_parameters"] == {"foo": "bar"}
+    assert payload.data["payload_data"] == {"baz": 1}
 
 
 def test_get_payload_by_payload_id_not_found_raises(service: PayloadsService):
@@ -224,12 +233,51 @@ def test_get_all_payloads_empty(service: PayloadsService):
     assert service.get_all_payloads() == []
 
 
-def test_get_all_payloads_returns_all(service: PayloadsService):
-    p1, p2 = _make_mock_payload(), _make_mock_payload()
-    service._payloads[str(p1.payload_id)] = p1
-    service._payloads[str(p2.payload_id)] = p2
+def test_get_all_payloads_returns_all(
+    service: PayloadsService, repo_service: RepositoryService
+):
+    r1 = _create_payload_resource(repo_service)
+    r2 = _create_payload_resource(repo_service)
     payloads = service.get_all_payloads()
     assert len(payloads) == 2
+    assert {str(p.resource_id) for p in payloads} == {
+        str(r1.resource_id),
+        str(r2.resource_id),
+    }
+
+
+# ---------------------------------------------------------------------------
+# resolved_agent_template (Payload wrapper resolution)
+# ---------------------------------------------------------------------------
+
+
+def test_payload_resolves_live_agent_template(
+    service: PayloadsService,
+    repo_service: RepositoryService,
+    agent_templates_service: MagicMock,
+):
+    _create_payload_resource(repo_service, label="test.label")
+    sentinel_template = MagicMock()
+    agent_templates_service.get_agent_template_by_label.return_value = sentinel_template
+
+    payload = service.get_all_payloads()[0]
+    assert payload.resolved_agent_template is sentinel_template
+    agent_templates_service.get_agent_template_by_label.assert_called_once_with(
+        label="test.label"
+    )
+
+
+def test_payload_resolution_returns_none_when_agent_template_deleted(
+    service: PayloadsService,
+    repo_service: RepositoryService,
+    agent_templates_service: MagicMock,
+):
+    _create_payload_resource(repo_service, label="missing.label")
+    agent_templates_service.get_agent_template_by_label.side_effect = (
+        AgentTemplateLabelNotFoundError(label="missing.label")
+    )
+    payload = service.get_all_payloads()[0]
+    assert payload.resolved_agent_template is None
 
 
 # ---------------------------------------------------------------------------
@@ -237,57 +285,49 @@ def test_get_all_payloads_returns_all(service: PayloadsService):
 # ---------------------------------------------------------------------------
 
 
-def test_delete_payload_both_exist(
-    service: PayloadsService, repo_service: RepositoryService
-):
-    # Create a real repository file so resource_exists check passes
-    with patch("asyncio.create_task"):
-        resource = repo_service.create_file(content="payload", name="p.bin")
-    payload_id = str(resource.resource_id)
-    p = _make_mock_payload(payload_id=payload_id)
-    service._payloads[payload_id] = p
-
-    with patch("asyncio.create_task"):
-        service.delete_payload_by_payload_id(payload_id=payload_id)
-
-    assert payload_id not in service._payloads
-    assert service.get_all_payloads() == []
-
-
-def test_delete_payload_metadata_only_orphaned(
+def test_delete_payload_removes_resource_and_emits_event(
     service: PayloadsService,
+    repo_service: RepositoryService,
+    events_service: MagicMock,
+    agent_templates_service: MagicMock,
 ):
-    # Payload metadata exists but no repository resource; should clean up metadata
-    p = _make_mock_payload()
-    payload_id = str(p.payload_id)
-    service._payloads[payload_id] = p
-    # Repository service has no resource with that ID (it will raise RepositoryResourceNotFoundError)
-    # delete_payload_by_payload_id handles this gracefully
-    with patch("asyncio.create_task"):
-        service.delete_payload_by_payload_id(payload_id=payload_id)
-    assert payload_id not in service._payloads
-
-
-def test_delete_payload_resource_only_orphaned(
-    service: PayloadsService, repo_service: RepositoryService
-):
-    # A repository resource exists but no payload metadata; should clean up resource
-    with patch("asyncio.create_task"):
-        resource = repo_service.create_file(content="orphan", name="orphan.bin")
-    payload_id = str(resource.resource_id)
-    # No entry in _payloads
-    with patch("asyncio.create_task"):
-        service.delete_payload_by_payload_id(payload_id=payload_id)
-    # Resource should be gone
-    from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
-        RepositoryResourceNotFoundError,
+    agent_templates_service.get_agent_template_by_label.side_effect = (
+        AgentTemplateLabelNotFoundError(label="test.label")
     )
+    resource = _create_payload_resource(repo_service)
+    payload_id = str(resource.resource_id)
 
-    with pytest.raises(RepositoryResourceNotFoundError):
-        repo_service.get_resource_by_resource_id(resource_id=payload_id)
+    with patch("asyncio.create_task"):
+        service.delete_payload_by_payload_id(payload_id=payload_id)
+
+    assert service.get_all_payloads() == []
+    with pytest.raises(PayloadNotFoundError):
+        service.get_payload_by_payload_id(payload_id=payload_id)
+    events_service.trigger_event.assert_called_once()
+    assert (
+        events_service.trigger_event.call_args.kwargs["event_type"]
+        == EventType.PAYLOAD_DELETED
+    )
 
 
 def test_delete_payload_not_found_raises(service: PayloadsService):
     with pytest.raises(PayloadNotFoundError):
         with patch("asyncio.create_task"):
             service.delete_payload_by_payload_id(payload_id=str(uuid.uuid4()))
+
+
+def test_delete_payload_not_found_leaves_repository_untouched(
+    service: PayloadsService, repo_service: RepositoryService
+):
+    # Deleting an unknown payload ID must not affect existing resources.
+    resource = _create_payload_resource(repo_service)
+    with pytest.raises(PayloadNotFoundError):
+        with patch("asyncio.create_task"):
+            service.delete_payload_by_payload_id(payload_id=str(uuid.uuid4()))
+    # The unrelated resource still exists.
+    assert (
+        repo_service.get_resource_by_resource_id(
+            resource_id=str(resource.resource_id)
+        ).resource_id
+        == resource.resource_id
+    )

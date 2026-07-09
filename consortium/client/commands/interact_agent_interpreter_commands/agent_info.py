@@ -51,11 +51,13 @@ class AgentInfoCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await display_agent_info(
-                rest_api=rest_api,
+            agent = await rest_api.get_agent_by_agent_id(
                 agent_id=parsed_args.agent_id
                 if parsed_args.agent_id is not None
                 else context.interpreter_context.agent["agent_id"],
+            )
+            display_agent_info(
+                agent=agent,
                 verbose=parsed_args.verbose,
             )
         except SystemExit:

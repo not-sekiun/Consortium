@@ -41,7 +41,7 @@ class _NoLifespanTestClient(TestClient):
     # lifespan here would start the whole server a second time and tear it down on the
     # wrong loop. Individual request calls do not need the context to be entered; they use
     # `self.portal` (set below) to reach the already-running server.
-    def __enter__(self) -> "_NoLifespanTestClient":
+    def __enter__(self) -> _NoLifespanTestClient:
         return self
 
     def __exit__(self, *args: Any) -> None:

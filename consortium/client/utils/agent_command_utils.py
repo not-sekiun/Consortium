@@ -1,3 +1,5 @@
+from typing import Any
+
 from rich.table import Table
 
 from consortium.client.client_rest_api import RestAPI
@@ -45,14 +47,14 @@ async def rename_agent(
     print_success(f"Renamed agent '{agent['name']}' ({agent['agent_id']}) to '{name}'")
 
 
-async def display_agent_info(
-    rest_api: RestAPI,
-    agent_id: str,
+def display_agent_info(
+    agent: dict[str, Any],
     verbose: bool,
 ) -> None:
-    agent = await rest_api.get_agent_by_agent_id(
-        agent_id=agent_id,
-    )
+    # The agent data is passed in already resolved rather than fetched here: callers
+    # source it differently (a direct agent lookup for the agent info command, the
+    # resolved producing-agent embedded in an artifact for the artifact info command),
+    # so this function is purely a renderer over an agent representation.
     agent_info_table = Table(title="Agent Information", highlight=True)
     agent_info_table.add_column("Information")
     agent_info_table.add_column("Data")

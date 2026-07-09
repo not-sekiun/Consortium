@@ -24,7 +24,7 @@ from consortium.server.server_dependencies import is_user_logged_in
 def register_server_exception_handlers(app: FastAPI) -> None:
     # This exception handler handles the `HTTPExceptions` that the FastAPI framework
     # raises internally on its own to ensure that they conform to our specifications. To
-    # handle `HTTPExceptions` raised by FastAPI we need to use the Starlette 
+    # handle `HTTPExceptions` raised by FastAPI we need to use the Starlette
     # `HTTPException` class instead of the FastAPI `HTTPException` class
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_exception_handler(

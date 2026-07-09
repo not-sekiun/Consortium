@@ -61,7 +61,7 @@ class PayloadInfoCommand(BaseConnectedCommand):
             info_table = Table(title="Payload Information", highlight=True)
             info_table.add_column("Information")
             info_table.add_column("Data")
-            info_table.add_row("Payload ID", str(payload["payload_id"]))
+            info_table.add_row("Payload ID", str(payload["resource_id"]))
             info_table.add_row("Name", str(payload["name"]))
             info_table.add_row("Description", str(payload["description"]))
             size = payload["size"]
@@ -88,34 +88,61 @@ class PayloadInfoCommand(BaseConnectedCommand):
             info_table.add_row(
                 "Type", "DIRECTORY" if payload["is_directory"] else "FILE"
             )
+            # The payload metadata lives in the `data` field. `agent_template` is the
+            # immutable point-in-time reference persisted at creation (only the template's
+            # label and name); `resolved_agent_template` is its live, read-time resolution
+            # (the full agent template) and is `None` when the template can no longer be
+            # resolved (for example it was deleted after the payload was created).
+            data = payload["data"]
             info_table.add_row(
                 "Build Parameters",
                 format_dict_as_multi_line_bulleted_key_value_string(
-                    input_dict=payload["build_parameters"]
+                    input_dict=data["build_parameters"]
                 ),
             )
             console.print(info_table, "")
 
-            agent_type = payload["agent_type"]
-            agent_template = payload["agent_template"]
+            agent_template_reference = data["agent_template"]
+            resolved_agent_template = data["resolved_agent_template"]
 
-            if not parsed_args.verbose:
+            if resolved_agent_template is None:
+                # The agent template can no longer be resolved, so only the persisted
+                # reference (label and name as of creation) is available. Full template
+                # details (including in verbose mode) cannot be shown.
+                unresolved_table = Table(
+                    title="Agent Template (Summary)", highlight=True
+                )
+                unresolved_table.add_column("Information")
+                unresolved_table.add_column("Data")
+                unresolved_table.add_row(
+                    "Template Label", agent_template_reference["label"]
+                )
+                unresolved_table.add_row(
+                    "Template Name", agent_template_reference["name"]
+                )
+                unresolved_table.add_row("Status", "Agent template no longer exists")
+                console.print(unresolved_table, "")
+            elif not parsed_args.verbose:
                 # Summary table showing agent type and key template identifiers
                 summary_table = Table(title="Agent Template (Summary)", highlight=True)
                 summary_table.add_column("Information")
                 summary_table.add_column("Data")
-                summary_table.add_row("Agent Type", agent_type["name"])
                 summary_table.add_row(
-                    "Template ID", agent_template["agent_template_id"]
+                    "Agent Type", resolved_agent_template["agent_type"]["name"]
                 )
-                summary_table.add_row("Template Label", agent_template["label"])
-                summary_table.add_row("Template Name", agent_template["name"])
+                summary_table.add_row(
+                    "Template ID", resolved_agent_template["agent_template_id"]
+                )
+                summary_table.add_row(
+                    "Template Label", resolved_agent_template["label"]
+                )
+                summary_table.add_row("Template Name", resolved_agent_template["name"])
                 console.print(summary_table, "")
             else:
-                display_agent_template_info(agent_template=agent_template)
+                display_agent_template_info(agent_template=resolved_agent_template)
 
                 # Options in a dedicated table to avoid cluttering the template table
-                options = agent_template["options"]
+                options = resolved_agent_template["options"]
                 if options:
                     options_table = Table(
                         title="Agent Template Options", highlight=True

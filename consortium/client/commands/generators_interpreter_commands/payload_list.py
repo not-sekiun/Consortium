@@ -42,10 +42,23 @@ class PayloadListCommand(BaseConnectedCommand):
             table.add_column("Size")
             for payload in payloads:
                 size = payload["size"]
+                # A payload is "just" a repository resource with metadata: the
+                # generating agent template reference, build parameters and payload
+                # data live in the `data` field. The stored reference records only the
+                # template's label and name; the live `resolved_agent_template` (when
+                # present) supplies the template's current details (including its agent
+                # type), while its absence means the agent template has since been
+                # deleted.
+                resolved_agent_template = payload["data"]["resolved_agent_template"]
+                agent_type = (
+                    resolved_agent_template["agent_type"]["name"]
+                    if resolved_agent_template is not None
+                    else "N/A"
+                )
                 table.add_row(
-                    payload["payload_id"],
+                    payload["resource_id"],
                     payload["name"],
-                    payload["agent_type"]["name"],
+                    agent_type,
                     "DIRECTORY" if payload["is_directory"] else "FILE",
                     format_size_bytes_as_human_readable_str(size_bytes=size)
                     if size is not None

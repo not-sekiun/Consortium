@@ -23,6 +23,15 @@ COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS = [
     command for command in CORE_COMMANDS if command.name != "agents"
 ] + AGENTS_INTERPRETER_COMMANDS
 
+# Commands that take an asset resource ID as their first positional argument, and so
+# autocomplete against the set of known asset IDs. Kept as a single source of truth so
+# the initial autocompleter population and the asset event handlers stay in sync.
+ASSET_ID_COMPLETION_COMMANDS = ["as-dl", "as-info", "as-rm"]
+
+# Commands that take an artifact resource ID as their first positional argument, and so
+# autocomplete against the set of known artifact IDs.
+ARTIFACT_ID_COMPLETION_COMMANDS = ["ar-dl", "ar-info", "ar-rm"]
+
 
 class AgentsInterpreter(BaseConnectedInterpreter):
     def __init__(
@@ -46,6 +55,7 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         all_agents: list[dict[str, Any]],
     ) -> None:
         all_assets = await self.client_session.rest_api.get_all_assets()
+        all_artifacts = await self.client_session.rest_api.get_all_artifacts()
 
         completions_dict = self.completer.get_completions_dict()
 
@@ -65,8 +75,16 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         # Register commands that take the asset resource ID as the first positional
         # argument to autocomplete with.
         assets_completion = {asset["resource_id"]: None for asset in all_assets}
-        for command in ["as-dl", "as-info"]:
+        for command in ASSET_ID_COMPLETION_COMMANDS:
             completions_dict[command] = assets_completion
+
+        # Register commands that take the artifact resource ID as the first positional
+        # argument to autocomplete with.
+        artifacts_completion = {
+            artifact["resource_id"]: None for artifact in all_artifacts
+        }
+        for command in ARTIFACT_ID_COMPLETION_COMMANDS:
+            completions_dict[command] = artifacts_completion
 
         # Register the help command to autocomplete with all available commands. This
         # includes all the newly added agent capability commands that are dynamically
@@ -99,6 +117,48 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             completions_dict[command][agent["agent_id"]] = None
         self.completer.set_completions_dict(completions_dict)
 
+    async def _asset_created_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        # The ASSET_CREATED event carries the created asset's JSON as its data payload,
+        # so its resource ID can be added to every asset ID completion set directly.
+        asset = event["data"]
+        completions_dict = self.completer.get_completions_dict()
+        for command in ASSET_ID_COMPLETION_COMMANDS:
+            completions_dict[command][asset["resource_id"]] = None
+        self.completer.set_completions_dict(completions_dict)
+
+    async def _asset_deleted_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        asset = event["data"]
+        completions_dict = self.completer.get_completions_dict()
+        for command in ASSET_ID_COMPLETION_COMMANDS:
+            completions_dict[command].pop(asset["resource_id"], None)
+        self.completer.set_completions_dict(completions_dict)
+
+    async def _artifact_created_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        artifact = event["data"]
+        completions_dict = self.completer.get_completions_dict()
+        for command in ARTIFACT_ID_COMPLETION_COMMANDS:
+            completions_dict[command][artifact["resource_id"]] = None
+        self.completer.set_completions_dict(completions_dict)
+
+    async def _artifact_deleted_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        artifact = event["data"]
+        completions_dict = self.completer.get_completions_dict()
+        for command in ARTIFACT_ID_COMPLETION_COMMANDS:
+            completions_dict[command].pop(artifact["resource_id"], None)
+        self.completer.set_completions_dict(completions_dict)
+
     async def _setup_event_handlers(self) -> None:
         await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_REGISTERED",
@@ -107,6 +167,22 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.subscribe_to_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
+        )
+        await self.client_session.websockets_api.subscribe_to_event(
+            event_type="ASSET_CREATED",
+            event_handler=self._asset_created_event_handler,
+        )
+        await self.client_session.websockets_api.subscribe_to_event(
+            event_type="ASSET_DELETED",
+            event_handler=self._asset_deleted_event_handler,
+        )
+        await self.client_session.websockets_api.subscribe_to_event(
+            event_type="ARTIFACT_CREATED",
+            event_handler=self._artifact_created_event_handler,
+        )
+        await self.client_session.websockets_api.subscribe_to_event(
+            event_type="ARTIFACT_DELETED",
+            event_handler=self._artifact_deleted_event_handler,
         )
         await self.client_session.websockets_api.start()
 
@@ -124,6 +200,22 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
+        )
+        await self.client_session.websockets_api.unsubscribe_from_event(
+            event_type="ASSET_CREATED",
+            event_handler=self._asset_created_event_handler,
+        )
+        await self.client_session.websockets_api.unsubscribe_from_event(
+            event_type="ASSET_DELETED",
+            event_handler=self._asset_deleted_event_handler,
+        )
+        await self.client_session.websockets_api.unsubscribe_from_event(
+            event_type="ARTIFACT_CREATED",
+            event_handler=self._artifact_created_event_handler,
+        )
+        await self.client_session.websockets_api.unsubscribe_from_event(
+            event_type="ARTIFACT_DELETED",
+            event_handler=self._artifact_deleted_event_handler,
         )
 
     async def on_enter(self) -> None:

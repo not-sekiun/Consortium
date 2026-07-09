@@ -1,7 +1,5 @@
 from typing import Any
 
-from pydantic import BaseModel, create_model
-
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
     BaseAPIError,
 )

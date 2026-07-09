@@ -13,6 +13,19 @@ class UserAccountModel(BaseModel):
         return f"'{self.username}' ({self.user_account_id})"
 
 
-class UserAccountReferenceModel(BaseModel):
+class LiveUserAccountReferenceModel(BaseModel):
     user_account_id: UUID4
     username: str
+    role: str
+
+
+# Used by assets to store persistent references on disk to the user account that
+# uploaded them. Omits `user_account_id` because that can vary on restart (user accounts
+# currently live in memory, so every restart reissues IDs). `username` is the persistent
+# identifier for a user account regardless of its ID, and `role` records the account's
+# role as of the moment the asset was uploaded.
+# TODO: Patch client commands to display the resolved live user account ID when present,
+#  else mention that the account no longer exists when it cannot be resolved.
+class PersistentUserAccountReferenceModel(BaseModel):
+    username: str
+    role: str

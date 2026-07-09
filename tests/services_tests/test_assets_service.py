@@ -154,6 +154,7 @@ async def test_create_file_with_user_account_id_stores_reference(
     user_accounts_service.get_user_account_by_user_account_id.return_value = MagicMock(
         user_account_id=user_account_id,
         username="uploader",
+        role="admin",
     )
     with patch("asyncio.create_task"):
         asset = await service.create_asset_file(
@@ -163,8 +164,8 @@ async def test_create_file_with_user_account_id_stores_reference(
         )
     assert asset.data == {
         "user_account": {
-            "user_account_id": str(user_account_id),
             "username": "uploader",
+            "role": "admin",
         },
     }
     user_accounts_service.get_user_account_by_user_account_id.assert_called_once_with(
