@@ -27,7 +27,7 @@ _rest_api_logger = logger.bind(
 _users_service = server_singletons.users_service
 
 
-# this middleware checks if the server is in the process of shutting down and if so
+# This middleware checks if the server is in the process of shutting down and if so
 # returns an error response with a 503 Service Unavailable status code notifying the
 # requester that the server is no longer willing to process any new requests
 async def check_if_server_is_shutting_down(
@@ -42,15 +42,13 @@ async def check_if_server_is_shutting_down(
     return await call_next(request)
 
 
-# this middleware checks if the request is authenticated with a valid JSON Web Token. If
+# This middleware checks if the request is authenticated with a valid JSON Web Token. If
 # the request is not authenticated, the server will respond with a 401 Unauthorized. The
 # only exceptions to this are the /api/login endpoint which depending on whether the
 # login is successful or not will return a 200 OK or a 401 Unauthorized response and the
 # /docs endpoint for the remote host 127.0.0.1 which is used for the server's Swagger UI
 # and does not require authentication
 async def check_if_request_is_authenticated(request: Request, call_next) -> Response:
-    # TODO: Move this to a service that can be accessed by plugins to hook into the
-    #  RBAC system
     # Provide access to the endpoint /api/login for hosts that have yet to authenticate.
     if request.url.path == "/api/login" and request.method == "POST":
         return await call_next(request)
@@ -60,18 +58,18 @@ async def check_if_request_is_authenticated(request: Request, call_next) -> Resp
         and request.client.host == "127.0.0.1"
     ):
         # We manually do a check here to prevent the framework from automatically
-        # raising a HTTPException with a 405 status code. Because we have registered
-        # custom exception handlers for HTTPException at server_exception_handlers.py,
+        # raising a `HTTPException` with a 405 status code. Because we have registered
+        # custom exception handlers for `HTTPException` at server_exception_handlers.py,
         # we want to return a manual 405 response here instead of a REST API error JSON
-        # response which would be the default behavior upon raising HTTPException with a
-        # 405 status code
+        # response which would be the default behavior upon raising `HTTPException`
+        # with a 405 status code
         if request.method != "GET":
             return Response(status_code=405)
         return await call_next(request)
     else:
         try:
-            # if the Authorization header is not present, KeyError is thrown. The header
-            # is in lowercase within the headers dictionary of the request object
+            # if the Authorization header is not present, `KeyError` is thrown. The
+            # header is in lowercase within the headers dictionary of the request object
             auth_header = request.headers["authorization"]
             if not auth_header.startswith("Bearer "):
                 return Response(status_code=401)
@@ -102,7 +100,7 @@ async def check_if_request_is_authenticated(request: Request, call_next) -> Resp
         return await call_next(request)
 
 
-# this middleware checks the remote host address against the remote host whitelist or
+# This middleware checks the remote host address against the remote host whitelist or
 # blacklist. If the host is not on the whitelist or is on the blacklist, the server will
 # respond with an empty 403 Forbidden response
 async def check_if_remote_host_is_allowed(request: Request, call_next) -> Response:
@@ -121,7 +119,7 @@ async def check_if_remote_host_is_allowed(request: Request, call_next) -> Respon
     return await call_next(request)
 
 
-# this middleware logs the requests to and responses from the framework's REST API along
+# This middleware logs the requests to and responses from the framework's REST API along
 # with any internal server errors to the console and to log files located at
 # data/server/logs. Because it logs errors, this middleware also acts as a catch-all
 # exception handler for any unhandled exceptions that occur within the server and
