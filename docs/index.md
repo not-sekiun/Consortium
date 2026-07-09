@@ -50,14 +50,14 @@ listeners and agents.
       automations and write custom clients.
     - Develop custom [listeners](framework/listeners/listeners-overview.md) and
       [agents](framework/agents/agents-overview.md) for the framework.
-    - Extend the framework further through writing
-      [plugins](framework/plugins/plugins-overview.md)
-      or [event hooks](framework/event-hooks/event-hooks-overview.md)
 
 -   __Advanced__
 
     ---
 
+    - Extend the framework further through writing
+      [plugins](framework/plugins/plugins-overview.md)
+      or [event hooks](framework/event-hooks/event-hooks-overview.md)
     - Look through the [API reference](reference/reference-overview.md) for more
       information on working with framework components.
 
