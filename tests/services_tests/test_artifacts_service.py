@@ -9,6 +9,7 @@ import pytest
 from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
     RepositoryResourceNotFoundError,
 )
+from consortium.server.services.agents_service import AgentsService
 from consortium.server.services.artifacts_service import ArtifactsService
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
@@ -49,12 +50,20 @@ def events_service() -> MagicMock:
 
 
 @pytest.fixture
+def agents_service() -> MagicMock:
+    return MagicMock(spec=AgentsService)
+
+
+@pytest.fixture
 def service(
-    events_service: MagicMock, repo_service: RepositoryService
+    events_service: MagicMock,
+    repo_service: RepositoryService,
+    agents_service: MagicMock,
 ) -> ArtifactsService:
     return ArtifactsService(
         events_service=events_service,
         repository_service=repo_service,
+        agents_service=agents_service,
     )
 
 
@@ -124,6 +133,51 @@ async def test_create_file_with_reserved_id(service: ArtifactsService):
     with patch("asyncio.create_task"):
         artifact = await service.create_file(content="reserved", resource_id=aid)
     assert str(artifact.resource_id) == str(aid)
+
+
+# ---------------------------------------------------------------------------
+# agent attribution
+# ---------------------------------------------------------------------------
+
+
+async def test_create_file_without_agent_id_stores_null_reference(
+    service: ArtifactsService,
+    agents_service: MagicMock,
+):
+    with patch("asyncio.create_task"):
+        artifact = await service.create_file(content="anon", name="anon.txt")
+    assert artifact.data == {"agent": None}
+    agents_service.get_agent_by_agent_id.assert_not_called()
+
+
+async def test_create_file_with_agent_id_stores_reference(
+    service: ArtifactsService,
+    agents_service: MagicMock,
+):
+    agent_id = uuid.uuid4()
+    agent_type_json = {"name": "test_agent_type", "agent_capabilities": {}}
+    # `name` is a reserved MagicMock constructor kwarg (it labels the mock rather than
+    # setting a `.name` attribute), so it must be assigned after construction to be read
+    # back as the plain string the AgentReferenceModel expects.
+    mock_agent = MagicMock(agent_id=agent_id)
+    mock_agent.name = "agent-name"
+    mock_agent.agent_type.to_json.return_value = agent_type_json
+    agents_service.get_agent_by_agent_id.return_value = mock_agent
+
+    with patch("asyncio.create_task"):
+        artifact = await service.create_file(
+            content="owned",
+            name="owned.txt",
+            agent_id=agent_id,
+        )
+    assert artifact.data == {
+        "agent": {
+            "agent_id": str(agent_id),
+            "name": "agent-name",
+            "agent_type": agent_type_json,
+        },
+    }
+    agents_service.get_agent_by_agent_id.assert_called_once_with(agent_id=agent_id)
 
 
 # ---------------------------------------------------------------------------

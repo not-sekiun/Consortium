@@ -10,13 +10,17 @@ from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
 
+# An asset/artifact is "just" a repository resource with metadata, so the resource
+# fields are shared across the assets, artifacts and payloads response schemas. Resources
+# are identified by `resource_id` and carry their type specific metadata in `data`.
 REPOSITORY_RESOURCE_JSON_SCHEMA = {
     "type": "object",
     "properties": {
-        "asset_id": {"type": "string"},
+        "resource_id": {"type": "string"},
         "name": {"type": ["string", "null"]},
         "description": {"type": "string"},
         "size": {"type": ["integer", "null"]},
+        "extension": {"type": ["string", "null"]},
         "exists_on_disk": {"type": "boolean"},
         "datetime_created": {"type": "string"},
         "datetime_modified": {"type": "string"},
@@ -25,10 +29,11 @@ REPOSITORY_RESOURCE_JSON_SCHEMA = {
         "data": {"type": "object"},
     },
     "required": [
-        "asset_id",
+        "resource_id",
         "name",
         "description",
         "size",
+        "extension",
         "exists_on_disk",
         "datetime_created",
         "datetime_modified",
@@ -220,7 +225,7 @@ async def test_upload_file_asset_returns_200(admin_client):
         expected_json_schema=REPOSITORY_RESOURCE_JSON_SCHEMA,
         expected_status_code=200,
     )
-    asset_id = response.json()["asset_id"]
+    asset_id = response.json()["resource_id"]
     await admin_client.delete(f"/api/assets/{asset_id}")
 
 

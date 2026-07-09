@@ -1,13 +1,14 @@
-import json
 import pathlib
 import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from consortium.framework.agents.base_agent_template import BaseAgentTemplate
+from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
+    AgentTemplateLabelNotFoundError,
+)
 from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
-    InvalidPayloadsMetadataFileJSONError,
-    InvalidPayloadsMetadataFileSchemaError,
     PayloadNotFoundError,
 )
 from consortium.server.services.agent_templates_service import AgentTemplatesService
@@ -105,64 +106,78 @@ def test_save_repository_metadata_delegates(
 # ---------------------------------------------------------------------------
 
 
-def test_load_payloads_metadata_creates_file_when_absent(
-    service: PayloadsService, repo_dir: pathlib.Path
+def test_load_payloads_metadata_empty_repository_leaves_payloads_empty(
+    service: PayloadsService,
 ):
-    assert not (repo_dir / ".payloads.json").exists()
+    # No repository resources means no payloads to reconstruct and no separate
+    # payloads metadata file is created.
+    service.load_repository_metadata()
     service.load_payloads_metadata()
-    assert (repo_dir / ".payloads.json").exists()
+    assert service.get_all_payloads() == []
+    assert not (service.repository_directory_path / ".payloads.json").exists()
 
 
-def test_load_payloads_metadata_invalid_json_raises(
-    service: PayloadsService, repo_dir: pathlib.Path
+def test_load_payloads_metadata_rebuilds_payloads_from_resource_data(
+    service: PayloadsService,
+    repo_service: RepositoryService,
+    agent_templates_service: MagicMock,
 ):
-    (repo_dir / ".payloads.json").write_text("not json {{{{")
-    with pytest.raises(InvalidPayloadsMetadataFileJSONError):
-        service.load_payloads_metadata()
+    # A payload's metadata is persisted in the `data` field of its repository resource
+    with patch("asyncio.create_task"):
+        resource = repo_service.create_file(
+            content="payload",
+            name="p.bin",
+            data={
+                "agent_template": "test.label",
+                "build_parameters": {"foo": "bar"},
+                "payload_data": {"baz": 1},
+            },
+        )
+    payload_id = str(resource.resource_id)
+
+    agent_template = MagicMock(spec=BaseAgentTemplate)
+    agent_template.label = "test.label"
+    agent_template.agent_type = MagicMock()
+    agent_templates_service.get_agent_template_by_label.return_value = agent_template
+
+    service.load_payloads_metadata()
+
+    payload = service.get_payload_by_payload_id(payload_id=payload_id)
+    assert payload.build_parameters == {"foo": "bar"}
+    assert payload.payload_data == {"baz": 1}
+    assert payload.agent_template is agent_template
 
 
-def test_load_payloads_metadata_invalid_schema_raises(
-    service: PayloadsService, repo_dir: pathlib.Path
+def test_load_payloads_metadata_skips_resource_missing_payload_fields(
+    service: PayloadsService, repo_service: RepositoryService
 ):
-    # Schema expects object values; a list value breaks it
-    (repo_dir / ".payloads.json").write_text(
-        json.dumps({"abc123": ["not", "an", "object"]})
-    )
-    with pytest.raises(InvalidPayloadsMetadataFileSchemaError):
-        service.load_payloads_metadata()
-
-
-def test_load_payloads_metadata_empty_file_leaves_payloads_empty(
-    service: PayloadsService, repo_dir: pathlib.Path
-):
-    (repo_dir / ".payloads.json").write_text(json.dumps({}))
+    # A resource whose `data` field lacks the expected payload keys is skipped
+    with patch("asyncio.create_task"):
+        repo_service.create_file(content="not a payload", name="x.bin")
     service.load_payloads_metadata()
     assert service.get_all_payloads() == []
 
 
-# ---------------------------------------------------------------------------
-# save_payloads_metadata
-# ---------------------------------------------------------------------------
-
-
-def test_save_payloads_metadata_empty(service: PayloadsService, repo_dir: pathlib.Path):
-    service.save_payloads_metadata()
-    data = json.loads((repo_dir / ".payloads.json").read_text())
-    assert data == {}
-
-
-def test_save_payloads_metadata_with_payloads(
-    service: PayloadsService, repo_dir: pathlib.Path
+def test_load_payloads_metadata_skips_resource_with_missing_agent_template(
+    service: PayloadsService,
+    repo_service: RepositoryService,
+    agent_templates_service: MagicMock,
 ):
-    p = _make_mock_payload()
-    service._payloads[str(p.payload_id)] = p
-    service.save_payloads_metadata()
-    data = json.loads((repo_dir / ".payloads.json").read_text())
-    assert str(p.payload_id) in data
-    entry = data[str(p.payload_id)]
-    assert entry["agent_template"] == "test.label"
-    assert entry["build_parameters"] == {}
-    assert entry["payload_data"] == {}
+    with patch("asyncio.create_task"):
+        repo_service.create_file(
+            content="payload",
+            name="p.bin",
+            data={
+                "agent_template": "missing.label",
+                "build_parameters": {},
+                "payload_data": {},
+            },
+        )
+    agent_templates_service.get_agent_template_by_label.side_effect = (
+        AgentTemplateLabelNotFoundError(label="missing.label")
+    )
+    service.load_payloads_metadata()
+    assert service.get_all_payloads() == []
 
 
 # ---------------------------------------------------------------------------

@@ -102,6 +102,7 @@ def test_load_repository_metadata_unsynced_file_raises(
             "name": "missing_file.txt",
             "description": "",
             "size": None,
+            "extension": "",
             "exists_on_disk": True,
             "md5_checksum": None,
             "datetime_created": "2024-01-01T00:00:00",

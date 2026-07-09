@@ -12,6 +12,7 @@ from consortium.server.exceptions.consortium_exceptions.repository_consortium_ex
 from consortium.server.services.assets_service import AssetsService
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
+from consortium.server.services.user_accounts_service import UserAccountsService
 
 pytestmark = pytest.mark.anyio
 
@@ -49,12 +50,20 @@ def events_service() -> MagicMock:
 
 
 @pytest.fixture
+def user_accounts_service() -> MagicMock:
+    return MagicMock(spec=UserAccountsService)
+
+
+@pytest.fixture
 def service(
-    events_service: MagicMock, repo_service: RepositoryService
+    events_service: MagicMock,
+    repo_service: RepositoryService,
+    user_accounts_service: MagicMock,
 ) -> AssetsService:
     return AssetsService(
         events_service=events_service,
         repository_service=repo_service,
+        user_accounts_service=user_accounts_service,
     )
 
 
@@ -120,6 +129,47 @@ async def test_create_file_with_reserved_id(service: AssetsService):
     with patch("asyncio.create_task"):
         asset = await service.create_file(content="reserved", resource_id=aid)
     assert str(asset.resource_id) == str(aid)
+
+
+# ---------------------------------------------------------------------------
+# user account attribution
+# ---------------------------------------------------------------------------
+
+
+async def test_create_file_without_user_account_id_stores_null_reference(
+    service: AssetsService,
+    user_accounts_service: MagicMock,
+):
+    with patch("asyncio.create_task"):
+        asset = await service.create_file(content="anon", name="anon.txt")
+    assert asset.data == {"user_account": None}
+    user_accounts_service.get_user_account_by_user_account_id.assert_not_called()
+
+
+async def test_create_file_with_user_account_id_stores_reference(
+    service: AssetsService,
+    user_accounts_service: MagicMock,
+):
+    user_account_id = uuid.uuid4()
+    user_accounts_service.get_user_account_by_user_account_id.return_value = MagicMock(
+        user_account_id=user_account_id,
+        username="uploader",
+    )
+    with patch("asyncio.create_task"):
+        asset = await service.create_file(
+            content="owned",
+            name="owned.txt",
+            user_account_id=user_account_id,
+        )
+    assert asset.data == {
+        "user_account": {
+            "user_account_id": str(user_account_id),
+            "username": "uploader",
+        },
+    }
+    user_accounts_service.get_user_account_by_user_account_id.assert_called_once_with(
+        user_account_id=user_account_id,
+    )
 
 
 # ---------------------------------------------------------------------------

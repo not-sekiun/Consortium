@@ -95,6 +95,7 @@ async def test_write_artifact_creates_directory_then_raises(service, mock_agent)
     artifacts.create_directory.assert_called_once_with(
         name=str(mock_agent.agent_id),
         parent_directory_id=None,
+        agent_id=mock_agent.agent_id,
     )
     assert svc._agent_artifacts_folder == mock_dir
 
