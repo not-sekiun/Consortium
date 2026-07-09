@@ -26,6 +26,7 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.1.0",
     "ruff>=0.14.8",
+    "schemathesis>=4.22.4",
 ]
 docs = [
     "mkdocs>=1.6.1",
