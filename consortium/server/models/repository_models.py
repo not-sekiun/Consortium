@@ -75,7 +75,7 @@ class ArtifactModel(RepositoryResourceModel):
     data: ResolvedArtifactDataModel
 
 
-# This data model is what is actually stored on disk in the artifacts services
+# This data model is what is actually stored on disk in the payloads services
 # .repository.json
 class PersistentPayloadDataModel(BaseModel):
     agent_template: PersistentAgentTemplateReferenceModel
@@ -85,7 +85,7 @@ class PersistentPayloadDataModel(BaseModel):
 
 # This data model is what is resolved at runtime by the payloads service
 class ResolvedPayloadDataModel(PersistentPayloadDataModel):
-    resolved_agent_template: AgentTemplateModel | None
+    resolved_agent_template: AgentTemplateModel | None = None
 
 
 class PayloadModel(RepositoryResourceModel):
