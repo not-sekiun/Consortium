@@ -182,6 +182,7 @@ nav = [
 ]
 
 extra_javascript = ["javascripts/asciinema-player.min.js"]
+extra_css = ["stylesheets/asciinema-player.css"]
 
 [project.theme]
 logo = "assets/logo.png"

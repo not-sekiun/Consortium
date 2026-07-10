@@ -7,8 +7,8 @@ discovered and loaded when the server starts.
 
 This page covers the concepts that are shared across every component type: how a
 component project is laid out, how components are identified (the difference between
-labels, names, and IDs), and how dependencies are declared and resolved. Read it once,
-then dive into the per-type guides:
+labels, names, and IDs), and how dependencies are declared and resolved. For more
+information on each type of component, check the following pages:
 
 - [Listeners Overview](listeners/listeners-overview.md)
 - [Agents Overview](agents/agents-overview.md)
@@ -228,8 +228,8 @@ class Plugin(BasePlugin):
     }
 ```
 
-This is exactly where labels earn their keep: because a label is stable and unique, it is
-a safe thing to depend on. At load time the framework:
+Because a label is stable and unique, it is a safe thing to depend on. At load time the
+framework:
 
 1. Confirms every named dependency label is registered, and that its `version` satisfies
    the specifier (missing or incompatible dependencies cause the dependent component to

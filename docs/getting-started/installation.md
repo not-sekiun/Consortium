@@ -62,9 +62,9 @@ install the development group dependencies and the pre-commit hooks.
     uv run pre-commit install
     ```
 
-## Installing Consortium with local documentation hosting via MkDocs
+## Installing Consortium with local documentation hosting via Zensical
 
-If you want to host the documentation locally using MkDocs, you need to additionally
+If you want to host the documentation locally using Zensical, you need to additionally
 install the documentation group dependencies.
 
 1. Follow the steps in the [Installing Consortium](#installing-consortium) section

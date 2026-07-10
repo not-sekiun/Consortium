@@ -28,12 +28,12 @@ jobs:
         run: uv sync --group docs
 
       - name: Build site
-        run: uv run mkdocs build --site-dir _site
+        run: uv run zensical build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: _site
+          path: site
 
   deploy:
     needs: build
