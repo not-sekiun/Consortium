@@ -62,6 +62,7 @@ nav = [
     ] }
   ] },
   { "Framework" = [
+    "framework/framework-overview.md",
     { "Listeners" = [
       "framework/listeners/listeners-overview.md",
       { "Building a Listener Profile" = [
@@ -114,6 +115,11 @@ nav = [
       ] },
       "framework/event-hooks/event-types.md"
     ] }
+  ] },
+  { "Scripts" = [
+    "scripts/scripts-overview.md",
+    "scripts/create-component-project.md",
+    "scripts/generate-distilled-mitre-attack-data.md"
   ] },
   { "Reference" = [
     "reference/reference-overview.md",

@@ -132,6 +132,10 @@ nav:
       - client/agents/managing-assets.md
       - client/agents/managing-artifacts.md
     - client/aliases-and-resource-files.md
+  - Scripts:
+    - scripts/scripts-overview.md
+    - scripts/create-component-project.md
+    - scripts/generate-distilled-mitre-attack-data.md
   - Reference:
       - reference/reference-overview.md
       - Framework:

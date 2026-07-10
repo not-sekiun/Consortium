@@ -6,6 +6,14 @@ type as it fires, and writes a summary report to a JSON file when the server shu
 By the time we reach [Complete Event Hook Example](complete-event-hook-example.md), it
 will demonstrate every major event hook concept.
 
+!!! tip "Scaffold it instead"
+
+    Rather than creating these files by hand, you can generate a ready-to-edit event hook
+    (directory, `manifest.json`, and a commented `event_hook.py`) with the
+    [`create_component_project.py`](../../../scripts/create-component-project.md)
+    scaffolder. This guide is still worth reading to understand what the generated files
+    do.
+
 ## Setting up the project files
 
 Create a directory under `consortium/components/event_hooks/`:

@@ -47,6 +47,15 @@ class AgentTemplate(BaseAgentTemplate):
 
 ## Project structure
 
+!!! tip "Scaffold it instead"
+
+    Rather than creating these files by hand, you can generate a ready-to-edit agent
+    profile (directory, `manifest.json`, and commented `agent_type.py`,
+    `agent_generator.py`, and `agent_template.py` files) with the
+    [`create_component_project.py`](../../scripts/create-component-project.md)
+    scaffolder. This section is still worth reading to understand what the generated files
+    do.
+
 Each agent profile lives in its own directory under `consortium/components/agents/`:
 
 ```

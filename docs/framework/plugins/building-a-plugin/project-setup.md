@@ -6,6 +6,14 @@ seconds for the current list of registered agents and logs a formatted summary. 
 time we reach [Complete Plugin Example](complete-plugin-example.md), it will demonstrate
 every major plugin concept.
 
+!!! tip "Scaffold it instead"
+
+    Rather than creating these files by hand, you can generate a ready-to-edit plugin
+    (directory, `manifest.json`, and a commented `plugin.py`) with the
+    [`create_component_project.py`](../../../scripts/create-component-project.md)
+    scaffolder. This guide is still worth reading to understand what the generated files
+    do.
+
 ## Setting up the project files
 
 Create a directory for the plugin under `consortium/components/plugins/`:

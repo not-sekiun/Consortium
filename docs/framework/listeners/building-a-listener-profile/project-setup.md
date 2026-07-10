@@ -21,6 +21,15 @@ written together and loaded as one unit. We will build them in order, one page a
 Between steps 2 and 3 we pause on [The Agent-Listener Protocol](listener-protocol.md):
 the contract the `Listener` class exists to satisfy.
 
+!!! tip "Scaffold it instead"
+
+    Rather than creating these files by hand, you can generate a ready-to-edit listener
+    profile (directory, `manifest.json`, and commented `listener_type.py`,
+    `listener_template.py`, and `listener.py` files) with the
+    [`create_component_project.py`](../../../scripts/create-component-project.md)
+    scaffolder. This guide is still worth reading to understand what the generated files
+    do.
+
 ## Setting up the project files
 
 Each listener profile lives in its own directory under
