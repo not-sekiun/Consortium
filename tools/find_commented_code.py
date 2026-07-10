@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-find_dead_code.py — Recursively scan a directory for Python files containing
+find_commented_code.py — Recursively scan a directory for Python files containing
 commented-out code (as opposed to ordinary natural-language comments), and
 display each finding with file path, line number, and surrounding context,
 nicely rendered with `rich`.
 
 Usage:
-    python find_dead_code.py [DIRECTORY] [--context N] [--ext .py] [--group] [--theme THEME]
+    python find_commented_code.py [DIRECTORY] [--context N] [--ext .py] [--group] [--theme THEME]
 
 Example:
-    python find_dead_code.py ./my_project --context 4 --group
+    python find_commented_code.py ./my_project --context 4 --group
 """
 
 import argparse

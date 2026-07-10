@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-add_license_header.py
+insert_license_header.py
 
 Walks a source directory recursively, finds *.py files (respecting
 .gitignore via `git ls-files`), and inserts a license header as line
@@ -10,7 +10,7 @@ Idempotent: if the header is already present, the file is left alone.
 Designed to be run as a pre-commit hook.
 
 Usage:
-    python add_license_header.py --source-dir . --license-file LICENSE_HEADER.txt
+    python insert_license_header.py --source-dir . --license-file LICENSE_HEADER.txt
 
 Exit codes:
     0 - nothing changed

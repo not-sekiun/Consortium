@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-exc_hierarchy_doc.py
+generate_exception_hierarchy_docstrings.py
 =====================
 
 Generate mkdocstrings-compatible exception-hierarchy docstrings from Python
@@ -435,36 +435,36 @@ EPILOGUE = """\
 examples:
 
   # Display the generated hierarchy docstring for a single file (no file changes)
-  python exc_hierarchy_doc.py path/to/listeners_consortium_exceptions.py
+  python generate_exception_hierarchy_docstrings.py path/to/listeners_consortium_exceptions.py
 
   # Display, recursively scanning an entire directory, one docstring per module
-  python exc_hierarchy_doc.py --recursive src/consortium/server/exceptions/
+  python generate_exception_hierarchy_docstrings.py --recursive src/consortium/server/exceptions/
 
   # Merge every exception across a directory into ONE combined hierarchy docstring
-  python exc_hierarchy_doc.py --recursive --merge src/consortium/server/exceptions/
+  python generate_exception_hierarchy_docstrings.py --recursive --merge src/consortium/server/exceptions/
 
   # Same as above, but sort siblings alphabetically at every level
-  python exc_hierarchy_doc.py --recursive --sort src/consortium/server/exceptions/
+  python generate_exception_hierarchy_docstrings.py --recursive --sort src/consortium/server/exceptions/
 
   # Insert the docstring at the top of each file (prompts per file, shows
   # current top-of-file content first; does NOT remove any existing docstring)
-  python exc_hierarchy_doc.py --recursive --insert src/consortium/server/exceptions/
+  python generate_exception_hierarchy_docstrings.py --recursive --insert src/consortium/server/exceptions/
 
   # Same, but REPLACE any existing top-of-file docstring instead of inserting above it
-  python exc_hierarchy_doc.py --recursive --insert --replace src/consortium/server/exceptions/
+  python generate_exception_hierarchy_docstrings.py --recursive --insert --replace src/consortium/server/exceptions/
 
   # Skip the confirmation prompt when inserting/replacing (use with care)
-  python exc_hierarchy_doc.py --recursive --insert --replace --yes src/consortium/server/exceptions/
+  python generate_exception_hierarchy_docstrings.py --recursive --insert --replace --yes src/consortium/server/exceptions/
 
   # Include an out-of-scope base exception as the synthetic root of the hierarchy,
   # pointing it at a real importable location for the mkdocstrings link
-  python exc_hierarchy_doc.py path/to/listeners_consortium_exceptions.py \\
+  python generate_exception_hierarchy_docstrings.py path/to/listeners_consortium_exceptions.py \\
       --extra-root BaseConsortiumError \\
       --extra-root-path consortium.server.exceptions.base_consortium_exception
 
   # Explicitly set the package root used to compute dotted module paths
   # (otherwise inferred by walking up through __init__.py files)
-  python exc_hierarchy_doc.py --recursive --package-root src/ src/consortium/server/exceptions/
+  python generate_exception_hierarchy_docstrings.py --recursive --package-root src/ src/consortium/server/exceptions/
 """
 
 

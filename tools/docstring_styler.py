@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-docstring_style.py
+docstring_styler.py
 
 Find multi-line triple-quoted docstrings in Python source files and report
 or convert their "opening line" style.
@@ -23,14 +23,14 @@ so they don't fall into either bucket and are always ignored.
 USAGE
 -----
 Report only (no files are modified):
-    python docstring_style.py PATH [-r]
+    python docstring_styler.py PATH [-r]
 
 Convert everything found to one style, writing the files in place:
-    python docstring_style.py PATH [-r] --convert below
-    python docstring_style.py PATH [-r] --convert same
+    python docstring_styler.py PATH [-r] --convert below
+    python docstring_styler.py PATH [-r] --convert same
 
 Preview a conversion as a unified diff without touching any files:
-    python docstring_style.py PATH [-r] --convert below --dry-run
+    python docstring_styler.py PATH [-r] --convert below --dry-run
 
 PATH may be a single .py file or a directory. Use -r/--recursive to walk
 subdirectories when PATH is a directory.

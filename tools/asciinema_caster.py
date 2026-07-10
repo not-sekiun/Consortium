@@ -3,7 +3,7 @@
 caster - record scripted terminal sessions to asciinema .cast files.
 
 Usage:
-    python caster.py demo.tape
+    python asciinema_caster.py demo.tape
 
 Requires: tmux, asciinema. No Python dependencies.
 
@@ -81,10 +81,13 @@ def parse_tape(path):
         "output": None,
         "shell": os.environ.get("SHELL", "/bin/bash"),
         "typing_speed": 0.05,
+        "idle_time_limit": None,
+        "cols": 120,
+        "rows": 30,
     }
     actions = []
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for lineno, raw in enumerate(f, start=1):
             line = raw.strip()
             if not line or line.startswith("#"):
@@ -102,11 +105,32 @@ def parse_tape(path):
                     try:
                         settings["typing_speed"] = float(value.rstrip("s"))
                     except ValueError:
-                        raise TapeError(f"line {lineno}: bad TypingSpeed {value!r}")
+                        raise TapeError(
+                            f"line {lineno}: bad TypingSpeed {value!r}"
+                        ) from None
                 elif key == "shell":
                     settings["shell"] = value
+                elif key == "idletimelimit":
+                    try:
+                        settings["idle_time_limit"] = float(value.rstrip("s"))
+                    except ValueError:
+                        raise TapeError(
+                            f"line {lineno}: bad IdleTimeLimit {value!r}"
+                        ) from None
+                elif key == "cols":
+                    try:
+                        settings["cols"] = int(value)
+                    except ValueError:
+                        raise TapeError(f"line {lineno}: bad Cols {value!r}") from None
+                elif key == "rows":
+                    try:
+                        settings["rows"] = int(value)
+                    except ValueError:
+                        raise TapeError(f"line {lineno}: bad Rows {value!r}") from None
                 else:
-                    raise TapeError(f"line {lineno}: unknown setting {m.group('key')!r}")
+                    raise TapeError(
+                        f"line {lineno}: unknown setting {m.group('key')!r}"
+                    )
                 continue
 
             if m := SLEEP_RE.match(line):
@@ -115,12 +139,14 @@ def parse_tape(path):
 
             if m := TYPE_RE.match(line):
                 speed = m.group("speed")
-                actions.append({
-                    **base,
-                    "op": "type",
-                    "text": _unquote(m.group("text")),
-                    "speed": float(speed) if speed else None,
-                })
+                actions.append(
+                    {
+                        **base,
+                        "op": "type",
+                        "text": _unquote(m.group("text")),
+                        "speed": float(speed) if speed else None,
+                    }
+                )
                 continue
 
             if line in ("Enter", "Tab", "Space"):
@@ -139,6 +165,7 @@ def parse_tape(path):
 # tmux driving
 # ---------------------------------------------------------------------------
 
+
 def tmux(*args, check=True):
     return subprocess.run(["tmux", *args], check=check, capture_output=True, text=True)
 
@@ -153,17 +180,27 @@ def progress(action):
 
 def run_tape(settings, actions, tape_path):
     session = f"caster-{os.getpid()}"
-    cols, rows = shutil.get_terminal_size(fallback=(80, 24))
+    cols, rows = settings["cols"], settings["rows"]
+
+    idle_flag = ""
+    if settings["idle_time_limit"] is not None:
+        idle_flag = f"--idle-time-limit {settings['idle_time_limit']} "
 
     rec_cmd = (
         f"asciinema rec -q --overwrite "
+        f"{idle_flag}"
         f"-c {shell_quote(settings['shell'])} "
         f"{shell_quote(settings['output'])}"
     )
     tmux(
-        "new-session", "-d",
-        "-s", session,
-        "-x", str(cols), "-y", str(rows),
+        "new-session",
+        "-d",
+        "-s",
+        session,
+        "-x",
+        str(cols),
+        "-y",
+        str(rows),
         rec_cmd,
     )
     print(f"[caster] recording '{tape_path}' -> {settings['output']}")
@@ -226,12 +263,14 @@ def run_tape(settings, actions, tape_path):
 
 def shell_quote(s):
     import shlex
+
     return shlex.quote(s)
 
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main():
     if len(sys.argv) != 2:
