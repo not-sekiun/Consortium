@@ -59,7 +59,6 @@ from consortium.client.models.interpreter_signal_models import (
     SwitchUseAgentTemplateInterpreterSignal,
     SwitchUseListenerTemplateInterpreterSignal,
 )
-from consortium.client.utils.formatter_utils import format_exc_as_message
 from consortium.client.utils.printer_utils import (
     console,
     print_error,
@@ -117,7 +116,7 @@ class Client:
                 remote_port=self._client_config.remote_port,
             )
             print_success(
-                f"Connected to server "
+                f"Logged in to server at "
                 f"{self._client_config.remote_host}:{self._client_config.remote_port} "
                 f"as '{self._client_config.username}'.",
             )
@@ -135,10 +134,10 @@ class Client:
             OSError,
         ) as exc:
             print_error(
-                f"Failed to connect to server "
-                f"{self._client_config.remote_host}:{self._client_config.remote_port}. "
-                f"An error occurred while attempting to login. "
-                f"{format_exc_as_message(exc=exc)}",
+                f"Failed to login to server at "
+                f"{self._client_config.remote_host}:{self._client_config.remote_port} "
+                f"as '{self._client_config.username}'.",
+                exc=exc,
             )
             return None
 
@@ -332,8 +331,8 @@ class Client:
                     # except Exception as exc:
                     #     print_error(
                     #         f"Unhandled exception occurred while switching to client "
-                    #         f"session {return_status.data['client_session']}. "
-                    #         f"{format_exc_as_message(exc=exc)}"
+                    #         f"session {return_status.data['client_session']}.",
+                    #         exc=exc
                     #     )
                     #     console.print_exception(show_locals=True)
                     #     print_info("Removing the faulty client session...")

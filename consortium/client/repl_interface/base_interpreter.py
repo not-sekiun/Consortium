@@ -37,7 +37,6 @@ from consortium.client.repl_interface.custom_completer import (
 )
 from consortium.client.repl_interface.lexer import tokenize
 from consortium.client.repl_interface.parser import ParsedCommand, parse
-from consortium.client.utils.formatter_utils import format_exc_as_message
 from consortium.client.utils.printer_utils import console, print_error, print_info
 
 _client_sessions_service = client_singletons.client_sessions_service
@@ -273,7 +272,8 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
             return ExitClientSessionSignal()
         except Exception as exc:
             print_error(
-                f"Unhandled exception occurred. {format_exc_as_message(exc=exc)}"
+                "Unhandled exception occurred",
+                exc=exc,
             )
             console.print_exception(show_locals=True)
             print_info("Exiting...")
