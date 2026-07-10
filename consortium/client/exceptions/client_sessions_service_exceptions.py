@@ -15,7 +15,8 @@ class ClientSessionAlreadyExistsError(Exception):
 
 
 class ClientSessionConnectionError(Exception):
-    def __init__(self, remote_host: str, remote_port: int):
+    def __init__(self, remote_host: str, remote_port: int, error_message: str):
         super().__init__(
-            f"Failed to connect to server {remote_host}:{remote_port}",
+            "Failed to create new client session. An error occurred while attempting "
+            f"to connect to the server {remote_host}:{remote_port}. {error_message}",
         )

@@ -1,4 +1,5 @@
 import textwrap
+import traceback
 from datetime import UTC, datetime
 from typing import Any
 
@@ -303,3 +304,7 @@ def format_agent_task_event_type_string_with_color(
     return event_type_string_to_colored_event_type_map.get(
         event_type_str, event_type_str
     )
+
+
+def format_exc_as_message(exc: Exception) -> str:
+    return "".join(traceback.format_exception_only(exc)).strip()
