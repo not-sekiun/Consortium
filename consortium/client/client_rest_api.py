@@ -79,7 +79,7 @@ class RestAPI:
                     "username": self.username,
                     "password": self.password,
                 },
-                timeout=aiohttp.ClientTimeout(total=5),  # 5 second timeout on login
+                timeout=aiohttp.ClientTimeout(total=10),
             )
             # The server returns a generic 401 response for failed logins.
             if response.status == 401:

@@ -57,7 +57,7 @@ class RcCommand(BaseCommand[AnyContext]):
                         context.interpreter_context.resource_commands.append(command)
                     print_info(f"Loaded resource file: {resource_file}")
             except Exception as exc:
-                print_info(f"Failed to read resource file '{resource_file}' : {exc}")
+                print_info(f"Failed to read resource file '{resource_file}': {exc}")
         except SystemExit:
             pass
 

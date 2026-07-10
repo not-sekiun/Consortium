@@ -8,7 +8,10 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
-from consortium.client.utils.formatter_utils import format_argparse_epilog
+from consortium.client.utils.formatter_utils import (
+    format_argparse_epilog,
+    format_exc_as_message,
+)
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
 
 client_sessions_service = client_singletons.client_sessions_service
@@ -44,7 +47,7 @@ class ExitCommand(BaseCommand[AnyContext]):
                 except Exception as exc:
                     print_error(
                         f"Error disconnecting client session {client_session}. "
-                        f"{exc.__class__.__name__}: {exc}",
+                        f"{format_exc_as_message(exc=exc)}",
                     )
 
             print_info("Exiting...")

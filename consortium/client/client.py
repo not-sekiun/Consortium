@@ -1,8 +1,11 @@
+import asyncio
 import json
 from collections import deque
 
 import jsonschema
 from aiohttp.client import ClientConnectionError
+from rich.live import Live
+from rich.spinner import Spinner
 from websockets.exceptions import WebSocketException
 
 import consortium.client.client_config as client_config_module
@@ -56,7 +59,13 @@ from consortium.client.models.interpreter_signal_models import (
     SwitchUseAgentTemplateInterpreterSignal,
     SwitchUseListenerTemplateInterpreterSignal,
 )
-from consortium.client.utils.printer_utils import print_error, print_info, print_success
+from consortium.client.utils.formatter_utils import format_exc_as_message
+from consortium.client.utils.printer_utils import (
+    console,
+    print_error,
+    print_info,
+    print_success,
+)
 
 
 class Client:
@@ -129,9 +138,29 @@ class Client:
                 f"Failed to connect to server "
                 f"{self._client_config.remote_host}:{self._client_config.remote_port}. "
                 f"An error occurred while attempting to login. "
-                f"{exc.__class__.__name__}: {exc}",
+                f"{format_exc_as_message(exc=exc)}",
             )
             return None
+
+    # TODO: Parameterize client timeouts in config file, defaults to 10 seconds right
+    #  now hardcoded in rest api and websockets api client
+    async def _connect_with_spinner(self, timeout: int = 10):
+        spinner = Spinner("dots", text="Connecting to server...")
+
+        async def countdown(live: Live) -> None:
+            for remaining in range(timeout, 0, -1):
+                spinner.update(text=f"Connecting to server... ({remaining}s)")
+                live.update(spinner)
+                await asyncio.sleep(1)
+
+        with Live(
+            spinner, refresh_per_second=10, transient=True, console=console
+        ) as live:
+            countdown_task = asyncio.create_task(countdown(live))
+            try:
+                return await self._attempt_initial_client_session_connection()
+            finally:
+                countdown_task.cancel()
 
     async def _display_startup_banner(
         self, client_session: ClientSession | None
@@ -258,7 +287,7 @@ class Client:
                     )
 
     async def run(self) -> None:
-        client_session = await self._attempt_initial_client_session_connection()
+        client_session = await self._connect_with_spinner()
         await self._display_startup_banner(client_session=client_session)
 
         # Run the initial interpreter. Either we run a special disconnected interpreter
@@ -304,7 +333,7 @@ class Client:
                     #     print_error(
                     #         f"Unhandled exception occurred while switching to client "
                     #         f"session {return_status.data['client_session']}. "
-                    #         f"{exc.__class__.__name__}: {exc}"
+                    #         f"{format_exc_as_message(exc=exc)}"
                     #     )
                     #     console.print_exception(show_locals=True)
                     #     print_info("Removing the faulty client session...")
