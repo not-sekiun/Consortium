@@ -172,7 +172,7 @@ how to use it, type `<command> --help` or `<command> -h`.
 
 <br>
 
-![Client help demo](docs/assets/help_demo.gif)
+![Client help demo](docs/demos/help_demo.gif)
 
 ## Contributing
 
