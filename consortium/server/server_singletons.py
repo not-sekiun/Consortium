@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 
 from consortium.server.models.repository_models import (
-    ArtifactDataModel,
-    AssetDataModel,
-    PayloadDataModel,
+    PersistentArtifactDataModel,
+    PersistentAssetDataModel,
+    PersistentPayloadDataModel,
 )
 from consortium.server.services.agent_generators_service import AgentGeneratorsService
 from consortium.server.services.agent_profiles_service import AgentProfilesService
@@ -123,7 +123,7 @@ payloads_service = PayloadsService(
     events_service=events_service,
     repository_service=RepositoryService(
         repository_directory_path=consortium_paths_service.payloads_directory,
-        data_model=PayloadDataModel,
+        data_model=PersistentPayloadDataModel,
     ),
     agent_templates_service=agent_templates_service,
 )
@@ -135,7 +135,7 @@ assets_service = AssetsService(
     events_service=events_service,
     repository_service=RepositoryService(
         repository_directory_path=consortium_paths_service.assets_directory,
-        data_model=AssetDataModel,
+        data_model=PersistentAssetDataModel,
     ),
     user_accounts_service=user_accounts_service,
 )
@@ -143,7 +143,7 @@ artifacts_service = ArtifactsService(
     events_service=events_service,
     repository_service=RepositoryService(
         repository_directory_path=consortium_paths_service.artifacts_directory,
-        data_model=ArtifactDataModel,
+        data_model=PersistentArtifactDataModel,
     ),
     agents_service=agents_service,
 )

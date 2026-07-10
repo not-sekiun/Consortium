@@ -24,8 +24,6 @@ class LiveUserAccountReferenceModel(BaseModel):
 # currently live in memory, so every restart reissues IDs). `username` is the persistent
 # identifier for a user account regardless of its ID, and `role` records the account's
 # role as of the moment the asset was uploaded.
-# TODO: Patch client commands to display the resolved live user account ID when present,
-#  else mention that the account no longer exists when it cannot be resolved.
 class PersistentUserAccountReferenceModel(BaseModel):
     username: str
     role: str

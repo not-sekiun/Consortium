@@ -181,7 +181,10 @@ nav = [
   ] }
 ]
 
-extra_javascript = ["javascripts/asciinema-player.min.js"]
+extra_javascript = [
+  "javascripts/asciinema-player.min.js",
+  "javascripts/asciinema-init.js"
+]
 extra_css = ["stylesheets/asciinema-player.css"]
 
 [project.theme]
@@ -190,7 +193,8 @@ favicon = "assets/favicon.png"
 font.code = "JetBrains mono"
 features = [
     "navigation.tabs",
-    "navigation.tabs.sticky"
+    "navigation.tabs.sticky",
+    "navigation.instant",
 ]
 
 # Color mode settings

@@ -126,12 +126,12 @@ class RepositoryService:
             if self._data_model is not None:
                 for resource_id, resource_data in repository_metadata.items():
                     try:
-                        self._data_model.model_validate_json(resource_data["data"])
+                        self._data_model.model_validate(resource_data["data"])
                     except ValidationError as exc:
                         raise InvalidRepositoryMetadataDataSchemaError(
                             repository_directory=str(self.repository_directory_path),
                             resource_id=resource_id,
-                            json_schema_error_message=exc.message,
+                            json_schema_error_message=str(exc),
                         ) from None
 
         # Pre-pass check and verify all resources actually exist on disk before

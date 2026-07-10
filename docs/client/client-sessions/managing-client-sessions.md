@@ -62,6 +62,11 @@ From disconnected mode, use `connect` to establish a session and `interact` to s
 into
 it, which lands you in that session's Home interpreter.
 
+<div
+  data-asciinema-cast="asciinema/disconnected_interpreter_demo.cast"
+  data-cols="100" data-rows="30" data-theme="gruvbox-dark"
+></div>
+
 ## Switching between sessions
 
 `interact <session_id>` switches the active session. This is the mechanism behind
