@@ -84,7 +84,7 @@ def parse_tape(path):
     }
     actions = []
 
-    with open(path, encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         for lineno, raw in enumerate(f, start=1):
             line = raw.strip()
             if not line or line.startswith("#"):
@@ -102,15 +102,11 @@ def parse_tape(path):
                     try:
                         settings["typing_speed"] = float(value.rstrip("s"))
                     except ValueError:
-                        raise TapeError(
-                            f"line {lineno}: bad TypingSpeed {value!r}"
-                        ) from None
+                        raise TapeError(f"line {lineno}: bad TypingSpeed {value!r}")
                 elif key == "shell":
                     settings["shell"] = value
                 else:
-                    raise TapeError(
-                        f"line {lineno}: unknown setting {m.group('key')!r}"
-                    )
+                    raise TapeError(f"line {lineno}: unknown setting {m.group('key')!r}")
                 continue
 
             if m := SLEEP_RE.match(line):
@@ -119,14 +115,12 @@ def parse_tape(path):
 
             if m := TYPE_RE.match(line):
                 speed = m.group("speed")
-                actions.append(
-                    {
-                        **base,
-                        "op": "type",
-                        "text": _unquote(m.group("text")),
-                        "speed": float(speed) if speed else None,
-                    }
-                )
+                actions.append({
+                    **base,
+                    "op": "type",
+                    "text": _unquote(m.group("text")),
+                    "speed": float(speed) if speed else None,
+                })
                 continue
 
             if line in ("Enter", "Tab", "Space"):
@@ -144,7 +138,6 @@ def parse_tape(path):
 # ---------------------------------------------------------------------------
 # tmux driving
 # ---------------------------------------------------------------------------
-
 
 def tmux(*args, check=True):
     return subprocess.run(["tmux", *args], check=check, capture_output=True, text=True)
@@ -168,14 +161,9 @@ def run_tape(settings, actions, tape_path):
         f"{shell_quote(settings['output'])}"
     )
     tmux(
-        "new-session",
-        "-d",
-        "-s",
-        session,
-        "-x",
-        str(cols),
-        "-y",
-        str(rows),
+        "new-session", "-d",
+        "-s", session,
+        "-x", str(cols), "-y", str(rows),
         rec_cmd,
     )
     print(f"[caster] recording '{tape_path}' -> {settings['output']}")
@@ -202,9 +190,13 @@ def run_tape(settings, actions, tape_path):
             elif action["op"] == "type":
                 speed = action["speed"]
                 speed = speed if speed is not None else settings["typing_speed"]
-                for ch in action["text"]:
-                    send_literal(ch)
-                    time.sleep(speed)
+                if speed == 0:
+                    # Instant: one write, appears all at once (like history recall).
+                    send_literal(action["text"])
+                else:
+                    for ch in action["text"]:
+                        send_literal(ch)
+                        time.sleep(speed)
             elif action["op"] == "key":
                 send_key(action["key"])
                 time.sleep(0.05)
@@ -234,14 +226,12 @@ def run_tape(settings, actions, tape_path):
 
 def shell_quote(s):
     import shlex
-
     return shlex.quote(s)
 
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
-
 
 def main():
     if len(sys.argv) != 2:

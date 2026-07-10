@@ -1,13 +1,13 @@
 # caster tape - records to a .cast via asciinema
 Output disconnected_interpreter_demo.cast
-Set TypingSpeed 0.05
+Set TypingSpeed 0
 
 Type "uv run consortium.py client"
 Enter
 Sleep 12
 
 Type@0.1 connect
-Sleep 5
+Sleep 3
 Enter
 Sleep 2
 
@@ -18,6 +18,11 @@ Sleep 2
 Type@0.1 interact
 Space
 Tab
+Sleep 0.5
+Enter
+Sleep 2
+
+Type@0.1 info
 Enter
 Sleep 2
 
