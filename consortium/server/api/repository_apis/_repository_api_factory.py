@@ -171,7 +171,7 @@ def create_upload_resource_endpoint(
         if is_directory:
             if directory_archive_file_format:
                 file_extension = directory_archive_file_format
-                file_name = file.filename
+                file_name = file.filename if file.filename is not None else ""
             else:
                 # Edge case where a file (`UploadFile) is uploaded with no specified
                 # filename. This can happen if the file is uploaded through a multipart
@@ -192,12 +192,14 @@ def create_upload_resource_endpoint(
                 )
             # Check for 'tar.bz2', 'tar.gz', and 'tar.xz' files.
             if file_extension in (".gz", ".bz2", ".xz"):
+                # Again os.path.splitext splits the extension with the leading period
+                # included
                 file_name, second_file_extension = os.path.splitext(file_name)
-                if second_file_extension != "tar":
+                if second_file_extension != ".tar":
                     raise api_excs.RepositoryDirectoryFileNotArchiveFileError(
                         file_extension=file_extension
                     )
-                file_extension = f"{second_file_extension}.{file_extension}"
+                file_extension = f"{second_file_extension}{file_extension}"
 
             # Type hint here to shut the IDE type checker up about the dictionary
             # values not being the expected `Literal` types.
