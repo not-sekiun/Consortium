@@ -10,7 +10,6 @@ from consortium.client.repl_interface.base_command import (
 )
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
-    format_exc_as_message,
 )
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
 
@@ -46,8 +45,7 @@ class ExitCommand(BaseCommand[AnyContext]):
                     )
                 except Exception as exc:
                     print_error(
-                        f"Error disconnecting client session {client_session}. "
-                        f"{format_exc_as_message(exc=exc)}",
+                        f"Error disconnecting client session {client_session}.", exc=exc
                     )
 
             print_info("Exiting...")

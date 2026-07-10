@@ -93,8 +93,7 @@ class ClientSessionsService:
             raise ClientSessionConnectionError(
                 remote_host=client_session.remote_host,
                 remote_port=client_session.remote_port,
-                error_message=str(exc),
-            ) from None
+            ) from exc
         self._logger.debug(
             f"Connected client session: {client_session!r}",
         )
