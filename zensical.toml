@@ -1,0 +1,221 @@
+# Site settings
+[project]
+site_name = "Consortium"
+site_author = "not-sekiun"
+site_description = """Consortium is a programming language agnostic, and networking
+protocol agnostic command and control (C2) framework that is designed to be
+collaborative, highly extensible, and modular."""
+site_url = "https://not-sekiun.github.io/Consortium/"
+docs_dir = "docs"
+site_dir = "site"
+copyright = "&copy; 2026 not-sekiun"
+
+repo_url = "https://github.com/not-sekiun/PyIris"
+repo_name = "not-sekiun/Consortium"
+edit_uri = "docs/"
+
+nav = [
+  { "Home" = "index.md" },
+  { "Getting Started" = [
+    "getting-started/installation.md",
+    "getting-started/updating.md",
+    "getting-started/quick-start.md"
+  ] },
+  { "Server API" = [
+    "server-api/server-api-overview.md",
+    { "REST API" = [
+      "server-api/rest-api/introduction.md"
+    ] },
+    { "Events Websockets API" = [
+      "server-api/events-websockets-api/introduction.md",
+      "server-api/events-websockets-api/authentication.md",
+      "server-api/events-websockets-api/sending-action-commands.md",
+      "server-api/events-websockets-api/server-messages.md"
+    ] }
+  ] },
+  { "Framework" = [
+    { "Listeners" = [
+      "framework/listeners/listeners-overview.md",
+      { "Building a Listener Profile" = [
+        "framework/listeners/building-a-listener-profile/project-setup.md",
+        "framework/listeners/building-a-listener-profile/listener-type.md",
+        "framework/listeners/building-a-listener-profile/listener-template.md",
+        "framework/listeners/building-a-listener-profile/listener-protocol.md",
+        "framework/listeners/building-a-listener-profile/listener-startup.md",
+        "framework/listeners/building-a-listener-profile/listener-running-loop.md",
+        "framework/listeners/building-a-listener-profile/listener-shutdown.md",
+        "framework/listeners/building-a-listener-profile/listener-error-handling.md",
+        "framework/listeners/building-a-listener-profile/listener-conventions.md",
+        "framework/listeners/building-a-listener-profile/complete-listener-profile.md"
+      ] }
+    ] },
+    { "Agents" = [
+      "framework/agents/agents-overview.md",
+      { "Building an Agent Profile" = [
+        "framework/agents/building-an-agent-profile/agent-capabilities.md",
+        "framework/agents/building-an-agent-profile/agent-type.md",
+        "framework/agents/building-an-agent-profile/agent-template.md",
+        "framework/agents/building-an-agent-profile/agent-generator.md",
+        "framework/agents/building-an-agent-profile/complete-agent-profile.md"
+      ] },
+      "framework/agents/agent-protocol.md"
+    ] },
+    { "Plugins" = [
+      "framework/plugins/plugins-overview.md",
+      { "Building a Plugin" = [
+        "framework/plugins/building-a-plugin/project-setup.md",
+        "framework/plugins/building-a-plugin/plugin-metadata.md",
+        "framework/plugins/building-a-plugin/plugin-startup.md",
+        "framework/plugins/building-a-plugin/plugin-running-loop.md",
+        "framework/plugins/building-a-plugin/plugin-shutdown.md",
+        "framework/plugins/building-a-plugin/plugin-error-handling.md",
+        "framework/plugins/building-a-plugin/plugin-conventions.md",
+        "framework/plugins/building-a-plugin/complete-plugin-example.md"
+      ] }
+    ] },
+    { "Event Hooks" = [
+      "framework/event-hooks/event-hooks-overview.md",
+      { "Building an Event Hook" = [
+        "framework/event-hooks/building-an-event-hook/project-setup.md",
+        "framework/event-hooks/building-an-event-hook/event-hook-metadata.md",
+        "framework/event-hooks/building-an-event-hook/event-hook-setup.md",
+        "framework/event-hooks/building-an-event-hook/event-hook-triggering.md",
+        "framework/event-hooks/building-an-event-hook/event-hook-teardown.md",
+        "framework/event-hooks/building-an-event-hook/event-hook-conventions.md",
+        "framework/event-hooks/building-an-event-hook/complete-event-hook-example.md"
+      ] },
+      "framework/event-hooks/event-types.md"
+    ] }
+  ] },
+  { "Client" = [
+    "client/client-overview.md",
+    { "Client Sessions" = [
+      "client/client-sessions/managing-client-sessions.md"
+    ] },
+    { "Listeners" = [
+      "client/listeners/setting-up-listeners.md",
+      "client/listeners/using-listener-templates.md"
+    ] },
+    { "Agent Generators" = [
+      "client/agent-generators/setting-up-agent-generators.md",
+      "client/agent-generators/using-agent-templates.md",
+      "client/agent-generators/managing-payloads.md"
+    ] },
+    { "Agents" = [
+      "client/agents/tasking-agents.md",
+      "client/agents/managing-assets.md",
+      "client/agents/managing-artifacts.md"
+    ] },
+    "client/aliases-and-resource-files.md"
+  ] },
+  { "Reference" = [
+    "reference/reference-overview.md",
+    { "Framework" = [
+      "reference/framework/agents-reference.md",
+      "reference/framework/agent-generator-utilities-reference.md",
+      "reference/framework/listeners-reference.md",
+      "reference/framework/options-reference.md",
+      "reference/framework/plugins-reference.md",
+      "reference/framework/event-hooks-reference.md",
+      "reference/framework/framework-types-reference.md"
+    ] },
+    { "Services" = [
+      "reference/services/agent-file-manager-service-reference.md",
+      "reference/services/agent-generators-service-reference.md",
+      "reference/services/agent-profiles-service-reference.md",
+      "reference/services/agent-templates-payloads-service-reference.md",
+      "reference/services/agent-templates-service-reference.md",
+      "reference/services/agents-service-reference.md",
+      "reference/services/artifacts-service-reference.md",
+      "reference/services/assets-service-reference.md",
+      "reference/services/authorization-service-reference.md",
+      "reference/services/c2-types-service-reference.md",
+      "reference/services/connected-agents-service-reference.md",
+      "reference/services/consortium-paths-service-reference.md",
+      "reference/services/event-hooks-service-reference.md",
+      "reference/services/events-service-reference.md",
+      "reference/services/listener-profiles-service-reference.md",
+      "reference/services/listener-templates-service-reference.md",
+      "reference/services/listeners-service-reference.md",
+      "reference/services/logging-service-reference.md",
+      "reference/services/payloads-service-reference.md",
+      "reference/services/plugins-service-reference.md",
+      "reference/services/release-service-reference.md",
+      "reference/services/repository-service-reference.md",
+      "reference/services/user-accounts-service-reference.md",
+      "reference/services/users-service-reference.md"
+    ] },
+    { "Consortium Exceptions" = [
+      "reference/exceptions/base-consortium-error.md",
+      "reference/exceptions/agents-errors.md",
+      "reference/exceptions/agent-capabilities-errors.md",
+      "reference/exceptions/agent-generators-errors.md",
+      "reference/exceptions/agent-profiles-errors.md",
+      "reference/exceptions/agent-templates-errors.md",
+      "reference/exceptions/c2-types-errors.md",
+      "reference/exceptions/components-errors.md",
+      "reference/exceptions/events-errors.md",
+      "reference/exceptions/event-hooks-errors.md",
+      "reference/exceptions/listeners-errors.md",
+      "reference/exceptions/listener-profiles-errors.md",
+      "reference/exceptions/listener-templates-errors.md",
+      "reference/exceptions/options-errors.md",
+      "reference/exceptions/plugins-errors.md",
+      "reference/exceptions/repository-errors.md",
+      "reference/exceptions/users-errors.md",
+      "reference/exceptions/user-accounts-errors.md"
+    ] }
+  ] }
+]
+
+extra_javascript = ["javascripts/asciinema-player.min.js"]
+
+[project.theme]
+logo = "assets/logo.png"
+favicon = "assets/favicon.png"
+font.code = "JetBrains mono"
+features = [
+    "navigation.tabs",
+    "navigation.tabs.sticky"
+]
+
+# Color mode settings
+# Palette toggle for automatic mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+# Palette toggle for light mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+# Palette toggle for dark mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+# Mkdocstrings plugin settings
+[project.plugins.mkdocstrings.handlers.python]
+inventories = ["https://docs.python.org/3/objects.inv"]
+paths = ["."]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+inherited_members = true
+show_source = false
+show_root_heading = true
+show_if_no_docstring = true
+members_order = "source"
+merge_init_into_class = true
+signature_crossrefs = true
+show_signature_annotations = true
+show_symbol_type_heading = true
+show_symbol_type_toc = true
+parameter_headings = false
+filters = ['!^_']

@@ -20,7 +20,6 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
     InvalidUUIDError,
 )
 from consortium.server.exceptions.consortium_exceptions import (
-    payloads_consortium_exceptions as payload_excs,
     repository_consortium_exceptions as consortium_excs,
 )
 from consortium.server.models.repository_models import PayloadModel
@@ -38,24 +37,6 @@ router = APIRouter(
 )
 
 _payloads_service = server_singletons.payloads_service
-
-
-def _get_payload_by_payload_id_handler(payload_id: str):
-    try:
-        return _payloads_service.get_payload_by_payload_id(payload_id)
-    except payload_excs.PayloadNotFoundError:
-        raise consortium_excs.RepositoryResourceNotFoundError(
-            resource_id=payload_id,
-        ) from None
-
-
-def _delete_payload_by_payload_id_handler(payload_id: str) -> None:
-    try:
-        _payloads_service.delete_payload_by_payload_id(payload_id)
-    except payload_excs.PayloadNotFoundError:
-        raise consortium_excs.RepositoryResourceNotFoundError(
-            resource_id=payload_id,
-        ) from None
 
 
 _resource_not_found_error = (
@@ -85,7 +66,7 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_get_resource_by_resource_id_endpoint(
-        get_resource_by_resource_id_handler=_get_payload_by_payload_id_handler,
+        get_resource_by_resource_id_handler=_payloads_service.get_payload_by_payload_id,
         get_resource_by_resource_id_permission=UserPermissions.READ_PAYLOAD_BY_PAYLOAD_ID,
         response_model_class=PayloadModel,
     ),
@@ -104,7 +85,7 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_delete_resource_by_resource_id_endpoint(
-        delete_resource_by_resource_id_handler=_delete_payload_by_payload_id_handler,
+        delete_resource_by_resource_id_handler=_payloads_service.delete_payload_by_payload_id,
         delete_resource_by_resource_id_permission=UserPermissions.DELETE_PAYLOAD_BY_PAYLOAD_ID,
     ),
     status_code=204,
@@ -123,7 +104,7 @@ router.add_api_route(
 router.add_api_route(
     path="/download/{resource_id}",
     endpoint=create_download_resource_by_resource_id_endpoint(
-        get_resource_by_resource_id_handler=_get_payload_by_payload_id_handler,
+        get_resource_by_resource_id_handler=_payloads_service.get_payload_by_payload_id,
         download_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_PAYLOADS,
     ),
     methods=["GET"],

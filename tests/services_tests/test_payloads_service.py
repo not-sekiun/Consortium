@@ -9,8 +9,8 @@ from consortium.framework.event_hooks import EventType
 from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
     AgentTemplateLabelNotFoundError,
 )
-from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
-    PayloadNotFoundError,
+from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+    RepositoryResourceNotFoundError,
 )
 from consortium.server.objects.payload_objects import Payload
 from consortium.server.services.agent_templates_service import AgentTemplatesService
@@ -220,7 +220,7 @@ def test_get_payload_by_payload_id_success(
 
 
 def test_get_payload_by_payload_id_not_found_raises(service: PayloadsService):
-    with pytest.raises(PayloadNotFoundError):
+    with pytest.raises(RepositoryResourceNotFoundError):
         service.get_payload_by_payload_id(payload_id=str(uuid.uuid4()))
 
 
@@ -301,7 +301,7 @@ def test_delete_payload_removes_resource_and_emits_event(
         service.delete_payload_by_payload_id(payload_id=payload_id)
 
     assert service.get_all_payloads() == []
-    with pytest.raises(PayloadNotFoundError):
+    with pytest.raises(RepositoryResourceNotFoundError):
         service.get_payload_by_payload_id(payload_id=payload_id)
     events_service.trigger_event.assert_called_once()
     assert (
@@ -311,7 +311,7 @@ def test_delete_payload_removes_resource_and_emits_event(
 
 
 def test_delete_payload_not_found_raises(service: PayloadsService):
-    with pytest.raises(PayloadNotFoundError):
+    with pytest.raises(RepositoryResourceNotFoundError):
         with patch("asyncio.create_task"):
             service.delete_payload_by_payload_id(payload_id=str(uuid.uuid4()))
 
@@ -321,7 +321,7 @@ def test_delete_payload_not_found_leaves_repository_untouched(
 ):
     # Deleting an unknown payload ID must not affect existing resources.
     resource = _create_payload_resource(repo_service)
-    with pytest.raises(PayloadNotFoundError):
+    with pytest.raises(RepositoryResourceNotFoundError):
         with patch("asyncio.create_task"):
             service.delete_payload_by_payload_id(payload_id=str(uuid.uuid4()))
     # The unrelated resource still exists.

@@ -81,7 +81,7 @@ class AgentTemplatesPayloadsService:
 
         Raises:
             AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+            ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
         return self._payloads_service.create_payload_file(
@@ -129,7 +129,7 @@ class AgentTemplatesPayloadsService:
 
         Raises:
             AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+            ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
         return self._payloads_service.create_payload_directory(
@@ -179,7 +179,7 @@ class AgentTemplatesPayloadsService:
 
         Raises:
             AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+            ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
         return self._payloads_service.add_payload_file(
@@ -230,7 +230,7 @@ class AgentTemplatesPayloadsService:
 
         Raises:
             AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+            ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
         return self._payloads_service.add_payload_directory(
@@ -261,7 +261,7 @@ class AgentTemplatesPayloadsService:
             Nothing.
 
         Raises:
-            PayloadNotFoundError: If neither payload metadata nor a matching repository
+            RepositroyResourceNotFoundError: If neither payload metadata nor a matching repository
                 resource exists.
         """
         self._payloads_service.delete_payload_by_payload_id(

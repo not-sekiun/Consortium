@@ -54,21 +54,6 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
         component_project_folder: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> ListenerProfile | None:
-        """Loads a listener profile from a component project folder.
-
-        Overrides the base class solely to narrow the return type annotation from
-        `Component | None` to `ListenerProfile | None` for IDE type checking.
-
-        Args:
-            component_project_folder (pathlib.Path): Path to the directory containing
-                the component project files and `manifest.json`.
-            ignore_enabled_component_flag (bool): When `True`, bypasses the `enabled`
-                check in the manifest. Defaults to `False`.
-
-        Returns:
-            ListenerProfile | None: The loaded listener profile, or `None` if the
-                profile is disabled and the enabled check is not overridden.
-        """
         return super().get_component_from_component_project_folder(
             component_project_folder=component_project_folder,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
@@ -84,22 +69,6 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:
-        """Scans a directory and loads all listener profiles found.
-
-        Overrides the base class solely to narrow the return type annotation for
-        IDE type checking. Behavior is identical to the base class.
-
-        Args:
-            directory (pathlib.Path): The root directory to recursively scan for
-                component project folders.
-            ignore_enabled_component_flag (bool): When `True`, bypasses the `enabled`
-                check in each manifest. Defaults to `False`.
-
-        Returns:
-            tuple[list[Component], list[pathlib.Path], list[tuple[pathlib.Path, ComponentLoadingError]]]:
-                A three-element tuple of loaded profiles, skipped paths, and
-                `(path, error)` pairs for profiles that errored.
-        """
         return super().get_components_from_component_project_folder_directories(
             directory=directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,

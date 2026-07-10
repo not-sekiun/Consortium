@@ -32,6 +32,7 @@ docs = [
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.0",
     "mkdocstrings[python]>=1.0.0",
+    "zensical>=0.0.50",
 ]
 plugins = []
 listeners = []

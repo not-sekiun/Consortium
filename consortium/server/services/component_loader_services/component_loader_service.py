@@ -321,47 +321,6 @@ class ComponentLoaderService[Component]:
         component_project_folder: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> Component | None:
-        """Loads and returns a single component instance from a component project folder.
-
-        Runs the full validation pipeline: manifest validation, enabled check,
-        third-party dependency resolution, module import, symbol lookup, interface
-        check, framework version check, and post-validation hook.
-
-        Args:
-            component_project_folder (pathlib.Path): Path to the directory containing
-                the component project files and `manifest.json`.
-            ignore_enabled_component_flag (bool): When `True`, bypasses the `enabled`
-                check in the manifest. Defaults to `False`.
-
-        Returns:
-            Component | None: The instantiated component, or `None` if the component is
-                disabled and the enabled check is not overridden.
-
-        Raises:
-            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
-                invalid JSON.
-            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
-                follow the expected schema.
-            InvalidComponentProjectPyProjectFileTOMLError: If `pyproject.toml` cannot
-                be parsed.
-            InvalidComponentProjectPyProjectFileDependencyError: If a dependency entry
-                in `pyproject.toml` is malformed.
-            ThirdPartyDependencyNotFoundError: If a required third-party package is not
-                installed.
-            IncompatibleThirdPartyDependencyVersionError: If an installed package does
-                not satisfy the required version specifier.
-            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
-                cannot be found.
-            ComponentProjectSymbolNotFoundError: If the symbol named in the manifest
-                does not exist in the module.
-            ComponentProjectInterfaceError: If the class does not inherit from the
-                expected base class.
-            IncompatibleComponentFrameworkVersionError: If the component is incompatible
-                with the current framework version.
-            InternalComponentProjectError: If an unhandled exception occurs during
-                import or instantiation.
-        """
         manifest_json = self._validate_manifest_json_file(
             component_project_folder=component_project_folder,
             manifest_file_path=self._get_manifest_json_file_path(
@@ -417,25 +376,6 @@ class ComponentLoaderService[Component]:
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:
-        """Recursively scans a directory and loads components from all project folders found.
-
-        Each subdirectory containing a `manifest.json` is treated as a component project
-        folder. Components that fail to load are collected rather than aborting the scan,
-        and disabled components are collected as skipped paths.
-
-        Args:
-            directory (pathlib.Path): The root directory to recursively scan for
-                component project folders.
-            ignore_enabled_component_flag (bool): When `True`, bypasses the `enabled`
-                check in each manifest. Defaults to `False`.
-
-        Returns:
-            tuple[list[Component], list[pathlib.Path], list[tuple[pathlib.Path, ComponentLoadingError]]]:
-                A three-element tuple of:
-                    - A list of successfully loaded component instances.
-                    - A list of paths for disabled (skipped) components.
-                    - A list of `(path, error)` pairs for components that errored.
-        """
         # Recursively search through the directory to find all component project
         # folders and returns them.
         component_project_folder_paths = []
@@ -474,26 +414,6 @@ class ComponentLoaderService[Component]:
         component: Component,
         registered_components: list[Component],
     ) -> bool:
-        """Validates that all component-level dependencies of a component are satisfied.
-
-        Checks that every declared `component_dependencies` entry exists in
-        `registered_components` and that the installed version falls within the required
-        specifier.
-
-        Args:
-            component (Component): The component whose dependencies to validate.
-            registered_components (list[Component]): The pool of already-registered
-                components to check against.
-
-        Returns:
-            bool: `True` when all dependencies are satisfied.
-
-        Raises:
-            ComponentDependencyNotFoundError: If a declared dependency is not present
-                in `registered_components`.
-            IncompatibleComponentDependencyVersionError: If a dependency is found but
-                its version does not satisfy the required specifier.
-        """
         label_registered_component_map = {
             registered_component.label: registered_component
             for registered_component in registered_components
@@ -531,29 +451,6 @@ class ComponentLoaderService[Component]:
         list[Component],
         list[tuple[Component, ComponentDependencyError]],
     ]:
-        """Resolves a topological load order for a batch of components.
-
-        Dependency-validates all components against the union of `already_loaded_components`
-        and `components`. Components with missing or incompatible dependencies are placed
-        in the skipped list along with the relevant error. The remaining valid components
-        are topologically sorted so dependencies load before dependents.
-
-        Args:
-            components (list[Component]): The batch of components to sort.
-            already_loaded_components (list[Any]): Components that are already loaded
-                and can satisfy dependencies without appearing in the output order.
-
-        Returns:
-            tuple[list[Component], list[tuple[Component, ComponentDependencyError]]]:
-                A two-element tuple of:
-                    - An ordered list of components to load (dependencies first).
-                    - A list of `(component, error)` pairs for components that could not
-                      be loaded due to dependency issues.
-
-        Raises:
-            graphlib.CycleError: If a cyclic dependency is detected among the valid
-                components.
-        """
         already_loaded_label_component_map = {
             component.label: component for component in already_loaded_components
         }

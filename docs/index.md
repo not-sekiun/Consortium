@@ -5,6 +5,8 @@ hide:
     - footer
 ---
 
+# Home
+
 ![Consortium Logo](assets/banner_light_mode.png#only-light){ width="75%" }
 ![Consortium Logo](assets/banner_dark_mode.png#only-dark){ width="75%" }
 { style="text-align: center;" }

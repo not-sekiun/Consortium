@@ -9,14 +9,6 @@ from pydantic import JsonValue
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.event_hooks import EventType
-from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
-    PayloadIDReservationNotFoundError,
-    PayloadNotFoundError,
-)
-from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
-    RepositoryResourceNotFoundError,
-    ResourceIDReservationNotFoundError,
-)
 from consortium.server.models.agent_template_models import (
     PersistentAgentTemplateReferenceModel,
 )
@@ -148,7 +140,7 @@ class PayloadsService:
 
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+            ResourceIDReservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
         # Validate payload build parameters against the agent template and check that
@@ -161,23 +153,17 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        try:
-            resource = self._repository_service.create_file(
-                content=content,
-                name=name,
-                description=description,
-                resource_id=payload_id,
-                data=self._build_payload_resource_data(
-                    agent_template=agent_template,
-                    build_parameters=build_parameters,
-                    payload_data=payload_data,
-                ),
-            )
-        except ResourceIDReservationNotFoundError:
-            raise PayloadIDReservationNotFoundError(
-                payload_id=normalize_uuid(payload_id),
-            ) from None
-
+        resource = self._repository_service.create_file(
+            content=content,
+            name=name,
+            description=description,
+            resource_id=payload_id,
+            data=self._build_payload_resource_data(
+                agent_template=agent_template,
+                build_parameters=build_parameters,
+                payload_data=payload_data,
+            ),
+        )
         payload = Payload(
             resource=resource,
             agent_templates_service=self._agent_templates_service,
@@ -239,7 +225,7 @@ class PayloadsService:
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID
                 exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but
+            ResourceIDReservationNotFoundError: If `payload_id` is provided but
                 has no corresponding reservation.
         """
         agent_template = (
@@ -250,24 +236,18 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        try:
-            resource = self._repository_service.add_file(
-                path=path,
-                name=name,
-                description=description,
-                resource_id=payload_id,
-                copy=copy,
-                data=self._build_payload_resource_data(
-                    agent_template=agent_template,
-                    build_parameters=build_parameters,
-                    payload_data=payload_data,
-                ),
-            )
-        except ResourceIDReservationNotFoundError:
-            raise PayloadIDReservationNotFoundError(
-                payload_id=normalize_uuid(payload_id),
-            ) from None
-
+        resource = self._repository_service.add_file(
+            path=path,
+            name=name,
+            description=description,
+            resource_id=payload_id,
+            copy=copy,
+            data=self._build_payload_resource_data(
+                agent_template=agent_template,
+                build_parameters=build_parameters,
+                payload_data=payload_data,
+            ),
+        )
         payload = Payload(
             resource=resource,
             agent_templates_service=self._agent_templates_service,
@@ -326,7 +306,7 @@ class PayloadsService:
 
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but has no
+            ResourceIDReservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
         # Validate payload build parameters against the agent template and check that
@@ -339,24 +319,18 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        try:
-            resource = self._repository_service.create_directory(
-                content=content,
-                archive_file_format=archive_file_format,
-                name=name,
-                description=description,
-                resource_id=payload_id,
-                data=self._build_payload_resource_data(
-                    agent_template=agent_template,
-                    build_parameters=build_parameters,
-                    payload_data=payload_data,
-                ),
-            )
-        except ResourceIDReservationNotFoundError:
-            raise PayloadIDReservationNotFoundError(
-                payload_id=normalize_uuid(payload_id),
-            ) from None
-
+        resource = self._repository_service.create_directory(
+            content=content,
+            archive_file_format=archive_file_format,
+            name=name,
+            description=description,
+            resource_id=payload_id,
+            data=self._build_payload_resource_data(
+                agent_template=agent_template,
+                build_parameters=build_parameters,
+                payload_data=payload_data,
+            ),
+        )
         payload = Payload(
             resource=resource,
             agent_templates_service=self._agent_templates_service,
@@ -418,7 +392,7 @@ class PayloadsService:
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID
                 exists.
-            PayloadIDReservationNotFoundError: If `payload_id` is provided but
+            ResourceIDReservationNotFoundError: If `payload_id` is provided but
                 has no corresponding reservation.
         """
         agent_template = (
@@ -429,24 +403,18 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        try:
-            resource = self._repository_service.add_directory(
-                path=path,
-                name=name,
-                description=description,
-                resource_id=payload_id,
-                copy=copy,
-                data=self._build_payload_resource_data(
-                    agent_template=agent_template,
-                    build_parameters=build_parameters,
-                    payload_data=payload_data,
-                ),
-            )
-        except ResourceIDReservationNotFoundError:
-            raise PayloadIDReservationNotFoundError(
-                payload_id=normalize_uuid(payload_id),
-            ) from None
-
+        resource = self._repository_service.add_directory(
+            path=path,
+            name=name,
+            description=description,
+            resource_id=payload_id,
+            copy=copy,
+            data=self._build_payload_resource_data(
+                agent_template=agent_template,
+                build_parameters=build_parameters,
+                payload_data=payload_data,
+            ),
+        )
         payload = Payload(
             resource=resource,
             agent_templates_service=self._agent_templates_service,
@@ -478,18 +446,15 @@ class PayloadsService:
             payload_id: The ID of the payload to delete.
 
         Raises:
-            PayloadNotFoundError: If no payload with the given ID exists.
+            RepositoryResourceNotFoundError: If no payload with the given ID exists.
         """
         payload_id = normalize_uuid(payload_id)
 
         # Snapshot payload JSON before deletion, since to_json() reads file metadata
         # (e.g. datetime_modified) that requires the file to still exist on disk.
-        try:
-            resource = self._repository_service.get_resource_by_resource_id(
-                resource_id=payload_id
-            )
-        except RepositoryResourceNotFoundError:
-            raise PayloadNotFoundError(payload_id=payload_id) from None
+        resource = self._repository_service.get_resource_by_resource_id(
+            resource_id=payload_id
+        )
         payload = Payload(
             resource=resource,
             agent_templates_service=self._agent_templates_service,
@@ -517,18 +482,13 @@ class PayloadsService:
             The requested payload.
 
         Raises:
-            PayloadNotFoundError: If no payload with the given ID exists.
+            RepositoryResourceNotFoundError: If no payload with the given ID exists.
         """
         payload_id = normalize_uuid(payload_id)
 
-        try:
-            resource = self._repository_service.get_resource_by_resource_id(
-                resource_id=payload_id
-            )
-        except RepositoryResourceNotFoundError:
-            raise PayloadNotFoundError(
-                payload_id=payload_id,
-            ) from None
+        resource = self._repository_service.get_resource_by_resource_id(
+            resource_id=payload_id
+        )
         self._logger.debug(
             "Retrieved payload by payload ID '{}'",
             payload_id,

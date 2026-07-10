@@ -11,15 +11,17 @@ data/client/logs/
 consortium/components/plugins/persistent_agent_generators/persistent_agent_generators.json
 consortium/components/plugins/persistent_listeners/persistent_listeners.json
 
-.idea/
-.claude/
-CLAUDE.md
-
 .pytest_cache/
 .ruff_cache/
 tools/defaults.txt
 .coverage
 .hypothesis/
+
+.idea/
+.claude/
+CLAUDE.md
+
+site/
 
 before_merging.txt
 agent.exe

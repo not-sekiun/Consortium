@@ -41,8 +41,8 @@ from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exc
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
 )
-from consortium.server.exceptions.consortium_exceptions.payloads_consortium_exceptions import (
-    PayloadNotFoundError,
+from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+    RepositoryResourceNotFoundError,
 )
 from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.models.logging_models import LoggerType
@@ -164,7 +164,7 @@ class Agent:
                     payload_id=payload_id
                 )
                 self.agent_type = payload.agent_type
-            except PayloadNotFoundError:
+            except RepositoryResourceNotFoundError:
                 raise AgentTypeResolutionError._due_to_payload_not_found_error(
                     payload_id=payload_id,
                 ) from None
