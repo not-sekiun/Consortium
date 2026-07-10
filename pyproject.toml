@@ -43,14 +43,14 @@ event-hooks = []
 
 [tool.ruff.lint]
 select = [
-    "E",      # pycodestyle errors
-    "W",      # pycodestyle warnings
-    "F",      # pyflakes (includes unused imports)
-    "I",      # isort (import sorting)
-    "B",      # flake8-bugbear
-    "C4",     # flake8-comprehensions
-    "UP",     # pyupgrade
-    "COM",    # flake8-commas (replaces add-trailing-comma)
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes (includes unused imports)
+    "I", # isort (import sorting)
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+    "COM", # flake8-commas (replaces add-trailing-comma)
 ]
 ignore = ["E501", "COM812"]
 
