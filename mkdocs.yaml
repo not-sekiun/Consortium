@@ -56,6 +56,12 @@ nav:
     - getting-started/installation.md
     - getting-started/updating.md
     - getting-started/quick-start.md
+  - Server:
+    - server/server-overview.md
+    - server/server-configuration.md
+    - server/user-accounts.md
+    - server/roles-and-permissions.md
+    - server/logging.md
   - Server API:
     - server-api/server-api-overview.md
     - REST API:

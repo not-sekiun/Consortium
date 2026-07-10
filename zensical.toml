@@ -21,6 +21,34 @@ nav = [
     "getting-started/updating.md",
     "getting-started/quick-start.md"
   ] },
+  { "Server" = [
+    "server/server-overview.md",
+    "server/server-configuration.md",
+    "server/user-accounts.md",
+    "server/roles-and-permissions.md",
+    "server/logging.md"
+  ] },
+  { "Client" = [
+    "client/client-overview.md",
+    { "Client Sessions" = [
+      "client/client-sessions/managing-client-sessions.md"
+    ] },
+    { "Listeners" = [
+      "client/listeners/setting-up-listeners.md",
+      "client/listeners/using-listener-templates.md"
+    ] },
+    { "Agent Generators" = [
+      "client/agent-generators/setting-up-agent-generators.md",
+      "client/agent-generators/using-agent-templates.md",
+      "client/agent-generators/managing-payloads.md"
+    ] },
+    { "Agents" = [
+      "client/agents/tasking-agents.md",
+      "client/agents/managing-assets.md",
+      "client/agents/managing-artifacts.md"
+    ] },
+    "client/aliases-and-resource-files.md"
+  ] },
   { "Server API" = [
     "server-api/server-api-overview.md",
     { "REST API" = [
@@ -86,27 +114,6 @@ nav = [
       ] },
       "framework/event-hooks/event-types.md"
     ] }
-  ] },
-  { "Client" = [
-    "client/client-overview.md",
-    { "Client Sessions" = [
-      "client/client-sessions/managing-client-sessions.md"
-    ] },
-    { "Listeners" = [
-      "client/listeners/setting-up-listeners.md",
-      "client/listeners/using-listener-templates.md"
-    ] },
-    { "Agent Generators" = [
-      "client/agent-generators/setting-up-agent-generators.md",
-      "client/agent-generators/using-agent-templates.md",
-      "client/agent-generators/managing-payloads.md"
-    ] },
-    { "Agents" = [
-      "client/agents/tasking-agents.md",
-      "client/agents/managing-assets.md",
-      "client/agents/managing-artifacts.md"
-    ] },
-    "client/aliases-and-resource-files.md"
   ] },
   { "Reference" = [
     "reference/reference-overview.md",

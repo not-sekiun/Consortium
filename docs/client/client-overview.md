@@ -21,7 +21,7 @@ uv run consortium.py client
 By default the client reads its connection details from
 `data/client/client_config.json` and attempts to connect on startup:
 
-```json title="client_config.json"
+```json hl_lines="4 5" title="client_config.json"
 {
   "username": "admin",
   "password": "admin",
@@ -29,6 +29,17 @@ By default the client reads its connection details from
   "remote_port": 9999
 }
 ```
+
+| Field         | Description                                                                        | Default Value |
+|---------------|------------------------------------------------------------------------------------|---------------|
+| `username`    | The username of the user that the client will use to authenticate with the server. | `"admin"`     |
+| `password`    | The password of the user that the client will use to authenticate with the server. | `"admin"`     |
+| `remote_host` | The remote host IP address that the client will connect to.                        | `"127.0.0.1"` |
+| `remote_port` | The remote host port that the client will connect to.                              | `9999`        |
+
+!!! important
+    The `username` and `password` must correspond to an existing user account in the
+    server's [`user_accounts.json`](../server/user-accounts.md) file.
 
 To use a configuration file from a different location, pass `-c/--config`:
 

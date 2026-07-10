@@ -1,20 +1,13 @@
 ## Updating Consortium
 
 To update Consortium, pull any new changes from the GitHub repository and install the
-updated Python dependencies using Poetry.
+updated Python dependencies using `uv`.
 
-1. Navigate to the root directory of the Consortium repository.
-    ```shell
-    cd path/to/Consortium
-    ```
-2. Pull the latest changes from the GitHub repository.
-    ```shell
-    git pull
-    ```
-3. Install any updated or newly added Python dependencies using Poetry.
-    ```shell
-    uv sync
-    ```
+ ```shell
+ cd path/to/Consortium
+ git pull
+ uv sync
+ ```
 
 ## Enabling Auto-updating for Consortium
 
@@ -27,8 +20,8 @@ the plugin configuration file at
 
 ```json hl_lines="3" title="manifest.json"
 {
-    "entry_point": "plugin:Plugin",
-    "enabled": true
+  "entry_point": "plugin:Plugin",
+  "enabled": true
 }
 ```
 
@@ -36,4 +29,4 @@ Now, whenever the server starts, it will check for updates from the GitHub repos
 and attempt to install them.
 
 For more information about plugins and plugin development, refer to the
-[Plugins]() section.
+[Plugins](../framework/plugins/plugins-overview.md) section.
