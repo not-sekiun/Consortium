@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-# /// script
-# dependencies = [
-#     "pexpect",
-# ]
-# ///
 """
 caster - record scripted terminal sessions to asciinema .cast files.
 
 Usage:
     python caster.py demo.tape
+
+Requires: tmux, asciinema. No Python dependencies.
 
 Tape file syntax (VHS-inspired):
 
@@ -31,22 +28,23 @@ Tape file syntax (VHS-inspired):
     Enter
     Sleep 2
 
-Notes:
-- Type does NOT press Enter for you; use an explicit Enter line.
-- Everything runs inside one spawned shell, so `Type "my-repl"` + Enter
-  drops you into your REPL and subsequent lines are typed into it.
-- The tool re-launches itself under `asciinema rec` automatically.
-- Progress ("line N: <content>") is printed to YOUR terminal's stderr as
-  each tape line executes, and is kept OUT of the recording.
+How it works:
+    caster starts a detached tmux session running `asciinema rec`, then
+    injects keystrokes into it with `tmux send-keys`. Because tmux is a
+    real terminal emulator, TUI apps (prompt_toolkit, spinners, cursor
+    queries / CPR) work exactly as they would interactively.
+
+    Progress is printed to caster's own terminal as each tape line runs,
+    and you can watch the session live from another terminal with:
+
+        tmux attach -r -t <session-name>   # printed at startup
 """
 
 import os
 import re
-import shlex
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 
 # ---------------------------------------------------------------------------
@@ -57,9 +55,6 @@ TYPE_RE = re.compile(r"^Type(?:@(?P<speed>[0-9]*\.?[0-9]+)s?)?\s+(?P<text>.*)$")
 SLEEP_RE = re.compile(r"^Sleep\s+(?P<secs>[0-9]*\.?[0-9]+)s?$")
 SET_RE = re.compile(r"^Set\s+(?P<key>\w+)\s+(?P<value>.+)$")
 OUTPUT_RE = re.compile(r"^Output\s+(?P<path>.+)$")
-
-STATUS_ENV = "CASTER_STATUS_FILE"
-INNER_FLAG = "--_inner"
 
 
 class TapeError(Exception):
@@ -76,12 +71,11 @@ def _unquote(text):
 def parse_tape(path):
     """Parse a tape file into (settings, actions).
 
-    settings: dict with 'output', 'shell', 'typing_speed'
-    actions:  list of dicts. Every action carries 'lineno' and 'raw'
-              (the original tape line) for progress reporting, plus:
-                {'op': 'type',  'text': str, 'speed': float|None}
-                {'op': 'sleep', 'secs': float}
-                {'op': 'key',   'key': 'enter'|'tab'|'space'}
+    Every action dict carries 'lineno' and 'raw' (the original tape line)
+    for progress reporting, plus:
+        {'op': 'type',  'text': str, 'speed': float|None}
+        {'op': 'sleep', 'secs': float}
+        {'op': 'key',   'key': 'Enter'|'Tab'|'Space'}
     """
     settings = {
         "output": None,
@@ -136,7 +130,7 @@ def parse_tape(path):
                 continue
 
             if line in ("Enter", "Tab", "Space"):
-                actions.append({**base, "op": "key", "key": line.lower()})
+                actions.append({**base, "op": "key", "key": line})
                 continue
 
             raise TapeError(f"line {lineno}: cannot parse {line!r}")
@@ -148,73 +142,100 @@ def parse_tape(path):
 
 
 # ---------------------------------------------------------------------------
-# Execution (runs inside asciinema)
+# tmux driving
 # ---------------------------------------------------------------------------
 
-KEYS = {
-    "enter": "\r",
-    "tab": "\t",
-    "space": " ",
-}
+
+def tmux(*args, check=True):
+    return subprocess.run(["tmux", *args], check=check, capture_output=True, text=True)
 
 
-def run_tape(settings, actions):
-    import pexpect  # imported here so parse errors surface before dependency errors
+def session_alive(session):
+    return tmux("has-session", "-t", session, check=False).returncode == 0
 
-    status_path = os.environ.get(STATUS_ENV)
-    status_file = open(status_path, "a", encoding="utf-8") if status_path else None
 
-    def report(action):
-        if status_file is not None:
-            status_file.write(f"line {action['lineno']}: {action['raw']}\n")
-            status_file.flush()
+def progress(action):
+    print(f"[caster] line {action['lineno']}: {action['raw']}", flush=True)
 
+
+def run_tape(settings, actions, tape_path):
+    session = f"caster-{os.getpid()}"
     cols, rows = shutil.get_terminal_size(fallback=(80, 24))
-    child = pexpect.spawn(
-        settings["shell"],
-        encoding="utf-8",
-        dimensions=(rows, cols),
-        echo=True,
+
+    rec_cmd = (
+        f"asciinema rec -q --overwrite "
+        f"-c {shell_quote(settings['shell'])} "
+        f"{shell_quote(settings['output'])}"
     )
-    # Mirror everything the pty produces (which includes echoed keystrokes)
-    # to our stdout, which asciinema is recording.
-    child.logfile_read = sys.stdout
+    tmux(
+        "new-session",
+        "-d",
+        "-s",
+        session,
+        "-x",
+        str(cols),
+        "-y",
+        str(rows),
+        rec_cmd,
+    )
+    print(f"[caster] recording '{tape_path}' -> {settings['output']}")
+    print(f"[caster] watch live from another terminal:  tmux attach -r -t {session}")
 
-    # Give the shell a moment to print its prompt.
-    time.sleep(0.5)
+    # Give asciinema + the shell a moment to come up.
+    time.sleep(0.7)
 
-    def type_text(text, speed):
-        for ch in text:
-            child.send(ch)
-            time.sleep(speed)
+    def send_literal(text):
+        # -l = literal, '--' guards against text starting with '-'
+        tmux("send-keys", "-t", session, "-l", "--", text)
+
+    def send_key(name):  # Enter / Tab / Space
+        tmux("send-keys", "-t", session, name)
 
     try:
         for action in actions:
-            report(action)
+            if not session_alive(session):
+                print("[caster] session ended unexpectedly; stopping.", file=sys.stderr)
+                return 1
+            progress(action)
             if action["op"] == "sleep":
                 time.sleep(action["secs"])
             elif action["op"] == "type":
                 speed = action["speed"]
-                type_text(
-                    action["text"],
-                    speed if speed is not None else settings["typing_speed"],
-                )
+                speed = speed if speed is not None else settings["typing_speed"]
+                for ch in action["text"]:
+                    send_literal(ch)
+                    time.sleep(speed)
             elif action["op"] == "key":
-                child.send(KEYS[action["key"]])
-                time.sleep(0.05)  # tiny settle so echoes land in order
-        # Drain remaining output briefly, then shut down.
+                send_key(action["key"])
+                time.sleep(0.05)
+
+        # Wind down: exit the shell so asciinema finalizes the cast.
         time.sleep(0.5)
-        child.sendline("exit")
-        child.expect(pexpect.EOF, timeout=10)
-    except pexpect.exceptions.ExceptionPexpect:
-        pass
-    finally:
-        if child.isalive():
-            child.close(force=True)
-        if status_file is not None:
-            status_file.write("done\n")
-            status_file.flush()
-            status_file.close()
+        if session_alive(session):
+            send_literal("exit")
+            send_key("Enter")
+
+        # Wait for asciinema to finish writing.
+        deadline = time.time() + 15
+        while session_alive(session) and time.time() < deadline:
+            time.sleep(0.1)
+        if session_alive(session):
+            print("[caster] session did not exit cleanly; killing it.", file=sys.stderr)
+            tmux("kill-session", "-t", session, check=False)
+            return 1
+
+        print(f"[caster] done: {settings['output']}")
+        return 0
+    except KeyboardInterrupt:
+        print("\n[caster] interrupted; killing session.", file=sys.stderr)
+        tmux("kill-session", "-t", session, check=False)
+        return 130
+
+
+def shell_quote(s):
+    import shlex
+
+    return shlex.quote(s)
 
 
 # ---------------------------------------------------------------------------
@@ -222,74 +243,24 @@ def run_tape(settings, actions):
 # ---------------------------------------------------------------------------
 
 
-def _tail_status(status_path, proc):
-    """Stream progress lines from the status file to OUR stderr while
-    asciinema runs. This output never enters the recording because it is
-    written by the outer process, outside the recorded pty."""
-    with open(status_path, encoding="utf-8") as sf:
-        while True:
-            line = sf.readline()
-            if line:
-                print(f"[caster] {line}", end="", file=sys.stderr, flush=True)
-                continue
-            if proc.poll() is not None:
-                # Process exited; drain anything left, then stop.
-                remainder = sf.read()
-                if remainder:
-                    for rline in remainder.splitlines():
-                        print(f"[caster] {rline}", file=sys.stderr, flush=True)
-                return
-            time.sleep(0.05)
-
-
 def main():
-    args = list(sys.argv[1:])
-    inner = INNER_FLAG in args
-    if inner:
-        args.remove(INNER_FLAG)
-
-    if len(args) != 1:
+    if len(sys.argv) != 2:
         print(f"usage: {os.path.basename(sys.argv[0])} <tape-file>", file=sys.stderr)
         sys.exit(2)
 
-    tape_path = args[0]
+    for dep in ("tmux", "asciinema"):
+        if shutil.which(dep) is None:
+            print(f"error: {dep} not found on PATH", file=sys.stderr)
+            sys.exit(1)
+
+    tape_path = sys.argv[1]
     try:
         settings, actions = parse_tape(tape_path)
     except (TapeError, OSError) as e:
         print(f"error: {e}", file=sys.stderr)
         sys.exit(1)
 
-    if inner:
-        run_tape(settings, actions)
-        return
-
-    # Outer invocation: wrap ourselves in asciinema rec.
-    if shutil.which("asciinema") is None:
-        print("error: asciinema not found on PATH", file=sys.stderr)
-        sys.exit(1)
-
-    with tempfile.NamedTemporaryFile(
-        mode="w", prefix="caster-status-", suffix=".log", delete=False
-    ) as tf:
-        status_path = tf.name
-
-    inner_cmd = shlex.join(
-        [sys.executable, os.path.abspath(__file__), INNER_FLAG, tape_path]
-    )
-    env = {**os.environ, STATUS_ENV: status_path}
-    proc = subprocess.Popen(
-        ["asciinema", "rec", "--overwrite", "-c", inner_cmd, settings["output"]],
-        env=env,
-    )
-    try:
-        _tail_status(status_path, proc)
-        proc.wait()
-    finally:
-        try:
-            os.unlink(status_path)
-        except OSError:
-            pass
-    sys.exit(proc.returncode)
+    sys.exit(run_tape(settings, actions, tape_path))
 
 
 if __name__ == "__main__":
