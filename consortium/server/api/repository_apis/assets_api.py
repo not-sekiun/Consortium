@@ -42,7 +42,7 @@ _assets_service = server_singletons.assets_service
 
 _resource_not_found_error = (
     api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
-        consortium_exception=svc_excs.RepositoryResourceNotFoundError(
+        consortium_exception=svc_excs.ResourceNotFoundError(
             resource_id="<resource_id>",
         ),
     )
@@ -79,7 +79,7 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_get_resource_by_resource_id_endpoint(
-        get_resource_by_resource_id_handler=_assets_service.get_asset_by_asset_id,
+        get_resource_by_resource_id_handler=_assets_service.get_asset_by_resource_id,
         get_resource_by_resource_id_permission=UserPermissions.READ_ASSET_BY_ASSET_ID,
         response_model_class=AssetModel,
     ),
@@ -99,7 +99,7 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_delete_resource_by_resource_id_endpoint(
-        delete_resource_by_resource_id_handler=_assets_service.delete_asset_by_asset_id,
+        delete_resource_by_resource_id_handler=_assets_service.delete_asset_by_resource_id,
         delete_resource_by_resource_id_permission=UserPermissions.DELETE_ASSET_BY_ASSET_ID,
     ),
     methods=["DELETE"],
@@ -119,7 +119,7 @@ router.add_api_route(
 router.add_api_route(
     path="/download/{resource_id}",
     endpoint=create_download_resource_by_resource_id_endpoint(
-        get_resource_by_resource_id_handler=_assets_service.get_asset_by_asset_id,
+        get_resource_by_resource_id_handler=_assets_service.get_asset_by_resource_id,
         download_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_ASSETS,
     ),
     methods=["GET"],

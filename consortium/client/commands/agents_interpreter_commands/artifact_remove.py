@@ -23,8 +23,8 @@ class ArtifactRemoveCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "artifact_id",
-            help="Resource ID of the artifact to be removed.",
+            "resource_id",
+            help="The artifact's resource ID.",
             nargs=1,
         )
 
@@ -36,10 +36,10 @@ class ArtifactRemoveCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await rest_api.delete_artifact_by_artifact_id(
-                artifact_id=parsed_args.artifact_id[0],
+            await rest_api.delete_artifact_by_resource_id(
+                resource_id=parsed_args.resource_id[0],
             )
-            print_success(f"Deleted artifact '{parsed_args.artifact_id[0]}'")
+            print_success(f"Deleted artifact '{parsed_args.resource_id[0]}'")
         except SystemExit:
             pass
 

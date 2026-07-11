@@ -42,7 +42,7 @@ from consortium.server.exceptions.service_exceptions.listeners_service_exception
     ListenerNotFoundError,
 )
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    RepositoryResourceNotFoundError,
+    ResourceNotFoundError,
 )
 from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.models.logging_models import LoggerType
@@ -160,11 +160,11 @@ class Agent:
             payload_id = normalize_uuid(value=payload_id)
 
             try:
-                payload = server_singletons.payloads_service.get_payload_by_payload_id(
-                    payload_id=payload_id
+                payload = server_singletons.payloads_service.get_payload_by_resource_id(
+                    resource_id=payload_id
                 )
                 self.agent_type = payload.agent_type
-            except RepositoryResourceNotFoundError:
+            except ResourceNotFoundError:
                 raise AgentTypeResolutionError._due_to_payload_not_found_error(
                     payload_id=payload_id,
                 ) from None

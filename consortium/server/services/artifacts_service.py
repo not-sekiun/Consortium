@@ -95,8 +95,8 @@ class ArtifactsService:
         self._repository_service.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
-    def reserve_artifact_id(self) -> uuid.UUID:
-        """Reserves and returns a new artifact ID without creating any artifact.
+    def reserve_resource_id(self) -> uuid.UUID:
+        """Reserves and returns a new resource ID without creating any artifact.
 
         The returned ID can later be passed as `resource_id` to one of the artifact
         creation methods to claim it. Reserving an ID up front lets a caller learn the
@@ -104,11 +104,11 @@ class ArtifactsService:
         the ID inside the content that will be stored).
 
         Returns:
-            The freshly reserved artifact ID, unique across the repository.
+            The freshly reserved resource ID, unique across the repository.
         """
-        artifact_id = self._repository_service.reserve_resource_id()
-        self._logger.debug("Reserved artifact ID '{}'", str(artifact_id))
-        return artifact_id
+        resource_id = self._repository_service.reserve_resource_id()
+        self._logger.debug("Reserved resource ID '{}'", str(resource_id))
+        return resource_id
 
     @log_and_propagate_error_on_service_method
     async def create_artifact_file(
@@ -133,7 +133,7 @@ class ArtifactsService:
                 `None`, the artifact's generated UUID is used as its name.
             description: A short human-readable description of the artifact.
                 Defaults to an empty string when omitted.
-            resource_id: A previously reserved artifact ID to
+            resource_id: A previously reserved resource ID to
                 claim for this artifact. When `None`, a new ID is generated automatically.
             agent_id: The ID of the agent that produced this
                 artifact, recorded for attribution. When `None`, the artifact is stored
@@ -190,7 +190,7 @@ class ArtifactsService:
                 `None`, the original filename is used.
             description: A short human-readable description of the artifact.
                 Defaults to an empty string when omitted.
-            resource_id: A previously reserved artifact ID to
+            resource_id: A previously reserved resource ID to
                 claim for this artifact. When `None`, a new ID is generated automatically.
             copy: When `False` (default) the source file is moved into the
                 repository, leaving nothing at the original path. When `True` the source
@@ -257,7 +257,7 @@ class ArtifactsService:
                 `None`, the artifact's generated UUID is used as its name.
             description: A short human-readable description of the artifact.
                 Defaults to an empty string when omitted.
-            resource_id: A previously reserved artifact ID to
+            resource_id: A previously reserved resource ID to
                 claim for this artifact. When `None`, a new ID is generated automatically.
             agent_id: The ID of the agent that produced this
                 artifact, recorded for attribution. When `None`, the artifact is stored
@@ -316,7 +316,7 @@ class ArtifactsService:
                 `None`, the original directory name is used.
             description: A short human-readable description of the artifact.
                 Defaults to an empty string when omitted.
-            resource_id: A previously reserved artifact ID to
+            resource_id: A previously reserved resource ID to
                 claim for this artifact. When `None`, a new ID is generated automatically.
             copy: When `False` (default) the source directory is moved into the
                 repository, leaving nothing at the original path. When `True` the source
@@ -354,8 +354,8 @@ class ArtifactsService:
         return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
-    async def delete_artifact_by_artifact_id(
-        self, artifact_id: str | uuid.UUID
+    async def delete_artifact_by_resource_id(
+        self, resource_id: str | uuid.UUID
     ) -> None:
         """Deletes an artifact from disk and the repository.
 
@@ -364,28 +364,28 @@ class ArtifactsService:
         deregistered.
 
         Args:
-            artifact_id: The ID of the artifact to delete.
+            resource_id: The ID of the artifact to delete.
 
         Raises:
             RepositoryResourceNotFoundError: If no artifact with the given ID exists.
         """
         # Snapshot JSON before deletion since to_json() reads from disk
         artifact = self._repository_service.get_resource_by_resource_id(
-            resource_id=artifact_id
+            resource_id=resource_id
         )
         artifact_json = artifact.to_json()
         await asyncio.to_thread(
             self._repository_service.delete_resource_by_resource_id,
-            resource_id=artifact_id,
+            resource_id=resource_id,
         )
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.ARTIFACT_DELETED,
-                message=f"Deleted artifact: {artifact_id}",
+                message=f"Deleted artifact: {resource_id}",
                 data=artifact_json,
             )
         )
-        self._logger.debug("Deleted artifact: {}", str(artifact_id))
+        self._logger.debug("Deleted artifact: {}", str(resource_id))
 
     @log_and_propagate_error_on_service_method
     def get_all_artifacts(self) -> list[Artifact]:
@@ -406,14 +406,14 @@ class ArtifactsService:
         ]
 
     @log_and_propagate_error_on_service_method
-    def get_artifact_by_artifact_id(
+    def get_artifact_by_resource_id(
         self,
-        artifact_id: str | uuid.UUID,
+        resource_id: str | uuid.UUID,
     ) -> Artifact:
         """Returns a single artifact by its ID.
 
         Args:
-            artifact_id: The ID of the artifact to retrieve.
+            resource_id: The ID of the artifact to retrieve.
 
         Returns:
             The requested artifact resource, either a file or a directory depending
@@ -423,7 +423,7 @@ class ArtifactsService:
             RepositoryResourceNotFoundError: If no artifact with the given ID exists.
         """
         artifact = self._repository_service.get_resource_by_resource_id(
-            resource_id=artifact_id
+            resource_id=resource_id
         )
         self._logger.debug("Retrieved artifact: {!r}", artifact)
         return Artifact(resource=artifact, agents_service=self._agents_service)

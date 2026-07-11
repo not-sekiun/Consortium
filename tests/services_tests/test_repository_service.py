@@ -6,8 +6,8 @@ import pytest
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,
-    RepositoryResourceNotFoundError,
     ResourceIDReservationNotFoundError,
+    ResourceNotFoundError,
     UnsyncedRepositoryMetadataFileError,
 )
 from consortium.server.services.repository_service import RepositoryService
@@ -381,7 +381,7 @@ def test_delete_directory_resource(service: RepositoryService):
 def test_delete_resource_not_found_raises(service: RepositoryService):
     import uuid
 
-    with pytest.raises(RepositoryResourceNotFoundError):
+    with pytest.raises(ResourceNotFoundError):
         service.delete_resource_by_resource_id(resource_id=str(uuid.uuid4()))
 
 
@@ -393,7 +393,7 @@ def test_delete_resource_not_found_raises(service: RepositoryService):
 def test_get_resource_by_resource_id_not_found_raises(service: RepositoryService):
     import uuid
 
-    with pytest.raises(RepositoryResourceNotFoundError):
+    with pytest.raises(ResourceNotFoundError):
         service.get_resource_by_resource_id(resource_id=str(uuid.uuid4()))
 
 

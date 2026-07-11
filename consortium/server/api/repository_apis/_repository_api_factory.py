@@ -77,7 +77,7 @@ def create_get_resource_by_resource_id_endpoint(
     ):
         try:
             repository_resource = get_resource_by_resource_id_handler(str(resource_id))
-        except svc_excs.RepositoryResourceNotFoundError as exc:
+        except svc_excs.ResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
@@ -107,7 +107,7 @@ def create_download_resource_by_resource_id_endpoint(
     ) -> FileResponse:
         try:
             repository_resource = get_resource_by_resource_id_handler(str(resource_id))
-        except svc_excs.RepositoryResourceNotFoundError as exc:
+        except svc_excs.ResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
@@ -261,7 +261,7 @@ def create_delete_resource_by_resource_id_endpoint(
             result = delete_resource_by_resource_id_handler(str(resource_id))
             if inspect.isawaitable(result):
                 await result
-        except svc_excs.RepositoryResourceNotFoundError as exc:
+        except svc_excs.ResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None

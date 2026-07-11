@@ -29,8 +29,8 @@ class ArtifactDownloadCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "artifact_id",
-            help="Resource ID of the artifact to download.",
+            "resource_id",
+            help="The artifact's resource ID.",
             nargs=1,
         )
         parser.add_argument(
@@ -61,8 +61,8 @@ class ArtifactDownloadCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            artifact = await rest_api.get_artifact_by_artifact_id(
-                artifact_id=parsed_args.artifact_id[0],
+            artifact = await rest_api.get_artifact_by_resource_id(
+                resource_id=parsed_args.resource_id[0],
             )
             # If user supplies an output path that takes precedence, else use the artifact
             # name directly for artifact files or append ".zip" for artifact directories
@@ -94,8 +94,8 @@ class ArtifactDownloadCommand(BaseConnectedCommand):
                     total=artifact["size"],
                 )
                 with output_file_path.open("wb") as output_file:
-                    async for chunk in rest_api.download_artifact_by_artifact_id(
-                        artifact_id=parsed_args.artifact_id[0],
+                    async for chunk in rest_api.download_artifact_by_resource_id(
+                        resource_id=parsed_args.resource_id[0],
                     ):
                         progress.update(downloading_task, advance=len(chunk))
                         output_file.write(chunk)

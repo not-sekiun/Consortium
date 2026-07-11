@@ -31,8 +31,8 @@ class ArtifactInfoCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "artifact_id",
-            help="Resource ID of the artifact to display information for.",
+            "resource_id",
+            help="The artifact's resource ID.",
             nargs=1,
         )
         parser.add_argument(
@@ -50,8 +50,8 @@ class ArtifactInfoCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            artifact = await rest_api.get_artifact_by_artifact_id(
-                artifact_id=parsed_args.artifact_id[0],
+            artifact = await rest_api.get_artifact_by_resource_id(
+                resource_id=parsed_args.resource_id[0],
             )
             # An artifact is "just" a repository resource with attached metadata. The
             # resource fields describe the file/directory on disk while the `data` field

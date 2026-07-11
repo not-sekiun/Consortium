@@ -88,20 +88,20 @@ class PayloadsService:
         self._repository_service.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
-    def reserve_payload_id(self) -> uuid.UUID:
-        """Generates and reserves a payload ID to be claimed later during payload creation.
+    def reserve_resource_id(self) -> uuid.UUID:
+        """Generates and reserves a resource ID to be claimed later during payload creation.
 
-        Reservations are required when the caller needs to know the payload ID before
+        Reservations are required when the caller needs to know the resource ID before
         the payload file or directory has been created (e.g., to name the file after the
-        ID). The reserved ID must be provided as `payload_id` to `create_payload_file`
+        ID). The reserved ID must be provided as `resource_id` to `create_payload_file`
         or `create_payload_directory`.
 
         Returns:
-            The reserved payload ID.
+            The reserved resource ID.
         """
-        payload_id = self._repository_service.reserve_resource_id()
-        self._logger.debug("Reserved payload ID '{}'", str(payload_id))
-        return payload_id
+        resource_id = self._repository_service.reserve_resource_id()
+        self._logger.debug("Reserved resource ID '{}'", str(resource_id))
+        return resource_id
 
     @log_and_propagate_error_on_service_method
     def create_payload_file(
@@ -110,15 +110,15 @@ class PayloadsService:
         build_parameters: dict[str, Any],
         content: str | bytes | TextIO | BinaryIO,
         payload_data: dict[str, Any] | None = None,
-        payload_id: str | uuid.UUID | None = None,
+        resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
         description: str = "",
     ) -> Payload:
         """Creates a file-based payload and associates it with an agent template.
 
         Build parameters are validated against the agent template before creating the
-        resource. If `payload_id` is provided it must have been previously reserved via
-        `reserve_payload_id`. Emits a `PAYLOAD_CREATED` event.
+        resource. If `resource_id` is provided it must have been previously reserved via
+        `reserve_resource_id`. Emits a `PAYLOAD_CREATED` event.
 
         Args:
             agent_template_id: The ID of the agent template to
@@ -129,7 +129,7 @@ class PayloadsService:
                 content to write to the repository.
             payload_data: Arbitrary metadata attached to the
                 payload. When `None`, no extra metadata is stored.
-            payload_id: A previously reserved ID to assign to
+            resource_id: A previously reserved ID to assign to
                 this payload. When `None`, a new ID is generated automatically.
             name: A human-readable name for the payload file. When `None`,
                 the resource UUID is used.
@@ -140,7 +140,7 @@ class PayloadsService:
 
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID exists.
-            ResourceIDReservationNotFoundError: If `payload_id` is provided but has no
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
         """
         # Validate payload build parameters against the agent template and check that
@@ -157,7 +157,7 @@ class PayloadsService:
             content=content,
             name=name,
             description=description,
-            resource_id=payload_id,
+            resource_id=resource_id,
             data=self._build_payload_resource_data(
                 agent_template=agent_template,
                 build_parameters=build_parameters,
@@ -177,7 +177,7 @@ class PayloadsService:
             )
         )
         self._logger.debug(
-            "Created payload file with payload ID '{}'",
+            "Created payload file with resource ID '{}'",
             resource.resource_id,
         )
         return payload
@@ -189,7 +189,7 @@ class PayloadsService:
         build_parameters: dict[str, Any],
         path: pathlib.Path | str,
         payload_data: dict[str, Any] | None = None,
-        payload_id: str | uuid.UUID | None = None,
+        resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
         description: str = "",
         copy: bool = False,
@@ -198,8 +198,8 @@ class PayloadsService:
 
         Unlike `create_payload_file`, no new file is written. The file at `path`
         is moved (or copied when `copy=True`) into the repository. Build parameters
-        are validated against the agent template before registration. If `payload_id`
-        is provided it must have been previously reserved via `reserve_payload_id`.
+        are validated against the agent template before registration. If `resource_id`
+        is provided it must have been previously reserved via `reserve_resource_id`.
         Emits a `PAYLOAD_CREATED` event.
 
         Args:
@@ -210,7 +210,7 @@ class PayloadsService:
             path: Path to the existing file to register.
             payload_data: Arbitrary metadata attached to
                 the payload. When `None`, no extra metadata is stored.
-            payload_id: A previously reserved ID to
+            resource_id: A previously reserved ID to
                 assign to this payload. When `None`, a new ID is generated.
             name: A human-readable name for the payload file. When
                 `None`, the original filename is used.
@@ -225,7 +225,7 @@ class PayloadsService:
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID
                 exists.
-            ResourceIDReservationNotFoundError: If `payload_id` is provided but
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but
                 has no corresponding reservation.
         """
         agent_template = (
@@ -240,7 +240,7 @@ class PayloadsService:
             path=path,
             name=name,
             description=description,
-            resource_id=payload_id,
+            resource_id=resource_id,
             copy=copy,
             data=self._build_payload_resource_data(
                 agent_template=agent_template,
@@ -261,7 +261,7 @@ class PayloadsService:
             )
         )
         self._logger.debug(
-            "Added payload file with payload ID '{}'",
+            "Added payload file with resource ID '{}'",
             resource.resource_id,
         )
         return payload
@@ -273,7 +273,7 @@ class PayloadsService:
         build_parameters: dict[str, Any],
         content: bytes | BinaryIO,
         payload_data: dict[str, Any] | None = None,
-        payload_id: str | uuid.UUID | None = None,
+        resource_id: str | uuid.UUID | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"] = "zip",
         name: str | None = None,
         description: str = "",
@@ -281,8 +281,8 @@ class PayloadsService:
         """Creates a directory-based payload by extracting an archive and associating it with an agent template.
 
         Build parameters are validated against the agent template before creating the
-        resource. If `payload_id` is provided it must have been previously reserved via
-        `reserve_payload_id`. Emits a `PAYLOAD_CREATED` event.
+        resource. If `resource_id` is provided it must have been previously reserved via
+        `reserve_resource_id`. Emits a `PAYLOAD_CREATED` event.
 
         Args:
             agent_template_id: The ID of the agent template to
@@ -293,7 +293,7 @@ class PayloadsService:
                 extract into the repository directory.
             payload_data: Arbitrary metadata attached to the
                 payload. When `None`, no extra metadata is stored.
-            payload_id: A previously reserved ID to assign to
+            resource_id: A previously reserved ID to assign to
                 this payload. When `None`, a new ID is generated automatically.
             archive_file_format: The
                 format of the archive to extract. Defaults to `"zip"`.
@@ -306,7 +306,7 @@ class PayloadsService:
 
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID exists.
-            ResourceIDReservationNotFoundError: If `payload_id` is provided but has no
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
         """
         # Validate payload build parameters against the agent template and check that
@@ -324,7 +324,7 @@ class PayloadsService:
             archive_file_format=archive_file_format,
             name=name,
             description=description,
-            resource_id=payload_id,
+            resource_id=resource_id,
             data=self._build_payload_resource_data(
                 agent_template=agent_template,
                 build_parameters=build_parameters,
@@ -343,7 +343,7 @@ class PayloadsService:
             )
         )
         self._logger.debug(
-            "Created payload directory with payload ID '{}'",
+            "Created payload directory with resource ID '{}'",
             resource.resource_id,
         )
         return payload
@@ -355,7 +355,7 @@ class PayloadsService:
         build_parameters: dict[str, Any],
         path: pathlib.Path | str,
         payload_data: dict[str, Any] | None = None,
-        payload_id: str | uuid.UUID | None = None,
+        resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
         description: str = "",
         copy: bool = False,
@@ -365,8 +365,8 @@ class PayloadsService:
         Unlike `create_payload_directory`, no archive is extracted and no new
         directory is created. The directory at `path` is moved (or copied when
         `copy=True`) into the repository. Build parameters are validated against
-        the agent template before registration. If `payload_id` is provided it
-        must have been previously reserved via `reserve_payload_id`. Emits a
+        the agent template before registration. If `resource_id` is provided it
+        must have been previously reserved via `reserve_resource_id`. Emits a
         `PAYLOAD_CREATED` event.
 
         Args:
@@ -377,7 +377,7 @@ class PayloadsService:
             path: Path to the existing directory to register.
             payload_data: Arbitrary metadata attached to
                 the payload. When `None`, no extra metadata is stored.
-            payload_id: A previously reserved ID to
+            resource_id: A previously reserved ID to
                 assign to this payload. When `None`, a new ID is generated.
             name: A human-readable name for the payload directory.
                 When `None`, the original directory name is used.
@@ -392,7 +392,7 @@ class PayloadsService:
         Raises:
             AgentTemplateNotFoundError: If no agent template with the given ID
                 exists.
-            ResourceIDReservationNotFoundError: If `payload_id` is provided but
+            ResourceIDReservationNotFoundError: If `resource_id` is provided but
                 has no corresponding reservation.
         """
         agent_template = (
@@ -407,7 +407,7 @@ class PayloadsService:
             path=path,
             name=name,
             description=description,
-            resource_id=payload_id,
+            resource_id=resource_id,
             copy=copy,
             data=self._build_payload_resource_data(
                 agent_template=agent_template,
@@ -428,13 +428,13 @@ class PayloadsService:
             )
         )
         self._logger.debug(
-            "Added payload directory with payload ID '{}'",
+            "Added payload directory with resource ID '{}'",
             resource.resource_id,
         )
         return payload
 
     @log_and_propagate_error_on_service_method
-    def delete_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> None:
+    def delete_payload_by_resource_id(self, resource_id: str | uuid.UUID) -> None:
         """Deletes a payload from disk and the repository.
 
         A payload is "just" a repository resource whose `data` field carries the payload
@@ -443,17 +443,17 @@ class PayloadsService:
         event, then the resource is deleted from disk and deregistered.
 
         Args:
-            payload_id: The ID of the payload to delete.
+            resource_id: The ID of the payload to delete.
 
         Raises:
             RepositoryResourceNotFoundError: If no payload with the given ID exists.
         """
-        payload_id = normalize_uuid(payload_id)
+        resource_id = normalize_uuid(resource_id)
 
         # Snapshot payload JSON before deletion, since to_json() reads file metadata
         # (e.g. datetime_modified) that requires the file to still exist on disk.
         resource = self._repository_service.get_resource_by_resource_id(
-            resource_id=payload_id
+            resource_id=resource_id
         )
         payload = Payload(
             resource=resource,
@@ -461,22 +461,22 @@ class PayloadsService:
         )
         payload_json = payload.to_json()
 
-        self._repository_service.delete_resource_by_resource_id(resource_id=payload_id)
+        self._repository_service.delete_resource_by_resource_id(resource_id=resource_id)
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_DELETED,
-                message=f"Deleted payload: {payload_id}",
+                message=f"Deleted payload: {resource_id}",
                 data=payload_json,
             )
         )
-        self._logger.debug("Deleted payload: {}", str(payload_id))
+        self._logger.debug("Deleted payload: {}", str(resource_id))
 
     @log_and_propagate_error_on_service_method
-    def get_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> Payload:
+    def get_payload_by_resource_id(self, resource_id: str | uuid.UUID) -> Payload:
         """Returns a payload by its ID.
 
         Args:
-            payload_id: The ID of the payload to retrieve.
+            resource_id: The ID of the payload to retrieve.
 
         Returns:
             The requested payload.
@@ -484,14 +484,14 @@ class PayloadsService:
         Raises:
             RepositoryResourceNotFoundError: If no payload with the given ID exists.
         """
-        payload_id = normalize_uuid(payload_id)
+        resource_id = normalize_uuid(resource_id)
 
         resource = self._repository_service.get_resource_by_resource_id(
-            resource_id=payload_id
+            resource_id=resource_id
         )
         self._logger.debug(
-            "Retrieved payload by payload ID '{}'",
-            payload_id,
+            "Retrieved payload by resource ID '{}'",
+            resource_id,
         )
         return Payload(
             resource=resource,

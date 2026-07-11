@@ -48,8 +48,8 @@ class AgentFileManagerService:
         Raises:
             RepositoryResourceNotFoundError: If no asset with the given ID exists.
         """
-        return self._assets_service.get_asset_by_asset_id(
-            asset_id=asset_id,
+        return self._assets_service.get_asset_by_resource_id(
+            resource_id=asset_id,
         )
 
     def get_all_artifacts(self) -> list[Artifact]:
@@ -75,8 +75,8 @@ class AgentFileManagerService:
         Raises:
             RepositoryResourceNotFoundError: If no artifact with the given ID exists.
         """
-        return self._artifacts_service.get_artifact_by_artifact_id(
-            artifact_id=artifact_id,
+        return self._artifacts_service.get_artifact_by_resource_id(
+            resource_id=artifact_id,
         )
 
     def read_asset_by_asset_id(

@@ -17,7 +17,7 @@ from consortium.client.utils.printer_utils import print_error, print_info, print
 
 class AssetDownloadCommand(BaseConnectedCommand):
     name = "as-dl"
-    description = "Download an asset by its ID"
+    description = "Download an asset by its resource ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -29,8 +29,8 @@ class AssetDownloadCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "asset_id",
-            help="ID of the asset to download",
+            "resource_id",
+            help="The asset's resource ID.",
             nargs=1,
         )
         parser.add_argument(
@@ -61,8 +61,8 @@ class AssetDownloadCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            asset = await rest_api.get_asset_by_asset_id(
-                asset_id=parsed_args.asset_id[0],
+            asset = await rest_api.get_asset_by_resource_id(
+                resource_id=parsed_args.resource_id[0],
             )
             # If user supplies a name that takes precedence, else use the asset name
             # directly for asset files or for asset directories append the ".zip" to the
@@ -94,8 +94,8 @@ class AssetDownloadCommand(BaseConnectedCommand):
                     total=asset["size"],
                 )
                 with output_file_path.open("wb") as output_file:
-                    async for chunk in rest_api.download_asset_by_asset_id(
-                        asset_id=parsed_args.asset_id[0],
+                    async for chunk in rest_api.download_asset_by_resource_id(
+                        resource_id=parsed_args.resource_id[0],
                     ):
                         progress.update(downloading_task, advance=len(chunk))
                         output_file.write(chunk)

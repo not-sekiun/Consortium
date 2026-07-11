@@ -14,7 +14,7 @@ from consortium.client.utils.printer_utils import print_success
 
 class AssetRemoveCommand(BaseConnectedCommand):
     name = "as-rm"
-    description = "Delete an asset by its ID"
+    description = "Delete an asset by its resource ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -25,8 +25,8 @@ class AssetRemoveCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "asset_id",
-            help="ID of the asset to be removed.",
+            "resource_id",
+            help="The asset's resource ID.",
             nargs=1,
         )
 
@@ -38,10 +38,10 @@ class AssetRemoveCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            await rest_api.delete_asset_by_asset_id(
-                asset_id=parsed_args.asset_id[0],
+            await rest_api.delete_asset_by_resource_id(
+                resource_id=parsed_args.resource_id[0],
             )
-            print_success(f"Deleted asset '{parsed_args.asset_id[0]}'")
+            print_success(f"Deleted asset '{parsed_args.resource_id[0]}'")
         except SystemExit:
             pass
 

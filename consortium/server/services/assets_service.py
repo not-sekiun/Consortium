@@ -98,8 +98,8 @@ class AssetsService:
         self._repository_service.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
-    def reserve_asset_id(self) -> uuid.UUID:
-        """Reserves and returns a new asset ID without creating any asset.
+    def reserve_resource_id(self) -> uuid.UUID:
+        """Reserves and returns a new resource ID without creating any asset.
 
         The returned ID can later be passed as `resource_id` to one of the asset
         creation methods to claim it. Reserving an ID up front lets a caller learn the
@@ -107,11 +107,11 @@ class AssetsService:
         ID inside the content that will be stored).
 
         Returns:
-            The freshly reserved asset ID, unique across the repository.
+            The freshly reserved resource ID, unique across the repository.
         """
-        asset_id = self._repository_service.reserve_resource_id()
-        self._logger.debug("Reserved asset ID '{}'", str(asset_id))
-        return asset_id
+        resource_id = self._repository_service.reserve_resource_id()
+        self._logger.debug("Reserved resource ID '{}'", str(resource_id))
+        return resource_id
 
     @log_and_propagate_error_on_service_method
     async def create_asset_file(
@@ -137,7 +137,7 @@ class AssetsService:
                 generated UUID is used as its name.
             description: A short human-readable description of the asset. Defaults to an
                 empty string when omitted.
-            resource_id: A previously reserved asset ID to claim for this asset. When
+            resource_id: A previously reserved resource ID to claim for this asset. When
                 `None`, a new ID is generated automatically.
             user_account_id: The ID of the user account that uploaded this asset,
                 recorded for attribution. When `None`, the asset is stored with no
@@ -193,7 +193,7 @@ class AssetsService:
                 filename is used.
             description: A short human-readable description of the asset. Defaults to an
                 empty string when omitted.
-            resource_id: A previously reserved asset ID to claim for this asset. When
+            resource_id: A previously reserved resource ID to claim for this asset. When
                 `None`, a new ID is generated automatically.
             copy: When `False` (default) the source file is moved into the repository,
                 leaving nothing at the original path. When `True` the source file is
@@ -259,7 +259,7 @@ class AssetsService:
                 generated UUID is used as its name.
             description: A short human-readable description of the asset. Defaults to an
                 empty string when omitted.
-            resource_id: A previously reserved asset ID to claim for this asset. When
+            resource_id: A previously reserved resource ID to claim for this asset. When
                 `None`, a new ID is generated automatically.
             user_account_id: The ID of the user account that uploaded this asset,
                 recorded for attribution. When `None`, the asset is stored with no
@@ -317,7 +317,7 @@ class AssetsService:
                 directory name is used.
             description: A short human-readable description of the asset. Defaults to an
                 empty string when omitted.
-            resource_id: A previously reserved asset ID to claim for this asset. When
+            resource_id: A previously reserved resource ID to claim for this asset. When
                 `None`, a new ID is generated automatically.
             copy: When `False` (default) the source directory is moved into the
                 repository, leaving nothing at the original path. When `True` the source
@@ -355,7 +355,7 @@ class AssetsService:
         return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
-    async def delete_asset_by_asset_id(self, asset_id: str | uuid.UUID) -> None:
+    async def delete_asset_by_resource_id(self, resource_id: str | uuid.UUID) -> None:
         """Deletes an asset from disk and the repository.
 
         The asset's metadata is snapshotted before removal so it can be carried on the
@@ -363,28 +363,28 @@ class AssetsService:
         deregistered.
 
         Args:
-            asset_id: The ID of the asset to delete.
+            resource_id: The ID of the asset to delete.
 
         Raises:
             RepositoryResourceNotFoundError: If no asset with the given ID exists.
         """
         # Snapshot JSON before deletion since to_json() reads from disk
         asset = self._repository_service.get_resource_by_resource_id(
-            resource_id=asset_id
+            resource_id=resource_id
         )
         asset_json = asset.to_json()
         await asyncio.to_thread(
             self._repository_service.delete_resource_by_resource_id,
-            resource_id=asset_id,
+            resource_id=resource_id,
         )
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.ASSET_DELETED,
-                message=f"Deleted asset: {asset_id}",
+                message=f"Deleted asset: {resource_id}",
                 data=asset_json,
             )
         )
-        self._logger.debug("Deleted asset: {}", str(asset_id))
+        self._logger.debug("Deleted asset: {}", str(resource_id))
 
     @log_and_propagate_error_on_service_method
     def get_all_assets(self) -> list[Asset]:
@@ -405,14 +405,14 @@ class AssetsService:
         ]
 
     @log_and_propagate_error_on_service_method
-    def get_asset_by_asset_id(
+    def get_asset_by_resource_id(
         self,
-        asset_id: str | uuid.UUID,
+        resource_id: str | uuid.UUID,
     ) -> Asset:
         """Returns a single asset by its ID.
 
         Args:
-            asset_id: The ID of the asset to retrieve.
+            resource_id: The ID of the asset to retrieve.
 
         Returns:
             The requested asset resource, either a file or a directory depending on how
@@ -422,7 +422,7 @@ class AssetsService:
             RepositoryResourceNotFoundError: If no asset with the given ID exists.
         """
         asset = self._repository_service.get_resource_by_resource_id(
-            resource_id=asset_id
+            resource_id=resource_id
         )
         self._logger.debug("Retrieved asset: {!r}", asset)
         return Asset(resource=asset, user_accounts_service=self._user_accounts_service)

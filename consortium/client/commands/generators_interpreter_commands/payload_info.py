@@ -34,8 +34,8 @@ class PayloadInfoCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "payload_id",
-            help="Payload ID of the payload to display information for.",
+            "resource_id",
+            help="The payload's resource ID.",
             nargs=1,
         )
         parser.add_argument(
@@ -53,15 +53,15 @@ class PayloadInfoCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            payload = await rest_api.get_payload_by_payload_id(
-                payload_id=parsed_args.payload_id[0],
+            payload = await rest_api.get_payload_by_resource_id(
+                resource_id=parsed_args.resource_id[0],
             )
 
             # Resource information table
             info_table = Table(title="Payload Information", highlight=True)
             info_table.add_column("Information")
             info_table.add_column("Data")
-            info_table.add_row("Payload ID", str(payload["resource_id"]))
+            info_table.add_row("Resource ID", str(payload["resource_id"]))
             info_table.add_row("Name", str(payload["name"]))
             info_table.add_row("Description", str(payload["description"]))
             size = payload["size"]

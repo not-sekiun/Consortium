@@ -32,36 +32,34 @@ class RepositoryServiceError(BaseServiceError):
     code = "REPOSITORY_SERVICE_ERROR"
 
 
-class RepositoryResourceNotFoundError(RepositoryServiceError):
-    """Raised when the requested repository resource was not found in the repository
-    service.
-    """
+class ResourceNotFoundError(RepositoryServiceError):
+    """Raised when the requested resource was not found in the repository service."""
 
-    code = "REPOSITORY_RESOURCE_NOT_FOUND_ERROR"
+    code = "RESOURCE_NOT_FOUND_ERROR"
 
     def __init__(self, resource_id: str):
         super().__init__(
             message=(
-                "Failed to find the requested repository resource. No resource "
-                f"was found with the provided resource ID '{resource_id}'."
+                "Failed to find the requested resource. No resource was found with the "
+                f"provided resource ID '{resource_id}'."
             ),
             detail={"resource_id": resource_id},
         )
 
 
-class RepositoryResourceAlreadyExistsError(RepositoryServiceError):
-    """Raised when a repository resource with the provided resource ID already exists in
-    the repository service.
+class ResourceAlreadyExistsError(RepositoryServiceError):
+    """Raised when a resource with the provided resource ID already exists in the
+    repository service.
     """
 
-    code = "REPOSITORY_RESOURCE_ALREADY_EXISTS_ERROR"
+    code = "RESOURCE_ALREADY_EXISTS_ERROR"
 
     def __init__(self, resource_id: str):
         super().__init__(
             message=(
-                "Failed to perform the requested operation on the repository resource. "
-                f"The repository resource with the provided resource ID '{resource_id}' "
-                "already exists."
+                "Failed to perform the requested operation on the resource. The "
+                f"resource with the provided resource ID '{resource_id}' already "
+                "exists."
             ),
             detail={"resource_id": resource_id},
         )

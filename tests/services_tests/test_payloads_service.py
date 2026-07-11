@@ -10,7 +10,7 @@ from consortium.server.exceptions.service_exceptions.agent_templates_service_exc
     AgentTemplateLabelNotFoundError,
 )
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    RepositoryResourceNotFoundError,
+    ResourceNotFoundError,
 )
 from consortium.server.objects.payload_objects import Payload
 from consortium.server.services.agent_templates_service import AgentTemplatesService
@@ -127,19 +127,19 @@ def test_save_repository_metadata_delegates(
 
 
 # ---------------------------------------------------------------------------
-# reserve_payload_id
+# reserve_resource_id
 # ---------------------------------------------------------------------------
 
 
-def test_reserve_payload_id_returns_uuid(service: PayloadsService):
-    pid = service.reserve_payload_id()
+def test_reserve_resource_id_returns_uuid(service: PayloadsService):
+    pid = service.reserve_resource_id()
     assert isinstance(pid, uuid.UUID)
 
 
-def test_reserve_payload_id_can_be_used_in_create(service: PayloadsService):
+def test_reserve_resource_id_can_be_used_in_create(service: PayloadsService):
     # The reservation should be forwarded to the underlying repository service;
     # verify by checking it's tracked there
-    pid = service.reserve_payload_id()
+    pid = service.reserve_resource_id()
     # The reservation is stored inside the repository service's internal set
     assert str(pid) in service._repository_service._reserved_resource_ids
 
@@ -176,7 +176,7 @@ def test_create_payload_file_persists_reference_and_metadata(
 
     # The payload is derived from the repository, so it is immediately retrievable.
     assert len(service.get_all_payloads()) == 1
-    fetched = service.get_payload_by_payload_id(payload_id=str(payload.resource_id))
+    fetched = service.get_payload_by_resource_id(resource_id=str(payload.resource_id))
     assert fetched.resource_id == payload.resource_id
 
 
@@ -202,26 +202,26 @@ def test_create_payload_file_emits_payload_created_event(
 
 
 # ---------------------------------------------------------------------------
-# get_payload_by_payload_id
+# get_payload_by_resource_id
 # ---------------------------------------------------------------------------
 
 
-def test_get_payload_by_payload_id_success(
+def test_get_payload_by_resource_id_success(
     service: PayloadsService, repo_service: RepositoryService
 ):
     resource = _create_payload_resource(
         repo_service, build_parameters={"foo": "bar"}, payload_data={"baz": 1}
     )
-    payload = service.get_payload_by_payload_id(payload_id=str(resource.resource_id))
+    payload = service.get_payload_by_resource_id(resource_id=str(resource.resource_id))
     assert isinstance(payload, Payload)
     assert payload.resource_id == resource.resource_id
     assert payload.data["build_parameters"] == {"foo": "bar"}
     assert payload.data["payload_data"] == {"baz": 1}
 
 
-def test_get_payload_by_payload_id_not_found_raises(service: PayloadsService):
-    with pytest.raises(RepositoryResourceNotFoundError):
-        service.get_payload_by_payload_id(payload_id=str(uuid.uuid4()))
+def test_get_payload_by_resource_id_not_found_raises(service: PayloadsService):
+    with pytest.raises(ResourceNotFoundError):
+        service.get_payload_by_resource_id(resource_id=str(uuid.uuid4()))
 
 
 # ---------------------------------------------------------------------------
@@ -281,7 +281,7 @@ def test_payload_resolution_returns_none_when_agent_template_deleted(
 
 
 # ---------------------------------------------------------------------------
-# delete_payload_by_payload_id
+# delete_payload_by_resource_id
 # ---------------------------------------------------------------------------
 
 
@@ -295,14 +295,14 @@ def test_delete_payload_removes_resource_and_emits_event(
         AgentTemplateLabelNotFoundError(label="test.label")
     )
     resource = _create_payload_resource(repo_service)
-    payload_id = str(resource.resource_id)
+    resource_id = str(resource.resource_id)
 
     with patch("asyncio.create_task"):
-        service.delete_payload_by_payload_id(payload_id=payload_id)
+        service.delete_payload_by_resource_id(resource_id=resource_id)
 
     assert service.get_all_payloads() == []
-    with pytest.raises(RepositoryResourceNotFoundError):
-        service.get_payload_by_payload_id(payload_id=payload_id)
+    with pytest.raises(ResourceNotFoundError):
+        service.get_payload_by_resource_id(resource_id=resource_id)
     events_service.trigger_event.assert_called_once()
     assert (
         events_service.trigger_event.call_args.kwargs["event_type"]
@@ -311,9 +311,9 @@ def test_delete_payload_removes_resource_and_emits_event(
 
 
 def test_delete_payload_not_found_raises(service: PayloadsService):
-    with pytest.raises(RepositoryResourceNotFoundError):
+    with pytest.raises(ResourceNotFoundError):
         with patch("asyncio.create_task"):
-            service.delete_payload_by_payload_id(payload_id=str(uuid.uuid4()))
+            service.delete_payload_by_resource_id(resource_id=str(uuid.uuid4()))
 
 
 def test_delete_payload_not_found_leaves_repository_untouched(
@@ -321,9 +321,9 @@ def test_delete_payload_not_found_leaves_repository_untouched(
 ):
     # Deleting an unknown payload ID must not affect existing resources.
     resource = _create_payload_resource(repo_service)
-    with pytest.raises(RepositoryResourceNotFoundError):
+    with pytest.raises(ResourceNotFoundError):
         with patch("asyncio.create_task"):
-            service.delete_payload_by_payload_id(payload_id=str(uuid.uuid4()))
+            service.delete_payload_by_resource_id(resource_id=str(uuid.uuid4()))
     # The unrelated resource still exists.
     assert (
         repo_service.get_resource_by_resource_id(

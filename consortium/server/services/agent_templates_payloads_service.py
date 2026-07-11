@@ -43,11 +43,11 @@ class AgentTemplatesPayloadsService:
     # still need to include some docstring pointing to the forwarded method since
     # mkdocstrings' griffe analyzer only does static analysis when generating
     # documentation
-    @wraps(PayloadsService.reserve_payload_id)
+    @wraps(PayloadsService.reserve_resource_id)
     @log_and_propagate_error_on_service_method
     def reserve_payload_id(self) -> uuid.UUID:
-        """See `PayloadsService.reserve_payload_id`."""
-        return self._payloads_service.reserve_payload_id()
+        """See `PayloadsService.reserve_resource_id`."""
+        return self._payloads_service.reserve_resource_id()
 
     @log_and_propagate_error_on_service_method
     def create_payload_file(
@@ -89,7 +89,7 @@ class AgentTemplatesPayloadsService:
             build_parameters=build_parameters,
             content=content,
             payload_data=payload_data,
-            payload_id=payload_id,
+            resource_id=payload_id,
             name=name,
             description=description,
         )
@@ -137,7 +137,7 @@ class AgentTemplatesPayloadsService:
             build_parameters=build_parameters,
             content=content,
             payload_data=payload_data,
-            payload_id=payload_id,
+            resource_id=payload_id,
             archive_file_format=archive_file_format,
             name=name,
             description=description,
@@ -187,7 +187,7 @@ class AgentTemplatesPayloadsService:
             build_parameters=build_parameters,
             path=path,
             payload_data=payload_data,
-            payload_id=payload_id,
+            resource_id=payload_id,
             name=name,
             description=description,
             copy=copy,
@@ -238,7 +238,7 @@ class AgentTemplatesPayloadsService:
             build_parameters=build_parameters,
             path=path,
             payload_data=payload_data,
-            payload_id=payload_id,
+            resource_id=payload_id,
             name=name,
             description=description,
             copy=copy,
@@ -248,7 +248,7 @@ class AgentTemplatesPayloadsService:
     def delete_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> None:
         """Deletes a payload's repository resource and its associated metadata.
 
-        Forwards to `PayloadsService.delete_payload_by_payload_id`. A
+        Forwards to `PayloadsService.delete_payload_by_resource_id`. A
         `PAYLOAD_DELETED` event is only emitted when both the metadata and the
         repository resource existed prior to deletion. If only one side exists, a
         warning is logged and the orphaned side is cleaned up without emitting an
@@ -264,16 +264,16 @@ class AgentTemplatesPayloadsService:
             RepositroyResourceNotFoundError: If neither payload metadata nor a matching repository
                 resource exists.
         """
-        self._payloads_service.delete_payload_by_payload_id(
-            payload_id=payload_id,
+        self._payloads_service.delete_payload_by_resource_id(
+            resource_id=payload_id,
         )
 
-    @wraps(PayloadsService.get_payload_by_payload_id)
+    @wraps(PayloadsService.get_payload_by_resource_id)
     @log_and_propagate_error_on_service_method
     def get_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> Payload:
-        """See `PayloadsService.get_payload_by_payload_id`."""
-        return self._payloads_service.get_payload_by_payload_id(
-            payload_id=payload_id,
+        """See `PayloadsService.get_payload_by_resource_id`."""
+        return self._payloads_service.get_payload_by_resource_id(
+            resource_id=payload_id,
         )
 
     @wraps(PayloadsService.get_all_payloads)

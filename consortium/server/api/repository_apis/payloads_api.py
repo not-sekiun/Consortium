@@ -41,7 +41,7 @@ _payloads_service = server_singletons.payloads_service
 
 _resource_not_found_error = (
     api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
-        consortium_exception=svc_excs.RepositoryResourceNotFoundError(
+        consortium_exception=svc_excs.ResourceNotFoundError(
             resource_id="<resource_id>",
         ),
     )
@@ -66,7 +66,7 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_get_resource_by_resource_id_endpoint(
-        get_resource_by_resource_id_handler=_payloads_service.get_payload_by_payload_id,
+        get_resource_by_resource_id_handler=_payloads_service.get_payload_by_resource_id,
         get_resource_by_resource_id_permission=UserPermissions.READ_PAYLOAD_BY_PAYLOAD_ID,
         response_model_class=PayloadModel,
     ),
@@ -85,7 +85,7 @@ router.add_api_route(
 router.add_api_route(
     path="/{resource_id}",
     endpoint=create_delete_resource_by_resource_id_endpoint(
-        delete_resource_by_resource_id_handler=_payloads_service.delete_payload_by_payload_id,
+        delete_resource_by_resource_id_handler=_payloads_service.delete_payload_by_resource_id,
         delete_resource_by_resource_id_permission=UserPermissions.DELETE_PAYLOAD_BY_PAYLOAD_ID,
     ),
     status_code=204,
@@ -104,7 +104,7 @@ router.add_api_route(
 router.add_api_route(
     path="/download/{resource_id}",
     endpoint=create_download_resource_by_resource_id_endpoint(
-        get_resource_by_resource_id_handler=_payloads_service.get_payload_by_payload_id,
+        get_resource_by_resource_id_handler=_payloads_service.get_payload_by_resource_id,
         download_resource_by_resource_id_permission=UserPermissions.DOWNLOAD_PAYLOADS,
     ),
     methods=["GET"],

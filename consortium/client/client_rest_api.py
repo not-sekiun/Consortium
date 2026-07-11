@@ -539,32 +539,32 @@ class RestAPI:
         )
 
     @_requires_authentication
-    async def delete_asset_by_asset_id(
+    async def delete_asset_by_resource_id(
         self,
-        asset_id: str,
+        resource_id: str,
     ) -> None:
         return await self._make_api_request(
             method="DELETE",
-            url=f"{self._api_base_url}/assets/{asset_id}",
+            url=f"{self._api_base_url}/assets/{resource_id}",
         )
 
     # Wrapper methods for the /api/assets API endpoint.
-    async def get_asset_by_asset_id(
+    async def get_asset_by_resource_id(
         self,
-        asset_id: str,
+        resource_id: str,
     ) -> dict[str, Any]:
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/assets/{asset_id}",
+            url=f"{self._api_base_url}/assets/{resource_id}",
         )
 
-    async def download_asset_by_asset_id(
+    async def download_asset_by_resource_id(
         self,
-        asset_id: str,
+        resource_id: str,
         maximum_chunk_size: int = 1024,
     ) -> AsyncGenerator[bytes]:
         response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/assets/download/{asset_id}",
+            f"{self._api_base_url}/assets/download/{resource_id}",
         )
         async for chunk in response.content.iter_chunked(maximum_chunk_size):
             yield chunk
@@ -609,32 +609,32 @@ class RestAPI:
         )
 
     @_requires_authentication
-    async def get_artifact_by_artifact_id(
+    async def get_artifact_by_resource_id(
         self,
-        artifact_id: str,
+        resource_id: str,
     ) -> dict[str, Any]:
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/artifacts/{artifact_id}",
+            url=f"{self._api_base_url}/artifacts/{resource_id}",
         )
 
     @_requires_authentication
-    async def delete_artifact_by_artifact_id(
+    async def delete_artifact_by_resource_id(
         self,
-        artifact_id: str,
+        resource_id: str,
     ) -> None:
         return await self._make_api_request(
             method="DELETE",
-            url=f"{self._api_base_url}/artifacts/{artifact_id}",
+            url=f"{self._api_base_url}/artifacts/{resource_id}",
         )
 
-    async def download_artifact_by_artifact_id(
+    async def download_artifact_by_resource_id(
         self,
-        artifact_id: str,
+        resource_id: str,
         maximum_chunk_size: int = 1024,
     ) -> AsyncGenerator[bytes]:
         response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/artifacts/download/{artifact_id}",
+            f"{self._api_base_url}/artifacts/download/{resource_id}",
         )
         async for chunk in response.content.iter_chunked(maximum_chunk_size):
             yield chunk
@@ -648,32 +648,32 @@ class RestAPI:
         )
 
     @_requires_authentication
-    async def get_payload_by_payload_id(
+    async def get_payload_by_resource_id(
         self,
-        payload_id: str,
+        resource_id: str,
     ) -> dict[str, Any]:
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/payloads/{payload_id}",
+            url=f"{self._api_base_url}/payloads/{resource_id}",
         )
 
     @_requires_authentication
-    async def delete_payload_by_payload_id(
+    async def delete_payload_by_resource_id(
         self,
-        payload_id: str,
+        resource_id: str,
     ) -> None:
         return await self._make_api_request(
             method="DELETE",
-            url=f"{self._api_base_url}/payloads/{payload_id}",
+            url=f"{self._api_base_url}/payloads/{resource_id}",
         )
 
-    async def download_payload_by_payload_id(
+    async def download_payload_by_resource_id(
         self,
-        payload_id: str,
+        resource_id: str,
         maximum_chunk_size: int = 1024,
     ) -> AsyncGenerator[bytes]:
         response = await self._aiohttp_client_session.get(
-            f"{self._api_base_url}/payloads/download/{payload_id}",
+            f"{self._api_base_url}/payloads/download/{resource_id}",
         )
         async for chunk in response.content.iter_chunked(maximum_chunk_size):
             yield chunk

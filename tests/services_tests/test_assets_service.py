@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    RepositoryResourceNotFoundError,
+    ResourceNotFoundError,
 )
 from consortium.server.services.assets_service import AssetsService
 from consortium.server.services.events_service import EventsService
@@ -97,12 +97,12 @@ async def test_save_repository_metadata(service: AssetsService, repo_dir: pathli
 
 
 # ---------------------------------------------------------------------------
-# reserve_asset_id
+# reserve_resource_id
 # ---------------------------------------------------------------------------
 
 
-def test_reserve_asset_id_returns_uuid(service: AssetsService):
-    aid = service.reserve_asset_id()
+def test_reserve_resource_id_returns_uuid(service: AssetsService):
+    aid = service.reserve_resource_id()
     assert isinstance(aid, uuid.UUID)
 
 
@@ -125,7 +125,7 @@ async def test_create_file_fires_asset_created_event(service: AssetsService):
 
 
 async def test_create_file_with_reserved_id(service: AssetsService):
-    aid = service.reserve_asset_id()
+    aid = service.reserve_resource_id()
     with patch("asyncio.create_task"):
         asset = await service.create_asset_file(content="reserved", resource_id=aid)
     assert str(asset.resource_id) == str(aid)
@@ -239,32 +239,32 @@ async def test_add_directory_copy_mode(service: AssetsService, tmp_path: pathlib
 
 
 # ---------------------------------------------------------------------------
-# delete_asset_by_asset_id
+# delete_asset_by_resource_id
 # ---------------------------------------------------------------------------
 
 
 async def test_delete_asset_removes_resource(service: AssetsService):
     with patch("asyncio.create_task"):
         asset = await service.create_asset_file(content="bye", name="bye.txt")
-    asset_id = str(asset.resource_id)
+    resource_id = str(asset.resource_id)
     with patch("asyncio.create_task"):
-        await service.delete_asset_by_asset_id(asset_id=asset_id)
+        await service.delete_asset_by_resource_id(resource_id=resource_id)
     assert service.get_all_assets() == []
 
 
 async def test_delete_asset_fires_deleted_event(service: AssetsService):
     with patch("asyncio.create_task"):
         asset = await service.create_asset_file(content="bye", name="bye.txt")
-    asset_id = str(asset.resource_id)
+    resource_id = str(asset.resource_id)
     with patch("asyncio.create_task") as mock_task:
-        await service.delete_asset_by_asset_id(asset_id=asset_id)
+        await service.delete_asset_by_resource_id(resource_id=resource_id)
     assert mock_task.called
 
 
 async def test_delete_asset_not_found_raises(service: AssetsService):
-    with pytest.raises(RepositoryResourceNotFoundError):
+    with pytest.raises(ResourceNotFoundError):
         with patch("asyncio.create_task"):
-            await service.delete_asset_by_asset_id(asset_id=str(uuid.uuid4()))
+            await service.delete_asset_by_resource_id(resource_id=str(uuid.uuid4()))
 
 
 # ---------------------------------------------------------------------------
@@ -284,17 +284,17 @@ async def test_get_all_assets_returns_all(service: AssetsService):
 
 
 # ---------------------------------------------------------------------------
-# get_asset_by_asset_id
+# get_asset_by_resource_id
 # ---------------------------------------------------------------------------
 
 
-async def test_get_asset_by_asset_id_success(service: AssetsService):
+async def test_get_asset_by_resource_id_success(service: AssetsService):
     with patch("asyncio.create_task"):
         asset = await service.create_asset_file(content="find me", name="find.txt")
-    found = service.get_asset_by_asset_id(asset_id=str(asset.resource_id))
+    found = service.get_asset_by_resource_id(resource_id=str(asset.resource_id))
     assert str(found.resource_id) == str(asset.resource_id)
 
 
-def test_get_asset_by_asset_id_not_found_raises(service: AssetsService):
-    with pytest.raises(RepositoryResourceNotFoundError):
-        service.get_asset_by_asset_id(asset_id=str(uuid.uuid4()))
+def test_get_asset_by_resource_id_not_found_raises(service: AssetsService):
+    with pytest.raises(ResourceNotFoundError):
+        service.get_asset_by_resource_id(resource_id=str(uuid.uuid4()))

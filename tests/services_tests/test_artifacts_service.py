@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    RepositoryResourceNotFoundError,
+    ResourceNotFoundError,
 )
 from consortium.server.services.agents_service import AgentsService
 from consortium.server.services.artifacts_service import ArtifactsService
@@ -99,12 +99,12 @@ async def test_save_repository_metadata(
 
 
 # ---------------------------------------------------------------------------
-# reserve_artifact_id
+# reserve_resource_id
 # ---------------------------------------------------------------------------
 
 
-def test_reserve_artifact_id_returns_uuid(service: ArtifactsService):
-    aid = service.reserve_artifact_id()
+def test_reserve_resource_id_returns_uuid(service: ArtifactsService):
+    aid = service.reserve_resource_id()
     assert isinstance(aid, uuid.UUID)
 
 
@@ -129,7 +129,7 @@ async def test_create_file_fires_artifact_created_event(
 
 
 async def test_create_file_with_reserved_id(service: ArtifactsService):
-    aid = service.reserve_artifact_id()
+    aid = service.reserve_resource_id()
     with patch("asyncio.create_task"):
         artifact = await service.create_artifact_file(
             content="reserved", resource_id=aid
@@ -250,32 +250,32 @@ async def test_add_directory_copy_mode(
 
 
 # ---------------------------------------------------------------------------
-# delete_artifact_by_artifact_id
+# delete_artifact_by_resource_id
 # ---------------------------------------------------------------------------
 
 
 async def test_delete_artifact_removes_resource(service: ArtifactsService):
     with patch("asyncio.create_task"):
         artifact = await service.create_artifact_file(content="bye", name="bye.txt")
-    artifact_id = str(artifact.resource_id)
+    resource_id = str(artifact.resource_id)
     with patch("asyncio.create_task"):
-        await service.delete_artifact_by_artifact_id(artifact_id=artifact_id)
+        await service.delete_artifact_by_resource_id(resource_id=resource_id)
     assert service.get_all_artifacts() == []
 
 
 async def test_delete_artifact_fires_deleted_event(service: ArtifactsService):
     with patch("asyncio.create_task"):
         artifact = await service.create_artifact_file(content="bye", name="bye.txt")
-    artifact_id = str(artifact.resource_id)
+    resource_id = str(artifact.resource_id)
     with patch("asyncio.create_task") as mock_task:
-        await service.delete_artifact_by_artifact_id(artifact_id=artifact_id)
+        await service.delete_artifact_by_resource_id(resource_id=resource_id)
     assert mock_task.called
 
 
 async def test_delete_artifact_not_found_raises(service: ArtifactsService):
-    with pytest.raises(RepositoryResourceNotFoundError):
+    with pytest.raises(ResourceNotFoundError):
         with patch("asyncio.create_task"):
-            await service.delete_artifact_by_artifact_id(artifact_id=str(uuid.uuid4()))
+            await service.delete_artifact_by_resource_id(resource_id=str(uuid.uuid4()))
 
 
 # ---------------------------------------------------------------------------
@@ -295,19 +295,19 @@ async def test_get_all_artifacts_returns_all(service: ArtifactsService):
 
 
 # ---------------------------------------------------------------------------
-# get_artifact_by_artifact_id
+# get_artifact_by_resource_id
 # ---------------------------------------------------------------------------
 
 
-async def test_get_artifact_by_artifact_id_success(service: ArtifactsService):
+async def test_get_artifact_by_resource_id_success(service: ArtifactsService):
     with patch("asyncio.create_task"):
         artifact = await service.create_artifact_file(
             content="find me", name="find.txt"
         )
-    found = service.get_artifact_by_artifact_id(artifact_id=str(artifact.resource_id))
+    found = service.get_artifact_by_resource_id(resource_id=str(artifact.resource_id))
     assert str(found.resource_id) == str(artifact.resource_id)
 
 
-def test_get_artifact_by_artifact_id_not_found_raises(service: ArtifactsService):
-    with pytest.raises(RepositoryResourceNotFoundError):
-        service.get_artifact_by_artifact_id(artifact_id=str(uuid.uuid4()))
+def test_get_artifact_by_resource_id_not_found_raises(service: ArtifactsService):
+    with pytest.raises(ResourceNotFoundError):
+        service.get_artifact_by_resource_id(resource_id=str(uuid.uuid4()))

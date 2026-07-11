@@ -72,7 +72,7 @@ RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {
                     "type": "string",
-                    "enum": ["REPOSITORY_RESOURCE_NOT_FOUND_ERROR"],
+                    "enum": ["RESOURCE_NOT_FOUND_ERROR"],
                 },
                 "message": {"type": "string"},
                 "detail": {},

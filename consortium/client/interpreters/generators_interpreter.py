@@ -100,10 +100,10 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         for command in ["at-info", "use"]:
             completions_dict[command] = agent_template_ids_completion
 
-        # Register payload commands that take the payload ID as the first positional
-        # argument to autocomplete with.
+        # Register payload commands that take the payload's resource ID as the first
+        # positional argument to autocomplete with.
         payload_ids_completion = {
-            payload["payload_id"]: None for payload in all_payloads
+            payload["resource_id"]: None for payload in all_payloads
         }
         for command in ["pl-info", "pl-rm", "pl-dl"]:
             completions_dict[command] = payload_ids_completion

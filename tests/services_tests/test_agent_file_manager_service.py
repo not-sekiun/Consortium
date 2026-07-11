@@ -51,10 +51,10 @@ def test_get_asset_by_asset_id_delegates(service):
     svc, assets, _ = service
     asset_id = uuid.uuid4()
     expected = MagicMock()
-    assets.get_asset_by_asset_id.return_value = expected
+    assets.get_asset_by_resource_id.return_value = expected
     result = svc.get_asset_by_asset_id(asset_id=asset_id)
     assert result == expected
-    assets.get_asset_by_asset_id.assert_called_once_with(asset_id=asset_id)
+    assets.get_asset_by_resource_id.assert_called_once_with(resource_id=asset_id)
 
 
 def test_get_all_artifacts_delegates(service):
@@ -70,11 +70,11 @@ def test_get_artifact_by_artifact_id_delegates(service):
     svc, _, artifacts = service
     artifact_id = uuid.uuid4()
     expected = MagicMock()
-    artifacts.get_artifact_by_artifact_id.return_value = expected
+    artifacts.get_artifact_by_resource_id.return_value = expected
     result = svc.get_artifact_by_artifact_id(artifact_id=artifact_id)
     assert result == expected
-    artifacts.get_artifact_by_artifact_id.assert_called_once_with(
-        artifact_id=artifact_id
+    artifacts.get_artifact_by_resource_id.assert_called_once_with(
+        resource_id=artifact_id
     )
 
 
@@ -84,12 +84,12 @@ def test_read_asset_by_asset_id_delegates_to_asset_read(service):
     asset = MagicMock()
     asset.is_directory = False
     asset.read.return_value = b"asset content"
-    assets.get_asset_by_asset_id.return_value = asset
+    assets.get_asset_by_resource_id.return_value = asset
 
     result = svc.read_asset_by_asset_id(asset_id=asset_id, binary=True, chunk_size=1024)
 
     assert result == b"asset content"
-    assets.get_asset_by_asset_id.assert_called_once_with(asset_id=asset_id)
+    assets.get_asset_by_resource_id.assert_called_once_with(resource_id=asset_id)
     asset.read.assert_called_once_with(binary=True, encoding="utf-8", chunk_size=1024)
 
 
@@ -99,7 +99,7 @@ def test_read_asset_by_asset_id_defaults_to_text_full_read(service):
     asset = MagicMock()
     asset.is_directory = False
     asset.read.return_value = "asset content"
-    assets.get_asset_by_asset_id.return_value = asset
+    assets.get_asset_by_resource_id.return_value = asset
 
     result = svc.read_asset_by_asset_id(asset_id=asset_id)
 
@@ -111,7 +111,7 @@ def test_read_asset_by_asset_id_raises_on_directory(service):
     svc, assets, _ = service
     asset = MagicMock()
     asset.is_directory = True
-    assets.get_asset_by_asset_id.return_value = asset
+    assets.get_asset_by_resource_id.return_value = asset
 
     with pytest.raises(IsADirectoryError):
         svc.read_asset_by_asset_id(asset_id="some_id")

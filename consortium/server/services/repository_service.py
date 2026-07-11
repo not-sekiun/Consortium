@@ -13,8 +13,8 @@ from consortium.server.exceptions.service_exceptions.repository_service_exceptio
     InvalidRepositoryMetadataDataSchemaError,
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,
-    RepositoryResourceNotFoundError,
     ResourceIDReservationNotFoundError,
+    ResourceNotFoundError,
     UnsyncedRepositoryMetadataFileError,
 )
 from consortium.server.objects.repository_objects import (
@@ -543,7 +543,7 @@ class RepositoryService:
         try:
             resource = self._resources[resource_id]
         except KeyError:
-            raise RepositoryResourceNotFoundError(
+            raise ResourceNotFoundError(
                 resource_id=resource_id,
             ) from None
 

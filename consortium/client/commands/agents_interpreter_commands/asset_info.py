@@ -18,7 +18,7 @@ from consortium.client.utils.printer_utils import console
 
 class AssetInfoCommand(BaseConnectedCommand):
     name = "as-info"
-    description = "Display information about an asset by its ID"
+    description = "Display information about an asset by its resource ID"
     epilog = format_argparse_epilog(
         """
         Examples:
@@ -29,8 +29,8 @@ class AssetInfoCommand(BaseConnectedCommand):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "asset_id",
-            help="ID of the asset to display information for.",
+            "resource_id",
+            help="The asset's resource ID.",
             nargs=1,
         )
 
@@ -42,8 +42,8 @@ class AssetInfoCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            asset = await rest_api.get_asset_by_asset_id(
-                asset_id=parsed_args.asset_id[0],
+            asset = await rest_api.get_asset_by_resource_id(
+                resource_id=parsed_args.resource_id[0],
             )
             # An asset is "just" a repository resource with attached metadata. The
             # resource fields describe the file/directory on disk while the `data` field
