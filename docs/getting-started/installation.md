@@ -27,11 +27,12 @@ and tools.
 !!! important
     Make sure that all the installed tools are visible on your system's PATH.
 
-1. Clone the repository and install base dependencies using `uv`.
+1. Clone the repository and install base dependencies along with component dependencies
+   using `uv`.
     ```shell
     git clone https://github.com/not-sekiun/Consortium
     cd Consortium
-    uv sync
+    uv sync --group components
     ```
 2. Start the server first
     ```shell
@@ -42,9 +43,61 @@ and tools.
     uv run consortium.py client
     ```
 
+For more information about component dependencies and how to install them, see the
+[Installing Component Dependencies](#installing-component-dependencies) section.
+
 For more information on how to configure the server and client, see the
 [Server](../server/server-overview.md) and [Client](../client/client-overview.md)
 sections.
+
+## Installing Component Dependencies
+
+Consortium ships with a set of default components that extend the framework. These are
+the components bundled with the server out of the box and live in
+`consortium/components`. Components come in four types: **listeners**, **agents**,
+**plugins**, and **event-hooks**.
+
+Each component type may declare its own Python dependencies. These are declared as
+`uv` dependency groups in `pyproject.toml`, one group per component type, and an
+umbrella `components` group that pulls in all four at once.
+
+```toml title="pyproject.toml"
+[dependency-groups]
+listeners = []
+agents = [
+    "pyinstaller>=6.21.0",
+]
+plugins = []
+event-hooks = []
+components = [
+    {include-group = "listeners"},
+    {include-group = "agents"},
+    {include-group = "plugins"},
+    {include-group = "event-hooks"},
+]
+```
+
+!!! important
+    A component will **not load** if its declared Python dependencies are not installed
+    in your environment. If you find a default component is missing at runtime, make
+    sure you have installed the dependency group for its component type.
+
+To install the dependencies for **all** component types at once, sync the umbrella
+`components` group.
+
+```shell
+uv sync --group components
+```
+
+To install the dependencies for only a **particular** component type, sync just that
+group. For example, to install only the agent component dependencies:
+
+```shell
+uv sync --group agents
+```
+
+You can pass multiple `--group` flags to install several groups at once (for example
+`uv sync --group agents --group plugins`).
 
 ## Installing Consortium for Development
 

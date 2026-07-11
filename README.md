@@ -44,19 +44,20 @@ rapidly develop their own highly customized listeners and agents.
 ## Features
 
 - **Asynchronous multiplayer/multiserver support**: Multiple clients can connect to
-the same server to perform all C2 related operations, including the sharing of agent
-sessions. Control RBAC permissions via user roles.
+  the same server to perform all C2 related operations, including the sharing of agent
+  sessions. Control RBAC permissions via user roles.
 - **High extensibility and automation, externally and natively**: Programmatic
-automation is possible through the server's **REST API** or **websockets events API**.
-Alternatively, users can write **plugins** and **event hooks** that interact _directly_
-with the server's internal services.
+  automation is possible through the server's **REST API** or **websockets events API**.
+  Alternatively, users can write **plugins** and **event hooks** that interact
+  _directly_
+  with the server's internal services.
 - **Language-agnostic modular listener-agent design**: Consortium ships with its own
-listeners and agents. **Custom listeners and agents** can be added to the framework.
-Agents can be written in any language while listeners can be written in python to
-_natively interact with the server_, or written in a different language to interact
-with the server _through its REST API_.
+  listeners and agents. **Custom listeners and agents** can be added to the framework.
+  Agents can be written in any language while listeners can be written in python to
+  _natively interact with the server_, or written in a different language to interact
+  with the server _through its REST API_.
 
-## Quickstart
+## Getting Started
 
 ### Prerequisites
 
@@ -77,10 +78,10 @@ Clone the repository and install dependencies.
 ```bash
 git clone https://github.com/not-sekiun/Consortium.git
 cd Consortium
-uv sync
+uv sync --group components
 ```
 
-### Starting the Framework
+### Quick Start
 
 The Consortium C2 framework runs on a client-server model. Start the server _first_
 before starting any compatible client to connect to the server.
@@ -103,7 +104,7 @@ Pull the latest changes from the repository and update/install any new dependenc
 
 ```shell
 git pull
-uv sync
+uv sync --group components
 ```
 
 ## Documentation
@@ -163,12 +164,13 @@ Alternatively, to host and view this documentation locally, refer back to
 
 There are several ways to get help information and command documentation within the
 client.
+
 1. General help menu: To view all commands for a particular interpreter in the client
-type `help`.
+   type `help`.
 2. Command summary: To view the summary for a specific command, which includes all of
-its arguments, type `help <command>`.
+   its arguments, type `help <command>`.
 3. Command help: To get comprehensive help for a specific command, including examples on
-how to use it, type `<command> --help` or `<command> -h`.
+   how to use it, type `<command> --help` or `<command> -h`.
 
 <br>
 
@@ -185,13 +187,19 @@ reports, and other issues through the GitHub issues section.
 This project makes heavy use of the following libraries and frameworks.
 
 - [FastAPI](https://github.com/fastapi/fastapi) for the REST API and websockets server.
-- [Prompt-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) for the client CLI interface.
-- [Rich](https://github.com/Textualize/rich) for modernizing and beautifying displays in the terminal
-- [Websockets](https://github.com/python-websockets/websockets) for the event based communication for the client.
+- [Prompt-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) for the
+  client CLI interface.
+- [Rich](https://github.com/Textualize/rich) for modernizing and beautifying displays in
+  the terminal
+- [Websockets](https://github.com/python-websockets/websockets) for the event based
+  communication for the client.
 
 Many other pre-existing C2 frameworks provided the inspiration and motivation to create
 this one.
 
-- [Empire, formerly Powershell-Empire](https://github.com/BC-SECURITY/Empire) for some of the client design and UI
-- [Mythic](https://github.com/its-a-feature/Mythic) for some elements of the framework design
-- [Cobalt Strike](https://www.cobaltstrike.com/) for the functionality and design of the listeners and agents
+- [Empire, formerly Powershell-Empire](https://github.com/BC-SECURITY/Empire) for some
+  of the client design and UI
+- [Mythic](https://github.com/its-a-feature/Mythic) for some elements of the framework
+  design
+- [Cobalt Strike](https://www.cobaltstrike.com/) for the functionality and design of the
+  listeners and agents
