@@ -122,7 +122,7 @@ From the project root folder, run:
 
 ```shell
 uv sync --group docs
-uv run mkdocs serve
+uv run zensical serve
 ```
 
 ### Server REST API Documentation
@@ -155,7 +155,7 @@ The Consortium server provides a WebSocket Events API for server-initiated push 
 Complete documentation is located at the
 [official Consortium documentation site](https://not-sekiun.github.io/Consortium/)
 
-![WebSocket API documentation for mkdocs](docs/assets/websockets_api_mkdocs.png)
+![WebSocket API documentation for zensical](docs/assets/websockets_api_zensical.png)
 
 Alternatively, to host and view this documentation locally, refer back to
 [this section](#complete-framework-documentation-and-self-hosted-documentation)
