@@ -1,4 +1,5 @@
-"""Exception hierarchy:
+"""
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`RepositoryError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryError]

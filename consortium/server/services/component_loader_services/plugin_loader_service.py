@@ -1,7 +1,7 @@
-from consortium.framework.plugins.base_plugin import BasePlugin
-from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.plugins_framework_exceptions import (
     PluginsFrameworkError,
 )
+from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.server.services.component_loader_services.component_loader_service import (
     ComponentLoaderService,
 )

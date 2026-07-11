@@ -10,8 +10,10 @@ import jsonschema
 import packaging.requirements as requirements
 import packaging.version as version
 
-from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentConfigurationError,
+)
+from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
     ComponentDependencyError,
     ComponentDependencyNotFoundError,
     ComponentDependsOnInvalidComponentDependencyError,

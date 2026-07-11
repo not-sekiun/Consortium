@@ -12,14 +12,14 @@ from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
 )
-from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
     ComponentNotRunningError,
     ComponentRuntimeError,
     ComponentStartError,
     ComponentStopError,
 )
-from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.listeners_framework_exceptions import (
     ListenerAlreadyRunningError,
     ListenerCreationParameterTypeError,
     ListenerNotRunningError,

@@ -1,7 +1,7 @@
-from consortium.framework.event_hooks.base_event_hook import BaseEventHook
-from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.event_hooks_framework_exceptions import (
     EventHooksFrameworkError,
 )
+from consortium.framework.event_hooks.base_event_hook import BaseEventHook
 from consortium.server.services.component_loader_services.component_loader_service import (
     ComponentLoaderService,
 )

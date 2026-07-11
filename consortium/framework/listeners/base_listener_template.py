@@ -13,6 +13,21 @@ from consortium.framework._core.components import (
     ComponentMetadata,
     ComponentMetadataModel,
 )
+from consortium.framework._core.framework_exceptions import (
+    components_framework_exceptions,
+)
+from consortium.framework._core.framework_exceptions.listener_templates_framework_exceptions import (
+    DuplicateListenerTemplateOptionNameError,
+    EmptyListenerTemplateLabelError,
+    InvalidFrameworkVersionSpecifierError,
+    InvalidListenerTemplateConfigurationParameterTypeError,
+    InvalidListenerTemplateDependencyVersionSpecifierError,
+    InvalidListenerTemplateVersionError,
+    ListenerTemplateOptionNotFoundError,
+    ListenerTemplateOptionValueValidationError,
+    MissingListenerTemplateConfigurationParameterError,
+    MissingRequiredListenerTemplateOptionError,
+)
 from consortium.framework._utils import format_docstring_to_single_line, remap_exception
 from consortium.framework.framework_types import (
     Primitive,
@@ -26,21 +41,6 @@ from consortium.framework.options import (
     ListValueOption,
     SingleValueOption,
     ToggleableChoicesValueOption,
-)
-from consortium.server.exceptions.consortium_exceptions import (
-    components_consortium_exceptions as comp_excs,
-)
-from consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions import (
-    DuplicateListenerTemplateOptionNameError,
-    EmptyListenerTemplateLabelError,
-    InvalidFrameworkVersionSpecifierError,
-    InvalidListenerTemplateConfigurationParameterTypeError,
-    InvalidListenerTemplateDependencyVersionSpecifierError,
-    InvalidListenerTemplateVersionError,
-    ListenerTemplateOptionNotFoundError,
-    ListenerTemplateOptionValueValidationError,
-    MissingListenerTemplateConfigurationParameterError,
-    MissingRequiredListenerTemplateOptionError,
 )
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
@@ -89,12 +89,12 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
     _METADATA_MODEL = _ListenerTemplateModel
 
     _COMPONENT_METADATA_EXCEPTION_MAP = {
-        comp_excs.MissingComponentConfigurationParameterError: MissingListenerTemplateConfigurationParameterError,
-        comp_excs.EmptyComponentLabelError: EmptyListenerTemplateLabelError,
-        comp_excs.InvalidComponentVersionError: InvalidListenerTemplateVersionError,
-        comp_excs.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
-        comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidListenerTemplateDependencyVersionSpecifierError,
-        comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidListenerTemplateConfigurationParameterTypeError,
+        components_framework_exceptions.MissingComponentConfigurationParameterError: MissingListenerTemplateConfigurationParameterError,
+        components_framework_exceptions.EmptyComponentLabelError: EmptyListenerTemplateLabelError,
+        components_framework_exceptions.InvalidComponentVersionError: InvalidListenerTemplateVersionError,
+        components_framework_exceptions.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
+        components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError: InvalidListenerTemplateDependencyVersionSpecifierError,
+        components_framework_exceptions.InvalidComponentConfigurationParameterTypeError: InvalidListenerTemplateConfigurationParameterTypeError,
     }
     _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "listener_template_str",
@@ -118,7 +118,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
 
         try:
             cls._validate_metadata()
-        except comp_excs.ComponentsFrameworkError as exc:
+        except components_framework_exceptions.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,

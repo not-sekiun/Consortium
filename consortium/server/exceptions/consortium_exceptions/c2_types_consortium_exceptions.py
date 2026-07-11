@@ -1,4 +1,5 @@
-"""Exception hierarchy:
+"""
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`C2TypesError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.C2TypesError]

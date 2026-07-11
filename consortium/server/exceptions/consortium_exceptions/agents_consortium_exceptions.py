@@ -1,4 +1,5 @@
-"""Exception hierarchy:
+"""
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentsError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentsError]
@@ -7,7 +8,6 @@
             - [`AgentResultNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentResultNotFoundError]
                 - [`AgentResultIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentResultIDNotFoundError]
                 - [`AgentResultTaskIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentResultTaskIDNotFoundError]
-            - [`AgentResultHasNoCorrespondingTaskError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentResultHasNoCorrespondingTaskError]
             - [`AgentTaskingError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentTaskingError]
                 - [`AgentCapabilityNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentCapabilityNotFoundError]
                 - [`AgentCapabilityOptionNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentCapabilityOptionNotFoundError]

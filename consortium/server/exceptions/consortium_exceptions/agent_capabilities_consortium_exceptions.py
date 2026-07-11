@@ -1,4 +1,5 @@
-"""Exception hierarchy:
+"""
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentCapabilitiesError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilitiesError]
@@ -9,7 +10,7 @@
             - [`EmptyAgentCapabilityNameError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.EmptyAgentCapabilityNameError]
             - [`DuplicateAgentCapabilityOptionNameError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.DuplicateAgentCapabilityOptionNameError]
             - [`CustomOSStringAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.CustomOSStringAlreadyRegisteredError]
-            - [`AgentCapabilityRuntimeError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilityRuntimeError]
+            - [`AgentCapabilityExecutionError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilityExecutionError]
 """
 
 from typing import Any

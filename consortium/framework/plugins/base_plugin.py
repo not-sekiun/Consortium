@@ -14,11 +14,10 @@ from consortium.framework._core.components import (
     ComponentMetadata,
     ComponentMetadataModel,
 )
-from consortium.framework._utils import remap_exception
-from consortium.server.exceptions.consortium_exceptions import (
-    components_consortium_exceptions as comp_excs,
+from consortium.framework._core.framework_exceptions import (
+    components_framework_exceptions,
 )
-from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.plugins_framework_exceptions import (
     EmptyPluginLabelError,
     InvalidFrameworkVersionSpecifierError,
     InvalidPluginConfigurationParameterTypeError,
@@ -31,6 +30,7 @@ from consortium.server.exceptions.consortium_exceptions.plugins_consortium_excep
     PluginStartError,
     PluginStopError,
 )
+from consortium.framework._utils import remap_exception
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import construct_services_dataclass
 
@@ -71,12 +71,12 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     _METADATA_MODEL = _PluginModel
 
     _COMPONENT_METADATA_EXCEPTION_MAP = {
-        comp_excs.MissingComponentConfigurationParameterError: MissingPluginConfigurationParameterError,
-        comp_excs.EmptyComponentLabelError: EmptyPluginLabelError,
-        comp_excs.InvalidComponentVersionError: InvalidPluginVersionError,
-        comp_excs.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
-        comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidPluginDependencyVersionSpecifierError,
-        comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidPluginConfigurationParameterTypeError,
+        components_framework_exceptions.MissingComponentConfigurationParameterError: MissingPluginConfigurationParameterError,
+        components_framework_exceptions.EmptyComponentLabelError: EmptyPluginLabelError,
+        components_framework_exceptions.InvalidComponentVersionError: InvalidPluginVersionError,
+        components_framework_exceptions.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
+        components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError: InvalidPluginDependencyVersionSpecifierError,
+        components_framework_exceptions.InvalidComponentConfigurationParameterTypeError: InvalidPluginConfigurationParameterTypeError,
     }
     _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "plugin_str",
@@ -102,7 +102,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
         try:
             cls._validate_metadata()
-        except comp_excs.ComponentsFrameworkError as exc:
+        except components_framework_exceptions.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,
@@ -201,11 +201,11 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         """
         try:
             await super().start()
-        except comp_excs.ComponentAlreadyRunningError:
+        except components_framework_exceptions.ComponentAlreadyRunningError:
             raise PluginAlreadyRunningError(
                 plugin_str=str(self),
             ) from None
-        except comp_excs.ComponentStartError as exc:
+        except components_framework_exceptions.ComponentStartError as exc:
             raise PluginStartError(
                 plugin_str=str(self),
                 error_message=exc.message,
@@ -221,11 +221,11 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         """
         try:
             await super().stop()
-        except comp_excs.ComponentNotRunningError:
+        except components_framework_exceptions.ComponentNotRunningError:
             raise PluginNotRunningError(
                 plugin_str=str(self),
             ) from None
-        except comp_excs.ComponentStopError as exc:
+        except components_framework_exceptions.ComponentStopError as exc:
             raise PluginStopError(
                 plugin_str=str(self),
                 error_message=exc.message,
@@ -240,7 +240,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         """
         try:
             await super().cancel()
-        except comp_excs.ComponentNotRunningError:
+        except components_framework_exceptions.ComponentNotRunningError:
             raise PluginNotRunningError(
                 plugin_str=str(self),
             ) from None
@@ -281,7 +281,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
     def _construct_component_runtime_error_from_framework_runtime_error(
         self,
-        error: comp_excs.ComponentRuntimeError,
+        error: components_framework_exceptions.ComponentRuntimeError,
     ) -> PluginRuntimeError:
         return PluginRuntimeError(
             plugin_str=str(self),

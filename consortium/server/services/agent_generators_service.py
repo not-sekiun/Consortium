@@ -6,11 +6,13 @@ from typing import Any
 from loguru import logger
 
 from consortium.framework._core.components.component_status import State
+from consortium.framework._core.framework_exceptions.agent_generators_framework_exceptions import (
+    AgentGeneratorAlreadyRunningError,
+)
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
     AgentGeneratorAlreadyExistsError,
-    AgentGeneratorAlreadyRunningError,
     AgentGeneratorNotFoundError,
     InvalidAgentGeneratorParameterNameError,
     InvalidAgentGeneratorParameterValueError,

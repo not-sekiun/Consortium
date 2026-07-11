@@ -5,6 +5,9 @@ import uuid
 
 from loguru import logger
 
+from consortium.framework._core.framework_exceptions.plugins_framework_exceptions import (
+    PluginsFrameworkError,
+)
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     PluginLoadingError,
@@ -465,7 +468,7 @@ class PluginsService:
                     await plugin.start()
                 self._logger.success("- Loaded plugin: {}", plugin)
                 self._logger.debug("- Loaded plugin: {!r}", plugin)
-            except PluginsError as exc:
+            except (PluginsError, PluginsFrameworkError) as exc:
                 failed_to_load += 1
                 self._logger.error("- {}", str(exc))
             except Exception as exc:

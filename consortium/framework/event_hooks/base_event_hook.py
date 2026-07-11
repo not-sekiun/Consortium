@@ -11,13 +11,10 @@ from consortium.framework._core.components import (
     ComponentMetadata,
     ComponentMetadataModel,
 )
-from consortium.framework._utils import remap_exception
-from consortium.framework.event_hooks._event import Event
-from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.consortium_exceptions import (
-    components_consortium_exceptions as comp_excs,
+from consortium.framework._core.framework_exceptions import (
+    components_framework_exceptions,
 )
-from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.event_hooks_framework_exceptions import (
     EmptyEventHookLabelError,
     InvalidEventHookConfigurationParameterTypeError,
     InvalidEventHookDependencyVersionSpecifierError,
@@ -25,6 +22,9 @@ from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_e
     InvalidFrameworkVersionSpecifierError,
     MissingEventHookConfigurationParameterError,
 )
+from consortium.framework._utils import remap_exception
+from consortium.framework.event_hooks._event import Event
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.utils import construct_services_dataclass
 
 
@@ -69,12 +69,12 @@ class BaseEventHook(ComponentMetadata):
     _METADATA_MODEL = _EventHookModel
 
     _COMPONENT_METADATA_EXCEPTION_MAP = {
-        comp_excs.MissingComponentConfigurationParameterError: MissingEventHookConfigurationParameterError,
-        comp_excs.EmptyComponentLabelError: EmptyEventHookLabelError,
-        comp_excs.InvalidComponentVersionError: InvalidEventHookVersionError,
-        comp_excs.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
-        comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidEventHookDependencyVersionSpecifierError,
-        comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidEventHookConfigurationParameterTypeError,
+        components_framework_exceptions.MissingComponentConfigurationParameterError: MissingEventHookConfigurationParameterError,
+        components_framework_exceptions.EmptyComponentLabelError: EmptyEventHookLabelError,
+        components_framework_exceptions.InvalidComponentVersionError: InvalidEventHookVersionError,
+        components_framework_exceptions.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
+        components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError: InvalidEventHookDependencyVersionSpecifierError,
+        components_framework_exceptions.InvalidComponentConfigurationParameterTypeError: InvalidEventHookConfigurationParameterTypeError,
     }
     _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "event_hook_str",
@@ -101,7 +101,7 @@ class BaseEventHook(ComponentMetadata):
 
         try:
             cls._validate_metadata()
-        except comp_excs.ComponentsFrameworkError as exc:
+        except components_framework_exceptions.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,

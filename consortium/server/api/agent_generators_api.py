@@ -4,6 +4,9 @@ from fastapi import APIRouter, Body, Depends
 from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
+from consortium.framework._core.framework_exceptions import (
+    agent_generators_framework_exceptions,
+)
 from consortium.server.exceptions.api_exceptions import (
     agent_generators_api_exceptions as api_excs,
 )
@@ -44,36 +47,28 @@ _agent_generator_not_found_error = (
         )
     )
 )
-_agent_generator_already_running_error = (
-    api_excs.AgentGeneratorAlreadyRunningError.from_consortium_exception(
-        consortium_exception=consortium_excs.AgentGeneratorAlreadyRunningError(
-            agent_generator_str="<agent_generator_str>"
-        )
+_agent_generator_already_running_error = api_excs.AgentGeneratorAlreadyRunningError.from_consortium_exception(
+    consortium_exception=agent_generators_framework_exceptions.AgentGeneratorAlreadyRunningError(
+        agent_generator_str="<agent_generator_str>"
     )
 )
-_agent_generator_not_running_error = (
-    api_excs.AgentGeneratorNotRunningError.from_consortium_exception(
-        consortium_exception=consortium_excs.AgentGeneratorNotRunningError(
-            agent_generator_str="<agent_generator_str>"
-        )
+_agent_generator_not_running_error = api_excs.AgentGeneratorNotRunningError.from_consortium_exception(
+    consortium_exception=agent_generators_framework_exceptions.AgentGeneratorNotRunningError(
+        agent_generator_str="<agent_generator_str>"
     )
 )
-_agent_generator_start_error = (
-    api_excs.AgentGeneratorStartError.from_consortium_exception(
-        consortium_exception=consortium_excs.AgentGeneratorStartError(
-            agent_generator_str="<agent_generator_str>",
-            error_message="<error_message>",
-            detail={"<key>": "<value>"},
-        )
+_agent_generator_start_error = api_excs.AgentGeneratorStartError.from_consortium_exception(
+    consortium_exception=agent_generators_framework_exceptions.AgentGeneratorStartError(
+        agent_generator_str="<agent_generator_str>",
+        error_message="<error_message>",
+        detail={"<key>": "<value>"},
     )
 )
-_agent_generator_stop_error = (
-    api_excs.AgentGeneratorStopError.from_consortium_exception(
-        consortium_exception=consortium_excs.AgentGeneratorStopError(
-            agent_generator_str="<agent_generator_str>",
-            error_message="<error_message>",
-            detail={"<key>": "<value>"},
-        )
+_agent_generator_stop_error = api_excs.AgentGeneratorStopError.from_consortium_exception(
+    consortium_exception=agent_generators_framework_exceptions.AgentGeneratorStopError(
+        agent_generator_str="<agent_generator_str>",
+        error_message="<error_message>",
+        detail={"<key>": "<value>"},
     )
 )
 _invalid_agent_generator_parameter_name_error = (
@@ -184,11 +179,13 @@ async def start_agent_generator_by_agent_generator_id(
         await _agent_generators_service.start_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
         )
-    except consortium_excs.AgentGeneratorStartError as exc:
+    except agent_generators_framework_exceptions.AgentGeneratorStartError as exc:
         raise api_excs.AgentGeneratorStartError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.AgentGeneratorAlreadyRunningError as exc:
+    except (
+        agent_generators_framework_exceptions.AgentGeneratorAlreadyRunningError
+    ) as exc:
         raise api_excs.AgentGeneratorAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -240,11 +237,11 @@ async def stop_agent_generator_by_agent_generator_id(
         raise api_excs.AgentGeneratorNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.AgentGeneratorStopError as exc:
+    except agent_generators_framework_exceptions.AgentGeneratorStopError as exc:
         raise api_excs.AgentGeneratorStopError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except consortium_excs.AgentGeneratorNotRunningError as exc:
+    except agent_generators_framework_exceptions.AgentGeneratorNotRunningError as exc:
         raise api_excs.AgentGeneratorNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -289,7 +286,7 @@ async def cancel_agent_generator_by_agent_generator_id(
         raise api_excs.AgentGeneratorNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.AgentGeneratorNotRunningError as exc:
+    except agent_generators_framework_exceptions.AgentGeneratorNotRunningError as exc:
         raise api_excs.AgentGeneratorNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -343,7 +340,9 @@ async def update_agent_generator_by_agent_generator_id(
         raise api_excs.AgentGeneratorNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.AgentGeneratorAlreadyRunningError as exc:
+    except (
+        agent_generators_framework_exceptions.AgentGeneratorAlreadyRunningError
+    ) as exc:
         raise api_excs.AgentGeneratorAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -388,7 +387,9 @@ async def delete_agent_generator_by_agent_generator_id(
         raise api_excs.AgentGeneratorNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.AgentGeneratorAlreadyRunningError as exc:
+    except (
+        agent_generators_framework_exceptions.AgentGeneratorAlreadyRunningError
+    ) as exc:
         raise api_excs.AgentGeneratorAlreadyRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None

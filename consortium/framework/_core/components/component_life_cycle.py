@@ -3,11 +3,11 @@ import asyncio
 import enum
 
 from consortium.framework._core.components.component_status import State, Status
+from consortium.framework._core.framework_exceptions import (
+    components_framework_exceptions,
+)
 from consortium.framework.signal_exceptions import (
     _component_signal_exceptions as framework_excs,
-)
-from consortium.server.exceptions.consortium_exceptions import (
-    components_consortium_exceptions as consortium_excs,
 )
 
 
@@ -47,7 +47,7 @@ class ComponentLifeCycle(abc.ABC):
 
     @abc.abstractmethod
     async def on_errored(
-        self, error: consortium_excs.ComponentRuntimeError
+        self, error: components_framework_exceptions.ComponentRuntimeError
     ) -> None: ...
 
     @abc.abstractmethod
@@ -59,7 +59,7 @@ class ComponentLifeCycle(abc.ABC):
 
     async def start(self) -> None:
         if self.status.state in (State.RUNNING, State.STARTED):
-            raise consortium_excs.ComponentAlreadyRunningError(
+            raise components_framework_exceptions.ComponentAlreadyRunningError(
                 component_str=str(self),
             )
 
@@ -71,7 +71,7 @@ class ComponentLifeCycle(abc.ABC):
             await self.on_started()
         except framework_excs.ComponentStartError as exc:
             self.status._transition_to_initialized()
-            raise consortium_excs.ComponentStartError(
+            raise components_framework_exceptions.ComponentStartError(
                 component_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
@@ -92,7 +92,7 @@ class ComponentLifeCycle(abc.ABC):
 
     async def stop(self) -> None:
         if self.status.state != State.RUNNING:
-            raise consortium_excs.ComponentNotRunningError(
+            raise components_framework_exceptions.ComponentNotRunningError(
                 component_str=str(self),
             )
 
@@ -101,7 +101,7 @@ class ComponentLifeCycle(abc.ABC):
             await self.on_stopped()
             self.status._transition_to_stopped()
         except framework_excs.ComponentStopError as exc:
-            raise consortium_excs.ComponentStopError(
+            raise components_framework_exceptions.ComponentStopError(
                 component_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
@@ -118,7 +118,7 @@ class ComponentLifeCycle(abc.ABC):
 
     async def cancel(self) -> None:
         if self.status.state != State.RUNNING:
-            raise consortium_excs.ComponentNotRunningError(
+            raise components_framework_exceptions.ComponentNotRunningError(
                 component_str=str(self),
             )
 
@@ -175,8 +175,8 @@ class ComponentLifeCycle(abc.ABC):
     def _construct_component_runtime_error_from_framework_runtime_error(
         self,
         error: framework_excs.ComponentRuntimeError,
-    ) -> consortium_excs.ComponentRuntimeError:
-        return consortium_excs.ComponentRuntimeError(
+    ) -> components_framework_exceptions.ComponentRuntimeError:
+        return components_framework_exceptions.ComponentRuntimeError(
             component_str=str(self),
             error_message=error.message,
             detail=error.detail,
@@ -185,8 +185,8 @@ class ComponentLifeCycle(abc.ABC):
     def _construct_component_runtime_error_from_unhandled_exception(
         self,
         exc: Exception,
-    ) -> consortium_excs.ComponentRuntimeError:
-        return consortium_excs.ComponentRuntimeError(
+    ) -> components_framework_exceptions.ComponentRuntimeError:
+        return components_framework_exceptions.ComponentRuntimeError(
             component_str=str(self),
             error_message=(
                 f"An unhandled exception was raised while running. "

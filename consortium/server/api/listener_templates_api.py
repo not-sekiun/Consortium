@@ -4,6 +4,9 @@ from fastapi import APIRouter, Depends
 from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
+from consortium.framework._core.framework_exceptions import (
+    listener_templates_framework_exceptions,
+)
 from consortium.server.exceptions.api_exceptions import (
     listener_templates_api_exceptions as api_excs,
 )
@@ -45,28 +48,22 @@ _listener_template_not_found_error = (
         )
     )
 )
-_listener_template_option_value_validation_error = (
-    api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
-        consortium_exception=consortium_excs.ListenerTemplateOptionValueValidationError(
-            listener_template_str="<listener_template_str>",
-            option_name="<option_str>",
-            option_value="<option_value>",
-            error_message="<error_message>",
-        )
+_listener_template_option_value_validation_error = api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
+    consortium_exception=listener_templates_framework_exceptions.ListenerTemplateOptionValueValidationError(
+        listener_template_str="<listener_template_str>",
+        option_name="<option_str>",
+        option_value="<option_value>",
+        error_message="<error_message>",
     )
 )
-_listener_template_option_not_found_error = (
-    api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
-        consortium_exception=consortium_excs.ListenerTemplateOptionNotFoundError(
-            listener_template_str="<listener_template>", option_name="<option_str>"
-        )
+_listener_template_option_not_found_error = api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
+    consortium_exception=listener_templates_framework_exceptions.ListenerTemplateOptionNotFoundError(
+        listener_template_str="<listener_template>", option_name="<option_str>"
     )
 )
-_missing_required_listener_template_option_error = (
-    api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
-        consortium_exception=consortium_excs.MissingRequiredListenerTemplateOptionError(
-            listener_template_str="<listener_template>", option_name="<option_str>"
-        )
+_missing_required_listener_template_option_error = api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
+    consortium_exception=listener_templates_framework_exceptions.MissingRequiredListenerTemplateOptionError(
+        listener_template_str="<listener_template>", option_name="<option_str>"
     )
 )
 _unprocessable_entity_error = UnprocessableEntityError(
@@ -158,15 +155,17 @@ async def create_listener_through_listener_template_by_listener_template_id(
         raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.ListenerTemplateOptionNotFoundError as exc:
+    except (
+        listener_templates_framework_exceptions.ListenerTemplateOptionNotFoundError
+    ) as exc:
         raise api_excs.ListenerTemplateOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.ListenerTemplateOptionValueValidationError as exc:
+    except listener_templates_framework_exceptions.ListenerTemplateOptionValueValidationError as exc:
         raise api_excs.ListenerTemplateOptionValueValidationError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.MissingRequiredListenerTemplateOptionError as exc:
+    except listener_templates_framework_exceptions.MissingRequiredListenerTemplateOptionError as exc:
         raise api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
             consortium_exception=exc,
         ) from None

@@ -1,4 +1,5 @@
-"""Exception hierarchy:
+"""
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`ListenerProfilesError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfilesError]

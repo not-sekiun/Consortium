@@ -13,6 +13,21 @@ from consortium.framework._core.components import (
     ComponentMetadata,
     ComponentMetadataModel,
 )
+from consortium.framework._core.framework_exceptions import (
+    components_framework_exceptions,
+)
+from consortium.framework._core.framework_exceptions.agent_templates_framework_exceptions import (
+    AgentTemplateOptionNotFoundError,
+    AgentTemplateOptionValueValidationError,
+    DuplicateAgentTemplateOptionNameError,
+    EmptyAgentTemplateLabelError,
+    InvalidAgentTemplateConfigurationParameterTypeError,
+    InvalidAgentTemplateDependencyVersionSpecifierError,
+    InvalidAgentTemplateVersionError,
+    InvalidFrameworkVersionSpecifierError,
+    MissingAgentTemplateConfigurationParameterError,
+    MissingRequiredAgentTemplateOptionError,
+)
 from consortium.framework._utils import format_docstring_to_single_line, remap_exception
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_type import BaseAgentType
@@ -26,21 +41,6 @@ from consortium.framework.options import (
     ListValueOption,
     SingleValueOption,
     ToggleableChoicesValueOption,
-)
-from consortium.server.exceptions.consortium_exceptions import (
-    components_consortium_exceptions as comp_excs,
-)
-from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
-    AgentTemplateOptionNotFoundError,
-    AgentTemplateOptionValueValidationError,
-    DuplicateAgentTemplateOptionNameError,
-    EmptyAgentTemplateLabelError,
-    InvalidAgentTemplateConfigurationParameterTypeError,
-    InvalidAgentTemplateDependencyVersionSpecifierError,
-    InvalidAgentTemplateVersionError,
-    InvalidFrameworkVersionSpecifierError,
-    MissingAgentTemplateConfigurationParameterError,
-    MissingRequiredAgentTemplateOptionError,
 )
 from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
     OptionValueValidationError,
@@ -93,12 +93,12 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
     _METADATA_MODEL = _AgentTemplateModel
 
     _COMPONENT_METADATA_EXCEPTION_MAP = {
-        comp_excs.MissingComponentConfigurationParameterError: MissingAgentTemplateConfigurationParameterError,
-        comp_excs.EmptyComponentLabelError: EmptyAgentTemplateLabelError,
-        comp_excs.InvalidComponentVersionError: InvalidAgentTemplateVersionError,
-        comp_excs.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
-        comp_excs.InvalidComponentDependencyVersionSpecifierError: InvalidAgentTemplateDependencyVersionSpecifierError,
-        comp_excs.InvalidComponentConfigurationParameterTypeError: InvalidAgentTemplateConfigurationParameterTypeError,
+        components_framework_exceptions.MissingComponentConfigurationParameterError: MissingAgentTemplateConfigurationParameterError,
+        components_framework_exceptions.EmptyComponentLabelError: EmptyAgentTemplateLabelError,
+        components_framework_exceptions.InvalidComponentVersionError: InvalidAgentTemplateVersionError,
+        components_framework_exceptions.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
+        components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError: InvalidAgentTemplateDependencyVersionSpecifierError,
+        components_framework_exceptions.InvalidComponentConfigurationParameterTypeError: InvalidAgentTemplateConfigurationParameterTypeError,
     }
     _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
         "component_str": "agent_template_str",
@@ -121,7 +121,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
 
         try:
             cls._validate_metadata()
-        except comp_excs.ComponentsFrameworkError as exc:
+        except components_framework_exceptions.ComponentsFrameworkError as exc:
             raise remap_exception(
                 original_exception=exc,
                 original_kwargs=exc._kwargs,

@@ -1,4 +1,5 @@
-"""Exception hierarchy:
+"""
+Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
     - [`AgentProfilesError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfilesError]
