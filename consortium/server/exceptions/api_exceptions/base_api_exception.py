@@ -46,7 +46,7 @@ class BaseAPIError(Exception):
         self,
         message: str = "",
         detail: dict[str, JsonValue] | None = None,
-        headers: dict[str, JsonValue] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         self.message = message
         self.detail = detail
