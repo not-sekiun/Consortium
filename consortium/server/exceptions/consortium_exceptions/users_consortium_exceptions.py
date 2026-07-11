@@ -2,11 +2,10 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`UsersError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UsersError]
-        - [`UsersServiceError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UsersServiceError]
-            - [`UserNotFoundError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UserNotFoundError]
-                - [`UserIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UserIDNotFoundError]
-                - [`UserAccessTokenNotFoundError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UserAccessTokenNotFoundError]
+    - [`UsersServiceError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UsersServiceError]
+        - [`UserNotFoundError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UserNotFoundError]
+            - [`UserIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UserIDNotFoundError]
+            - [`UserAccessTokenNotFoundError`][consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions.UserAccessTokenNotFoundError]
 """
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
@@ -14,13 +13,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class UsersError(BaseConsortiumError):
-    """Base exception for all users related errors."""
-
-    code = "USERS_ERROR"
-
-
-class UsersServiceError(UsersError):
+class UsersServiceError(BaseConsortiumError):
     """Base exception for all users service related errors."""
 
     code = "USERS_SERVICE_ERROR"

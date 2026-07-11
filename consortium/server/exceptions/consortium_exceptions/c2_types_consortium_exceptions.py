@@ -2,12 +2,11 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`C2TypesError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.C2TypesError]
-        - [`C2TypesServiceError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.C2TypesServiceError]
-            - [`ListenerTypeNotFoundError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.ListenerTypeNotFoundError]
-            - [`AgentTypeNotFoundError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.AgentTypeNotFoundError]
-            - [`DuplicateAgentTypeNameError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.DuplicateAgentTypeNameError]
-            - [`UnresolvableAgentTypeReferenceError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.UnresolvableAgentTypeReferenceError]
+    - [`C2TypesServiceError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.C2TypesServiceError]
+        - [`ListenerTypeNotFoundError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.ListenerTypeNotFoundError]
+        - [`AgentTypeNotFoundError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.AgentTypeNotFoundError]
+        - [`DuplicateAgentTypeNameError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.DuplicateAgentTypeNameError]
+        - [`UnresolvableAgentTypeReferenceError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.UnresolvableAgentTypeReferenceError]
 """
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
@@ -15,13 +14,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class C2TypesError(BaseConsortiumError):
-    """Base exception for all C2 types-related errors."""
-
-    code = "C2_TYPES_ERROR"
-
-
-class C2TypesServiceError(C2TypesError):
+class C2TypesServiceError(BaseConsortiumError):
     """Base exception for all errors that occur within the C2 types service."""
 
     code = "C2_TYPES_SERVICE_ERROR"

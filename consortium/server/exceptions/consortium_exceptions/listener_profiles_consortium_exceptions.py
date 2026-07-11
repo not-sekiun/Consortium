@@ -2,33 +2,32 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`ListenerProfilesError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfilesError]
-        - [`ListenerProfilesServiceError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfilesServiceError]
-            - [`ListenerProfileNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileNotFoundError]
-            - [`ListenerProfileLoadingError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileLoadingError]
-                - [`InvalidListenerProfileProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectManifestFileError]
-                    - [`InvalidListenerProfileProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectManifestFileJSONError]
-                    - [`InvalidListenerProfileProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectManifestFileSchemaError]
-                - [`InvalidListenerProfileProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileError]
-                - [`InvalidListenerProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileTOMLError]
-                - [`InvalidListenerProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileDependencyError]
-                - [`InvalidListenerProfileProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectFolderStructureError]
-                    - [`ListenerProfileProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectManifestFileNotFoundError]
-                    - [`ListenerProfileProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectEntryPointModuleNotFoundError]
-                - [`InvalidListenerProfileProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectImplementationError]
-                    - [`ListenerProfileProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectSymbolNotFoundError]
-                    - [`ListenerProfileProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectInterfaceError]
-                    - [`InternalListenerProfileProjectError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InternalListenerProfileProjectError]
-                - [`IncompatibleListenerProfileFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.IncompatibleListenerProfileFrameworkVersionError]
-                - [`ListenerProfileAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileAlreadyRegisteredError]
-                - [`DuplicateListenerProfileLabelError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.DuplicateListenerProfileLabelError]
-            - [`ListenerProfileDependencyError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileDependencyError]
-                - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ThirdPartyDependencyNotFoundError]
-                - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
-                - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ComponentDependencyNotFoundError]
-                - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.IncompatibleComponentDependencyVersionError]
-                - [`ListenerProfileDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileDependsOnInvalidComponentDependencyError]
-                - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ComponentDependencyNotRunningError]
+    - [`ListenerProfilesServiceError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfilesServiceError]
+        - [`ListenerProfileNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileNotFoundError]
+        - [`ListenerProfileLoadingError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileLoadingError]
+            - [`InvalidListenerProfileProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectManifestFileError]
+                - [`InvalidListenerProfileProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectManifestFileJSONError]
+                - [`InvalidListenerProfileProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectManifestFileSchemaError]
+            - [`InvalidListenerProfileProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileError]
+            - [`InvalidListenerProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileTOMLError]
+            - [`InvalidListenerProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectPyProjectFileDependencyError]
+            - [`InvalidListenerProfileProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectFolderStructureError]
+                - [`ListenerProfileProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectManifestFileNotFoundError]
+                - [`ListenerProfileProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectEntryPointModuleNotFoundError]
+            - [`InvalidListenerProfileProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InvalidListenerProfileProjectImplementationError]
+                - [`ListenerProfileProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectSymbolNotFoundError]
+                - [`ListenerProfileProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileProjectInterfaceError]
+                - [`InternalListenerProfileProjectError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.InternalListenerProfileProjectError]
+            - [`IncompatibleListenerProfileFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.IncompatibleListenerProfileFrameworkVersionError]
+            - [`ListenerProfileAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileAlreadyRegisteredError]
+            - [`DuplicateListenerProfileLabelError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.DuplicateListenerProfileLabelError]
+        - [`ListenerProfileDependencyError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileDependencyError]
+            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ThirdPartyDependencyNotFoundError]
+            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
+            - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ComponentDependencyNotFoundError]
+            - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.IncompatibleComponentDependencyVersionError]
+            - [`ListenerProfileDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ListenerProfileDependsOnInvalidComponentDependencyError]
+            - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions.ComponentDependencyNotRunningError]
 """
 
 from consortium.server.exceptions.consortium_exceptions import (
@@ -39,25 +38,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class ListenerProfilesError(BaseConsortiumError):
-    """Base exception for all listener profiles related errors.
-
-    All exceptions that inherit from `ListenerProfilesError` define, `code`, `message`, and
-    `detail` attributes. For brevity, `message` and `detail` are omitted within
-    the documentation here.
-
-    Attributes:
-        code: A **stable, machine-readable identifier** for the specific type of
-            error that occurred.
-        message: A human-readable message that describes the error.
-        detail: Any JSON-serializable data structure holding **structured, raw data**
-            relevant to the error.
-    """
-
-    code = "LISTENER_PROFILES_ERROR"
-
-
-class ListenerProfilesServiceError(ListenerProfilesError):
+class ListenerProfilesServiceError(BaseConsortiumError):
     """Base exception for all errors that occur within the listener profiles service."""
 
     code = "LISTENER_PROFILES_SERVICE_ERROR"

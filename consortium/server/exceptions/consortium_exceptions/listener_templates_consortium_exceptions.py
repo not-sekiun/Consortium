@@ -2,11 +2,10 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`ListenerTemplatesError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplatesError]
-        - [`ListenerTemplatesServiceError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplatesServiceError]
-            - [`ListenerTemplateNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateNotFoundError]
-                - [`ListenerTemplateIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateIDNotFoundError]
-                - [`ListenerTemplateLabelNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateLabelNotFoundError]
+    - [`ListenerTemplatesServiceError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplatesServiceError]
+        - [`ListenerTemplateNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateNotFoundError]
+            - [`ListenerTemplateIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateIDNotFoundError]
+            - [`ListenerTemplateLabelNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateLabelNotFoundError]
 """
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
@@ -14,13 +13,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class ListenerTemplatesError(BaseConsortiumError):
-    """Base exception for all listener templates-related errors."""
-
-    code = "LISTENER_TEMPLATES_ERROR"
-
-
-class ListenerTemplatesServiceError(ListenerTemplatesError):
+class ListenerTemplatesServiceError(BaseConsortiumError):
     """Base exception for all errors that occur within the listener templates service."""
 
     code = "LISTENER_TEMPLATES_SERVICE_ERROR"

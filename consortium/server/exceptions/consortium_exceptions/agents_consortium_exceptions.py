@@ -2,9 +2,8 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`AgentsError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentsError]
-        - [`AgentServiceError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentServiceError]
-            - [`AgentNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentNotFoundError]
+    - [`AgentServiceError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentServiceError]
+        - [`AgentNotFoundError`][consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions.AgentNotFoundError]
 """
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
@@ -12,11 +11,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class AgentsError(BaseConsortiumError):
-    code = "AGENTS_ERROR"
-
-
-class AgentServiceError(AgentsError):
+class AgentServiceError(BaseConsortiumError):
     code = "AGENT_SERVICE_ERROR"
 
 

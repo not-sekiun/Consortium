@@ -2,13 +2,12 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`ListenersError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersError]
-        - [`ListenersServiceError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersServiceError]
-            - [`ListenerNotFoundError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerNotFoundError]
-            - [`ListenerAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerAlreadyExistsError]
-            - [`ListenerParameterUpdateError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerParameterUpdateError]
-                - [`InvalidListenerParameterNameError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.InvalidListenerParameterNameError]
-                - [`InvalidListenerParameterValueError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.InvalidListenerParameterValueError]
+    - [`ListenersServiceError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersServiceError]
+        - [`ListenerNotFoundError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerNotFoundError]
+        - [`ListenerAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerAlreadyExistsError]
+        - [`ListenerParameterUpdateError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerParameterUpdateError]
+            - [`InvalidListenerParameterNameError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.InvalidListenerParameterNameError]
+            - [`InvalidListenerParameterValueError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.InvalidListenerParameterValueError]
 """
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
@@ -16,25 +15,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class ListenersError(BaseConsortiumError):
-    """Base exception for all listeners-related errors.
-
-    All exceptions that inherit from `ListenersError` define, `code`, `message`, and
-    `detail` attributes. For brevity, `message` and `detail` are omitted within
-    the documentation here.
-
-    Attributes:
-        code: A **stable, machine-readable identifier** for the specific type of
-            error that occurred.
-        message: A human-readable message that describes the error.
-        detail: Any JSON-serializable data structure holding **structured, raw data**
-            relevant to the error.
-    """
-
-    code = "LISTENER_ERROR"
-
-
-class ListenersServiceError(ListenersError):
+class ListenersServiceError(BaseConsortiumError):
     """Base exception for all errors that occur within the listeners service."""
 
     code = "LISTENERS_SERVICE_ERROR"

@@ -2,26 +2,25 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`UserAccountsError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsError]
-        - [`UserAccountsServiceError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsServiceError]
-            - [`UserAccountNotFoundError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountNotFoundError]
-                - [`UserAccountIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountIDNotFoundError]
-                - [`UserAccountUsernameNotFoundError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountUsernameNotFoundError]
-            - [`UserAccountsFileError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileError]
-                - [`UserAccountsFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileNotFoundError]
-                - [`UserAccountsFileAccessError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileAccessError]
-                    - [`UserAccountsFileReadAccessError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileReadAccessError]
-                    - [`UserAccountsFileWriteAccessError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileWriteAccessError]
-                - [`UserAccountsFilepathIsDirectoryError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFilepathIsDirectoryError]
-                - [`UserAccountsFileIsNotJSONError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileIsNotJSONError]
-                - [`UserAccountsFileSchemaError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileSchemaError]
-                - [`UserAccountsFileContainsDuplicateUsernamesError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileContainsDuplicateUsernamesError]
-            - [`UserAccountAuthenticationError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountAuthenticationError]
-            - [`UserAccountManagementError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountManagementError]
-                - [`UserAccountUsernameAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountUsernameAlreadyExistsError]
-                - [`EmptyUserAccountUsernameError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.EmptyUserAccountUsernameError]
-                - [`EmptyUserAccountPasswordError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.EmptyUserAccountPasswordError]
-                - [`InvalidUserAccountRoleError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.InvalidUserAccountRoleError]
+    - [`UserAccountsServiceError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsServiceError]
+        - [`UserAccountNotFoundError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountNotFoundError]
+            - [`UserAccountIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountIDNotFoundError]
+            - [`UserAccountUsernameNotFoundError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountUsernameNotFoundError]
+        - [`UserAccountsFileError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileError]
+            - [`UserAccountsFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileNotFoundError]
+            - [`UserAccountsFileAccessError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileAccessError]
+                - [`UserAccountsFileReadAccessError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileReadAccessError]
+                - [`UserAccountsFileWriteAccessError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileWriteAccessError]
+            - [`UserAccountsFilepathIsDirectoryError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFilepathIsDirectoryError]
+            - [`UserAccountsFileIsNotJSONError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileIsNotJSONError]
+            - [`UserAccountsFileSchemaError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileSchemaError]
+            - [`UserAccountsFileContainsDuplicateUsernamesError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountsFileContainsDuplicateUsernamesError]
+        - [`UserAccountAuthenticationError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountAuthenticationError]
+        - [`UserAccountManagementError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountManagementError]
+            - [`UserAccountUsernameAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountUsernameAlreadyExistsError]
+            - [`EmptyUserAccountUsernameError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.EmptyUserAccountUsernameError]
+            - [`EmptyUserAccountPasswordError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.EmptyUserAccountPasswordError]
+            - [`InvalidUserAccountRoleError`][consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.InvalidUserAccountRoleError]
 """
 
 from pathlib import Path
@@ -31,13 +30,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class UserAccountsError(BaseConsortiumError):
-    """Base exception for all user account-related errors."""
-
-    code = "USER_ACCOUNTS_ERROR"
-
-
-class UserAccountsServiceError(UserAccountsError):
+class UserAccountsServiceError(BaseConsortiumError):
     """Base exception for all errors that occur within the user accounts service."""
 
     code = "USER_ACCOUNTS_SERVICE_ERROR"

@@ -2,16 +2,15 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`RepositoryError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryError]
-        - [`RepositoryServiceError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryServiceError]
-            - [`RepositoryResourceNotFoundError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryResourceNotFoundError]
-            - [`RepositoryResourceAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryResourceAlreadyExistsError]
-            - [`ResourceIDReservationNotFoundError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.ResourceIDReservationNotFoundError]
-            - [`InvalidRepositoryMetadataFileError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileError]
-                - [`InvalidRepositoryMetadataFileJSONError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileJSONError]
-                - [`InvalidRepositoryMetadataFileSchemaError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileSchemaError]
-                - [`UnsyncedRepositoryMetadataFileError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.UnsyncedRepositoryMetadataFileError]
-                - [`InvalidRepositoryMetadataDataSchemaError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataDataSchemaError]
+    - [`RepositoryServiceError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryServiceError]
+        - [`RepositoryResourceNotFoundError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryResourceNotFoundError]
+        - [`RepositoryResourceAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.RepositoryResourceAlreadyExistsError]
+        - [`ResourceIDReservationNotFoundError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.ResourceIDReservationNotFoundError]
+        - [`InvalidRepositoryMetadataFileError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileError]
+            - [`InvalidRepositoryMetadataFileJSONError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileJSONError]
+            - [`InvalidRepositoryMetadataFileSchemaError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataFileSchemaError]
+            - [`UnsyncedRepositoryMetadataFileError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.UnsyncedRepositoryMetadataFileError]
+            - [`InvalidRepositoryMetadataDataSchemaError`][consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions.InvalidRepositoryMetadataDataSchemaError]
 """
 
 from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
@@ -19,13 +18,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class RepositoryError(BaseConsortiumError):
-    """Base exception for all repository-related errors."""
-
-    code = "REPOSITORY_ERROR"
-
-
-class RepositoryServiceError(RepositoryError):
+class RepositoryServiceError(BaseConsortiumError):
     """Base exception for all errors that occur within the repository service."""
 
     code = "REPOSITORY_SERVICE_ERROR"

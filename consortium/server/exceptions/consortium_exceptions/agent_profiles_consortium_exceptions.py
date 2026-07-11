@@ -2,33 +2,32 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`AgentProfilesError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfilesError]
-        - [`AgentProfilesServiceError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfilesServiceError]
-            - [`AgentProfileNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileNotFoundError]
-            - [`AgentProfileLoadingError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileLoadingError]
-                - [`InvalidAgentProfileProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectManifestFileError]
-                    - [`InvalidAgentProfileProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectManifestFileJSONError]
-                    - [`InvalidAgentProfileProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectManifestFileSchemaError]
-                - [`InvalidAgentProfileProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileError]
-                - [`InvalidAgentProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileTOMLError]
-                - [`InvalidAgentProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileDependencyError]
-                - [`InvalidAgentProfileProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectFolderStructureError]
-                    - [`AgentProfileProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectManifestFileNotFoundError]
-                    - [`AgentProfileProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectEntryPointModuleNotFoundError]
-                - [`InvalidAgentProfileProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectImplementationError]
-                    - [`AgentProfileProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectSymbolNotFoundError]
-                    - [`AgentProfileProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectInterfaceError]
-                    - [`InternalAgentProfileProjectError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InternalAgentProfileProjectError]
-                - [`IncompatibleAgentProfileFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.IncompatibleAgentProfileFrameworkVersionError]
-                - [`AgentProfileAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileAlreadyRegisteredError]
-                - [`DuplicateAgentProfileLabelError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.DuplicateAgentProfileLabelError]
-            - [`AgentProfileDependencyError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileDependencyError]
-                - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.ThirdPartyDependencyNotFoundError]
-                - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
-                - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.ComponentDependencyNotFoundError]
-                - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.IncompatibleComponentDependencyVersionError]
-                - [`AgentProfileDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileDependsOnInvalidComponentDependencyError]
-                - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.ComponentDependencyNotRunningError]
+    - [`AgentProfilesServiceError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfilesServiceError]
+        - [`AgentProfileNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileNotFoundError]
+        - [`AgentProfileLoadingError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileLoadingError]
+            - [`InvalidAgentProfileProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectManifestFileError]
+                - [`InvalidAgentProfileProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectManifestFileJSONError]
+                - [`InvalidAgentProfileProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectManifestFileSchemaError]
+            - [`InvalidAgentProfileProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileError]
+            - [`InvalidAgentProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileTOMLError]
+            - [`InvalidAgentProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectPyProjectFileDependencyError]
+            - [`InvalidAgentProfileProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectFolderStructureError]
+                - [`AgentProfileProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectManifestFileNotFoundError]
+                - [`AgentProfileProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectEntryPointModuleNotFoundError]
+            - [`InvalidAgentProfileProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InvalidAgentProfileProjectImplementationError]
+                - [`AgentProfileProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectSymbolNotFoundError]
+                - [`AgentProfileProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileProjectInterfaceError]
+                - [`InternalAgentProfileProjectError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.InternalAgentProfileProjectError]
+            - [`IncompatibleAgentProfileFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.IncompatibleAgentProfileFrameworkVersionError]
+            - [`AgentProfileAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileAlreadyRegisteredError]
+            - [`DuplicateAgentProfileLabelError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.DuplicateAgentProfileLabelError]
+        - [`AgentProfileDependencyError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileDependencyError]
+            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.ThirdPartyDependencyNotFoundError]
+            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
+            - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.ComponentDependencyNotFoundError]
+            - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.IncompatibleComponentDependencyVersionError]
+            - [`AgentProfileDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.AgentProfileDependsOnInvalidComponentDependencyError]
+            - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions.ComponentDependencyNotRunningError]
 """
 
 from consortium.server.exceptions.consortium_exceptions import (
@@ -39,25 +38,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class AgentProfilesError(BaseConsortiumError):
-    """Base exception for all agent profiles related errors.
-
-    All exceptions that inherit from `AgentProfilesError` define, `code`, `message`, and
-    `detail` attributes. For brevity, `message` and `detail` are omitted within
-    the documentation here.
-
-    Attributes:
-        code: A **stable, machine-readable identifier** for the specific type of
-            error that occurred.
-        message: A human-readable message that describes the error.
-        detail: Any JSON-serializable data structure holding **structured, raw data**
-            relevant to the error.
-    """
-
-    code = "AGENT_PROFILES_ERROR"
-
-
-class AgentProfilesServiceError(AgentProfilesError):
+class AgentProfilesServiceError(BaseConsortiumError):
     """Base exception for all errors that occur within the agent profiles service."""
 
     code = "AGENT_PROFILES_SERVICE_ERROR"

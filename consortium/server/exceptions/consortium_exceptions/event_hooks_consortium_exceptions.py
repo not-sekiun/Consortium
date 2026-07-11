@@ -2,37 +2,36 @@
 Exception hierarchy:
 
 - [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`EventHooksError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHooksError]
-        - [`EventHooksServiceError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHooksServiceError]
-            - [`EventHookNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookNotFoundError]
-            - [`EventHookLoadingError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookLoadingError]
-                - [`InvalidEventHookProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectManifestFileError]
-                    - [`InvalidEventHookProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectManifestFileJSONError]
-                    - [`InvalidEventHookProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectManifestFileSchemaError]
-                - [`InvalidEventHookProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileError]
-                - [`InvalidEventHookProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileTOMLError]
-                - [`InvalidEventHookProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileDependencyError]
-                - [`InvalidEventHookProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectFolderStructureError]
-                    - [`EventHookProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectManifestFileNotFoundError]
-                    - [`EventHookProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectEntryPointModuleNotFoundError]
-                - [`InvalidEventHookProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectImplementationError]
-                    - [`EventHookProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectSymbolNotFoundError]
-                    - [`EventHookProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectInterfaceError]
-                    - [`InternalEventHookProjectError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InternalEventHookProjectError]
-                - [`IncompatibleEventHookFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.IncompatibleEventHookFrameworkVersionError]
-                - [`EventHookAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookAlreadyRegisteredError]
-                - [`DuplicateEventHookLabelError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.DuplicateEventHookLabelError]
-            - [`EventHookDependencyError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookDependencyError]
-                - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.ThirdPartyDependencyNotFoundError]
-                - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
-                - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.ComponentDependencyNotFoundError]
-                - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.IncompatibleComponentDependencyVersionError]
-                - [`EventHookDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookDependsOnInvalidComponentDependencyError]
-                - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.ComponentDependencyNotRunningError]
-            - [`EventHookOperationError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookOperationError]
-                - [`EventHookSetupError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookSetupError]
-                - [`EventHookTriggerError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookTriggerError]
-                - [`EventHookTeardownError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookTeardownError]
+    - [`EventHooksServiceError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHooksServiceError]
+        - [`EventHookNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookNotFoundError]
+        - [`EventHookLoadingError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookLoadingError]
+            - [`InvalidEventHookProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectManifestFileError]
+                - [`InvalidEventHookProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectManifestFileJSONError]
+                - [`InvalidEventHookProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectManifestFileSchemaError]
+            - [`InvalidEventHookProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileError]
+            - [`InvalidEventHookProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileTOMLError]
+            - [`InvalidEventHookProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectPyProjectFileDependencyError]
+            - [`InvalidEventHookProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectFolderStructureError]
+                - [`EventHookProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectManifestFileNotFoundError]
+                - [`EventHookProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectEntryPointModuleNotFoundError]
+            - [`InvalidEventHookProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InvalidEventHookProjectImplementationError]
+                - [`EventHookProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectSymbolNotFoundError]
+                - [`EventHookProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookProjectInterfaceError]
+                - [`InternalEventHookProjectError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.InternalEventHookProjectError]
+            - [`IncompatibleEventHookFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.IncompatibleEventHookFrameworkVersionError]
+            - [`EventHookAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookAlreadyRegisteredError]
+            - [`DuplicateEventHookLabelError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.DuplicateEventHookLabelError]
+        - [`EventHookDependencyError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookDependencyError]
+            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.ThirdPartyDependencyNotFoundError]
+            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
+            - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.ComponentDependencyNotFoundError]
+            - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.IncompatibleComponentDependencyVersionError]
+            - [`EventHookDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookDependsOnInvalidComponentDependencyError]
+            - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.ComponentDependencyNotRunningError]
+        - [`EventHookOperationError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookOperationError]
+            - [`EventHookSetupError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookSetupError]
+            - [`EventHookTriggerError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookTriggerError]
+            - [`EventHookTeardownError`][consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions.EventHookTeardownError]
 """
 
 from typing import Any
@@ -45,25 +44,7 @@ from consortium.server.exceptions.consortium_exceptions.base_consortium_exceptio
 )
 
 
-class EventHooksError(BaseConsortiumError):
-    """Base exception for all event hooks related errors.
-
-    All exceptions that inherit from `EventHooksError` define, `code`, `message`, and
-    `detail` attributes. For brevity, `message` and `detail` are omitted within
-    the documentation here.
-
-    Attributes:
-        code: A **stable, machine-readable identifier** for the specific type of
-            error that occurred.
-        message: A human-readable message that describes the error.
-        detail: Any JSON-serializable data structure holding **structured, raw data**
-            relevant to the error.
-    """
-
-    code = "EVENT_HOOKS_ERROR"
-
-
-class EventHooksServiceError(EventHooksError):
+class EventHooksServiceError(BaseConsortiumError):
     """Base exception for all errors that occur within the event hooks service."""
 
     code = "EVENT_HOOKS_SERVICE_ERROR"
