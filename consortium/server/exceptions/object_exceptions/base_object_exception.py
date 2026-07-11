@@ -17,7 +17,7 @@ class BaseObjectError(Exception):
 
     code: str = "BASE_OBJECT_ERROR"
 
-    def __init__(self, message: str = "", detail: JsonValue = None):
+    def __init__(self, message: str = "", detail: dict[str, JsonValue] | None = None):
         self.message: str = message
-        self.detail: JsonValue = detail
+        self.detail: dict[str, JsonValue] | None = detail
         super().__init__(message)
