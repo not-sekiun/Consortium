@@ -11,7 +11,7 @@ from consortium.framework._core.framework_exceptions.plugins_framework_exception
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
     PluginLoadingError,
-    PluginsError,
+    PluginsServiceError,
     PluginUnloadingError,
 )
 from consortium.server.models.logging_models import LoggerType
@@ -468,7 +468,7 @@ class PluginsService:
                     await plugin.start()
                 self._logger.success("- Loaded plugin: {}", plugin)
                 self._logger.debug("- Loaded plugin: {!r}", plugin)
-            except (PluginsError, PluginsFrameworkError) as exc:
+            except (PluginsServiceError, PluginsFrameworkError) as exc:
                 failed_to_load += 1
                 self._logger.error("- {}", str(exc))
             except Exception as exc:
