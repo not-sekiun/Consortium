@@ -7,7 +7,7 @@ from typing import Any, get_type_hints
 from loguru import logger
 from pydantic import UUID4, BaseModel, JsonValue, ValidationError
 
-from consortium.framework._components import State
+from consortium.framework._core.components import State
 from consortium.framework.agents import BaseAgentCapability, TaskInputMessageModel
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
@@ -15,10 +15,10 @@ from consortium.framework.agents.agent_message_models import (
 )
 from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.event_hooks import EventType
-from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+from consortium.framework.listeners import BaseListener
+from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
     AgentCapabilityExecutionError as AgentCapabilityExecutionFrameworkError,
 )
-from consortium.framework.listeners import BaseListener
 from consortium.server import server_singletons as server_singletons
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
     AgentCapabilityExecutionError,

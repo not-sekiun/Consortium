@@ -2,9 +2,9 @@ import abc
 import asyncio
 import enum
 
-from consortium.framework._components._component_status import State, Status
-from consortium.framework.exceptions import (
-    _component_framework_exceptions as framework_excs,
+from consortium.framework._core.components.component_status import State, Status
+from consortium.framework.signal_exceptions import (
+    _component_signal_exceptions as framework_excs,
 )
 from consortium.server.exceptions.consortium_exceptions import (
     components_consortium_exceptions as consortium_excs,

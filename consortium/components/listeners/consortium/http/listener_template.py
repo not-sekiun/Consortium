@@ -1,6 +1,3 @@
-from consortium.framework.exceptions import (
-    OptionValueValidationError,
-)
 from consortium.framework.framework_types import JSONObject
 from consortium.framework.listeners import BaseListenerTemplate
 from consortium.framework.options import (
@@ -8,6 +5,9 @@ from consortium.framework.options import (
     SingleValueOption,
     validate_is_ip_address,
     validate_is_url_path,
+)
+from consortium.framework.signal_exceptions import (
+    OptionValueValidationError,
 )
 
 from .listener import Listener

@@ -13,15 +13,15 @@ from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
 )
 from consortium.framework.agents.agent_outcomes import Failure, Success
-from consortium.framework.exceptions.agent_capabilties_framework_exception import (
-    AgentCapabilityLaunchError,
-)
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
     ListValueOption,
     SingleValueOption,
     ToggleableChoicesValueOption,
+)
+from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
+    AgentCapabilityLaunchError,
 )
 from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
     DuplicateAgentCapabilityOptionNameError,

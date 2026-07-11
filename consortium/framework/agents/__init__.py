@@ -43,7 +43,7 @@ from consortium.framework.agents.base_agent_generator import (
 )
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.agents.base_agent_type import BaseAgentType
-from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
     AgentCapabilityLaunchError,
 )
 

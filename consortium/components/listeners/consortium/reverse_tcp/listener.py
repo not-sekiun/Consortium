@@ -8,8 +8,8 @@ from typing import Any
 import jsonschema
 from pydantic import ValidationError
 
-from consortium.framework.exceptions import ListenerStartError
 from consortium.framework.listeners import BaseListener
+from consortium.framework.signal_exceptions import ListenerStartError
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentTypeResolutionError,
 )

@@ -8,7 +8,7 @@ from loguru import logger
 from pydantic import BaseModel, JsonValue, ValidationError
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework._components import (
+from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
 )

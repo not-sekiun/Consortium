@@ -1,11 +1,11 @@
 from pydantic import JsonValue
 
-from consortium.framework.exceptions.base_framework_exception import (
-    BaseRaiseOnlyFrameworkException,
+from consortium.framework.signal_exceptions.base_signal_exception import (
+    BaseSignalException,
 )
 
 
-class ComponentStartError(BaseRaiseOnlyFrameworkException):
+class ComponentStartError(BaseSignalException):
     def __init__(
         self,
         message: str = "",
@@ -17,7 +17,7 @@ class ComponentStartError(BaseRaiseOnlyFrameworkException):
         )
 
 
-class ComponentRuntimeError(BaseRaiseOnlyFrameworkException):
+class ComponentRuntimeError(BaseSignalException):
     def __init__(
         self,
         message: str = "",
@@ -29,7 +29,7 @@ class ComponentRuntimeError(BaseRaiseOnlyFrameworkException):
         )
 
 
-class ComponentStopError(BaseRaiseOnlyFrameworkException):
+class ComponentStopError(BaseSignalException):
     def __init__(
         self,
         message: str = "",

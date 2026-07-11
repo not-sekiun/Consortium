@@ -4,8 +4,8 @@ import socket
 import jsonschema
 from aiohttp import web
 
-from consortium.framework.exceptions import ListenerStartError
 from consortium.framework.listeners import BaseListener
+from consortium.framework.signal_exceptions import ListenerStartError
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
     AgentTaskNotFoundError,

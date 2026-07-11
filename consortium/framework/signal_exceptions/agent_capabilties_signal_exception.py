@@ -1,11 +1,11 @@
 from pydantic import JsonValue
 
-from consortium.framework.exceptions.base_framework_exception import (
-    BaseRaiseOnlyFrameworkException,
+from consortium.framework.signal_exceptions.base_signal_exception import (
+    BaseSignalException,
 )
 
 
-class AgentCapabilityLaunchError(BaseRaiseOnlyFrameworkException):
+class AgentCapabilityLaunchError(BaseSignalException):
     """Raise this exception from `on_launch` to deliberately deny a task from starting
     and report failure to the operator."""
 
@@ -17,7 +17,7 @@ class AgentCapabilityLaunchError(BaseRaiseOnlyFrameworkException):
         super().__init__(message=message, detail=detail)
 
 
-class AgentCapabilityExecutionError(BaseRaiseOnlyFrameworkException):
+class AgentCapabilityExecutionError(BaseSignalException):
     """Raise this exception from `on_execute` to deliberately stop an executing agent
     capability and report failure to the operator."""
 

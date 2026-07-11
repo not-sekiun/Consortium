@@ -5,10 +5,10 @@ from loguru import logger
 
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.framework.exceptions import (
-    event_hooks_framework_exceptions as event_hook_framework_excs,
-)
 from consortium.framework.framework_types import JSON
+from consortium.framework.signal_exceptions import (
+    event_hooks_signal_exceptions as event_hook_framework_excs,
+)
 from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
     EventHookTriggerError,
 )

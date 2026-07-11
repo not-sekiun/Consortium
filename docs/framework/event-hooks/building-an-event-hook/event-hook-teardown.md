@@ -32,9 +32,10 @@ service, and the registry surfaces the failure as an `EventHookTeardownError` (f
 carrying your `message` and any structured `detail` you provide.
 
 ```python
-from consortium.framework.exceptions.event_hooks_framework_exceptions import (
+from consortium.framework.signal_exceptions.event_hooks_signal_exceptions import (
     EventHookTeardownError,
 )
+
 
 async def on_teardown(self) -> None:
     try:

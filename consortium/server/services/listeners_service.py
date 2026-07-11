@@ -6,7 +6,7 @@ from typing import Any
 from loguru import logger
 from pydantic import validate_call
 
-from consortium.framework._components._component_status import State
+from consortium.framework._core.components.component_status import State
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (

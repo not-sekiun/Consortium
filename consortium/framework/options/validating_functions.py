@@ -16,7 +16,7 @@ import uuid
 from datetime import datetime
 from urllib.parse import urlparse
 
-from consortium.framework.exceptions.options_framework_exceptions import (
+from consortium.framework.signal_exceptions.options_signal_exceptions import (
     OptionValueValidationError,
 )
 

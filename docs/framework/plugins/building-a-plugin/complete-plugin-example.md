@@ -8,7 +8,7 @@ import asyncio
 import json
 
 from consortium.framework.plugins import BasePlugin
-from consortium.framework.exceptions.plugins_framework_exceptions import (
+from consortium.framework.signal_exceptions.plugins_signal_exceptions import (
     PluginRuntimeError,
     PluginStartError,
 )

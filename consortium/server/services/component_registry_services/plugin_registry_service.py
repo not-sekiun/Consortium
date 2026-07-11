@@ -2,7 +2,7 @@ import asyncio
 import pathlib
 import uuid
 
-from consortium.framework._components._component_status import State
+from consortium.framework._core.components.component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.server.exceptions.consortium_exceptions import (
     components_consortium_exceptions as comp_excs,

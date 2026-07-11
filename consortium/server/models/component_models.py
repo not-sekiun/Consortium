@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from consortium.framework._components._component_status import State
+from consortium.framework._core.components.component_status import State
 from consortium.server.models.error_models import ErrorModel
 
 

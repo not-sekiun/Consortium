@@ -1,26 +1,26 @@
-from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
     AgentCapabilityExecutionError,
     AgentCapabilityLaunchError,
 )
-from consortium.framework.exceptions.agent_generators_framework_exceptions import (
+from consortium.framework.signal_exceptions.agent_generators_signal_exceptions import (
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorStartError,
     AgentGeneratorStopError,
 )
-from consortium.framework.exceptions.event_hooks_framework_exceptions import (
+from consortium.framework.signal_exceptions.event_hooks_signal_exceptions import (
     EventHookSetupError,
     EventHookTeardownError,
     EventHookTriggerError,
 )
-from consortium.framework.exceptions.listeners_framework_exceptions import (
+from consortium.framework.signal_exceptions.listeners_signal_exceptions import (
     ListenerRuntimeError,
     ListenerStartError,
     ListenerStopError,
 )
-from consortium.framework.exceptions.options_framework_exceptions import (
+from consortium.framework.signal_exceptions.options_signal_exceptions import (
     OptionValueValidationError,
 )
-from consortium.framework.exceptions.plugins_framework_exceptions import (
+from consortium.framework.signal_exceptions.plugins_signal_exceptions import (
     PluginRuntimeError,
     PluginStartError,
     PluginStopError,

@@ -80,9 +80,10 @@ alongside any other handler failures for that event. It does not stop other hook
 other handlers) subscribed to the same event from running.
 
 ```python
-from consortium.framework.exceptions.event_hooks_framework_exceptions import (
+from consortium.framework.signal_exceptions.event_hooks_signal_exceptions import (
     EventHookTriggerError,
 )
+
 
 async def on_triggered(self, event) -> None:
     try:

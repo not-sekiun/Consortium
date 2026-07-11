@@ -9,7 +9,7 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework._components._component_status import State
+from consortium.framework._core.components.component_status import State
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.api.agent_generators_api import (
     router as agent_generators_api_router,

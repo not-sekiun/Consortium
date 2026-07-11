@@ -9,7 +9,10 @@ from typing import get_type_hints
 from pydantic import ConfigDict, JsonValue
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
+from consortium.framework._core.components import (
+    ComponentMetadata,
+    ComponentMetadataModel,
+)
 from consortium.framework._utils import format_docstring_to_single_line, remap_exception
 from consortium.framework.framework_types import (
     Primitive,

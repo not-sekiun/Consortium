@@ -67,9 +67,10 @@ never called for it, and the registry surfaces the failure as an `EventHookSetup
 carrying your `message` and any structured `detail` you provide.
 
 ```python
-from consortium.framework.exceptions.event_hooks_framework_exceptions import (
+from consortium.framework.signal_exceptions.event_hooks_signal_exceptions import (
     EventHookSetupError,
 )
+
 
 async def on_setup(self) -> None:
     config_path = self.event_hook_project_folder / "config.json"

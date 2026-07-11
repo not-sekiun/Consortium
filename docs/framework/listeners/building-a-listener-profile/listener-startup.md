@@ -11,7 +11,7 @@ that credentials are present, before the server tries to accept connections.
 ```python
 import socket
 
-from consortium.framework.exceptions import ListenerStartError
+from consortium.framework.signal_exceptions import ListenerStartError
 from consortium.framework.listeners import BaseListener
 
 

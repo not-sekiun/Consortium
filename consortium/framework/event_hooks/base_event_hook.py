@@ -7,7 +7,10 @@ from loguru import logger
 from pydantic import JsonValue
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework._components import ComponentMetadata, ComponentMetadataModel
+from consortium.framework._core.components import (
+    ComponentMetadata,
+    ComponentMetadataModel,
+)
 from consortium.framework._utils import remap_exception
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType

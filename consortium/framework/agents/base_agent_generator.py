@@ -11,13 +11,13 @@ from loguru import logger
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework._components import (
+from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
     State,
 )
-from consortium.framework.exceptions import (
-    _component_framework_exceptions as framework_excs,
+from consortium.framework.signal_exceptions import (
+    _component_signal_exceptions as framework_excs,
 )
 from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
     AgentGeneratorAlreadyRunningError,

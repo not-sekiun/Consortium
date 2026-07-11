@@ -8,7 +8,7 @@ import loguru
 from pydantic import JsonValue
 
 import consortium.server.server_singletons as server_singletons
-from consortium.framework._components import (
+from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
     ComponentMetadata,

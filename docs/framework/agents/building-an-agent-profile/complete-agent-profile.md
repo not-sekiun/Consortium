@@ -79,7 +79,7 @@ class AgentType(BaseAgentType):
 
 ```python
 from consortium.framework.agents import BaseAgentGenerator, BaseAgentGeneratorBuildStep
-from consortium.framework.exceptions import AgentGeneratorBuildStepRuntimeError
+from consortium.framework.signal_exceptions import AgentGeneratorBuildStepRuntimeError
 
 
 class BuildScript(BaseAgentGeneratorBuildStep):

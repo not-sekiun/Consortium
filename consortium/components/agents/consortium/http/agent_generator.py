@@ -10,7 +10,7 @@ from consortium.framework.agents import (
 from consortium.framework.agents.agent_generator_utils import multiple_string_replace
 
 # TODO: Move framework exceptions to signals to be more explicit
-from consortium.framework.exceptions import (
+from consortium.framework.signal_exceptions import (
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorStartError,
 )

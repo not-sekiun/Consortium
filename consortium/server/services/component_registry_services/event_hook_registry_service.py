@@ -2,8 +2,8 @@ import pathlib
 import uuid
 
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
-from consortium.framework.exceptions import (
-    event_hooks_framework_exceptions as event_hook_framework_excs,
+from consortium.framework.signal_exceptions import (
+    event_hooks_signal_exceptions as event_hook_framework_excs,
 )
 from consortium.server.exceptions.consortium_exceptions import (
     components_consortium_exceptions as comp_excs,

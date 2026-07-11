@@ -13,7 +13,7 @@ cannot be overridden. `build()` is the only customisation point.
 
 ```python
 from consortium.framework.agents import BaseAgentGeneratorBuildStep
-from consortium.framework.exceptions import AgentGeneratorBuildStepRuntimeError
+from consortium.framework.signal_exceptions import AgentGeneratorBuildStepRuntimeError
 
 
 class BuildScript(BaseAgentGeneratorBuildStep):
@@ -112,7 +112,7 @@ override it. Override `on_started()` to run pre-build validation:
 import shutil
 
 from consortium.framework.agents import BaseAgentGenerator
-from consortium.framework.exceptions import AgentGeneratorStartError
+from consortium.framework.signal_exceptions import AgentGeneratorStartError
 
 from .build_steps import BuildScript
 
@@ -122,8 +122,8 @@ class AgentGenerator(BaseAgentGenerator):
 
     async def on_started(self) -> None:
         if (
-            self.parameters["format"] == "executable"
-            and shutil.which("pyinstaller") is None
+                self.parameters["format"] == "executable"
+                and shutil.which("pyinstaller") is None
         ):
             raise AgentGeneratorStartError(
                 "format='executable' requires PyInstaller, but it was not found on PATH."

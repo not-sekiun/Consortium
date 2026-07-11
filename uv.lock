@@ -224,6 +224,9 @@ dependencies = [
 agents = [
     { name = "pyinstaller" },
 ]
+components = [
+    { name = "pyinstaller" },
+]
 dev = [
     { name = "anyio" },
     { name = "httpx" },
@@ -255,6 +258,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 agents = [{ name = "pyinstaller", specifier = ">=6.21.0" }]
+components = [{ name = "pyinstaller", specifier = ">=6.21.0" }]
 dev = [
     { name = "anyio", specifier = ">=4.13.0" },
     { name = "httpx", specifier = ">=0.28.1" },

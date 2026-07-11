@@ -203,7 +203,8 @@ launch without sending anything. Raising `AgentCapabilityLaunchError` also abort
 surfaces as a `Failure`:
 
 ```python
-from consortium.framework.exceptions import AgentCapabilityLaunchError
+from consortium.framework.signal_exceptions import AgentCapabilityLaunchError
+
 
 async def on_launch(self, task_message):
     if not self._check_precondition():

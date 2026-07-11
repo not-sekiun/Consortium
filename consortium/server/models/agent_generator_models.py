@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from consortium.framework._components._component_status import State
+from consortium.framework._core.components.component_status import State
 from consortium.server.models.agent_template_models import (
     LiveAgentTemplateReferenceModel,
 )

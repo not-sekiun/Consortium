@@ -88,7 +88,7 @@ When validation requires inspecting multiple options together, provide a
 individual option validations have passed:
 
 ```python
-from consortium.framework.exceptions import OptionValueValidationError
+from consortium.framework.signal_exceptions import OptionValueValidationError
 
 
 def _validate_loopback_warning(parameters: dict) -> None:

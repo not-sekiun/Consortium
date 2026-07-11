@@ -2,10 +2,10 @@ from pathlib import Path
 
 from consortium.framework.agents import Failure, Success, TaskLaunchMessageModel
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
-from consortium.framework.exceptions.agent_capabilties_framework_exception import (
+from consortium.framework.options import SingleValueOption
+from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
     AgentCapabilityLaunchError,
 )
-from consortium.framework.options import SingleValueOption
 
 
 class UploadCapability(BaseAgentCapability):

@@ -1,15 +1,15 @@
 from pathlib import Path
 
 from consortium.framework.agents import BaseAgentTemplate
-from consortium.framework.exceptions import (
-    OptionValueValidationError,
-)
 from consortium.framework.framework_types import JSONObject
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
     ListValueOption,
     SingleValueOption,
+)
+from consortium.framework.signal_exceptions import (
+    OptionValueValidationError,
 )
 
 from .agent_generator import AgentGenerator

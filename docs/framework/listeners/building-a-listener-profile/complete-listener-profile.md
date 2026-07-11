@@ -17,7 +17,7 @@ class ListenerType(BaseListenerType):
 ## listener_template.py
 
 ```python
-from consortium.framework.exceptions import OptionValueValidationError
+from consortium.framework.signal_exceptions import OptionValueValidationError
 from consortium.framework.listeners import BaseListenerTemplate
 from consortium.framework.options import SingleValueOption
 
@@ -44,7 +44,7 @@ class ListenerTemplate(BaseListenerTemplate):
     compatible_framework_version = ">=0.1.0"
     authors = {"Your Name"}
 
-    listener      = Listener
+    listener = Listener
     listener_type = ListenerType
     validating_function = _validate_loopback_warning
     options = {
@@ -87,7 +87,7 @@ import asyncio
 import json
 import socket
 
-from consortium.framework.exceptions import ListenerStartError
+from consortium.framework.signal_exceptions import ListenerStartError
 from consortium.framework.listeners import BaseListener
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
