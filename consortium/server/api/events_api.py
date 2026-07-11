@@ -12,6 +12,7 @@ from fastapi import (
     status,
 )
 from loguru import logger
+from pydantic import JsonValue
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework.event_hooks._event import Event
@@ -159,7 +160,7 @@ class _WebsocketManager:
     def _construct_error_json(
         code: _ErrorResponseErrorCodes,
         message: str,
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> dict[str, Any]:
         return {
             "code": code,
@@ -181,7 +182,7 @@ class _WebsocketManager:
         self,
         code: _ErrorResponseErrorCodes,
         message: str,
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> dict[str, Any]:
         """Convenience wrapper for the (common) case of a single error: builds
         the one error object and wraps it in the same `errors` list shape

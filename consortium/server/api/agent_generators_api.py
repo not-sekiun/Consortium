@@ -74,7 +74,7 @@ _agent_generator_stop_error = api_excs.AgentGeneratorStopError.from_consortium_e
 _invalid_agent_generator_parameter_name_error = (
     api_excs.InvalidAgentGeneratorParameterNameError.from_consortium_exception(
         consortium_exception=svc_excs.InvalidAgentGeneratorParameterNameError(
-            parameter_name="<parameter_name>", agent_generator="<agent_generator>"
+            parameter_name="<parameter_name>", agent_generator_str="<agent_generator>"
         )
     )
 )

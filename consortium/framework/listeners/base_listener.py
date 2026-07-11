@@ -43,8 +43,6 @@ class _BaseListenerParametersModel(BaseModel):
     name: str
     description: str
     endpoint: str
-    # Pydantic doesn't support recursive forward reference types, so we use JsonValue
-    # here.
     parameters: dict[str, JsonValue]
 
 

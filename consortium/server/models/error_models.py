@@ -1,6 +1,4 @@
-from typing import Any
-
-from pydantic import BaseModel
+from pydantic import BaseModel, JsonValue
 
 
 # This model is the generic error model, all responses that need to return some sort of
@@ -8,4 +6,4 @@ from pydantic import BaseModel
 class ErrorModel(BaseModel):
     code: str
     message: str
-    detail: Any
+    detail: dict[str, JsonValue]

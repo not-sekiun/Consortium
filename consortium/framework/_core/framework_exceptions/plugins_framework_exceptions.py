@@ -1,4 +1,4 @@
-from typing import Any
+from pydantic import JsonValue
 
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
@@ -14,7 +14,7 @@ from consortium.framework._core.framework_exceptions.components_framework_except
     InvalidComponentConfigurationParameterTypeError,
     InvalidComponentDependencyVersionSpecifierError,
     InvalidComponentVersionError,
-    InvalidFrameworkVersionSpecifierError,
+    InvalidFrameworkVersionSpecifierError as InvalidComponentFrameworkVersionSpecifierError,
     MissingComponentConfigurationParameterError,
 )
 
@@ -112,7 +112,7 @@ class InvalidPluginVersionError(
 
 
 class InvalidFrameworkVersionSpecifierError(
-    InvalidFrameworkVersionSpecifierError,
+    InvalidComponentFrameworkVersionSpecifierError,
     PluginConfigurationError,
 ):
     """Raised when the framework version specifier string provided in the plugin's
@@ -171,7 +171,7 @@ class PluginStartError(ComponentStartError, PluginOperationError):
         self,
         plugin_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             detail=detail,
@@ -194,7 +194,7 @@ class PluginRuntimeError(
         self,
         plugin_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             detail=detail,
@@ -212,7 +212,7 @@ class PluginStopError(ComponentStopError, PluginOperationError):
         self,
         plugin_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             detail=detail,

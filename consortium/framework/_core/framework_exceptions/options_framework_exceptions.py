@@ -1,5 +1,7 @@
 from typing import Any, Literal
 
+from pydantic.config import JsonValue
+
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
 )
@@ -15,7 +17,7 @@ class OptionValueValidationError(OptionsFrameworkError):
     the value through the option's `validate_option_value()` method.
     """
 
-    def __init__(self, message: str, detail: Any = None):
+    def __init__(self, message: str, detail: dict[str, JsonValue] | None = None):
         super().__init__(message=message, detail=detail)
 
 

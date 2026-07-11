@@ -1,4 +1,4 @@
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, JsonValue, create_model
 
@@ -45,8 +45,8 @@ class BaseAPIError(Exception):
     def __init__(
         self,
         message: str = "",
-        detail: Any = None,
-        headers: dict[str, Any] | None = None,
+        detail: JsonValue = None,
+        headers: dict[str, JsonValue] | None = None,
     ) -> None:
         self.message = message
         self.detail = detail
@@ -54,9 +54,7 @@ class BaseAPIError(Exception):
 
         super().__init__(message)
 
-    # `to_json` may return `None` only for 401 Unauthorized errors where no body is
-    # returned
-    def to_json(self) -> dict[str, JsonValue] | None:
+    def to_json(self) -> dict[str, JsonValue]:
         return {
             "error": {
                 "code": self.code,

@@ -1,4 +1,4 @@
-from typing import Any
+from pydantic import JsonValue
 
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
@@ -42,7 +42,7 @@ class ListenerStartError(ComponentStartError, ListenerOperationError):
         self,
         listener_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             component_str=listener_str,
@@ -62,7 +62,7 @@ class ListenerRuntimeError(ComponentRuntimeError, ListenerOperationError):
         self,
         listener_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             component_str=listener_str,
@@ -80,7 +80,7 @@ class ListenerStopError(ComponentStopError, ListenerOperationError):
         self,
         listener_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             component_str=listener_str,

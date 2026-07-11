@@ -1,4 +1,4 @@
-from typing import Any
+from pydantic.config import JsonValue
 
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
@@ -120,7 +120,10 @@ class AgentCapabilityExecutionError(AgentCapabilitiesFrameworkError):
     code = "AGENT_CAPABILITY_EXECUTION_ERROR"
 
     def __init__(
-        self, agent_capability_name: str, error_message: str, detail: Any = None
+        self,
+        agent_capability_name: str,
+        error_message: str,
+        detail: dict[str, JsonValue] | None = None,
     ):
         super().__init__(
             message=(

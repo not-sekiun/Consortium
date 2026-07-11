@@ -1,4 +1,4 @@
-from typing import Any
+from pydantic import JsonValue
 
 from consortium.server.exceptions.api_exceptions.base_api_exception import (
     BaseAPIError,
@@ -17,7 +17,7 @@ class ForbiddenError(HTTPError):
     def __init__(
         self,
         message: str = "You do not have permission to access this resource.",
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -32,7 +32,7 @@ class NotFoundError(HTTPError):
     def __init__(
         self,
         message: str = "The requested resource could not be found.",
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -47,7 +47,7 @@ class MethodNotAllowedError(HTTPError):
     def __init__(
         self,
         message: str = "The requested method is not allowed for this resource.",
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -63,7 +63,7 @@ class ConflictError(HTTPError):
         self,
         message: str = "The request could not be completed due to a conflict with the "
         "current status of the resource.",
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -79,7 +79,7 @@ class UnsupportedMediaTypeError(HTTPError):
         self,
         message: str = "The request could not be completed due to an unsupported media "
         "type being provided.",
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -97,7 +97,7 @@ class UnprocessableEntityError(HTTPError):
             "The request could not be processed due to it containing invalidly "
             "formatted data."
         ),
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -112,7 +112,7 @@ class InternalServerError(HTTPError):
     def __init__(
         self,
         message: str = "An internal server error occurred. Please try again later.",
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -127,7 +127,7 @@ class ServiceUnavailableError(HTTPError):
     def __init__(
         self,
         message: str = "The service is currently unavailable. Please try again later.",
-        detail: Any | None = None,
+        detail: dict[str, JsonValue] | None = None,
     ) -> None:
         super().__init__(
             message=message,

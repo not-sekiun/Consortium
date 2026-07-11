@@ -320,7 +320,7 @@ class AgentGeneratorsService:
                     not in agent_generator.creating_agent_template.options
                 ):
                     raise InvalidAgentGeneratorParameterNameError(
-                        agent_generator=str(agent_generator),
+                        agent_generator_str=str(agent_generator),
                         parameter_name=parameter_name,
                     )
                 try:

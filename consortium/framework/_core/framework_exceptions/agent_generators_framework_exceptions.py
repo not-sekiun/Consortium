@@ -1,4 +1,4 @@
-from typing import Any
+from pydantic import JsonValue
 
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
@@ -252,7 +252,7 @@ class AgentGeneratorStartError(ComponentStartError, AgentGeneratorOperationError
         self,
         agent_generator_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             component_str=agent_generator_str,
@@ -272,7 +272,7 @@ class AgentGeneratorRuntimeError(ComponentRuntimeError, AgentGeneratorOperationE
         self,
         agent_generator_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             component_str=agent_generator_str,
@@ -296,7 +296,7 @@ class AgentGeneratorBuildStepRuntimeError(
         self,
         agent_generator_build_step_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             component_str=agent_generator_build_step_str,
@@ -314,7 +314,7 @@ class AgentGeneratorStopError(ComponentStopError, AgentGeneratorOperationError):
         self,
         agent_generator_str: str,
         error_message: str,
-        detail: Any,
+        detail: dict[str, JsonValue],
     ):
         super().__init__(
             component_str=agent_generator_str,

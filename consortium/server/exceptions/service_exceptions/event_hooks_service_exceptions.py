@@ -34,7 +34,7 @@ Exception hierarchy:
             - [`EventHookTeardownError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookTeardownError]
 """
 
-from typing import Any
+from pydantic import JsonValue
 
 from consortium.server.exceptions.service_exceptions import (
     components_service_exceptions as comp_excs,
@@ -496,7 +496,12 @@ class EventHookSetupError(EventHookOperationError):
 
     code = "EVENT_HOOK_SETUP_ERROR"
 
-    def __init__(self, event_hook_str: str, error_message: str, detail: Any = None):
+    def __init__(
+        self,
+        event_hook_str: str,
+        error_message: str,
+        detail: dict[str, JsonValue] | None = None,
+    ):
         super().__init__(
             message=(
                 f"Failed to load event hook '{event_hook_str}'. An error occurred "
@@ -513,7 +518,12 @@ class EventHookTriggerError(EventHookOperationError):
 
     code = "EVENT_HOOK_TRIGGER_ERROR"
 
-    def __init__(self, event_hook_str: str, error_message: str, detail: Any = None):
+    def __init__(
+        self,
+        event_hook_str: str,
+        error_message: str,
+        detail: dict[str, JsonValue] | None = None,
+    ):
         super().__init__(
             message=(
                 f"Event hook '{event_hook_str}' failed while handling a triggered "
@@ -528,7 +538,12 @@ class EventHookTeardownError(EventHookOperationError):
 
     code = "EVENT_HOOK_TEARDOWN_ERROR"
 
-    def __init__(self, event_hook_str: str, error_message: str, detail: Any = None):
+    def __init__(
+        self,
+        event_hook_str: str,
+        error_message: str,
+        detail: dict[str, JsonValue] | None = None,
+    ):
         super().__init__(
             message=(
                 f"Failed to unload event hook '{event_hook_str}'. An error occurred "

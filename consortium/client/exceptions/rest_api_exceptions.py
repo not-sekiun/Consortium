@@ -1,4 +1,4 @@
-from typing import Any
+from pydantic import JsonValue
 
 from consortium.client.exceptions.client_session_exceptions import (
     BaseClientSessionError,
@@ -56,7 +56,9 @@ class RestAPIConnectionError(RestAPIAuthenticationError):
 
 
 class RestAPIOperationError(RestAPIError):
-    def __init__(self, status_code: int, code: str, message: str, detail: Any):
+    def __init__(
+        self, status_code: int, code: str, message: str, detail: dict[str, JsonValue]
+    ):
         self.status_code = status_code
         self.code = code
         self.message = message
