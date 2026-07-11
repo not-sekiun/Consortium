@@ -4,6 +4,17 @@ from consortium.server.exceptions.object_exceptions.base_object_exception import
 
 
 class RepositoryObjectError(BaseObjectError):
+    """Base exception for all errors that occur when operating on repository objects
+    such as repository files and directories.
+
+    Attributes:
+        code: A stable machine-readable string identifying the specific error.
+        message: A human-readable description of what went wrong and, where possible,
+            how to resolve it.
+        detail: Optional structured context about the error, or None when there is
+            none.
+    """
+
     code = "REPOSITORY_OBJECT_ERROR"
 
 

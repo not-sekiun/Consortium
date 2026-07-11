@@ -22,11 +22,12 @@ primitives and are how the REST API and other parts of the system act on them. E
 service exposes the business logic for a particular area of the framework, such as
 listeners, agents, payloads, or user accounts.
 
-## Consortium Exceptions
+## Exceptions
 
-The [Consortium Exceptions](exceptions/base-consortium-error.md) section documents the
-internal exception hierarchy raised by the framework and services, located at
-`consortium/server/exceptions/consortium_exceptions`. These exceptions are raised inside
-the framework and services and are, at the REST API boundary, wrapped by API exceptions
-that attach an HTTP status code. Every exception ultimately derives from a common base
-error.
+The [Exceptions](exceptions/exceptions-overview.md) section documents the internal
+exception families raised across Consortium: framework exceptions raised by the framework
+primitives, object exceptions raised by the server's primitive objects, and service
+exceptions raised by the services. The overview explains the common contract every
+exception shares (its `code`, `message`, and `detail`), why only the `code` is shown in
+these reference pages, and how the three families relate to one another and to the API
+exceptions that wrap them at the REST API boundary.

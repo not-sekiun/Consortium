@@ -36,7 +36,15 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class ComponentsServiceError(BaseServiceError):
-    """Base exception for all errors that occur within the components service."""
+    """Base exception for all errors that occur within the components service.
+
+    Attributes:
+        code: A stable machine-readable string identifying the specific error.
+        message: A human-readable description of what went wrong and, where possible,
+            how to resolve it.
+        detail: Optional structured context about the error, or None when there is
+            none.
+    """
 
     code = "COMPONENTS_SERVICE_ERROR"
 

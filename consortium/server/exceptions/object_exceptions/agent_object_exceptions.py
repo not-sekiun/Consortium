@@ -6,10 +6,22 @@ from consortium.server.exceptions.object_exceptions.base_object_exception import
 
 
 class AgentsObjectError(BaseObjectError):
+    """Base exception for all errors raised by agent objects.
+
+    Attributes:
+        code: A stable machine-readable string identifying the specific error.
+        message: A human-readable description of what went wrong and, where possible,
+            how to resolve it.
+        detail: Optional structured context about the error, or None when there is
+            none.
+    """
+
     code = "AGENTS_OBJECT_ERROR"
 
 
 class AgentTaskNotFoundError(AgentsObjectError):
+    """Raised when the requested agent task was not found."""
+
     code = "AGENT_TASK_NOT_FOUND_ERROR"
 
     def __init__(self, task_id: str):
@@ -20,10 +32,14 @@ class AgentTaskNotFoundError(AgentsObjectError):
 
 
 class AgentResultNotFoundError(AgentsObjectError):
+    """Base exception for errors raised when a requested agent result is not found."""
+
     code = "AGENT_RESULT_NOT_FOUND_ERROR"
 
 
 class AgentResultIDNotFoundError(AgentResultNotFoundError):
+    """Raised when the requested agent result with the provided result ID was not found."""
+
     code = "AGENT_RESULT_ID_NOT_FOUND_ERROR"
 
     def __init__(self, result_id: str):
@@ -34,6 +50,10 @@ class AgentResultIDNotFoundError(AgentResultNotFoundError):
 
 
 class AgentResultTaskIDNotFoundError(AgentResultNotFoundError):
+    """Raised when no agent result was found for the agent task with the provided task
+    ID.
+    """
+
     code = "AGENT_RESULT_TASK_ID_NOT_FOUND_ERROR"
 
     def __init__(self, task_id: str):
@@ -45,10 +65,16 @@ class AgentResultTaskIDNotFoundError(AgentResultNotFoundError):
 
 
 class AgentTaskingError(AgentsObjectError):
-    code = "AGENT_CAPABILITY_OPTION_ERROR"
+    """Base exception for errors raised while tasking an agent."""
+
+    code = "AGENT_TASKING_ERROR"
 
 
 class AgentCapabilityNotFoundError(AgentTaskingError):
+    """Raised when the agent tasking references a command that does not match any
+    capability of the agent's type.
+    """
+
     code = "AGENT_CAPABILITY_NOT_FOUND_ERROR"
 
     def __init__(self, command: str, agent_str: str, agent_type_str: str):
@@ -63,6 +89,10 @@ class AgentCapabilityNotFoundError(AgentTaskingError):
 
 
 class AgentCapabilityOptionNotFoundError(AgentTaskingError):
+    """Raised when the agent tasking references an option that does not match any option
+    of the agent capability.
+    """
+
     code = "AGENT_CAPABILITY_OPTION_NOT_FOUND_ERROR"
 
     def __init__(
@@ -83,6 +113,10 @@ class AgentCapabilityOptionNotFoundError(AgentTaskingError):
 
 
 class MissingRequiredAgentCapabilityOptionError(AgentTaskingError):
+    """Raised when a required option for an agent capability was not provided in the agent
+    tasking.
+    """
+
     code = "MISSING_REQUIRED_AGENT_CAPABILITY_OPTION_ERROR"
 
     def __init__(self, agent_str: str, agent_capability_name: str, option_name: str):
@@ -96,6 +130,10 @@ class MissingRequiredAgentCapabilityOptionError(AgentTaskingError):
 
 
 class AgentCapabilityOptionValueValidationError(AgentTaskingError):
+    """Raised when the provided value for an agent capability option fails validation
+    during agent tasking.
+    """
+
     code = "AGENT_CAPABILITY_OPTION_VALUE_VALIDATION_ERROR"
 
     def __init__(
@@ -115,10 +153,16 @@ class AgentCapabilityOptionValueValidationError(AgentTaskingError):
 
 
 class AgentCreationError(AgentsObjectError):
+    """Base exception for errors raised while creating an agent."""
+
     code = "AGENT_CREATION_ERROR"
 
 
 class AgentCreationParameterTypeError(AgentCreationError):
+    """Raised when a parameter provided during agent creation is not of the expected
+    type.
+    """
+
     code = "AGENT_CREATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
@@ -136,6 +180,8 @@ class AgentCreationParameterTypeError(AgentCreationError):
 
 
 class AgentTypeResolutionError(AgentCreationError):
+    """Raised when the agent's type could not be resolved during agent creation."""
+
     code = "AGENT_TYPE_RESOLUTION_ERROR"
 
     @classmethod

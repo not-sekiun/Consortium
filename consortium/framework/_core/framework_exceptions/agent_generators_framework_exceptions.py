@@ -13,16 +13,24 @@ from consortium.framework._core.framework_exceptions.components_framework_except
 
 
 class AgentGeneratorsFrameworkError(ComponentsFrameworkError):
+    """Base exception for all errors that occur within the agent generators framework."""
+
     code = "AGENT_GENERATORS_FRAMEWORK_ERROR"
 
     _COMPONENT_TYPE = "agent generator"
 
 
 class AgentGeneratorConfigurationError(AgentGeneratorsFrameworkError):
+    """Base exception for agent generator configuration errors."""
+
     code = "AGENT_GENERATOR_CONFIGURATION_ERROR"
 
 
 class AgentGeneratorConfigurationParameterTypeError(AgentGeneratorConfigurationError):
+    """Raised when an agent generator's configuration parameter is not of the expected
+    type during agent generator configuration.
+    """
+
     code = "AGENT_GENERATOR_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
@@ -43,6 +51,10 @@ class AgentGeneratorConfigurationParameterTypeError(AgentGeneratorConfigurationE
 class MissingAgentGeneratorConfigurationParameterError(
     AgentGeneratorConfigurationError,
 ):
+    """Raised when a required parameter is not declared in an agent generator's definition
+    during agent generator configuration.
+    """
+
     code = "MISSING_AGENT_GENERATOR_CONFIGURATION_PARAMETER_ERROR"
 
     def __init__(self, parameter_name: str, agent_generator_filepath: str):
@@ -57,6 +69,10 @@ class MissingAgentGeneratorConfigurationParameterError(
 
 
 class AgentGeneratorOverridesFinalMethodError(AgentGeneratorConfigurationError):
+    """Raised when an agent generator's implementation overrides a final method during
+    agent generator configuration.
+    """
+
     code = "AGENT_GENERATOR_OVERRIDES_FINAL_METHOD_ERROR"
 
     def __init__(self, agent_generator_filepath: str, method_name: str) -> None:
@@ -70,12 +86,18 @@ class AgentGeneratorOverridesFinalMethodError(AgentGeneratorConfigurationError):
 
 
 class AgentGeneratorBuildStepConfigurationError(AgentGeneratorsFrameworkError):
+    """Base exception for agent generator build step configuration errors."""
+
     code = "AGENT_GENERATOR_BUILD_STEP_CONFIGURATION_ERROR"
 
 
 class AgentGeneratorBuildStepConfigurationParameterTypeError(
     AgentGeneratorBuildStepConfigurationError,
 ):
+    """Raised when an agent generator build step's configuration parameter is not of the
+    expected type during agent generator build step configuration.
+    """
+
     code = "AGENT_GENERATOR_BUILD_STEP_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
@@ -101,6 +123,10 @@ class AgentGeneratorBuildStepConfigurationParameterTypeError(
 class RequiredAgentGeneratorBuildStepConfigurationParameterNotDeclaredError(
     AgentGeneratorBuildStepConfigurationError,
 ):
+    """Raised when a required parameter is not declared in an agent generator build step's
+    definition during agent generator build step configuration.
+    """
+
     code = (
         "REQUIRED_AGENT_GENERATOR_BUILD_STEP_CONFIGURATION_PARAMETER_NOT_DECLARED_ERROR"
     )
@@ -119,6 +145,10 @@ class RequiredAgentGeneratorBuildStepConfigurationParameterNotDeclaredError(
 class MissingAgentGeneratorBuildStepConfigurationParameterError(
     AgentGeneratorConfigurationError,
 ):
+    """Raised when a required parameter is not declared in an agent generator build step's
+    definition during agent generator build step configuration.
+    """
+
     code = "MISSING_AGENT_GENERATOR_BUILD_STEP_CONFIGURATION_PARAMETER_ERROR"
 
     def __init__(self, parameter_name: str, agent_generator_build_step_filepath: str):
@@ -135,6 +165,10 @@ class MissingAgentGeneratorBuildStepConfigurationParameterError(
 class AgentGeneratorBuildStepOverridesFinalMethodError(
     AgentGeneratorConfigurationError
 ):
+    """Raised when an agent generator build step's implementation overrides a final method
+    during agent generator build step configuration.
+    """
+
     code = "AGENT_GENERATOR_BUILD_STEP_OVERRIDES_FINAL_METHOD_ERROR"
 
     def __init__(
@@ -150,10 +184,16 @@ class AgentGeneratorBuildStepOverridesFinalMethodError(
 
 
 class AgentGeneratorCreationError(AgentGeneratorsFrameworkError):
+    """Base exception for agent generator creation errors."""
+
     code = "AGENT_GENERATOR_CREATION_ERROR"
 
 
 class AgentGeneratorCreationParameterTypeError(AgentGeneratorCreationError):
+    """Raised when a provided agent generator parameter is not of the expected type during
+    agent generator creation.
+    """
+
     code = "AGENT_GENERATOR_CREATION_PARAMETER_TYPE_ERROR"
 
     def __init__(
@@ -176,6 +216,10 @@ class AgentGeneratorCreationParameterTypeError(AgentGeneratorCreationError):
 
 
 class EmptyAgentGeneratorBuildStepNameError(AgentGeneratorBuildStepConfigurationError):
+    """Raised when an empty name is provided in an agent generator build step's definition
+    during agent generator build step configuration.
+    """
+
     code = "EMPTY_AGENT_GENERATOR_BUILD_STEP_NAME_ERROR"
 
     def __init__(self, agent_generator_build_step_filepath: str):
@@ -200,6 +244,8 @@ class AgentGeneratorOperationError(
 
 
 class AgentGeneratorStartError(ComponentStartError, AgentGeneratorOperationError):
+    """Raised when an agent generator fails to start during agent generator operation."""
+
     code = "AGENT_GENERATOR_START_ERROR"
 
     def __init__(
@@ -216,6 +262,10 @@ class AgentGeneratorStartError(ComponentStartError, AgentGeneratorOperationError
 
 
 class AgentGeneratorRuntimeError(ComponentRuntimeError, AgentGeneratorOperationError):
+    """Raised when an agent generator encounters an unhandled error at runtime during
+    agent generator operation.
+    """
+
     code = "AGENT_GENERATOR_RUNTIME_ERROR"
 
     def __init__(
@@ -235,6 +285,10 @@ class AgentGeneratorBuildStepRuntimeError(
     ComponentRuntimeError,
     AgentGeneratorOperationError,
 ):
+    """Raised when an agent generator build step encounters an unhandled error at runtime
+    during agent generator operation.
+    """
+
     code = "AGENT_GENERATOR_BUILD_STEP_RUNTIME_ERROR"
     _COMPONENT_TYPE = "agent generator build step"
 
@@ -252,6 +306,8 @@ class AgentGeneratorBuildStepRuntimeError(
 
 
 class AgentGeneratorStopError(ComponentStopError, AgentGeneratorOperationError):
+    """Raised when an agent generator fails to stop during agent generator operation."""
+
     code = "AGENT_GENERATOR_STOP_ERROR"
 
     def __init__(
@@ -279,6 +335,10 @@ class AgentGeneratorStateError(
 
 
 class AgentGeneratorNotRunningError(ComponentNotRunningError, AgentGeneratorStateError):
+    """Raised when an operation is attempted on an agent generator that requires the agent
+    generator to already be running but the agent generator is not running.
+    """
+
     code = "AGENT_GENERATOR_NOT_RUNNING_ERROR"
 
     def __init__(
@@ -292,6 +352,11 @@ class AgentGeneratorAlreadyRunningError(
     ComponentAlreadyRunningError,
     AgentGeneratorStateError,
 ):
+    """Raised when an operation is attempted on an agent generator that requires the agent
+    generator to not already be started or running but the agent generator is already
+    started or running.
+    """
+
     code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
 
     def __init__(

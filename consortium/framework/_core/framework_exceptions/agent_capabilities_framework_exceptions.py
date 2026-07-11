@@ -115,6 +115,8 @@ class CustomOSStringAlreadyRegisteredError(AgentCapabilitiesFrameworkError):
 
 
 class AgentCapabilityExecutionError(AgentCapabilitiesFrameworkError):
+    """Raised when an agent capability encounters an error during its execution."""
+
     code = "AGENT_CAPABILITY_EXECUTION_ERROR"
 
     def __init__(

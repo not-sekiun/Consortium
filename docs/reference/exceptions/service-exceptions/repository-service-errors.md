@@ -1,0 +1,8 @@
+# Repository Service Errors
+
+::: consortium.server.exceptions.service_exceptions.repository_service_exceptions
+    options:
+        filters:
+            - '!message'
+            - '!detail'
+            - '!^_'

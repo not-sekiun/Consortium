@@ -16,10 +16,24 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 
 
 class AgentGeneratorsServiceError(BaseServiceError):
+    """Base exception for all errors that occur within the agent generators service.
+
+    Attributes:
+        code: A stable machine-readable string identifying the specific error.
+        message: A human-readable description of what went wrong and, where possible,
+            how to resolve it.
+        detail: Optional structured context about the error, or None when there is
+            none.
+    """
+
     code = "AGENT_GENERATORS_SERVICE_ERROR"
 
 
 class AgentGeneratorNotFoundError(AgentGeneratorsServiceError):
+    """Raised when the requested agent generator was not found in the agent generators
+    service.
+    """
+
     code = "AGENT_GENERATOR_NOT_FOUND_ERROR"
 
     def __init__(self, agent_generator_id: str):
@@ -32,6 +46,10 @@ class AgentGeneratorNotFoundError(AgentGeneratorsServiceError):
 
 
 class AgentGeneratorAlreadyExistsError(AgentGeneratorsServiceError):
+    """Raised when an agent generator with the provided agent generator ID already exists
+    in the agent generators service.
+    """
+
     code = "AGENT_GENERATOR_ALREADY_EXISTS_ERROR"
 
     def __init__(self, agent_generator_id: str):
@@ -44,10 +62,16 @@ class AgentGeneratorAlreadyExistsError(AgentGeneratorsServiceError):
 
 
 class AgentGeneratorParameterUpdateError(AgentGeneratorsServiceError):
+    """Base exception for agent generator parameter update errors."""
+
     code = "AGENT_GENERATOR_PARAMETER_UPDATE_ERROR"
 
 
 class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError):
+    """Raised when the provided parameter name was not found on the agent generator during
+    a parameter update.
+    """
+
     code = "INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"
 
     def __init__(self, agent_generator: str, parameter_name: str):
@@ -61,6 +85,10 @@ class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError
 
 
 class InvalidAgentGeneratorParameterValueError(AgentGeneratorParameterUpdateError):
+    """Raised when the provided value for an agent generator parameter is invalid during a
+    parameter update.
+    """
+
     code = "INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR"
 
     def __init__(
