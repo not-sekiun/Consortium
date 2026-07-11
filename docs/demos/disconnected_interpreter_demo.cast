@@ -1,5 +1,5 @@
-{"version": 2, "width": 120, "height": 30, "timestamp": 1783712623, "env": {"SHELL": "/bin/bash", "TERM": "tmux-256color"}}
-[0.034507, "o", "\u001b[?2004h\r\n\u001b[1;36mConsortium\u001b[0m on \u001b[1;35m\ue0a0 framework-restructure\u001b[0m \u001b[1;31m[$!?]\u001b[0m is \u001b[1;38;5;208m\ud83d\udce6 v0.1.0\u001b[0m via \u001b[1;33m\ud83d\udc0d v3.14.2 (consortium) \u001b[0m\r\n\u001b[1;32m\u276f\u001b[0m "]
+{"version": 2, "width": 105, "height": 32, "timestamp": 1783712623, "env": {"SHELL": "/bin/bash", "TERM": "tmux-256color"}}
+[0.034507, "o", "\u001b[0m\r\n\u001b[1;32m\u276f\u001b[0m "]
 [0.430139, "o", "uv run consortium.py client"]
 [0.433335, "o", "\r\n\u001b[?2004l\r"]
 [0.701376, "o", "\u001b[?25l"]

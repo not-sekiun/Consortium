@@ -13,6 +13,9 @@ Tape file syntax (VHS-inspired):
     Output demo.cast              # where to save the recording (default: <tape>.cast)
     Set Shell /bin/bash           # what to spawn (default: $SHELL or /bin/bash)
     Set TypingSpeed 0.05          # global per-character delay in seconds (float)
+    Set IdleTimeLimit 2           # cap any recorded idle gap to N seconds (float, optional)
+    Set Cols 120                  # recorded terminal width in columns (default: 120)
+    Set Rows 30                   # recorded terminal height in rows (default: 30)
 
     Type "uv run consortium.py client"   # typed at global speed, quotes optional
     Enter

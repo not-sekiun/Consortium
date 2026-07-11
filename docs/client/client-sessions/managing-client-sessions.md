@@ -64,7 +64,7 @@ it, which lands you in that session's Home interpreter.
 
 <div
   data-asciinema-cast="demos/disconnected_interpreter_demo.cast"
-  data-cols="100" data-rows="40" data-theme="gruvbox-dark"
+  data-cols="105" data-rows="32" data-theme="gruvbox-dark"
 ></div>
 
 ## Switching between sessions
