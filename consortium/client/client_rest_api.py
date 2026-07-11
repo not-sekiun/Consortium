@@ -9,6 +9,7 @@ from consortium.client.exceptions.rest_api_exceptions import (
     InvalidRestAPICredentialsError,
     InvalidServerRestAPILoginResponseError,
     RestAPIAlreadyLoggedInError,
+    RestAPIConnectionError,
     RestAPINotLoggedInError,
     RestAPIOperationError,
 )
@@ -72,6 +73,7 @@ class RestAPI:
                 remote_port=self.remote_port,
                 username=self.username,
             )
+
         try:
             response = await self._aiohttp_client_session.post(
                 f"{self._api_base_url}/login",
@@ -81,19 +83,24 @@ class RestAPI:
                 },
                 timeout=aiohttp.ClientTimeout(total=10),
             )
-            # The server returns a generic 401 response for failed logins.
-            if response.status == 401:
-                raise InvalidRestAPICredentialsError(
-                    remote_host=self.remote_host,
-                    remote_port=self.remote_port,
-                    username=self.username,
-                )
-            response_json = await response.json()
-        except Exception as exc:
-            # Close the client session if an exception is raised while attempting to log
-            # in to the server.
+        # Close the client session if any connection related exception is raised
+        # while attempting to log in to the server.
+        except ClientConnectionError as exc:
             await self._aiohttp_client_session.close()
-            raise exc
+            raise RestAPIConnectionError(
+                remote_host=self.remote_host,
+                remote_port=self.remote_port,
+                username=self.username,
+            ) from exc
+
+        # The server returns a generic 401 response for failed logins.
+        if response.status == 401:
+            raise InvalidRestAPICredentialsError(
+                remote_host=self.remote_host,
+                remote_port=self.remote_port,
+                username=self.username,
+            )
+        response_json = await response.json()
 
         # If any other status code is returned other than 200, or if the response does
         # not contain the expected fields, conclude that the server returned an invalid

@@ -1,4 +1,9 @@
-class WebsocketsAPIError(Exception): ...
+from consortium.client.exceptions.client_session_exceptions import (
+    BaseClientSessionError,
+)
+
+
+class WebsocketsAPIError(BaseClientSessionError): ...
 
 
 class WebsocketsAPIConnectionError(WebsocketsAPIError): ...
@@ -61,7 +66,7 @@ class WebsocketsAPIHandlerNotRunningError(WebsocketsAPIError):
         )
 
 
-class InvalidEventTypeError(Exception):
+class InvalidEventTypeError(WebsocketsAPIError):
     def __init__(self, event_type: str):
         super().__init__(
             "Failed to perform the requested operation. Invalid event type "
@@ -69,7 +74,7 @@ class InvalidEventTypeError(Exception):
         )
 
 
-class EventHandlerNotSubscribedError(Exception):
+class EventHandlerNotSubscribedError(WebsocketsAPIError):
     def __init__(self, event_type: str):
         super().__init__(
             "Failed to unsubscribe from the requested event. The provided event "
@@ -77,7 +82,7 @@ class EventHandlerNotSubscribedError(Exception):
         )
 
 
-class EventTypeNotSubscribedError(Exception):
+class EventTypeNotSubscribedError(WebsocketsAPIError):
     def __init__(self, event_type: str):
         super().__init__(
             "Failed to unsubscribe from the requested event. The provided event type "

@@ -1,26 +1,17 @@
-import asyncio
 import json
 from collections import deque
 
 import jsonschema
-from aiohttp.client import ClientConnectionError
-from rich.live import Live
-from rich.spinner import Spinner
-from websockets.exceptions import WebSocketException
 
 import consortium.client.client_config as client_config_module
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
 from consortium.client.commands.core_commands.banner import BannerCommand
-from consortium.client.exceptions.client_sessions_service_exceptions import (
-    ClientSessionConnectionError,
+from consortium.client.exceptions.client_session_exceptions import (
+    BaseClientSessionError,
 )
 from consortium.client.exceptions.rest_api_exceptions import (
-    RestAPIError,
     RestAPIOperationError,
-)
-from consortium.client.exceptions.websockets_api_exceptions import (
-    WebsocketsAPIError,
 )
 from consortium.client.interpreters import (
     AgentsInterpreter,
@@ -60,11 +51,11 @@ from consortium.client.models.interpreter_signal_models import (
     SwitchUseListenerTemplateInterpreterSignal,
 )
 from consortium.client.utils.printer_utils import (
-    console,
     print_error,
     print_info,
     print_success,
 )
+from consortium.client.utils.ui_utils import with_spinner
 
 
 class Client:
@@ -107,7 +98,8 @@ class Client:
                 )
         return aliases
 
-    async def _attempt_initial_client_session_connection(self) -> ClientSession | None:
+    @with_spinner()
+    async def _connect(self) -> ClientSession | None:
         try:
             client_session = await self._client_sessions_service.create_client_session(
                 username=self._client_config.username,
@@ -115,24 +107,7 @@ class Client:
                 remote_host=self._client_config.remote_host,
                 remote_port=self._client_config.remote_port,
             )
-            print_success(
-                f"Logged in to server at "
-                f"{self._client_config.remote_host}:{self._client_config.remote_port} "
-                f"as '{self._client_config.username}'.",
-            )
-            return client_session
-        except (
-            # Exceptions raised when failing to log in to the REST API.
-            RestAPIError,
-            # Exceptions raised when failing to connect to the Websockets API.
-            WebsocketsAPIError,
-            # Generic network exceptions.
-            ClientSessionConnectionError,
-            WebSocketException,
-            ClientConnectionError,
-            TimeoutError,
-            OSError,
-        ) as exc:
+        except BaseClientSessionError as exc:
             print_error(
                 f"Failed to login to server at "
                 f"{self._client_config.remote_host}:{self._client_config.remote_port} "
@@ -141,25 +116,12 @@ class Client:
             )
             return None
 
-    # TODO: Parameterize client timeouts in config file, defaults to 10 seconds right
-    #  now hardcoded in rest api and websockets api client
-    async def _connect_with_spinner(self, timeout: int = 10):
-        spinner = Spinner("dots", text="Connecting to server...")
-
-        async def countdown(live: Live) -> None:
-            for remaining in range(timeout, 0, -1):
-                spinner.update(text=f"Connecting to server... ({remaining}s)")
-                live.update(spinner)
-                await asyncio.sleep(1)
-
-        with Live(
-            spinner, refresh_per_second=10, transient=True, console=console
-        ) as live:
-            countdown_task = asyncio.create_task(countdown(live))
-            try:
-                return await self._attempt_initial_client_session_connection()
-            finally:
-                countdown_task.cancel()
+        print_success(
+            f"Logged in to server at "
+            f"{self._client_config.remote_host}:{self._client_config.remote_port} "
+            f"as '{self._client_config.username}'.",
+        )
+        return client_session
 
     async def _display_startup_banner(
         self, client_session: ClientSession | None
@@ -286,7 +248,7 @@ class Client:
                     )
 
     async def run(self) -> None:
-        client_session = await self._connect_with_spinner()
+        client_session = await self._connect()
         await self._display_startup_banner(client_session=client_session)
 
         # Run the initial interpreter. Either we run a special disconnected interpreter
@@ -318,7 +280,8 @@ class Client:
                     except RestAPIOperationError as exc:
                         print_error(
                             f"Failed to switch to client session "
-                            f"{previous_interpreter_signal.client_session}. {exc}",
+                            f"{previous_interpreter_signal.client_session}.",
+                            exc=exc,
                         )
                         print_info(
                             "Switching to disconnected interpreter due to error raised "

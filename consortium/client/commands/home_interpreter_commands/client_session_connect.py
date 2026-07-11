@@ -5,11 +5,9 @@ import jsonschema
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH
-from consortium.client.exceptions.client_sessions_service_exceptions import (
-    ClientSessionConnectionError,
-)
-from consortium.client.exceptions.rest_api_exceptions import (
-    RestAPIAuthenticationError,
+from consortium.client.client_session import ClientSession
+from consortium.client.exceptions.client_session_exceptions import (
+    BaseClientSessionError,
 )
 from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
@@ -21,6 +19,7 @@ from consortium.client.repl_interface.base_command import (
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_error, print_info, print_success
+from consortium.client.utils.ui_utils import with_spinner
 
 client_sessions_service = client_singletons.client_sessions_service
 
@@ -68,6 +67,17 @@ class ConnectCommand(BaseConnectedCommand):
             "-p", "--password", help="Password of the account to login with."
         )
 
+    @with_spinner()
+    async def _connect(
+        self, username: str, password: str, remote_host: str, remote_port: int
+    ) -> ClientSession:
+        return await client_sessions_service.create_client_session(
+            username=username,
+            password=password,
+            remote_host=remote_host,
+            remote_port=remote_port,
+        )
+
     async def run(
         self,
         context: ConnectedContext,
@@ -107,18 +117,18 @@ class ConnectCommand(BaseConnectedCommand):
                     with open(parsed_args.config) as file:
                         config_data = json.load(fp=file)
                     jsonschema.validate(config_data, client_config_file_json_schema)
-                except FileNotFoundError:
+                except FileNotFoundError, IsADirectoryError:
                     print_error(
                         f"Failed to read the provided client configuration file "
                         f"'{parsed_args.config}'. The file path supplied was not "
                         f"found.",
                     )
                     return ContinueSignal()
-                except PermissionError as exc:
+                except PermissionError:
                     print_error(
                         f"Failed to read the provided client configuration file "
                         f"'{parsed_args.config}'. Insufficient permissions to read the "
-                        f"file: {exc}",
+                        f"file.",
                     )
                     return ContinueSignal()
                 except json.decoder.JSONDecodeError:
@@ -147,18 +157,24 @@ class ConnectCommand(BaseConnectedCommand):
                 remote_port = parsed_args.remote_port
 
             try:
-                client_session = await client_sessions_service.create_client_session(
+                client_session = await self._connect(
                     username=username,
                     password=password,
                     remote_host=remote_host,
                     remote_port=remote_port,
                 )
-                print_success(
-                    f"Connected to server {remote_host}:{remote_port} as '{username}'"
+            except BaseClientSessionError as exc:
+                print_error(
+                    f"Failed to login to server at "
+                    f"{remote_host}:{remote_port} as '{username}'.",
+                    exc=exc,
                 )
-                print_info(f"New client session created: {client_session}")
-            except (ClientSessionConnectionError, RestAPIAuthenticationError) as exc:
-                print_error(exc)
+                return ContinueSignal()
+
+            print_success(
+                f"Connected to server {remote_host}:{remote_port} as '{username}'"
+            )
+            print_info(f"New client session created: {client_session}")
         except SystemExit:
             pass
 

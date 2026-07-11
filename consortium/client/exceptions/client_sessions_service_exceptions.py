@@ -1,4 +1,11 @@
-class ClientSessionNotFoundError(Exception):
+from consortium.client.exceptions.base_client_exception import BaseClientError
+
+
+class BaseClientSessionServiceError(BaseClientError):
+    pass
+
+
+class ClientSessionNotFoundError(BaseClientSessionServiceError):
     def __init__(self, client_session_id: str):
         super().__init__(
             "Failed to find the requested client session. No client session was found "
@@ -6,16 +13,9 @@ class ClientSessionNotFoundError(Exception):
         )
 
 
-class ClientSessionAlreadyExistsError(Exception):
+class ClientSessionAlreadyExistsError(BaseClientSessionServiceError):
     def __init__(self, client_session_id: str):
         super().__init__(
             "Failed to add the provided client session. A client session already "
             f"exists with the provided client session ID '{client_session_id}'",
-        )
-
-
-class ClientSessionConnectionError(Exception):
-    def __init__(self, remote_host: str, remote_port: int):
-        super().__init__(
-            f"Failed to connect to server {remote_host}:{remote_port}",
         )

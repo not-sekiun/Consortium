@@ -1,0 +1,2 @@
+class BaseClientError(Exception):
+    pass

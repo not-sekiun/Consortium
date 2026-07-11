@@ -1,12 +1,9 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from aiohttp.client_exceptions import ClientConnectorError
 from loguru import logger
-from websockets.exceptions import ConnectionClosed, InvalidHandshake
 
 from consortium.client.exceptions.client_sessions_service_exceptions import (
-    ClientSessionConnectionError,
     ClientSessionNotFoundError,
 )
 
@@ -74,26 +71,8 @@ class ClientSessionsService:
             f"Created client session: {client_session!r}",
         )
 
-        try:
-            # If credentials are invalid `InvalidRestAPICredentialsError` is raised
-            # here
-            await client_session.connect()
-        except (
-            ClientConnectorError,
-            InvalidHandshake,
-            ConnectionClosed,
-        ) as exc:
-            # The client session attempts to connect to the REST API first before the
-            # websockets server. If the REST API connection fails, the client session
-            # will not attempt to connect to the websockets server. So we only need to
-            # check the case where the REST API connection succeeds but the websockets
-            # connection fails.
-            if client_session.rest_api.logged_in:
-                await client_session.rest_api.disconnect()
-            raise ClientSessionConnectionError(
-                remote_host=client_session.remote_host,
-                remote_port=client_session.remote_port,
-            ) from exc
+        await client_session.connect()
+
         self._logger.debug(
             f"Connected client session: {client_session!r}",
         )

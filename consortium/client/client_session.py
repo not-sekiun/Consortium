@@ -10,6 +10,7 @@ from consortium.client.exceptions.client_session_exceptions import (
     ClientSessionNotConnectedException,
 )
 from consortium.client.exceptions.rest_api_exceptions import RestAPINotLoggedInError
+from consortium.client.exceptions.websockets_api_exceptions import WebsocketsAPIError
 
 
 class ClientSession:
@@ -54,7 +55,15 @@ class ClientSession:
                 remote_host=self.remote_host,
                 remote_port=self.remote_port,
             )
-        await self.websockets_api.connect(json_web_token=self.rest_api.json_web_token)
+
+        try:
+            await self.websockets_api.connect(
+                json_web_token=self.rest_api.json_web_token
+            )
+        except WebsocketsAPIError:
+            if self.rest_api.logged_in:
+                await self.rest_api.disconnect()
+            raise
 
         self.datetime_connected = datetime.now()
         self.connected = True

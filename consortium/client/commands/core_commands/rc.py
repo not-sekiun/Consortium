@@ -9,7 +9,7 @@ from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
-from consortium.client.utils.printer_utils import print_info
+from consortium.client.utils.printer_utils import print_error, print_info
 
 
 class RcCommand(BaseCommand[AnyContext]):
@@ -56,8 +56,8 @@ class RcCommand(BaseCommand[AnyContext]):
                     for command in commands:
                         context.interpreter_context.resource_commands.append(command)
                     print_info(f"Loaded resource file: {resource_file}")
-            except Exception as exc:
-                print_info(f"Failed to read resource file '{resource_file}': {exc}")
+            except OSError as exc:
+                print_error(f"Failed to read resource file '{resource_file}'.", exc=exc)
         except SystemExit:
             pass
 

@@ -1,7 +1,11 @@
 from typing import Any
 
+from consortium.client.exceptions.client_session_exceptions import (
+    BaseClientSessionError,
+)
 
-class RestAPIError(Exception): ...
+
+class RestAPIError(BaseClientSessionError): ...
 
 
 class RestAPIAuthenticationError(RestAPIError): ...
@@ -39,6 +43,15 @@ class InvalidServerRestAPILoginResponseError(RestAPIAuthenticationError):
             f"{remote_host}:{remote_port} as '{username}'. Server did not return a "
             f"valid login response. Check that the server is a valid Consortium "
             f"server instance.",
+        )
+
+
+class RestAPIConnectionError(RestAPIAuthenticationError):
+    def __init__(self, remote_host: str, remote_port: int, username: str):
+        super().__init__(
+            f"Failed to login to the server over its REST API at "
+            f"{remote_host}:{remote_port} as '{username}'. Could not establish a "
+            f"connection with the server.",
         )
 
 

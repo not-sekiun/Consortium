@@ -6,6 +6,7 @@ from typing import Any
 import jsonschema
 import websockets
 from loguru import logger
+from websockets import ConnectionClosed, InvalidHandshake
 
 from consortium.client.exceptions.websockets_api_exceptions import (
     EventHandlerNotSubscribedError,
@@ -14,6 +15,7 @@ from consortium.client.exceptions.websockets_api_exceptions import (
     InvalidServerWebsocketAPIResponseError,
     SeverWebsocketsAPIErrorResponseError,
     WebsocketsAPIAlreadyConnectedError,
+    WebsocketsAPIFailedToConnectError,
     WebsocketsAPIHandlerAlreadyRunningError,
     WebsocketsAPIHandlerNotRunningError,
     WebsocketsAPINotConnectedError,
@@ -70,11 +72,14 @@ class WebsocketsAPI:
         if self.connected:
             raise WebsocketsAPIAlreadyConnectedError
 
-        self._websocket = await websockets.connect(
-            f"ws://{self.remote_host}:{self.remote_port}/api/events",
-            additional_headers={"Authorization": f"Bearer {json_web_token}"},
-            open_timeout=10,
-        )
+        try:
+            self._websocket = await websockets.connect(
+                f"ws://{self.remote_host}:{self.remote_port}/api/events",
+                additional_headers={"Authorization": f"Bearer {json_web_token}"},
+                open_timeout=10,
+            )
+        except (InvalidHandshake, ConnectionClosed) as exc:
+            raise WebsocketsAPIFailedToConnectError from exc
 
         self.json_web_token = json_web_token
         self.connected = True
@@ -85,7 +90,7 @@ class WebsocketsAPI:
 
         try:
             await self._websocket.close()
-        except websockets.exceptions.ConnectionClosed:
+        except ConnectionClosed:
             pass
 
         self.connected = False
