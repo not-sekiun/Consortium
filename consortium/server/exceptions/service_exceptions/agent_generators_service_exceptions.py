@@ -74,11 +74,11 @@ class InvalidAgentGeneratorParameterNameError(AgentGeneratorParameterUpdateError
 
     code = "INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"
 
-    def __init__(self, agent_generator: str, parameter_name: str):
+    def __init__(self, agent_generator_str: str, parameter_name: str):
         super().__init__(
             message=(
                 f"Failed to update the agent generator parameter for agent generator "
-                f"'{agent_generator}'. The provided parameter name '{parameter_name}' "
+                f"'{agent_generator_str}'. The provided parameter name '{parameter_name}' "
                 f"was not found for the agent generator."
             ),
         )
