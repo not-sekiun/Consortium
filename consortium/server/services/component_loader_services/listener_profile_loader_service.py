@@ -7,7 +7,7 @@ from consortium.framework._core.framework_exceptions.listeners_framework_excepti
     ListenersFrameworkError,
 )
 from consortium.framework.listeners.base_listener_template import BaseListenerTemplate
-from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentLoadingError,
 )
 from consortium.server.objects.c2_profile_objects import ListenerProfile

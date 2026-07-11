@@ -4,10 +4,10 @@ import uuid
 
 from consortium.framework._core.components.component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
-from consortium.server.exceptions.consortium_exceptions import (
-    components_consortium_exceptions as comp_excs,
+from consortium.server.exceptions.service_exceptions import (
+    components_service_exceptions as comp_excs,
 )
-from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
     ComponentDependencyNotFoundError,
     ComponentDependencyNotRunningError,
     DuplicatePluginLabelError,

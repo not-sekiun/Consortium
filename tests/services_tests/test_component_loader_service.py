@@ -6,7 +6,7 @@ import packaging.requirements as requirements
 import packaging.version as pv
 import pytest
 
-from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentDependencyNotFoundError,
     ComponentProjectEntryPointModuleNotFoundError,
     ComponentProjectInterfaceError,

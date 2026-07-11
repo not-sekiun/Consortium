@@ -1,41 +1,41 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`ComponentsServiceError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentsServiceError]
-        - [`ComponentLoadingError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentLoadingError]
-            - [`InvalidComponentProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectManifestFileError]
-                - [`InvalidComponentProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectManifestFileJSONError]
-                - [`InvalidComponentProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectManifestFileSchemaError]
-            - [`InvalidComponentProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileError]
-            - [`InvalidComponentProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileTOMLError]
-            - [`InvalidComponentProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectPyProjectFileDependencyError]
-            - [`InvalidComponentProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectFolderStructureError]
-                - [`ComponentProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectManifestFileNotFoundError]
-                - [`ComponentProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectEntryPointModuleNotFoundError]
-            - [`InvalidComponentProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InvalidComponentProjectImplementationError]
-                - [`ComponentProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectSymbolNotFoundError]
-                - [`ComponentProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentProjectInterfaceError]
-                - [`InternalComponentProjectError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.InternalComponentProjectError]
-            - [`IncompatibleComponentFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.IncompatibleComponentFrameworkVersionError]
-            - [`ComponentAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentAlreadyRegisteredError]
-            - [`DuplicateComponentLabelError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.DuplicateComponentLabelError]
-        - [`ComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentDependencyError]
-            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ThirdPartyDependencyNotFoundError]
-            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
-            - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentDependencyNotFoundError]
-            - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.IncompatibleComponentDependencyVersionError]
-            - [`ComponentDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentDependsOnInvalidComponentDependencyError]
-            - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentDependencyNotRunningError]
-        - [`ComponentNotFoundError`][consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions.ComponentNotFoundError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`ComponentsServiceError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentsServiceError]
+        - [`ComponentLoadingError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentLoadingError]
+            - [`InvalidComponentProjectManifestFileError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectManifestFileError]
+                - [`InvalidComponentProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectManifestFileJSONError]
+                - [`InvalidComponentProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectManifestFileSchemaError]
+            - [`InvalidComponentProjectPyProjectFileError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectPyProjectFileError]
+            - [`InvalidComponentProjectPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectPyProjectFileTOMLError]
+            - [`InvalidComponentProjectPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectPyProjectFileDependencyError]
+            - [`InvalidComponentProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectFolderStructureError]
+                - [`ComponentProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentProjectManifestFileNotFoundError]
+                - [`ComponentProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentProjectEntryPointModuleNotFoundError]
+            - [`InvalidComponentProjectImplementationError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectImplementationError]
+                - [`ComponentProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentProjectSymbolNotFoundError]
+                - [`ComponentProjectInterfaceError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentProjectInterfaceError]
+                - [`InternalComponentProjectError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InternalComponentProjectError]
+            - [`IncompatibleComponentFrameworkVersionError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.IncompatibleComponentFrameworkVersionError]
+            - [`ComponentAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentAlreadyRegisteredError]
+            - [`DuplicateComponentLabelError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.DuplicateComponentLabelError]
+        - [`ComponentDependencyError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentDependencyError]
+            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ThirdPartyDependencyNotFoundError]
+            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.IncompatibleThirdPartyDependencyVersionError]
+            - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentDependencyNotFoundError]
+            - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.IncompatibleComponentDependencyVersionError]
+            - [`ComponentDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentDependsOnInvalidComponentDependencyError]
+            - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentDependencyNotRunningError]
+        - [`ComponentNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentNotFoundError]
 """
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class ComponentsServiceError(BaseConsortiumError):
+class ComponentsServiceError(BaseServiceError):
     """Base exception for all errors that occur within the components service."""
 
     code = "COMPONENTS_SERVICE_ERROR"

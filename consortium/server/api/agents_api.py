@@ -16,10 +16,10 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
     InvalidUUIDError,
 )
-from consortium.server.exceptions.consortium_exceptions import (
-    agents_consortium_exceptions as consortium_excs,
-)
 from consortium.server.exceptions.objects_exceptions import agent_objects_exceptions
+from consortium.server.exceptions.service_exceptions import (
+    agents_service_exceptions as consortium_excs,
+)
 from consortium.server.models.agent_models import (
     AgentModel,
 )

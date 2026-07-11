@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import JsonValue
 
-from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )
 from consortium.server.models.agent_models import AgentModel

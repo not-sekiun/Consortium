@@ -1,46 +1,46 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`PluginsServiceError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginsServiceError]
-        - [`PluginNotFoundError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginNotFoundError]
-        - [`PluginLoadingError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginLoadingError]
-            - [`InvalidPluginProjectManifestFileError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectManifestFileError]
-                - [`InvalidPluginProjectManifestFileJSONError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectManifestFileJSONError]
-                - [`InvalidPluginProjectManifestFileSchemaError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectManifestFileSchemaError]
-            - [`InvalidPluginProjectPyProjectFileError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectPyProjectFileError]
-            - [`InvalidPluginProjectPyProjectFileTOMLError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectPyProjectFileTOMLError]
-            - [`InvalidPluginProjectPyProjectFileDependencyError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectPyProjectFileDependencyError]
-            - [`InvalidPluginProjectFolderStructureError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectFolderStructureError]
-                - [`PluginProjectManifestFileNotFoundError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginProjectManifestFileNotFoundError]
-                - [`PluginProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginProjectEntryPointModuleNotFoundError]
-            - [`InvalidPluginProjectImplementationError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InvalidPluginProjectImplementationError]
-                - [`PluginProjectSymbolNotFoundError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginProjectSymbolNotFoundError]
-                - [`PluginProjectInterfaceError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginProjectInterfaceError]
-                - [`InternalPluginProjectError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.InternalPluginProjectError]
-            - [`IncompatiblePluginFrameworkVersionError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.IncompatiblePluginFrameworkVersionError]
-            - [`PluginAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginAlreadyRegisteredError]
-            - [`DuplicatePluginLabelError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.DuplicatePluginLabelError]
-        - [`PluginDependencyError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginDependencyError]
-            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.ThirdPartyDependencyNotFoundError]
-            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.IncompatibleThirdPartyDependencyVersionError]
-            - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.ComponentDependencyNotFoundError]
-            - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.IncompatibleComponentDependencyVersionError]
-            - [`PluginDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginDependsOnInvalidComponentDependencyError]
-            - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.ComponentDependencyNotRunningError]
-        - [`PluginUnloadingError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginUnloadingError]
-            - [`PluginStopTimeoutError`][consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions.PluginStopTimeoutError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`PluginsServiceError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginsServiceError]
+        - [`PluginNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginNotFoundError]
+        - [`PluginLoadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginLoadingError]
+            - [`InvalidPluginProjectManifestFileError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileError]
+                - [`InvalidPluginProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileJSONError]
+                - [`InvalidPluginProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileSchemaError]
+            - [`InvalidPluginProjectPyProjectFileError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectPyProjectFileError]
+            - [`InvalidPluginProjectPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectPyProjectFileTOMLError]
+            - [`InvalidPluginProjectPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectPyProjectFileDependencyError]
+            - [`InvalidPluginProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectFolderStructureError]
+                - [`PluginProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectManifestFileNotFoundError]
+                - [`PluginProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectEntryPointModuleNotFoundError]
+            - [`InvalidPluginProjectImplementationError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectImplementationError]
+                - [`PluginProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectSymbolNotFoundError]
+                - [`PluginProjectInterfaceError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectInterfaceError]
+                - [`InternalPluginProjectError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InternalPluginProjectError]
+            - [`IncompatiblePluginFrameworkVersionError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.IncompatiblePluginFrameworkVersionError]
+            - [`PluginAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginAlreadyRegisteredError]
+            - [`DuplicatePluginLabelError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.DuplicatePluginLabelError]
+        - [`PluginDependencyError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginDependencyError]
+            - [`ThirdPartyDependencyNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.ThirdPartyDependencyNotFoundError]
+            - [`IncompatibleThirdPartyDependencyVersionError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.IncompatibleThirdPartyDependencyVersionError]
+            - [`ComponentDependencyNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.ComponentDependencyNotFoundError]
+            - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.IncompatibleComponentDependencyVersionError]
+            - [`PluginDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginDependsOnInvalidComponentDependencyError]
+            - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.ComponentDependencyNotRunningError]
+        - [`PluginUnloadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginUnloadingError]
+            - [`PluginStopTimeoutError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginStopTimeoutError]
 """
 
-from consortium.server.exceptions.consortium_exceptions import (
-    components_consortium_exceptions as comp_excs,
+from consortium.server.exceptions.service_exceptions import (
+    components_service_exceptions as comp_excs,
 )
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class PluginsServiceError(BaseConsortiumError):
+class PluginsServiceError(BaseServiceError):
     """Base exception for all errors that occur within the plugins service."""
 
     code = "PLUGINS_SERVICE_ERROR"

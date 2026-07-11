@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
     EventHookSetupError,
     EventHookTeardownError,
 )

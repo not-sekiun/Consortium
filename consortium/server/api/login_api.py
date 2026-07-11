@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 import consortium.server.server_singletons as server_singletons
-from consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
     UserAccountAuthenticationError,
 )
 from consortium.server.models.user_models import JSONWebTokenModel

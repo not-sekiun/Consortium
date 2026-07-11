@@ -3,7 +3,7 @@ import uuid
 from loguru import logger
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
-from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
     AgentTemplateIDNotFoundError,
     AgentTemplateLabelNotFoundError,
 )

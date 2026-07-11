@@ -4,7 +4,7 @@ import pathlib
 import jsonschema
 from loguru import logger
 
-from consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.authorization_service_exceptions import (
     InvalidRolePermissionsFileJSONError,
     InvalidRolePermissionsFilePermissionValueError,
     InvalidRolePermissionsFileSchemaError,

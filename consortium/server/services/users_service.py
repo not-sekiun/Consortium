@@ -5,7 +5,7 @@ from loguru import logger
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
     UserAccessTokenNotFoundError,
     UserIDNotFoundError,
 )

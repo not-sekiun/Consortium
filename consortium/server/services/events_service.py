@@ -9,10 +9,10 @@ from consortium.framework.framework_types import JSON
 from consortium.framework.signal_exceptions import (
     event_hooks_signal_exceptions as event_hook_framework_excs,
 )
-from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
     EventHookTriggerError,
 )
-from consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.events_service_exceptions import (
     EventHandlerAlreadyRegisteredError,
     EventHandlerNotRegisteredError,
 )

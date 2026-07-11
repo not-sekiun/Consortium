@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentAlreadyRegisteredError,
     ComponentNotFoundError,
     DuplicateComponentLabelError,

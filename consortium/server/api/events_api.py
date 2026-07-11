@@ -21,10 +21,10 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerError,
     MethodNotAllowedError,
 )
-from consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.events_service_exceptions import (
     EventHandlerNotRegisteredError,
 )
-from consortium.server.exceptions.consortium_exceptions.users_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
     UserAccessTokenNotFoundError,
 )
 from consortium.server.models.logging_models import LoggerType

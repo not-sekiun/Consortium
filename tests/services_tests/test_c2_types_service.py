@@ -4,7 +4,7 @@ import pytest
 
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.listeners.base_listener_type import BaseListenerType
-from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.c2_types_service_exceptions import (
     AgentTypeNotFoundError,
     DuplicateAgentTypeNameError,
     ListenerTypeNotFoundError,

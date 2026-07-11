@@ -14,7 +14,7 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
 )
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions import (
     AgentGeneratorAlreadyExistsError,
     AgentGeneratorNotFoundError,
     InvalidAgentGeneratorParameterNameError,

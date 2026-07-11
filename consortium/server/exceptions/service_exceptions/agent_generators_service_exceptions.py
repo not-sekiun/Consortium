@@ -1,21 +1,21 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`AgentGeneratorsServiceError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorsServiceError]
-        - [`AgentGeneratorNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorNotFoundError]
-        - [`AgentGeneratorAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorAlreadyExistsError]
-        - [`AgentGeneratorParameterUpdateError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.AgentGeneratorParameterUpdateError]
-            - [`InvalidAgentGeneratorParameterNameError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.InvalidAgentGeneratorParameterNameError]
-            - [`InvalidAgentGeneratorParameterValueError`][consortium.server.exceptions.consortium_exceptions.agent_generators_consortium_exceptions.InvalidAgentGeneratorParameterValueError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`AgentGeneratorsServiceError`][consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions.AgentGeneratorsServiceError]
+        - [`AgentGeneratorNotFoundError`][consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions.AgentGeneratorNotFoundError]
+        - [`AgentGeneratorAlreadyExistsError`][consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions.AgentGeneratorAlreadyExistsError]
+        - [`AgentGeneratorParameterUpdateError`][consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions.AgentGeneratorParameterUpdateError]
+            - [`InvalidAgentGeneratorParameterNameError`][consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions.InvalidAgentGeneratorParameterNameError]
+            - [`InvalidAgentGeneratorParameterValueError`][consortium.server.exceptions.service_exceptions.agent_generators_service_exceptions.InvalidAgentGeneratorParameterValueError]
 """
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class AgentGeneratorsServiceError(BaseConsortiumError):
+class AgentGeneratorsServiceError(BaseServiceError):
     code = "AGENT_GENERATORS_SERVICE_ERROR"
 
 

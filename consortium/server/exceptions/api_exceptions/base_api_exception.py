@@ -5,8 +5,11 @@ from pydantic import BaseModel, JsonValue, create_model
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
 )
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.objects_exceptions.base_object_exception import (
+    BaseObjectError,
+)
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 T = TypeVar("T")
@@ -108,7 +111,7 @@ class BaseAPIError(Exception):
     @classmethod
     def from_consortium_exception(
         cls,
-        consortium_exception: BaseConsortiumError | BaseFrameworkError,
+        consortium_exception: BaseServiceError | BaseFrameworkError | BaseObjectError,
     ) -> BaseAPIError:
         api_exception = cls(
             message=consortium_exception.message,

@@ -6,10 +6,10 @@ import pytest
 
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.event_hooks import EventType
-from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
     AgentTemplateLabelNotFoundError,
 )
-from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
     RepositoryResourceNotFoundError,
 )
 from consortium.server.objects.payload_objects import Payload

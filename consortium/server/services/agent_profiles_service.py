@@ -7,7 +7,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.framework_exceptions.agent_templates_framework_exceptions import (
     AgentTemplatesFrameworkError,
 )
-from consortium.server.exceptions.consortium_exceptions.agent_profiles_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
     AgentProfileLoadingError,
     AgentProfilesServiceError,
 )

@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,
     RepositoryResourceNotFoundError,

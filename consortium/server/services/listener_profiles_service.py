@@ -7,7 +7,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.framework_exceptions.listener_templates_framework_exceptions import (
     ListenerTemplatesFrameworkError,
 )
-from consortium.server.exceptions.consortium_exceptions.listener_profiles_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions import (
     ListenerProfileLoadingError,
     ListenerProfilesServiceError,
 )

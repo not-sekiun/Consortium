@@ -16,8 +16,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
     InvalidUUIDError,
 )
-from consortium.server.exceptions.consortium_exceptions import (
-    user_accounts_consortium_exceptions as consortium_excs,
+from consortium.server.exceptions.service_exceptions import (
+    user_accounts_service_exceptions as consortium_excs,
 )
 from consortium.server.models.request_data_models import (
     UpdateOwnUserAccountRequestDataModel,

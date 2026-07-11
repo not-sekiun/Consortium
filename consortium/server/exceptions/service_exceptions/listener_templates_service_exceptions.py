@@ -1,19 +1,19 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`ListenerTemplatesServiceError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplatesServiceError]
-        - [`ListenerTemplateNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateNotFoundError]
-            - [`ListenerTemplateIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateIDNotFoundError]
-            - [`ListenerTemplateLabelNotFoundError`][consortium.server.exceptions.consortium_exceptions.listener_templates_consortium_exceptions.ListenerTemplateLabelNotFoundError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`ListenerTemplatesServiceError`][consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions.ListenerTemplatesServiceError]
+        - [`ListenerTemplateNotFoundError`][consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions.ListenerTemplateNotFoundError]
+            - [`ListenerTemplateIDNotFoundError`][consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions.ListenerTemplateIDNotFoundError]
+            - [`ListenerTemplateLabelNotFoundError`][consortium.server.exceptions.service_exceptions.listener_templates_service_exceptions.ListenerTemplateLabelNotFoundError]
 """
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class ListenerTemplatesServiceError(BaseConsortiumError):
+class ListenerTemplatesServiceError(BaseServiceError):
     """Base exception for all errors that occur within the listener templates service."""
 
     code = "LISTENER_TEMPLATES_SERVICE_ERROR"

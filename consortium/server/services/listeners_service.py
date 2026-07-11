@@ -15,7 +15,7 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
 )
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
-from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
     InvalidListenerParameterNameError,
     InvalidListenerParameterValueError,
     ListenerAlreadyExistsError,

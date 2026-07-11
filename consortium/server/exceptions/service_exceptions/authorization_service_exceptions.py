@@ -1,24 +1,24 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`AuthorizationServiceError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.AuthorizationServiceError]
-        - [`InvalidRolePermissionsFileError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.InvalidRolePermissionsFileError]
-            - [`InvalidRolePermissionsFileJSONError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.InvalidRolePermissionsFileJSONError]
-            - [`InvalidRolePermissionsFileSchemaError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.InvalidRolePermissionsFileSchemaError]
-            - [`InvalidRolePermissionsFilePermissionValueError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.InvalidRolePermissionsFilePermissionValueError]
-        - [`RoleNotFoundError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.RoleNotFoundError]
-        - [`RoleAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.RoleAlreadyExistsError]
-        - [`PermissionNotInRoleError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.PermissionNotInRoleError]
-        - [`PermissionAlreadyInRoleError`][consortium.server.exceptions.consortium_exceptions.authorization_consortium_exceptions.PermissionAlreadyInRoleError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`AuthorizationServiceError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.AuthorizationServiceError]
+        - [`InvalidRolePermissionsFileError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFileError]
+            - [`InvalidRolePermissionsFileJSONError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFileJSONError]
+            - [`InvalidRolePermissionsFileSchemaError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFileSchemaError]
+            - [`InvalidRolePermissionsFilePermissionValueError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFilePermissionValueError]
+        - [`RoleNotFoundError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RoleNotFoundError]
+        - [`RoleAlreadyExistsError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RoleAlreadyExistsError]
+        - [`PermissionNotInRoleError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.PermissionNotInRoleError]
+        - [`PermissionAlreadyInRoleError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.PermissionAlreadyInRoleError]
 """
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class AuthorizationServiceError(BaseConsortiumError):
+class AuthorizationServiceError(BaseServiceError):
     """Base exception for all authorization service related errors."""
 
     code = "AUTHORIZATION_SERVICE_ERROR"

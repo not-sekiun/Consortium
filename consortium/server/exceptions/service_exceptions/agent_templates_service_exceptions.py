@@ -1,20 +1,20 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`AgentTemplatesServiceError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplatesServiceError]
-        - [`AgentTemplateNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplateNotFoundError]
-            - [`AgentTemplateIDNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplateIDNotFoundError]
-            - [`AgentTemplateLabelNotFoundError`][consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions.AgentTemplateLabelNotFoundError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`AgentTemplatesServiceError`][consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions.AgentTemplatesServiceError]
+        - [`AgentTemplateNotFoundError`][consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions.AgentTemplateNotFoundError]
+            - [`AgentTemplateIDNotFoundError`][consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions.AgentTemplateIDNotFoundError]
+            - [`AgentTemplateLabelNotFoundError`][consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions.AgentTemplateLabelNotFoundError]
 """
 # TODO: The docstring generator tool for some reason missed out on InvalidFrameworkVersionSpecifierError agent template, listener template, event hooks and plugins exceptions
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class AgentTemplatesServiceError(BaseConsortiumError):
+class AgentTemplatesServiceError(BaseServiceError):
     """Base exception for all errors that occur within the agent templates service."""
 
     code = "AGENT_TEMPLATES_SERVICE_ERROR"

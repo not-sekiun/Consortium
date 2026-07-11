@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
     RepositoryResourceNotFoundError,
 )
 from consortium.server.services.assets_service import AssetsService

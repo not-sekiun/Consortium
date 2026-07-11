@@ -1,19 +1,19 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`EventsServiceError`][consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions.EventsServiceError]
-        - [`EventHandlerAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions.EventHandlerAlreadyRegisteredError]
-        - [`EventHandlerNotRegisteredError`][consortium.server.exceptions.consortium_exceptions.events_consortium_exceptions.EventHandlerNotRegisteredError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`EventsServiceError`][consortium.server.exceptions.service_exceptions.events_service_exceptions.EventsServiceError]
+        - [`EventHandlerAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.events_service_exceptions.EventHandlerAlreadyRegisteredError]
+        - [`EventHandlerNotRegisteredError`][consortium.server.exceptions.service_exceptions.events_service_exceptions.EventHandlerNotRegisteredError]
 """
 
 from consortium.framework.event_hooks import EventType
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class EventsServiceError(BaseConsortiumError):
+class EventsServiceError(BaseServiceError):
     """Base exception for all errors that occur within the events service."""
 
     code = "EVENTS_SERVICE_ERROR"

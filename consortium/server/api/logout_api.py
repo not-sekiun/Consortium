@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from pydantic import UUID4
 
-import consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions
+import consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions import (
     user_accounts_api_exceptions as user_accounts_api_excs,
@@ -16,8 +16,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
     InvalidUUIDError,
 )
-from consortium.server.exceptions.consortium_exceptions import (
-    users_consortium_exceptions as users_consortium_excs,
+from consortium.server.exceptions.service_exceptions import (
+    users_service_exceptions as users_consortium_excs,
 )
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import (
@@ -80,7 +80,7 @@ async def logout_user_account_by_user_account_id(
         _user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=str(user_account_id)
         )
-    except consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions.UserAccountIDNotFoundError:
+    except consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountIDNotFoundError:
         raise user_accounts_api_excs.UserAccountNotFoundError(
             user_account_id=str(user_account_id)
         ) from None

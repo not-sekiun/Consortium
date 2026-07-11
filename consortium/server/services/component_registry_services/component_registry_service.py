@@ -2,7 +2,7 @@ import pathlib
 import uuid
 from abc import ABC, abstractmethod
 
-from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentAlreadyRegisteredError,
     ComponentNotFoundError,
     DuplicateComponentLabelError,

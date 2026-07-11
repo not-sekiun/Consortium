@@ -21,8 +21,8 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
     InvalidUUIDError,
 )
-from consortium.server.exceptions.consortium_exceptions import (
-    repository_consortium_exceptions as consortium_excs,
+from consortium.server.exceptions.service_exceptions import (
+    repository_service_exceptions as consortium_excs,
 )
 from consortium.server.models.repository_models import AssetModel
 from consortium.server.objects.user_account_objects import UserPermissions

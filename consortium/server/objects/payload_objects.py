@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import JsonValue
 
-from consortium.server.exceptions.consortium_exceptions.agent_templates_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
     AgentTemplateLabelNotFoundError,
 )
 from consortium.server.models.agent_template_models import AgentTemplateModel

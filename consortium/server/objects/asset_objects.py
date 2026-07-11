@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import JsonValue
 
-from consortium.server.exceptions.consortium_exceptions.user_accounts_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
     UserAccountUsernameNotFoundError,
 )
 from consortium.server.models.user_account_models import LiveUserAccountReferenceModel

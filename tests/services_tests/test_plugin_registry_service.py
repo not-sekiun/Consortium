@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from consortium.framework._core.components.component_status import State
-from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
     PluginStopTimeoutError,
 )
 from consortium.server.services.component_registry_services.plugin_registry_service import (

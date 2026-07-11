@@ -9,7 +9,7 @@ from consortium.framework._core.framework_exceptions.plugins_framework_exception
     PluginsFrameworkError,
 )
 from consortium.framework.plugins.base_plugin import BasePlugin
-from consortium.server.exceptions.consortium_exceptions.plugins_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
     PluginLoadingError,
     PluginsServiceError,
     PluginUnloadingError,

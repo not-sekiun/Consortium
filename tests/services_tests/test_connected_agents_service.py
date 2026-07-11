@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 import consortium.server.server_singletons as _ss
-from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )
 from consortium.server.services.connected_agents_service import ConnectedAgentsService

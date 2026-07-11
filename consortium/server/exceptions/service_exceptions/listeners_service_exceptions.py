@@ -1,21 +1,21 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`ListenersServiceError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenersServiceError]
-        - [`ListenerNotFoundError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerNotFoundError]
-        - [`ListenerAlreadyExistsError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerAlreadyExistsError]
-        - [`ListenerParameterUpdateError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.ListenerParameterUpdateError]
-            - [`InvalidListenerParameterNameError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.InvalidListenerParameterNameError]
-            - [`InvalidListenerParameterValueError`][consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions.InvalidListenerParameterValueError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`ListenersServiceError`][consortium.server.exceptions.service_exceptions.listeners_service_exceptions.ListenersServiceError]
+        - [`ListenerNotFoundError`][consortium.server.exceptions.service_exceptions.listeners_service_exceptions.ListenerNotFoundError]
+        - [`ListenerAlreadyExistsError`][consortium.server.exceptions.service_exceptions.listeners_service_exceptions.ListenerAlreadyExistsError]
+        - [`ListenerParameterUpdateError`][consortium.server.exceptions.service_exceptions.listeners_service_exceptions.ListenerParameterUpdateError]
+            - [`InvalidListenerParameterNameError`][consortium.server.exceptions.service_exceptions.listeners_service_exceptions.InvalidListenerParameterNameError]
+            - [`InvalidListenerParameterValueError`][consortium.server.exceptions.service_exceptions.listeners_service_exceptions.InvalidListenerParameterValueError]
 """
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class ListenersServiceError(BaseConsortiumError):
+class ListenersServiceError(BaseServiceError):
     """Base exception for all errors that occur within the listeners service."""
 
     code = "LISTENERS_SERVICE_ERROR"

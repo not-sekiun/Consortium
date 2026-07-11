@@ -26,15 +26,6 @@ from consortium.framework.signal_exceptions.agent_capabilties_signal_exception i
     AgentCapabilityExecutionError as AgentCapabilityExecutionFrameworkError,
 )
 from consortium.server import server_singletons as server_singletons
-from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
-    AgentTypeNotFoundError,
-)
-from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
-    ListenerNotFoundError,
-)
-from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
-    RepositoryResourceNotFoundError,
-)
 from consortium.server.exceptions.objects_exceptions.agent_objects_exceptions import (
     AgentCapabilityNotFoundError,
     AgentCapabilityOptionNotFoundError,
@@ -43,6 +34,15 @@ from consortium.server.exceptions.objects_exceptions.agent_objects_exceptions im
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
     MissingRequiredAgentCapabilityOptionError,
+)
+from consortium.server.exceptions.service_exceptions.c2_types_service_exceptions import (
+    AgentTypeNotFoundError,
+)
+from consortium.server.exceptions.service_exceptions.listeners_service_exceptions import (
+    ListenerNotFoundError,
+)
+from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
+    RepositoryResourceNotFoundError,
 )
 from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.models.logging_models import LoggerType

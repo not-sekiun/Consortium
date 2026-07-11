@@ -9,7 +9,7 @@ from typing import BinaryIO, Literal, TextIO
 import jsonschema
 from pydantic import BaseModel, JsonValue, ValidationError
 
-from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
     InvalidRepositoryMetadataDataSchemaError,
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,

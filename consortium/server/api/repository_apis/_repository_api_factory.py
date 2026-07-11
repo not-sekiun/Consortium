@@ -22,11 +22,11 @@ from starlette.background import BackgroundTask
 from consortium.server.exceptions.api_exceptions import (
     repository_api_exceptions as api_excs,
 )
-from consortium.server.exceptions.consortium_exceptions import (
-    repository_consortium_exceptions as consortium_excs,
-)
 from consortium.server.exceptions.objects_exceptions import (
     repository_objects_exceptions,
+)
+from consortium.server.exceptions.service_exceptions import (
+    repository_service_exceptions as consortium_excs,
 )
 from consortium.server.models.repository_models import (
     RepositoryResourceModel,

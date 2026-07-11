@@ -1,20 +1,20 @@
 """
 Exception hierarchy:
 
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`C2TypesServiceError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.C2TypesServiceError]
-        - [`ListenerTypeNotFoundError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.ListenerTypeNotFoundError]
-        - [`AgentTypeNotFoundError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.AgentTypeNotFoundError]
-        - [`DuplicateAgentTypeNameError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.DuplicateAgentTypeNameError]
-        - [`UnresolvableAgentTypeReferenceError`][consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions.UnresolvableAgentTypeReferenceError]
+- [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
+    - [`C2TypesServiceError`][consortium.server.exceptions.service_exceptions.c2_types_service_exceptions.C2TypesServiceError]
+        - [`ListenerTypeNotFoundError`][consortium.server.exceptions.service_exceptions.c2_types_service_exceptions.ListenerTypeNotFoundError]
+        - [`AgentTypeNotFoundError`][consortium.server.exceptions.service_exceptions.c2_types_service_exceptions.AgentTypeNotFoundError]
+        - [`DuplicateAgentTypeNameError`][consortium.server.exceptions.service_exceptions.c2_types_service_exceptions.DuplicateAgentTypeNameError]
+        - [`UnresolvableAgentTypeReferenceError`][consortium.server.exceptions.service_exceptions.c2_types_service_exceptions.UnresolvableAgentTypeReferenceError]
 """
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.server.exceptions.service_exceptions.base_service_exception import (
+    BaseServiceError,
 )
 
 
-class C2TypesServiceError(BaseConsortiumError):
+class C2TypesServiceError(BaseServiceError):
     """Base exception for all errors that occur within the C2 types service."""
 
     code = "C2_TYPES_SERVICE_ERROR"

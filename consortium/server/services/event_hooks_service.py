@@ -9,7 +9,7 @@ from consortium.framework._core.framework_exceptions.event_hooks_framework_excep
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.consortium_exceptions.event_hooks_consortium_exceptions import (
+from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
     EventHookLoadingError,
     EventHooksServiceError,
 )

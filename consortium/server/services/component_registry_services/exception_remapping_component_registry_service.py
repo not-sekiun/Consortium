@@ -2,8 +2,8 @@ import pathlib
 import uuid
 
 from consortium.framework._utils import remap_exception
-from consortium.server.exceptions.consortium_exceptions import (
-    components_consortium_exceptions as comp_excs,
+from consortium.server.exceptions.service_exceptions import (
+    components_service_exceptions as comp_excs,
 )
 from consortium.server.services.component_registry_services.component_registry_service import (
     ComponentRegistryService,
