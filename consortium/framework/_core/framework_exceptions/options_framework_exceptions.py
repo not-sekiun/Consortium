@@ -1,35 +1,11 @@
-"""
-Exception hierarchy:
-
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`OptionsError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionsError]
-        - [`OptionsFrameworkError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionsFrameworkError]
-            - [`OptionValueValidationError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionValueValidationError]
-            - [`OptionConfigurationError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.OptionConfigurationError]
-                - [`InvalidOptionConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionConfigurationParameterTypeError]
-                - [`EmptyOptionNameError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.EmptyOptionNameError]
-                - [`InvalidDefaultValueError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidDefaultValueError]
-                - [`InvalidValidatingRegexError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidValidatingRegexError]
-                - [`InvalidOptionValueLengthRangeError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionValueLengthRangeError]
-                - [`InvalidOptionValueLengthBoundError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionValueLengthBoundError]
-                - [`InvalidOptionValueRangeError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionValueRangeError]
-                - [`InvalidOptionIterableLengthRangeError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionIterableLengthRangeError]
-                - [`InvalidOptionIterableLengthBoundError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.InvalidOptionIterableLengthBoundError]
-                - [`EmptyAvailableValuesError`][consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions.EmptyAvailableValuesError]
-"""
-
 from typing import Any, Literal
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.framework._core.framework_exceptions.base_framework_exception import (
+    BaseFrameworkError,
 )
 
 
-class OptionsError(BaseConsortiumError):
-    """Base exception for all options-related errors."""
-
-
-class OptionsFrameworkError(OptionsError):
+class OptionsFrameworkError(BaseFrameworkError):
     """Base exception for all errors that occur within the options framework."""
 
 

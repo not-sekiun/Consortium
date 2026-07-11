@@ -7,6 +7,12 @@ from typing import TYPE_CHECKING, Any, get_type_hints
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 import consortium.server.server_singletons as server_singletons
+from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
+    DuplicateAgentCapabilityOptionNameError,
+    EmptyAgentCapabilityNameError,
+    InvalidAgentCapabilityConfigurationParameterTypeError,
+    MissingAgentCapabilityConfigurationParameterError,
+)
 from consortium.framework._utils import format_docstring_to_single_line
 from consortium.framework.agents._agent_communicator import _AgentCommunicator
 from consortium.framework.agents.agent_message_models import (
@@ -22,12 +28,6 @@ from consortium.framework.options import (
 )
 from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
     AgentCapabilityLaunchError,
-)
-from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
-    DuplicateAgentCapabilityOptionNameError,
-    EmptyAgentCapabilityNameError,
-    InvalidAgentCapabilityConfigurationParameterTypeError,
-    MissingAgentCapabilityConfigurationParameterError,
 )
 from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.objects.mitre_attack_objects import (

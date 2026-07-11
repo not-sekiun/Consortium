@@ -1,10 +1,17 @@
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
+from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
+    ComponentConfigurationError,
+    ComponentsFrameworkError,
+    EmptyComponentLabelError,
+    InvalidComponentConfigurationParameterTypeError,
+    InvalidComponentDependencyVersionSpecifierError,
+    InvalidComponentVersionError,
+    InvalidFrameworkVersionSpecifierError,
+    MissingComponentConfigurationParameterError,
 )
 
 
 class EventHooksFrameworkError(
-    components_framework_exceptions.ComponentsFrameworkError,
+    ComponentsFrameworkError,
 ):
     """Base exception for all errors that occur within the event hooks framework."""
 
@@ -14,7 +21,7 @@ class EventHooksFrameworkError(
 
 
 class EventHookConfigurationError(
-    components_framework_exceptions.ComponentConfigurationError,
+    ComponentConfigurationError,
     EventHooksFrameworkError,
 ):
     """Base exception for all errors that occur during the configuration of a particular
@@ -25,7 +32,7 @@ class EventHookConfigurationError(
 
 
 class InvalidEventHookConfigurationParameterTypeError(
-    components_framework_exceptions.InvalidComponentConfigurationParameterTypeError,
+    InvalidComponentConfigurationParameterTypeError,
     EventHookConfigurationError,
 ):
     """Raised when an event hook's configuration parameter is not of the expected type during
@@ -48,7 +55,7 @@ class InvalidEventHookConfigurationParameterTypeError(
 
 
 class MissingEventHookConfigurationParameterError(
-    components_framework_exceptions.MissingComponentConfigurationParameterError,
+    MissingComponentConfigurationParameterError,
     EventHookConfigurationError,
 ):
     """Raised when a required parameter is not declared in an event hook's definition during
@@ -65,7 +72,7 @@ class MissingEventHookConfigurationParameterError(
 
 
 class EmptyEventHookLabelError(
-    components_framework_exceptions.EmptyComponentLabelError,
+    EmptyComponentLabelError,
     EventHookConfigurationError,
 ):
     """Raised when an empty label is provided in an event hook's definition during event
@@ -79,7 +86,7 @@ class EmptyEventHookLabelError(
 
 
 class InvalidEventHookVersionError(
-    components_framework_exceptions.InvalidComponentVersionError,
+    InvalidComponentVersionError,
     EventHookConfigurationError,
 ):
     """Raised when the event hook version string provided in the event hook's definition
@@ -96,7 +103,7 @@ class InvalidEventHookVersionError(
 
 
 class InvalidFrameworkVersionSpecifierError(
-    components_framework_exceptions.InvalidFrameworkVersionSpecifierError,
+    InvalidFrameworkVersionSpecifierError,
     EventHookConfigurationError,
 ):
     """Raised when the framework version specifier string provided in the event hook's
@@ -114,7 +121,7 @@ class InvalidFrameworkVersionSpecifierError(
 
 
 class InvalidEventHookDependencyVersionSpecifierError(
-    components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError,
+    InvalidComponentDependencyVersionSpecifierError,
     EventHookConfigurationError,
 ):
     """Raised when an event hook dependency version specifier string provided in the event hook's

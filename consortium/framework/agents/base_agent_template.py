@@ -28,6 +28,9 @@ from consortium.framework._core.framework_exceptions.agent_templates_framework_e
     MissingAgentTemplateConfigurationParameterError,
     MissingRequiredAgentTemplateOptionError,
 )
+from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.framework._utils import format_docstring_to_single_line, remap_exception
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_type import BaseAgentType
@@ -41,9 +44,6 @@ from consortium.framework.options import (
     ListValueOption,
     SingleValueOption,
     ToggleableChoicesValueOption,
-)
-from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
-    OptionValueValidationError,
 )
 from consortium.server.utils import construct_services_dataclass
 

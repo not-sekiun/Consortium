@@ -3,11 +3,11 @@ from typing import get_type_hints
 
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
-from consortium.framework.agents.base_agent_capability import BaseAgentCapability
-from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.c2_types_framework_exceptions import (
     AgentTypeConfigurationParameterTypeError,
     EmptyAgentTypeNameError,
 )
+from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 
 
 class _BaseAgentTypeModel(BaseModel):

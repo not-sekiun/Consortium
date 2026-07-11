@@ -1,11 +1,11 @@
 import pytest
 
-from consortium.framework.agents.base_agent_type import BaseAgentType
-from consortium.framework.listeners.base_listener_type import BaseListenerType
-from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.c2_types_framework_exceptions import (
     AgentTypeConfigurationParameterTypeError,
     ListenerTypeConfigurationParameterTypeError,
 )
+from consortium.framework.agents.base_agent_type import BaseAgentType
+from consortium.framework.listeners.base_listener_type import BaseListenerType
 
 
 class _TestBaseAgentType(BaseAgentType):

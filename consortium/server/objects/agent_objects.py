@@ -8,6 +8,12 @@ from loguru import logger
 from pydantic import UUID4, BaseModel, JsonValue, ValidationError
 
 from consortium.framework._core.components import State
+from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
+    AgentCapabilityExecutionError,
+)
+from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.framework.agents import BaseAgentCapability, TaskInputMessageModel
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
@@ -20,10 +26,16 @@ from consortium.framework.signal_exceptions.agent_capabilties_signal_exception i
     AgentCapabilityExecutionError as AgentCapabilityExecutionFrameworkError,
 )
 from consortium.server import server_singletons as server_singletons
-from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
-    AgentCapabilityExecutionError,
+from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
+    AgentTypeNotFoundError,
 )
-from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
+from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
+    ListenerNotFoundError,
+)
+from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
+    RepositoryResourceNotFoundError,
+)
+from consortium.server.exceptions.objects_exceptions.agent_objects_exceptions import (
     AgentCapabilityNotFoundError,
     AgentCapabilityOptionNotFoundError,
     AgentCapabilityOptionValueValidationError,
@@ -31,18 +43,6 @@ from consortium.server.exceptions.consortium_exceptions.agents_consortium_except
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
     MissingRequiredAgentCapabilityOptionError,
-)
-from consortium.server.exceptions.consortium_exceptions.c2_types_consortium_exceptions import (
-    AgentTypeNotFoundError,
-)
-from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
-    ListenerNotFoundError,
-)
-from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
-    OptionValueValidationError,
-)
-from consortium.server.exceptions.consortium_exceptions.repository_consortium_exceptions import (
-    RepositoryResourceNotFoundError,
 )
 from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.models.logging_models import LoggerType

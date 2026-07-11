@@ -1,5 +1,8 @@
 import pathlib
 
+from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
+    AgentCapabilitiesFrameworkError,
+)
 from consortium.framework._core.framework_exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorsFrameworkError,
 )
@@ -7,9 +10,6 @@ from consortium.framework._core.framework_exceptions.agent_templates_framework_e
     AgentTemplatesFrameworkError,
 )
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
-from consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions import (
-    AgentCapabilitiesFrameworkError,
-)
 from consortium.server.exceptions.consortium_exceptions.components_consortium_exceptions import (
     ComponentLoadingError,
 )

@@ -10,6 +10,9 @@ from consortium.framework._core.components.component_status import State
 from consortium.framework._core.framework_exceptions.listeners_framework_exceptions import (
     ListenerAlreadyRunningError,
 )
+from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.framework.listeners.base_listener import BaseListener
 from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exceptions import (
@@ -17,9 +20,6 @@ from consortium.server.exceptions.consortium_exceptions.listeners_consortium_exc
     InvalidListenerParameterValueError,
     ListenerAlreadyExistsError,
     ListenerNotFoundError,
-)
-from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
-    OptionValueValidationError,
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.events_service import EventsService

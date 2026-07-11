@@ -1,12 +1,19 @@
 from typing import Any
 
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
+from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
+    ComponentAlreadyRunningError,
+    ComponentNotRunningError,
+    ComponentOperationError,
+    ComponentRuntimeError,
+    ComponentsFrameworkError,
+    ComponentStartError,
+    ComponentStateError,
+    ComponentStopError,
 )
 
 
 class ListenersFrameworkError(
-    components_framework_exceptions.ComponentsFrameworkError,
+    ComponentsFrameworkError,
 ):
     """Base exception for all errors that occur within the listeners framework."""
 
@@ -16,7 +23,7 @@ class ListenersFrameworkError(
 
 
 class ListenerOperationError(
-    components_framework_exceptions.ComponentOperationError,
+    ComponentOperationError,
     ListenersFrameworkError,
 ):
     """Base exception for all errors that occur during the operation of a particular
@@ -26,9 +33,7 @@ class ListenerOperationError(
     code = "LISTENER_OPERATION_ERROR"
 
 
-class ListenerStartError(
-    components_framework_exceptions.ComponentStartError, ListenerOperationError
-):
+class ListenerStartError(ComponentStartError, ListenerOperationError):
     """Raised when a listener fails to start during listener operation."""
 
     code = "LISTENER_START_ERROR"
@@ -46,9 +51,7 @@ class ListenerStartError(
         )
 
 
-class ListenerRuntimeError(
-    components_framework_exceptions.ComponentRuntimeError, ListenerOperationError
-):
+class ListenerRuntimeError(ComponentRuntimeError, ListenerOperationError):
     """Raised when a listener encounters an unhandled error at runtime during listener
     operation.
     """
@@ -68,9 +71,7 @@ class ListenerRuntimeError(
         )
 
 
-class ListenerStopError(
-    components_framework_exceptions.ComponentStopError, ListenerOperationError
-):
+class ListenerStopError(ComponentStopError, ListenerOperationError):
     """Raised when a listener fails to stop during listener operation."""
 
     code = "LISTENER_STOP_ERROR"
@@ -89,7 +90,7 @@ class ListenerStopError(
 
 
 class ListenerStateError(
-    components_framework_exceptions.ComponentStateError,
+    ComponentStateError,
     ListenersFrameworkError,
 ):
     """Base exception for all errors that occur due to invalid listener status during
@@ -100,7 +101,7 @@ class ListenerStateError(
 
 
 class ListenerNotRunningError(
-    components_framework_exceptions.ComponentNotRunningError,
+    ComponentNotRunningError,
     ListenerStateError,
 ):
     """Raised when an operation is attempted on a listener that requires the listener to
@@ -117,7 +118,7 @@ class ListenerNotRunningError(
 
 
 class ListenerAlreadyRunningError(
-    components_framework_exceptions.ComponentAlreadyRunningError,
+    ComponentAlreadyRunningError,
     ListenerStateError,
 ):
     """Raised when an operation is attempted on a listener that requires the listener to

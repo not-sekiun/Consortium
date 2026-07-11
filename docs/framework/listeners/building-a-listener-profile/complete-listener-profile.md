@@ -91,8 +91,9 @@ from consortium.framework.signal_exceptions import ListenerStartError
 from consortium.framework.listeners import BaseListener
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
-    AgentTypeResolutionError,
 )
+from consortium.server.exceptions.objects_exceptions.agent_objects_exceptions import
+    AgentTypeResolutionError
 
 
 class Listener(BaseListener):

@@ -25,6 +25,9 @@ from consortium.server.exceptions.api_exceptions import (
 from consortium.server.exceptions.consortium_exceptions import (
     repository_consortium_exceptions as consortium_excs,
 )
+from consortium.server.exceptions.objects_exceptions import (
+    repository_objects_exceptions,
+)
 from consortium.server.models.repository_models import (
     RepositoryResourceModel,
 )
@@ -222,7 +225,7 @@ def create_upload_resource_endpoint(
                 )
                 if inspect.isawaitable(resource):
                     resource = await resource
-            except consortium_excs.InvalidRepositoryDirectoryArchiveFileFormatError:
+            except repository_objects_exceptions.InvalidRepositoryDirectoryArchiveFileFormatError:
                 raise api_excs.InvalidRepositoryDirectoryArchiveFileFormatError() from None
         else:
             resource = create_file_handler(

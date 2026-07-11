@@ -1,12 +1,19 @@
 from typing import Any
 
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
+from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
+    ComponentConfigurationError,
+    ComponentsFrameworkError,
+    EmptyComponentLabelError,
+    InvalidComponentConfigurationParameterTypeError,
+    InvalidComponentDependencyVersionSpecifierError,
+    InvalidComponentVersionError,
+    InvalidFrameworkVersionSpecifierError,
+    MissingComponentConfigurationParameterError,
 )
 
 
 class ListenerTemplatesFrameworkError(
-    components_framework_exceptions.ComponentsFrameworkError,
+    ComponentsFrameworkError,
 ):
     """Base exception for all errors that occur within the listener templates framework."""
 
@@ -16,7 +23,7 @@ class ListenerTemplatesFrameworkError(
 
 
 class ListenerTemplateConfigurationError(
-    components_framework_exceptions.ComponentConfigurationError,
+    ComponentConfigurationError,
     ListenerTemplatesFrameworkError,
 ):
     """Base exception for all errors that occur during the configuration of a particular
@@ -27,7 +34,7 @@ class ListenerTemplateConfigurationError(
 
 
 class InvalidListenerTemplateConfigurationParameterTypeError(
-    components_framework_exceptions.InvalidComponentConfigurationParameterTypeError,
+    InvalidComponentConfigurationParameterTypeError,
     ListenerTemplateConfigurationError,
 ):
     """Raised when a listener template's configuration parameter is not of the expected
@@ -50,7 +57,7 @@ class InvalidListenerTemplateConfigurationParameterTypeError(
 
 
 class MissingListenerTemplateConfigurationParameterError(
-    components_framework_exceptions.MissingComponentConfigurationParameterError,
+    MissingComponentConfigurationParameterError,
     ListenerTemplateConfigurationError,
 ):
     """Raised when a required parameter is not declared in a listener template's definition
@@ -67,7 +74,7 @@ class MissingListenerTemplateConfigurationParameterError(
 
 
 class EmptyListenerTemplateLabelError(
-    components_framework_exceptions.EmptyComponentLabelError,
+    EmptyComponentLabelError,
     ListenerTemplateConfigurationError,
 ):
     """Raised when an empty label is provided in a listener template's definition during
@@ -81,7 +88,7 @@ class EmptyListenerTemplateLabelError(
 
 
 class InvalidListenerTemplateVersionError(
-    components_framework_exceptions.InvalidComponentVersionError,
+    InvalidComponentVersionError,
     ListenerTemplateConfigurationError,
 ):
     """Raised when the listener template version string provided in a listener template's
@@ -99,7 +106,7 @@ class InvalidListenerTemplateVersionError(
 
 
 class InvalidFrameworkVersionSpecifierError(
-    components_framework_exceptions.InvalidFrameworkVersionSpecifierError,
+    InvalidFrameworkVersionSpecifierError,
     ListenerTemplateConfigurationError,
 ):
     """Raised when the framework version specifier string provided in a listener template's
@@ -121,7 +128,7 @@ class InvalidFrameworkVersionSpecifierError(
 
 
 class InvalidListenerTemplateDependencyVersionSpecifierError(
-    components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError,
+    InvalidComponentDependencyVersionSpecifierError,
     ListenerTemplateConfigurationError,
 ):
     """Raised when a listener template dependency version specifier string provided in a

@@ -1,12 +1,19 @@
 from typing import Any
 
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
+from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
+    ComponentConfigurationError,
+    ComponentsFrameworkError,
+    EmptyComponentLabelError,
+    InvalidComponentConfigurationParameterTypeError,
+    InvalidComponentDependencyVersionSpecifierError,
+    InvalidComponentVersionError,
+    InvalidFrameworkVersionSpecifierError,
+    MissingComponentConfigurationParameterError,
 )
 
 
 class AgentTemplatesFrameworkError(
-    components_framework_exceptions.ComponentsFrameworkError,
+    ComponentsFrameworkError,
 ):
     """Base exception for all errors that occur within the agent templates framework."""
 
@@ -16,7 +23,7 @@ class AgentTemplatesFrameworkError(
 
 
 class AgentTemplateConfigurationError(
-    components_framework_exceptions.ComponentConfigurationError,
+    ComponentConfigurationError,
     AgentTemplatesFrameworkError,
 ):
     """Base exception for all errors that occur during the configuration of a particular
@@ -27,7 +34,7 @@ class AgentTemplateConfigurationError(
 
 
 class InvalidAgentTemplateConfigurationParameterTypeError(
-    components_framework_exceptions.InvalidComponentConfigurationParameterTypeError,
+    InvalidComponentConfigurationParameterTypeError,
     AgentTemplateConfigurationError,
 ):
     """Raised when an agent template's configuration parameter is not of the expected
@@ -50,7 +57,7 @@ class InvalidAgentTemplateConfigurationParameterTypeError(
 
 
 class MissingAgentTemplateConfigurationParameterError(
-    components_framework_exceptions.MissingComponentConfigurationParameterError,
+    MissingComponentConfigurationParameterError,
     AgentTemplateConfigurationError,
 ):
     """Raised when a required parameter is not declared in an agent template's definition
@@ -67,7 +74,7 @@ class MissingAgentTemplateConfigurationParameterError(
 
 
 class EmptyAgentTemplateLabelError(
-    components_framework_exceptions.EmptyComponentLabelError,
+    EmptyComponentLabelError,
     AgentTemplateConfigurationError,
 ):
     """Raised when an empty label is provided in an agent template's definition during
@@ -81,7 +88,7 @@ class EmptyAgentTemplateLabelError(
 
 
 class InvalidAgentTemplateVersionError(
-    components_framework_exceptions.InvalidComponentVersionError,
+    InvalidComponentVersionError,
     AgentTemplateConfigurationError,
 ):
     """Raised when the agent template version string provided in an agent template's
@@ -99,7 +106,7 @@ class InvalidAgentTemplateVersionError(
 
 
 class InvalidFrameworkVersionSpecifierError(
-    components_framework_exceptions.InvalidFrameworkVersionSpecifierError,
+    InvalidFrameworkVersionSpecifierError,
     AgentTemplateConfigurationError,
 ):
     """Raised when the framework version specifier string provided in an agent template's
@@ -121,7 +128,7 @@ class InvalidFrameworkVersionSpecifierError(
 
 
 class InvalidAgentTemplateDependencyVersionSpecifierError(
-    components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError,
+    InvalidComponentDependencyVersionSpecifierError,
     AgentTemplateConfigurationError,
 ):
     """Raised when an agent template dependency version specifier string provided in an

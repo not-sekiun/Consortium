@@ -3,13 +3,13 @@ from typing import TypeVar, get_type_hints
 
 from pydantic import BaseModel, JsonValue, ValidationError
 
-from consortium.framework.options.option_types import OptionType
-from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     EmptyOptionNameError,
     InvalidDefaultValueError,
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError,
 )
+from consortium.framework.options.option_types import OptionType
 
 ValueType = TypeVar("ValueType")
 

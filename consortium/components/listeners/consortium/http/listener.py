@@ -8,6 +8,8 @@ from consortium.framework.listeners import BaseListener
 from consortium.framework.signal_exceptions import ListenerStartError
 from consortium.server.exceptions.consortium_exceptions.agents_consortium_exceptions import (
     AgentNotFoundError,
+)
+from consortium.server.exceptions.objects_exceptions.agent_objects_exceptions import (
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
 )

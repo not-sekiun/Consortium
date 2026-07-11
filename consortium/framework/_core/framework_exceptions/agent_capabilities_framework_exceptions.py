@@ -1,32 +1,11 @@
-"""
-Exception hierarchy:
-
-- [`BaseConsortiumError`][consortium.server.exceptions.consortium_exceptions.base_consortium_exception.BaseConsortiumError]
-    - [`AgentCapabilitiesError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilitiesError]
-        - [`AgentCapabilitiesFrameworkError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilitiesFrameworkError]
-            - [`AgentCapabilityConfigurationError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilityConfigurationError]
-                - [`InvalidAgentCapabilityConfigurationParameterTypeError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.InvalidAgentCapabilityConfigurationParameterTypeError]
-                - [`MissingAgentCapabilityConfigurationParameterError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.MissingAgentCapabilityConfigurationParameterError]
-            - [`EmptyAgentCapabilityNameError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.EmptyAgentCapabilityNameError]
-            - [`DuplicateAgentCapabilityOptionNameError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.DuplicateAgentCapabilityOptionNameError]
-            - [`CustomOSStringAlreadyRegisteredError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.CustomOSStringAlreadyRegisteredError]
-            - [`AgentCapabilityExecutionError`][consortium.server.exceptions.consortium_exceptions.agent_capabilities_consortium_exceptions.AgentCapabilityExecutionError]
-"""
-
 from typing import Any
 
-from consortium.server.exceptions.consortium_exceptions.base_consortium_exception import (
-    BaseConsortiumError,
+from consortium.framework._core.framework_exceptions.base_framework_exception import (
+    BaseFrameworkError,
 )
 
 
-class AgentCapabilitiesError(BaseConsortiumError):
-    """Base exception for all agent capabilities-related errors."""
-
-    code = "AGENT_CAPABILITIES_ERROR"
-
-
-class AgentCapabilitiesFrameworkError(AgentCapabilitiesError):
+class AgentCapabilitiesFrameworkError(BaseFrameworkError):
     """Base exception for all errors that occur within the agent capabilities framework."""
 
     code = "AGENT_CAPABILITIES_FRAMEWORK_ERROR"

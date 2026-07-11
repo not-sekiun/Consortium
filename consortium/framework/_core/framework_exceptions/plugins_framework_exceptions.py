@@ -1,12 +1,26 @@
 from typing import Any
 
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
+from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
+    ComponentAlreadyRunningError,
+    ComponentConfigurationError,
+    ComponentNotRunningError,
+    ComponentOperationError,
+    ComponentRuntimeError,
+    ComponentsFrameworkError,
+    ComponentStartError,
+    ComponentStateError,
+    ComponentStopError,
+    EmptyComponentLabelError,
+    InvalidComponentConfigurationParameterTypeError,
+    InvalidComponentDependencyVersionSpecifierError,
+    InvalidComponentVersionError,
+    InvalidFrameworkVersionSpecifierError,
+    MissingComponentConfigurationParameterError,
 )
 
 
 class PluginsFrameworkError(
-    components_framework_exceptions.ComponentsFrameworkError,
+    ComponentsFrameworkError,
 ):
     """Base exception for all errors that occur within the plugins framework."""
 
@@ -16,7 +30,7 @@ class PluginsFrameworkError(
 
 
 class PluginConfigurationError(
-    components_framework_exceptions.ComponentConfigurationError,
+    ComponentConfigurationError,
     PluginsFrameworkError,
 ):
     """Base exception for all errors that occur during the configuration of a particular
@@ -27,7 +41,7 @@ class PluginConfigurationError(
 
 
 class InvalidPluginConfigurationParameterTypeError(
-    components_framework_exceptions.InvalidComponentConfigurationParameterTypeError,
+    InvalidComponentConfigurationParameterTypeError,
     PluginConfigurationError,
 ):
     """Raised when a plugin's configuration parameter is not of the expected type during
@@ -50,7 +64,7 @@ class InvalidPluginConfigurationParameterTypeError(
 
 
 class MissingPluginConfigurationParameterError(
-    components_framework_exceptions.MissingComponentConfigurationParameterError,
+    MissingComponentConfigurationParameterError,
     PluginConfigurationError,
 ):
     """Raised when a required parameter is not declared in a plugin's definition during
@@ -67,7 +81,7 @@ class MissingPluginConfigurationParameterError(
 
 
 class EmptyPluginLabelError(
-    components_framework_exceptions.EmptyComponentLabelError,
+    EmptyComponentLabelError,
     PluginConfigurationError,
 ):
     """Raised when an empty label is provided in a plugin's definition during plugin
@@ -81,7 +95,7 @@ class EmptyPluginLabelError(
 
 
 class InvalidPluginVersionError(
-    components_framework_exceptions.InvalidComponentVersionError,
+    InvalidComponentVersionError,
     PluginConfigurationError,
 ):
     """Raised when the plugin version string provided in the plugin's definition is not a
@@ -98,7 +112,7 @@ class InvalidPluginVersionError(
 
 
 class InvalidFrameworkVersionSpecifierError(
-    components_framework_exceptions.InvalidFrameworkVersionSpecifierError,
+    InvalidFrameworkVersionSpecifierError,
     PluginConfigurationError,
 ):
     """Raised when the framework version specifier string provided in the plugin's
@@ -116,7 +130,7 @@ class InvalidFrameworkVersionSpecifierError(
 
 
 class InvalidPluginDependencyVersionSpecifierError(
-    components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError,
+    InvalidComponentDependencyVersionSpecifierError,
     PluginConfigurationError,
 ):
     """Raised when a plugin dependency version specifier string provided in the plugin's
@@ -138,7 +152,7 @@ class InvalidPluginDependencyVersionSpecifierError(
 
 
 class PluginOperationError(
-    components_framework_exceptions.ComponentOperationError,
+    ComponentOperationError,
     PluginsFrameworkError,
 ):
     """Base exception for all errors that occur during the operation of a particular
@@ -148,9 +162,7 @@ class PluginOperationError(
     code = "PLUGIN_OPERATION_ERROR"
 
 
-class PluginStartError(
-    components_framework_exceptions.ComponentStartError, PluginOperationError
-):
+class PluginStartError(ComponentStartError, PluginOperationError):
     """Raised when a plugin fails to start during plugin operation."""
 
     code = "PLUGIN_START_ERROR"
@@ -169,7 +181,7 @@ class PluginStartError(
 
 
 class PluginRuntimeError(
-    components_framework_exceptions.ComponentRuntimeError,
+    ComponentRuntimeError,
     PluginOperationError,
 ):
     """Raised when a plugin encounters an unhandled error at runtime during plugin
@@ -191,9 +203,7 @@ class PluginRuntimeError(
         )
 
 
-class PluginStopError(
-    components_framework_exceptions.ComponentStopError, PluginOperationError
-):
+class PluginStopError(ComponentStopError, PluginOperationError):
     """Raised when a plugin fails to stop during plugin operation."""
 
     code = "PLUGIN_STOP_ERROR"
@@ -212,7 +222,7 @@ class PluginStopError(
 
 
 class PluginStateError(
-    components_framework_exceptions.ComponentStateError,
+    ComponentStateError,
     PluginsFrameworkError,
 ):
     """Base exception for all errors that occur due to invalid plugin status during
@@ -223,7 +233,7 @@ class PluginStateError(
 
 
 class PluginNotRunningError(
-    components_framework_exceptions.ComponentNotRunningError,
+    ComponentNotRunningError,
     PluginStateError,
 ):
     """Raised when an operation is attempted on a plugin that requires the plugin to
@@ -240,7 +250,7 @@ class PluginNotRunningError(
 
 
 class PluginAlreadyRunningError(
-    components_framework_exceptions.ComponentAlreadyRunningError,
+    ComponentAlreadyRunningError,
     PluginStateError,
 ):
     """Raised when an operation is attempted on a plugin that requires the plugin to not

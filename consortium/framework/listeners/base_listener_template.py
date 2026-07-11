@@ -28,6 +28,9 @@ from consortium.framework._core.framework_exceptions.listener_templates_framewor
     MissingListenerTemplateConfigurationParameterError,
     MissingRequiredListenerTemplateOptionError,
 )
+from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
+    OptionValueValidationError,
+)
 from consortium.framework._utils import format_docstring_to_single_line, remap_exception
 from consortium.framework.framework_types import (
     Primitive,
@@ -41,9 +44,6 @@ from consortium.framework.options import (
     ListValueOption,
     SingleValueOption,
     ToggleableChoicesValueOption,
-)
-from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
-    OptionValueValidationError,
 )
 from consortium.server.utils import construct_services_dataclass
 

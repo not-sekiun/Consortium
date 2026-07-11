@@ -2,10 +2,10 @@ import re
 from collections.abc import Callable
 from typing import Any
 
-from consortium.framework.framework_types import Primitive
-from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
+from consortium.framework.framework_types import Primitive
 
 
 def validate_value_data_type(

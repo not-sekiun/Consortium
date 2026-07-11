@@ -1,9 +1,9 @@
 import pytest
 
-from consortium.framework.options import ChoiceValueOption
-from consortium.server.exceptions.consortium_exceptions.options_consortium_exceptions import (
+from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     OptionConfigurationError,
 )
+from consortium.framework.options import ChoiceValueOption
 
 
 def test_init_with_empty_name():
