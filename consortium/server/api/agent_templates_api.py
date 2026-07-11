@@ -20,7 +20,7 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
     InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
-    agent_templates_service_exceptions as consortium_excs,
+    agent_templates_service_exceptions as svc_excs,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.models.agent_template_models import AgentTemplateModel
@@ -43,7 +43,7 @@ _agent_generators_service = server_singletons.agent_generators_service
 
 _agent_template_not_found_error = (
     api_excs.AgentTemplateNotFoundError.from_consortium_exception(
-        consortium_exception=consortium_excs.AgentTemplateIDNotFoundError(
+        consortium_exception=svc_excs.AgentTemplateIDNotFoundError(
             agent_template_id="<agent_template_id>"
         )
     )
@@ -102,7 +102,7 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
             agent_template_id=agent_template_id,
             parameters=options,
         )
-    except consortium_excs.AgentTemplateNotFoundError as exc:
+    except svc_excs.AgentTemplateNotFoundError as exc:
         raise api_excs.AgentTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -174,7 +174,7 @@ def get_agent_template_by_agent_template_id(
                 agent_template_id,
             )
         )
-    except consortium_excs.AgentTemplateNotFoundError as exc:
+    except svc_excs.AgentTemplateNotFoundError as exc:
         raise api_excs.AgentTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None

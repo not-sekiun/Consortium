@@ -26,7 +26,7 @@ from consortium.framework.signal_exceptions.agent_capabilties_signal_exception i
     AgentCapabilityExecutionError as AgentCapabilityExecutionFrameworkError,
 )
 from consortium.server import server_singletons as server_singletons
-from consortium.server.exceptions.objects_exceptions.agent_objects_exceptions import (
+from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
     AgentCapabilityNotFoundError,
     AgentCapabilityOptionNotFoundError,
     AgentCapabilityOptionValueValidationError,

@@ -1,4 +1,4 @@
-from consortium.server.exceptions.objects_exceptions.base_object_exception import (
+from consortium.server.exceptions.object_exceptions.base_object_exception import (
     BaseObjectError,
 )
 

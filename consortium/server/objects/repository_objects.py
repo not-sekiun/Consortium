@@ -11,7 +11,7 @@ from typing import BinaryIO, Literal, TextIO
 
 from pydantic import JsonValue
 
-from consortium.server.exceptions.objects_exceptions.repository_objects_exceptions import (
+from consortium.server.exceptions.object_exceptions.repository_object_exceptions import (
     InvalidRepositoryDirectoryArchiveFileFormatError,
     RepositoryDirectoryAlreadyExistsError,
     RepositoryDirectoryDoesNotExistError,

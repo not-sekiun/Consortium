@@ -17,7 +17,7 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
     InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
-    users_service_exceptions as users_consortium_excs,
+    users_service_exceptions as users_svc_excs,
 )
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import (
@@ -108,5 +108,5 @@ async def logout_user_by_user_id(
 ) -> None:
     try:
         _users_service.logout_user_by_user_id(user_id=str(user_id))
-    except users_consortium_excs.UserIDNotFoundError:
+    except users_svc_excs.UserIDNotFoundError:
         raise users_api_excs.UserNotFoundError(user_id=str(user_id)) from None

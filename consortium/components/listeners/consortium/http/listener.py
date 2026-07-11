@@ -6,7 +6,7 @@ from aiohttp import web
 
 from consortium.framework.listeners import BaseListener
 from consortium.framework.signal_exceptions import ListenerStartError
-from consortium.server.exceptions.objects_exceptions.agent_objects_exceptions import (
+from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
 )

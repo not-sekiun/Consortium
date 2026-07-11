@@ -22,7 +22,7 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
     InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
-    repository_service_exceptions as consortium_excs,
+    repository_service_exceptions as svc_excs,
 )
 from consortium.server.models.repository_models import AssetModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -42,7 +42,7 @@ _assets_service = server_singletons.assets_service
 
 _resource_not_found_error = (
     api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
-        consortium_exception=consortium_excs.RepositoryResourceNotFoundError(
+        consortium_exception=svc_excs.RepositoryResourceNotFoundError(
             resource_id="<resource_id>",
         ),
     )

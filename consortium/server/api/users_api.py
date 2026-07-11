@@ -15,7 +15,7 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
     InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
-    users_service_exceptions as consortium_excs,
+    users_service_exceptions as svc_excs,
 )
 from consortium.server.models.user_models import UserModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -88,7 +88,7 @@ async def get_user_by_user_id(
 ) -> UserModel:
     try:
         user = _users_service.get_user_by_user_id(str(user_id))
-    except consortium_excs.UserIDNotFoundError:
+    except svc_excs.UserIDNotFoundError:
         raise api_excs.UserNotFoundError(
             user_id=str(user_id),
         ) from None
@@ -116,7 +116,7 @@ async def update_own_display_name(
             user_id=str(user.user_id),
             display_name=display_name,
         )
-    except consortium_excs.UserIDNotFoundError:
+    except svc_excs.UserIDNotFoundError:
         # This should never happen since the user is updating their own display name
         raise api_excs.UserNotFoundError(
             user_id=str(user.user_id),
@@ -149,7 +149,7 @@ async def update_user_display_name_by_user_id(
             user_id=str(user_id),
             display_name=display_name,
         )
-    except consortium_excs.UserIDNotFoundError:
+    except svc_excs.UserIDNotFoundError:
         raise api_excs.UserNotFoundError(
             user_id=str(user_id),
         ) from None

@@ -5,7 +5,7 @@ from pydantic import BaseModel, JsonValue, create_model
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
 )
-from consortium.server.exceptions.objects_exceptions.base_object_exception import (
+from consortium.server.exceptions.object_exceptions.base_object_exception import (
     BaseObjectError,
 )
 from consortium.server.exceptions.service_exceptions.base_service_exception import (

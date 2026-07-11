@@ -22,11 +22,11 @@ from starlette.background import BackgroundTask
 from consortium.server.exceptions.api_exceptions import (
     repository_api_exceptions as api_excs,
 )
-from consortium.server.exceptions.objects_exceptions import (
-    repository_objects_exceptions,
+from consortium.server.exceptions.object_exceptions import (
+    repository_object_exceptions as obj_excs,
 )
 from consortium.server.exceptions.service_exceptions import (
-    repository_service_exceptions as consortium_excs,
+    repository_service_exceptions as svc_excs,
 )
 from consortium.server.models.repository_models import (
     RepositoryResourceModel,
@@ -77,7 +77,7 @@ def create_get_resource_by_resource_id_endpoint(
     ):
         try:
             repository_resource = get_resource_by_resource_id_handler(str(resource_id))
-        except consortium_excs.RepositoryResourceNotFoundError as exc:
+        except svc_excs.RepositoryResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
@@ -107,7 +107,7 @@ def create_download_resource_by_resource_id_endpoint(
     ) -> FileResponse:
         try:
             repository_resource = get_resource_by_resource_id_handler(str(resource_id))
-        except consortium_excs.RepositoryResourceNotFoundError as exc:
+        except svc_excs.RepositoryResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None
@@ -225,7 +225,7 @@ def create_upload_resource_endpoint(
                 )
                 if inspect.isawaitable(resource):
                     resource = await resource
-            except repository_objects_exceptions.InvalidRepositoryDirectoryArchiveFileFormatError:
+            except obj_excs.InvalidRepositoryDirectoryArchiveFileFormatError:
                 raise api_excs.InvalidRepositoryDirectoryArchiveFileFormatError() from None
         else:
             resource = create_file_handler(
@@ -261,7 +261,7 @@ def create_delete_resource_by_resource_id_endpoint(
             result = delete_resource_by_resource_id_handler(str(resource_id))
             if inspect.isawaitable(result):
                 await result
-        except consortium_excs.RepositoryResourceNotFoundError as exc:
+        except svc_excs.RepositoryResourceNotFoundError as exc:
             raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
                 consortium_exception=exc,
             ) from None

@@ -17,7 +17,7 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
     InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
-    user_accounts_service_exceptions as consortium_excs,
+    user_accounts_service_exceptions as svc_excs,
 )
 from consortium.server.models.request_data_models import (
     UpdateOwnUserAccountRequestDataModel,
@@ -47,39 +47,39 @@ _user_account_not_found_error = api_excs.UserAccountNotFoundError(
 )
 _user_account_authentication_error = api_excs.UserAccountAuthenticationError()
 _user_account_username_already_exists_error_during_creation = api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
-    consortium_exception=consortium_excs.UserAccountUsernameAlreadyExistsError._during_user_account_creation(
+    consortium_exception=svc_excs.UserAccountUsernameAlreadyExistsError._during_user_account_creation(
         username="<username>",
     ),
 )
 _empty_user_account_username_error_during_creation = api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
-    consortium_exception=consortium_excs.EmptyUserAccountUsernameError()._during_user_account_creation(),
+    consortium_exception=svc_excs.EmptyUserAccountUsernameError()._during_user_account_creation(),
 )
 _empty_user_account_password_error_during_creation = api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
-    consortium_exception=consortium_excs.EmptyUserAccountPasswordError()._during_user_account_creation(),
+    consortium_exception=svc_excs.EmptyUserAccountPasswordError()._during_user_account_creation(),
 )
 _invalid_user_account_role_error_during_creation = api_excs.InvalidUserAccountRoleError.from_consortium_exception(
-    consortium_exception=consortium_excs.InvalidUserAccountRoleError._during_user_account_creation(
+    consortium_exception=svc_excs.InvalidUserAccountRoleError._during_user_account_creation(
         role="<role>",
     ),
 )
 _user_account_username_already_exists_error_during_modification = api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
-    consortium_exception=consortium_excs.UserAccountUsernameAlreadyExistsError._during_user_account_modification(
+    consortium_exception=svc_excs.UserAccountUsernameAlreadyExistsError._during_user_account_modification(
         username="<username>",
         user_account_str="<user_account>",
     ),
 )
 _empty_user_account_username_error_during_modification = api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
-    consortium_exception=consortium_excs.EmptyUserAccountUsernameError()._during_user_account_modification(
+    consortium_exception=svc_excs.EmptyUserAccountUsernameError()._during_user_account_modification(
         user_account_str="<user_account>"
     ),
 )
 _empty_user_account_password_error_during_modification = api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
-    consortium_exception=consortium_excs.EmptyUserAccountPasswordError()._during_user_account_modification(
+    consortium_exception=svc_excs.EmptyUserAccountPasswordError()._during_user_account_modification(
         user_account_str="<user_account>"
     ),
 )
 _invalid_user_account_role_error_during_modification = api_excs.InvalidUserAccountRoleError.from_consortium_exception(
-    consortium_exception=consortium_excs.InvalidUserAccountRoleError._during_user_account_modification(
+    consortium_exception=svc_excs.InvalidUserAccountRoleError._during_user_account_modification(
         user_account_str="<user_account>", role="<role>"
     ),
 )
@@ -147,7 +147,7 @@ async def get_user_account_by_user_account_id(
         return _user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=str(user_account_id),
         )
-    except consortium_excs.UserAccountIDNotFoundError:
+    except svc_excs.UserAccountIDNotFoundError:
         raise api_excs.UserAccountNotFoundError(
             user_account_id=str(user_account_id),
         ) from None
@@ -184,25 +184,25 @@ async def create_user_account(
             password=password,
             role=role,
         )
-    except consortium_excs.EmptyUserAccountUsernameError as exc:
+    except svc_excs.EmptyUserAccountUsernameError as exc:
         raise api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.EmptyUserAccountPasswordError as exc:
+    except svc_excs.EmptyUserAccountPasswordError as exc:
         raise api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.InvalidUserAccountRoleError as exc:
+    except svc_excs.InvalidUserAccountRoleError as exc:
         raise api_excs.InvalidUserAccountRoleError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.UserAccountUsernameAlreadyExistsError as exc:
+    except svc_excs.UserAccountUsernameAlreadyExistsError as exc:
         raise api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
     try:
         _user_accounts_service.write_framework_user_accounts()
-    except consortium_excs.UserAccountsFileError:
+    except svc_excs.UserAccountsFileError:
         raise InternalServerError() from None
 
     return new_user_account
@@ -239,7 +239,7 @@ async def update_own_user_account(
         user_account = _user_accounts_service.get_user_account_by_user_account_id(
             user_account_id=user_account_id,
         )
-    except consortium_excs.UserAccountIDNotFoundError:
+    except svc_excs.UserAccountIDNotFoundError:
         raise api_excs.UserAccountNotFoundError(
             user_account_id=user_account_id
         ) from None
@@ -257,15 +257,15 @@ async def update_own_user_account(
                 else None,
             )
         )
-    except consortium_excs.UserAccountUsernameAlreadyExistsError as exc:
+    except svc_excs.UserAccountUsernameAlreadyExistsError as exc:
         raise api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.EmptyUserAccountUsernameError as exc:
+    except svc_excs.EmptyUserAccountUsernameError as exc:
         raise api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.EmptyUserAccountPasswordError as exc:
+    except svc_excs.EmptyUserAccountPasswordError as exc:
         raise api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -273,7 +273,7 @@ async def update_own_user_account(
     # Write the updated user accounts data to disk.
     try:
         _user_accounts_service.write_framework_user_accounts()
-    except consortium_excs.UserAccountsFileError:
+    except svc_excs.UserAccountsFileError:
         raise InternalServerError() from None
 
     return updated_user_account
@@ -317,23 +317,23 @@ async def update_user_account_by_user_account_id(
                 role=request_data.role,
             )
         )
-    except consortium_excs.UserAccountUsernameAlreadyExistsError as exc:
+    except svc_excs.UserAccountUsernameAlreadyExistsError as exc:
         raise api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.EmptyUserAccountUsernameError as exc:
+    except svc_excs.EmptyUserAccountUsernameError as exc:
         raise api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.EmptyUserAccountPasswordError as exc:
+    except svc_excs.EmptyUserAccountPasswordError as exc:
         raise api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.InvalidUserAccountRoleError as exc:
+    except svc_excs.InvalidUserAccountRoleError as exc:
         raise api_excs.InvalidUserAccountRoleError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
-    except consortium_excs.UserAccountNotFoundError:
+    except svc_excs.UserAccountNotFoundError:
         raise api_excs.UserAccountNotFoundError(
             user_account_id=str(user_account_id),
         ) from None
@@ -341,7 +341,7 @@ async def update_user_account_by_user_account_id(
     # Write the updated user accounts data to disk.
     try:
         _user_accounts_service.write_framework_user_accounts()
-    except consortium_excs.UserAccountsFileError:
+    except svc_excs.UserAccountsFileError:
         raise InternalServerError() from None
 
     return updated_user_account
@@ -376,7 +376,7 @@ async def delete_user_account_by_user_account_id(
         _user_accounts_service.delete_user_account_by_user_account_id(
             user_account_id=str(user_account_id),
         )
-    except consortium_excs.UserAccountIDNotFoundError:
+    except svc_excs.UserAccountIDNotFoundError:
         raise api_excs.UserAccountNotFoundError(
             user_account_id=str(user_account_id),
         ) from None
@@ -384,5 +384,5 @@ async def delete_user_account_by_user_account_id(
     # Write the updated user accounts data to disk.
     try:
         _user_accounts_service.write_framework_user_accounts()
-    except consortium_excs.UserAccountsFileError:
+    except svc_excs.UserAccountsFileError:
         raise InternalServerError() from None

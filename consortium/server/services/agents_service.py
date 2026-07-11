@@ -12,7 +12,7 @@ from consortium.framework.agents.agent_message_models import (
 )
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.objects_exceptions.agent_objects_exceptions import (
+from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
     AgentTaskNotFoundError,
 )
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (

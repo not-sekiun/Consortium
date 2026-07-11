@@ -20,7 +20,7 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
     InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
-    listener_templates_service_exceptions as consortium_excs,
+    listener_templates_service_exceptions as svc_excs,
 )
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.models.listener_template_models import ListenerTemplateModel
@@ -43,7 +43,7 @@ _listeners_service = server_singletons.listeners_service
 
 _listener_template_not_found_error = (
     api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
-        consortium_exception=consortium_excs.ListenerTemplateIDNotFoundError(
+        consortium_exception=svc_excs.ListenerTemplateIDNotFoundError(
             listener_template_id="<listener_template_id>"
         )
     )
@@ -118,7 +118,7 @@ def get_listener_template_by_listener_template_id(
                 listener_template_id=listener_template_id,
             )
         )
-    except consortium_excs.ListenerTemplateNotFoundError as exc:
+    except svc_excs.ListenerTemplateNotFoundError as exc:
         raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
@@ -151,7 +151,7 @@ async def create_listener_through_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
             parameters=options,
         )
-    except consortium_excs.ListenerTemplateNotFoundError as exc:
+    except svc_excs.ListenerTemplateNotFoundError as exc:
         raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None

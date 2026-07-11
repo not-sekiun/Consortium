@@ -16,9 +16,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
     InvalidUUIDError,
 )
-from consortium.server.exceptions.objects_exceptions import agent_objects_exceptions
+from consortium.server.exceptions.object_exceptions import agent_object_exceptions
 from consortium.server.exceptions.service_exceptions import (
-    agents_service_exceptions as consortium_excs,
+    agents_service_exceptions as svc_excs,
 )
 from consortium.server.models.agent_models import (
     AgentModel,
@@ -44,38 +44,40 @@ router = APIRouter(
 _agents_service = server_singletons.agents_service
 
 _agent_not_found_error = api_excs.AgentNotFoundError.from_consortium_exception(
-    consortium_exception=consortium_excs.AgentNotFoundError(agent_id="string"),
+    consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
 )
 _agent_task_not_found_error = api_excs.AgentTaskNotFoundError.from_consortium_exception(
-    consortium_exception=agent_objects_exceptions.AgentTaskNotFoundError(
+    consortium_exception=agent_object_exceptions.AgentTaskNotFoundError(
         task_id="string"
     ),
 )
 _agent_result_not_found_error = (
     api_excs.AgentResultNotFoundError.from_consortium_exception(
-        consortium_exception=agent_objects_exceptions.AgentResultIDNotFoundError(
+        consortium_exception=agent_object_exceptions.AgentResultIDNotFoundError(
             result_id="string"
         ),
     )
 )
 _agent_capability_option_value_validation_error = api_excs.AgentCapabilityOptionValueValidationError.from_consortium_exception(
-    consortium_exception=agent_objects_exceptions.AgentCapabilityOptionValueValidationError(
+    consortium_exception=agent_object_exceptions.AgentCapabilityOptionValueValidationError(
         agent_str="<agent_str>",
         option_name="<option_str>",
         option_value="<option_value>",
         error_message="<error_message>",
     ),
 )
-_agent_capability_option_not_found_error = api_excs.AgentCapabilityOptionNotFoundError.from_consortium_exception(
-    consortium_exception=agent_objects_exceptions.AgentCapabilityOptionNotFoundError(
-        agent_str="<agent_str>",
-        option_name="<option_str>",
-        command="<command>",
-        agent_type_str="<agent_type_str>",
-    ),
+_agent_capability_option_not_found_error = (
+    api_excs.AgentCapabilityOptionNotFoundError.from_consortium_exception(
+        consortium_exception=agent_object_exceptions.AgentCapabilityOptionNotFoundError(
+            agent_str="<agent_str>",
+            option_name="<option_str>",
+            command="<command>",
+            agent_type_str="<agent_type_str>",
+        ),
+    )
 )
 _missing_required_agent_capability_option_error = api_excs.MissingRequiredAgentCapabilityOptionError.from_consortium_exception(
-    consortium_exception=agent_objects_exceptions.MissingRequiredAgentCapabilityOptionError(
+    consortium_exception=agent_object_exceptions.MissingRequiredAgentCapabilityOptionError(
         agent_str="<agent_str>",
         option_name="<option_str>",
         agent_capability_name="<agent_capability_name>",
@@ -83,7 +85,7 @@ _missing_required_agent_capability_option_error = api_excs.MissingRequiredAgentC
 )
 _agent_capability_not_found_error = (
     api_excs.AgentCapabilityNotFoundError.from_consortium_exception(
-        consortium_exception=agent_objects_exceptions.AgentCapabilityNotFoundError(
+        consortium_exception=agent_object_exceptions.AgentCapabilityNotFoundError(
             command="<command>",
             agent_str="<agent_str>",
             agent_type_str="<agent_type_str>",
@@ -171,7 +173,7 @@ def get_agent_task_by_task_id(
 ) -> AgentTaskModel:
     try:
         task = _agents_service.get_agent_task_by_task_id(task_id=task_id)
-    except agent_objects_exceptions.AgentTaskNotFoundError as exc:
+    except agent_object_exceptions.AgentTaskNotFoundError as exc:
         raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -211,7 +213,7 @@ def get_all_agent_tasks_by_agent_id(
         tasks = _agents_service.get_all_agent_tasks_by_agent_id(
             agent_id=agent_id, status=status
         )
-    except consortium_excs.AgentNotFoundError as exc:
+    except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -240,7 +242,7 @@ def get_agent_by_agent_id(
 ):
     try:
         return AgentModel(**_agents_service.get_agent_by_agent_id(agent_id).to_json())
-    except consortium_excs.AgentNotFoundError as exc:
+    except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -284,11 +286,11 @@ def get_agent_tasks_by_agent_id_and_task_id(
         )
         return AgentTaskModel(**task.to_json(limit=limit, offset=offset))
         # return _convert_agent_task_model_to_api_response_model(task, limit, offset)
-    except consortium_excs.AgentNotFoundError as exc:
+    except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_objects_exceptions.AgentTaskNotFoundError as exc:
+    except agent_object_exceptions.AgentTaskNotFoundError as exc:
         raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -330,23 +332,23 @@ async def task_agent_by_agent_id(
         task = await _agents_service.task_agent_by_agent_id(
             agent_id=agent_id, command=command, arguments=arguments
         )
-    except consortium_excs.AgentNotFoundError as exc:
+    except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_objects_exceptions.AgentCapabilityNotFoundError as exc:
+    except agent_object_exceptions.AgentCapabilityNotFoundError as exc:
         raise api_excs.AgentCapabilityNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_objects_exceptions.AgentCapabilityOptionNotFoundError as exc:
+    except agent_object_exceptions.AgentCapabilityOptionNotFoundError as exc:
         raise api_excs.AgentCapabilityOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_objects_exceptions.AgentCapabilityOptionValueValidationError as exc:
+    except agent_object_exceptions.AgentCapabilityOptionValueValidationError as exc:
         raise api_excs.AgentCapabilityOptionValueValidationError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_objects_exceptions.MissingRequiredAgentCapabilityOptionError as exc:
+    except agent_object_exceptions.MissingRequiredAgentCapabilityOptionError as exc:
         raise api_excs.MissingRequiredAgentCapabilityOptionError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -377,7 +379,7 @@ async def update_agent_by_agent_id(
         agent = _agents_service.update_agent_by_agent_id(
             agent_id=agent_id, name=name, description=description
         )
-    except consortium_excs.AgentNotFoundError as exc:
+    except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -413,11 +415,11 @@ async def delete_queued_agent_task_by_agent_id_and_task_id(
         _agents_service.delete_queued_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id, task_id=task_id
         )
-    except consortium_excs.AgentNotFoundError as exc:
+    except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_objects_exceptions.AgentTaskNotFoundError as exc:
+    except agent_object_exceptions.AgentTaskNotFoundError as exc:
         raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
