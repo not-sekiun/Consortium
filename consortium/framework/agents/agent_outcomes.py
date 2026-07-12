@@ -11,9 +11,12 @@ class Success:
     from a task output message.
 
     Attributes:
-        message (str): Human-readable description of the successful result.
-        data (dict[str, JsonValue]): Structured result data from the execution.
+        message: Human-readable description of the successful result.
+        data: Structured result data from the execution.
     """
+
+    message: str
+    data: dict[str, JsonValue]
 
     def __init__(
         self,
@@ -50,9 +53,12 @@ class Failure:
     overridden when constructing from a task output message.
 
     Attributes:
-        message (str): Human-readable description of the failure.
-        data (dict[str, JsonValue]): Structured diagnostic data from the failed execution.
+        message: Human-readable description of the failure.
+        data: Structured diagnostic data from the failed execution.
     """
+
+    message: str
+    data: dict[str, JsonValue]
 
     def __init__(
         self,

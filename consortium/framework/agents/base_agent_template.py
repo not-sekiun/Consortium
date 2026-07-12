@@ -78,14 +78,14 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
     before instantiation.
 
     Attributes:
-        agent_generator (type[BaseAgentGenerator]): The generator class that this
-            template instantiates when creating a new agent generator.
-        agent_type (type[BaseAgentType]): The agent type that identifies which
-            capabilities the generated agent supports.
-        compatible_listener_types (set[str]): Names of listener types that agents
-            generated from this template can connect through.
-        options (set[Options]): Configuration options accepted when creating a generator
-            from this template. Converted to a name-keyed dict at class definition time.
+        agent_generator: The generator class that this template instantiates when
+            creating a new agent generator.
+        agent_type: The agent type that identifies which capabilities the generated
+            agent supports.
+        compatible_listener_types: Names of listener types that agents generated from
+            this template can connect through.
+        options: Configuration options accepted when creating a generator from this
+            template. Converted to a name-keyed dict at class definition time.
         validating_function: Optional single-argument callable that validates the full
             set of resolved option values before generator creation.
     """

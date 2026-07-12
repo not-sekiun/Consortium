@@ -32,9 +32,10 @@ class _DictionaryValueParametersModel(BaseModel):
 
 
 class DictionaryValueOption(BaseOption[dict[str, Primitive]]):
-    """
-    An option that contains a mapping of keys of type `str` to values of type
-    `str`, `int`, `float`, or `bool`.
+    """An option that holds a mapping of string keys to scalar values.
+
+    Keys are restricted to type `str` and values are restricted to one of the
+    primitive types `str`, `int`, `float`, or `bool`.
 
     Attributes:
         option_type: The type of the option.
@@ -107,9 +108,7 @@ class DictionaryValueOption(BaseOption[dict[str, Primitive]]):
     """
 
     option_type: OptionType = OptionType.DICTIONARY_VALUE_OPTION
-    """
-    The type of the option.
-    """
+    """The type of the option."""
 
     def __init__(
         self,
@@ -124,12 +123,18 @@ class DictionaryValueOption(BaseOption[dict[str, Primitive]]):
         value_validating_function: Callable[[Primitive], None] | None = None,
         validating_function: Callable[[dict[str, Primitive]], None] | None = None,
     ):
-        self.key_validating_regex = key_validating_regex
-        self.key_validating_function = key_validating_function
-        self.value_type = value_type
-        self.value_validating_regex = value_validating_regex
-        self.value_validating_function = value_validating_function
-        self.validating_function = validating_function
+        self.key_validating_regex: str | None = key_validating_regex
+        self.key_validating_function: Callable[[str], None] | None = (
+            key_validating_function
+        )
+        self.value_type: PrimitiveType | None = value_type
+        self.value_validating_regex: str | None = value_validating_regex
+        self.value_validating_function: Callable[[Primitive], None] | None = (
+            value_validating_function
+        )
+        self.validating_function: Callable[[dict[str, Primitive]], None] | None = (
+            validating_function
+        )
 
         try:
             _DictionaryValueParametersModel(
@@ -173,6 +178,20 @@ class DictionaryValueOption(BaseOption[dict[str, Primitive]]):
         )
 
     def validate_value(self, value: dict[str, Primitive]) -> None:
+        """Validate a candidate dictionary value against this option's constraints.
+
+        Checks that the value is a dictionary, then validates each key against the key
+        type, key regex, and key validating function, and each value against the value
+        type, value regex, and value validating function, before running any
+        whole-dictionary validating function.
+
+        Args:
+            value: The dictionary value to validate.
+
+        Raises:
+            OptionValueValidationError: If the value, any key, or any value violates a
+                configured constraint.
+        """
         if not isinstance(value, dict):
             raise OptionValueValidationFrameworkError(
                 f"Value '{value}' for option '{self.name}' must be a dictionary.",
@@ -245,6 +264,12 @@ class DictionaryValueOption(BaseOption[dict[str, Primitive]]):
     def to_json(
         self,
     ) -> dict[str, str | bool | dict[str, Primitive] | None]:
+        """Serialize the option and its constraints to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the option's name, description, required flag,
+            default value, and every configured key and value constraint.
+        """
         return {
             "name": self.name,
             "description": self.description,

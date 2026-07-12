@@ -8,21 +8,12 @@ from consortium.framework.signal_exceptions.base_signal_exception import (
 # framework errors. Therefore, we define their own set of exceptions to be raised and
 # handled by the event hook registry service
 class EventHookSetupError(BaseSignalException):
-    """
-    Raise this exception from `on_setup()` to signal that an error occurred while the
-    event hook was setting up and to abort loading it.
-    """
+    """Raise from `on_setup` to abort loading the event hook with an error."""
 
 
 class EventHookTriggerError(BaseSignalException):
-    """
-    Raise this exception from `on_triggered()` to signal that an error occurred while
-    handling a triggered event.
-    """
+    """Raise from `on_triggered` to signal that handling a triggered event failed."""
 
 
 class EventHookTeardownError(BaseSignalException):
-    """
-    Raise this exception from `on_teardown()` to signal that an error occurred while the
-    event hook was tearing down and to abort unloading it.
-    """
+    """Raise from `on_teardown` to abort unloading the event hook with an error."""

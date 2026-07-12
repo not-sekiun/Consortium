@@ -6,21 +6,12 @@ from consortium.framework.signal_exceptions._component_signal_exceptions import 
 
 
 class ListenerStartError(ComponentStartError):
-    """
-    Raise this exception to signal that an error occurred while attempting to start the
-    listener and to abort the start process.
-    """
+    """Raise from a start hook to abort starting the listener with an error."""
 
 
 class ListenerRuntimeError(ComponentRuntimeError):
-    """
-    Raise this exception to signal that an error occurred while the listener was
-    running.
-    """
+    """Raise from a runtime hook to signal that an error occurred while the listener ran."""
 
 
 class ListenerStopError(ComponentStopError):
-    """
-    Raise this exception to signal that an error occurred while attempting to stop the
-    listener and to abort the stop process.
-    """
+    """Raise from a stop hook to abort stopping the listener with an error."""

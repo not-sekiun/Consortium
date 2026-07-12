@@ -66,8 +66,8 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     earlier steps can pass state (file paths, keys, metadata, etc.) to later ones.
 
     Attributes:
-        name (str): Unique display name for this build step. Required.
-        description (str): Human-readable explanation of what this step does.
+        name: Unique display name for this build step. Required.
+        description: Human-readable explanation of what this step does.
     """
 
     name: str
@@ -179,36 +179,26 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
 
     @final
     async def on_started(self) -> None:
-        """Record the build step start timestamp when the step transitions to running."""
         self.datetime_started = datetime.now()
 
     @final
     async def on_running(self) -> None:
-        """Delegate execution to the build() method with the current parameters."""
         await self.build(parameters=self.parameters)
 
     @final
     async def on_completed(self) -> None:
-        """Record the build step completion timestamp when the step finishes successfully."""
         self.datetime_stopped = datetime.now()
 
     @final
     async def on_stopped(self) -> None:
-        """Record the build step stop timestamp when the step is halted before completion."""
         self.datetime_stopped = datetime.now()
 
     @final
     async def on_cancelled(self) -> None:
-        """Record the build step cancellation timestamp when the step is cancelled."""
         self.datetime_stopped = datetime.now()
 
     @final
     async def on_errored(self, error: AgentGeneratorBuildStepRuntimeError) -> None:
-        """Record the build step error timestamp and log the error when the step fails.
-
-        Args:
-            error: The structured runtime error describing the build failure.
-        """
         self.datetime_stopped = datetime.now()
         self.logger.error(error)
 
@@ -349,9 +339,8 @@ class BaseAgentGenerator(ComponentLifeCycle):
     compiled artifacts, etc.) to later ones.
 
     Attributes:
-        agent_generator_build_steps (list[type[BaseAgentGeneratorBuildStep]]): Ordered
-            sequence of build step classes. Declared at the class level and converted
-            to instances in __init__.
+        agent_generator_build_steps: Ordered sequence of build step classes. Declared
+            at the class level and converted to instances in __init__.
     """
 
     agent_generator_build_steps: list[type[BaseAgentGeneratorBuildStep]] = None
@@ -492,7 +481,6 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
     @final
     async def on_running(self) -> None:
-        """Drive the build pipeline by resetting and executing each build step in sequence."""
         # Reset each build step before running them in case the agent generator is
         # started more than once.
         for agent_generator_build_step in self.agent_generator_build_steps:

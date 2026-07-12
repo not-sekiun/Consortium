@@ -29,9 +29,9 @@ class BaseAgentType:
     lookup during task dispatch.
 
     Attributes:
-        name (str): Unique identifier for this agent type. Required and must be non-empty.
-        agent_capabilities (set[type[BaseAgentCapability]] | None): The capability
-            classes this agent type exposes. Converted to a name-keyed dict at class
+        name: Unique identifier for this agent type. Required and must be non-empty.
+        agent_capabilities: The capability classes this agent type exposes. Declared
+            as a set at the class level; converted to a name-keyed dict at class
             definition time.
     """
 

@@ -6,21 +6,12 @@ from consortium.framework.signal_exceptions._component_signal_exceptions import 
 
 
 class AgentGeneratorStartError(ComponentStartError):
-    """
-    Raise this exception to signal that an error occurred while attempting to start the
-    agent generator to abort the start process.
-    """
+    """Raise from a start hook to abort starting the agent generator with an error."""
 
 
 class AgentGeneratorBuildStepRuntimeError(ComponentRuntimeError):
-    """
-    Raise this exception to signal that an error occurred while the agent generator was
-    building the agent.
-    """
+    """Raise from a build step to signal that an error occurred while building the agent."""
 
 
 class AgentGeneratorStopError(ComponentStopError):
-    """
-    Raise this exception to signal that an error occurred while attempting to stop the
-    agent generator and to abort the stop process.
-    """
+    """Raise from a stop hook to abort stopping the agent generator with an error."""

@@ -40,30 +40,29 @@ class BaseEventHook(ComponentMetadata):
     implement the required event hook methods.
 
     Attributes:
-        event_hook_id (uuid.UUID): Unique framework-wide identifier for this event
-            hook instance, generated as a UUID4.
-        name (str): Human-readable name for identifying this event hook.
-        description (str): Brief description of the event hook's purpose and
-            functionality.
-        authors (set[str]): Set of authors associated with this event hook.
-        version (Version): Version of the event hook, specified using a valid PEP 440
-            version string.
-        compatible_framework_version (SpecifierSet): Framework version specifier
-            defining which versions of Consortium this event hook is compatible with.
-        event_types (set[EventType]): Set of event types that this hook subscribes to
-            and will be triggered by.
-        component_dependencies (set[str]): Version-pinned dependencies on other
-            framework components, defined using PEP 440 specifiers.
-        third_party_dependencies (set[str]): Third-party library dependencies required
-            for this event hook to function.
-        event_hook_project_folder (Path): Filesystem path to the project directory
-            containing this event hook's source code.
-        environment (SimpleNamespace): Namespace for storing hook-specific state shared
-            across event invocations without naming conflicts.
-        services (SimpleNamespace): Namespace providing programmatic access to
-            server-level framework services.
-        logger (loguru.Logger): Event-hook-specific logger instance, automatically
-            tagged with the hook's name and ID for traceability in logs.
+        event_hook_id: Unique framework-wide identifier for this event hook instance,
+            generated as a UUID4.
+        name: Human-readable name for identifying this event hook.
+        description: Brief description of the event hook's purpose and functionality.
+        authors: Set of authors associated with this event hook.
+        version: Version of the event hook, specified using a valid PEP 440 version
+            string.
+        compatible_framework_version: Framework version specifier defining which
+            versions of Consortium this event hook is compatible with.
+        event_types: Set of event types that this hook subscribes to and will be
+            triggered by.
+        component_dependencies: Version-pinned dependencies on other framework
+            components, defined using PEP 440 specifiers.
+        third_party_dependencies: Third-party library dependencies required for this
+            event hook to function.
+        event_hook_project_folder: Filesystem path to the project directory containing
+            this event hook's source code.
+        environment: Namespace for storing hook-specific state shared across event
+            invocations without naming conflicts.
+        services: Namespace providing programmatic access to server-level framework
+            services.
+        logger: Event-hook-specific logger instance, automatically tagged with the
+            hook's name and ID for traceability in logs.
     """
 
     _METADATA_MODEL = _EventHookModel
@@ -84,11 +83,11 @@ class BaseEventHook(ComponentMetadata):
     event_types: set[EventType] | None = None
 
     def __init__(self):
-        self.event_hook_id = uuid.uuid4()
+        self.event_hook_id: uuid.UUID = uuid.uuid4()
         self.logger = logger.bind(
             logger_name=f"Event Hook - {self}",
         )
-        self.environment = types.SimpleNamespace()
+        self.environment: types.SimpleNamespace = types.SimpleNamespace()
 
         super().__init__()
 

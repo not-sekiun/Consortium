@@ -76,12 +76,12 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
     defaults and running cross-field validation before instantiation.
 
     Attributes:
-        listener (type[BaseListener]): The listener class this template instantiates
-            when creating a new listener.
-        listener_type (type[BaseListenerType]): The listener type that identifies
-            which agent types are compatible with listeners created from this template.
-        options (set[Options]): Configuration options accepted when creating a listener
-            from this template. Converted to a name-keyed dict at class definition time.
+        listener: The listener class this template instantiates when creating a new
+            listener.
+        listener_type: The listener type that identifies which agent types are
+            compatible with listeners created from this template.
+        options: Configuration options accepted when creating a listener from this
+            template. Converted to a name-keyed dict at class definition time.
         validating_function: Optional single-argument callable that validates the full
             set of resolved option values before listener creation.
     """

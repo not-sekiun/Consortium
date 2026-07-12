@@ -6,12 +6,12 @@ from consortium.framework.signal_exceptions._component_signal_exceptions import 
 
 
 class PluginStartError(ComponentStartError):
-    pass
+    """Raise from a start hook to abort starting the plugin with an error."""
 
 
 class PluginRuntimeError(ComponentRuntimeError):
-    pass
+    """Raise from a runtime hook to signal that an error occurred while the plugin ran."""
 
 
 class PluginStopError(ComponentStopError):
-    pass
+    """Raise from a stop hook to abort stopping the plugin with an error."""

@@ -39,9 +39,10 @@ class _SingleValueParametersModel(BaseModel):
 
 
 class SingleValueOption(BaseOption):
-    """
-    An option that can only have a single value. This single value can only be of type
-    `str`, `int`, `float`, or `bool`.
+    """An option that holds a single scalar value.
+
+    The value is restricted to one of the primitive types `str`, `int`, `float`, or
+    `bool`.
 
     Attributes:
         option_type: The type of the option.
@@ -123,15 +124,17 @@ class SingleValueOption(BaseOption):
         validating_regex: str | None = None,
         validating_function: Callable[[Primitive], None] | None = None,
     ):
-        self.value_type = value_type
-        self.minimum_length = minimum_length
-        self.maximum_length = maximum_length
-        self.greater_than = greater_than
-        self.less_than = less_than
-        self.greater_than_or_equal_to = greater_than_or_equal_to
-        self.less_than_or_equal_to = less_than_or_equal_to
-        self.validating_regex = validating_regex
-        self.validating_function = validating_function
+        self.value_type: PrimitiveType | None = value_type
+        self.minimum_length: int | None = minimum_length
+        self.maximum_length: int | None = maximum_length
+        self.greater_than: int | float | None = greater_than
+        self.less_than: int | float | None = less_than
+        self.greater_than_or_equal_to: int | float | None = greater_than_or_equal_to
+        self.less_than_or_equal_to: int | float | None = less_than_or_equal_to
+        self.validating_regex: str | None = validating_regex
+        self.validating_function: Callable[[Primitive], None] | None = (
+            validating_function
+        )
 
         try:
             _SingleValueParametersModel(
@@ -182,6 +185,17 @@ class SingleValueOption(BaseOption):
         )
 
     def validate_value(self, value: Primitive) -> None:
+        """Validate a candidate value against this option's constraints.
+
+        Checks the value's data type followed by any configured numeric range, string
+        length, regex, and custom validating function constraints.
+
+        Args:
+            value: The value to validate.
+
+        Raises:
+            OptionValueValidationError: If the value violates any configured constraint.
+        """
         validate_value_data_type(
             self.name,
             value,
@@ -213,6 +227,12 @@ class SingleValueOption(BaseOption):
         )
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the option and its constraints to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the option's name, description, required flag,
+            default value, value type, and every configured constraint.
+        """
         return {
             "name": self.name,
             "description": self.description,

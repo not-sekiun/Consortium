@@ -2,9 +2,9 @@ from enum import StrEnum
 
 
 class OptionType(StrEnum):
-    """
-    An enum representing the different types of options that can be created. Every
-    option object will have an `option_type` class attribute that is set to one of the
+    """Identifies the different types of options that can be created.
+
+    Every option object exposes an `option_type` class attribute set to one of the
     variants of this enum.
 
     Attributes:

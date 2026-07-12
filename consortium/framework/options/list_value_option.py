@@ -45,10 +45,10 @@ class _ListValueParametersModel(BaseModel):
 
 
 class ListValueOption(BaseOption[list[Primitive]]):
-    """
-    An option that can hold multiple values. Each element of the option can only be
-    of type `str`, `int`, `float`, or `bool`. This type of the elements may be
-    either homogeneous or heterogeneous.
+    """An option that holds a list of scalar values.
+
+    Each element is restricted to one of the primitive types `str`, `int`, `float`,
+    or `bool`, and the elements may be either homogeneous or heterogeneous.
 
     Attributes:
         option_type: The type of the option.
@@ -171,18 +171,20 @@ class ListValueOption(BaseOption[list[Primitive]]):
         validating_regex: str | None = None,
         validating_function: Callable[[Primitive], None] | None = None,
     ):
-        self.allow_duplicates = allow_duplicates
-        self.value_type = value_type
-        self.minimum_length = minimum_length
-        self.maximum_length = maximum_length
-        self.greater_than = greater_than
-        self.less_than = less_than
-        self.greater_than_or_equal_to = greater_than_or_equal_to
-        self.less_than_or_equal_to = less_than_or_equal_to
-        self.minimum_elements = minimum_elements
-        self.maximum_elements = maximum_elements
-        self.validating_regex = validating_regex
-        self.validating_function = validating_function
+        self.allow_duplicates: bool = allow_duplicates
+        self.value_type: PrimitiveType | None = value_type
+        self.minimum_length: int | None = minimum_length
+        self.maximum_length: int | None = maximum_length
+        self.greater_than: int | float | None = greater_than
+        self.less_than: int | float | None = less_than
+        self.greater_than_or_equal_to: int | float | None = greater_than_or_equal_to
+        self.less_than_or_equal_to: int | float | None = less_than_or_equal_to
+        self.minimum_elements: int | None = minimum_elements
+        self.maximum_elements: int | None = maximum_elements
+        self.validating_regex: str | None = validating_regex
+        self.validating_function: Callable[[Primitive], None] | None = (
+            validating_function
+        )
 
         try:
             _ListValueParametersModel(
@@ -233,6 +235,20 @@ class ListValueOption(BaseOption[list[Primitive]]):
         )
 
     def validate_value(self, value: list[Primitive]) -> None:
+        """Validate a candidate list value against this option's constraints.
+
+        Checks that the value is a list, applies any element duplication and list
+        length constraints, then validates each element's data type along with any
+        configured numeric range, string length, regex, and custom validating function
+        constraints.
+
+        Args:
+            value: The list value to validate.
+
+        Raises:
+            OptionValueValidationError: If the value or any of its elements violates a
+                configured constraint.
+        """
         validate_value_data_type(
             self.name,
             value,
@@ -284,6 +300,12 @@ class ListValueOption(BaseOption[list[Primitive]]):
     def to_json(
         self,
     ) -> dict[str, Primitive | list[Primitive] | None]:
+        """Serialize the option and its constraints to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the option's name, description, required flag,
+            default value, and every configured constraint.
+        """
         return {
             "name": self.name,
             "description": self.description,

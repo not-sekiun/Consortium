@@ -11,8 +11,8 @@ class Payload:
     callers do not need to branch on the data source type.
 
     Attributes:
-        is_stream (bool): True if the payload is backed by an async iterable rather
-            than an in-memory byte sequence.
+        is_stream: True if the payload is backed by an async iterable rather than an
+            in-memory byte sequence.
     """
 
     def __init__(self, payload: AsyncIterable[bytes] | bytes | bytearray):
@@ -25,6 +25,7 @@ class Payload:
         Raises:
             TypeError: If payload is not bytes, bytearray, or AsyncIterable[bytes].
         """
+        self.is_stream: bool
         if isinstance(payload, bytes):
             self._payload = payload
             self.is_stream = False
@@ -99,14 +100,13 @@ class TaskLaunchMessageModel(BaseModel):
     for capabilities that require file or binary input.
 
     Attributes:
-        task_id (UUID4): Unique identifier for the task being launched.
-        command (str): The name of the capability command the agent should execute.
-        arguments (dict[str, JsonValue]): Command arguments required to execute the
-            capability. Must be JSON-serializable.
-        data (dict[str, JsonValue]): Supplementary data associated with the task.
-            Must be JSON-serializable.
-        payload (Payload | None): Optional binary payload accompanying the task,
-            such as a file to be processed by the agent.
+        task_id: Unique identifier for the task being launched.
+        command: The name of the capability command the agent should execute.
+        arguments: Command arguments required to execute the capability. Must be
+            JSON-serializable.
+        data: Supplementary data associated with the task. Must be JSON-serializable.
+        payload: Optional binary payload accompanying the task, such as a file to be
+            processed by the agent.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -122,7 +122,7 @@ class TaskLaunchMessageModel(BaseModel):
 
         Returns:
             A dictionary containing task_id, command, arguments, and data. The payload
-            field is omitted since binary data is not JSON-serializable.
+                field is omitted since binary data is not JSON-serializable.
         """
         return {
             "task_id": str(self.task_id),
@@ -139,11 +139,10 @@ class TaskInputMessageModel(BaseModel):
     launch message has been sent.
 
     Attributes:
-        task_id (UUID4): Unique identifier of the task receiving the input.
-        data (dict[str, JsonValue]): Structured input data for the running task.
-            Must be JSON-serializable.
-        payload (Payload | None): Optional binary payload accompanying the input,
-            such as a file chunk or continuation data.
+        task_id: Unique identifier of the task receiving the input.
+        data: Structured input data for the running task. Must be JSON-serializable.
+        payload: Optional binary payload accompanying the input, such as a file chunk
+            or continuation data.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -152,12 +151,12 @@ class TaskInputMessageModel(BaseModel):
     data: dict[str, JsonValue] = {}
     payload: Annotated[Payload | None, BeforeValidator(_wrap_payload)] = None
 
-    def to_json(self):
+    def to_json(self) -> dict[str, JsonValue]:
         """Serialize the message to a JSON-compatible dictionary, excluding the binary payload.
 
         Returns:
             A dictionary containing the task_id and data. The payload field is omitted
-            since binary data is not JSON-serializable.
+                since binary data is not JSON-serializable.
         """
         return {
             "task_id": str(self.task_id),
@@ -172,13 +171,12 @@ class TaskOutputMessageModel(BaseModel):
     structured output data or binary artifacts produced during execution.
 
     Attributes:
-        task_id (UUID4): Unique identifier of the task that produced this output.
-        success (bool): True if the task completed successfully, False on failure.
-        message (str): Human-readable summary of the task result or error description.
-        data (dict[str, JsonValue]): Structured output data from the task.
-            Must be JSON-serializable.
-        payload (Payload | None): Optional binary artifact produced by the task,
-            such as a captured file or command output blob.
+        task_id: Unique identifier of the task that produced this output.
+        success: True if the task completed successfully, False on failure.
+        message: Human-readable summary of the task result or error description.
+        data: Structured output data from the task. Must be JSON-serializable.
+        payload: Optional binary artifact produced by the task, such as a captured
+            file or command output blob.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -189,12 +187,12 @@ class TaskOutputMessageModel(BaseModel):
     data: dict[str, JsonValue] = {}
     payload: Annotated[Payload | None, BeforeValidator(_wrap_payload)] = None
 
-    def to_json(self):
+    def to_json(self) -> dict[str, JsonValue]:
         """Serialize the message to a JSON-compatible dictionary, excluding the binary payload.
 
         Returns:
             A dictionary containing task_id, success, message, and data. The payload
-            field is omitted since binary data is not JSON-serializable.
+                field is omitted since binary data is not JSON-serializable.
         """
         return {
             "task_id": str(self.task_id),

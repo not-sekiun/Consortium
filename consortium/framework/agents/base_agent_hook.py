@@ -22,8 +22,8 @@ class BaseAgentHook(_AgentCommunicator):
     same agent-and-task communication interface provided by _AgentCommunicator.
 
     Attributes:
-        execution_triggers (AgentLifecycleEvent): The lifecycle event that causes this
-            hook to be invoked automatically by the framework.
+        execution_triggers: The lifecycle event that causes this hook to be invoked
+            automatically by the framework.
     """
 
     execution_triggers: AgentLifecycleEvent

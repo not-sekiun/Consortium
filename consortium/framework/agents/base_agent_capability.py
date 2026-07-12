@@ -110,23 +110,23 @@ class BaseAgentCapability(_AgentCommunicator):
     validates all class attributes at subclass definition time via __init_subclass__.
 
     Attributes:
-        name (str): Unique command identifier used to route incoming task messages.
+        name: Unique command identifier used to route incoming task messages.
             Required and must be non-empty.
-        description (str): Human-readable explanation of what this capability does.
-        authors (set[str]): Identifiers for the capability's authors.
-        requires_admin (bool): Whether elevated privileges are required on the target
+        description: Human-readable explanation of what this capability does.
+        authors: Identifiers for the capability's authors.
+        requires_admin: Whether elevated privileges are required on the target
             system to execute this capability.
-        supported_oses (set[SupportedOS]): Platforms this capability supports.
-            Defaults to {SupportedOS.ANY} if not declared.
-        is_atomic (bool): Whether this capability maps to a single MITRE ATT&CK step.
-        options (set[...]): Configuration options accepted by this capability. Declared
-            as a set at the class level; converted to a name-keyed dict at definition time.
-        mitre_attack_techniques (set[str]): MITRE ATT&CK technique IDs associated with
-            this capability. Resolved to MitreAttackTechnique objects at definition time.
+        supported_oses: Platforms this capability supports. Defaults to
+            {SupportedOS.ANY} if not declared.
+        is_atomic: Whether this capability maps to a single MITRE ATT&CK step.
+        options: Configuration options accepted by this capability. Declared as a set
+            at the class level; converted to a name-keyed dict at definition time.
+        mitre_attack_techniques: MITRE ATT&CK technique IDs associated with this
+            capability. Resolved to MitreAttackTechnique objects at definition time.
         validating_function: Optional single-argument callable that validates the full
             resolved option set before execution.
-        launch_message (TaskLaunchMessageModel | None): The message sent to the agent on
-            the most recent execute() call; set by execute() after on_launch completes.
+        launch_message: The message sent to the agent on the most recent execute()
+            call; set by execute() after on_launch completes.
     """
 
     name: str
@@ -276,7 +276,7 @@ class BaseAgentCapability(_AgentCommunicator):
         self,
         percent_complete: float = 0,
         message: str | None = None,
-        data: dict[str, Any] | None = None,
+        data: dict[str, JsonValue] | None = None,
     ):
         """Report a partial progress update for the currently running task.
 
@@ -289,7 +289,7 @@ class BaseAgentCapability(_AgentCommunicator):
             percent_complete=percent_complete, message=message, data=data
         )
 
-    def emit_success(self, message: str, data: dict[str, Any] | None = None):
+    def emit_success(self, message: str, data: dict[str, JsonValue] | None = None):
         """Emit a SUCCESS event on the current task's event stream.
 
         Args:
@@ -300,7 +300,7 @@ class BaseAgentCapability(_AgentCommunicator):
             event_type=AgentTaskEventType.SUCCESS, message=message, data=data or {}
         )
 
-    def emit_info(self, message: str, data: dict[str, Any] | None = None):
+    def emit_info(self, message: str, data: dict[str, JsonValue] | None = None):
         """Emit an INFO event on the current task's event stream.
 
         Args:
@@ -311,7 +311,7 @@ class BaseAgentCapability(_AgentCommunicator):
             event_type=AgentTaskEventType.INFO, message=message, data=data or {}
         )
 
-    def emit_failure(self, message: str, data: dict[str, Any] | None = None):
+    def emit_failure(self, message: str, data: dict[str, JsonValue] | None = None):
         """Emit a FAILURE event on the current task's event stream.
 
         Args:
@@ -322,7 +322,7 @@ class BaseAgentCapability(_AgentCommunicator):
             event_type=AgentTaskEventType.FAILURE, message=message, data=data or {}
         )
 
-    def emit_artifact(self, message: str, data: dict[str, Any] | None = None):
+    def emit_artifact(self, message: str, data: dict[str, JsonValue] | None = None):
         """Emit an ARTIFACT event on the current task's event stream.
 
         Used to signal that the capability has produced a file, binary blob, or

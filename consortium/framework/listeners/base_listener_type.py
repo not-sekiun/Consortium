@@ -21,13 +21,13 @@ class BaseListenerType:
     name at the class level; the framework validates it at class definition time.
 
     Attributes:
-        name (str): Unique identifier for this listener type. Required and must be
-            non-empty.
-        registered_compatible_agent_types (set): Agent type names that have been
-            registered as compatible with this listener type at runtime.
+        name: Unique identifier for this listener type. Required and must be non-empty.
+        registered_compatible_agent_types: Agent type names that have been registered
+            as compatible with this listener type at runtime.
     """
 
     name: str
+    registered_compatible_agent_types: set[str]
 
     def __init_subclass__(cls, **kwargs):
         cls.registered_compatible_agent_types = set()

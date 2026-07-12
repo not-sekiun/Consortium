@@ -54,27 +54,25 @@ class BaseListener(ComponentLifeCycle):
     inherit from this class and implement the required base listener hook methods.
 
     Attributes:
-        listener_id (uuid.UUID): Unique framework-wide identifier for this listener
-            instance, generated as a UUID4.
-        name (str): Human-readable name for identifying this listener instance.
-        description (str): Brief description of the listener's purpose and functionality.
-        endpoint (str): Network endpoint identifier, typically a socket address, that
+        listener_id: Unique framework-wide identifier for this listener instance,
+            generated as a UUID4.
+        name: Human-readable name for identifying this listener instance.
+        description: Brief description of the listener's purpose and functionality.
+        endpoint: Network endpoint identifier, typically a socket address, that
             uniquely identifies where this listener can be reached.
-        listener_type (BaseListenerType): Type descriptor that defines which agent types
-            are compatible with this listener.
-        parameters (dict[str, Any]): Configuration parameters used to customize the
-            listener's behavior. Available parameters are defined in the associated
-            listener template.
-        datetime_created (datetime): Timestamp recording when this listener instance
-            was created.
-        environment (SimpleNamespace): Namespace for storing listener-specific state
-            shared between user-defined methods without naming conflicts.
-        connected_agents_service (ConnectedAgentsService): Internal manager for handling
-            the lifecycles and operations of agents connected to this listener.
-        logger (loguru.Logger): Listener-specific logger instance, automatically tagged
-            with the listener's name and ID for easy identification in logs.
-        creating_listener_template (BaseListenerTemplate): Reference to the listener
-            template that created this instance. Set automatically during creation.
+        listener_type: Type descriptor that defines which agent types are compatible
+            with this listener.
+        parameters: Configuration parameters used to customize the listener's behavior.
+            Available parameters are defined in the associated listener template.
+        datetime_created: Timestamp recording when this listener instance was created.
+        environment: Namespace for storing listener-specific state shared between
+            user-defined methods without naming conflicts.
+        connected_agents_service: Internal manager for handling the lifecycles and
+            operations of agents connected to this listener.
+        logger: Listener-specific logger instance, automatically tagged with the
+            listener's name and ID for easy identification in logs.
+        creating_listener_template: Reference to the listener template that created
+            this instance. Set automatically during creation.
     """
 
     creating_listener_template: BaseListenerTemplate
@@ -135,15 +133,15 @@ class BaseListener(ComponentLifeCycle):
                 ),
             ) from None
 
-        self.name = name
-        self.description = description
-        self.endpoint = endpoint
-        self.parameters = parameters
+        self.name: str = name
+        self.description: str = description
+        self.endpoint: str = endpoint
+        self.parameters: dict[str, Any] = parameters
 
-        self.datetime_created = datetime.now()
-        self.listener_id = uuid.uuid4()
-        self.environment = SimpleNamespace()
-        self.connected_agents_service = ConnectedAgentsService(
+        self.datetime_created: datetime = datetime.now()
+        self.listener_id: uuid.UUID = uuid.uuid4()
+        self.environment: SimpleNamespace = SimpleNamespace()
+        self.connected_agents_service: ConnectedAgentsService = ConnectedAgentsService(
             listener_id=self.listener_id,
         )
         self.logger = logger.bind(

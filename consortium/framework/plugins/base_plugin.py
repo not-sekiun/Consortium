@@ -48,24 +48,24 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     the required lifecycle hook methods.
 
     Attributes:
-        plugin_id (uuid.UUID): Unique framework-wide identifier for this plugin
-            instance, generated as a UUID4.
-        name (str): Human-readable name for identifying this plugin.
-        description (str): Brief description of the plugin's purpose and functionality.
-        version (Version): Version of this plugin, specified as a PEP 440 version string.
-        compatible_framework_version (SpecifierSet): Framework version specifier defining
-            which versions of Consortium this plugin is compatible with.
-        authors (set[str]): Set of authors associated with this plugin.
-        component_dependencies (set[str]): Version-pinned dependencies on other framework
+        plugin_id: Unique framework-wide identifier for this plugin instance,
+            generated as a UUID4.
+        name: Human-readable name for identifying this plugin.
+        description: Brief description of the plugin's purpose and functionality.
+        version: Version of this plugin, specified as a PEP 440 version string.
+        compatible_framework_version: Framework version specifier defining which
+            versions of Consortium this plugin is compatible with.
+        authors: Set of authors associated with this plugin.
+        component_dependencies: Version-pinned dependencies on other framework
             components, defined using PEP 440 specifiers.
-        third_party_dependencies (set[str]): Third-party library dependencies required
-            for this plugin to function.
-        autostart (bool): Whether the framework should start this plugin automatically
-            on server startup. Defaults to True.
-        environment (SimpleNamespace): Namespace for storing plugin-specific state shared
-            across lifecycle hook calls without naming conflicts.
-        logger (loguru.Logger): Plugin-specific logger instance, automatically tagged
-            with the plugin's name and ID for easy identification in logs.
+        third_party_dependencies: Third-party library dependencies required for this
+            plugin to function.
+        autostart: Whether the framework should start this plugin automatically on
+            server startup. Defaults to True.
+        environment: Namespace for storing plugin-specific state shared across
+            lifecycle hook calls without naming conflicts.
+        logger: Plugin-specific logger instance, automatically tagged with the
+            plugin's name and ID for easy identification in logs.
     """
 
     _METADATA_MODEL = _PluginModel
@@ -86,9 +86,9 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     autostart: bool = True
 
     def __init__(self) -> None:
-        self.plugin_id = uuid.uuid4()
-        self.environment = types.SimpleNamespace()
-        self.logger = loguru.logger.bind(
+        self.plugin_id: uuid.UUID = uuid.uuid4()
+        self.environment: types.SimpleNamespace = types.SimpleNamespace()
+        self.logger: loguru.Logger = loguru.logger.bind(
             logger_name=f"Plugin - {self}",
             logger_type=LoggerType.PLUGIN_LOGGER,
         )

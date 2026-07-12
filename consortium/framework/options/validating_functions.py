@@ -22,10 +22,7 @@ from consortium.framework.signal_exceptions.options_signal_exceptions import (
 
 
 def validate_is_datetime(value: str):
-    """
-    Validates if the provided value to the option is a valid datetime string in ISO
-    8601 format.
-    """
+    """Validate that the value is a valid datetime string in ISO 8601 format."""
 
     try:
         datetime.fromisoformat(value)
@@ -36,9 +33,9 @@ def validate_is_datetime(value: str):
 
 
 def validate_is_uuid4(value: str):
-    """
-    Validates if the provided value to the option is a valid UUID4 string. Note that
-    non-hyphenated UUID4 strings are considered invalid.
+    """Validate that the value is a valid, hyphenated UUID4 string.
+
+    Non-hyphenated UUID4 strings are considered invalid.
     """
 
     try:
@@ -58,9 +55,7 @@ def validate_is_uuid4(value: str):
 
 
 def validate_is_ip_address(value: str):
-    """
-    Validates if the provided value to the option is a valid IP address.
-    """
+    """Validate that the value is a valid IP address."""
 
     try:
         ipaddress.ip_address(value)
@@ -71,9 +66,7 @@ def validate_is_ip_address(value: str):
 
 
 def validate_is_cidr(value: str):
-    """
-    Validates if the provided value to the option is a valid CIDR subnet.
-    """
+    """Validate that the value is a valid CIDR subnet."""
 
     try:
         ipaddress.ip_network(value)
@@ -84,10 +77,7 @@ def validate_is_cidr(value: str):
 
 
 def validate_is_url(value: str):
-    """
-    Validates if the provided value to the option is a valid URL with a defined scheme
-    and network location.
-    """
+    """Validate that the value is a valid URL with a defined scheme and network location."""
 
     try:
         parsed = urlparse(value)
@@ -105,9 +95,7 @@ def validate_is_url(value: str):
 
 
 def validate_is_http_url(value: str):
-    """
-    Validates if the provided value to the option is a valid HTTP or HTTPS URL.
-    """
+    """Validate that the value is a valid HTTP or HTTPS URL."""
 
     parsed = urlparse(value)
     if parsed.scheme not in ("http", "https") or not parsed.netloc:
@@ -117,9 +105,7 @@ def validate_is_http_url(value: str):
 
 
 def validate_is_url_path(value: str):
-    """
-    Validates if the provided value to the option is a valid URL endpoint path.
-    """
+    """Validate that the value is a valid URL endpoint path."""
 
     if not value.startswith("/"):
         raise OptionValueValidationError("The URL path provided must start with '/'")
@@ -145,10 +131,7 @@ def validate_is_url_path(value: str):
 
 
 def validate_is_filesystem_path_and_exists(value: str):
-    """
-    Validates if the provided value to the option is a valid filesystem path and that
-    the path exists.
-    """
+    """Validate that the value is a valid filesystem path that exists."""
 
     try:
         pathlib.Path(value)
@@ -163,10 +146,7 @@ def validate_is_filesystem_path_and_exists(value: str):
 
 
 def validate_is_file_and_exists(value: str):
-    """
-    Validates if the provided value to the option is a valid filesystem path and that
-    the path is a file that exists.
-    """
+    """Validate that the value is a valid filesystem path to a file that exists."""
 
     try:
         pathlib.Path(value)
@@ -181,10 +161,7 @@ def validate_is_file_and_exists(value: str):
 
 
 def validate_is_directory_and_exists(value: str):
-    """
-    Validates if the provided value to the option is a valid filesystem path and that
-    the path is a directory that exists.
-    """
+    """Validate that the value is a valid filesystem path to a directory that exists."""
 
     try:
         pathlib.Path(value)

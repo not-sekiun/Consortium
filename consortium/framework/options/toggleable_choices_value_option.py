@@ -17,12 +17,11 @@ class _ToggleableChoicesValueParametersModel(BaseModel):
 
 
 class ToggleableChoicesValueOption(BaseOption[dict[str, bool]]):
-    """
-    An option that allows the user to toggle on (`True`) or off (`False`) a set of
-    available values. The type of each toggleable choice is restricted to being a
-    `str`. Multiple choices can be toggled on at the same time. The value set must be a
-    dictionary with the keys being the available values and the values being a boolean
-    indicating whether the choice is toggled on or off.
+    """An option whose value toggles each of a set of string choices on or off.
+
+    Each toggleable choice is restricted to type `str`, and multiple choices can be
+    toggled on at the same time. The value is a dictionary mapping each available
+    value to a boolean indicating whether that choice is toggled on or off.
 
     Attributes:
         option_type: The type of the option.
@@ -60,7 +59,7 @@ class ToggleableChoicesValueOption(BaseOption[dict[str, bool]]):
         required: bool = True,
         default_value: dict[str, bool] | None = None,
     ):
-        self.available_values = available_values
+        self.available_values: set[str] = available_values
 
         try:
             _ToggleableChoicesValueParametersModel(
@@ -95,6 +94,18 @@ class ToggleableChoicesValueOption(BaseOption[dict[str, bool]]):
         )
 
     def validate_value(self, value: dict[str, bool]) -> None:
+        """Validate a candidate toggle mapping against this option's available values.
+
+        Checks that the value is a dictionary whose keys are all available values and
+        whose values are all booleans.
+
+        Args:
+            value: The toggle mapping to validate.
+
+        Raises:
+            OptionValueValidationError: If the value is not a dictionary, contains an
+                unknown key, or maps a key to a non-boolean value.
+        """
         if not isinstance(value, dict):
             raise OptionValueValidationFrameworkError(
                 f"Value '{value}' for option '{self.name}' must be a dictionary.",
@@ -113,6 +124,12 @@ class ToggleableChoicesValueOption(BaseOption[dict[str, bool]]):
                 )
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the option and its available values to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the option's name, description, required flag,
+            default value, and available values.
+        """
         return {
             "name": self.name,
             "description": self.description,

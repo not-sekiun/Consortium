@@ -18,10 +18,10 @@ class _ChoiceValueParametersModel(BaseModel):
 
 
 class ChoiceValueOption(BaseOption[Primitive]):
-    """
-    An option that allows the user to choose from a set of available values. The type of
-    each choice is restricted to being a `str`, `int`, `float`, or `bool`. Only one
-    choice can be selected at a time.
+    """An option whose value is a single choice from a fixed set of available values.
+
+    Each available choice is restricted to one of the primitive types `str`, `int`,
+    `float`, or `bool`, and only one choice can be selected at a time.
 
     Attributes:
         option_type: The type of the option.
@@ -75,7 +75,7 @@ class ChoiceValueOption(BaseOption[Primitive]):
         required: bool = True,
         default_value: Primitive | None = None,
     ):
-        self.available_values = available_values
+        self.available_values: set[Primitive] = available_values
 
         try:
             _ChoiceValueParametersModel(
@@ -107,6 +107,14 @@ class ChoiceValueOption(BaseOption[Primitive]):
         )
 
     def validate_value(self, value: Primitive) -> None:
+        """Validate that a candidate value is one of the option's available values.
+
+        Args:
+            value: The value to validate.
+
+        Raises:
+            OptionValueValidationError: If the value is not one of the available values.
+        """
         if value not in self.available_values:
             raise OptionValueValidationFrameworkError(
                 f"Value `{value}` for option `{self.name}` is not one of its available "
@@ -114,6 +122,12 @@ class ChoiceValueOption(BaseOption[Primitive]):
             )
 
     def to_json(self) -> dict[str, JsonValue]:
+        """Serialize the option and its available values to a JSON-compatible dictionary.
+
+        Returns:
+            A dictionary containing the option's name, description, required flag,
+            default value, and available values.
+        """
         return {
             "name": self.name,
             "description": self.description,

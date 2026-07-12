@@ -35,12 +35,12 @@ class BaseOption[ValueType]:
         # Assign all values to self before performing validation because the validation
         # function might make reference to the provided parameters by accessing them
         # through self.
-        self.name = name
-        self.description = description
-        self.required = required
-        self.default_value = default_value
+        self.name: str = name
+        self.description: str = description
+        self.required: bool = required
+        self.default_value: ValueType | None = default_value
 
-        self._value = None
+        self._value: ValueType | None = None
 
         self._validate_option_configuration()
 
