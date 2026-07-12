@@ -51,7 +51,7 @@ class RestAPIConnectionError(RestAPIAuthenticationError):
         super().__init__(
             f"Failed to login to the server over its REST API at "
             f"{remote_host}:{remote_port} as '{username}'. Could not establish a "
-            f"connection with the server.",
+            f"connection with the server's REST API.",
         )
 
 

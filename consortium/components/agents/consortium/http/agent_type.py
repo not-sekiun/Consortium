@@ -11,6 +11,8 @@ from consortium.framework.options import SingleValueOption
 from .agent_capabilities.cat import CatCapability
 from .agent_capabilities.cd import CdCapability
 from .agent_capabilities.download import DownloadCapability
+from .agent_capabilities.ls import LsCapability
+from .agent_capabilities.pwd import PwdCapability
 from .agent_capabilities.upload import UploadCapability
 
 authors = {"Sekiun (github.com/not-sekiun)"}
@@ -213,4 +215,6 @@ class AgentType(BaseAgentType):
         UploadCapability,
         CdCapability,
         CatCapability,
+        PwdCapability,
+        LsCapability,
     }

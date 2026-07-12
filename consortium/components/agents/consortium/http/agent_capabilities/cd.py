@@ -15,6 +15,15 @@ class CdCapability(BaseAgentCapability):
             description="Path to the file or directory to download.",
             required=True,
             value_type=str,
-        )
+        ),
+        SingleValueOption(
+            name="expand",
+            description=(
+                "Whether to expand environment variables in the provided path or not."
+            ),
+            required=False,
+            value_type=bool,
+            default_value=True,
+        ),
     }
     mitre_attack_techniques = {"T1083"}

