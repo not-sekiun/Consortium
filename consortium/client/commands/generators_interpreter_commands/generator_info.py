@@ -95,16 +95,17 @@ class GeneratorInfoCommand(BaseConnectedCommand):
             # Collate any errored build steps into a dedicated red panel shown at the
             # very bottom. When no build steps errored the panel is omitted entirely.
             errored_build_steps = [
-                build_step
-                for build_step in build_steps
+                (build_step_num + 1, build_step)
+                for build_step_num, build_step in enumerate(build_steps)
                 if build_step["status"]["error"]
             ]
             build_step_errors_panel = None
             if errored_build_steps:
                 build_step_errors_string = "\n\n".join(
-                    f"[bold white]{build_step['name']}:[/]\n"
+                    f"[bold white](#{build_step_num}) "
+                    f"{build_step['name']}:[/]\n"
                     f"{build_step['status']['error']['message']}"
-                    for build_step in errored_build_steps
+                    for build_step_num, build_step in errored_build_steps
                 )
                 build_step_errors_panel = Panel(
                     build_step_errors_string,
