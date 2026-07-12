@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 from consortium.framework._core.framework_exceptions.c2_types_framework_exceptions import (
     AgentTypeConfigurationParameterTypeError,
+    DuplicateAgentCapabilityNameError,
     EmptyAgentTypeNameError,
 )
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
@@ -59,6 +60,17 @@ class BaseAgentType:
             raise EmptyAgentTypeNameError(
                 agent_type_filepath=sys.modules[cls.__module__].__file__,
             )
+
+        # Check for duplicate agent capability names
+        seen = set()
+        for agent_capability in cls.agent_capabilities:
+            if agent_capability.name not in seen:
+                seen.add(agent_capability.name)
+            else:
+                raise DuplicateAgentCapabilityNameError(
+                    agent_type_filepath=sys.modules[cls.__module__].__file__,
+                    agent_capability_name=agent_capability.name,
+                )
 
         # Reassign agent_capabilities to be a dictionary mapping capability names to
         # capability types for easier usage.

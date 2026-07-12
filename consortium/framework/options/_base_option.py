@@ -1,5 +1,5 @@
 import sys
-from typing import TypeVar, get_type_hints
+from typing import get_type_hints
 
 from pydantic import BaseModel, JsonValue, ValidationError
 
@@ -10,8 +10,6 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
     OptionValueValidationError,
 )
 from consortium.framework.options.option_types import OptionType
-
-ValueType = TypeVar("ValueType")
 
 
 # Ignore validating the default value type here because each option type will

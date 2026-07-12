@@ -8,8 +8,6 @@ from consortium.framework.agents import (
     BaseAgentGeneratorBuildStep,
 )
 from consortium.framework.agents.agent_generator_utils import multiple_string_replace
-
-# TODO: Move framework exceptions to signals to be more explicit
 from consortium.framework.signal_exceptions import (
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorStartError,
@@ -33,7 +31,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                 {
                     'REMOTE_HOST = "127.0.0.1"': f"REMOTE_HOST = {repr(parameters['remote_host'])}",
                     "REMOTE_PORT = 1337": f"REMOTE_PORT = {repr(parameters['remote_port'])}",
-                    "SLEEP_TIME = 1": f"SLEEP_TIME = {repr(parameters['sleep_time'])}",
+                    "SLEEP_TIME = 1.0": f"SLEEP_TIME = {repr(parameters['sleep_time'])}",
                     "SLEEP_TIME_JITTER = 0.5": f"SLEEP_TIME_JITTER = {repr(parameters['sleep_time_jitter'])}",
                     'TASKS_URL_PATHS = ["/tasks"]': f"TASKS_URL_PATHS = {repr(parameters['tasks_url_paths'])}",
                     'RESULTS_URL_PATHS = ["/results"]': f"RESULTS_URL_PATHS = {repr(parameters['results_url_paths'])}",

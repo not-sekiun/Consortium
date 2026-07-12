@@ -64,4 +64,4 @@ class RestAPIOperationError(RestAPIError):
         self.message = message
         self.detail = detail
 
-        super().__init__(f"[{self.status_code}] {code}: {message}")
+        super().__init__(f"HTTP {self.status_code} ({code}): {message}")

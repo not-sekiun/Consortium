@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import JsonValue
 
+from consortium.framework.agents import BaseAgentTemplate
 from consortium.server.exceptions.service_exceptions.agent_templates_service_exceptions import (
     AgentTemplateLabelNotFoundError,
 )
-from consortium.server.models.agent_template_models import AgentTemplateModel
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
@@ -63,7 +63,7 @@ class Payload:
         )
 
     @property
-    def resolved_agent_template(self) -> AgentTemplateModel | None:
+    def resolved_agent_template(self) -> BaseAgentTemplate | None:
         """The live agent template that generated this payload, or `None` if it cannot
         be resolved.
 
@@ -106,7 +106,7 @@ class Payload:
         resolved_agent_template = self.resolved_agent_template
         resource_json["data"] = {
             **resource_json["data"],
-            "resolved_agent_template": resolved_agent_template.model_dump(mode="json")
+            "resolved_agent_template": resolved_agent_template.to_json()
             if resolved_agent_template is not None
             else None,
         }

@@ -28,6 +28,7 @@ from consortium.framework._core.framework_exceptions.agent_generators_framework_
     AgentGeneratorRuntimeError,
     AgentGeneratorStartError,
     AgentGeneratorStopError,
+    DuplicateAgentGeneratorBuildStepNameError,
     MissingAgentGeneratorBuildStepConfigurationParameterError,
     MissingAgentGeneratorConfigurationParameterError,
 )
@@ -39,7 +40,7 @@ from consortium.framework._core.framework_exceptions.components_framework_except
     ComponentStopError,
 )
 from consortium.framework.signal_exceptions import (
-    _component_signal_exceptions as framework_excs,
+    _component_signal_exceptions as sig_excs,
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import construct_services_dataclass
@@ -80,7 +81,6 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             agent_templates_payload_service: Service providing storage and retrieval of
                 payload artifacts produced or consumed by this build step.
         """
-        self.agent_generator_build_step_id = uuid.uuid4()
         self.datetime_started = None
         self.datetime_stopped = None
         self.environment = types.SimpleNamespace()
@@ -142,7 +142,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             ) from None
 
     def __str__(self) -> str:
-        return f"'{self.name}' ({str(self.agent_generator_build_step_id)})"
+        return f"'{self.name}'"
 
     def __repr__(self) -> str:
         return (
@@ -262,11 +262,10 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         """Serialize the build step's current state to a JSON-compatible dictionary.
 
         Returns:
-            A dictionary containing the step ID, name, description, start and stop
+            A dictionary containing the step name, description, start and stop
             timestamps, elapsed time in seconds, and current lifecycle status.
         """
         return {
-            "agent_generator_build_step_id": str(self.agent_generator_build_step_id),
             "name": self.name,
             "description": self.description,
             "datetime_started": self.datetime_started.isoformat()
@@ -283,11 +282,10 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         """Serialize a compact reference to this build step.
 
         Returns:
-            A dictionary containing only the step ID and name, suitable for embedding
-            as a lightweight foreign key reference in other JSON objects.
+            A dictionary containing only the step name, suitable for embedding as a
+            lightweight reference in other JSON objects.
         """
         return {
-            "agent_generator_build_step_id": str(self.agent_generator_build_step_id),
             "name": self.name,
         }
 
@@ -449,6 +447,18 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 ],
             ) from None
 
+        # Enforce that build step names are unique within the agent generator so they
+        # can serve as stable identifiers for each step.
+        seen = set()
+        for agent_generator_build_step in cls.agent_generator_build_steps:
+            if agent_generator_build_step.name not in seen:
+                seen.add(agent_generator_build_step.name)
+            else:
+                raise DuplicateAgentGeneratorBuildStepNameError(
+                    agent_generator_filepath=sys.modules[cls.__module__].__file__,
+                    agent_generator_build_step_name=agent_generator_build_step.name,
+                )
+
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
@@ -499,17 +509,16 @@ class BaseAgentGenerator(ComponentLifeCycle):
             # module. We can throw the generic ComponentRuntimeError because it will be
             # caught and translated by the _construct_component_runtime_error_* methods
             # in this class to the appropriate AgentGeneratorRuntimeError.
+            # TODO: Allow a build step to error but not cut the pipeline out early with
+            #  an exit_on_fail boolean on agent generator build steps, default to true
+            #  and have it be opt in false
             if agent_generator_build_step.status.state in (State.ERRORED, State.FATAL):
-                raise framework_excs.ComponentRuntimeError(
-                    message=(
-                        f"Agent generator build step "
-                        f"{agent_generator_build_step} "
-                        f"failed while running."
-                    ),
+                raise sig_excs.ComponentRuntimeError(
+                    message=f"The following agent generator build step(s) failed: {agent_generator_build_step}",
                     detail={
-                        "agent_generator_build_step_status": (
-                            agent_generator_build_step.status.to_json()
-                        ),
+                        "errored_agent_generator_build_steps": [
+                            agent_generator_build_step.name
+                        ],
                     },
                 )
 

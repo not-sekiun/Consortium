@@ -158,8 +158,7 @@ would cause all steps to fail.
 
 | Attribute                              | Type                            | Description                                              |
 |----------------------------------------|---------------------------------|----------------------------------------------------------|
-| `self.name`                            | `str`                           | Step name (class attribute)                              |
-| `self.agent_generator_build_step_id`   | `uuid.UUID`                     | Unique ID for this step instance                         |
+| `self.name`                            | `str`                           | Step name (class attribute); unique within the generator |
 | `self.parameters`                      | `dict`                          | Generator parameters forwarded from the owning generator |
 | `self.environment`                     | `SimpleNamespace`               | Shared namespace across all steps in one run             |
 | `self.working_directory`               | `pathlib.Path`                  | Directory containing this step's source file             |

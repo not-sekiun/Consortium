@@ -68,6 +68,28 @@ class MissingAgentGeneratorConfigurationParameterError(
         )
 
 
+class DuplicateAgentGeneratorBuildStepNameError(AgentGeneratorConfigurationError):
+    """Raised when a duplicate name is provided in the list of defined agent generator
+    build steps for a particular agent generator.
+    """
+
+    code = "DUPLICATE_AGENT_GENERATOR_BUILD_STEP_NAME_ERROR"
+
+    def __init__(
+        self,
+        agent_generator_filepath: str,
+        agent_generator_build_step_name: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to configure the agent generator defined at "
+                f"'{agent_generator_filepath}'. The agent generator's list of defined "
+                f"build steps contains a build step with a non-unique name "
+                f"'{agent_generator_build_step_name}'."
+            ),
+        )
+
+
 class AgentGeneratorOverridesFinalMethodError(AgentGeneratorConfigurationError):
     """Raised when an agent generator's implementation overrides a final method during
     agent generator configuration.

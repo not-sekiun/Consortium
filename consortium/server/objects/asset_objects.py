@@ -5,7 +5,10 @@ from pydantic import JsonValue
 from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
     UserAccountUsernameNotFoundError,
 )
-from consortium.server.models.user_account_models import LiveUserAccountReferenceModel
+from consortium.server.models.user_account_models import (
+    LiveUserAccountReferenceModel,
+    UserAccountModel,
+)
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
@@ -61,7 +64,7 @@ class Asset:
         )
 
     @property
-    def resolved_user_account(self) -> LiveUserAccountReferenceModel | None:
+    def resolved_user_account(self) -> UserAccountModel | None:
         """The live account that uploaded this asset, or `None` if it cannot be resolved.
 
         Resolves the uploading account reference stored on the asset to its current
@@ -77,16 +80,11 @@ class Asset:
         if username is None:
             return None
         try:
-            user_account = self._user_accounts_service.get_user_account_by_username(
+            return self._user_accounts_service.get_user_account_by_username(
                 username=username,
             )
         except UserAccountUsernameNotFoundError:
             return None
-        return LiveUserAccountReferenceModel(
-            user_account_id=user_account.user_account_id,
-            username=user_account.username,
-            role=user_account.role,
-        )
 
     def to_json(
         self, include_checksum: bool = False, force_checksum_refresh: bool = False
@@ -105,7 +103,11 @@ class Asset:
         resolved_user_account = self.resolved_user_account
         resource_json["data"] = {
             **resource_json["data"],
-            "resolved_user_account": resolved_user_account.model_dump(mode="json")
+            "resolved_user_account": LiveUserAccountReferenceModel(
+                user_account_id=resolved_user_account.user_account_id,
+                username=resolved_user_account.username,
+                role=resolved_user_account.role,
+            ).model_dump(mode="json")
             if resolved_user_account is not None
             else None,
         }

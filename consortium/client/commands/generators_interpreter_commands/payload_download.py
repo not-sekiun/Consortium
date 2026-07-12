@@ -43,6 +43,15 @@ class PayloadDownloadCommand(BaseConnectedCommand):
             nargs="?",
         )
         parser.add_argument(
+            "-w",
+            "--overwrite",
+            help=(
+                "Overwrite the output file if it already exists (disabled by default). "
+                "Refuses to overwrite if the output path is an existing directory."
+            ),
+            action="store_true",
+        )
+        parser.add_argument(
             "-d",
             "--decompress",
             help=(
@@ -78,11 +87,21 @@ class PayloadDownloadCommand(BaseConnectedCommand):
             )
 
             if output_file_path.exists():
-                print_error(
-                    f"Cannot download payload to '{output_file_path}' because a file or "
-                    f"directory already exists at that path"
-                )
-                return ContinueSignal()
+                # Refuse to overwrite a directory regardless of the overwrite flag as
+                # clobbering a whole directory is never the intended download behaviour.
+                if output_file_path.is_dir():
+                    print_error(
+                        f"Cannot download payload to '{output_file_path}' because a "
+                        f"directory already exists at that path"
+                    )
+                    return ContinueSignal()
+                if not parsed_args.overwrite:
+                    print_error(
+                        f"Cannot download payload to '{output_file_path}' because a file "
+                        f"already exists at that path (use -w/--overwrite to overwrite "
+                        f"it)"
+                    )
+                    return ContinueSignal()
 
             print_info(
                 f"Downloading payload {'directory' if payload['is_directory'] else 'file'} "

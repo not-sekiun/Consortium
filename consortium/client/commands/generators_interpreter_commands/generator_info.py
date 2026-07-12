@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 
+from rich.panel import Panel
 from rich.table import Table
 
 from consortium.client.models.context_models import ConnectedContext
@@ -57,26 +58,23 @@ class GeneratorInfoCommand(BaseConnectedCommand):
                 highlight=True,
             )
 
-            # Define columns (former "Information" rows)
+            # Define columns (former "Information" rows).
             build_steps_table.add_column("#", justify="right")
-            build_steps_table.add_column("Build Step ID", no_wrap=True)
             build_steps_table.add_column("Name")
             build_steps_table.add_column("Description")
             build_steps_table.add_column("Status")
             build_steps_table.add_column("Datetime Started")
             build_steps_table.add_column("Elapsed")
 
+            build_steps = agent_generator["agent_generator_build_steps"]
+
             total_time_elapsed = 0
-            for index, build_step in enumerate(
-                agent_generator["agent_generator_build_steps"],
-                start=1,
-            ):
+            for index, build_step in enumerate(build_steps, start=1):
                 if build_step["time_elapsed_in_seconds"]:
                     total_time_elapsed += build_step["time_elapsed_in_seconds"]
 
                 build_steps_table.add_row(
                     str(index),
-                    build_step["agent_generator_build_step_id"],
                     build_step["name"],
                     build_step["description"],
                     format_agent_generator_state_string_with_color(
@@ -92,6 +90,28 @@ class GeneratorInfoCommand(BaseConnectedCommand):
                     )
                     if build_step["time_elapsed_in_seconds"] is not None
                     else "",
+                )
+
+            # Collate any errored build steps into a dedicated red panel shown at the
+            # very bottom. When no build steps errored the panel is omitted entirely.
+            errored_build_steps = [
+                build_step
+                for build_step in build_steps
+                if build_step["status"]["error"]
+            ]
+            build_step_errors_panel = None
+            if errored_build_steps:
+                build_step_errors_string = "\n\n".join(
+                    f"[bold white]{build_step['name']}:[/]\n"
+                    f"{build_step['status']['error']['message']}"
+                    for build_step in errored_build_steps
+                )
+                build_step_errors_panel = Panel(
+                    build_step_errors_string,
+                    title="Agent Generator Build Step Errors",
+                    title_align="left",
+                    expand=False,
+                    style="red",
                 )
 
             agent_generator_info_table = Table(
@@ -166,6 +186,8 @@ class GeneratorInfoCommand(BaseConnectedCommand):
 
             console.print(agent_generator_info_table, "")
             console.print(build_steps_table, "")
+            if build_step_errors_panel is not None:
+                console.print(build_step_errors_panel, "")
         except SystemExit:
             pass
 

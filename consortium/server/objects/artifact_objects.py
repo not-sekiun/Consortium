@@ -5,7 +5,7 @@ from pydantic import JsonValue
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )
-from consortium.server.models.agent_models import AgentModel
+from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
@@ -62,7 +62,7 @@ class Artifact:
         )
 
     @property
-    def resolved_agent(self) -> AgentModel | None:
+    def resolved_agent(self) -> Agent | None:
         """The live agent that produced this artifact, or `None` if it cannot be resolved.
 
         Resolves the producing agent reference stored on the artifact to its current
@@ -78,10 +78,9 @@ class Artifact:
         if agent_id is None:
             return None
         try:
-            agent = self._agents_service.get_agent_by_agent_id(agent_id=agent_id)
+            return self._agents_service.get_agent_by_agent_id(agent_id=agent_id)
         except AgentNotFoundError:
             return None
-        return AgentModel(**agent.to_json())
 
     def to_json(
         self, include_checksum: bool = False, force_checksum_refresh: bool = False
@@ -100,7 +99,7 @@ class Artifact:
         resolved_agent = self.resolved_agent
         resource_json["data"] = {
             **resource_json["data"],
-            "resolved_agent": resolved_agent.model_dump(mode="json")
+            "resolved_agent": resolved_agent.to_json()
             if resolved_agent is not None
             else None,
         }

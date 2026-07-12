@@ -174,7 +174,6 @@ AGENT_GENERATOR_JSON_SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "agent_generator_build_step_id": {"type": "string"},
                     "name": {"type": "string"},
                     "description": {"type": "string"},
                     # "ignore_failure": {"type": "boolean"},
@@ -184,7 +183,6 @@ AGENT_GENERATOR_JSON_SCHEMA = {
                     "status": STATUS_JSON_SCHEMA,
                 },
                 "required": [
-                    "agent_generator_build_step_id",
                     "name",
                     "description",
                     # "ignore_failure",

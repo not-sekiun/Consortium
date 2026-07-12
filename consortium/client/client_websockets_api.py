@@ -217,7 +217,7 @@ class WebsocketsAPI:
             message_json,
         )
 
-        if not message_json["success"]:
+        if message_json["type"] == "response" and not message_json["success"]:
             raise SeverWebsocketsAPIErrorResponseError(
                 error_message=(
                     "\n".join(

@@ -64,7 +64,7 @@ class MissingAgentCapabilityConfigurationParameterError(
         )
 
 
-class EmptyAgentCapabilityNameError(AgentCapabilitiesFrameworkError):
+class EmptyAgentCapabilityNameError(AgentCapabilityConfigurationError):
     """Raised when an empty name is provided in an agent capability's definition during
     agent capability configuration.
     """
@@ -81,7 +81,7 @@ class EmptyAgentCapabilityNameError(AgentCapabilitiesFrameworkError):
         )
 
 
-class DuplicateAgentCapabilityOptionNameError(AgentCapabilitiesFrameworkError):
+class DuplicateAgentCapabilityOptionNameError(AgentCapabilityConfigurationError):
     """Raised when duplicate option names are provided in an agent capability's definition
     during agent capability configuration.
     """
@@ -98,7 +98,7 @@ class DuplicateAgentCapabilityOptionNameError(AgentCapabilitiesFrameworkError):
         )
 
 
-class CustomOSStringAlreadyRegisteredError(AgentCapabilitiesFrameworkError):
+class CustomOSStringAlreadyRegisteredError(AgentCapabilityConfigurationError):
     """Raised when the provided custom OS string has already been registered in the agent
     capabilities framework during agent capability configuration.
     """

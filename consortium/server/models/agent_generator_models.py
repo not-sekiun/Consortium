@@ -17,7 +17,6 @@ class AgentGeneratorBuildStepStatusModel(BaseModel):
 
 
 class AgentGeneratorBuildStepModel(BaseModel):
-    agent_generator_build_step_id: str
     name: str
     description: str
     datetime_started: str | None

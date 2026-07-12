@@ -91,3 +91,24 @@ class EmptyAgentTypeNameError(AgentTypeConfigurationError):
             f"'{agent_type_filepath}'. The name provided in the agent type's "
             f"definition during configuration cannot be empty.",
         )
+
+
+class DuplicateAgentCapabilityNameError(AgentTypeConfigurationError):
+    """Raised when a duplicate name is provided in the set of defined agent
+    capability's for a particular agent type"""
+
+    code = "DUPLICATE_AGENT_CAPABILITY_NAME_ERROR"
+
+    def __init__(
+        self,
+        agent_type_filepath: str,
+        agent_capability_name: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to configure the agent type defined at "
+                f"'{agent_type_filepath}'. The agent type's set of defined agent "
+                f"capabilities contains an agent capability with a non-unique name "
+                f"'{agent_capability_name}'."
+            ),
+        )

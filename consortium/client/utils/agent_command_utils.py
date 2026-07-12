@@ -134,21 +134,29 @@ def display_agent_info(
     console.print(agent_info_table, "")
 
     if verbose:
+        # The capability description is deliberately omitted from the information table
+        # and rendered in a dedicated "Agent Capabilities Description" table below it to
+        # keep the information table compact.
         agent_capabilities_info_table = Table(
             title="Agent Capabilities Information", highlight=True
         )
         agent_capabilities_info_table.add_column("Name")
-        agent_capabilities_info_table.add_column("Description")
         agent_capabilities_info_table.add_column("Admin")
         agent_capabilities_info_table.add_column("Supported OSes")
         agent_capabilities_info_table.add_column("MITRE ATT&CK Techniques")
+
+        agent_capabilities_description_table = Table(
+            title="Agent Capabilities Description", highlight=True
+        )
+        agent_capabilities_description_table.add_column("Name")
+        agent_capabilities_description_table.add_column("Description")
+
         sorted_agent_capabilities = dict(
             sorted(agent["agent_type"]["agent_capabilities"].items())
         )
         for capability_name, capability in sorted_agent_capabilities.items():
             agent_capabilities_info_table.add_row(
                 capability_name,
-                capability["description"],
                 str(capability["requires_admin"]),
                 format_list_as_single_line_comma_separated_string(
                     capability["supported_oses"]
@@ -164,4 +172,9 @@ def display_agent_info(
                 if capability["mitre_attack_techniques"]
                 else "[dim white]N/A[/]",
             )
+            agent_capabilities_description_table.add_row(
+                capability_name,
+                capability["description"],
+            )
         console.print(agent_capabilities_info_table, "")
+        console.print(agent_capabilities_description_table, "")

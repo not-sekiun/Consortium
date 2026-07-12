@@ -4,17 +4,17 @@ from consortium.framework.agents import (
 from consortium.framework.options import SingleValueOption
 
 
-class CdCapability(BaseAgentCapability):
-    name = "cd"
-    description = "Change directory on the agent"
+class CatCapability(BaseAgentCapability):
+    name = "cat"
+    description = "Display the contents of a file"
     authors = {"Sekiun (github.com/not-sekiun)"}
     is_atomic = True
     options = {
         SingleValueOption(
             name="path",
-            description="Path to the file or directory to download.",
+            description="Path to the file or directory to display.",
             required=True,
             value_type=str,
         )
     }
-    mitre_attack_techniques = {"T1083"}
+    mitre_attack_techniques = {"T1005"}

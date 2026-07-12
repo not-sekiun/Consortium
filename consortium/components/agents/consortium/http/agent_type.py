@@ -8,6 +8,8 @@ from consortium.framework.agents import (
 from consortium.framework.agents.agent_message_models import TaskOutputMessageModel
 from consortium.framework.options import SingleValueOption
 
+from .agent_capabilities.cat import CatCapability
+from .agent_capabilities.cd import CdCapability
 from .agent_capabilities.download import DownloadCapability
 from .agent_capabilities.upload import UploadCapability
 
@@ -209,4 +211,6 @@ class AgentType(BaseAgentType):
         shell_capability,
         DownloadCapability,
         UploadCapability,
+        CdCapability,
+        CatCapability,
     }

