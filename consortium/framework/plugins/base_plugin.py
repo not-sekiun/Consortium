@@ -30,7 +30,7 @@ from consortium.framework._core.framework_exceptions.plugins_framework_exception
     PluginStartError,
     PluginStopError,
 )
-from consortium.framework._utils import remap_exception
+from consortium.framework._core.utils import remap_exception
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import construct_services_dataclass
 

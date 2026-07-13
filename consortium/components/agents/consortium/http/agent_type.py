@@ -10,6 +10,7 @@ from consortium.framework.options import SingleValueOption
 
 from .agent_capabilities.cat import CatCapability
 from .agent_capabilities.cd import CdCapability
+from .agent_capabilities.cp import CpCapability
 from .agent_capabilities.download import DownloadCapability
 from .agent_capabilities.ls import LsCapability
 from .agent_capabilities.pwd import PwdCapability
@@ -217,4 +218,5 @@ class AgentType(BaseAgentType):
         CatCapability,
         PwdCapability,
         LsCapability,
+        CpCapability,
     }

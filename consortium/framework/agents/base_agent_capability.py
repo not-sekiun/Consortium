@@ -13,7 +13,7 @@ from consortium.framework._core.framework_exceptions.agent_capabilities_framewor
     InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
-from consortium.framework._utils import format_docstring_to_single_line
+from consortium.framework._core.utils import format_docstring_to_single_line
 from consortium.framework.agents._agent_communicator import _AgentCommunicator
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,

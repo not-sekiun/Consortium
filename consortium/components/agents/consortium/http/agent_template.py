@@ -11,6 +11,7 @@ from consortium.framework.options import (
 from consortium.framework.signal_exceptions import (
     OptionValueValidationError,
 )
+from consortium.framework.utils.random_utils import random_name
 
 from .agent_generator import AgentGenerator
 from .agent_type import AgentType
@@ -170,9 +171,21 @@ class AgentTemplate(BaseAgentTemplate):
             value_type=str,
             required=False,
         ),
+        SingleValueOption(
+            name="minify",
+            description=(
+                "Whether to minify the agent code when generating the agent. "
+                "Minification removes whitespace and comments from the code to reduce "
+                "its size."
+            ),
+            default_value=False,
+            value_type=bool,
+            required=False,
+        ),
     }
     compatible_listener_types = {"http_consortium"}
     validating_function = _check_all_url_endpoints_unique
 
     def resolve_agent_generator_name(self, parameters: JSONObject) -> str:
-        return parameters["name"]
+        name = parameters.get("name", "")
+        return str(name) if name else random_name()

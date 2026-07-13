@@ -22,7 +22,7 @@ from consortium.framework._core.framework_exceptions.event_hooks_framework_excep
     InvalidFrameworkVersionSpecifierError,
     MissingEventHookConfigurationParameterError,
 )
-from consortium.framework._utils import remap_exception
+from consortium.framework._core.utils import remap_exception
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.utils import construct_services_dataclass

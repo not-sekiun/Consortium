@@ -16,6 +16,7 @@ dependencies = [
     "watchdog>=6.0.0",
     "websockets>=15.0.1",
     "pydantic>=2.0",
+    "tomlkit>=0.15.0",
 ]
 
 [dependency-groups]
@@ -32,18 +33,10 @@ docs = [
     "mkdocstrings[python]>=1.0.0",
     "zensical>=0.0.50",
 ]
-listeners = []
-agents = [
-    "pyinstaller>=6.21.0",
-]
-plugins = []
-event-hooks = []
-components = [
-    {include-group = "listeners"},
-    {include-group = "agents"},
-    {include-group = "plugins"},
-    {include-group = "event-hooks"},
-]
+
+[tool.uv.workspace]
+members = []
+
 
 [tool.ruff.lint]
 select = [

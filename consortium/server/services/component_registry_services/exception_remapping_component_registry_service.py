@@ -1,7 +1,7 @@
 import pathlib
 import uuid
 
-from consortium.framework._utils import remap_exception
+from consortium.framework._core.utils import remap_exception
 from consortium.server.exceptions.service_exceptions import (
     components_service_exceptions as comp_excs,
 )

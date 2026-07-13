@@ -1,7 +1,10 @@
 import asyncio
+import base64
 import pathlib
 import shutil
 import tempfile
+
+import python_minifier
 
 from consortium.framework.agents import (
     BaseAgentGenerator,
@@ -39,6 +42,9 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                     'EXTRA_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)"}': f"EXTRA_HEADERS = {repr(parameters['extra_headers'])}",
                 },
             )
+
+        if parameters["minify"]:
+            source_code = python_minifier.minify(source_code)
 
         if parameters["format"] == "script":
             self.agent_templates_payload_service.create_payload_file(
@@ -93,7 +99,9 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         elif parameters["format"] == "oneliner":
             self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,
-                content='python -c "' + repr(source_code) + '"',
+                content='python -c "import base64; exec(base64.b64decode('
+                + repr(base64.b64encode(source_code.encode()).decode())
+                + '))"',
                 name=f"{parameters['file_name']}.txt",
             )
         else:

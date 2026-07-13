@@ -12,6 +12,7 @@ class AgentLifecycleEvent(StrEnum):
 
     ON_REGISTERED = "ON_REGISTERED"
     ON_CHECKED_IN = "ON_CHECKED_IN"
+    ON_DISCONNECTED = "ON_DISCONNECTED"
 
 
 class BaseAgentHook(_AgentCommunicator):

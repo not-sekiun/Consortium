@@ -31,7 +31,10 @@ from consortium.framework._core.framework_exceptions.agent_templates_framework_e
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
-from consortium.framework._utils import format_docstring_to_single_line, remap_exception
+from consortium.framework._core.utils import (
+    format_docstring_to_single_line,
+    remap_exception,
+)
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.framework_types import (

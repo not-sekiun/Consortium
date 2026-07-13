@@ -4,6 +4,7 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from inspect import signature
+from types import NotImplementedType
 from typing import get_type_hints
 
 from pydantic import ConfigDict, JsonValue
@@ -31,7 +32,10 @@ from consortium.framework._core.framework_exceptions.listener_templates_framewor
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
-from consortium.framework._utils import format_docstring_to_single_line, remap_exception
+from consortium.framework._core.utils import (
+    format_docstring_to_single_line,
+    remap_exception,
+)
 from consortium.framework.framework_types import (
     Primitive,
     PrimitiveCollection,
@@ -213,6 +217,26 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         Returns:
             The network endpoint string to assign to the new listener instance.
         """
+
+    # TODO: Implement being able to create agents from a particular listener but only if
+    #   this method exists and is overriden otherwise it should be treated as not
+    #   possible
+    def resolve_agent_parameters_from_listener_parameters(
+        self,
+        agent_type: str,
+        parameters: dict[str, Primitive | PrimitiveCollection],
+    ) -> dict[str, Primitive | PrimitiveCollection] | NotImplementedType:
+        """Resolve agent parameters from listener parameters.
+
+        Args:
+            agent_type: The type of agent for which to resolve parameters.
+            parameters: The resolved option values provided at listener creation time,
+                keyed by option name.
+
+        Returns:
+            A dictionary of agent parameters keyed by parameter name.
+        """
+        return NotImplemented
 
     def create_listener(
         self,

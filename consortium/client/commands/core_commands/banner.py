@@ -35,42 +35,42 @@ class BannerCommand(BaseCommand[AnyContext]):
     ) -> None:
         logo_banner = Text.from_ansi(
             """
-\x1b[2;90m----CONSORTIUMCONSORTIUMCONSORTIUNCONSORTIUNCONSORTIUNCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTIU\x1b[0m                      \x1b[2;90mONSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m    \x1b[31mM@@@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@p\x1b[0m  \x1b[31mM@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@p\x1b[0m  \x1b[31m?@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@m\x1b[0m \x1b[31ma[\x1b[0m        \x1b[31m`QL\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m \x1b[31mMWL\x1b[0m     \x1b[31ma@f\x1b[0m   \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m   \x1b[31mO@MMM@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m    \x1b[31mb\x1b[0m   \x1b[31m@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m   \x1b[31mo&mmm@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m \x1b[31mp@^\x1b[0m     \x1b[31mM@\x1b[0m    \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@B\x1b[0m \x1b[31mM[\x1b[0m        \x1b[31m;O^\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@M\x1b[0m  \x1b[31ma@@@@@@@@@@@@&\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@M\x1b[0m  \x1b[31ma@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m    \x1b[31ma@@@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTIU\x1b[0m                      \x1b[2;90mONSORTIUMCONSORTIUM----\x1b[0m
-\x1b[2;90m----CONSORTIUMCONSORTIUMCONSORTIUNCONSORTIUNCONSORTIUNCONSORTIUM----\x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTIU\x1b[0m                      \x1b[2;90mONSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m    \x1b[31mM@@@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@p\x1b[0m  \x1b[31mM@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@p\x1b[0m  \x1b[31m?@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@m\x1b[0m \x1b[31ma[\x1b[0m        \x1b[31m`QL\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m \x1b[31mMWL\x1b[0m     \x1b[31ma@f\x1b[0m   \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m   \x1b[31mO@MMM@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m    \x1b[31mb\x1b[0m   \x1b[31m@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m   \x1b[31mo&mmm@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m \x1b[31mp@^\x1b[0m     \x1b[31mM@\x1b[0m    \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@B\x1b[0m \x1b[31mM[\x1b[0m        \x1b[31m;O^\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@M\x1b[0m  \x1b[31ma@@@@@@@@@@@@&\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@M\x1b[0m  \x1b[31ma@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTI\x1b[0m    \x1b[31ma@@@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTIU\x1b[0m                      \x1b[2;90mONSORTIUMCONSORTIUM    \x1b[0m
+\x1b[2;90m    CONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUM    \x1b[0m
 """
         )
-        star_banner = (
+        ad_astra_banner = (
             "[bold white]        .        x      "
-            "[bold red]------[bold white]+             `        .          *   `     --.\n"
-            "[bold white]  <<o>>            `     .          +               o         [bold red]----------[bold white]X\n"
+            "[bold red]    --[bold white]+             `        .          *   `     --.\n"
+            "[bold white]  <<o>>            `     .          +               o         [bold red]        --[bold white]X\n"
             "[bold white]             x                       ,        +++       -<o>-       x\n"
             "[bold white]    `   o          =      '    -o        .         `     x      o  \n"
-            "[bold red]       __________  _   _______ ____  ____  ____________  ____  ___    -------[bold white]X\n"
+            "[bold red]       __________  _   _______ ____  ____  ____________  ____  ___        ---[bold white]X\n"
             "[bold white]x   .[bold red] / ____/ __ \\/ | / / ___// __ \\/ __ \\/_  __/  _/ / / /  |/  /\n"
             "[bold red]     / /   / / / /  |/ /\\__ \\/ / / / /_/ / / /  / // / / / /|_/ / [bold white]   +   `\n"
-            "[bold red]    / /___/ /_/ / /|  /___/ / /_/ / _, _/ / / _/ // /_/ / /  / /  [bold red]------[bold white]X\n"
+            "[bold red]    / /___/ /_/ / /|  /___/ / /_/ / _, _/ / / _/ // /_/ / /  / /  [bold red]    --[bold white]X\n"
             "[bold white] ,[bold red]  \\____/\\____/_/ |_//____/\\____/_/ |_| /_/ /___/\\____/_/  /_/   [bold white]`   .   -\n"
             "[bold white]                          .                             -  \n"
-            "[bold white]   x    [bold red]--------[bold white]+    .              <o>         X          [bold red]--------[bold white]x * <<o>>\n"
+            "[bold white]   x    [bold red]        [bold white]+    .              <o>         X          [bold red]        [bold white]x * <<o>>\n"
             "[bold white]      x              -x-       o          <o>        ,        ' `\n"
-            "[bold white] <o>      .--+x   .          [bold red]--------[bold white]+ .        `     --.    x  [bold cyan]   [Ad astra!]\n"
+            "[bold white] <o>      .--+x   .          [bold red]        [bold white]+ .        `     --.    x  [bold cyan]   [Ad astra!]\n"
         )
-        banner_art = [star_banner, logo_banner]
+        banner_art = [ad_astra_banner, logo_banner]
 
         if rest_api is None:
             number_of_active_listeners = "N/A"

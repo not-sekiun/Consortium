@@ -5,6 +5,7 @@ import pathlib
 
 from pydantic import ValidationError
 
+import consortium.server.server_component_dependency_syncer as server_component_dependency_syncer
 import consortium.server.server_reloader as server_reloader
 import consortium.server.server_singletons as server_singletons
 from consortium.server.models.logging_models import LoggingConfigModel
@@ -13,6 +14,8 @@ from consortium.server.server import Server
 
 
 async def _start_server(arguments: argparse.Namespace) -> None:
+    server_component_dependency_syncer.main()
+
     # Resolve necessary file and directory paths first. We dont do this through the
     # `ConsortiumPathsService` because that service depends on the logging service being
     # initialized first, which we are doing here.
