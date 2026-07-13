@@ -1,5 +1,6 @@
 [project]
 name = "consortium.debug-console-plugin"
+version = "0.1.0"
 dependencies = [
     "prompt-toolkit",
     "loguru"

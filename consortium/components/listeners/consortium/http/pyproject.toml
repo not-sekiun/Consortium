@@ -1,5 +1,6 @@
 [project]
 name = "consortium.agents.http-agent"
+version = "0.1.0"
 dependencies = [
     "aiohttp",
 ]
