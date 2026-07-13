@@ -32,7 +32,7 @@ and tools.
     ```shell
     git clone https://github.com/not-sekiun/Consortium
     cd Consortium
-    uv sync --group components
+    uv sync --all-packages
     ```
 2. Start the server first
     ```shell
@@ -57,47 +57,43 @@ the components bundled with the server out of the box and live in
 `consortium/components`. Components come in four types: **listeners**, **agents**,
 **plugins**, and **event-hooks**.
 
-Each component type may declare its own Python dependencies. These are declared as
-`uv` dependency groups in `pyproject.toml`, one group per component type, and an
-umbrella `components` group that pulls in all four at once.
+A component that needs its own third-party Python packages is a `uv` **workspace
+package**: it has its own `pyproject.toml` next to its manifest that declares those
+dependencies, and it is registered as a member of the workspace in the root
+`pyproject.toml`.
 
 ```toml title="pyproject.toml"
-[dependency-groups]
-listeners = []
-agents = [
-    "pyinstaller>=6.21.0",
+[tool.uv.workspace]
+members = [
+    "consortium\\components\\plugins\\auto_updater",
+    "consortium\\components\\listeners\\consortium\\http",
+    "consortium\\components\\agents\\consortium\\http",
 ]
-plugins = []
-event-hooks = []
-components = [
-    {include-group = "listeners"},
-    {include-group = "agents"},
-    {include-group = "plugins"},
-    {include-group = "event-hooks"},
-]
+```
+
+Because the components are workspace members, syncing the whole workspace installs the
+base framework dependencies **and** the dependencies of every bundled component in one
+step. This is the `--all-packages` flag, which is used for the baseline install.
+
+```shell
+uv sync --all-packages
 ```
 
 !!! important
     A component will **not load** if its declared Python dependencies are not installed
     in your environment. If you find a default component is missing at runtime, make
-    sure you have installed the dependency group for its component type.
+    sure you synced the workspace with `--all-packages` so its package dependencies were
+    installed.
 
-To install the dependencies for **all** component types at once, sync the umbrella
-`components` group.
-
-```shell
-uv sync --group components
-```
-
-To install the dependencies for only a **particular** component type, sync just that
-group. For example, to install only the agent component dependencies:
+To install the dependencies for only a **particular** component, sync just that
+workspace package with `--package`, passing the name declared in that component's own
+`pyproject.toml` (`[project].name`).
 
 ```shell
-uv sync --group agents
+uv sync --package <component-package-name>
 ```
 
-You can pass multiple `--group` flags to install several groups at once (for example
-`uv sync --group agents --group plugins`).
+You can pass multiple `--package` flags to sync several individual packages at once.
 
 ## Installing Consortium for Development
 
@@ -108,7 +104,7 @@ install the development group dependencies and the pre-commit hooks.
    above to install the base dependencies
 2. Install the development dependencies using `uv`.
     ```shell
-    uv sync --dev
+    uv sync --all-packages --group dev
     ```
 3. Install pre-commit hooks.
     ```shell
@@ -124,7 +120,7 @@ install the documentation group dependencies.
    above to install the base
 2. Install the documentation dependencies using `uv`.
     ```shell
-    uv sync --docs
+    uv sync --all-packages --group docs
     ```
 3. Serve the documentation locally.
     ```shell

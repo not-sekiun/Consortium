@@ -4,20 +4,141 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
-from tests.api_tests.test_assets_api import (
-    ALL_RESOURCES_JSON_SCHEMA,
-    RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA,
-)
+from tests.api_tests.test_assets_api import RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
+
+# Full resolved agent, matching AgentModel. This is what `resolved_agent` holds when the
+# persistent `agent` reference resolves at read-time.
+AGENT_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "agent_id": {"type": "string"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "endpoint": {"type": "string"},
+        "agent_type": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "agent_capabilities": {"type": "object"},
+            },
+            "required": ["name", "agent_capabilities"],
+        },
+        "user": {"type": ["string", "null"]},
+        "is_admin": {"type": ["boolean", "null"]},
+        "os": {"type": ["string", "null"]},
+        "version": {"type": ["string", "null"]},
+        "arch": {"type": ["string", "null"]},
+        "pid": {"type": ["integer", "null"]},
+        "locale": {"type": ["string", "null"]},
+        "remote_host_address": {"type": ["string", "null"]},
+        "local_host_address": {"type": ["string", "null"]},
+        "hostname": {"type": ["string", "null"]},
+        "datetime_first_checked_in": {"type": "string"},
+        "datetime_last_checked_in": {"type": "string"},
+        "status": {"type": "string"},
+        "connected_listener": {
+            "type": ["object", "null"],
+            "properties": {
+                "listener_id": {"type": "string"},
+                "name": {"type": "string"},
+            },
+        },
+        "agent_data": {"type": ["object", "null"]},
+    },
+    "required": [
+        "agent_id",
+        "name",
+        "description",
+        "endpoint",
+        "agent_type",
+        "user",
+        "is_admin",
+        "os",
+        "version",
+        "arch",
+        "pid",
+        "locale",
+        "remote_host_address",
+        "local_host_address",
+        "hostname",
+        "datetime_first_checked_in",
+        "datetime_last_checked_in",
+        "status",
+        "connected_listener",
+        "agent_data",
+    ],
+}
+ARTIFACT_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "resource_id": {"type": "string"},
+        "name": {"type": ["string", "null"]},
+        "description": {"type": "string"},
+        "size": {"type": ["integer", "null"]},
+        "extension": {"type": ["string", "null"]},
+        "exists_on_disk": {"type": "boolean"},
+        "datetime_created": {"type": "string"},
+        "datetime_modified": {"type": "string"},
+        "md5_checksum": {"type": ["string", "null"]},
+        "is_directory": {"type": "boolean"},
+        "data": {
+            "type": "object",
+            "properties": {
+                # Persistent point-in-time reference to the producing agent recorded at
+                # creation, `None` when the artifact was created without agent
+                # attribution.
+                "agent": {
+                    "type": ["object", "null"],
+                    "properties": {
+                        "agent_id": {"type": "string"},
+                        "name": {"type": "string"},
+                        "agent_type": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "agent_capabilities": {"type": "object"},
+                            },
+                            "required": ["name", "agent_capabilities"],
+                        },
+                    },
+                },
+                # Live read-time resolution of `agent`, `None` when the producing agent
+                # cannot be resolved.
+                "resolved_agent": {
+                    "oneOf": [AGENT_JSON_SCHEMA, {"type": "null"}],
+                },
+            },
+            "required": ["agent", "resolved_agent"],
+        },
+    },
+    "required": [
+        "resource_id",
+        "name",
+        "description",
+        "size",
+        "extension",
+        "exists_on_disk",
+        "datetime_created",
+        "datetime_modified",
+        "md5_checksum",
+        "is_directory",
+        "data",
+    ],
+}
+ALL_ARTIFACTS_JSON_SCHEMA = {
+    "type": "array",
+    "items": ARTIFACT_JSON_SCHEMA,
+}
 
 
 async def test_get_all_artifacts(client):
     """All roles can GET /api/artifacts/all."""
     validate_response(
         test_response=await client.get("/api/artifacts/all"),
-        expected_json_schema=ALL_RESOURCES_JSON_SCHEMA,
+        expected_json_schema=ALL_ARTIFACTS_JSON_SCHEMA,
         expected_status_code=200,
     )
 

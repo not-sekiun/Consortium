@@ -60,7 +60,7 @@ ASSET_JSON_SCHEMA = {
         "data",
     ],
 }
-ALL_RESOURCES_JSON_SCHEMA = {
+ALL_ASSETS_JSON_SCHEMA = {
     "type": "array",
     "items": ASSET_JSON_SCHEMA,
 }
@@ -126,7 +126,7 @@ async def test_get_all_assets(client):
     """All roles can GET /api/assets/all."""
     validate_response(
         test_response=await client.get("/api/assets/all"),
-        expected_json_schema=ALL_RESOURCES_JSON_SCHEMA,
+        expected_json_schema=ALL_ASSETS_JSON_SCHEMA,
         expected_status_code=200,
     )
 

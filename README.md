@@ -78,7 +78,7 @@ Clone the repository and install dependencies.
 ```bash
 git clone https://github.com/not-sekiun/Consortium.git
 cd Consortium
-uv sync --group components
+uv sync --all-packages
 ```
 
 ### Quick Start
@@ -104,7 +104,7 @@ Pull the latest changes from the repository and update/install any new dependenc
 
 ```shell
 git pull
-uv sync --group components
+uv sync --all-packages
 ```
 
 ## Documentation
@@ -121,7 +121,7 @@ Alternatively, you can install dependencies to host and view the documentation l
 From the project root folder, run:
 
 ```shell
-uv sync --group docs
+uv sync --all-packages --group docs
 uv run zensical serve
 ```
 

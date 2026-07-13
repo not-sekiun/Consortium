@@ -209,8 +209,10 @@ version, the component is not loaded and the framework reports why.
     Declaring a dependency in `pyproject.toml` is a **check**, not an install step. The
     framework verifies the package is present; it never fetches anything. You must install
     third-party dependencies into the same environment the server runs in yourself. For
-    the standard `uv`-managed setup that means `uv add <package>` (then `uv sync`), which
-    matches how the rest of the project manages dependencies.
+    the standard `uv`-managed setup, where each component is a workspace package, that
+    means `uv add <package>` from within the component's package (then
+    `uv sync --all-packages`), which matches how the rest of the project manages
+    dependencies.
 
 ### Component dependencies (on other components)
 

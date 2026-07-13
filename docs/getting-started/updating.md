@@ -6,7 +6,7 @@ updated Python dependencies using `uv`.
  ```shell
  cd path/to/Consortium
  git pull
- uv sync
+ uv sync --all-packages
  ```
 
 ## Enabling Auto-updating for Consortium
