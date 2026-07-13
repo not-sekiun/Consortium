@@ -119,6 +119,7 @@ nav = [
     { "Scripts" = [
         "scripts/scripts-overview.md",
         "scripts/create-component-project.md",
+        "scripts/clear-repository.md",
         "scripts/generate-distilled-mitre-attack-data.md"
     ] },
     { "Reference" = [
