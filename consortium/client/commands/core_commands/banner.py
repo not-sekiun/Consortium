@@ -1,5 +1,7 @@
 import random
 
+from rich.text import Text
+
 from consortium.client.client_config import CLIENT_RELEASE
 from consortium.client.client_rest_api import RestAPI
 from consortium.client.models.context_models import AnyContext, ConnectedContext
@@ -31,6 +33,27 @@ class BannerCommand(BaseCommand[AnyContext]):
     async def _display_banner(
         rest_api: RestAPI | None,
     ) -> None:
+        logo_banner = Text.from_ansi(
+            """
+\x1b[2;90m----CONSORTIUMCONSORTIUMCONSORTIUNCONSORTIUNCONSORTIUNCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTIU\x1b[0m                      \x1b[2;90mONSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m    \x1b[31mM@@@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@p\x1b[0m  \x1b[31mM@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@p\x1b[0m  \x1b[31m?@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@m\x1b[0m \x1b[31ma[\x1b[0m        \x1b[31m`QL\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m \x1b[31mMWL\x1b[0m     \x1b[31ma@f\x1b[0m   \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m   \x1b[31mO@MMM@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m    \x1b[31mb\x1b[0m   \x1b[31m@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m   \x1b[31mo&mmm@\x1b[0m      \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@@b\x1b[0m \x1b[31mp@^\x1b[0m     \x1b[31mM@\x1b[0m    \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@@@B\x1b[0m \x1b[31mM[\x1b[0m        \x1b[31m;O^\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@@@M\x1b[0m  \x1b[31ma@@@@@@@@@@@@&\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m  \x1b[31m@M\x1b[0m  \x1b[31ma@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTI\x1b[0m    \x1b[31ma@@@@@@@@@@@@@@@@@\x1b[0m  \x1b[2;90mNSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTIU\x1b[0m                      \x1b[2;90mONSORTIUMCONSORTIUM----\x1b[0m
+\x1b[2;90m----CONSORTIUMCONSORTIUMCONSORTIUNCONSORTIUNCONSORTIUNCONSORTIUM----\x1b[0m
+"""
+        )
         star_banner = (
             "[bold white]        .        x      "
             "[bold red]------[bold white]+             `        .          *   `     --.\n"
@@ -47,7 +70,7 @@ class BannerCommand(BaseCommand[AnyContext]):
             "[bold white]      x              -x-       o          <o>        ,        ' `\n"
             "[bold white] <o>      .--+x   .          [bold red]--------[bold white]+ .        `     --.    x  [bold cyan]   [Ad astra!]\n"
         )
-        banner_art = [star_banner]
+        banner_art = [star_banner, logo_banner]
 
         if rest_api is None:
             number_of_active_listeners = "N/A"
