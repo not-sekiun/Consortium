@@ -9,7 +9,7 @@ from consortium.server.services.events_service import EventsService
 from consortium.server.services.release_service import ReleaseService
 
 _HERE = pathlib.Path(__file__).parent
-_MOCK_EVENT_HOOKS = _HERE / "mock" / "event_hooks"
+_MOCK_EVENT_HOOKS = _HERE / "mocks" / "event_hooks"
 _CONSORTIUM_ROOT = _HERE.parent.parent
 _RELEASE_JSON = _CONSORTIUM_ROOT / "data" / "release.json"
 

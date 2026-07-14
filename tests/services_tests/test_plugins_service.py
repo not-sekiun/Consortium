@@ -8,7 +8,7 @@ from consortium.server.services.plugins_service import PluginsService
 from consortium.server.services.release_service import ReleaseService
 
 _HERE = pathlib.Path(__file__).parent
-_MOCK_PLUGINS = _HERE / "mock" / "plugins"
+_MOCK_PLUGINS = _HERE / "mocks" / "plugins"
 _CONSORTIUM_ROOT = _HERE.parent.parent
 _RELEASE_JSON = _CONSORTIUM_ROOT / "data" / "release.json"
 

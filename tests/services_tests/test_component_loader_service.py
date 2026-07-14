@@ -30,8 +30,8 @@ from consortium.server.services.component_loader_services.plugin_loader_service 
 )
 
 _HERE = pathlib.Path(__file__).parent
-_MOCK_PLUGINS = _HERE / "mock" / "plugins"
-_MOCK_EVENT_HOOKS = _HERE / "mock" / "event_hooks"
+_MOCK_PLUGINS = _HERE / "mocks" / "plugins"
+_MOCK_EVENT_HOOKS = _HERE / "mocks" / "event_hooks"
 _CONSORTIUM_ROOT = _HERE.parent.parent
 
 

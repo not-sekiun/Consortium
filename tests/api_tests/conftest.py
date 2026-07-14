@@ -203,7 +203,7 @@ def client(admin_client, operator_client, spectator_client, request):
 
 @pytest.fixture(scope="session")
 async def load_mock_listener_profiles(app):
-    mock_root = pathlib.Path(__file__).parent / "mock"
+    mock_root = pathlib.Path(__file__).parent / "mocks"
     for folder in ("mock_listener_1", "mock_listener_2"):
         await server_singletons.listener_profiles_service.load_listener_profile_from_listener_profile_project_folder(
             listener_profile_project_folder=mock_root / folder,
@@ -212,7 +212,7 @@ async def load_mock_listener_profiles(app):
 
 @pytest.fixture(scope="session")
 async def load_mock_agent_profiles(app):
-    mock_root = pathlib.Path(__file__).parent / "mock"
+    mock_root = pathlib.Path(__file__).parent / "mocks"
     for folder in ("mock_agent_1", "mock_agent_2"):
         await server_singletons.agent_profiles_service.load_agent_profile_from_agent_profile_project_folder(
             agent_profile_project_folder=mock_root / folder,

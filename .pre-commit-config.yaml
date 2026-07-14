@@ -1,6 +1,6 @@
 # Mock folder includes deliberately malformed JSON and TOML files for testing, exclude them so pre-commit
 # does not flag them during CI/CD and during fresh runs
-exclude: ^tests/services_tests/mock/plugins/
+exclude: ^tests/services_tests/mocks/plugins/
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

@@ -6,8 +6,6 @@ requires-python = ">=3.14"
 members = [
     "consortium",
     "consortium-agents-http-agent",
-    "consortium-auto-updater-plugin",
-    "consortium-debug-console-plugin",
     "consortium-http-agent",
 ]
 
@@ -286,36 +284,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "aiohttp" }]
-
-[[package]]
-name = "consortium-auto-updater-plugin"
-version = "0.1.0"
-source = { virtual = "consortium/components/plugins/auto_updater" }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "prompt-toolkit" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiohttp" },
-    { name = "prompt-toolkit" },
-]
-
-[[package]]
-name = "consortium-debug-console-plugin"
-version = "0.1.0"
-source = { virtual = "consortium/components/plugins/debug_console" }
-dependencies = [
-    { name = "loguru" },
-    { name = "prompt-toolkit" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "loguru" },
-    { name = "prompt-toolkit" },
-]
 
 [[package]]
 name = "consortium-http-agent"

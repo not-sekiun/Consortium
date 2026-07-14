@@ -35,7 +35,10 @@ docs = [
 ]
 
 [tool.uv.workspace]
-members = ["consortium\\components\\plugins\\auto_updater", "consortium\\components\\plugins\\debug_console", "consortium\\components\\listeners\\consortium\\http", "consortium\\components\\agents\\consortium\\http"]
+members = [
+    "consortium/components/agents/consortium/http",
+    "consortium/components/listeners/consortium/http",
+]
 
 
 [tool.ruff.lint]
