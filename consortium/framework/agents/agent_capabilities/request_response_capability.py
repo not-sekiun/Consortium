@@ -1,188 +1,140 @@
-import asyncio
-from collections.abc import Awaitable, Callable
-from types import SimpleNamespace
-from typing import TYPE_CHECKING, Protocol
+from typing import final
 
-from consortium.framework.agents.agent_capabilities._common_protocols import (
-    _ResolveTimeoutProtocol,
-)
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
-from consortium.framework.agents.agent_outcomes import (
-    Failure,
-    Success,
-)
+from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.agents.base_agent_capability import (
     BaseAgentCapability,
-    SupportedOS,
-)
-from consortium.framework.options import (
-    ChoiceValueOption,
-    DictionaryValueOption,
-    ListValueOption,
-    SingleValueOption,
-    ToggleableChoicesValueOption,
 )
 
-if TYPE_CHECKING:
-    from consortium.server.objects.agent_objects import Agent
 
+class RequestResponseCapability(BaseAgentCapability, abstract=True):
+    """Template base class for capabilities that send one task and await one response.
 
-class _TaskMessageHandlerProtocol(Protocol):
-    def __call__(
-        self,
-        agent: Agent,
-        task_message: TaskLaunchMessageModel,
-        context: SimpleNamespace,
-    ) -> TaskLaunchMessageModel | None | Awaitable[TaskLaunchMessageModel | None]: ...
+    This is the class-based counterpart to the request_response_capability factory.
+    Subclass it, declare the usual capability metadata as class attributes (name,
+    description, options, and so on), and override only the hooks you need. The
+    request-then-response machinery, including timeout handling, lives in the final
+    on_launch and on_execute methods so subclasses never have to reimplement it.
 
+    Intermediate state that used to be threaded through a SimpleNamespace context is
+    now just instance state on self, and the agent is always available as self.agent.
 
-class _ResultMessageHandlerProtocol(Protocol):
-    def __call__(
-        self,
-        agent: Agent,
-        result_message: TaskOutputMessageModel,
-        context: SimpleNamespace,
-    ) -> TaskOutputMessageModel | Awaitable[TaskOutputMessageModel]: ...
+    Attributes:
+        timeout (int | float | None): Default number of seconds to wait for the agent's
+            response. None waits indefinitely. Override resolve_timeout for a value
+            computed per task.
 
+    Example: A capability that trims the agent's response
+        ```python
+        class Whoami(RequestResponseCapability):
+            name = "whoami"
+            description = "Return the current user."
+            timeout = 30
 
-class _TimeoutHandlerProtocol(Protocol):
-    def __call__(
-        self,
-        agent: Agent,
-        context: SimpleNamespace,
-    ) -> TaskOutputMessageModel | Awaitable[TaskOutputMessageModel]: ...
-
-
-def request_response_capability(
-    name: str,
-    description: str = "",
-    options: set[
-        SingleValueOption
-        | ListValueOption
-        | DictionaryValueOption
-        | ChoiceValueOption
-        | ToggleableChoicesValueOption
-    ] = None,
-    authors: set[str] = None,
-    requires_admin: bool = False,
-    supported_oses: set[SupportedOS] = None,
-    mitre_attack_techniques: set[str] = None,
-    validating_function: Callable | None = None,
-    timeout: int | None = None,
-    resolve_timeout: _ResolveTimeoutProtocol | None = None,
-    task_handler: _TaskMessageHandlerProtocol | None = None,
-    result_handler: _ResultMessageHandlerProtocol | None = None,
-    timeout_handler: _TimeoutHandlerProtocol | None = None,
-) -> type[BaseAgentCapability]:
-    """Build an agent capability that sends one task message and awaits a single response.
-
-    This is a factory that returns a new BaseAgentCapability subclass wired up with the
-    supplied metadata and handlers, saving you from writing a full capability class for
-    the common request-then-response pattern. The optional handlers let you hook into
-    each phase: task_handler mutates the outgoing message, result_handler post-processes
-    the agent's reply, and timeout_handler supplies a fallback result if the agent does
-    not respond in time.
-
-    Args:
-        name: Unique command name used to route task messages to this capability.
-        description: Human-readable explanation of what the capability does.
-        options: Configuration options the capability accepts, declared as a set.
-        authors: Identifiers for the capability's authors.
-        requires_admin: Whether the capability requires elevated privileges on the target.
-        supported_oses: Platforms the capability supports. Defaults to any platform.
-        mitre_attack_techniques: MITRE ATT&CK technique IDs associated with the capability.
-        validating_function: Optional callable that validates the full resolved option set.
-        timeout: Seconds to wait for the agent's response before timing out. Ignored if
-            resolve_timeout is provided.
-        resolve_timeout: Optional callable that computes the response timeout dynamically
-            from the launch message and context, overriding timeout.
-        task_handler: Optional callable invoked before the message is sent, returning the
-            message to transmit or None to cancel the launch. May be sync or async.
-        result_handler: Optional callable invoked with the agent's response, returning the
-            (possibly modified) output message. May be sync or async.
-        timeout_handler: Optional callable invoked when the response times out, returning
-            an output message to report instead of raising. May be sync or async.
-
-    Returns:
-        A new BaseAgentCapability subclass implementing the request-response behavior.
+            async def on_response(self, task_output_message):
+                task_output_message.message = task_output_message.message.strip()
+                return task_output_message
+        ```
     """
 
-    async def _on_launch(
-        self, task_message: TaskLaunchMessageModel
+    timeout: int | float | None = None
+
+    async def resolve_timeout(
+        self,
+        task_message: TaskLaunchMessageModel,
+    ) -> int | float | None:
+        """Return the number of seconds to wait for the agent's response.
+
+        Override to compute the timeout dynamically from the outgoing task message.
+        The default returns the class-level timeout attribute.
+
+        Args:
+            task_message: The task message about to be sent to the agent.
+
+        Returns:
+            The receive timeout in seconds, or None to wait indefinitely.
+        """
+        return self.timeout
+
+    async def on_request(
+        self,
+        task_launch_message: TaskLaunchMessageModel,
     ) -> TaskLaunchMessageModel | None:
-        self._rrc_context = SimpleNamespace()
-        context = self._rrc_context
+        """Inspect or mutate the task message before it is sent to the agent.
 
-        if resolve_timeout:
-            context.recv_timeout = resolve_timeout(
-                task_message=task_message, context=context
-            )
-        else:
-            context.recv_timeout = timeout
+        Override to enrich or replace the outgoing message. The default returns it
+        unchanged.
 
-        if task_handler:
-            result = task_handler(
-                agent=self.agent, task_message=task_message, context=context
-            )
-            if asyncio.iscoroutine(result):
-                result = await result
-            return result
-        return task_message
+        Args:
+            task_launch_message: The task message prepared for launch.
 
-    async def _on_execute(self) -> Success | Failure:
-        context = self._rrc_context
+        Returns:
+            The message to transmit, or None to cancel the launch.
+        """
+        return task_launch_message
 
+    async def on_response(
+        self,
+        task_output_message: TaskOutputMessageModel,
+    ) -> TaskOutputMessageModel:
+        """Post-process the agent's response before it becomes the outcome.
+
+        Override to reshape or annotate the response. The default returns it unchanged.
+
+        Args:
+            task_output_message: The output message received from the agent.
+
+        Returns:
+            The output message to wrap in the Success or Failure outcome.
+        """
+        return task_output_message
+
+    async def on_timeout(self) -> TaskOutputMessageModel:
+        """Handle the case where the agent does not respond within the timeout.
+
+        Override to return a substitute output message instead of failing. The default
+        re-raises the TimeoutError so the task errors out.
+
+        Returns:
+            A substitute output message to report as the outcome.
+        """
+        # A bare raise re-raises the TimeoutError currently being handled in on_execute.
+        raise
+
+    @final
+    async def on_launch(
+        self,
+        task_message: TaskLaunchMessageModel,
+    ) -> TaskLaunchMessageModel | None:
+        # Resolve the receive timeout from the original message before on_task can
+        # replace it, matching the request_response_capability factory's ordering.
+        self._recv_timeout = await self.resolve_timeout(task_message)
+        return await self.on_request(task_message)
+
+    @final
+    async def on_execute(self) -> Success | Failure:
         try:
-            result_message = await self.recv_from_agent(timeout=context.recv_timeout)
+            response_message = await self.recv_from_agent(timeout=self._recv_timeout)
         except TimeoutError:
-            if timeout_handler:
-                result_message = timeout_handler(agent=self.agent, context=context)
-                if asyncio.iscoroutine(result_message):
-                    result_message = await result_message
-                return (
-                    Success(result_message)
-                    if result_message.success
-                    else Failure(result_message)
-                )
-            else:
-                raise
+            # on_timeout re-raises by default; an override may return a substitute
+            # result message to report instead.
+            response_message = await self.on_timeout()
+            return self._to_outcome(response_message)
 
-        if result_handler:
-            result_message = result_handler(
-                agent=self.agent,
-                result_message=result_message,
-                context=context,
-            )
-            if asyncio.iscoroutine(result_message):
-                result_message = await result_message
-
-        if not isinstance(result_message, TaskOutputMessageModel):
+        response_message = await self.on_response(response_message)
+        if not isinstance(response_message, TaskOutputMessageModel):
             raise TypeError(
-                "The `result_handler` must return an `TaskOutputMessageModel`."
+                "The `on_result` hook must return a `TaskOutputMessageModel`."
             )
+        return self._to_outcome(response_message)
 
+    @staticmethod
+    def _to_outcome(result_message: TaskOutputMessageModel) -> Success | Failure:
         return (
             Success(result_message)
             if result_message.success
             else Failure(result_message)
         )
-
-    return type(
-        "RequestResponseCapability",
-        (BaseAgentCapability,),
-        {
-            "name": name,
-            "description": description,
-            "options": options,
-            "authors": authors,
-            "requires_admin": requires_admin,
-            "mitre_attack_techniques": mitre_attack_techniques,
-            "supported_oses": supported_oses,
-            "validating_function": validating_function,
-            "on_launch": _on_launch,
-            "on_execute": _on_execute,
-        },
-    )

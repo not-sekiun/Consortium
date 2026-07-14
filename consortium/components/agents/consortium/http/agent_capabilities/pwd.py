@@ -1,6 +1,4 @@
-from consortium.framework.agents import (
-    BaseAgentCapability,
-)
+from consortium.framework.agents import BaseAgentCapability
 
 
 class PwdCapability(BaseAgentCapability):

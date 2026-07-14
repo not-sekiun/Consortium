@@ -21,10 +21,10 @@ factories build capability classes without requiring a full subclass definition.
 """
 
 from consortium.framework.agents.agent_capabilities.request_response_capability import (
-    request_response_capability,
+    RequestResponseCapability,
 )
 from consortium.framework.agents.agent_capabilities.sequential_request_response_capability import (
-    sequential_request_response_capability,
+    SequentialRequestResponseCapability,
 )
 from consortium.framework.agents.agent_message_models import (
     Payload,
@@ -53,8 +53,6 @@ __all__ = [
     "BaseAgentCapability",
     "BaseAgentTemplate",
     "BaseAgentType",
-    "request_response_capability",
-    "sequential_request_response_capability",
     "SupportedOS",
     "AgentCapabilityLaunchError",
     "Success",
@@ -63,4 +61,6 @@ __all__ = [
     "TaskLaunchMessageModel",
     "TaskInputMessageModel",
     "TaskOutputMessageModel",
+    "RequestResponseCapability",
+    "SequentialRequestResponseCapability",
 ]

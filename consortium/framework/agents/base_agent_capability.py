@@ -2,6 +2,7 @@ import sys
 from collections.abc import Callable
 from enum import StrEnum
 from inspect import signature
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, get_type_hints
 
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
@@ -153,6 +154,7 @@ class BaseAgentCapability(_AgentCommunicator):
             agent: The agent instance this capability is executing against.
             task: The task record that tracks the execution lifecycle and event stream.
         """
+        self.environment = SimpleNamespace()
         super().__init__(agent=agent, task=task)
 
     def __init_subclass__(cls, abstract: bool = False, **kwargs):

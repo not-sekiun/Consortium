@@ -54,6 +54,27 @@ class BannerCommand(BaseCommand[AnyContext]):
 \x1b[2;90m    CONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUM    \x1b[0m
 """
         )
+        logo_banner = Text.from_ansi(
+            """
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTIU\x1b[0m                      \x1b[2;38;2;146;131;116mONSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⡀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣦⡀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⣦⣀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⣿⣿⣷⣄⣼⣍⠉⠉⠉⠉⠉⠉⠉⠉⢉⣽⣄\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⣿⣿⣿⡇⠈⠻⣷⣄⣀⣀⣀⣀⣀⣴⣿⠟⠁\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⣿⣿⣿⡇\x1b[0m  \x1b[38;2;204;36;29m⠈⣿⡿⠿⠿⠿⣿⡟⠁\x1b[0m    \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⣿⣿⣿⡇\x1b[0m   \x1b[38;2;204;36;29m⣿⡇\x1b[0m   \x1b[38;2;204;36;29m⣿⡇\x1b[0m     \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⣿⣿⣿⡇\x1b[0m  \x1b[38;2;204;36;29m⢀⣿⣷⣶⣶⣶⣿⣧⡀\x1b[0m    \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⣿⣿⣿⡇⢀⣴⡿⠋⠉⠉⠉⠉⠉⠻⣿⣦⡀\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⣿⣿⡿⠋⢻⣋⣀⣀⣀⣀⣀⣀⣀⣀⣈⣻⠋\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⣿⣿⠟⠉⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⣿⠟⠁⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTI\x1b[0m  \x1b[38;2;204;36;29m⠁⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\x1b[0m  \x1b[2;38;2;146;131;116mNSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTIU\x1b[0m                      \x1b[2;38;2;146;131;116mONSORTIUMCONSORTIUM\x1b[0m
+    \x1b[2;38;2;146;131;116mCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUMCONSORTIUM\x1b[0m
+"""
+        )
         ad_astra_banner = (
             "[bold white]        .        x      "
             "[bold red]    --[bold white]+             `        .          *   `     --.\n"
