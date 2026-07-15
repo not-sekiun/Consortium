@@ -3,9 +3,10 @@ import typing
 from collections.abc import AsyncIterable
 from typing import Any
 
+from pydantic import JsonValue
+
 from consortium.framework.agents.agent_message_models import (
     TaskInputMessageModel,
-    TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
 
@@ -18,13 +19,14 @@ class _AgentCommunicator:
     def __init__(self, agent: Agent, task: AgentTask):
         self.agent = agent
         self.task = task
+
         # The agent result messages queue is per agent capability and serves to
         # demultiplex messages coming in from the listener.
-        self.result_messages_queue = asyncio.Queue()
+        self._result_messages_queue = asyncio.Queue()
 
     async def send_to_agent(
         self,
-        task_message: TaskLaunchMessageModel | TaskInputMessageModel | None = None,
+        task_message: TaskInputMessageModel | None = None,
         data: dict[str, Any] | None = None,
         payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
         timeout: int | float | None = None,
@@ -82,16 +84,16 @@ class _AgentCommunicator:
             TimeoutError: If `timeout` is set and no message arrives within it.
         """
         if timeout is None:
-            return await self.result_messages_queue.get()
+            return await self._result_messages_queue.get()
 
         return await asyncio.wait_for(
-            self.result_messages_queue.get(),
+            self._result_messages_queue.get(),
             timeout=timeout,
         )
 
     async def send_and_recv_from_agent(
         self,
-        task_message: TaskLaunchMessageModel | TaskInputMessageModel | None = None,
+        task_message: TaskInputMessageModel | None = None,
         data: dict[str, Any] | None = None,
         payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
         timeout: int | float | None = None,
@@ -133,3 +135,9 @@ class _AgentCommunicator:
                 payload=payload,
             )
             return await self.recv_from_agent()
+
+    def create_task_input_message(
+        self, data: dict[str, JsonValue] | None = None
+    ) -> TaskInputMessageModel:
+        data = data if data is not None else {}
+        return TaskInputMessageModel(task_id=self.task.task_id, data=data)

@@ -10,6 +10,7 @@ from pydantic import UUID4, BaseModel, JsonValue, ValidationError
 from consortium.framework._core.components import State
 from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
     AgentCapabilityExecutionError,
+    AgentCapabilityLaunchError,
 )
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
@@ -23,7 +24,8 @@ from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.event_hooks import EventType
 from consortium.framework.listeners import BaseListener
 from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
-    AgentCapabilityExecutionError as AgentCapabilityExecutionFrameworkError,
+    AgentCapabilityExecutionError as AgentCapabilityExecutionSignal,
+    AgentCapabilityLaunchError as AgentCapabilityLaunchSignal,
 )
 from consortium.server import server_singletons as server_singletons
 from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
@@ -521,7 +523,7 @@ class Agent:
             )
             return False
 
-        await agent_capability.result_messages_queue.put(task_output_message)
+        await agent_capability._result_messages_queue.put(task_output_message)
         return True
 
     def mark_as_active(self) -> None:
@@ -586,7 +588,7 @@ class Agent:
                 if agent_capability.is_atomic:
                     async with self._agent_capability_execution_lock:
                         task_outcome = await agent_capability.execute(
-                            task_message=task_message
+                            task_launch_message=task_message
                         )
                 else:
                     # "Wait" for the lock to be released but dont actually hold it while
@@ -597,7 +599,7 @@ class Agent:
                         pass
 
                     task_outcome = await agent_capability.execute(
-                        task_message=task_message
+                        task_launch_message=task_message
                     )
 
                 # Upon returning without raising an error check the `task_outcome` to
@@ -623,9 +625,8 @@ class Agent:
                         data=task_outcome.data,
                     )
                 elif isinstance(task_outcome, Failure):
-                    # Failure is the standard deliberate failure path — returned by
-                    # on_execute to report a task failure to the operator, or by
-                    # execute() when on_launch raises AgentCapabilityDeniedError.
+                    # Failure is the standard deliberate failure path, returned by
+                    # on_execute to report a task failure to the operator.
                     task.status._transition_to_failed(
                         error=AgentCapabilityExecutionError(
                             agent_capability_name=agent_capability.name,
@@ -639,9 +640,20 @@ class Agent:
                         data=task_outcome.data,
                     )
                 elif task_outcome is None:
-                    # None = `on_launch` silently dropped the task (returned None).
-                    # No status transition — task remains in its current state.
-                    pass
+                    # None = the capability used the emit-only events pattern and
+                    # completed normally without opting in to an explicit outcome. Treat
+                    # it as a normal completion: transition to SUCCEEDED without
+                    # appending a duplicate terminal event (the capability already
+                    # emitted whatever events it wanted via emit_*).
+                    if task.status.state == AgentTaskState.QUEUED:
+                        self.logger.warning(
+                            "Agent {} completed task {} normally but the task never left "
+                            "QUEUED, its launch message was never popped so it was never "
+                            "acknowledged by the agent nor transitioned through RUNNING.",
+                            self,
+                            task,
+                        )
+                    task.status._transition_to_succeeded()
                 else:
                     self.logger.warning(
                         "Agent {} had a task {} that completed but returned a value "
@@ -651,17 +663,37 @@ class Agent:
                         task,
                         task_outcome,
                     )
-            except AgentCapabilityExecutionFrameworkError as exc:
-                task.status._transition_to_failed(error=exc)
-                # TODO: Decide on what to append in this case and how data should be
-                #  communicated via `AgentCapabilityExecutionFrameworkError` and where
-                #  the exception should live
+            except AgentCapabilityLaunchSignal as exc:
+                # Deliberately raised from on_launch to deny a task from starting, for
+                # example when a pre-launch validation check fails. This is the launch
+                # (validation) analogue of the execution error below; both are reported
+                # as ERRORED but with distinct base messages.
+                task.status._transition_to_errored(
+                    error=AgentCapabilityLaunchError(
+                        agent_capability_name=agent_capability.name,
+                        error_message=exc.message,
+                        detail=exc.detail,
+                    )
+                )
                 task.append_event(
                     event_type=AgentTaskEventType.FAILURE,
                     message=exc.message,
-                    data={
-                        "detail": exc.detail,
-                    },
+                    data={"detail": exc.detail},
+                )
+            except AgentCapabilityExecutionSignal as exc:
+                # Deliberately raised from on_execute to stop a running capability with a
+                # runtime error. Reported as ERRORED with the execution base message.
+                task.status._transition_to_errored(
+                    error=AgentCapabilityExecutionError(
+                        agent_capability_name=agent_capability.name,
+                        error_message=exc.message,
+                        detail=exc.detail,
+                    )
+                )
+                task.append_event(
+                    event_type=AgentTaskEventType.FAILURE,
+                    message=exc.message,
+                    data={"detail": exc.detail},
                 )
             except Exception as exc:
                 self.logger.error(

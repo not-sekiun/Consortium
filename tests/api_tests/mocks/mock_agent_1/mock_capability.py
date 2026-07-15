@@ -12,7 +12,7 @@ class MockCapability(BaseAgentCapability):
     description = "No-op capability that returns success immediately for API tests."
     authors = {"test"}
 
-    async def execute(self, task_message: TaskLaunchMessageModel) -> Success:
+    async def execute(self, task_launch_message: TaskLaunchMessageModel) -> Success:
         # Transition QUEUED -> RUNNING directly, mirroring what get_next_task_message
         # does, so the framework can then transition RUNNING -> SUCCEEDED on return.
         if self.task.status.state == AgentTaskState.QUEUED:
@@ -29,9 +29,13 @@ class MockBlockingCapability(BaseAgentCapability):
     description = "No-op capability that blocks so the task stays QUEUED for API tests."
     authors = {"test"}
 
-    async def execute(self, task_message: TaskLaunchMessageModel) -> Success | None:
+    async def execute(self, task_launch_message: TaskLaunchMessageModel) -> Success:
+        # Block so the task stays QUEUED long enough for the deletion tests to act on
+        # it. On cancellation at teardown, report Success explicitly rather than
+        # returning None: a None return now means "completed normally" as well, but
+        # being explicit keeps this mock independent of that convention.
         try:
             await asyncio.sleep(3)
         except asyncio.CancelledError:
-            return None
+            return Success(message="mock cancelled")
         return Success(message="mock success")

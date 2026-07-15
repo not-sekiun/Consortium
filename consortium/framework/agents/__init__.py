@@ -20,11 +20,21 @@ and
 factories build capability classes without requiring a full subclass definition.
 """
 
+from consortium.framework.agents.agent_capabilities.bidirectional_stream_capability import (
+    BidirectionalStreamCapability,
+)
+from consortium.framework.agents.agent_capabilities.control_models import Finish
+from consortium.framework.agents.agent_capabilities.incoming_stream_capability import (
+    IncomingStreamCapability,
+)
+from consortium.framework.agents.agent_capabilities.iterated_request_response_capability import (
+    IteratedRequestResponseCapability,
+)
+from consortium.framework.agents.agent_capabilities.outgoing_stream_capability import (
+    OutgoingStreamCapability,
+)
 from consortium.framework.agents.agent_capabilities.request_response_capability import (
     RequestResponseCapability,
-)
-from consortium.framework.agents.agent_capabilities.sequential_request_response_capability import (
-    SequentialRequestResponseCapability,
 )
 from consortium.framework.agents.agent_message_models import (
     Payload,
@@ -50,7 +60,6 @@ from consortium.framework.signal_exceptions.agent_capabilties_signal_exception i
 __all__ = [
     "BaseAgentGenerator",
     "BaseAgentGeneratorBuildStep",
-    "BaseAgentCapability",
     "BaseAgentTemplate",
     "BaseAgentType",
     "SupportedOS",
@@ -61,6 +70,11 @@ __all__ = [
     "TaskLaunchMessageModel",
     "TaskInputMessageModel",
     "TaskOutputMessageModel",
+    "BaseAgentCapability",
     "RequestResponseCapability",
-    "SequentialRequestResponseCapability",
+    "IteratedRequestResponseCapability",
+    "IncomingStreamCapability",
+    "OutgoingStreamCapability",
+    "Finish",
+    "BidirectionalStreamCapability",
 ]

@@ -79,27 +79,27 @@ class UploadCapability(BaseAgentCapability):
     mitre_attack_techniques = {"T1105"}
 
     async def on_launch(
-        self, task_message: TaskLaunchMessageModel
+        self, task_launch_message: TaskLaunchMessageModel
     ) -> TaskLaunchMessageModel:
-        source = Path(task_message.arguments["source"])
+        source = Path(task_launch_message.arguments["source"])
         if not source.exists():
             raise AgentCapabilityLaunchError(
                 message=f"Failed to start upload. Path '{source}' does not exist."
             )
 
         self._source = source
-        self._chunk_size = task_message.arguments["chunk_size"]
-        self._recursive = task_message.arguments["recursive"]
-        self._ignore_empty_dirs = task_message.arguments["ignore_empty_dirs"]
-        self._compression_level = task_message.arguments["compression_level"]
+        self._chunk_size = task_launch_message.arguments["chunk_size"]
+        self._recursive = task_launch_message.arguments["recursive"]
+        self._ignore_empty_dirs = task_launch_message.arguments["ignore_empty_dirs"]
+        self._compression_level = task_launch_message.arguments["compression_level"]
 
         # Strip server-side-only args before sending to agent
-        task_message.arguments = {
-            "destination": task_message.arguments["destination"],
-            "expand": task_message.arguments["expand"],
-            "overwrite": task_message.arguments["overwrite"],
+        task_launch_message.arguments = {
+            "destination": task_launch_message.arguments["destination"],
+            "expand": task_launch_message.arguments["expand"],
+            "overwrite": task_launch_message.arguments["overwrite"],
         }
-        return task_message
+        return task_launch_message
 
     # FIXME: What the fuck is this bullshit
     async def on_execute(self) -> Success | Failure | None:

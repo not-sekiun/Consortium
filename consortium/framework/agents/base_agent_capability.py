@@ -98,7 +98,7 @@ class _BaseAgentCapabilityModel(BaseModel):
         | ChoiceValueOption
         | ToggleableChoicesValueOption
     ]
-    mitre_attack_techniques: set[str]  # set[MitreAttackTechniqueID]
+    mitre_attack_techniques: set[str]
     validating_function: Callable[[dict[str, JsonValue]], None] | None
 
 
@@ -126,7 +126,7 @@ class BaseAgentCapability(_AgentCommunicator):
             capability. Resolved to MitreAttackTechnique objects at definition time.
         validating_function: Optional single-argument callable that validates the full
             resolved option set before execution.
-        launch_message: The message sent to the agent on the most recent execute()
+        task_launch_message: The message sent to the agent on the most recent execute()
             call; set by execute() after on_launch completes.
     """
 
@@ -143,9 +143,9 @@ class BaseAgentCapability(_AgentCommunicator):
         | ChoiceValueOption
         | ToggleableChoicesValueOption
     ] = None
-    mitre_attack_techniques: set[str] | None = None  # set[MitreAttackTechniqueID]
+    mitre_attack_techniques: set[str] | None = None
     validating_function: Callable[[dict[str, JsonValue]], None] | None = None
-    launch_message: TaskLaunchMessageModel | None = None
+    task_launch_message: TaskLaunchMessageModel | None = None
 
     def __init__(self, agent: Agent, task: AgentTask):
         """Initialize the capability with the agent and task context for this execution.
@@ -340,21 +340,23 @@ class BaseAgentCapability(_AgentCommunicator):
 
     async def on_launch(
         self,
-        task_message: TaskLaunchMessageModel,
+        task_launch_message: TaskLaunchMessageModel,
     ) -> TaskLaunchMessageModel | None:
         """Hook called before the task message is transmitted to the agent.
 
-        Override to mutate or enrich the launch message prior to sending, or return
-        None to abort the launch without transmitting a message.
+        Override to mutate or enrich the launch message prior to sending. To deny the
+        launch (for example when a pre-launch validation check fails) raise
+        AgentCapabilityLaunchError rather than returning None; the task is then reported
+        as ERRORED.
 
         Args:
-            task_message: The task launch message prepared by the caller, containing
+            task_launch_message: The task launch message prepared by the caller, containing
                 the command, arguments, data, and any attached payload.
 
         Returns:
-            The (possibly modified) task message to send, or None to cancel the launch.
+            The (possibly modified) task message to send.
         """
-        return task_message
+        return task_launch_message
 
     async def on_execute(self) -> Success | Failure | None:
         """Hook called after the task message has been sent to process the agent's response.
@@ -366,16 +368,11 @@ class BaseAgentCapability(_AgentCommunicator):
             A Success wrapping the agent's response on success, a Failure on failure,
             or None if no response is expected.
         """
-        task_output_message = await self.recv_from_agent()
-        return (
-            Success(task_output_message=task_output_message)
-            if task_output_message.success
-            else Failure(task_output_message=task_output_message)
-        )
+        return (await self.recv_from_agent()).to_outcome()
 
     async def execute(
         self,
-        task_message: TaskLaunchMessageModel,
+        task_launch_message: TaskLaunchMessageModel,
     ) -> Success | Failure | None:
         """Dispatch the task to the agent and return the execution outcome.
 
@@ -383,21 +380,33 @@ class BaseAgentCapability(_AgentCommunicator):
         message to the agent, then calls on_execute to await and process the response.
 
         Args:
-            task_message: The fully populated task launch message to dispatch, including
-                the command, arguments, data, and any binary payload.
+            task_launch_message: The fully populated task launch message to dispatch,
+                including the command, arguments, data, and any binary payload.
 
         Returns:
-            A Success or Failure wrapping the agent's response, or None if on_launch
-            cancelled the launch by returning None.
+            The outcome from on_execute. Return Success or Failure to opt in to an
+            explicit terminal event and task transition; return None when the capability
+            reported everything it needs to via emit_* events, in which case the task is
+            assumed to have completed normally.
+
+        Raises:
+            AgentCapabilityLaunchError: If on_launch denies the launch, either by raising
+                it directly or by returning None instead of a launch message. The task
+                handler converts this into an ERRORED task.
         """
-        try:
-            result = await self.on_launch(task_message)
-        except AgentCapabilityLaunchError as exc:
-            return Failure(message=exc.message)
-        if result is None:
-            return None
-        self.launch_message = result
-        await self.agent.send_task_message(task_message=self.launch_message)
+        modified_task_launch_message = await self.on_launch(task_launch_message)
+        if modified_task_launch_message is None:
+            # on_launch must hand back a launch message or deny the launch by raising
+            # AgentCapabilityLaunchError. Returning None is no longer a silent cancel:
+            # None returned from execute() now means "completed normally", so an aborted
+            # launch has to be reported explicitly through the launch error.
+            raise AgentCapabilityLaunchError(
+                "`on_launch` must return a `TaskLaunchMessageModel`, or raise "
+                "`AgentCapabilityLaunchError` to deny the launch, but it returned "
+                "`None`."
+            )
+        self.task_launch_message = modified_task_launch_message
+        await self.agent.send_task_message(task_message=modified_task_launch_message)
         return await self.on_execute()
 
     @classmethod

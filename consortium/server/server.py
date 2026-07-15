@@ -147,7 +147,7 @@ class Server:
         # TODO: Add `timeout` to prevent hanging during shutdown. Do not replace
         #  `blocking` because we want non block (false, Any), block with finite timeout
         #  (true, float), block forever (true, None).
-        self._logger.info("- Stopping all running listeners...")
+        self._logger.info("Stopping all running listeners...")
         # Gracefully stop all running listeners.
         for listener in server_singletons.listeners_service.get_all_listeners():
             if listener.status.state == State.RUNNING:
@@ -157,23 +157,23 @@ class Server:
                         blocking=True,
                     )
                     self._logger.success(
-                        "  - Stopped listener: {}.",
+                        "- Stopped listener: {}.",
                         listener,
                     )
                 except Exception as exc:
                     self._logger.error(
-                        "  - Failed to stop listener {} due to error: {}",
+                        "- Failed to stop listener {} due to error: {}",
                         listener,
                         exc,
                     )
             else:
                 self._logger.info(
-                    "  - Listener {} is not running, skipped stop procedure.",
+                    "- Listener {} is not running, skipped stop procedure.",
                     listener,
                 )
 
         # Gracefully stop all running agent generators.
-        self._logger.info("- Stopping all running agent generators...")
+        self._logger.info("Stopping all running agent generators...")
         for (
             agent_generator
         ) in server_singletons.agent_generators_service.get_all_agent_generators():
@@ -200,7 +200,7 @@ class Server:
                 )
 
         # Gracefully stop all running plugins.
-        self._logger.info("- Stopping all running plugins...")
+        self._logger.info("Stopping all running plugins...")
         for plugin in server_singletons.plugins_service.get_all_plugins():
             if plugin.status.state == State.RUNNING:
                 try:

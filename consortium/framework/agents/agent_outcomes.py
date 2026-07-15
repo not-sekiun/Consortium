@@ -1,6 +1,9 @@
+from typing import TYPE_CHECKING
+
 from pydantic import JsonValue
 
-from consortium.framework.agents.agent_message_models import TaskOutputMessageModel
+if TYPE_CHECKING:
+    from consortium.framework.agents.agent_message_models import TaskOutputMessageModel
 
 
 class Success:
@@ -37,7 +40,7 @@ class Success:
             data: Structured result data. Overrides the data from task_output_message
                 when both are provided.
         """
-        if isinstance(task_output_message, TaskOutputMessageModel):
+        if task_output_message is not None:
             self.message = task_output_message.message if message is None else message
             self.data = task_output_message.data if data is None else data
         else:
@@ -79,7 +82,7 @@ class Failure:
             data: Structured diagnostic data. Overrides the data from task_output_message
                 when both are provided.
         """
-        if isinstance(task_output_message, TaskOutputMessageModel):
+        if task_output_message is not None:
             self.message = task_output_message.message if message is None else message
             self.data = task_output_message.data if data is None else data
         else:

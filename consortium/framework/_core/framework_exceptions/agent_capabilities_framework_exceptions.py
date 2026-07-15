@@ -114,6 +114,31 @@ class CustomOSStringAlreadyRegisteredError(AgentCapabilityConfigurationError):
         )
 
 
+class AgentCapabilityLaunchError(AgentCapabilitiesFrameworkError):
+    """Raised when an agent capability is denied from launching.
+
+    This is the launch-time analogue of `AgentCapabilityExecutionError`: it reports a
+    task that never started because a pre-launch check (validation) failed, as opposed
+    to a task that failed while running.
+    """
+
+    code = "AGENT_CAPABILITY_LAUNCH_ERROR"
+
+    def __init__(
+        self,
+        agent_capability_name: str,
+        error_message: str,
+        detail: dict[str, JsonValue] | None = None,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to launch agent capability '{agent_capability_name}'. "
+                f"{error_message}"
+            ),
+            detail=detail,
+        )
+
+
 class AgentCapabilityExecutionError(AgentCapabilitiesFrameworkError):
     """Raised when an agent capability encounters an error during its execution."""
 

@@ -44,7 +44,7 @@ class RequestResponseCapability(BaseAgentCapability, abstract=True):
 
     async def resolve_timeout(
         self,
-        task_message: TaskLaunchMessageModel,
+        task_launch_message: TaskLaunchMessageModel,
     ) -> int | float | None:
         """Return the number of seconds to wait for the agent's response.
 
@@ -52,7 +52,7 @@ class RequestResponseCapability(BaseAgentCapability, abstract=True):
         The default returns the class-level timeout attribute.
 
         Args:
-            task_message: The task message about to be sent to the agent.
+            task_launch_message: The task message about to be sent to the agent.
 
         Returns:
             The receive timeout in seconds, or None to wait indefinitely.
@@ -107,12 +107,12 @@ class RequestResponseCapability(BaseAgentCapability, abstract=True):
     @final
     async def on_launch(
         self,
-        task_message: TaskLaunchMessageModel,
+        task_launch_message: TaskLaunchMessageModel,
     ) -> TaskLaunchMessageModel | None:
         # Resolve the receive timeout from the original message before on_task can
         # replace it, matching the request_response_capability factory's ordering.
-        self._recv_timeout = await self.resolve_timeout(task_message)
-        return await self.on_request(task_message)
+        self._recv_timeout = await self.resolve_timeout(task_launch_message)
+        return await self.on_request(task_launch_message)
 
     @final
     async def on_execute(self) -> Success | Failure:
@@ -122,19 +122,11 @@ class RequestResponseCapability(BaseAgentCapability, abstract=True):
             # on_timeout re-raises by default; an override may return a substitute
             # result message to report instead.
             response_message = await self.on_timeout()
-            return self._to_outcome(response_message)
+            return response_message.to_outcome()
 
         response_message = await self.on_response(response_message)
         if not isinstance(response_message, TaskOutputMessageModel):
             raise TypeError(
-                "The `on_result` hook must return a `TaskOutputMessageModel`."
+                "The `on_response` hook must return a `TaskOutputMessageModel`."
             )
-        return self._to_outcome(response_message)
-
-    @staticmethod
-    def _to_outcome(result_message: TaskOutputMessageModel) -> Success | Failure:
-        return (
-            Success(result_message)
-            if result_message.success
-            else Failure(result_message)
-        )
+        return response_message.to_outcome()

@@ -3,6 +3,8 @@ from typing import Annotated
 
 from pydantic import UUID4, BaseModel, BeforeValidator, ConfigDict, JsonValue
 
+from consortium.framework.agents.agent_outcomes import Failure, Success
+
 
 class Payload:
     """Binary payload that wraps either a complete byte sequence or an async stream of byte chunks.
@@ -200,3 +202,15 @@ class TaskOutputMessageModel(BaseModel):
             "message": self.message,
             "data": self.data,
         }
+
+    def to_outcome(self) -> Success | Failure:
+        """Convert the message into a Success or Failure outcome object.
+
+        Returns:
+            A Success instance if success is True, otherwise a Failure instance.
+        """
+
+        if self.success:
+            return Success(task_output_message=self)
+        else:
+            return Failure(task_output_message=self)

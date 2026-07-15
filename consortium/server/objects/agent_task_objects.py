@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
-    AgentCapabilityExecutionError,
+    AgentCapabilitiesFrameworkError,
 )
 from consortium.server.models.agent_task_models import (
     AgentCurrentProgressModel,
@@ -56,14 +56,14 @@ class AgentTaskStatus:
                 "message": self.error.message,
                 "detail": self.error.detail,
             }
-            if isinstance(self.error, AgentCapabilityExecutionError)  # TODO: Add error
+            if isinstance(self.error, AgentCapabilitiesFrameworkError)
             else None,
         }
 
     def _transition_to_state(
         self,
         new_state: AgentTaskState,
-        error: AgentCapabilityExecutionError | None = None,
+        error: AgentCapabilitiesFrameworkError | None = None,
     ):
         if new_state not in self._VALID_STATE_TRANSITIONS[self.state]:
             raise AssertionError(
@@ -98,10 +98,10 @@ class AgentTaskStatus:
     def _transition_to_succeeded(self) -> None:
         self._transition_to_state(new_state=AgentTaskState.SUCCEEDED)
 
-    def _transition_to_failed(self, error: AgentCapabilityExecutionError) -> None:
+    def _transition_to_failed(self, error: AgentCapabilitiesFrameworkError) -> None:
         self._transition_to_state(new_state=AgentTaskState.FAILED, error=error)
 
-    def _transition_to_errored(self, error: AgentCapabilityExecutionError) -> None:
+    def _transition_to_errored(self, error: AgentCapabilitiesFrameworkError) -> None:
         self._transition_to_state(new_state=AgentTaskState.ERRORED, error=error)
 
 
