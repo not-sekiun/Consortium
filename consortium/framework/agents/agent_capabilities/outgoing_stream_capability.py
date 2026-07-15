@@ -1,8 +1,8 @@
 from typing import final
 
-from consortium.framework.agents import TaskInputMessageModel
 from consortium.framework.agents.agent_capabilities.control_models import Finish
 from consortium.framework.agents.agent_message_models import (
+    TaskInputMessageModel,
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )

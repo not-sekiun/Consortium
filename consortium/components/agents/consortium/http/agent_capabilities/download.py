@@ -81,7 +81,7 @@ class DownloadCapability(IncomingStreamCapability):
     #  emit_artifact should properly log this event with reference to the artifact
     #  created
     async def on_handle_incoming_message(
-        self, task_output_message: TaskOutputMessageModel
+        self, index: int, task_output_message: TaskOutputMessageModel
     ) -> Success | Failure | None:
         response = task_output_message
         # Per-transfer state that persists across the streamed messages. Held on
@@ -96,7 +96,7 @@ class DownloadCapability(IncomingStreamCapability):
         # The first message is the transfer header. Capture the top-level transfer
         # metadata once so `end_of_transfer` can report against it. `header.data['type']`
         # can be 'file' or 'directory' here for the initial header.
-        if not hasattr(env, "is_dir"):
+        if index == 0:
             env.is_dir = response.data["type"] == "directory"
             env.target_name = pathlib.Path(response.data["path"]).name
             env.current_file = None
@@ -171,7 +171,7 @@ class DownloadCapability(IncomingStreamCapability):
             )
         else:
             return Failure(
-                message=(f"Unknown message type received during download: {msg_type}")
+                message=f"Unknown message type received during download: {msg_type}"
             )
 
         # No terminal signal for this message: keep receiving the next one.

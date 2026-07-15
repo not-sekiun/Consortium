@@ -56,10 +56,11 @@ class BidirectionalStreamCapability(BaseAgentCapability, abstract=True):
                 )
 
     async def _incoming_message_task_handler(self) -> Success | Failure | None:
+        index = 0
         while True:
             task_output_message = await self.recv_from_agent()
             result = await self.on_handle_incoming_message(
-                task_output_message=task_output_message
+                index=index, task_output_message=task_output_message
             )
             # A `Success`/`Failure` ends the exchange and becomes the task result; the
             # `Finish` sentinel ends it with no outcome; `None` continues the loop to
@@ -74,6 +75,7 @@ class BidirectionalStreamCapability(BaseAgentCapability, abstract=True):
                     "`Finish`, or `None` but instead returned value of type "
                     f"{type(result).__name__}"
                 )
+            index += 1
 
     async def on_handle_outgoing_message(
         self,
@@ -90,7 +92,7 @@ class BidirectionalStreamCapability(BaseAgentCapability, abstract=True):
         """
 
     async def on_handle_incoming_message(
-        self, task_output_message: TaskOutputMessageModel
+        self, index: int, task_output_message: TaskOutputMessageModel
     ) -> Success | Failure | None:
         """Consume a message from the agent and decide whether the exchange is over.
 
@@ -101,6 +103,8 @@ class BidirectionalStreamCapability(BaseAgentCapability, abstract=True):
         send loop; the returned outcome (or None for Finish) becomes the task result.
 
         Args:
+            index: The 0-based count of messages received from the agent this execution
+                (0 for the first message, incremented once per continued round).
             task_output_message: The message just received from the agent.
 
         Returns:
