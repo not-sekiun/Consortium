@@ -5,6 +5,7 @@ from typing import Any
 
 from pydantic import JsonValue
 
+from consortium.framework._core.task_messages_queue import TaskMessagesQueue
 from consortium.framework.agents.agent_message_models import (
     TaskInputMessageModel,
     TaskOutputMessageModel,
@@ -20,9 +21,11 @@ class _AgentCommunicator:
         self.agent = agent
         self.task = task
 
-        # The agent result messages queue is per agent capability and serves to
-        # demultiplex messages coming in from the listener.
-        self._result_messages_queue = asyncio.Queue()
+        # The task messages inbox is per agent capability and demultiplexes messages
+        # coming in from the listener.
+        self._task_messages_inbox = TaskMessagesQueue(
+            maximum_memory_size=8 * 1024 * 1024
+        )  # 8 MB cap
 
     async def send_to_agent(
         self,
@@ -84,12 +87,9 @@ class _AgentCommunicator:
             TimeoutError: If `timeout` is set and no message arrives within it.
         """
         if timeout is None:
-            return await self._result_messages_queue.get()
+            return await self._task_messages_inbox.get()
 
-        return await asyncio.wait_for(
-            self._result_messages_queue.get(),
-            timeout=timeout,
-        )
+        return await self._task_messages_inbox.get(timeout=timeout)
 
     async def send_and_recv_from_agent(
         self,

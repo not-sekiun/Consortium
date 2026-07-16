@@ -4,6 +4,7 @@ from typing import IO, Any, Literal
 import aiohttp
 from aiohttp import ClientConnectionError
 from loguru import logger
+from pydantic import JsonValue
 
 from consortium.client.exceptions.rest_api_exceptions import (
     InvalidRestAPICredentialsError,
@@ -139,7 +140,7 @@ class RestAPI:
         self.logged_in = False
 
     # Wrapper methods for the /api/login API endpoints.
-    async def login(self, username: str, password: str) -> dict[str, Any]:
+    async def login(self, username: str, password: str) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/login",
@@ -151,7 +152,7 @@ class RestAPI:
 
     # Wrapper methods for the /api/logout API endpoint.
     @_requires_authentication
-    async def logout(self) -> dict[str, Any]:
+    async def logout(self) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/logout",
@@ -159,14 +160,14 @@ class RestAPI:
 
     # Wrapper methods for the /api/server API endpoints.
     @_requires_authentication
-    async def get_server_release(self) -> dict[str, Any]:
+    async def get_server_release(self) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/server/release",
         )
 
     @_requires_authentication
-    async def get_server_config(self) -> dict[str, Any]:
+    async def get_server_config(self) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/server/config",
@@ -174,7 +175,7 @@ class RestAPI:
 
     # Wrapper methods for the /api/listener-templates API endpoint.
     @_requires_authentication
-    async def get_all_listener_templates(self) -> list[dict[str, Any]]:
+    async def get_all_listener_templates(self) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/listener-templates/all",
@@ -184,7 +185,7 @@ class RestAPI:
     async def get_listener_template_by_listener_template_id(
         self,
         listener_template_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/listener-templates/{listener_template_id}",
@@ -194,8 +195,8 @@ class RestAPI:
     async def create_listener_through_listener_template_by_listener_template_id(
         self,
         listener_template_id: str,
-        listener_template_option_values: dict[str, Any],
-    ) -> dict[str, Any]:
+        listener_template_option_values: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/listener-templates/{listener_template_id}",
@@ -204,7 +205,7 @@ class RestAPI:
 
     # Wrapper methods for the /api/listeners API endpoint.
     @_requires_authentication
-    async def get_all_listeners(self) -> list[dict[str, Any]]:
+    async def get_all_listeners(self) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/listeners/all",
@@ -214,7 +215,7 @@ class RestAPI:
     async def get_listener_by_listener_id(
         self,
         listener_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/listeners/{listener_id}",
@@ -224,8 +225,8 @@ class RestAPI:
     async def update_listener_by_listener_id(
         self,
         listener_id: str,
-        new_listener_attributes: dict[str, Any],
-    ) -> dict[str, Any]:
+        new_listener_attributes: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="PATCH",
             url=f"{self._api_base_url}/listeners/{listener_id}",
@@ -243,21 +244,27 @@ class RestAPI:
         )
 
     @_requires_authentication
-    async def start_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
+    async def start_listener_by_listener_id(
+        self, listener_id: str
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/listeners/{listener_id}/start",
         )
 
     @_requires_authentication
-    async def stop_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
+    async def stop_listener_by_listener_id(
+        self, listener_id: str
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/listeners/{listener_id}/stop",
         )
 
     @_requires_authentication
-    async def cancel_listener_by_listener_id(self, listener_id: str) -> dict[str, Any]:
+    async def cancel_listener_by_listener_id(
+        self, listener_id: str
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/listeners/{listener_id}/cancel",
@@ -265,7 +272,7 @@ class RestAPI:
 
     # Wrapper methods for the /api/agent-templates API endpoint.
     @_requires_authentication
-    async def get_all_agent_templates(self) -> list[dict[str, Any]]:
+    async def get_all_agent_templates(self) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agent-templates/all",
@@ -275,7 +282,7 @@ class RestAPI:
     async def get_agent_template_by_agent_template_id(
         self,
         agent_template_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
@@ -285,8 +292,8 @@ class RestAPI:
     async def create_agent_generator_through_agent_template_by_agent_template_id(
         self,
         agent_template_id: str,
-        agent_template_option_values: dict[str, Any],
-    ) -> dict[str, Any]:
+        agent_template_option_values: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
@@ -295,7 +302,7 @@ class RestAPI:
 
     # Wrapper methods for the /api/agent-generators API endpoint.
     @_requires_authentication
-    async def get_all_agent_generators(self) -> list[dict[str, Any]]:
+    async def get_all_agent_generators(self) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agent-generators/all",
@@ -305,7 +312,7 @@ class RestAPI:
     async def get_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
@@ -315,8 +322,8 @@ class RestAPI:
     async def update_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
-        new_agent_generator_attributes: dict[str, Any],
-    ) -> dict[str, Any]:
+        new_agent_generator_attributes: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="PATCH",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
@@ -327,7 +334,7 @@ class RestAPI:
     async def delete_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="DELETE",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
@@ -337,7 +344,7 @@ class RestAPI:
     async def start_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}/start",
@@ -347,7 +354,7 @@ class RestAPI:
     async def stop_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}/stop",
@@ -357,7 +364,7 @@ class RestAPI:
     async def cancel_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}/cancel",
@@ -365,14 +372,14 @@ class RestAPI:
 
     # Wrapper methods for the /api/agents API endpoint.
     @_requires_authentication
-    async def get_all_agents(self) -> list[dict[str, Any]]:
+    async def get_all_agents(self) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/all",
         )
 
     @_requires_authentication
-    async def get_agent_by_agent_id(self, agent_id: str) -> list[dict[str, Any]]:
+    async def get_agent_by_agent_id(self, agent_id: str) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}",
@@ -383,7 +390,7 @@ class RestAPI:
         self,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, JsonValue]]:
         params = self._build_task_events_params(limit, offset)
         return await self._make_api_request(
             method="GET",
@@ -411,7 +418,7 @@ class RestAPI:
         agent_id: str,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, JsonValue]]:
         params = self._build_task_events_params(limit, offset)
         return await self._make_api_request(
             method="GET",
@@ -425,7 +432,7 @@ class RestAPI:
         agent_id: str,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, JsonValue]]:
         params = {"status": "QUEUED"}
         params.update(self._build_task_events_params(limit, offset))
         return await self._make_api_request(
@@ -440,7 +447,7 @@ class RestAPI:
         agent_id: str,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, JsonValue]]:
         params = {"status": "RUNNING"}
         params.update(self._build_task_events_params(limit, offset))
         return await self._make_api_request(
@@ -455,7 +462,7 @@ class RestAPI:
         agent_id: str,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, JsonValue]]:
         params = {"status": "COMPLETED"}
         params.update(self._build_task_events_params(limit, offset))
         return await self._make_api_request(
@@ -483,8 +490,8 @@ class RestAPI:
     async def update_agent_by_agent_id(
         self,
         agent_id: str,
-        new_agent_attributes: dict[str, Any],
-    ) -> dict[str, Any]:
+        new_agent_attributes: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="PATCH",
             url=f"{self._api_base_url}/agents/{agent_id}",
@@ -496,21 +503,21 @@ class RestAPI:
     async def get_user_info_by_user_id(
         self,
         user_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/users/{user_id}",
         )
 
     @_requires_authentication
-    async def get_own_user_info(self) -> dict[str, Any]:
+    async def get_own_user_info(self) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/users/me",
         )
 
     @_requires_authentication
-    async def get_all_users_info(self) -> list[dict[str, Any]]:
+    async def get_all_users_info(self) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/users/all",
@@ -521,8 +528,8 @@ class RestAPI:
         self,
         agent_id: str,
         command: str,
-        arguments: dict[str, Any],
-    ) -> dict[str, Any]:
+        arguments: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -532,7 +539,7 @@ class RestAPI:
     # Wrapper methods for the /api/assets API endpoint.
     async def get_all_assets(
         self,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/assets/all",
@@ -552,7 +559,7 @@ class RestAPI:
     async def get_asset_by_resource_id(
         self,
         resource_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/assets/{resource_id}",
@@ -583,7 +590,7 @@ class RestAPI:
             ".tar.xz",
         ]
         | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         response = await self._aiohttp_client_session.post(
             f"{self._api_base_url}/assets/upload",
             data={
@@ -602,7 +609,7 @@ class RestAPI:
     @_requires_authentication
     async def get_all_artifacts(
         self,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/artifacts/all",
@@ -612,7 +619,7 @@ class RestAPI:
     async def get_artifact_by_resource_id(
         self,
         resource_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/artifacts/{resource_id}",
@@ -641,7 +648,7 @@ class RestAPI:
 
     # Wrapper methods for the /api/payloads API endpoint.
     @_requires_authentication
-    async def get_all_payloads(self) -> list[dict[str, Any]]:
+    async def get_all_payloads(self) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/payloads/all",
@@ -651,7 +658,7 @@ class RestAPI:
     async def get_payload_by_resource_id(
         self,
         resource_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/payloads/{resource_id}",
@@ -682,7 +689,7 @@ class RestAPI:
     def _build_task_events_params(
         limit: int | None,
         offset: int | None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JsonValue]:
         params = {}
         if limit is not None:
             params["limit"] = limit
@@ -692,7 +699,7 @@ class RestAPI:
 
     @staticmethod
     def _check_for_api_error_response(
-        status_code: int, response_json: dict[str, Any] | None
+        status_code: int, response_json: dict[str, JsonValue] | None
     ) -> None:
         if response_json is None:  # Empty body like in HTTP 204 or 202 responses
             return
@@ -710,7 +717,7 @@ class RestAPI:
         method: str,
         url: str,
         response: aiohttp.ClientResponse,
-        response_json: dict[str, Any],
+        response_json: dict[str, JsonValue],
     ):
         _http_response_code_to_color_string_map = {
             1: "<bold><cyan>",

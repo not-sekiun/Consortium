@@ -87,6 +87,14 @@ nav = [
                 "framework/agents/building-an-agent-profile/agent-generator.md",
                 "framework/agents/building-an-agent-profile/complete-agent-profile.md"
             ] },
+            { "Agent Capability Patterns" = [
+                "framework/agents/agent-capability-patterns/agent-capability-patterns-overview.md",
+                "framework/agents/agent-capability-patterns/request-response-capability.md",
+                "framework/agents/agent-capability-patterns/lock-step-stream-capability.md",
+                "framework/agents/agent-capability-patterns/incoming-stream-capability.md",
+                "framework/agents/agent-capability-patterns/outgoing-stream-capability.md",
+                "framework/agents/agent-capability-patterns/bidirectional-stream-capability.md",
+            ] },
             "framework/agents/agent-protocol.md"
         ] },
         { "Plugins" = [

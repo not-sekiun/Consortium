@@ -8,6 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
+    format_datetime_as_human_readable_str,
     format_size_bytes_as_human_readable_str,
 )
 from consortium.client.utils.printer_utils import console
@@ -40,6 +41,7 @@ class AssetListCommand(BaseConnectedCommand):
             table.add_column("Uploaded By")
             table.add_column("Type")
             table.add_column("Size")
+            table.add_column("Datetime Created")
             for asset in assets:
                 size = asset["size"]
                 # An asset is "just" a resource with metadata: the uploading user
@@ -70,6 +72,10 @@ class AssetListCommand(BaseConnectedCommand):
                     format_size_bytes_as_human_readable_str(size_bytes=size)
                     if size is not None
                     else "N/A",
+                    format_datetime_as_human_readable_str(
+                        datetime_str=asset["datetime_created"],
+                        include_elapsed_time=True,
+                    ),
                 )
             console.print(table, "")
         except SystemExit:

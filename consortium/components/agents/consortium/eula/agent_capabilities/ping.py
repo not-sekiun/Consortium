@@ -1,12 +1,14 @@
+import asyncio
 from datetime import datetime
 
 from consortium.framework.agents import (
-    IteratedRequestResponseCapability,
+    Finish,
+    LockStepStreamCapability,
 )
 from consortium.framework.options import SingleValueOption
 
 
-class PingCapability(IteratedRequestResponseCapability):
+class PingCapability(LockStepStreamCapability):
     name = "ping"
     description = "Ping the agent to check responsiveness and measure latency"
     authors = {"Sekiun (github.com/not-sekiun)"}
@@ -30,12 +32,12 @@ class PingCapability(IteratedRequestResponseCapability):
     }
 
     async def resolve_iterations(self, task_launch_message):
-        return task_launch_message.arguments["iterations"] - 1
+        return task_launch_message.arguments["iterations"]
 
-    async def resolve_timeout(self, index, current_task_message):
+    async def resolve_timeout(self, index, attempt, current_task_message):
         return self.environment.timeout
 
-    async def on_prepare_launch(self, task_launch_message):
+    async def on_prepare(self, task_launch_message):
         self.environment.timeout = task_launch_message.arguments.pop("timeout")
         self.environment.received = 0
         self.environment.timed_out = 0
@@ -43,29 +45,37 @@ class PingCapability(IteratedRequestResponseCapability):
         self.environment.latencies = []
         return task_launch_message
 
-    async def on_create_next_input_message(self, index, task_output_message):
+    async def next_task_input(self, index, task_output_message):
+        # Sleep for 1 second between each ping to avoid accidental DoSing
+        await asyncio.sleep(1)
+        self.emit_info(message="Sending ping request...")
         self.environment.ping_start = datetime.now()
         self.environment.task_id = task_output_message.task_id
+        # Return an empty task input to await the next ping output
         return self.create_task_input_message()
 
-    async def on_response(self, index, task_output_message):
+    async def on_task_output(self, index, task_output_message):
+        # Skip the first response, that is a ready command that itself has beacon
+        # interval latency
+        if index == 0:
+            return None
+
         delta = datetime.now() - self.environment.ping_start
         self.environment.received += 1
         if delta.total_seconds() < 1:
             message = (
-                f"Agent returned ping response. Latency: "
+                f"Received pong response. Latency: "
                 f"{delta.total_seconds() * 1000:.3f} milliseconds"
             )
         else:
             message = (
-                f"Agent returned ping response. Latency: "
-                f"{delta.total_seconds():.3f} seconds"
+                f"Received pong response. Latency: {delta.total_seconds():.3f} seconds"
             )
         self.environment.latencies.append(delta)
         self.emit_success(message=message)
-        return task_output_message, True
+        return None
 
-    async def on_timeout(self, index, current_task_message):
+    async def on_timeout(self, index, attempt, current_task_message):
         delta = datetime.now() - self.environment.ping_start
         self.environment.timed_out += 1
         self.emit_failure(
@@ -74,9 +84,9 @@ class PingCapability(IteratedRequestResponseCapability):
                 f"Latency: {delta.total_seconds():.3f} seconds"
             )
         )
-        return None, True
+        return Finish
 
-    async def on_completed(self, index, task_output_message, stopped_early):
+    async def on_completed(self, index, outcome, stopped_early):
         received = self.environment.received
         timed_out = self.environment.timed_out
         total = received + timed_out

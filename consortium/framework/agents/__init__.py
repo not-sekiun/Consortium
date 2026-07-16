@@ -27,8 +27,8 @@ from consortium.framework.agents.agent_capabilities.control_models import Finish
 from consortium.framework.agents.agent_capabilities.incoming_stream_capability import (
     IncomingStreamCapability,
 )
-from consortium.framework.agents.agent_capabilities.iterated_request_response_capability import (
-    IteratedRequestResponseCapability,
+from consortium.framework.agents.agent_capabilities.lock_step_stream_capability import (
+    LockStepStreamCapability,
 )
 from consortium.framework.agents.agent_capabilities.outgoing_stream_capability import (
     OutgoingStreamCapability,
@@ -72,7 +72,7 @@ __all__ = [
     "TaskOutputMessageModel",
     "BaseAgentCapability",
     "RequestResponseCapability",
-    "IteratedRequestResponseCapability",
+    "LockStepStreamCapability",
     "IncomingStreamCapability",
     "OutgoingStreamCapability",
     "Finish",

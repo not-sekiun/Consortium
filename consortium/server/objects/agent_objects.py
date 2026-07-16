@@ -15,6 +15,7 @@ from consortium.framework._core.framework_exceptions.agent_capabilities_framewor
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
+from consortium.framework._core.task_messages_queue import TaskMessagesQueue
 from consortium.framework.agents import BaseAgentCapability, TaskInputMessageModel
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
@@ -216,7 +217,9 @@ class Agent:
         self._status = AgentStatus.ACTIVE
         # TODO: Move all the tasks to a database instead of storing them in memory.
         self._tasks = {}
-        self._task_messages_queue = asyncio.Queue()
+        self._task_messages_outbox = TaskMessagesQueue(
+            maximum_memory_size=32 * 1024 * 1024
+        )  # 32 MB cap
         self._agent_capability_execution_lock = asyncio.Lock()
         # Each agent capability is mapped to a task by the task ID. This lets us
         # distinguish which capability a response should be sent to even if the same
@@ -356,27 +359,14 @@ class Agent:
         task_message: TaskLaunchMessageModel | TaskInputMessageModel,
         timeout: float | None = None,
     ) -> None:
-        if timeout is None:
-            await self._task_messages_queue.put(task_message)
-        else:
-            await asyncio.wait_for(
-                self._task_messages_queue.put(task_message),
-                timeout=timeout,
-            )
+        await self._task_messages_outbox.put(task_message=task_message, timeout=timeout)
 
     async def get_next_task_message(
         self, timeout: float | None = None
     ) -> TaskLaunchMessageModel | None:
         while True:
             try:
-                if timeout == 0:
-                    message = self._task_messages_queue.get_nowait()
-                elif timeout is None:
-                    message = await self._task_messages_queue.get()
-                else:
-                    message = await asyncio.wait_for(
-                        self._task_messages_queue.get(), timeout
-                    )
+                message = await self._task_messages_outbox.get(timeout=timeout)
             except asyncio.QueueEmpty:
                 return None
             except TimeoutError:
@@ -408,7 +398,7 @@ class Agent:
                     "completed with status {} without ever being acknowledged.",
                     self,
                     task,
-                    task.status,
+                    task.status.state,
                 )
                 continue
 
@@ -523,7 +513,9 @@ class Agent:
             )
             return False
 
-        await agent_capability._result_messages_queue.put(task_output_message)
+        await agent_capability._task_messages_inbox.put(
+            task_message=task_output_message
+        )
         return True
 
     def mark_as_active(self) -> None:
@@ -696,12 +688,20 @@ class Agent:
                     data={"detail": exc.detail},
                 )
             except Exception as exc:
+                # Format the error in the standard `<ErrorClass>: message` form, falling
+                # back to just `<ErrorClass>` (no dangling colon) when the exception
+                # carries no message, e.g. a bare TimeoutError.
+                exception_message = str(exc)
+                formatted_exception = (
+                    f"{exc.__class__.__name__}: {exception_message}"
+                    if exception_message
+                    else exc.__class__.__name__
+                )
                 self.logger.error(
                     "Failed to execute agent capability '{}'. An unhandled "
-                    "exception was raised during execution. {}: {}",
+                    "exception was raised during execution. {}",
                     str(agent_capability),
-                    exc.__class__.__name__,
-                    str(exc),
+                    formatted_exception,
                 )
                 # Guard the terminal transition, this is the last-resort error handler
                 # running inside a fire-and-forget asyncio task. If the transition itself
@@ -713,14 +713,13 @@ class Agent:
                             agent_capability_name=agent_capability.name,
                             error_message=(
                                 "An unhandled exception was raised during execution. "
-                                f"{exc.__class__.__name__}: {exc}"
+                                f"{formatted_exception}"
                             ),
                         )
                     )
-                    # TODO: Decide on what to append in this case
                     task.append_event(
                         event_type=AgentTaskEventType.FAILURE,
-                        message=str(exc),
+                        message=formatted_exception,
                     )
                 except Exception as transition_exc:
                     self.logger.error(

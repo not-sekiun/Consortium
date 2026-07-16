@@ -13,8 +13,8 @@ from consortium.framework.signal_exceptions import (
 )
 from consortium.framework.utils.random_utils import random_name
 
+from ..agent_type import AgentType
 from .agent_generator import AgentGenerator
-from .agent_type import AgentType
 
 
 def _check_filename_does_not_traverse_directories(filename: str):
@@ -50,12 +50,13 @@ def _check_all_url_endpoints_unique(
 
 
 class AgentTemplate(BaseAgentTemplate):
-    label = "consortium.agents.consortium_http.eula"
-    name = "Consortium HTTP Eula Agent"
+    label = "consortium.agents.eula.python"
+    name = "Consortium Python Eula Agent"
     description = (
-        "The canonical Consortium Python agent, Eula, written in pure python that "
-        "communicates over the HTTP transport with its associated HTTP listener. This "
-        "agent supports running on Python 3.6+ without any external dependencies."
+        "The canonical Consortium agent, Eula, written in pure python that "
+        "communicates over the HTTP transport. This agent supports running on "
+        "Python 3.6+ without any external dependencies and can be frozen to an "
+        "executable via PyInstaller but does not support cross-compilation."
     )
     version = "0.1.0"
     compatible_framework_version = ">=0.1.0"

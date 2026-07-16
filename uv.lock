@@ -288,7 +288,7 @@ requires-dist = [{ name = "aiohttp" }]
 [[package]]
 name = "consortium-http-agent"
 version = "0.1.0"
-source = { virtual = "consortium/components/agents/consortium/http" }
+source = { virtual = "consortium/components/agents/consortium/eula/python" }
 dependencies = [
     { name = "pyinstaller" },
     { name = "python-minifier" },

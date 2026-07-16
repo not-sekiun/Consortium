@@ -341,13 +341,13 @@ class BaseAgentCapability(_AgentCommunicator):
     async def on_launch(
         self,
         task_launch_message: TaskLaunchMessageModel,
-    ) -> TaskLaunchMessageModel | None:
+    ) -> TaskLaunchMessageModel:
         """Hook called before the task message is transmitted to the agent.
 
-        Override to mutate or enrich the launch message prior to sending. To deny the
-        launch (for example when a pre-launch validation check fails) raise
-        AgentCapabilityLaunchError rather than returning None; the task is then reported
-        as ERRORED.
+        Override to mutate or enrich the launch message prior to sending. This must
+        return a TaskLaunchMessageModel. To deny the launch (for example when a
+        pre-launch validation check fails) raise AgentCapabilityLaunchError; the task
+        is then reported as ERRORED.
 
         Args:
             task_launch_message: The task launch message prepared by the caller, containing
@@ -391,19 +391,20 @@ class BaseAgentCapability(_AgentCommunicator):
 
         Raises:
             AgentCapabilityLaunchError: If on_launch denies the launch, either by raising
-                it directly or by returning None instead of a launch message. The task
-                handler converts this into an ERRORED task.
+                it directly or by returning anything other than a TaskLaunchMessageModel
+                (such as None). The task handler converts this into an ERRORED task.
         """
         modified_task_launch_message = await self.on_launch(task_launch_message)
-        if modified_task_launch_message is None:
+        if not isinstance(modified_task_launch_message, TaskLaunchMessageModel):
             # on_launch must hand back a launch message or deny the launch by raising
-            # AgentCapabilityLaunchError. Returning None is no longer a silent cancel:
-            # None returned from execute() now means "completed normally", so an aborted
+            # AgentCapabilityLaunchError. Returning anything other than a
+            # TaskLaunchMessageModel (such as None) is no longer a silent cancel: None
+            # returned from execute() now means "completed normally", so an aborted
             # launch has to be reported explicitly through the launch error.
             raise AgentCapabilityLaunchError(
                 "`on_launch` must return a `TaskLaunchMessageModel`, or raise "
                 "`AgentCapabilityLaunchError` to deny the launch, but it returned "
-                "`None`."
+                f"`{type(modified_task_launch_message).__name__}`."
             )
         self.task_launch_message = modified_task_launch_message
         await self.agent.send_task_message(task_message=modified_task_launch_message)

@@ -10,6 +10,9 @@ from typing import TYPE_CHECKING, Any
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
 )
+from consortium.server.exceptions.object_exceptions.base_object_exception import (
+    BaseObjectError,
+)
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceError,
 )
@@ -55,7 +58,7 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
     def _log_service_method_error(
         logger: Logger, instance: Any, func_name: str, exc: Exception
     ) -> None:
-        if isinstance(exc, (BaseServiceError, BaseFrameworkError)):
+        if isinstance(exc, (BaseServiceError, BaseFrameworkError, BaseObjectError)):
             logger.error(
                 "Error in `{}.{}`. {}: {}",
                 type(instance).__name__,

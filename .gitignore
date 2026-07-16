@@ -23,9 +23,9 @@ CLAUDE.md
 
 site/
 
-before_merging.txt
-agent.exe
-agent.py
+/before_merging.txt
+/agent.exe
+/agent.py
 test_agents/
-test*.py
-TODO.md
+/test*.py
+/TODO.md

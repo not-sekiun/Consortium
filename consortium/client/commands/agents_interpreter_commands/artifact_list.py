@@ -8,6 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
+    format_datetime_as_human_readable_str,
     format_size_bytes_as_human_readable_str,
 )
 from consortium.client.utils.printer_utils import console
@@ -40,6 +41,7 @@ class ArtifactListCommand(BaseConnectedCommand):
             table.add_column("Produced By")
             table.add_column("Type")
             table.add_column("Size")
+            table.add_column("Datetime Created")
             for artifact in artifacts:
                 size = artifact["size"]
                 # An artifact is "just" a resource with metadata: the producing agent is
@@ -53,6 +55,10 @@ class ArtifactListCommand(BaseConnectedCommand):
                     format_size_bytes_as_human_readable_str(size_bytes=size)
                     if size is not None
                     else "N/A",
+                    format_datetime_as_human_readable_str(
+                        datetime_str=artifact["datetime_created"],
+                        include_elapsed_time=True,
+                    ),
                 )
             console.print(table, "")
         except SystemExit:

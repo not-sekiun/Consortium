@@ -80,7 +80,7 @@ class DownloadCapability(IncomingStreamCapability):
     # TODO: Make download actually write artifacts via artifacts service and
     #  emit_artifact should properly log this event with reference to the artifact
     #  created
-    async def on_handle_incoming_message(
+    async def on_task_output(
         self, index: int, task_output_message: TaskOutputMessageModel
     ) -> Success | Failure | None:
         response = task_output_message
