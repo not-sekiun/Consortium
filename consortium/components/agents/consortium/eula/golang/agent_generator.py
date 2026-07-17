@@ -1,4 +1,3 @@
-import os
 import shutil
 
 from consortium.framework.agents import (
@@ -17,9 +16,10 @@ class SetupDockerContainer(BaseAgentGeneratorBuildStep):
     description = "Set up a Docker container to compile the agent with."
 
     async def build(self, parameters: dict) -> None:
-        os.chdir(self.project_folder / "agent_source")
         command = ["docker", "build", "-t", "agent-builder", "."]
-        output = await run_command(*command)
+        output = await run_command(
+            *command, working_dir=self.project_folder / "agent_source"
+        )
         if output.return_code != 0:
             raise AgentGeneratorBuildStepRuntimeError(
                 f"Failed to execute command '{' '.join(command)}':\n"
@@ -45,7 +45,9 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         ]
 
         for cmd in commands:
-            output = await run_command(*cmd)
+            output = await run_command(
+                *cmd, working_dir=self.project_folder / "agent_source"
+            )
             if output.return_code != 0:
                 raise AgentGeneratorBuildStepRuntimeError(
                     f"Failed to execute command '{' '.join(cmd)}':\n"
