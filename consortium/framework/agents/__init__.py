@@ -12,30 +12,8 @@ Capabilities communicate with a live agent using the task message models
 [`TaskOutputMessageModel`][consortium.framework.agents.TaskOutputMessageModel]) and
 report results as a [`Success`][consortium.framework.agents.Success] or
 [`Failure`][consortium.framework.agents.Failure] outcome.
-
-For common interaction patterns, the
-[`request_response_capability`][consortium.framework.agents.request_response_capability]
-and
-[`sequential_request_response_capability`][consortium.framework.agents.sequential_request_response_capability]
-factories build capability classes without requiring a full subclass definition.
 """
 
-from consortium.framework.agents.agent_capabilities.bidirectional_stream_capability import (
-    BidirectionalStreamCapability,
-)
-from consortium.framework.agents.agent_capabilities.control_models import Finish
-from consortium.framework.agents.agent_capabilities.incoming_stream_capability import (
-    IncomingStreamCapability,
-)
-from consortium.framework.agents.agent_capabilities.lock_step_stream_capability import (
-    LockStepStreamCapability,
-)
-from consortium.framework.agents.agent_capabilities.outgoing_stream_capability import (
-    OutgoingStreamCapability,
-)
-from consortium.framework.agents.agent_capabilities.request_response_capability import (
-    RequestResponseCapability,
-)
 from consortium.framework.agents.agent_message_models import (
     Payload,
     TaskInputMessageModel,
@@ -71,10 +49,4 @@ __all__ = [
     "TaskInputMessageModel",
     "TaskOutputMessageModel",
     "BaseAgentCapability",
-    "RequestResponseCapability",
-    "LockStepStreamCapability",
-    "IncomingStreamCapability",
-    "OutgoingStreamCapability",
-    "Finish",
-    "BidirectionalStreamCapability",
 ]

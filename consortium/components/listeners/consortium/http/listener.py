@@ -129,10 +129,12 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
-            # Serialize task messages to JSON for the wire protocol, if binary payloads
-            # were provided attach them as multipart data
-            task_messages_json = [msg.to_json() for msg in task_messages]
-            return web.json_response(task_messages_json, status=200)
+            for message in task_messages:
+                if message.payload is None:
+                    # Serialize task messages to JSON for the wire protocol, if binary payloads
+                    # were provided attach them as multipart data
+                    task_messages_json = [msg.to_json() for msg in task_messages]
+                    return web.json_response(task_messages_json, status=200)
 
         async def handle_agent_posting_results(request):
             # Validate the agent result message schema

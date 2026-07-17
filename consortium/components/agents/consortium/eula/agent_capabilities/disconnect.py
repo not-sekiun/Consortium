@@ -1,8 +1,8 @@
-from consortium.framework.agents import RequestResponseCapability
+from consortium.framework.agents import BaseAgentCapability
 from consortium.framework.options import SingleValueOption
 
 
-class DisconnectCapability(RequestResponseCapability):
+class DisconnectCapability(BaseAgentCapability):
     name = "disconnect"
     description = "Disconnect the agent from the server"
     authors = {"Sekiun (github.com/not-sekiun)"}
@@ -20,6 +20,6 @@ class DisconnectCapability(RequestResponseCapability):
         ),
     }
 
-    async def on_response(self, result_message):
+    async def on_execute(self):
         self.agent.mark_as_inactive()
-        return result_message
+        return (await self.recv_from_agent()).to_outcome()

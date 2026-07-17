@@ -1,8 +1,8 @@
-from consortium.framework.agents import RequestResponseCapability
+from consortium.framework.agents import BaseAgentCapability
 from consortium.framework.options import SingleValueOption
 
 
-class SleepCapability(RequestResponseCapability):
+class SleepCapability(BaseAgentCapability):
     name = "sleep"
     description = "Put the agent to sleep for a specified duration"
     authors = {"Sekiun (github.com/not-sekiun)"}
@@ -16,6 +16,6 @@ class SleepCapability(RequestResponseCapability):
         ),
     }
 
-    async def on_response(self, result_message):
+    async def on_execute(self):
         self.agent.mark_as_inactive()
-        return result_message
+        return (await self.recv_from_agent()).to_outcome()

@@ -1,6 +1,7 @@
 package info
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
 
@@ -43,4 +44,10 @@ func GetLocale() string {
 	}
 
 	return syscall.UTF16ToString(buf)
+}
+
+func GetVersion() string {
+	version := windows.RtlGetVersion()
+	fmt.Println(version.MajorVersion, version.MinorVersion, version.BuildNumber)
+	return ""
 }

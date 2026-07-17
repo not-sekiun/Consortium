@@ -5,7 +5,6 @@ from typing import Any
 
 from pydantic import JsonValue
 
-from consortium.framework._core.task_messages_queue import TaskMessagesQueue
 from consortium.framework.agents.agent_message_models import (
     TaskInputMessageModel,
     TaskOutputMessageModel,
@@ -18,6 +17,9 @@ if typing.TYPE_CHECKING:
 
 class _AgentCommunicator:
     def __init__(self, agent: Agent, task: AgentTask):
+        from consortium.framework._core.task_messages_queue import TaskMessagesQueue
+        # Importing here to avoid circular import
+
         self.agent = agent
         self.task = task
 

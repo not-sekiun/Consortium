@@ -157,16 +157,7 @@ class BaseAgentCapability(_AgentCommunicator):
         self.environment = SimpleNamespace()
         super().__init__(agent=agent, task=task)
 
-    def __init_subclass__(cls, abstract: bool = False, **kwargs):
-        # Abstract capabilities are intermediate template base classes (such as
-        # `RequestResponseCapability`) that concrete capabilities inherit from. They do
-        # not declare their own `name` or options, so configuration validation is
-        # skipped for them. Concrete subclasses defined without `abstract=True` are
-        # validated as normal.
-        if abstract:
-            super().__init_subclass__(**kwargs)
-            return
-
+    def __init_subclass__(cls, **kwargs):
         if not hasattr(cls, "name"):
             raise MissingAgentCapabilityConfigurationParameterError(
                 parameter_name="name",
