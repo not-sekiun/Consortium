@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/user"
 	"runtime"
-	"strconv"
 )
 
 func getLocalHostAddress() string {
@@ -36,15 +35,15 @@ func getHostname() string {
 	return hostname
 }
 
-func GetSystemInfo() map[string]string {
-	return map[string]string{
+func GetSystemInfo() map[string]any {
+	return map[string]any{
 		"agent_type":         config.AgentType,
 		"user":               getUser(),
-		"is_admin":           strconv.FormatBool(IsAdmin()),
+		"is_admin":           IsAdmin(),
 		"os":                 runtime.GOOS,
 		"version":            GetVersion(),
 		"arch":               runtime.GOARCH,
-		"pid":                strconv.Itoa(os.Getpid()),
+		"pid":                os.Getpid(),
 		"locale":             GetLocale(),
 		"local_host_address": getLocalHostAddress(),
 		"hostname":           getHostname(),

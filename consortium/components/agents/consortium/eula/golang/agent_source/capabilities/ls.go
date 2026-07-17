@@ -1,11 +1,11 @@
 package capabilities
 
 import (
-	"eula/core"
+	"eula/connection"
 	"os"
 )
 
-func Ls(taskData core.TaskData) string {
+func Ls(taskData connection.TaskData) string {
 	entries, err := os.ReadDir(".")
 	if err != nil {
 		panic(err)

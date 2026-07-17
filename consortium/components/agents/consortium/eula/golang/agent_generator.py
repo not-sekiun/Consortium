@@ -1,4 +1,5 @@
 import shutil
+import uuid
 
 from consortium.framework.agents import (
     BaseAgentGenerator,
@@ -32,16 +33,32 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
     description = "Build the agent within the docker container."
 
     async def build(self, parameters: dict) -> None:
-        container_id = "temp-agent-builder-container"
+        container_id = f"temp-agent-builder-container-{uuid.uuid4()}"
         commands = [
-            ["docker", "run", "--name", container_id, "agent-builder"],
+            [
+                "docker",  # Command to start up the docker container from built image
+                "run",
+                "--name",
+                container_id,
+                "-e",
+                f"GOOS={parameters['os']}",  # Setup GOOS env variable externally
+                "-e",
+                f"GOARCH={parameters['arch']}",  # Setup GOARCH env variable externally
+                "agent-builder",
+                "go",  # Actual command running inside docker container
+                "build",
+                "-o",
+                "agent",
+                ".",
+            ],  # Compile agent inside container
             [
                 "docker",
                 "cp",
                 f"{container_id}:/agent_builder/agent",
-                parameters["file_name"],
-            ],
-            ["docker", "rm", "-f", container_id],
+                parameters["file_name"]
+                + (".exe" if parameters["os"] == "windows" else ""),
+            ],  # Copy agent to host machine
+            ["docker", "rm", "-f", container_id],  # Remove container
         ]
 
         for cmd in commands:

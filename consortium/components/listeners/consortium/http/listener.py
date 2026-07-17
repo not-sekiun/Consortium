@@ -59,11 +59,10 @@ class Listener(BaseListener):
                 "oneOf": [{"required": ["payload_id"]}, {"required": ["agent_type"]}],
                 "additionalProperties": False,
             }
-
             try:
                 json_request_body = await request.json()
                 jsonschema.validate(json_request_body, agent_registration_json_schema)
-            except json.JSONDecodeError, jsonschema.ValidationError:
+            except (json.JSONDecodeError, jsonschema.ValidationError):
                 return web.Response(status=401)
 
             # Register the agent and create an agent record
