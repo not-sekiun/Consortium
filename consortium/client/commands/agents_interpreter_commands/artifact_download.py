@@ -107,7 +107,7 @@ class ArtifactDownloadCommand(BaseConnectedCommand):
                 f"Downloading artifact {'directory' if artifact['is_directory'] else 'file'} "
                 f"'{artifact['name']}' ({artifact['resource_id']}) to '{output_file_path}'..."
             )
-            with Progress() as progress:
+            with Progress(transient=True) as progress:
                 downloading_task = progress.add_task(
                     "",
                     total=artifact["size"],

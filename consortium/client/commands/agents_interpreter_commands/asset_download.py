@@ -107,7 +107,7 @@ class AssetDownloadCommand(BaseConnectedCommand):
                 f"Downloading asset {'directory' if asset['is_directory'] else 'file'} "
                 f"'{asset['name']}' ({asset['resource_id']}) to '{output_file_path}'..."
             )
-            with Progress() as progress:
+            with Progress(transient=True) as progress:
                 downloading_task = progress.add_task(
                     "",
                     total=asset["size"],
