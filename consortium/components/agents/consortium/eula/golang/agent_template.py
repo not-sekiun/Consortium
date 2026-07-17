@@ -94,13 +94,6 @@ class AgentTemplate(BaseAgentTemplate):
     agent_type = AgentType
     options = {
         SingleValueOption(
-            name="name",
-            description="Name of the agent generator.",
-            required=False,
-            default_value="",
-            value_type=str,
-        ),
-        SingleValueOption(
             name="remote_host",
             description="Remote listener host address for the agent to connect back to.",
             value_type=str,
@@ -169,16 +162,6 @@ class AgentTemplate(BaseAgentTemplate):
             greater_than_or_equal_to=0.0,
             required=False,
         ),
-        SingleValueOption(
-            name="file_name",
-            description=(
-                "Output filename of agent without extension. Extension is "
-                "automatically appended based on format."
-            ),
-            default_value="agent",
-            validating_function=_check_filename_does_not_traverse_directories,
-            required=False,
-        ),
         DictionaryValueOption(
             name="extra_headers",
             description=(
@@ -189,6 +172,20 @@ class AgentTemplate(BaseAgentTemplate):
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)",
             },
             value_type=str,
+            required=False,
+        ),
+        SingleValueOption(
+            name="name",
+            description="Name of the agent generator.",
+            required=False,
+            default_value="",
+            value_type=str,
+        ),
+        SingleValueOption(
+            name="file_name",
+            description=("Output filename of agent without extension."),
+            default_value="agent",
+            validating_function=_check_filename_does_not_traverse_directories,
             required=False,
         ),
         ChoiceValueOption(

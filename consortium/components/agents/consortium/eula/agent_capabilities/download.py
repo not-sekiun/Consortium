@@ -76,101 +76,6 @@ class DownloadCapability(BaseAgentCapability):
         task_message.arguments.pop("destination", None)
         return task_message
 
-    # TODO: Make download actually write artifacts via artifacts service and
-    #  emit_artifact should properly log this event with reference to the artifact
-    #  created
-    # async def on_execute(self) -> Success | Failure | None:
-    #     header = await self.recv_from_agent()
-    #     if not header.success:
-    #         return Failure(task_output_message=header)
-    #
-    #     is_dir = header.data["type"] == "directory"
-    #     target_name = pathlib.Path(header.data["path"]).name
-    #     # `header.data['type']` can be 'file' or 'directory' here for the initial header
-    #     self.update_progress(
-    #         message=f"Starting download of {header.data['type']} '{target_name}'",
-    #         percent_complete=0,
-    #     )
-    #
-    #     # State for the current file being processed
-    #     current_file = pathlib.Path(header.data["path"]) if not is_dir else None
-    #     current_file_size = header.data["size"] if not is_dir else 0
-    #     downloaded_bytes = 0
-    #
-    #     response = header
-    #     while True:
-    #         if not response.success:  # Error response from agent, abort download
-    #             return Failure(task_output_message=response)
-    #
-    #         msg_type = response.data.get("type")
-    #
-    #         # New file download starting within a directory
-    #         if msg_type == "file":
-    #             current_file = pathlib.Path(response.data["path"])
-    #             current_file_size = response.data.get("size", 0)
-    #             downloaded_bytes = 0
-    #             # Ephemerally update the status of the task with the start of a new
-    #             # file/directory download
-    #             self.update_progress(
-    #                 message=f"Starting download of file '{response.data['path']}'",
-    #                 percent_complete=0,
-    #             )
-    #         elif msg_type == "chunk":
-    #             try:
-    #                 chunk = zlib.decompress(response.payload.data)
-    #             except zlib.error as exc:
-    #                 return Failure(
-    #                     message=f"Failed to decompress file chunk: {exc}",
-    #                 )
-    #             downloaded_bytes += len(chunk)
-    #             # Ephemeral update (Overwrites previous status but does not log to
-    #             # task events to avoid flooding it)
-    #             percent_complete = (
-    #                 round(downloaded_bytes / current_file_size * 100, 2)
-    #                 if current_file_size
-    #                 else 0
-    #             )
-    #             self.update_progress(
-    #                 message=f"Downloading {current_file}: {downloaded_bytes}/{current_file_size} bytes",
-    #                 percent_complete=percent_complete,
-    #             )
-    #         elif msg_type == "directory":
-    #             # Ephemerally update the status of the task with the start of a new
-    #             # file/directory download
-    #             self.update_progress(
-    #                 message=f"Created new directory '{response.data['path']}'",
-    #                 percent_complete=100,
-    #             )
-    #         elif msg_type == "end_of_file":
-    #             self.emit_artifact(
-    #                 message=f"Downloaded file '{current_file}'",
-    #             )  # Log completion of file download in task events for task
-    #             current_file = None
-    #             current_file_size = 0
-    #             downloaded_bytes = 0
-    #         elif msg_type == "end_of_transfer":
-    #             # Entire file or directory download is finished, emit to task events of
-    #             # task and break loop if a directory was being downloaded, avoid logging
-    #             # since we already log file download completion on 'end_of_file'
-    #             if is_dir:
-    #                 self.emit_artifact(
-    #                     message=f"Downloaded directory '{target_name}'",
-    #                 )
-    #             break
-    #         else:
-    #             return Failure(
-    #                 message=(
-    #                     f"Unknown message type received during download: {msg_type}"
-    #                 )
-    #             )
-    #
-    #         response = await self.recv_from_agent()
-    #
-    #     # Return response to indicate successful download
-    #     return Success(
-    #         message=f"Downloaded {'directory' if is_dir else 'file'} '{target_name}'",
-    #     )
-
     async def on_execute(self) -> Success | Failure | None:
         header = await self.recv_from_agent()
         if not header.success:
@@ -184,8 +89,8 @@ class DownloadCapability(BaseAgentCapability):
         )
         # For a single file the header is also the file announcement.
         current_file = None if is_dir else pathlib.Path(header.data["path"])
-        file_size = 0 if is_dir else header.data.get("size", 0)
-        downloaded = 0
+        current_file_size = 0 if is_dir else header.data.get("size", 0)
+        downloaded_bytes = 0
 
         while True:
             response = await self.recv_from_agent()
@@ -195,8 +100,8 @@ class DownloadCapability(BaseAgentCapability):
             match response.data.get("type"):
                 case "file":
                     current_file = pathlib.Path(response.data["path"])
-                    file_size = response.data.get("size", 0)
-                    downloaded = 0
+                    current_file_size = response.data.get("size", 0)
+                    downloaded_bytes = 0
                     self.update_progress(
                         message=f"Starting download of file '{current_file}'",
                         percent_complete=0,
@@ -208,11 +113,16 @@ class DownloadCapability(BaseAgentCapability):
                         return Failure(
                             message=f"Failed to decompress file chunk: {exc}"
                         )
-                    downloaded += len(chunk)
+                    downloaded_bytes += len(chunk)
                     self.update_progress(
-                        message=f"Downloading {current_file}: {downloaded}/{file_size} bytes",
-                        percent_complete=round(downloaded / file_size * 100, 2)
-                        if file_size
+                        message=(
+                            f"Downloading {current_file}: "
+                            f"{downloaded_bytes}/{current_file_size} bytes"
+                        ),
+                        percent_complete=round(
+                            downloaded_bytes / current_file_size * 100, 2
+                        )
+                        if current_file_size
                         else 0,
                     )
                 case "directory":
@@ -227,10 +137,10 @@ class DownloadCapability(BaseAgentCapability):
                         self.emit_artifact(
                             message=f"Downloaded directory '{target_name}'"
                         )
-                    return Success(
-                        message=f"Downloaded {'directory' if is_dir else 'file'} '{target_name}'"
-                    )
+                    return Success(message="Download complete")
                 case unknown:
                     return Failure(
-                        message=f"Unknown message type received during download: {unknown}"
+                        message=(
+                            f"Unknown message type received during download: {unknown}"
+                        )
                     )

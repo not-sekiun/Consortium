@@ -1,4 +1,3 @@
-import inspect
 import pathlib
 import sys
 import traceback
@@ -90,9 +89,6 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             logger_type=LoggerType.GENERATOR_LOGGER,
         )
         self.agent_templates_payload_service = agent_templates_payload_service
-        self.working_directory = pathlib.Path(
-            inspect.getsourcefile(self.__class__)
-        ).parent
 
         super().__init__()
 
@@ -113,6 +109,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
                     method_name=method_name,
                 )
 
+        cls.project_folder = pathlib.Path(sys.modules[cls.__module__].__file__).parent
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         expected_attrs_and_types_map = get_type_hints(cls)
@@ -424,6 +421,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 method_name="on_running",
             )
 
+        cls.project_folder = pathlib.Path(sys.modules[cls.__module__].__file__).parent
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         if not hasattr(cls, "agent_generator_build_steps"):

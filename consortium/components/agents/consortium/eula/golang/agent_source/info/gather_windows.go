@@ -48,6 +48,5 @@ func GetLocale() string {
 
 func GetVersion() string {
 	version := windows.RtlGetVersion()
-	fmt.Println(version.MajorVersion, version.MinorVersion, version.BuildNumber)
-	return ""
+	return fmt.Sprintf("%d.%d.%d", version.MajorVersion, version.MinorVersion, version.BuildNumber)
 }
