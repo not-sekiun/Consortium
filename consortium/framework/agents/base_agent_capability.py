@@ -119,7 +119,6 @@ class BaseAgentCapability(_AgentCommunicator):
             system to execute this capability.
         supported_oses: Platforms this capability supports. Defaults to
             {SupportedOS.ANY} if not declared.
-        is_atomic: Whether this capability maps to a single MITRE ATT&CK step.
         options: Configuration options accepted by this capability. Declared as a set
             at the class level; converted to a name-keyed dict at definition time.
         mitre_attack_techniques: MITRE ATT&CK technique IDs associated with this
@@ -135,7 +134,6 @@ class BaseAgentCapability(_AgentCommunicator):
     authors: set[str] = None
     requires_admin: bool = False
     supported_oses: set[SupportedOS] = None
-    is_atomic: bool = False
     options: set[
         SingleValueOption
         | ListValueOption

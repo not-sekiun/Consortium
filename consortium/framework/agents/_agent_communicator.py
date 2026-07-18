@@ -23,11 +23,14 @@ class _AgentCommunicator:
         self.agent = agent
         self.task = task
 
-        # The task messages inbox is per agent capability and demultiplexes messages
-        # coming in from the listener.
+        # 8 MB memory capacity for the inbox and outbox
+        message_queue_size = 8 * 1024 * 1024
         self._task_messages_inbox = TaskMessagesQueue(
-            maximum_memory_size=8 * 1024 * 1024
-        )  # 8 MB cap
+            maximum_memory_size=message_queue_size
+        )
+        self._task_messages_outbox = TaskMessagesQueue(
+            maximum_memory_size=message_queue_size
+        )
 
     async def send_to_agent(
         self,
