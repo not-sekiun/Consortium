@@ -12,11 +12,11 @@ CONSORTIUM_RELEASE_JSON_FILE_PATH = (
 CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH = (
     CONSORTIUM_HOME_DIRECTORY_PATH / "data" / "client" / "client_config.json"
 )
-CONSORTIUM_CLIENT_LOGS_DIRECTORY_PATH = (
-    CONSORTIUM_HOME_DIRECTORY_PATH / "data" / "client" / "logs"
-)
 CONSORTIUM_ALIASES_JSON_FILE_PATH = (
     CONSORTIUM_HOME_DIRECTORY_PATH / "data" / "client" / "aliases.json"
+)
+CONSORTIUM_LOGGING_CONFIG_JSON_FILE_PATH = (
+    CONSORTIUM_HOME_DIRECTORY_PATH / "data" / "client" / "logging_config.json"
 )
 
 # Client release information

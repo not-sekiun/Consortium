@@ -20,6 +20,7 @@ from consortium.client.exceptions.websockets_api_exceptions import (
     WebsocketsAPIHandlerNotRunningError,
     WebsocketsAPINotConnectedError,
 )
+from consortium.client.models.logging_models import LoggerType
 
 _websockets_api_generic_response_json_schema = {
     "type": "object",
@@ -51,7 +52,7 @@ _websockets_api_event_response_json_schema = {
 }
 
 
-class WebsocketsAPI:
+class WebsocketsEventsAPI:
     def __init__(self, remote_host: str, remote_port: int):
         self.remote_host = remote_host
         self.remote_port = remote_port
@@ -64,9 +65,13 @@ class WebsocketsAPI:
         self._websocket_message_handler_task = None
         self._logger = logger.bind(
             logger_name=str(self),
+            logger_type=LoggerType.CLIENT_WEBSOCKETS_EVENTS_API_LOGGER,
         )
         self._event_handlers = {}
         self._websocket_action_response_messages_queue = asyncio.Queue()
+
+    def __str__(self):
+        return f"Client Websockets Events API ({self.remote_host}:{self.remote_port})"
 
     async def connect(self, json_web_token: str) -> None:
         if self.connected:

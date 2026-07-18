@@ -2,8 +2,8 @@ import uuid
 from datetime import datetime
 
 from consortium.client.client_rest_api import RestAPI
-from consortium.client.client_websockets_api import (
-    WebsocketsAPI,
+from consortium.client.client_websockets_events_api import (
+    WebsocketsEventsAPI,
 )
 from consortium.client.exceptions.client_session_exceptions import (
     ClientSessionAlreadyConnectedException,
@@ -37,7 +37,7 @@ class ClientSession:
             remote_host=self.remote_host,
             remote_port=self.remote_port,
         )
-        self.websockets_api = WebsocketsAPI(
+        self.websockets_api = WebsocketsEventsAPI(
             remote_host=self.remote_host,
             remote_port=self.remote_port,
         )

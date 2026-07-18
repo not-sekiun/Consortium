@@ -14,6 +14,7 @@ from consortium.client.exceptions.rest_api_exceptions import (
     RestAPINotLoggedInError,
     RestAPIOperationError,
 )
+from consortium.client.models.logging_models import LoggerType
 
 
 def _requires_authentication(
@@ -50,12 +51,14 @@ class RestAPI:
         self.logged_in = False
         self.json_web_token = None
 
-        self._logger = logger.bind(logger_name=str(self))
+        self._logger = logger.bind(
+            logger_name=str(self), logger_type=LoggerType.CLIENT_REST_API_LOGGER
+        )
         self._api_base_url = f"http://{self.remote_host}:{self.remote_port}/api"
         self._aiohttp_client_session = aiohttp.ClientSession()
 
     def __str__(self):
-        return f"RestAPI Session Connected to {self.remote_host}:{self.remote_port}"
+        return f"Client RestAPI ({self.remote_host}:{self.remote_port})"
 
     def __repr__(self):
         return (

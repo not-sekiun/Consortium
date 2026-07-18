@@ -1,0 +1,42 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_DB=mydb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  # Consortium Server
+  server:
+    build: .
+    image: my-app-image # Builds and tags the image once
+    command: ["uv", "run", "consortium.py", "server"] # Explicitly overrides entrypoint to start server
+    ports:
+      - "8000:8000" # Expose your server port to your host machine if needed
+    volumes:
+      - ./data/server/server_config.json:/data/server/server_config.json # Mounts your dynamic host config file
+      - ./data/server/role_permissions.json:/data/server/role_permissions.json # Mounts your dynamic host config file
+    environment:
+      - DATABASE_URL=postgresql://postgres:mysecretpassword@db:5432/mydb
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 3. Consortium Client
+  client:
+    image: my-app-image # Reuses the exact same image built by the server service
+    volumes:
+      - ./host_config.yaml:/app/config.yaml # Shares the exact same dynamic host config file
+    environment:
+      - DATABASE_URL=postgresql://postgres:mysecretpassword@db:5432/mydb
+      - SERVER_URL=http://server:8000 # Allows your client to target the server container over the network
+    depends_on:
+      - server

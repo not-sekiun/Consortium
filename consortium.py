@@ -92,11 +92,22 @@ def main():
     )
     client_parser.add_argument(
         "-c",
-        "--config",
+        "--client-config",
         help=(
             "Filepath of the client configuration file to use when starting the "
             "client. By default the configuration file from "
             "`data/client/client_config.json` is used."
+        ),
+        nargs="?",
+        default=None,
+    )
+    client_parser.add_argument(
+        "-l",
+        "--logging-config",
+        help=(
+            "Filepath of the logging configuration file to use when starting the "
+            "client. By default the configuration file from "
+            "`data/client/logging_config.json` is used."
         ),
         nargs="?",
         default=None,

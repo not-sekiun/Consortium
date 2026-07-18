@@ -59,7 +59,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         return
     except PermissionError:
         print(
-            "Failed to start client. Permission denied when attempting to read the "
+            "Failed to start server. Permission denied when attempting to read the "
             f"server configuration file at '{server_config_filepath}'.",
         )
         return
@@ -97,7 +97,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         return
     except PermissionError:
         print(
-            "Failed to start client. Permission denied when attempting to read the "
+            "Failed to start server. Permission denied when attempting to read the "
             f"logging configuration file at '{logging_config_filepath}'.",
         )
         return
@@ -121,7 +121,8 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         )
         return
 
-    # Configure server and create a reference to it in the server singletons module.
+    # Create server and create a reference to it in the server singletons module before
+    # starting it
     server_singletons.server = Server(server_config=server_config)
     await server_singletons.server.start_server()
 

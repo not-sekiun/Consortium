@@ -6,6 +6,7 @@ from loguru import logger
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
+from consortium.client.models.logging_models import LoggerType
 
 if TYPE_CHECKING:
     from consortium.client.client_session import ClientSession
@@ -15,7 +16,7 @@ class ClientSessionsService:
     def __init__(self):
         self._client_sessions = {}
         self._logger = logger.bind(
-            logger_name=str(self),
+            logger_name=str(self), logger_type=LoggerType.CLIENT_SESSIONS_SERVICE
         )
 
     def __str__(self) -> str:

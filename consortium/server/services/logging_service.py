@@ -220,6 +220,7 @@ class LoggingService:
         logger.level("CRITICAL", color="<white><RED><bold>")
         logger.level("SUCCESS", color="<bold><green>")
 
+        # Add default stdout logging
         self.add_sink(
             sink=sys.stdout,
             level=logging_config.level,
@@ -228,6 +229,7 @@ class LoggingService:
             is_server_default=True,
         )
 
+        # Add default file based logging if specified
         if logging_config.log_file is not None:
             self.add_sink(
                 sink=logging_config.log_file,
