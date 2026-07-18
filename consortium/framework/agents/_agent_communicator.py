@@ -56,7 +56,7 @@ class _AgentCommunicator:
                 waits indefinitely.
         """
         if task_message is not None:
-            await self.agent.send_task_message(
+            await self._task_messages_outbox.put(
                 task_message=task_message,
                 timeout=timeout,
             )
