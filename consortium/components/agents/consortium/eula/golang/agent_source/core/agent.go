@@ -75,12 +75,17 @@ func (a *Agent) Run() {
 		a.registrationUrlPaths,
 		a.extraHeaders,
 	)
-	agentID, err := conn.RegisterWithListener(info.GetSystemInfo())
-	if err != nil {
-		debug.LogErr(err)
-		return
+
+	for {
+		agentID, err := conn.RegisterWithListener(info.GetSystemInfo())
+		if err != nil {
+			debug.LogErr(err)
+			continue
+		}
+		fmt.Println("Agent ID:", agentID)
+		break
 	}
-	fmt.Println("Agent ID:", agentID)
+
 	fmt.Println(info.GetSystemInfo())
 	taskData := connection.TaskData{}
 	result := capabilities.Ls(taskData)

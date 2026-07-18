@@ -83,8 +83,8 @@ class _AgentParametersModel(BaseModel):
     arch: str | None
     pid: int | None
     locale: str | None
-    remote_host_address: str | None
-    local_host_address: str | None
+    remote_ip: str | None
+    local_ip: str | None
     hostname: str | None
     agent_data: dict[str, JsonValue]
 
@@ -105,8 +105,8 @@ class Agent:
         arch: str | None = None,
         pid: int | None = None,
         locale: str | None = None,
-        remote_host_address: str | None = None,
-        local_host_address: str | None = None,
+        remote_ip: str | None = None,
+        local_ip: str | None = None,
         hostname: str | None = None,
         agent_data: dict[str, Any] | None = None,
     ):
@@ -128,8 +128,8 @@ class Agent:
                 arch=arch,
                 pid=pid,
                 locale=locale,
-                remote_host_address=remote_host_address,
-                local_host_address=local_host_address,
+                remote_ip=remote_ip,
+                local_ip=local_ip,
                 hostname=hostname,
                 agent_data=agent_data,
             )
@@ -195,8 +195,8 @@ class Agent:
         self.arch = arch
         self.pid = pid
         self.locale = locale
-        self.remote_host_address = remote_host_address
-        self.local_host_address = local_host_address
+        self.remote_ip = remote_ip
+        self.local_ip = local_ip
         self.hostname = hostname
         self.agent_data = agent_data
 
@@ -243,8 +243,8 @@ class Agent:
             f"arch={self.arch!r}, "
             f"pid={self.pid!r}, "
             f"locale={self.locale!r}, "
-            f"remote_host_address={self.remote_host_address!r}, "
-            f"local_host_address={self.local_host_address!r}, "
+            f"remote_ip={self.remote_ip!r}, "
+            f"local_ip={self.local_ip!r}, "
             f"agent_data={self.agent_data!r}"
             f")"
         )
@@ -544,8 +544,8 @@ class Agent:
             "arch": self.arch,
             "pid": self.pid,
             "locale": self.locale,
-            "remote_host_address": self.remote_host_address,
-            "local_host_address": self.local_host_address,
+            "remote_ip": self.remote_ip,
+            "local_ip": self.local_ip,
             "hostname": self.hostname,
             "datetime_first_checked_in": self.datetime_first_checked_in.isoformat(),
             "datetime_last_checked_in": self.datetime_last_checked_in.isoformat(),

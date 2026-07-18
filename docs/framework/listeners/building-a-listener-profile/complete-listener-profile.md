@@ -171,7 +171,7 @@ class Listener(BaseListener):
                 payload_id=message.get("payload_id"),
                 agent_type=message.get("agent_type"),
                 endpoint=remote_addr,
-                remote_host_address=remote_addr,
+                remote_ip=remote_addr,
                 user=message.get("user"),
                 is_admin=message.get("is_admin"),
                 os=message.get("os"),

@@ -85,8 +85,9 @@ def display_agent_info(
     agent_info_table.add_row("System Arch", str(agent["arch"]))
     agent_info_table.add_row("Process ID", str(agent["pid"]))
     agent_info_table.add_row("System Locale", str(agent["locale"]))
-    agent_info_table.add_row("Remote Host Address", str(agent["remote_host_address"]))
-    agent_info_table.add_row("Local Host Address", str(agent["local_host_address"]))
+    agent_info_table.add_row("Remote IP", str(agent["remote_ip"]))
+    agent_info_table.add_row("Local IP", str(agent["local_ip"]))
+    agent_info_table.add_row("Hostname", str(agent["hostname"]))
     agent_info_table.add_row(
         "First Checked In",
         format_datetime_as_human_readable_str(

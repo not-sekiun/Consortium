@@ -8,7 +8,20 @@ import (
 	"runtime"
 )
 
-func getLocalHostAddress() string {
+type SystemInfo struct {
+	AgentType        string `json:"agent_type"`
+	User             string `json:"user"`
+	IsAdmin          bool   `json:"is_admin"`
+	OS               string `json:"os"`
+	Version          string `json:"version"`
+	Arch             string `json:"arch"`
+	PID              int    `json:"pid"`
+	Locale           string `json:"locale"`
+	LocalIP string `json:"local_ip"`
+	Hostname         string `json:"hostname"`
+}
+
+func getLocalIP() string {
 	conn, err := net.Dial("udp", "10.255.255.255:1")
 	if err != nil {
 		return "127.0.0.1"
@@ -35,17 +48,17 @@ func getHostname() string {
 	return hostname
 }
 
-func GetSystemInfo() map[string]any {
-	return map[string]any{
-		"agent_type":         config.AgentType,
-		"user":               getUser(),
-		"is_admin":           IsAdmin(),
-		"os":                 runtime.GOOS,
-		"version":            GetVersion(),
-		"arch":               runtime.GOARCH,
-		"pid":                os.Getpid(),
-		"locale":             GetLocale(),
-		"local_host_address": getLocalHostAddress(),
-		"hostname":           getHostname(),
+func GetSystemInfo() SystemInfo {
+	return SystemInfo{
+		AgentType:        config.AgentType,
+		User:             getUser(),
+		IsAdmin:          IsAdmin(),
+		OS:               runtime.GOOS,
+		Version:          GetVersion(),
+		Arch:             runtime.GOARCH,
+		PID:              os.Getpid(),
+		Locale:           GetLocale(),
+		LocalIP: getLocalIP(),
+		Hostname:         getHostname(),
 	}
 }

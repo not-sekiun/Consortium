@@ -61,8 +61,8 @@ class AgentsService:
         arch: str | None = None,
         pid: int | None = None,
         locale: str | None = None,
-        remote_host_address: str | None = None,
-        local_host_address: str | None = None,
+        remote_ip: str | None = None,
+        local_ip: str | None = None,
         hostname: str | None = None,
         agent_data: dict[str, Any] | None = None,
     ) -> Agent:
@@ -96,9 +96,9 @@ class AgentsService:
                 PID is unknown.
             locale: The locale string of the host system (for example
                 "en_US"). When `None`, the locale is unknown.
-            remote_host_address: The IP address the agent connected from,
+            remote_ip: The IP address the agent connected from,
                 as seen by the server. When `None`, the remote address is unknown.
-            local_host_address: The local IP address of the agent's host as
+            local_ip: The local IP address of the agent's host as
                 seen by the agent itself. When `None`, the local address is unknown.
             hostname: The hostname of the agent's host. When `None`, the
                 hostname is unknown.
@@ -123,8 +123,8 @@ class AgentsService:
             arch=arch,
             pid=pid,
             locale=locale,
-            remote_host_address=remote_host_address,
-            local_host_address=local_host_address,
+            remote_ip=remote_ip,
+            local_ip=local_ip,
             hostname=hostname,
             agent_data=agent_data,
         )

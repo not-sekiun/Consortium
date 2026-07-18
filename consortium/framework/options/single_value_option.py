@@ -93,16 +93,16 @@ class SingleValueOption(BaseOption):
 
     Example: Setting up a `SingleValueOption` with string value constraints
         ```python
-        local_host_address = SingleValueOption(
-            name="local_host_address",
+        local_host = SingleValueOption(
+            name="local_host",
             description="The local host as an IPV4 address that the server listens on.",
             required=True,
             default_value="127.0.0.1",
             value_type=str,
             validating_regex=r"^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$",
         )
-        local_host_address.set_option_value("0.0.0.0")
-        local_host_address.set_option_value("not_an_ip_address")  # Will raise `OptionValueValidationError`
+        local_host.set_option_value("0.0.0.0")
+        local_host.set_option_value("not_an_ip_address")  # Will raise `OptionValueValidationError`
         ```
     """
 

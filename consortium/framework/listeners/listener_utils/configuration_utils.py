@@ -8,10 +8,9 @@ import socket
 import subprocess
 
 
-def get_local_host_address() -> str:
-    """
-    This function attempts to get the local host IP address of the system. If it fails
-    to do so, it returns the loopback address.
+def get_local_ip() -> str:
+    """Attempt to get the local IP address of the system. If it fails to do so, it
+    returns the loopback address.
 
     Returns:
         str: The local host IP address of the system.
@@ -20,31 +19,30 @@ def get_local_host_address() -> str:
     test_socket.settimeout(0)
     try:
         test_socket.connect(("10.254.254.254", 1))
-        local_host_address = test_socket.getsockname()[0]
+        local_ip = test_socket.getsockname()[0]
     except Exception:
-        local_host_address = "127.0.0.1"
+        local_ip = "127.0.0.1"
     finally:
         test_socket.close()
-    return local_host_address
+    return local_ip
 
 
 def check_socket_address_availability(
-    local_host_address: str,
-    local_port: int,
+    bind_address: str,
+    bind_port: int,
 ) -> bool:
-    """
-    This function checks if a given socket address is available for use to be bound on.
+    """Check if a given socket address is available for use to be bound on.
 
     Args:
-        local_host_address (str): The local host address to check.
-        local_port (int): The local port to check.
+        bind_address (str): The bind address to check.
+        bind_port (int): The bind port to check.
 
     Returns:
         bool: `True` if the socket address is available, `False` otherwise.
     """
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as test_socket:
-            test_socket.bind((local_host_address, local_port))
+            test_socket.bind((bind_address, bind_port))
     except OSError:
         return False
     return True
@@ -53,29 +51,28 @@ def check_socket_address_availability(
 def get_available_port(
     start_port: int = 49152,
     end_port: int = 65535,
-    local_host_address: str = "127.0.0.1",
+    bind_address: str = "127.0.0.1",
 ) -> int | None:
-    """
-    Find an available port within a specified range.
+    """Find an available port to bind onto within a specified range for a particular bind
+    address
 
     Args:
         start_port (int, optional): Starting port of the range. Defaults to 49152 (dynamic/private port range start).
         end_port (int, optional): Ending port of the range. Defaults to 65535.
-        local_host_address (str, optional): Local host address to check port
+        bind_address (str, optional): Local host address to check port
             availability. Defaults to localhost.
 
     Returns:
         int | None: An available port number, or None if no port is available.
     """
     for port in range(start_port, end_port + 1):
-        if check_socket_address_availability(local_host_address, port):
+        if check_socket_address_availability(bind_address, port):
             return port
     return None
 
 
 def validate_ip_address(ip_address: str) -> bool:
-    """
-    Validate whether a given string is a valid IP address.
+    """Validate whether a given string is a valid IP address.
 
     Args:
         ip_address (str): IP address to validate.
@@ -91,8 +88,7 @@ def validate_ip_address(ip_address: str) -> bool:
 
 
 def get_network_interfaces() -> list[tuple[str, str]]:
-    """
-    Retrieve a list of network interfaces with their IP addresses.
+    """Retrieve a list of network interfaces with their IP addresses.
 
     Returns:
         list[tuple[str, str]]: A list of tuples containing the interface name and IP address.
@@ -131,8 +127,7 @@ def get_network_interfaces() -> list[tuple[str, str]]:
 
 
 def check_valid_port_number(port: int) -> bool:
-    """
-    Check if a given port number is valid.
+    """Check if a given port number is valid.
 
     Args:
         port (int): Port number to check.

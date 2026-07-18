@@ -53,7 +53,7 @@ class Listener(BaseListener):
                     "arch": {"type": "string"},
                     "pid": {"type": "integer"},
                     "locale": {"type": "string"},
-                    "local_host_address": {"type": "string"},
+                    "local_ip": {"type": "string"},
                     "hostname": {"type": "string"},
                 },
                 "oneOf": [{"required": ["payload_id"]}, {"required": ["agent_type"]}],
@@ -73,7 +73,7 @@ class Listener(BaseListener):
                     payload_id=payload_id,
                     agent_type=agent_type,
                     endpoint=request.remote,
-                    remote_host_address=request.remote,
+                    remote_ip=request.remote,
                     **json_request_body,
                 )
             except AgentTypeResolutionError:

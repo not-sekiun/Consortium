@@ -55,7 +55,7 @@ Content-Type: application/json
     "arch":                "<string>",    # CPU architecture (e.g. "x86_64")
     "pid":                 <int>,         # process ID
     "locale":              "<string>",    # system locale (e.g. "en-US")
-    "local_host_address":  "<string>",   # agent's local IP
+    "local_ip":  "<string>",   # agent's local IP
     "hostname":            "<string>"    # agent's hostname
 }
 ```

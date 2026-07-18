@@ -4,10 +4,10 @@ import enum
 
 from consortium.framework._core.components.component_status import State, Status
 from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
+    components_framework_exceptions as frmwrk_excs,
 )
 from consortium.framework.signal_exceptions import (
-    _component_signal_exceptions as framework_excs,
+    _component_signal_exceptions as sig_excs,
 )
 
 
@@ -46,9 +46,7 @@ class ComponentLifeCycle(abc.ABC):
     async def on_cancelled(self) -> None: ...
 
     @abc.abstractmethod
-    async def on_errored(
-        self, error: components_framework_exceptions.ComponentRuntimeError
-    ) -> None: ...
+    async def on_errored(self, error: frmwrk_excs.ComponentRuntimeError) -> None: ...
 
     @abc.abstractmethod
     async def on_fatal(
@@ -59,7 +57,7 @@ class ComponentLifeCycle(abc.ABC):
 
     async def start(self) -> None:
         if self.status.state in (State.RUNNING, State.STARTED):
-            raise components_framework_exceptions.ComponentAlreadyRunningError(
+            raise frmwrk_excs.ComponentAlreadyRunningError(
                 component_str=str(self),
             )
 
@@ -69,9 +67,9 @@ class ComponentLifeCycle(abc.ABC):
 
         try:
             await self.on_started()
-        except framework_excs.ComponentStartError as exc:
+        except sig_excs.ComponentStartError as exc:
             self.status._transition_to_initialized()
-            raise components_framework_exceptions.ComponentStartError(
+            raise frmwrk_excs.ComponentStartError(
                 component_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
@@ -92,7 +90,7 @@ class ComponentLifeCycle(abc.ABC):
 
     async def stop(self) -> None:
         if self.status.state != State.RUNNING:
-            raise components_framework_exceptions.ComponentNotRunningError(
+            raise frmwrk_excs.ComponentNotRunningError(
                 component_str=str(self),
             )
 
@@ -100,8 +98,8 @@ class ComponentLifeCycle(abc.ABC):
             self.status._transition_to_stopping()
             await self.on_stopped()
             self.status._transition_to_stopped()
-        except framework_excs.ComponentStopError as exc:
-            raise components_framework_exceptions.ComponentStopError(
+        except sig_excs.ComponentStopError as exc:
+            raise frmwrk_excs.ComponentStopError(
                 component_str=str(self),
                 error_message=exc.message,
                 detail=exc.detail,
@@ -118,7 +116,7 @@ class ComponentLifeCycle(abc.ABC):
 
     async def cancel(self) -> None:
         if self.status.state != State.RUNNING:
-            raise components_framework_exceptions.ComponentNotRunningError(
+            raise frmwrk_excs.ComponentNotRunningError(
                 component_str=str(self),
             )
 
@@ -174,9 +172,9 @@ class ComponentLifeCycle(abc.ABC):
 
     def _construct_component_runtime_error_from_framework_runtime_error(
         self,
-        error: framework_excs.ComponentRuntimeError,
-    ) -> components_framework_exceptions.ComponentRuntimeError:
-        return components_framework_exceptions.ComponentRuntimeError(
+        error: sig_excs.ComponentRuntimeError,
+    ) -> frmwrk_excs.ComponentRuntimeError:
+        return frmwrk_excs.ComponentRuntimeError(
             component_str=str(self),
             error_message=error.message,
             detail=error.detail,
@@ -185,8 +183,8 @@ class ComponentLifeCycle(abc.ABC):
     def _construct_component_runtime_error_from_unhandled_exception(
         self,
         exc: Exception,
-    ) -> components_framework_exceptions.ComponentRuntimeError:
-        return components_framework_exceptions.ComponentRuntimeError(
+    ) -> frmwrk_excs.ComponentRuntimeError:
+        return frmwrk_excs.ComponentRuntimeError(
             component_str=str(self),
             error_message=(
                 f"An unhandled exception was raised while running. "
@@ -213,7 +211,7 @@ class ComponentLifeCycle(abc.ABC):
             await self.on_completed()
         except asyncio.CancelledError:
             return
-        except framework_excs.ComponentRuntimeError as exc:
+        except sig_excs.ComponentRuntimeError as exc:
             component_runtime_error = (
                 self._construct_component_runtime_error_from_framework_runtime_error(
                     error=exc,

@@ -165,7 +165,7 @@ class _AgentHandler:
                 "arch": {"type": "string"},
                 "pid": {"type": "integer"},
                 "locale": {"type": "string"},
-                "local_host_address": {"type": "string"},
+                "local_ip": {"type": "string"},
                 "hostname": {"type": "string"},
             },
             "oneOf": [{"required": ["payload_id"]}, {"required": ["agent_type"]}],

@@ -24,8 +24,8 @@ class AgentModel(BaseModel):
     arch: str | None
     pid: int | None
     locale: str | None
-    remote_host_address: str | None
-    local_host_address: str | None
+    remote_ip: str | None
+    local_ip: str | None
     hostname: str | None
     datetime_first_checked_in: str
     datetime_last_checked_in: str

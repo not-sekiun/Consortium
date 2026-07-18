@@ -763,17 +763,17 @@ class Agent:
                 except Exception:
                     return False
 
-        def get_local_host_address():
+        def get_local_ip():
             test_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             test_socket.settimeout(0)
             try:
                 test_socket.connect(("10.254.254.254", 1))
-                local_host_address = test_socket.getsockname()[0]
+                local_ip = test_socket.getsockname()[0]
             except Exception:
-                local_host_address = "127.0.0.1"
+                local_ip = "127.0.0.1"
             finally:
                 test_socket.close()
-            return local_host_address
+            return local_ip
 
         def get_user():
             try:
@@ -790,7 +790,7 @@ class Agent:
             "arch": platform.machine,
             "pid": os.getpid,
             "locale": lambda: " ".join(str(x) for x in locale.getlocale()),
-            "local_host_address": get_local_host_address,
+            "local_ip": get_local_ip,
             "hostname": platform.node,
         }
         agent_data = {}

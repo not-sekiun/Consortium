@@ -3,6 +3,7 @@ package connection
 import (
 	"bytes"
 	"encoding/json"
+	"eula/info"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -44,7 +45,7 @@ func NewConnection(
 	}
 }
 
-func (c *Connection) RegisterWithListener(agentData map[string]any) (string, error) {
+func (c *Connection) RegisterWithListener(agentData info.SystemInfo) (string, error) {
 	jsonData, err := json.Marshal(agentData)
 	if err != nil {
 		return "", err
@@ -77,6 +78,8 @@ func (c *Connection) RegisterWithListener(agentData map[string]any) (string, err
 	if err != nil {
 		return "", err
 	}
+
+	c.agentID = &registrationResponse.AgentID
 
 	return registrationResponse.AgentID, nil
 }

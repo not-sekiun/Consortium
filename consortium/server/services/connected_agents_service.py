@@ -71,8 +71,8 @@ class ConnectedAgentsService:
         arch: str | None = None,
         pid: int | None = None,
         locale: str | None = None,
-        remote_host_address: str | None = None,
-        local_host_address: str | None = None,
+        remote_ip: str | None = None,
+        local_ip: str | None = None,
         hostname: str | None = None,
         agent_data: dict[str, Any] | None = None,
     ) -> Agent:
@@ -93,8 +93,8 @@ class ConnectedAgentsService:
             arch: The architecture of the system.
             pid: The process ID of the agent.
             locale: The locale of the system.
-            remote_host_address: The remote host address of the agent.
-            local_host_address: The local host address of the agent.
+            remote_ip: The remote host address of the agent.
+            local_ip: The local host address of the agent.
             hostname: The hostname of the system.
             agent_data: Additional data from the agent.
 
@@ -120,8 +120,8 @@ class ConnectedAgentsService:
             arch=arch,
             pid=pid,
             locale=locale,
-            remote_host_address=remote_host_address,
-            local_host_address=local_host_address,
+            remote_ip=remote_ip,
+            local_ip=local_ip,
             hostname=hostname,
             agent_data=agent_data,
         )

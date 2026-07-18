@@ -27,7 +27,7 @@ agent = self.connected_agents_service.register_agent(
     payload_id="<uuid of the payload this agent was generated from>",
     # OR: agent_type="my_type_name"   -- fallback when no payload_id is available
     endpoint=remote_address,
-    remote_host_address=remote_address,
+    remote_ip=remote_address,
     user="DESKTOP\\alice",
     is_admin=False,
     os="Windows",
@@ -35,7 +35,7 @@ agent = self.connected_agents_service.register_agent(
     arch="x86_64",
     pid=4567,
     locale="en-US",
-    local_host_address="192.168.1.50",
+    local_ip="192.168.1.50",
     hostname="DESKTOP-ABC",
 )
 # agent.agent_id is the UUID the framework assigned; send it back to the agent

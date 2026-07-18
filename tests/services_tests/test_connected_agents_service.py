@@ -106,8 +106,8 @@ def test_register_agent_delegates(service, mock_agents_service, listener_id):
         arch=None,
         pid=None,
         locale=None,
-        remote_host_address=None,
-        local_host_address=None,
+        remote_ip=None,
+        local_ip=None,
         hostname=None,
         agent_data=None,
     )
