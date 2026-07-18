@@ -224,6 +224,7 @@ class LoggingService:
         self.add_sink(
             sink=sys.stdout,
             level=logging_config.level,
+            format=self._log_formatter,
             label="stdout",
             colorize=logging_config.colorize,
             is_server_default=True,
