@@ -67,7 +67,7 @@ class _AgentCommunicator:
         task_message = TaskInputMessageModel(
             task_id=self.task.task_id, data=data, payload=payload
         )
-        await self.agent.send_task_message(
+        await self._task_messages_outbox.put(
             task_message=task_message,
             timeout=timeout,
         )

@@ -396,7 +396,7 @@ class BaseAgentCapability(_AgentCommunicator):
                 f"`{type(modified_task_launch_message).__name__}`."
             )
         self.task_launch_message = modified_task_launch_message
-        await self.agent.send_task_message(task_message=modified_task_launch_message)
+        await self._task_messages_outbox.put(task_message=modified_task_launch_message)
         return await self.on_execute()
 
     @classmethod
