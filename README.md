@@ -143,11 +143,11 @@ Then open a web browser to either URL.
 
 #### REST API documentation at /docs (http://localhost:9999/docs by default)
 
-![REST API documentation for "docs" endpoint](docs/assets/rest_api_documentation_doc_endpoint.png)
+![REST API documentation for "docs" endpoint](.github/assets/rest_api_documentation_doc_endpoint.png)
 
 #### REST API documentation at /redoc (http://localhost:9999/redoc by default)
 
-![REST API documentation for "redoc" endpoint](docs/assets/rest_api_documentation_redoc_endpoint.png)
+![REST API documentation for "redoc" endpoint](.github/assets/rest_api_documentation_redoc_endpoint.png)
 
 ### Server Events Websocket API Documentation
 
@@ -155,7 +155,7 @@ The Consortium server provides a WebSocket Events API for server-initiated push 
 Complete documentation is located at the
 [official Consortium documentation site](https://not-sekiun.github.io/Consortium/)
 
-![WebSocket API documentation for zensical](docs/assets/websockets_api_zensical.png)
+![WebSocket API documentation for zensical](.github/assets/websockets_api_zensical.png)
 
 Alternatively, to host and view this documentation locally, refer back to
 [this section](#complete-framework-documentation-and-self-hosted-documentation)
@@ -174,7 +174,7 @@ client.
 
 <br>
 
-![Client help demo](docs/demos/help_demo.gif)
+![Client help demo](.github/assets/help_demo.gif)
 
 ## Contributing
 
