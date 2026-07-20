@@ -149,42 +149,95 @@ def test_check_in_agent_validates_then_delegates(
     )
 
 
-# --- get_next_agent_task_messages_by_agent_id ---
+# --- get_next_task_message_by_task_id ---
 
 
 @pytest.mark.anyio
-async def test_get_next_task_messages_validates_checks_in_delegates(
+async def test_get_next_task_message_by_task_id_validates_and_delegates(
     service, mock_agents_service, listener_id
 ):
     agent = _make_connected_agent(listener_id)
+    task_id = uuid.uuid4()
+    expected = MagicMock()
     mock_agents_service.get_agent_by_agent_id.return_value = agent
-    mock_agents_service.get_next_agent_task_messages_by_agent_id = AsyncMock(
-        return_value=[]
+    mock_agents_service.get_next_task_message_by_task_id = AsyncMock(
+        return_value=expected
     )
-    result = await service.get_next_agent_task_messages_by_agent_id(
-        agent_id=agent.agent_id, count=1
+    result = await service.get_next_task_message_by_task_id(
+        agent_id=agent.agent_id, task_id=task_id, timeout=1.0
     )
-    mock_agents_service.check_in_agent_by_agent_id.assert_called_with(
-        agent_id=agent.agent_id
+    mock_agents_service.get_next_task_message_by_task_id.assert_called_once_with(
+        agent_id=agent.agent_id, task_id=task_id, timeout=1.0
     )
-    mock_agents_service.get_next_agent_task_messages_by_agent_id.assert_called_once_with(
-        agent_id=agent.agent_id, count=1, block=False, timeout=None
-    )
-    assert result == []
-
-
-# --- submit_result_by_agent_id ---
+    assert result == expected
 
 
 @pytest.mark.anyio
-async def test_submit_result_validates_and_delegates(
+async def test_get_next_task_message_by_task_id_wrong_listener_raises(
+    service, mock_agents_service
+):
+    agent = _make_wrong_listener_agent()
+    mock_agents_service.get_agent_by_agent_id.return_value = agent
+    mock_agents_service.get_next_task_message_by_task_id = AsyncMock()
+    with pytest.raises(AgentNotFoundError):
+        await service.get_next_task_message_by_task_id(
+            agent_id=agent.agent_id, task_id=uuid.uuid4()
+        )
+    mock_agents_service.get_next_task_message_by_task_id.assert_not_called()
+
+
+# --- get_next_task_message_sequential ---
+
+
+@pytest.mark.anyio
+async def test_get_next_task_message_sequential_validates_and_delegates(
+    service, mock_agents_service, listener_id
+):
+    agent = _make_connected_agent(listener_id)
+    expected = MagicMock()
+    mock_agents_service.get_agent_by_agent_id.return_value = agent
+    mock_agents_service.get_next_task_message_sequential = AsyncMock(
+        return_value=expected
+    )
+    result = await service.get_next_task_message_sequential(
+        agent_id=agent.agent_id, timeout=None
+    )
+    mock_agents_service.get_next_task_message_sequential.assert_called_once_with(
+        agent_id=agent.agent_id, timeout=None
+    )
+    assert result == expected
+
+
+# --- get_next_task_message_any ---
+
+
+@pytest.mark.anyio
+async def test_get_next_task_message_any_validates_and_delegates(
+    service, mock_agents_service, listener_id
+):
+    agent = _make_connected_agent(listener_id)
+    expected = MagicMock()
+    mock_agents_service.get_agent_by_agent_id.return_value = agent
+    mock_agents_service.get_next_task_message_any = AsyncMock(return_value=expected)
+    result = await service.get_next_task_message_any(agent_id=agent.agent_id, timeout=0)
+    mock_agents_service.get_next_task_message_any.assert_called_once_with(
+        agent_id=agent.agent_id, timeout=0
+    )
+    assert result == expected
+
+
+# --- dispatch_task_output_message ---
+
+
+@pytest.mark.anyio
+async def test_dispatch_task_output_message_validates_and_delegates(
     service, mock_agents_service, listener_id
 ):
     agent = _make_connected_agent(listener_id)
     task_id = uuid.uuid4()
     agent.get_running_task_by_task_id.return_value = MagicMock()
     mock_agents_service.get_agent_by_agent_id.return_value = agent
-    mock_agents_service.submit_result_by_agent_id = AsyncMock()
+    mock_agents_service.dispatch_task_output_message = AsyncMock()
 
     await service.dispatch_task_output_message(
         agent_id=agent.agent_id,
@@ -197,7 +250,14 @@ async def test_submit_result_validates_and_delegates(
     mock_agents_service.check_in_agent_by_agent_id.assert_called_with(
         agent_id=agent.agent_id
     )
-    mock_agents_service.submit_result_by_agent_id.assert_called_once()
+    mock_agents_service.dispatch_task_output_message.assert_called_once_with(
+        agent_id=agent.agent_id,
+        task_id=task_id,
+        success=True,
+        message="done",
+        data={"key": "val"},
+        payload=None,
+    )
 
 
 # --- get_all_agents ---

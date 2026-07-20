@@ -219,14 +219,6 @@ class Agent:
         # TODO: Move all the tasks to a database instead of storing them in memory.
         self._tasks = {}
 
-        # TODO: Deprecate
-        # self._task_messages_outbox = TaskMessagesQueue(
-        #     maximum_memory_size=32 * 1024 * 1024
-        # )  # 32 MB cap
-
-        # TODO: Deprecate
-        # self._agent_capability_execution_lock = asyncio.Lock()
-
         # Fired when a new task is started (specifically after its outbox is added to
         # self._task_outboxes). This is used specifically and only to wake up
         # self.get_next_task_message_sequential() when it is called with a timeout of
@@ -646,63 +638,6 @@ class Agent:
             )
             return False
 
-    # TODO: Deprecate
-    # async def send_task_message(
-    #     self,
-    #     task_message: TaskLaunchMessageModel | TaskInputMessageModel,
-    #     timeout: float | None = None,
-    # ) -> None:
-    #     await self._task_messages_outbox.put(task_message=task_message, timeout=timeout)
-    #
-    # async def get_next_task_message(
-    #     self, timeout: float | None = None
-    # ) -> TaskLaunchMessageModel | None:
-    #     while True:
-    #         try:
-    #             message = await self._task_messages_outbox.get(timeout=timeout)
-    #         except asyncio.QueueEmpty:
-    #             return None
-    #         except TimeoutError:
-    #             return None
-    #
-    #         # A popped message may be orphaned: its task could have been deleted, or the
-    #         # task may have already reached a terminal state while still QUEUED (it
-    #         # completed before its launch message was ever popped). Such a message is
-    #         # stale, discard it and fetch the next one rather than resurrecting a task
-    #         # that is gone or already finished.
-    #         try:
-    #             task = self.get_task_by_task_id(task_id=message.task_id)
-    #         except AgentTaskNotFoundError:
-    #             self.logger.debug(
-    #                 "Agent {} discarded an orphaned task message for an unknown or "
-    #                 "deleted task '{}'.",
-    #                 self,
-    #                 message.task_id,
-    #             )
-    #             continue
-    #
-    #         if task.status.state in (
-    #             AgentTaskState.SUCCEEDED,
-    #             AgentTaskState.FAILED,
-    #             AgentTaskState.ERRORED,
-    #         ):
-    #             self.logger.warning(
-    #                 "Agent {} discarded an orphaned message for task {} that already "
-    #                 "completed with status {} without ever being acknowledged.",
-    #                 self,
-    #                 task,
-    #                 task.status.state,
-    #             )
-    #             continue
-    #
-    #         # A task may emit one or more task messages. The first time a message is
-    #         # fetched for a task we transition it to RUNNING, this is the point at which
-    #         # the agent has acknowledged and picked up the task.
-    #         if task.status.state == AgentTaskState.QUEUED:
-    #             task.status._transition_to_running()
-    #             task.datetime_started = datetime.now()
-    #         return message
-
     def get_all_tasks(
         self,
         state: AgentTaskState | None = None,
@@ -849,24 +784,6 @@ class Agent:
                 task_outcome = await agent_capability.execute(
                     task_launch_message=task_launch_message
                 )
-
-                # TODO: Deprecate
-                # if agent_capability.is_atomic:
-                #     async with self._agent_capability_execution_lock:
-                #         task_outcome = await agent_capability.execute(
-                #             task_launch_message=task_launch_message
-                #         )
-                # else:
-                #     # "Wait" for the lock to be released but dont actually hold it while
-                #     # executing the agent capability. This allows non-atomic agent
-                #     # capabilities to interleave their task messages with other agent
-                #     # capabilities.
-                #     async with self._agent_capability_execution_lock:
-                #         pass
-                #
-                #     task_outcome = await agent_capability.execute(
-                #         task_launch_message=task_launch_message
-                #     )
 
                 # Upon returning without raising an error check the `task_outcome` to
                 # see if it is present or not and emit the final event based on that

@@ -160,46 +160,6 @@ class ConnectedAgentsService:
         self._validate_agent_connected_to_listener(agent_id=agent_id)
         self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
 
-    # TODO: Deprecate
-    # @log_and_propagate_error_on_service_method
-    # async def get_next_agent_task_messages_by_agent_id(
-    #     self,
-    #     agent_id: str | uuid.UUID,
-    #     count: int | None = None,
-    #     block: bool = False,
-    #     timeout: float | None = None,
-    # ) -> list[TaskLaunchMessageModel]:
-    #     """Get pending tasks for an agent connected to this listener. This method also
-    #     performs an automatic check-in for the agent.
-    #
-    #     Args:
-    #         agent_id: The agent ID of the agent to get tasks for.
-    #         count: The number of tasks to retrieve. If None, retrieves all available
-    #             tasks. If 1, retrieves a single task. If > 1, retrieves up to that
-    #             many tasks.
-    #         block: If True, blocks until at least one task is available.
-    #             If False, returns immediately with whatever tasks are available
-    #             (may be empty). Defaults to False.
-    #         timeout: Maximum time in seconds to block waiting for tasks. Only applies
-    #             when block=True. If None, blocks indefinitely. If 0, equivalent to
-    #             block=False.
-    #
-    #     Raises:
-    #         AgentNotFoundError: Raised if the agent does not exist or is not connected
-    #             to this listener.
-    #
-    #     Returns:
-    #         A list of task message objects, or an empty list if none are available.
-    #     """
-    #     self._validate_agent_connected_to_listener(agent_id=agent_id)
-    #     self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
-    #     return await self._agents_service.get_next_agent_task_messages_by_agent_id(
-    #         agent_id=agent_id,
-    #         count=count,
-    #         block=block,
-    #         timeout=timeout,
-    #     )
-
     @log_and_propagate_error_on_service_method
     async def get_next_task_message_by_task_id(
         self,
