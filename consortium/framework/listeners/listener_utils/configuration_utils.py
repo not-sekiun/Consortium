@@ -20,7 +20,7 @@ def get_local_ip() -> str:
     try:
         test_socket.connect(("10.254.254.254", 1))
         local_ip = test_socket.getsockname()[0]
-    except Exception:
+    except OSError:
         local_ip = "127.0.0.1"
     finally:
         test_socket.close()

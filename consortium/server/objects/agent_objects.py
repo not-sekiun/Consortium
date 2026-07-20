@@ -468,7 +468,7 @@ class Agent:
         # Dictionaries preserve insertion order, so the first tracked outbox is the
         # earliest tasked one. We drain it completely (its end of stream drops it from
         # self._task_outboxes) before the next call moves on to the following outbox.
-        task_id = list(self._task_outboxes)[0]
+        task_id = next(iter(self._task_outboxes))
         return await self.get_next_task_message_by_task_id(
             task_id=task_id, timeout=timeout
         )
