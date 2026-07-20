@@ -1,12 +1,13 @@
 import asyncio
 import uuid
-from collections.abc import AsyncIterable
+from collections.abc import AsyncGenerator, AsyncIterable
 from datetime import datetime
 from typing import Any
 
 from loguru import logger
 
 from consortium.framework.agents.agent_message_models import (
+    TaskInputMessageModel,
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
@@ -189,72 +190,240 @@ class AgentsService:
         agent.mark_as_active()
         self._logger.debug("Checked in agent {!r}", agent)
 
+    # TODO: Deprecate
+    # @log_and_propagate_error_on_service_method
+    # async def get_next_agent_task_messages_by_agent_id(
+    #     self,
+    #     agent_id: str | uuid.UUID,
+    #     count: int | None = None,
+    #     block: bool = False,
+    #     timeout: float | None = None,
+    # ) -> list[TaskLaunchMessageModel]:
+    #     """Get pending task messages for an agent. This method retrieves task messages
+    #     that are queued for the agent and returns them as a list of
+    #     `AgentTaskMessageModel` objects.
+    #
+    #     Args:
+    #         agent_id: The agent ID of the agent to get tasks for.
+    #         count: The number of tasks to retrieve. If None, retrieves
+    #             all available tasks. If 1, retrieves a single task. If > 1, retrieves
+    #             up to that many tasks.
+    #         block: If True, blocks until at least one task is available.
+    #             If False, returns immediately with whatever tasks are available
+    #             (may be empty). Defaults to False.
+    #         timeout: Maximum time in seconds to block waiting for tasks.
+    #             Only applies when block=True. If None, blocks indefinitely.
+    #             If 0, equivalent to block=False.
+    #
+    #     Raises:
+    #         AgentNotFoundError: Raised if the agent with the specified agent ID is not
+    #             found.
+    #
+    #     Returns:
+    #         A list of task messages. Returns an empty list
+    #             if no tasks are available and block=False.
+    #     """
+    #     agent = self.get_agent_by_agent_id(agent_id=agent_id)
+    #
+    #     # Normalize timeout=0 to non-blocking
+    #     if timeout == 0:
+    #         block = False
+    #
+    #     task_messages: list[TaskLaunchMessageModel] = []
+    #
+    #     # Determine max tasks to collect
+    #     max_tasks = count if count is not None else float("inf")
+    #
+    #     if block and len(task_messages) == 0:
+    #         # Block for at least one task message from any running capability. Returns
+    #         # None on timeout or when no capability is running, in which case we fall
+    #         # through with an empty batch.
+    #         first_task = await agent.get_next_task_message_any(timeout=timeout)
+    #         if first_task is not None:
+    #             task_messages.append(first_task)
+    #
+    #     # Collect any further messages that are immediately available without blocking
+    #     # (timeout=0 returns None as soon as nothing more is ready).
+    #     while len(task_messages) < max_tasks:
+    #         task_message = await agent.get_next_task_message_any(timeout=0)
+    #         if task_message is None:
+    #             break
+    #         task_messages.append(task_message)
+    #
+    #     self._logger.debug(
+    #         "Retrieved {} pending task(s) for agent {!r}",
+    #         len(task_messages),
+    #         agent,
+    #     )
+    #
+    #     return task_messages
+
     @log_and_propagate_error_on_service_method
-    async def get_next_agent_task_messages_by_agent_id(
+    async def get_next_task_message_by_task_id(
         self,
         agent_id: str | uuid.UUID,
-        count: int | None = None,
-        block: bool = False,
+        task_id: str | uuid.UUID,
         timeout: float | None = None,
-    ) -> list[TaskLaunchMessageModel]:
-        """Get pending task messages for an agent. This method retrieves task messages
-        that are queued for the agent and returns them as a list of
-        `AgentTaskMessageModel` objects.
+    ) -> TaskInputMessageModel | TaskOutputMessageModel | None:
+        """Get the next task message produced by a running capability of an agent for a
+        specific task.
 
         Args:
-            agent_id: The agent ID of the agent to get tasks for.
-            count: The number of tasks to retrieve. If None, retrieves
-                all available tasks. If 1, retrieves a single task. If > 1, retrieves
-                up to that many tasks.
-            block: If True, blocks until at least one task is available.
-                If False, returns immediately with whatever tasks are available
-                (may be empty). Defaults to False.
-            timeout: Maximum time in seconds to block waiting for tasks.
-                Only applies when block=True. If None, blocks indefinitely.
-                If 0, equivalent to block=False.
+            agent_id: The agent ID of the agent to read the task message from.
+            task_id: The task ID of the running task whose next message to read.
+            timeout: Maximum time in seconds to wait for the next message. If None, waits
+                indefinitely. If 0, polls without blocking.
+
+        Returns:
+            The next task message produced by the task's capability, or None if the
+            capability has finished (end of stream) or the timeout elapsed before a
+            message was produced.
 
         Raises:
             AgentNotFoundError: Raised if the agent with the specified agent ID is not
                 found.
-
-        Returns:
-            A list of task messages. Returns an empty list
-                if no tasks are available and block=False.
+            AgentTaskNotFoundError: Raised if the task with the specified task ID is not
+                found on the agent.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-
-        # Normalize timeout=0 to non-blocking
-        if timeout == 0:
-            block = False
-
-        task_messages: list[TaskLaunchMessageModel] = []
-
-        # Determine max tasks to collect
-        max_tasks = count if count is not None else float("inf")
-
-        if block and len(task_messages) == 0:
-            # Block for at least one task
-            first_task = await agent.get_next_task_message(timeout=timeout)
-            if first_task is not None:
-                task_messages.append(first_task)
-
-        # Collect remaining tasks (non-blocking)
-        while len(task_messages) < max_tasks:
-            task_message = await agent.get_next_task_message(timeout=0)
-            if task_message is None:
-                break
-            task_messages.append(task_message)
-
-        self._logger.debug(
-            "Retrieved {} pending task(s) for agent {!r}",
-            len(task_messages),
-            agent,
+        return await agent.get_next_task_message_by_task_id(
+            task_id=task_id, timeout=timeout
         )
 
-        return task_messages
+    @log_and_propagate_error_on_service_method
+    async def get_next_task_message_sequential(
+        self,
+        agent_id: str | uuid.UUID,
+        timeout: float | None = None,
+    ) -> TaskInputMessageModel | TaskOutputMessageModel | None:
+        """Get the next task message from the earliest running capability of an agent.
+
+        Messages are drained from the earliest started capability until it completes
+        before moving on to the next one, preserving a strict per-capability ordering.
+
+        Args:
+            agent_id: The agent ID of the agent to read the task message from.
+            timeout: Maximum time in seconds to wait for the next message, spanning both
+                the wait for a capability to start and the wait for it to produce a
+                message. If None, waits indefinitely. If 0, polls without blocking.
+
+        Returns:
+            The next task message from the earliest running capability, or None if the
+            timeout elapsed before a message was produced.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
+        """
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        return await agent.get_next_task_message_sequential(timeout=timeout)
 
     @log_and_propagate_error_on_service_method
-    async def submit_result_by_agent_id(
+    async def get_next_task_message_any(
+        self,
+        agent_id: str | uuid.UUID,
+        timeout: float | None = None,
+    ) -> TaskLaunchMessageModel | TaskOutputMessageModel | None:
+        """Get the next task message from any running capability of an agent.
+
+        Returns the first message produced by any running capability, interleaving
+        (muxing) messages across capabilities in the order they become available.
+
+        Args:
+            agent_id: The agent ID of the agent to read the task message from.
+            timeout: Maximum time in seconds to wait for the next message, spanning both
+                the wait for a capability to start and the wait for one to produce a
+                message. If None, waits indefinitely. If 0, polls without blocking.
+
+        Returns:
+            The next task message from any running capability, or None if the timeout
+            elapsed before a message was produced.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
+        """
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        return await agent.get_next_task_message_any(timeout=timeout)
+
+    async def drain_task_messages_by_task_id(
+        self,
+        agent_id: str | uuid.UUID,
+        task_id: str | uuid.UUID,
+    ) -> AsyncGenerator[TaskLaunchMessageModel | TaskInputMessageModel]:
+        """Drain task messages from a specific running task of an agent until it completes.
+
+        Yields each message produced by the task's capability in order, terminating when
+        the capability finishes.
+
+        Args:
+            agent_id: The agent ID of the agent to drain task messages from.
+            task_id: The task ID of the running task whose messages to drain.
+
+        Yields:
+            Each task message produced by the task's capability, in the order produced.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
+            AgentTaskNotFoundError: Raised if the task with the specified task ID is not
+                found on the agent.
+        """
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        async for task_message in agent.drain_task_messages_by_task_id(task_id=task_id):
+            yield task_message
+
+    async def drain_task_messages_sequential(
+        self,
+        agent_id: str | uuid.UUID,
+    ) -> AsyncGenerator[TaskLaunchMessageModel | TaskInputMessageModel]:
+        """Drain task messages from an agent one capability at a time.
+
+        Yields messages from the earliest started capability until it completes before
+        moving on to the next one, preserving a strict per-capability ordering. Loops
+        indefinitely, waiting for new capabilities to start as needed.
+
+        Args:
+            agent_id: The agent ID of the agent to drain task messages from.
+
+        Yields:
+            Each task message, drained from the earliest running capability first.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
+        """
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        async for task_message in agent.drain_task_messages_sequential():
+            yield task_message
+
+    async def drain_task_messages_any(
+        self,
+        agent_id: str | uuid.UUID,
+    ) -> AsyncGenerator[TaskLaunchMessageModel | TaskInputMessageModel]:
+        """Drain task messages from any running capability of an agent.
+
+        Yields messages from any running capability, interleaving (muxing) them in the
+        order they become available. Loops indefinitely, waiting for new capabilities to
+        start as needed.
+
+        Args:
+            agent_id: The agent ID of the agent to drain task messages from.
+
+        Yields:
+            Each task message, in the order it becomes available across all running
+            capabilities.
+
+        Raises:
+            AgentNotFoundError: Raised if the agent with the specified agent ID is not
+                found.
+        """
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        async for task_message in agent.drain_task_messages_any():
+            yield task_message
+
+    @log_and_propagate_error_on_service_method
+    async def dispatch_task_output_message(
         self,
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
@@ -263,7 +432,7 @@ class AgentsService:
         data: dict[str, Any] | None = None,
         payload: AsyncIterable[bytes] | bytes | None = None,
     ) -> None:
-        """Submit a result for a running task on an agent.
+        """Dispatch a task output message for a running task on an agent.
 
         Args:
             agent_id: The agent ID of the agent to submit the result
@@ -280,9 +449,9 @@ class AgentsService:
                 found.
 
         Note:
-            A result whose task ID does not correspond to a running task (the task
-            completed, timed out or was deleted) is a benign lifecycle race, it is
-            logged and dropped rather than raised.
+            A task output message whose task ID does not correspond to a running task
+            (the task completed, timed out or was deleted) is a benign lifecycle race,
+            it is logged and dropped rather than raised.
         """
         if data is None:
             data = {}
@@ -571,7 +740,7 @@ class AgentsService:
         return agent
 
     @log_and_propagate_error_on_service_method
-    def delete_queued_agent_task_by_agent_id_and_task_id(
+    async def delete_queued_agent_task_by_agent_id_and_task_id(
         self,
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
@@ -591,4 +760,4 @@ class AgentsService:
                 task ID.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        agent.delete_queued_task_by_task_id(task_id=task_id)
+        await agent.delete_queued_task_by_task_id(task_id=task_id)

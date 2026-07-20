@@ -2,7 +2,7 @@ import json
 import socket
 
 import jsonschema
-from aiohttp import web
+from aiohttp import MultipartWriter, web
 
 from consortium.framework.listeners import BaseListener
 from consortium.framework.signal_exceptions import ListenerStartError
@@ -62,7 +62,7 @@ class Listener(BaseListener):
             try:
                 json_request_body = await request.json()
                 jsonschema.validate(json_request_body, agent_registration_json_schema)
-            except (json.JSONDecodeError, jsonschema.ValidationError):
+            except json.JSONDecodeError, jsonschema.ValidationError:
                 return web.Response(status=401)
 
             # Register the agent and create an agent record
@@ -99,7 +99,7 @@ class Listener(BaseListener):
             )
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
-        async def handle_agent_getting_tasks(request):
+        async def handle_agent_getting_task_message(request):
             # Validate the agent task message schema
             try:
                 agent_id = request.headers["Cookie"]
@@ -112,12 +112,10 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
-            # Retrieve all pending task messages for the agent (non-blocking)
             try:
-                task_messages = await self.connected_agents_service.get_next_agent_task_messages_by_agent_id(
+                task_message = await self.connected_agents_service.get_next_task_message_sequential(
                     agent_id=agent_id,
-                    count=None,  # Get all available task messages
-                    block=False,  # Don't block, return immediately
+                    timeout=0,  # Don't block, return immediately
                 )
             except AgentNotFoundError:
                 self.logger.warning(
@@ -128,16 +126,35 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
-            for message in task_messages:
-                if message.payload is None:
-                    # Serialize task messages to JSON for the wire protocol, if binary payloads
-                    # were provided attach them as multipart data
-                    task_messages_json = [msg.to_json() for msg in task_messages]
-                    return web.json_response(task_messages_json, status=200)
+            if task_message is None:  # No task messages to report
+                return web.Response(status=204)
+            elif task_message.payload is None:
+                # Serialize task messages to JSON for the wire protocol, if binary payloads
+                # were provided attach them as multipart data
+                return web.json_response(task_message.to_json(), status=200)
+            else:
+                # Handle task messages with binary payloads using a multipart response
+                with MultipartWriter() as writer:
+                    # JSON part
+                    json_part = writer.append_json(task_message.to_json())
+                    json_part.set_content_disposition("form-data", name="json")
 
-        async def handle_agent_posting_results(request):
+                    # Payload part
+                    binary_data = task_message.payload
+                    bin_part = writer.append(binary_data)
+                    bin_part.set_content_disposition("form-data", name="payload")
+                    bin_part.headers["Content-Type"] = "application/octet-stream"
+
+                return web.Response(
+                    body=writer,
+                    headers={
+                        "Content-Type": f"multipart/mixed; boundary={writer.boundary}"
+                    },
+                )
+
+        async def handle_agent_posting_task_message(request):
             # Validate the agent result message schema
-            agent_result_json_schema = {
+            task_output_message_json_schema = {
                 "type": "object",
                 "properties": {
                     "task_id": {"type": "string"},
@@ -153,7 +170,7 @@ class Listener(BaseListener):
                 agent_id = request.headers["Cookie"]
             except KeyError:
                 self.logger.warning(
-                    "Unidentified client {} attempted to send results without "
+                    "Unidentified client {} attempted to post data to endpoint without "
                     "providing an agent ID in the Cookie header. Responded with 401 "
                     "Unauthorized.",
                     request.remote,
@@ -163,26 +180,27 @@ class Listener(BaseListener):
             # Handle results that do not include multipart payloads and only have JSON
             if request.content_type == "application/json":
                 try:
-                    result_json = await request.json()
-                    jsonschema.validate(result_json, agent_result_json_schema)
+                    task_output_message_json = await request.json()
+                    jsonschema.validate(
+                        task_output_message_json, task_output_message_json_schema
+                    )
                 except json.JSONDecodeError, jsonschema.ValidationError:
                     self.logger.warning(
-                        "Unidentified client {} sent malformed agent result data. "
-                        "JSON data was not valid result JSON. Responded with 401 "
-                        "Unauthorized.",
+                        "Unidentified client {} posted malformed JSON data. Responded "
+                        "with 401 Unauthorized.",
                         request.remote,
                     )
                     return web.Response(status=401)
 
-                task_id = result_json["task_id"]
-                success = result_json["success"]
-                message = result_json["message"]
-                data = result_json["data"]
+                task_id = task_output_message_json["task_id"]
+                success = task_output_message_json["success"]
+                message = task_output_message_json["message"]
+                data = task_output_message_json["data"]
                 payload = None
             # Handle results that include multipart payloads
             elif request.content_type == "multipart/form-data":
                 reader = await request.multipart()
-                result_json = None
+                task_output_message_json = None
                 payload = None
 
                 # Extract parts from the multipart data, expecting "json" and "payload"
@@ -190,39 +208,43 @@ class Listener(BaseListener):
                     if part.name == "json":
                         try:
                             json_bytes = await part.read()
-                            result_json = json.loads(json_bytes.decode("utf-8"))
-                            jsonschema.validate(result_json, agent_result_json_schema)
+                            task_output_message_json = json.loads(
+                                json_bytes.decode("utf-8")
+                            )
+                            jsonschema.validate(
+                                task_output_message_json,
+                                task_output_message_json_schema,
+                            )
                         except (
                             json.JSONDecodeError,
                             jsonschema.ValidationError,
                         ):
                             self.logger.warning(
-                                "Unidentified client {} sent malformed agent result "
-                                "data. JSON data was not valid result JSON. Responded "
-                                "with 401 Unauthorized.",
+                                "Unidentified client {} posted malformed JSON data. "
+                                "Responded with 401 Unauthorized.",
                                 request.remote,
                             )
                             return web.Response(status=401)
                     elif part.name == "payload":
                         payload = await part.read()
 
-                if result_json is None or payload is None:
+                if task_output_message_json is None or payload is None:
                     self.logger.warning(
-                        "Unidentified client {} sent malformed agent result data. "
-                        "Multipart result response did not contain both 'json' and "
-                        "'payload'. Responded with 401 Unauthorized.",
+                        "Unidentified client {} posted malformed multipart request. "
+                        "Multipart request did not contain both a 'json' and "
+                        "'payload' field. Responded with 401 Unauthorized.",
                         request.remote,
                     )
                     return web.Response(status=401)
 
-                task_id = result_json["task_id"]
-                success = result_json["success"]
-                message = result_json["message"]
-                data = result_json["data"]
+                task_id = task_output_message_json["task_id"]
+                success = task_output_message_json["success"]
+                message = task_output_message_json["message"]
+                data = task_output_message_json["data"]
             else:
                 self.logger.warning(
-                    "Unidentified client {} sent agent result data with unsupported "
-                    "Content-Type: {}. Responded with 401 Unauthorized.",
+                    "Unidentified client {} posted malformed multipart request with "
+                    "unsupported Content-Type '{}'. Responded with 401 Unauthorized.",
                     request.remote,
                     request.content_type,
                 )
@@ -230,7 +252,7 @@ class Listener(BaseListener):
 
             # Submit the agent result after validation
             try:
-                await self.connected_agents_service.submit_result_by_agent_id(
+                await self.connected_agents_service.dispatch_task_output_message(
                     agent_id=agent_id,
                     task_id=task_id,
                     success=success,
@@ -260,9 +282,9 @@ class Listener(BaseListener):
         for url_path in registration_url_paths:
             app.add_routes([web.post(url_path, handle_agent_registration)])
         for url_path in tasks_url_paths:
-            app.add_routes([web.get(url_path, handle_agent_getting_tasks)])
+            app.add_routes([web.get(url_path, handle_agent_getting_task_message)])
         for url_path in results_url_paths:
-            app.add_routes([web.post(url_path, handle_agent_posting_results)])
+            app.add_routes([web.post(url_path, handle_agent_posting_task_message)])
 
         self.environment.runner = web.AppRunner(app)
         await self.environment.runner.setup()

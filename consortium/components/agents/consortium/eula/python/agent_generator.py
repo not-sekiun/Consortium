@@ -26,7 +26,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
 
     async def build(self, parameters: dict) -> None:
         with open(
-            self.working_directory / "agent_source" / "agent.py",
+            self.project_folder / "agent_source" / "agent.py",
         ) as file:
             template_source_code = file.read()
             source_code = multiple_string_replace(
@@ -42,6 +42,14 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                     'EXTRA_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0)"}': f"EXTRA_HEADERS = {repr(parameters['extra_headers'])}",
                 },
             )
+            # Strip debugging code (logging output and imports) if debug is not enabled
+            if not parameters["debug"]:
+                filtered_lines = []
+                for line in source_code.splitlines():
+                    if line.rstrip().endswith("# DEBUG"):
+                        continue
+                    filtered_lines.append(line)
+                source_code = "\n".join(filtered_lines)
 
         if parameters["minify"]:
             source_code = python_minifier.minify(source_code)

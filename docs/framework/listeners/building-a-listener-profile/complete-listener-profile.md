@@ -200,7 +200,7 @@ class Listener(BaseListener):
 
     async def _handle_result(self, message, writer):
         try:
-            await self.connected_agents_service.submit_result_by_agent_id(
+            await self.connected_agents_service.dispatch_task_output_message(
                 agent_id=message.get("agent_id", ""),
                 task_id=message["task_id"],
                 success=message["success"],

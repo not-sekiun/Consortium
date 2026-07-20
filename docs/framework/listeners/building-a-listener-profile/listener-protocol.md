@@ -80,7 +80,7 @@ from `to_json()` and require an out-of-band channel (multipart encoding, base64,
 When an agent submits a completed task result:
 
 ```python
-await self.connected_agents_service.submit_result_by_agent_id(
+await self.connected_agents_service.dispatch_task_output_message(
     agent_id=agent_id,
     task_id=task_id,  # must match a running task for this agent
     success=True,

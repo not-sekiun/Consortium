@@ -183,6 +183,13 @@ class AgentTemplate(BaseAgentTemplate):
             value_type=bool,
             required=False,
         ),
+        SingleValueOption(
+            name="debug",
+            description="Whether to generate the agent with debug logging enabled.",
+            default_value=False,
+            value_type=bool,
+            required=False,
+        ),
     }
     compatible_listener_types = {"http_consortium"}
     validating_function = _check_all_url_endpoints_unique

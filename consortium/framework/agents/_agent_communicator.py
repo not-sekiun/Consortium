@@ -7,6 +7,7 @@ from pydantic import JsonValue
 
 from consortium.framework.agents.agent_message_models import (
     TaskInputMessageModel,
+    TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
 
@@ -25,12 +26,16 @@ class _AgentCommunicator:
 
         # 8 MB memory capacity for the inbox and outbox
         message_queue_size = 8 * 1024 * 1024
-        self._task_messages_inbox = TaskMessagesQueue(
+        self._task_messages_inbox = TaskMessagesQueue[TaskOutputMessageModel](
             maximum_memory_size=message_queue_size
         )
-        self._task_messages_outbox = TaskMessagesQueue(
-            maximum_memory_size=message_queue_size
-        )
+        # The outbox is constructed with the owning agent so every put also signals the
+        # agent's shared outbox activity condition, letting Agent.get_next_task_message_any
+        # wait across all capability outboxes at once. The inbox does not participate in
+        # that fan-in so it is left without an agent reference.
+        self._task_messages_outbox = TaskMessagesQueue[
+            TaskLaunchMessageModel | TaskInputMessageModel
+        ](maximum_memory_size=message_queue_size, agent=agent)
 
     async def send_to_agent(
         self,

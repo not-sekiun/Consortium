@@ -186,7 +186,7 @@ async def test_submit_result_validates_and_delegates(
     mock_agents_service.get_agent_by_agent_id.return_value = agent
     mock_agents_service.submit_result_by_agent_id = AsyncMock()
 
-    await service.submit_result_by_agent_id(
+    await service.dispatch_task_output_message(
         agent_id=agent.agent_id,
         task_id=task_id,
         success=True,

@@ -87,10 +87,6 @@ class _BaseAgentCapabilityModel(BaseModel):
     authors: set[str]
     requires_admin: bool
     supported_oses: set[SupportedOS | str]
-    # Note: `is_atomic` is deliberately excluded from the output of `to_json()` because
-    # it's an internal implementation detail that while part of the developer framework
-    # API is not of concern to REST API consumers.
-    is_atomic: bool
     options: set[
         SingleValueOption
         | ListValueOption
@@ -177,7 +173,6 @@ class BaseAgentCapability(_AgentCommunicator):
                 authors=cls.authors,
                 requires_admin=cls.requires_admin,
                 supported_oses=cls.supported_oses,
-                is_atomic=cls.is_atomic,
                 mitre_attack_techniques=cls.mitre_attack_techniques,
                 validating_function=cls.validating_function,
             )
@@ -383,21 +378,33 @@ class BaseAgentCapability(_AgentCommunicator):
                 it directly or by returning anything other than a TaskLaunchMessageModel
                 (such as None). The task handler converts this into an ERRORED task.
         """
-        modified_task_launch_message = await self.on_launch(task_launch_message)
-        if not isinstance(modified_task_launch_message, TaskLaunchMessageModel):
-            # on_launch must hand back a launch message or deny the launch by raising
-            # AgentCapabilityLaunchError. Returning anything other than a
-            # TaskLaunchMessageModel (such as None) is no longer a silent cancel: None
-            # returned from execute() now means "completed normally", so an aborted
-            # launch has to be reported explicitly through the launch error.
-            raise AgentCapabilityLaunchError(
-                "`on_launch` must return a `TaskLaunchMessageModel`, or raise "
-                "`AgentCapabilityLaunchError` to deny the launch, but it returned "
-                f"`{type(modified_task_launch_message).__name__}`."
+        try:
+            modified_task_launch_message = await self.on_launch(task_launch_message)
+            if not isinstance(modified_task_launch_message, TaskLaunchMessageModel):
+                # on_launch must hand back a launch message or deny the launch by raising
+                # AgentCapabilityLaunchError. Returning anything other than a
+                # TaskLaunchMessageModel (such as None) is no longer a silent cancel: None
+                # returned from execute() now means "completed normally", so an aborted
+                # launch has to be reported explicitly through the launch error.
+                raise AgentCapabilityLaunchError(
+                    "`on_launch` must return a `TaskLaunchMessageModel`, or raise "
+                    "`AgentCapabilityLaunchError` to deny the launch, but it returned "
+                    f"`{type(modified_task_launch_message).__name__}`."
+                )
+            self.task_launch_message = modified_task_launch_message
+            await self._task_messages_outbox.put(
+                task_message=modified_task_launch_message
             )
-        self.task_launch_message = modified_task_launch_message
-        await self._task_messages_outbox.put(task_message=modified_task_launch_message)
-        return await self.on_execute()
+            return await self.on_execute()
+        finally:
+            # Signal end of stream on both queues so any reader still waiting on the
+            # outbox is informed the capability has finished and won't wait forever.
+            # `on_execute()` can return before the outbox is drained (for example a
+            # capability that fires messages without waiting for responses), so we
+            # shut down gracefully (`immediate=False`) to let buffered outbound
+            # messages flush before readers see the end of stream `None`.
+            await self._task_messages_inbox.shutdown(immediate=False)
+            await self._task_messages_outbox.shutdown(immediate=False)
 
     @classmethod
     def to_json(cls) -> dict[str, Any]:
