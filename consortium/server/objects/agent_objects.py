@@ -255,7 +255,7 @@ class Agent:
         # Each task's capability handler asyncio task mapped by task ID. Holding the
         # references prevents their garbage collection while running, and the mapping lets
         # us cancel a specific task's handler on deletion.
-        self._task_handler_tasks: dict[str, asyncio.Task] = {}
+        self._task_handler_async_tasks: dict[str, asyncio.Task] = {}
 
     def __repr__(self) -> str:
         return (
@@ -762,7 +762,7 @@ class Agent:
         # completion event. Cancellation raises CancelledError (a BaseException), which
         # slips past the handler's `except Exception`, skipping the terminal transitions
         # and the AGENT_TASK_COMPLETED event.
-        handler_task = self._task_handler_tasks.pop(task_id, None)
+        handler_task = self._task_handler_async_tasks.pop(task_id, None)
         if handler_task is not None:
             handler_task.cancel()
 
@@ -1046,11 +1046,11 @@ class Agent:
         )
         # Hold a reference keyed by task ID to prevent garbage collection while running
         # and to allow cancelling this specific handler on deletion.
-        self._task_handler_tasks[str(task.task_id)] = agent_capability_task
+        self._task_handler_async_tasks[str(task.task_id)] = agent_capability_task
         # Once the task is finished it removes its own reference to avoid holding
         # references to finished handlers indefinitely.
         agent_capability_task.add_done_callback(
-            lambda _task, task_id=str(task.task_id): self._task_handler_tasks.pop(
+            lambda _task, task_id=str(task.task_id): self._task_handler_async_tasks.pop(
                 task_id, None
             )
         )
