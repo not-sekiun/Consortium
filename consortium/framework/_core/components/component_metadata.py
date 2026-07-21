@@ -74,11 +74,16 @@ class ComponentMetadata:
                 **cls._get_metadata_fields(),
             )
         except ValidationError as exc:
-            attr = exc.errors()[0]["loc"][0]
+            errors = exc.errors()
+            # A field level error carries the offending field name in loc[0]. A model
+            # level error has an empty loc, so fall back to the first declared field
+            # rather than indexing into nothing.
+            loc = errors[0]["loc"] if errors else ()
+            attr = loc[0] if loc else next(iter(cls._get_metadata_fields()), "label")
             raise InvalidComponentConfigurationParameterTypeError(
                 component_str=component_str,
-                parameter_name=attr,
-                parameter_type=str(expected_attrs_and_types_map[attr]),
+                parameter_name=str(attr),
+                parameter_type=str(expected_attrs_and_types_map.get(attr, attr)),
             ) from None
 
         # Perform semantic checking of specific attributes and reassign as needed

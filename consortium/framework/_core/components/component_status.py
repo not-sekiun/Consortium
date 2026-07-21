@@ -29,9 +29,10 @@ class Status:
             State.FATAL,
         },
         State.RUNNING: {
+            # `stop()` always routes through STOPPING, so RUNNING never transitions
+            # straight to STOPPED.
             State.COMPLETED,
             State.STOPPING,
-            State.STOPPED,
             State.CANCELLED,
             State.ERRORED,
             State.FATAL,
@@ -44,6 +45,9 @@ class Status:
         State.STOPPING: {
             State.STOPPED,
             State.FATAL,
+            # A stop that is refused by a signalling `on_stopped()` rolls back to
+            # RUNNING, mirroring how a refused `start()` rolls back to INITIALIZED.
+            State.RUNNING,
         },
         State.STOPPED: {
             State.INITIALIZED,
