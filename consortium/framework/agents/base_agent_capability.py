@@ -35,6 +35,9 @@ from consortium.server.objects.mitre_attack_objects import (
     # MitreAttackTechniqueID,
     resolve_mitre_attack_technique_id,
 )
+from consortium.server.services.agent_file_manager_service import (
+    AgentFileManagerService,
+)
 from consortium.server.utils import construct_services_dataclass
 
 if TYPE_CHECKING:
@@ -148,6 +151,7 @@ class BaseAgentCapability(_AgentCommunicator):
             agent: The agent instance this capability is executing against.
             task: The task record that tracks the execution lifecycle and event stream.
         """
+        self.agent_file_manager_service = AgentFileManagerService(agent=agent)
         self.environment = SimpleNamespace()
         super().__init__(agent=agent, task=task)
 

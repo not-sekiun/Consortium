@@ -1,4 +1,6 @@
-from pathlib import Path
+import os
+import pathlib
+import zlib
 
 from consortium.framework.agents import (
     BaseAgentCapability,
@@ -8,7 +10,11 @@ from consortium.framework.agents import (
 )
 from consortium.framework.options import SingleValueOption
 from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
+    AgentCapabilityExecutionError,
     AgentCapabilityLaunchError,
+)
+from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
+    ResourceNotFoundError,
 )
 
 
@@ -19,8 +25,8 @@ class UploadCapability(BaseAgentCapability):
     is_atomic = True
     options = {
         SingleValueOption(
-            name="source",
-            description="Path to the file or directory to upload.",
+            name="source_asset",
+            description="The asset ID of the source file or directory to upload.",
             required=True,
             value_type=str,
         ),
@@ -81,17 +87,20 @@ class UploadCapability(BaseAgentCapability):
     async def on_launch(
         self, task_launch_message: TaskLaunchMessageModel
     ) -> TaskLaunchMessageModel:
-        source = Path(task_launch_message.arguments["source"])
-        if not source.exists():
-            raise AgentCapabilityLaunchError(
-                message=f"Failed to start upload. Path '{source}' does not exist."
-            )
+        source_asset_id = task_launch_message.arguments["source_asset"]
 
-        self._source = source
-        self._chunk_size = task_launch_message.arguments["chunk_size"]
-        self._recursive = task_launch_message.arguments["recursive"]
-        self._ignore_empty_dirs = task_launch_message.arguments["ignore_empty_dirs"]
-        self._compression_level = task_launch_message.arguments["compression_level"]
+        try:
+            self.agent_file_manager_service.get_asset_by_asset_id(
+                asset_id=source_asset_id
+            )
+        except ResourceNotFoundError:
+            raise AgentCapabilityLaunchError(
+                message=(
+                    f"Failed to start upload. Asset with ID '{source_asset_id}' not "
+                    "found. Hint: Check that the `source_asset` ID is correct and "
+                    "that an asset with that ID exists on the server."
+                )
+            ) from None
 
         # Strip server-side-only args before sending to agent
         task_launch_message.arguments = {
@@ -101,65 +110,131 @@ class UploadCapability(BaseAgentCapability):
         }
         return task_launch_message
 
-    # FIXME: What the fuck is this bullshit
     async def on_execute(self) -> Success | Failure | None:
-        # Wait for agent to signal ready
-        ready_response = await self.recv_from_agent()
-        if not ready_response.success:
-            return Failure(task_output_message=ready_response)
+        # Assuming task arguments are accessible via self.request.arguments
+        source_asset_id = self.task_launch_message.arguments.get("source_asset")
+        recursive = self.task_launch_message.arguments.get("recursive", True)
+        chunk_size = self.task_launch_message.arguments.get("chunk_size", 1024 * 1024)
+        compression_level = self.task_launch_message.arguments.get(
+            "compression_level", -1
+        )
 
-        if ready_response.data.get("type") != "ready":
-            return Failure(message="Agent did not signal ready for upload.")
+        try:
+            asset = self.agent_file_manager_service.get_asset_by_asset_id(
+                asset_id=source_asset_id
+            )
+        except ResourceNotFoundError:
+            raise AgentCapabilityExecutionError(
+                message=(
+                    f"Failed to execute upload. Asset with ID '{source_asset_id}' not "
+                    "found. Hint: The pre capability execution validation passed so the "
+                    "asset may have been deleted between tasking and execution."
+                )
+            ) from None
 
-        # def send_chunk(chunk_type, **kwargs):
-        #     return self.send_upload_chunk_to_agent(
-        #         task_id=self.launch_message.task_id,
-        #         chunk_data={"type": chunk_type, **kwargs},
-        #     )
-        #
-        # def stream_file_chunks(file_path):
-        #     with open(file_path, mode="rb") as file:
-        #         while chunk := file.read(self._chunk_size):
-        #             if self._compression_level:
-        #                 chunk = zlib.compress(chunk, level=self._compression_level)
-        #                 send_chunk(
-        #                     "chunk",
-        #                     chunk=base64.b64encode(chunk).decode(),
-        #                     compressed=True,
-        #                 )
-        #             else:
-        #                 send_chunk("chunk", chunk=base64.b64encode(chunk).decode())
-        #
-        # if self._source.is_file():
-        #     # Single file upload
-        #     await send_chunk("file", path=self._source.name, size=self._source.stat().st_size)
-        #     stream_file_chunks(self._source)
-        #     await send_chunk("end_of_file")
-        #     await send_chunk("end_of_upload")
-        # else:
-        #     # Directory upload
-        #     await send_chunk("directory", path=self._source.name)
-        #
-        #     for item in self._source.rglob("*") if self._recursive else self._source.iterdir():
-        #         relative_path = str(item.relative_to(self._source))
-        #
-        #         if item.is_dir():
-        #             if self._ignore_empty_dirs and not any(item.iterdir()):
-        #                 continue
-        #             await send_chunk("directory_entry", path=relative_path)
-        #         elif item.is_file():
-        #             await send_chunk(
-        #                 "file_in_directory",
-        #                 path=relative_path,
-        #                 size=item.stat().st_size,
-        #             )
-        #             stream_file_chunks(item)
-        #             await send_chunk("end_of_file")
-        #
-        #         if not self._recursive and item.is_dir():
-        #             continue
-        #
-        #     await send_chunk("end_of_directory")
+        is_dir = asset.is_directory
+        target_name = asset.name
 
-        # # Wait for final confirmation from agent
-        # return await self.recv_from_agent()
+        self.update_progress(
+            message=f"Starting upload of {'directory' if is_dir else 'file'} '{target_name}'",
+            percent_complete=0,
+        )
+
+        # Get agent response to task launch message
+        task_output_message = await self.recv_from_agent()
+        if not task_output_message.success:
+            return task_output_message.to_outcome()
+
+        # Send the initial header announcement
+        await self.send_to_agent(
+            data={
+                "type": "directory" if is_dir else "file",
+                "path": target_name,
+                **({"size": asset.size} if not is_dir else {}),
+            },
+        )
+
+        async def send_file(file_path: pathlib.Path, relative_path: str = None):
+            display_path = relative_path if relative_path else file_path.name
+            file_size = file_path.stat().st_size
+
+            # Announce the specific file
+            await self.send_to_agent(
+                data={
+                    "type": "file",
+                    "path": display_path,
+                    "size": file_size,
+                },
+            )
+
+            try:
+                with open(file_path, mode="rb") as file:
+                    uploaded_bytes = 0
+                    while True:
+                        chunk = file.read(chunk_size)
+                        if not chunk:
+                            break
+
+                        uploaded_bytes += len(chunk)
+                        if compression_level:
+                            chunk = zlib.compress(chunk, level=compression_level)
+
+                        # Send chunk payload
+                        await self.send_to_agent(
+                            data={"type": "chunk"},
+                            payload=chunk,
+                        )
+
+                        self.update_progress(
+                            message=f"Uploading {display_path}: {uploaded_bytes}/{file_size} bytes",
+                            percent_complete=round(uploaded_bytes / file_size * 100, 2)
+                            if file_size
+                            else 0,
+                        )
+                # Signal file completion
+                await self.send_to_agent(data={"type": "end_of_file"})
+                return True
+            except PermissionError:
+                await self.send_to_agent(
+                    message=f"Permission denied reading local file '{file_path}'",
+                )
+                return False
+
+        async def send_directory(directory_path: pathlib.Path):
+            base_parent = directory_path.parent
+            for root, dirs, files in os.walk(directory_path):
+                root_path = pathlib.Path(root)
+                for directory in dirs:
+                    dir_path = root_path / directory
+                    # Announce new directory
+                    await self.send_to_agent(
+                        data={
+                            "type": "directory",
+                            "path": str(dir_path.relative_to(base_parent)),
+                        },
+                    )
+                for file in files:
+                    file_path = root_path / file
+                    relative_path = str(file_path.relative_to(base_parent))
+                    if not await send_file(file_path, relative_path):
+                        return False
+
+                if not recursive:
+                    break
+            return True
+
+        # Process File / Directory
+        if is_dir:
+            success = await send_directory(asset.path)
+        else:
+            success = await send_file(asset.path)
+
+        # Finalize
+        if success:
+            await self.send_to_agent(data={"type": "end_of_transfer"})
+            self.emit_artifact(
+                message=f"Uploaded {'directory' if is_dir else 'file'} '{target_name}'"
+            )
+            return Success(message="Upload complete")
+        else:
+            return Failure(message="Upload failed during transfer.")

@@ -51,9 +51,6 @@ from consortium.server.exceptions.service_exceptions.repository_service_exceptio
 from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
-from consortium.server.services.agent_file_manager_service import (
-    AgentFileManagerService,
-)
 from consortium.server.utils import generate_random_human_readable_name, normalize_uuid
 
 
@@ -201,7 +198,6 @@ class Agent:
         self.hostname = hostname
         self.agent_data = agent_data
 
-        self.agent_file_manager_service = AgentFileManagerService(agent=self)
         self.logger = logger.bind(
             logger_name=f"Agent {self}",
             logger_type=LoggerType.AGENT_LOGGER,
