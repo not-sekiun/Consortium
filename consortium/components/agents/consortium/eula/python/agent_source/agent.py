@@ -518,7 +518,9 @@ def upload_capability(context):
                     current_file_path = destination
 
             # Ensure the parent directory for the incoming file exists
-            os.makedirs(os.path.dirname(current_file_path), exist_ok=True)
+            parent_dir = os.path.dirname(current_file_path)
+            if parent_dir:
+                os.makedirs(parent_dir, exist_ok=True)
 
             try:
                 current_file_handle = open(current_file_path, "wb")

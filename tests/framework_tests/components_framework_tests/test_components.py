@@ -647,6 +647,45 @@ async def test_stop_signal_error_rolls_back_to_running(
     assert blocking_component.status.state is State.STOPPED
 
 
+# REGRESSION (RUNNING-zombie): a refused stop must leave the component genuinely live even
+# when on_stopped() suspends before raising. stop() must not release the parked
+# on_running() until on_stopped() has accepted the stop. Otherwise an async on_stopped()
+# that suspends after the wake signal lets the runtime loop drain on_running() to
+# completion and clear its task, and the following refusal then rolls back to RUNNING with
+# no live runtime loop task, an impossible state that also makes wait_until_stopped()
+# report the component at rest. The suspension is modelled with _settle() so the
+# interleaving is deterministic rather than timing dependent.
+async def test_refused_stop_that_suspends_keeps_the_runtime_task_live(
+    blocking_component: _RecordingComponent,
+):
+    await _bring_to_running(blocking_component)
+
+    async def _yield_then_refuse() -> None:
+        # Hand control to the runtime loop mid stop, then refuse. If stop() had already set
+        # stop_event the parked on_running() would drain here and clear the runtime task.
+        await _settle(3)
+        raise sig_excs.ComponentStopError(message="still busy", detail={"pending": 1})
+
+    blocking_component.behaviours["on_stopped"] = _yield_then_refuse
+
+    with pytest.raises(frmwrk_excs.ComponentStopError):
+        await blocking_component.stop()
+
+    # The refusal restored RUNNING without ever raising the wake signal, and crucially the
+    # runtime loop task is still live to keep driving on_running().
+    assert blocking_component.status.state is State.RUNNING
+    assert not blocking_component.stop_event.is_set()
+    assert blocking_component._runtime_loop_task is not None
+    assert not blocking_component._runtime_loop_task.done()
+
+    # And it can still be stopped cleanly afterwards.
+    blocking_component.behaviours.pop("on_stopped")
+    await blocking_component.stop()
+    await asyncio.wait_for(blocking_component.wait_until_stopped(), timeout=_TIMEOUT)
+
+    assert blocking_component.status.state is State.STOPPED
+
+
 # CONTRADICTION (F2): stop() transitions to FATAL without ever invoking on_fatal(),
 # unlike start(), cancel() and the runtime loop. ComponentLifeCycleFatalContext.STOP is
 # defined and currently unused, which is the evidence this is an omission.

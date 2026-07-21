@@ -111,12 +111,13 @@ class UploadCapability(BaseAgentCapability):
         return task_launch_message
 
     async def on_execute(self) -> Success | Failure | None:
-        # Assuming task arguments are accessible via self.request.arguments
+        # self.task_launch_message is always populated with the initial launch message
+        # and contains the task arguments
         source_asset_id = self.task_launch_message.arguments.get("source_asset")
         recursive = self.task_launch_message.arguments.get("recursive", True)
         chunk_size = self.task_launch_message.arguments.get("chunk_size", 1024 * 1024)
         compression_level = self.task_launch_message.arguments.get(
-            "compression_level", -1
+            "compression_level", 0
         )
 
         try:
@@ -176,8 +177,7 @@ class UploadCapability(BaseAgentCapability):
                             break
 
                         uploaded_bytes += len(chunk)
-                        if compression_level:
-                            chunk = zlib.compress(chunk, level=compression_level)
+                        chunk = zlib.compress(chunk, level=compression_level)
 
                         # Send chunk payload
                         await self.send_to_agent(

@@ -105,33 +105,47 @@ class ComponentLifeCycle(abc.ABC):
                     component_str=str(self),
                 )
 
+            # Move to STOPPING before anything else: the state (not stop_event) is what
+            # the runtime loop reads to tell a stop-in-progress from a natural completion,
+            # so it must already read STOPPING before on_running() can ever be released.
             self.status._transition_to_stopping()
-            # Move to STOPPING before signalling: the state is what tells the runtime
-            # loop a stop is in progress (so it skips the completion branch), while
-            # stop_event exists only to wake an on_running() that is blocked waiting on
-            # it. Setting it up front releases that body even on the fatal path below.
-            self.stop_event.set()
 
+            # stop_event is the wake signal for a parked on_running(); on_stopped() is the
+            # guard that may still refuse the stop. Do NOT set the event before the guard:
+            # while a refusal is still possible the parked on_running() must stay parked,
+            # so a refusal can restore a genuinely live RUNNING component with its runtime
+            # task intact. Setting it up front would let an async on_stopped() suspend, the
+            # runtime loop drain on_running() to completion, and a following refusal roll
+            # back to RUNNING with no live runtime task.
             try:
                 await self.on_stopped()
             except sig_excs.ComponentStopError as exc:
-                # A refused stop rolls back to RUNNING and leaves the component live so
-                # it can be stopped again later. `on_stopped()` raises the signal
-                # synchronously, so the loop never observes the brief `stop_event` set.
+                # Refused: the event was never set, so on_running() is still parked and its
+                # runtime task is still live. Restoring RUNNING leaves the component
+                # exactly as it was, ready to be stopped again later.
                 self.status._transition_to_running()
-                self.stop_event.clear()
                 raise frmwrk_excs.ComponentStopError(
                     component_str=str(self),
                     error_message=exc.message,
                     detail=exc.detail,
                 ) from None
             except Exception as exc:
+                # Fatal: the component is going down, but on_running() is still parked on
+                # stop_event and its runtime task would otherwise hang forever behind the
+                # FATAL state. Release it so the runtime loop can unwind. The FATAL
+                # transition runs synchronously before any await, so the loop never
+                # observes RUNNING and cannot take the completion branch.
+                self.stop_event.set()
                 await self._transition_to_fatal_and_notify(
                     exc=exc,
                     fatal_context=ComponentLifeCycleFatalContext.STOP,
                 )
                 raise exc
 
+            # Accepted: commit the stop. Only now release the parked on_running() so its
+            # runtime loop can drain, then settle on STOPPED. The loop reads STOPPING (or
+            # STOPPED), never RUNNING, so it skips the completion branch.
+            self.stop_event.set()
             self.status._transition_to_stopped()
 
     async def cancel(self) -> None:
