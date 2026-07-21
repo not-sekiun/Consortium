@@ -51,18 +51,23 @@ other fields are optional system metadata that improve the agent's detail view.
 
 ## 2. Task delivery
 
-When a registered agent polls for pending work:
+When a registered agent asks for work, read one message from the agent's capability
+outboxes. This minimal protocol serves complete task streams one at a time:
 
 ```python
-task_messages = await self.connected_agents_service.get_next_agent_task_messages_by_agent_id(
+task_message = await self.connected_agents_service.get_next_task_message_sequential(
     agent_id=agent_id,
-    count=None,  # None returns all pending tasks
-    block=False,  # False returns immediately even if the queue is empty
+    timeout=30.0,  # long-poll for up to 30 seconds; use 0 to poll immediately
 )
 ```
 
-This call also records an automatic check-in for the agent. Each returned object is a
-`TaskLaunchMessageModel`:
+This call drains the earliest tasked capability's outbox before moving to the next task.
+It is a canonical protocol pattern when an agent processes one task stream at a time. A
+call returns `None` when the timeout expires without a message. The agent should send another
+work request after handling the message. Other protocols can instead mux all capability
+outboxes or read a specific task stream; see [Task Message Muxing](task-message-muxing.md).
+
+The first message for a task is a `TaskLaunchMessageModel`:
 
 | Field       | Type              | Description                                                                |
 |-------------|-------------------|----------------------------------------------------------------------------|
@@ -72,8 +77,18 @@ This call also records an automatic check-in for the agent. Each returned object
 | `data`      | `dict`            | Additional unvalidated data attached by the capability                     |
 | `payload`   | `Payload \| None` | Binary payload sent along with the task                                    |
 
-Serialize for transmission with `task_message.to_json()`. Binary payloads are excluded
-from `to_json()` and require an out-of-band channel (multipart encoding, base64, etc.).
+The message stream can also contain `TaskInputMessageModel` values for an already-running
+task. Both message types provide `to_json()`. Binary payloads are excluded from
+`to_json()` and require an out-of-band channel (multipart encoding, base64, etc.).
+
+Each capability owns an inbox and an outbox. The outbox holds messages sent to the
+agent, while the inbox receives that task's results. The framework keeps a task's outbox
+available until its buffered messages are drained, even if the capability has already
+finished. This means listeners can safely resume draining output after a transient
+network failure.
+
+For the complete reader choices and their ordering guarantees, see
+[Task Message Muxing](task-message-muxing.md).
 
 ## 3. Result submission
 
@@ -91,10 +106,12 @@ await self.connected_agents_service.dispatch_task_output_message(
 ```
 
 The service validates that the task ID corresponds to a running task on that agent,
-records a check-in, and routes the result to the capability's `on_execute()` method via
-an internal queue. For multi-message capabilities the agent submits multiple results with
-the same `task_id`; each call to `submit_result_by_agent_id` unblocks one
-`recv_from_agent()` call on the server side.
+records a check-in, and routes the result into that task's capability-specific inbox. For
+multi-message capabilities the agent submits multiple results with the same `task_id`;
+each call unblocks one `recv_from_agent()` call on the server side. The listener-scoped
+service rejects results for completed or deleted tasks, so translate that validation error
+into the appropriate wire response.
 
-Continue to [Listener Startup](listener-startup.md) to begin building the `Listener`
+Continue to [Task Message Muxing](task-message-muxing.md) for the delivery-reader
+choices, then [Listener Startup](listener-startup.md) to begin building the `Listener`
 class.

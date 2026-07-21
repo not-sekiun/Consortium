@@ -70,6 +70,7 @@ nav = [
                 "framework/listeners/building-a-listener-profile/listener-type.md",
                 "framework/listeners/building-a-listener-profile/listener-template.md",
                 "framework/listeners/building-a-listener-profile/listener-protocol.md",
+                "framework/listeners/building-a-listener-profile/task-message-muxing.md",
                 "framework/listeners/building-a-listener-profile/listener-startup.md",
                 "framework/listeners/building-a-listener-profile/listener-running-loop.md",
                 "framework/listeners/building-a-listener-profile/listener-shutdown.md",

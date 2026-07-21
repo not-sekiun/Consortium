@@ -113,10 +113,11 @@ obligations via `self.connected_agents_service`:
 
 1. **Registration**: accept an agent's initial check-in and call
    `connected_agents_service.register_agent()` to create an agent record.
-2. **Task delivery**: respond to agents requesting pending tasks via
-   `connected_agents_service.get_next_agent_task_messages_by_agent_id()`.
+2. **Task delivery**: respond to agents requesting pending task messages with the reader
+   that matches the wire protocol, such as
+   `connected_agents_service.get_next_task_message_sequential()`.
 3. **Result submission**: accept agent task results and forward them via
-   `connected_agents_service.submit_result_by_agent_id()`.
+   `connected_agents_service.dispatch_task_output_message()`.
 
 Beyond these three, the rest of the protocol (framing, authentication, transport
 encoding) is entirely up to the listener implementation.

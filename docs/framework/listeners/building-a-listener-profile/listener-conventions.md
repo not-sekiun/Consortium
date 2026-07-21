@@ -42,18 +42,24 @@ initialising.
 The three [protocol obligations](listener-protocol.md) are fulfilled through
 `self.connected_agents_service`. Its full method surface:
 
-| Method                                                                          | Sync/Async | Description                                                        |
-|---------------------------------------------------------------------------------|------------|--------------------------------------------------------------------|
-| `register_agent(payload_id=..., agent_type=..., ...)`                           | sync       | Create an agent record; supply either `payload_id` or `agent_type` |
-| `get_next_agent_task_messages_by_agent_id(agent_id, count, block)`              | async      | Return pending tasks; auto check-in                                |
-| `submit_result_by_agent_id(agent_id, task_id, success, message, data, payload)` | async      | Forward a result to the capability; auto check-in                  |
-| `deregister_agent_by_agent_id(agent_id)`                                        | sync       | Remove the agent from the framework entirely                       |
-| `check_in_agent_by_agent_id(agent_id)`                                          | sync       | Manual check-in without task retrieval                             |
-| `get_all_agents()`                                                              | sync       | All agents connected to this listener                              |
-| `get_agent_by_agent_id(agent_id)`                                               | sync       | Look up a single agent; validates it belongs to this listener      |
+| Method                                                                          | Sync/Async | Description                                                              |
+|---------------------------------------------------------------------------------|------------|--------------------------------------------------------------------------|
+| `register_agent(payload_id=..., agent_type=..., ...)`                           | sync       | Create an agent record; supply either `payload_id` or `agent_type`       |
+| `get_next_task_message_by_task_id(agent_id, task_id, timeout)`                  | async      | Read the next message for one task's outbox                              |
+| `get_next_task_message_sequential(agent_id, timeout)`                           | async      | Drain one outbox completely before moving to the next                    |
+| `get_next_task_message_any(agent_id, timeout)`                                  | async      | Mux the next available message from any task outbox                      |
+| `drain_task_messages_by_task_id(agent_id, task_id)`                             | async gen  | Yield every remaining message for one task                               |
+| `drain_task_messages_sequential(agent_id)`                                     | async gen  | Yield task messages one outbox at a time                                 |
+| `drain_task_messages_any(agent_id)`                                            | async gen  | Yield muxed messages from all task outboxes                              |
+| `dispatch_task_output_message(agent_id, task_id, success, message, data, payload)` | async   | Route a result into its task-specific inbox; auto check-in               |
+| `deregister_agent_by_agent_id(agent_id)`                                        | sync       | Remove the agent from the framework entirely                             |
+| `check_in_agent_by_agent_id(agent_id)`                                          | sync       | Record a manual check-in without reading or submitting task messages     |
+| `get_all_agents()`                                                              | sync       | All agents connected to this listener                                    |
+| `get_agent_by_agent_id(agent_id)`                                               | sync       | Look up a single agent; validates it belongs to this listener            |
 
-`get_next_agent_task_messages_by_agent_id` and `submit_result_by_agent_id` are the only
-async methods. All others are synchronous.
+Choose the reader that matches the wire protocol. Sequential, muxed, and task-specific
+delivery are all canonical patterns. `timeout=None` waits indefinitely, while
+`timeout=0` performs a non-blocking poll.
 
 See the [Complete Listener Profile](complete-listener-profile.md) for all of these
 concepts combined into one working profile.

@@ -92,9 +92,10 @@ from consortium.framework.listeners import BaseListener
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )
-from consortium.server.exceptions.object_exceptions.agent_object_exceptions import
-
-AgentTypeResolutionError
+from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
+    AgentTaskNotFoundError,
+    AgentTypeResolutionError,
+)
 
 
 class Listener(BaseListener):
@@ -186,16 +187,16 @@ class Listener(BaseListener):
 
     async def _handle_check_in(self, message, writer):
         try:
-            tasks = await self.connected_agents_service.get_next_agent_task_messages_by_agent_id(
+            task_message = await self.connected_agents_service.get_next_task_message_sequential(
                 agent_id=message.get("agent_id", ""),
-                count=None,
-                block=False,
+                timeout=30.0,
             )
         except AgentNotFoundError:
             writer.write(b'{"error": "unauthorized"}\n')
             await writer.drain()
             return
-        writer.write((json.dumps([t.to_json() for t in tasks]) + "\n").encode())
+        response = task_message.to_json() if task_message is not None else None
+        writer.write((json.dumps(response) + "\n").encode())
         await writer.drain()
 
     async def _handle_result(self, message, writer):
@@ -209,6 +210,10 @@ class Listener(BaseListener):
             )
         except (AgentNotFoundError, KeyError):
             writer.write(b'{"error": "unauthorized"}\n')
+            await writer.drain()
+            return
+        except AgentTaskNotFoundError:
+            writer.write(b'{"error": "invalid task"}\n')
             await writer.drain()
             return
         writer.write(b'{"ok": true}\n')
