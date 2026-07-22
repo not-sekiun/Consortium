@@ -75,20 +75,20 @@ class PluginsService:
             enabled check is not overridden.
 
         Raises:
-            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+            ComponentEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+            ComponentSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentProjectInterfaceError: If the class does not inherit from the
+            ComponentInterfaceError: If the class does not inherit from the
                 expected base class.
             IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
                 with the current framework version.
-            InternalComponentProjectError: If an unhandled exception occurs while
+            InternalComponentError: If an unhandled exception occurs while
                 loading the plugin.
         """
         plugin = self._plugin_registry_service.get_component_from_directory(
@@ -204,20 +204,20 @@ class PluginsService:
             check is not overridden.
 
         Raises:
-            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+            ComponentEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+            ComponentSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentProjectInterfaceError: If the class does not inherit from the
+            ComponentInterfaceError: If the class does not inherit from the
                 expected base class.
             IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
                 with the current framework version.
-            InternalComponentProjectError: If an unhandled exception occurs while
+            InternalComponentError: If an unhandled exception occurs while
                 loading the plugin.
             ComponentAlreadyRegisteredError: If a plugin with the same ID is already
                 registered.
@@ -262,20 +262,20 @@ class PluginsService:
             check is not overridden.
 
         Raises:
-            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+            ComponentEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+            ComponentSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentProjectInterfaceError: If the class does not inherit from the
+            ComponentInterfaceError: If the class does not inherit from the
                 expected base class.
             IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
                 with the current framework version.
-            InternalComponentProjectError: If an unhandled exception occurs while
+            InternalComponentError: If an unhandled exception occurs while
                 loading the plugin.
             PluginStartError: If the plugin autostarts but fails to start.
         """
@@ -366,20 +366,20 @@ class PluginsService:
                 `force_unload` is `False`.
             PluginStopTimeoutError: If the plugin does not stop within `unload_timeout`
                 and `force_unload` is `False`.
-            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+            ComponentEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+            ComponentSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentProjectInterfaceError: If the class does not inherit from the
+            ComponentInterfaceError: If the class does not inherit from the
                 expected base class.
             IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
                 with the current framework version.
-            InternalComponentProjectError: If an unhandled exception occurs while
+            InternalComponentError: If an unhandled exception occurs while
                 loading the plugin.
             PluginStartError: If the reloaded plugin autostarts but fails to start.
         """

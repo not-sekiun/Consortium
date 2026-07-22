@@ -5,19 +5,19 @@ Exception hierarchy:
     - [`PluginsServiceError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginsServiceError]
         - [`PluginNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginNotFoundError]
         - [`PluginLoadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginLoadingError]
-            - [`InvalidPluginProjectManifestFileError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileError]
-                - [`InvalidPluginProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileJSONError]
-                - [`InvalidPluginProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectManifestFileSchemaError]
-            - [`InvalidPluginProjectPyProjectFileError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectPyProjectFileError]
-            - [`InvalidPluginProjectPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectPyProjectFileTOMLError]
-            - [`InvalidPluginProjectPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectPyProjectFileDependencyError]
-            - [`InvalidPluginProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectFolderStructureError]
-                - [`PluginProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectManifestFileNotFoundError]
-                - [`PluginProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectEntryPointModuleNotFoundError]
-            - [`InvalidPluginProjectImplementationError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginProjectImplementationError]
-                - [`PluginProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectSymbolNotFoundError]
-                - [`PluginProjectInterfaceError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginProjectInterfaceError]
-                - [`InternalPluginProjectError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InternalPluginProjectError]
+            - [`InvalidPluginManifestFileError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginManifestFileError]
+                - [`InvalidPluginManifestFileJSONError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginManifestFileJSONError]
+                - [`InvalidPluginManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginManifestFileSchemaError]
+            - [`InvalidPluginPyProjectFileError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginPyProjectFileError]
+            - [`InvalidPluginPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginPyProjectFileTOMLError]
+            - [`InvalidPluginPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginPyProjectFileDependencyError]
+            - [`InvalidPluginDirectoryStructureError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginDirectoryStructureError]
+                - [`PluginManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginManifestFileNotFoundError]
+                - [`PluginEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginEntryPointModuleNotFoundError]
+            - [`InvalidPluginImplementationError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InvalidPluginImplementationError]
+                - [`PluginSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginSymbolNotFoundError]
+                - [`PluginInterfaceError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginInterfaceError]
+                - [`InternalPluginError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.InternalPluginError]
             - [`IncompatiblePluginFrameworkVersionError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.IncompatiblePluginFrameworkVersionError]
             - [`PluginAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginAlreadyRegisteredError]
             - [`DuplicatePluginLabelError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.DuplicatePluginLabelError]
@@ -81,145 +81,145 @@ class PluginLoadingError(PluginsServiceError, comp_excs.ComponentLoadingError):
     _COMPONENT_TYPE = "plugin"
 
 
-class InvalidPluginProjectManifestFileError(
+class InvalidPluginManifestFileError(
     PluginLoadingError,
-    comp_excs.InvalidComponentProjectManifestFileError,
+    comp_excs.InvalidComponentManifestFileError,
 ):
-    """Base exception for all errors that occur due to an invalid plugin project manifest
-    `manifest.json` file during plugin loading.
+    """Base exception for all errors that occur due to an invalid plugin manifest
+    file during plugin loading.
     """
 
-    code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_ERROR"
+    code = "INVALID_PLUGIN_MANIFEST_FILE_ERROR"
 
 
-class InvalidPluginProjectManifestFileJSONError(
-    InvalidPluginProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileJSONError,
+class InvalidPluginManifestFileJSONError(
+    InvalidPluginManifestFileError,
+    comp_excs.InvalidComponentManifestFileJSONError,
 ):
-    """Raised when the plugin project manifest file is not valid JSON during plugin
+    """Raised when the plugin manifest file is not valid JSON during plugin
     loading.
     """
 
-    code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_JSON_ERROR"
+    code = "INVALID_PLUGIN_MANIFEST_FILE_JSON_ERROR"
 
 
-class InvalidPluginProjectManifestFileSchemaError(
-    InvalidPluginProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileSchemaError,
+class InvalidPluginManifestFileSchemaError(
+    InvalidPluginManifestFileError,
+    comp_excs.InvalidComponentManifestFileSchemaError,
 ):
-    """Raised when the plugin project manifest file does not conform to the expected JSON
+    """Raised when the plugin manifest file does not conform to the expected JSON
     schema during plugin loading.
     """
 
-    code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
+    code = "INVALID_PLUGIN_MANIFEST_FILE_SCHEMA_ERROR"
 
 
-class InvalidPluginProjectPyProjectFileError(
+class InvalidPluginPyProjectFileError(
     PluginLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileError,
+    comp_excs.InvalidComponentPyProjectFileError,
 ):
     """Base exception for all errors that occur due to an invalid `pyproject.toml` file
     during plugin loading.
     """
 
-    code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_ERROR"
+    code = "INVALID_PLUGIN_PYPROJECT_FILE_ERROR"
 
 
-class InvalidPluginProjectPyProjectFileTOMLError(
+class InvalidPluginPyProjectFileTOMLError(
     PluginLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_excs.InvalidComponentPyProjectFileTOMLError,
 ):
     """Raised when the `pyproject.toml` file is not a valid TOML file during plugin loading."""
 
-    code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_TOML_ERROR"
+    code = "INVALID_PLUGIN_PYPROJECT_FILE_TOML_ERROR"
 
 
-class InvalidPluginProjectPyProjectFileDependencyError(
+class InvalidPluginPyProjectFileDependencyError(
     PluginLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_excs.InvalidComponentPyProjectFileDependencyError,
 ):
     """Raised when the `pyproject.toml` file contains an invalid dependency entry during
     plugin loading.
     """
 
-    code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_PLUGIN_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
 
-class InvalidPluginProjectFolderStructureError(
+class InvalidPluginDirectoryStructureError(
     PluginLoadingError,
-    comp_excs.InvalidComponentProjectFolderStructureError,
+    comp_excs.InvalidComponentDirectoryStructureError,
 ):
-    """Base exception for all errors that occur due to an invalid plugin root directory
+    """Base exception for all errors that occur due to an invalid plugin directory
     structure during plugin loading.
     """
 
-    code = "INVALID_PLUGIN_PROJECT_FOLDER_STRUCTURE_ERROR"
+    code = "INVALID_PLUGIN_DIRECTORY_STRUCTURE_ERROR"
 
 
-class PluginProjectManifestFileNotFoundError(
-    InvalidPluginProjectFolderStructureError,
-    comp_excs.ComponentProjectManifestFileNotFoundError,
+class PluginManifestFileNotFoundError(
+    InvalidPluginDirectoryStructureError,
+    comp_excs.ComponentManifestFileNotFoundError,
 ):
-    """Raised when the plugin project manifest file is not found in the plugin root
+    """Raised when the plugin manifest file is not found in the plugin
     directory during plugin loading.
     """
 
-    code = "PLUGIN_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
+    code = "PLUGIN_MANIFEST_FILE_NOT_FOUND_ERROR"
 
 
-class PluginProjectEntryPointModuleNotFoundError(
-    InvalidPluginProjectFolderStructureError,
-    comp_excs.ComponentProjectEntryPointModuleNotFoundError,
+class PluginEntryPointModuleNotFoundError(
+    InvalidPluginDirectoryStructureError,
+    comp_excs.ComponentEntryPointModuleNotFoundError,
 ):
-    """Raised when the plugin entry point module specified in the manifest is not found in
-    the plugin root directory during plugin loading.
+    """Raised when the plugin entry point module specified in the manifest file is not
+    found in the plugin directory during plugin loading.
     """
 
-    code = "PLUGIN_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
+    code = "PLUGIN_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
 
-class InvalidPluginProjectImplementationError(
+class InvalidPluginImplementationError(
     PluginLoadingError,
-    comp_excs.InvalidComponentProjectImplementationError,
+    comp_excs.InvalidComponentImplementationError,
 ):
-    """Base exception for all errors that occur due to the plugin project not implementing
+    """Base exception for all errors that occur due to the plugin not implementing
     the required interface during plugin loading.
     """
 
-    code = "INVALID_PLUGIN_PROJECT_IMPLEMENTATION_ERROR"
+    code = "INVALID_PLUGIN_IMPLEMENTATION_ERROR"
 
 
-class PluginProjectSymbolNotFoundError(
-    InvalidPluginProjectImplementationError,
-    comp_excs.ComponentProjectSymbolNotFoundError,
+class PluginSymbolNotFoundError(
+    InvalidPluginImplementationError,
+    comp_excs.ComponentSymbolNotFoundError,
 ):
-    """Raised when the plugin symbol name specified in the manifest is not found in the
-    plugin entry point module during plugin loading.
+    """Raised when the plugin symbol name specified in the manifest file is not found in
+    the plugin entry point module during plugin loading.
     """
 
-    code = "PLUGIN_PROJECT_SYMBOL_NOT_FOUND_ERROR"
+    code = "PLUGIN_SYMBOL_NOT_FOUND_ERROR"
 
 
-class PluginProjectInterfaceError(
-    InvalidPluginProjectImplementationError,
-    comp_excs.ComponentProjectInterfaceError,
+class PluginInterfaceError(
+    InvalidPluginImplementationError,
+    comp_excs.ComponentInterfaceError,
 ):
     """Raised when the plugin class does not implement the required interface during
     plugin loading.
     """
 
-    code = "PLUGIN_PROJECT_INTERFACE_ERROR"
+    code = "PLUGIN_INTERFACE_ERROR"
 
 
-class InternalPluginProjectError(
-    InvalidPluginProjectImplementationError,
-    comp_excs.InternalComponentProjectError,
+class InternalPluginError(
+    InvalidPluginImplementationError,
+    comp_excs.InternalComponentError,
 ):
     """Raised when an unhandled exception from within the plugin is raised during plugin
     loading.
     """
 
-    code = "INTERNAL_PLUGIN_PROJECT_ERROR"
+    code = "INTERNAL_PLUGIN_ERROR"
 
 
 class IncompatiblePluginFrameworkVersionError(

@@ -4,19 +4,19 @@ Exception hierarchy:
 - [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
     - [`ComponentsServiceError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentsServiceError]
         - [`ComponentLoadingError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentLoadingError]
-            - [`InvalidComponentProjectManifestFileError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectManifestFileError]
-                - [`InvalidComponentProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectManifestFileJSONError]
-                - [`InvalidComponentProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectManifestFileSchemaError]
-            - [`InvalidComponentProjectPyProjectFileError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectPyProjectFileError]
-            - [`InvalidComponentProjectPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectPyProjectFileTOMLError]
-            - [`InvalidComponentProjectPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectPyProjectFileDependencyError]
-            - [`InvalidComponentProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectFolderStructureError]
-                - [`ComponentProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentProjectManifestFileNotFoundError]
-                - [`ComponentProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentProjectEntryPointModuleNotFoundError]
-            - [`InvalidComponentProjectImplementationError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentProjectImplementationError]
-                - [`ComponentProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentProjectSymbolNotFoundError]
-                - [`ComponentProjectInterfaceError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentProjectInterfaceError]
-                - [`InternalComponentProjectError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InternalComponentProjectError]
+            - [`InvalidComponentManifestFileError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentManifestFileError]
+                - [`InvalidComponentManifestFileJSONError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentManifestFileJSONError]
+                - [`InvalidComponentManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentManifestFileSchemaError]
+            - [`InvalidComponentPyProjectFileError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentPyProjectFileError]
+            - [`InvalidComponentPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentPyProjectFileTOMLError]
+            - [`InvalidComponentPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentPyProjectFileDependencyError]
+            - [`InvalidComponentDirectoryStructureError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentDirectoryStructureError]
+                - [`ComponentManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentManifestFileNotFoundError]
+                - [`ComponentEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentEntryPointModuleNotFoundError]
+            - [`InvalidComponentImplementationError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InvalidComponentImplementationError]
+                - [`ComponentSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentSymbolNotFoundError]
+                - [`ComponentInterfaceError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentInterfaceError]
+                - [`InternalComponentError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.InternalComponentError]
             - [`IncompatibleComponentFrameworkVersionError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.IncompatibleComponentFrameworkVersionError]
             - [`ComponentAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentAlreadyRegisteredError]
             - [`DuplicateComponentLabelError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.DuplicateComponentLabelError]
@@ -71,26 +71,26 @@ class ComponentLoadingError(ComponentsServiceError):
     code = "COMPONENT_LOADING_ERROR"
 
 
-class InvalidComponentProjectManifestFileError(ComponentLoadingError):
-    """Base exception for all errors that occur due to an invalid component project manifest
-    `manifest.json` file during component loading.
+class InvalidComponentManifestFileError(ComponentLoadingError):
+    """Base exception for all errors that occur due to an invalid component manifest
+    file during component loading.
     """
 
-    code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_ERROR"
+    code = "INVALID_COMPONENT_MANIFEST_FILE_ERROR"
 
 
-class InvalidComponentProjectManifestFileJSONError(
-    InvalidComponentProjectManifestFileError,
+class InvalidComponentManifestFileJSONError(
+    InvalidComponentManifestFileError,
 ):
-    """Raised when the component project manifest file is not valid JSON during component
+    """Raised when the component manifest file is not valid JSON during component
     loading.
     """
 
-    code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_JSON_ERROR"
+    code = "INVALID_COMPONENT_MANIFEST_FILE_JSON_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
-        "The $COMPONENT_TYPE$ project manifest file `manifest.json` is not a valid JSON "
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}'. "
+        "The $COMPONENT_TYPE$ manifest file is not a valid JSON "
         "file."
     )
 
@@ -98,18 +98,18 @@ class InvalidComponentProjectManifestFileJSONError(
         super().__init__(component_directory=component_directory)
 
 
-class InvalidComponentProjectManifestFileSchemaError(
-    InvalidComponentProjectManifestFileError,
+class InvalidComponentManifestFileSchemaError(
+    InvalidComponentManifestFileError,
 ):
-    """Raised when the component project manifest file does not conform to the expected JSON
+    """Raised when the component manifest file does not conform to the expected JSON
     schema during component loading.
     """
 
-    code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
+    code = "INVALID_COMPONENT_MANIFEST_FILE_SCHEMA_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
-        "The $COMPONENT_TYPE$ project manifest file `manifest.json` does not conform to the "
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}'. "
+        "The $COMPONENT_TYPE$ manifest file does not conform to the "
         "expected JSON schema. {json_schema_error_message}"
     )
 
@@ -120,38 +120,38 @@ class InvalidComponentProjectManifestFileSchemaError(
         )
 
 
-class InvalidComponentProjectPyProjectFileError(ComponentLoadingError):
+class InvalidComponentPyProjectFileError(ComponentLoadingError):
     """Base exception for all errors that occur due to an invalid `pyproject.toml` file
     during component loading.
     """
 
-    code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_ERROR"
+    code = "INVALID_COMPONENT_PYPROJECT_FILE_ERROR"
 
 
-class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
+class InvalidComponentPyProjectFileTOMLError(ComponentLoadingError):
     """Raised when the `pyproject.toml` file is not a valid TOML file during component loading."""
 
-    code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_TOML_ERROR"
+    code = "INVALID_COMPONENT_PYPROJECT_FILE_TOML_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
-        "The `pyproject.toml` file specified is not a valid TOML file."
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}'. "
+        "The `pyproject.toml` file provided is not a valid TOML file."
     )
 
     def __init__(self, component_directory: str):
         super().__init__(component_directory=component_directory)
 
 
-class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError):
+class InvalidComponentPyProjectFileDependencyError(ComponentLoadingError):
     """Raised when the `pyproject.toml` file contains an invalid dependency entry during
     component loading.
     """
 
-    code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_COMPONENT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
-        "The `pyproject.toml` file specified contains the invalid dependency "
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}'. "
+        "The `pyproject.toml` file provided contains the invalid dependency "
         "entry '{invalid_dependency_entry}'. Check that the dependency "
         "parameter contains entries conforming to PEP 508."
     )
@@ -163,27 +163,27 @@ class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError)
         )
 
 
-class InvalidComponentProjectFolderStructureError(ComponentLoadingError):
-    """Base exception for all errors that occur due to an invalid component root directory
+class InvalidComponentDirectoryStructureError(ComponentLoadingError):
+    """Base exception for all errors that occur due to an invalid component directory
     structure during component loading.
     """
 
-    code = "INVALID_COMPONENT_PROJECT_FOLDER_STRUCTURE_ERROR"
+    code = "INVALID_COMPONENT_DIRECTORY_STRUCTURE_ERROR"
 
 
-class ComponentProjectManifestFileNotFoundError(
-    InvalidComponentProjectFolderStructureError,
+class ComponentManifestFileNotFoundError(
+    InvalidComponentDirectoryStructureError,
 ):
-    """Raised when the component project manifest file is not found in the component root
+    """Raised when the component manifest file is not found in the component
     directory during component loading.
     """
 
-    code = "COMPONENT_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
+    code = "COMPONENT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
-        "The $COMPONENT_TYPE$ project manifest file `manifest.json` was not found in the "
-        "$COMPONENT_TYPE$ root directory. Create a `manifest.json` file in the root "
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}'. "
+        "The $COMPONENT_TYPE$ manifest file was not found in its "
+        "root directory. Create a manifest file (`manifest.json`) in the root "
         "directory containing your $COMPONENT_TYPE$."
     )
 
@@ -191,19 +191,19 @@ class ComponentProjectManifestFileNotFoundError(
         super().__init__(component_directory=component_directory)
 
 
-class ComponentProjectEntryPointModuleNotFoundError(
-    InvalidComponentProjectFolderStructureError,
+class ComponentEntryPointModuleNotFoundError(
+    InvalidComponentDirectoryStructureError,
 ):
-    """Raised when the component entry point module specified in the manifest is not found in
-    the component root directory during component loading.
+    """Raised when the component entry point module specified in the manifest file is
+    not found in the component directory during component loading.
     """
 
-    code = "COMPONENT_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
+    code = "COMPONENT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
-        "The $COMPONENT_TYPE$ entry point module '{entry_point_module}' specified in the "
-        "$COMPONENT_TYPE$ project's manifest file was not found. Check that the module "
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}'. "
+        "The entry point module '{entry_point_module}' specified in the "
+        "$COMPONENT_TYPE$ manifest file was not found. Check that the module "
         "specified in the entry point parameter exists."
     )
 
@@ -214,25 +214,25 @@ class ComponentProjectEntryPointModuleNotFoundError(
         )
 
 
-class InvalidComponentProjectImplementationError(ComponentLoadingError):
-    """Base exception for all errors that occur due to the component project not implementing
+class InvalidComponentImplementationError(ComponentLoadingError):
+    """Base exception for all errors that occur due to the component not implementing
     the required interface during component loading.
     """
 
-    code = "INVALID_COMPONENT_PROJECT_IMPLEMENTATION_ERROR"
+    code = "INVALID_COMPONENT_IMPLEMENTATION_ERROR"
 
 
-class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationError):
-    """Raised when the component symbol name specified in the manifest is not found in the
-    component entry point module during component loading.
+class ComponentSymbolNotFoundError(InvalidComponentImplementationError):
+    """Raised when the component symbol name specified in the manifest file is not found
+    in the component entry point module during component loading.
     """
 
-    code = "COMPONENT_PROJECT_SYMBOL_NOT_FOUND_ERROR"
+    code = "COMPONENT_SYMBOL_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load $COMPONENT_TYPE$ project at '{component_directory}'. The "
-        "entry point symbol '{entry_point_symbol}' specified in the $COMPONENT_TYPE$ project's "
-        "manifest file was not found in the $COMPONENT_TYPE$ entry point module "
+        "Failed to load $COMPONENT_TYPE$ at '{component_directory}'. The "
+        "entry point symbol '{entry_point_symbol}' specified in the $COMPONENT_TYPE$ "
+        "manifest file was not found within the entry point module "
         "'{entry_point_module}'. Check that the class specified in the `entry_points` "
         "parameter exists for the module specified."
     )
@@ -250,16 +250,16 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
         )
 
 
-class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError):
+class ComponentInterfaceError(InvalidComponentImplementationError):
     """Raised when the component class does not implement the required interface during
     component loading.
     """
 
-    code = "COMPONENT_PROJECT_INTERFACE_ERROR"
+    code = "COMPONENT_INTERFACE_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
-        "The entry point symbol '{entry_point_symbol}' in the $COMPONENT_TYPE$ project does "
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}'. "
+        "The entry point symbol '{entry_point_symbol}' in the $COMPONENT_TYPE$ does "
         "not implement the required interface. Check that the symbol specified "
         "inherits from the appropriate base class."
     )
@@ -275,16 +275,17 @@ class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError)
         )
 
 
-class InternalComponentProjectError(InvalidComponentProjectImplementationError):
+class InternalComponentError(InvalidComponentImplementationError):
     """Raised when an unhandled exception from within the component is raised during component
     loading.
     """
 
-    code = "INTERNAL_COMPONENT_PROJECT_ERROR"
+    code = "INTERNAL_COMPONENT_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load $COMPONENT_TYPE$ project at '{component_directory}'. An "
-        "exception occurred while loading the $COMPONENT_TYPE$: {internal_error_message}"
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}'. An "
+        "unhandled exception occurred while loading the $COMPONENT_TYPE$: "
+        "{internal_error_message}"
     )
 
     def __init__(
@@ -306,8 +307,8 @@ class IncompatibleComponentFrameworkVersionError(ComponentLoadingError):
     code = "INCOMPATIBLE_COMPONENT_FRAMEWORK_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ {component_str}. The $COMPONENT_TYPE$ requires a "
-        "framework version of '{required_version}' which is incompatible "
+        "Failed to load the $COMPONENT_TYPE$ '{component_str}'. The $COMPONENT_TYPE$ "
+        "requires a framework version of '{required_version}' which is incompatible "
         "with the current framework version '{current_version}'."
     )
 
@@ -332,8 +333,9 @@ class ComponentAlreadyRegisteredError(ComponentLoadingError):
     code = "COMPONENT_ALREADY_REGISTERED_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to register the $COMPONENT_TYPE$ {component_str}. A $COMPONENT_TYPE$ with the same "
-        "ID '{component_id}' has already been registered in the $COMPONENT_TYPE$s service."
+        "Failed to register the $COMPONENT_TYPE$ '{component_str}'. A $COMPONENT_TYPE$ "
+        "with the same ID '{component_id}' has already been registered in the "
+        "$COMPONENT_TYPE$s service."
     )
 
     def __init__(self, component_str: str, component_id: str):
@@ -351,10 +353,11 @@ class DuplicateComponentLabelError(ComponentLoadingError):
     code = "DUPLICATE_COMPONENT_LABEL_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to register the $COMPONENT_TYPE$ {component_str}. A $COMPONENT_TYPE$ with the same "
-        "label '{label}' has already been registered in the $COMPONENT_TYPE$s "
-        "service. Check that you are not registering an already registered "
-        "$COMPONENT_TYPE$ or that the $COMPONENT_TYPE$ you are registering has a unique label."
+        "Failed to register the $COMPONENT_TYPE$ '{component_str}'. A $COMPONENT_TYPE$ "
+        "with the same label '{label}' has already been registered in the "
+        "$COMPONENT_TYPE$s service. Check that you are not registering an already "
+        "registered $COMPONENT_TYPE$ or that the $COMPONENT_TYPE$ you are registering "
+        "has a unique label."
     )
 
     def __init__(self, component_str: str, label: str):
@@ -380,10 +383,10 @@ class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
     code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ '{component_directory}' due to a dependency "
-        "error. The third-party dependency '{third_party_dependency_name}' is required "
-        "but not installed. Either install that dependency or remove it from the "
-        "$COMPONENT_TYPE$'s definition."
+        "Failed to load the $COMPONENT_TYPE$ '{component_directory}' due to a "
+        "dependency error. The third-party dependency '{third_party_dependency_name}' "
+        "is required but not installed. Either install that dependency or remove it "
+        "from the $COMPONENT_TYPE$'s definition."
     )
 
     def __init__(
@@ -405,7 +408,7 @@ class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
     code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ '{component_directory}' due to a "
+        "Failed to load the $COMPONENT_TYPE$ at '{component_directory}' due to a "
         "dependency error. The $COMPONENT_TYPE$ requires the third-party dependency "
         "'{third_party_dependency_name}' of version '{required_version}' but version "
         "'{installed_version}' was found. Either install the dependency of the correct "
@@ -435,7 +438,7 @@ class ComponentDependencyNotFoundError(ComponentDependencyError):
     code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ {component_str} due to a dependency error. "
+        "Failed to load the $COMPONENT_TYPE$ '{component_str}' due to a dependency error. "
         "The component dependency '{missing_dependency}' is required but not "
         "installed. Either install that dependency or remove it from the $COMPONENT_TYPE$'s "
         "definition."
@@ -460,7 +463,7 @@ class IncompatibleComponentDependencyVersionError(ComponentDependencyError):
     code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ {component_str} due to a dependency error. "
+        "Failed to load the $COMPONENT_TYPE$ '{component_str}' due to a dependency error. "
         "The $COMPONENT_TYPE$ requires the component dependency '{incompatible_dependency}' of "
         "version '{required_version}' but version '{installed_version}' is installed. "
         "Either install the dependency of the correct version or change the dependency "
@@ -490,7 +493,7 @@ class ComponentDependsOnInvalidComponentDependencyError(ComponentDependencyError
     code = "COMPONENT_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ {component_str} due to a dependency error. The "
+        "Failed to load the $COMPONENT_TYPE$ '{component_str}' due to a dependency error. The "
         "component dependency '{invalid_dependency}' that the $COMPONENT_TYPE$ depends on is "
         "invalid."
     )
@@ -514,7 +517,7 @@ class ComponentDependencyNotRunningError(ComponentDependencyError):
     code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ {component_str} due to a dependency error. The "
+        "Failed to load the $COMPONENT_TYPE$ '{component_str}' due to a dependency error. The "
         "component dependency '{not_running_dependency}' that the $COMPONENT_TYPE$ depends on "
         "is installed but not currently running."
     )
@@ -538,8 +541,8 @@ class ComponentNotFoundError(ComponentsServiceError):
     code = "COMPONENT_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to find the requested $COMPONENT_TYPE$. No $COMPONENT_TYPE$ was found with the "
-        "provided $COMPONENT_TYPE$ ID '{component_id}'."
+        "Failed to find the requested $COMPONENT_TYPE$. No $COMPONENT_TYPE$ was found "
+        "with the provided $COMPONENT_TYPE$ ID '{component_id}'."
     )
 
     def __init__(self, component_id: str):

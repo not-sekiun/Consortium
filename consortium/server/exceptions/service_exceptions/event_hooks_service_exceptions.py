@@ -5,19 +5,19 @@ Exception hierarchy:
     - [`EventHooksServiceError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHooksServiceError]
         - [`EventHookNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookNotFoundError]
         - [`EventHookLoadingError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookLoadingError]
-            - [`InvalidEventHookProjectManifestFileError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectManifestFileError]
-                - [`InvalidEventHookProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectManifestFileJSONError]
-                - [`InvalidEventHookProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectManifestFileSchemaError]
-            - [`InvalidEventHookProjectPyProjectFileError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectPyProjectFileError]
-            - [`InvalidEventHookProjectPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectPyProjectFileTOMLError]
-            - [`InvalidEventHookProjectPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectPyProjectFileDependencyError]
-            - [`InvalidEventHookProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectFolderStructureError]
-                - [`EventHookProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookProjectManifestFileNotFoundError]
-                - [`EventHookProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookProjectEntryPointModuleNotFoundError]
-            - [`InvalidEventHookProjectImplementationError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookProjectImplementationError]
-                - [`EventHookProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookProjectSymbolNotFoundError]
-                - [`EventHookProjectInterfaceError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookProjectInterfaceError]
-                - [`InternalEventHookProjectError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InternalEventHookProjectError]
+            - [`InvalidEventHookManifestFileError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookManifestFileError]
+                - [`InvalidEventHookManifestFileJSONError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookManifestFileJSONError]
+                - [`InvalidEventHookManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookManifestFileSchemaError]
+            - [`InvalidEventHookPyProjectFileError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookPyProjectFileError]
+            - [`InvalidEventHookPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookPyProjectFileTOMLError]
+            - [`InvalidEventHookPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookPyProjectFileDependencyError]
+            - [`InvalidEventHookDirectoryStructureError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookDirectoryStructureError]
+                - [`EventHookManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookManifestFileNotFoundError]
+                - [`EventHookEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookEntryPointModuleNotFoundError]
+            - [`InvalidEventHookImplementationError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InvalidEventHookImplementationError]
+                - [`EventHookSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookSymbolNotFoundError]
+                - [`EventHookInterfaceError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookInterfaceError]
+                - [`InternalEventHookError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.InternalEventHookError]
             - [`IncompatibleEventHookFrameworkVersionError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.IncompatibleEventHookFrameworkVersionError]
             - [`EventHookAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookAlreadyRegisteredError]
             - [`DuplicateEventHookLabelError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.DuplicateEventHookLabelError]
@@ -86,145 +86,145 @@ class EventHookLoadingError(
     _COMPONENT_TYPE = "event hook"
 
 
-class InvalidEventHookProjectManifestFileError(
+class InvalidEventHookManifestFileError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectManifestFileError,
+    comp_excs.InvalidComponentManifestFileError,
 ):
-    """Base exception for all errors that occur due to an invalid event hook project manifest
-    `manifest.json` file during event hook loading.
+    """Base exception for all errors that occur due to an invalid event hook manifest
+    file during event hook loading.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_ERROR"
+    code = "INVALID_EVENT_HOOK_MANIFEST_FILE_ERROR"
 
 
-class InvalidEventHookProjectManifestFileJSONError(
-    InvalidEventHookProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileJSONError,
+class InvalidEventHookManifestFileJSONError(
+    InvalidEventHookManifestFileError,
+    comp_excs.InvalidComponentManifestFileJSONError,
 ):
-    """Raised when the event hook project manifest file is not valid JSON during event hook
+    """Raised when the event hook manifest file is not valid JSON during event hook
     loading.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_JSON_ERROR"
+    code = "INVALID_EVENT_HOOK_MANIFEST_FILE_JSON_ERROR"
 
 
-class InvalidEventHookProjectManifestFileSchemaError(
-    InvalidEventHookProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileSchemaError,
+class InvalidEventHookManifestFileSchemaError(
+    InvalidEventHookManifestFileError,
+    comp_excs.InvalidComponentManifestFileSchemaError,
 ):
-    """Raised when the event hook project manifest file does not conform to the expected JSON
+    """Raised when the event hook manifest file does not conform to the expected JSON
     schema during event hook loading.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
+    code = "INVALID_EVENT_HOOK_MANIFEST_FILE_SCHEMA_ERROR"
 
 
-class InvalidEventHookProjectPyProjectFileError(
+class InvalidEventHookPyProjectFileError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileError,
+    comp_excs.InvalidComponentPyProjectFileError,
 ):
     """Base exception for all errors that occur due to an invalid `pyproject.toml` file
     during event hook loading.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_ERROR"
+    code = "INVALID_EVENT_HOOK_PYPROJECT_FILE_ERROR"
 
 
-class InvalidEventHookProjectPyProjectFileTOMLError(
+class InvalidEventHookPyProjectFileTOMLError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_excs.InvalidComponentPyProjectFileTOMLError,
 ):
     """Raised when the `pyproject.toml` file is not a valid TOML file during event hook loading."""
 
-    code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_TOML_ERROR"
+    code = "INVALID_EVENT_HOOK_PYPROJECT_FILE_TOML_ERROR"
 
 
-class InvalidEventHookProjectPyProjectFileDependencyError(
+class InvalidEventHookPyProjectFileDependencyError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_excs.InvalidComponentPyProjectFileDependencyError,
 ):
     """Raised when the `pyproject.toml` file contains an invalid dependency entry during
     event hook loading.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_EVENT_HOOK_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
 
-class InvalidEventHookProjectFolderStructureError(
+class InvalidEventHookDirectoryStructureError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectFolderStructureError,
+    comp_excs.InvalidComponentDirectoryStructureError,
 ):
-    """Base exception for all errors that occur due to an invalid event hook root directory
+    """Base exception for all errors that occur due to an invalid event hook directory
     structure during event hook loading.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_FOLDER_STRUCTURE_ERROR"
+    code = "INVALID_EVENT_HOOK_DIRECTORY_STRUCTURE_ERROR"
 
 
-class EventHookProjectManifestFileNotFoundError(
-    InvalidEventHookProjectFolderStructureError,
-    comp_excs.ComponentProjectManifestFileNotFoundError,
+class EventHookManifestFileNotFoundError(
+    InvalidEventHookDirectoryStructureError,
+    comp_excs.ComponentManifestFileNotFoundError,
 ):
-    """Raised when the event hook project manifest file is not found in the event hook root
+    """Raised when the event hook manifest file is not found in the event hook
     directory during event hook loading.
     """
 
-    code = "EVENT_HOOK_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
+    code = "EVENT_HOOK_MANIFEST_FILE_NOT_FOUND_ERROR"
 
 
-class EventHookProjectEntryPointModuleNotFoundError(
-    InvalidEventHookProjectFolderStructureError,
-    comp_excs.ComponentProjectEntryPointModuleNotFoundError,
+class EventHookEntryPointModuleNotFoundError(
+    InvalidEventHookDirectoryStructureError,
+    comp_excs.ComponentEntryPointModuleNotFoundError,
 ):
-    """Raised when the event hook entry point module specified in the manifest is not found in
-    the event hook root directory during event hook loading.
+    """Raised when the event hook entry point module specified in the manifest file
+    is not found in the event hook directory during event hook loading.
     """
 
-    code = "EVENT_HOOK_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
+    code = "EVENT_HOOK_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
 
-class InvalidEventHookProjectImplementationError(
+class InvalidEventHookImplementationError(
     EventHookLoadingError,
-    comp_excs.InvalidComponentProjectImplementationError,
+    comp_excs.InvalidComponentImplementationError,
 ):
-    """Base exception for all errors that occur due to the event hook project not implementing
+    """Base exception for all errors that occur due to the event hook not implementing
     the required interface during event hook loading.
     """
 
-    code = "INVALID_EVENT_HOOK_PROJECT_IMPLEMENTATION_ERROR"
+    code = "INVALID_EVENT_HOOK_IMPLEMENTATION_ERROR"
 
 
-class EventHookProjectSymbolNotFoundError(
-    InvalidEventHookProjectImplementationError,
-    comp_excs.ComponentProjectSymbolNotFoundError,
+class EventHookSymbolNotFoundError(
+    InvalidEventHookImplementationError,
+    comp_excs.ComponentSymbolNotFoundError,
 ):
-    """Raised when the event hook symbol name specified in the manifest is not found in the
-    event hook entry point module during event hook loading.
+    """Raised when the event hook symbol name specified in the manifest file is not
+    found in the event hook entry point module during event hook loading.
     """
 
-    code = "EVENT_HOOK_PROJECT_SYMBOL_NOT_FOUND_ERROR"
+    code = "EVENT_HOOK_SYMBOL_NOT_FOUND_ERROR"
 
 
-class EventHookProjectInterfaceError(
-    InvalidEventHookProjectImplementationError,
-    comp_excs.ComponentProjectInterfaceError,
+class EventHookInterfaceError(
+    InvalidEventHookImplementationError,
+    comp_excs.ComponentInterfaceError,
 ):
     """Raised when the event hook class does not implement the required interface during
     event hook loading.
     """
 
-    code = "EVENT_HOOK_PROJECT_INTERFACE_ERROR"
+    code = "EVENT_HOOK_INTERFACE_ERROR"
 
 
-class InternalEventHookProjectError(
-    InvalidEventHookProjectImplementationError,
-    comp_excs.InternalComponentProjectError,
+class InternalEventHookError(
+    InvalidEventHookImplementationError,
+    comp_excs.InternalComponentError,
 ):
     """Raised when an unhandled exception from within the event hook is raised during event hook
     loading.
     """
 
-    code = "INTERNAL_EVENT_HOOK_PROJECT_ERROR"
+    code = "INTERNAL_EVENT_HOOK_ERROR"
 
 
 class IncompatibleEventHookFrameworkVersionError(

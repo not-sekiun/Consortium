@@ -5,19 +5,19 @@ Exception hierarchy:
     - [`AgentProfilesServiceError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfilesServiceError]
         - [`AgentProfileNotFoundError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileNotFoundError]
         - [`AgentProfileLoadingError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileLoadingError]
-            - [`InvalidAgentProfileProjectManifestFileError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileProjectManifestFileError]
-                - [`InvalidAgentProfileProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileProjectManifestFileJSONError]
-                - [`InvalidAgentProfileProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileProjectManifestFileSchemaError]
-            - [`InvalidAgentProfileProjectPyProjectFileError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileProjectPyProjectFileError]
-            - [`InvalidAgentProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileProjectPyProjectFileTOMLError]
-            - [`InvalidAgentProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileProjectPyProjectFileDependencyError]
-            - [`InvalidAgentProfileProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileProjectFolderStructureError]
-                - [`AgentProfileProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileProjectManifestFileNotFoundError]
-                - [`AgentProfileProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileProjectEntryPointModuleNotFoundError]
-            - [`InvalidAgentProfileProjectImplementationError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileProjectImplementationError]
-                - [`AgentProfileProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileProjectSymbolNotFoundError]
-                - [`AgentProfileProjectInterfaceError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileProjectInterfaceError]
-                - [`InternalAgentProfileProjectError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InternalAgentProfileProjectError]
+            - [`InvalidAgentProfileManifestFileError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileManifestFileError]
+                - [`InvalidAgentProfileManifestFileJSONError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileManifestFileJSONError]
+                - [`InvalidAgentProfileManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileManifestFileSchemaError]
+            - [`InvalidAgentProfilePyProjectFileError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfilePyProjectFileError]
+            - [`InvalidAgentProfilePyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfilePyProjectFileTOMLError]
+            - [`InvalidAgentProfilePyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfilePyProjectFileDependencyError]
+            - [`InvalidAgentProfileDirectoryStructureError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileDirectoryStructureError]
+                - [`AgentProfileManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileManifestFileNotFoundError]
+                - [`AgentProfileEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileEntryPointModuleNotFoundError]
+            - [`InvalidAgentProfileImplementationError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InvalidAgentProfileImplementationError]
+                - [`AgentProfileSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileSymbolNotFoundError]
+                - [`AgentProfileInterfaceError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileInterfaceError]
+                - [`InternalAgentProfileError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.InternalAgentProfileError]
             - [`IncompatibleAgentProfileFrameworkVersionError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.IncompatibleAgentProfileFrameworkVersionError]
             - [`AgentProfileAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileAlreadyRegisteredError]
             - [`DuplicateAgentProfileLabelError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.DuplicateAgentProfileLabelError]
@@ -81,147 +81,147 @@ class AgentProfileLoadingError(
     _COMPONENT_TYPE = "agent profile"
 
 
-class InvalidAgentProfileProjectManifestFileError(
+class InvalidAgentProfileManifestFileError(
     AgentProfileLoadingError,
-    comp_excs.InvalidComponentProjectManifestFileError,
+    comp_excs.InvalidComponentManifestFileError,
 ):
-    """Base exception for all errors that occur due to an invalid agent profile project
-    manifest `manifest.json` file during agent profile loading.
+    """Base exception for all errors that occur due to an invalid agent profile
+    manifest file during agent profile loading.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_MANIFEST_FILE_ERROR"
+    code = "INVALID_AGENT_PROFILE_MANIFEST_FILE_ERROR"
 
 
-class InvalidAgentProfileProjectManifestFileJSONError(
-    InvalidAgentProfileProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileJSONError,
+class InvalidAgentProfileManifestFileJSONError(
+    InvalidAgentProfileManifestFileError,
+    comp_excs.InvalidComponentManifestFileJSONError,
 ):
-    """Raised when the agent profile project manifest file is not valid JSON during agent
+    """Raised when the agent profile manifest file is not valid JSON during agent
     profile loading.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_MANIFEST_FILE_JSON_ERROR"
+    code = "INVALID_AGENT_PROFILE_MANIFEST_FILE_JSON_ERROR"
 
 
-class InvalidAgentProfileProjectManifestFileSchemaError(
-    InvalidAgentProfileProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileSchemaError,
+class InvalidAgentProfileManifestFileSchemaError(
+    InvalidAgentProfileManifestFileError,
+    comp_excs.InvalidComponentManifestFileSchemaError,
 ):
-    """Raised when the agent profile project manifest file does not conform to the expected
+    """Raised when the agent profile manifest file does not conform to the expected
     JSON schema during agent profile loading.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
+    code = "INVALID_AGENT_PROFILE_MANIFEST_FILE_SCHEMA_ERROR"
 
 
-class InvalidAgentProfileProjectPyProjectFileError(
+class InvalidAgentProfilePyProjectFileError(
     AgentProfileLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileError,
+    comp_excs.InvalidComponentPyProjectFileError,
 ):
     """Base exception for all errors that occur due to an invalid `pyproject.toml` file
     during agent profile loading.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_PYPROJECT_FILE_ERROR"
+    code = "INVALID_AGENT_PROFILE_PYPROJECT_FILE_ERROR"
 
 
-class InvalidAgentProfileProjectPyProjectFileTOMLError(
+class InvalidAgentProfilePyProjectFileTOMLError(
     AgentProfileLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_excs.InvalidComponentPyProjectFileTOMLError,
 ):
     """Raised when the `pyproject.toml` file is not a valid TOML file during agent profile
     loading.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_PYPROJECT_FILE_TOML_ERROR"
+    code = "INVALID_AGENT_PROFILE_PYPROJECT_FILE_TOML_ERROR"
 
 
-class InvalidAgentProfileProjectPyProjectFileDependencyError(
+class InvalidAgentProfilePyProjectFileDependencyError(
     AgentProfileLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_excs.InvalidComponentPyProjectFileDependencyError,
 ):
     """Raised when the `pyproject.toml` file contains an invalid dependency entry during
     agent profile loading.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_AGENT_PROFILE_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
 
-class InvalidAgentProfileProjectFolderStructureError(
+class InvalidAgentProfileDirectoryStructureError(
     AgentProfileLoadingError,
-    comp_excs.InvalidComponentProjectFolderStructureError,
+    comp_excs.InvalidComponentDirectoryStructureError,
 ):
-    """Base exception for all errors that occur due to an invalid agent profile root
+    """Base exception for all errors that occur due to an invalid agent profile
     directory structure during agent profile loading.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_FOLDER_STRUCTURE_ERROR"
+    code = "INVALID_AGENT_PROFILE_DIRECTORY_STRUCTURE_ERROR"
 
 
-class AgentProfileProjectManifestFileNotFoundError(
-    InvalidAgentProfileProjectFolderStructureError,
-    comp_excs.ComponentProjectManifestFileNotFoundError,
+class AgentProfileManifestFileNotFoundError(
+    InvalidAgentProfileDirectoryStructureError,
+    comp_excs.ComponentManifestFileNotFoundError,
 ):
-    """Raised when the agent profile project manifest file is not found in the agent profile
-    root directory during agent profile loading.
+    """Raised when the agent profile manifest file is not found in the agent profile
+    directory during agent profile loading.
     """
 
-    code = "AGENT_PROFILE_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
+    code = "AGENT_PROFILE_MANIFEST_FILE_NOT_FOUND_ERROR"
 
 
-class AgentProfileProjectEntryPointModuleNotFoundError(
-    InvalidAgentProfileProjectFolderStructureError,
-    comp_excs.ComponentProjectEntryPointModuleNotFoundError,
+class AgentProfileEntryPointModuleNotFoundError(
+    InvalidAgentProfileDirectoryStructureError,
+    comp_excs.ComponentEntryPointModuleNotFoundError,
 ):
-    """Raised when the agent profile entry point module specified in the manifest is not
-    found in the agent profile root directory during agent profile loading.
+    """Raised when the agent profile entry point module specified in the manifest file
+    is not found in the agent profile directory during agent profile loading.
     """
 
-    code = "AGENT_PROFILE_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
+    code = "AGENT_PROFILE_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
 
-class InvalidAgentProfileProjectImplementationError(
+class InvalidAgentProfileImplementationError(
     AgentProfileLoadingError,
-    comp_excs.InvalidComponentProjectImplementationError,
+    comp_excs.InvalidComponentImplementationError,
 ):
-    """Base exception for all errors that occur due to the agent profile project not
+    """Base exception for all errors that occur due to the agent profile not
     implementing the required interface during agent profile loading.
     """
 
-    code = "INVALID_AGENT_PROFILE_PROJECT_IMPLEMENTATION_ERROR"
+    code = "INVALID_AGENT_PROFILE_IMPLEMENTATION_ERROR"
 
 
-class AgentProfileProjectSymbolNotFoundError(
-    InvalidAgentProfileProjectImplementationError,
-    comp_excs.ComponentProjectSymbolNotFoundError,
+class AgentProfileSymbolNotFoundError(
+    InvalidAgentProfileImplementationError,
+    comp_excs.ComponentSymbolNotFoundError,
 ):
-    """Raised when the agent profile symbol name specified in the manifest is not found in
-    the agent profile entry point module during agent profile loading.
+    """Raised when the agent profile symbol name specified in the manifest file is not
+    found in the agent profile entry point module during agent profile loading.
     """
 
-    code = "AGENT_PROFILE_PROJECT_SYMBOL_NOT_FOUND_ERROR"
+    code = "AGENT_PROFILE_SYMBOL_NOT_FOUND_ERROR"
 
 
-class AgentProfileProjectInterfaceError(
-    InvalidAgentProfileProjectImplementationError,
-    comp_excs.ComponentProjectInterfaceError,
+class AgentProfileInterfaceError(
+    InvalidAgentProfileImplementationError,
+    comp_excs.ComponentInterfaceError,
 ):
     """Raised when the agent profile class does not implement the required interface during
     agent profile loading.
     """
 
-    code = "AGENT_PROFILE_PROJECT_INTERFACE_ERROR"
+    code = "AGENT_PROFILE_INTERFACE_ERROR"
 
 
-class InternalAgentProfileProjectError(
-    InvalidAgentProfileProjectImplementationError,
-    comp_excs.InternalComponentProjectError,
+class InternalAgentProfileError(
+    InvalidAgentProfileImplementationError,
+    comp_excs.InternalComponentError,
 ):
     """Raised when an unhandled exception from within the agent profile is raised during
     agent profile loading.
     """
 
-    code = "INTERNAL_AGENT_PROFILE_PROJECT_ERROR"
+    code = "INTERNAL_AGENT_PROFILE_ERROR"
 
 
 class IncompatibleAgentProfileFrameworkVersionError(

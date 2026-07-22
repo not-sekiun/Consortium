@@ -8,18 +8,18 @@ import pytest
 
 from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentDependencyNotFoundError,
-    ComponentProjectEntryPointModuleNotFoundError,
-    ComponentProjectInterfaceError,
-    ComponentProjectManifestFileNotFoundError,
-    ComponentProjectSymbolNotFoundError,
+    ComponentEntryPointModuleNotFoundError,
+    ComponentInterfaceError,
+    ComponentManifestFileNotFoundError,
+    ComponentSymbolNotFoundError,
     IncompatibleComponentDependencyVersionError,
     IncompatibleComponentFrameworkVersionError,
     IncompatibleThirdPartyDependencyVersionError,
-    InternalComponentProjectError,
-    InvalidComponentProjectManifestFileJSONError,
-    InvalidComponentProjectManifestFileSchemaError,
-    InvalidComponentProjectPyProjectFileDependencyError,
-    InvalidComponentProjectPyProjectFileTOMLError,
+    InternalComponentError,
+    InvalidComponentManifestFileJSONError,
+    InvalidComponentManifestFileSchemaError,
+    InvalidComponentPyProjectFileDependencyError,
+    InvalidComponentPyProjectFileTOMLError,
     ThirdPartyDependencyNotFoundError,
 )
 from consortium.server.services.component_loader_services.event_hook_loader_service import (
@@ -89,19 +89,19 @@ def test_disabled_plugin_with_ignore_flag_loads(plugin_loader):
 
 
 def test_missing_manifest_raises(plugin_loader, tmp_path):
-    with pytest.raises(ComponentProjectManifestFileNotFoundError):
+    with pytest.raises(ComponentManifestFileNotFoundError):
         plugin_loader.get_component_from_directory(tmp_path)
 
 
 def test_bad_json_manifest_raises(plugin_loader):
-    with pytest.raises(InvalidComponentProjectManifestFileJSONError):
+    with pytest.raises(InvalidComponentManifestFileJSONError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_json"
         )
 
 
 def test_bad_schema_manifest_raises(plugin_loader):
-    with pytest.raises(InvalidComponentProjectManifestFileSchemaError):
+    with pytest.raises(InvalidComponentManifestFileSchemaError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_schema"
         )
@@ -109,7 +109,7 @@ def test_bad_schema_manifest_raises(plugin_loader):
 
 def test_bad_entry_point_format_raises(plugin_loader):
     # Entry point without colon triggers schema error from the format check.
-    with pytest.raises(InvalidComponentProjectManifestFileSchemaError):
+    with pytest.raises(InvalidComponentManifestFileSchemaError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_entry_point"
         )
@@ -119,7 +119,7 @@ def test_bad_entry_point_format_raises(plugin_loader):
 
 
 def test_bad_toml_raises(plugin_loader):
-    with pytest.raises(InvalidComponentProjectPyProjectFileTOMLError):
+    with pytest.raises(InvalidComponentPyProjectFileTOMLError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_toml"
         )
@@ -140,7 +140,7 @@ def test_incompatible_dep_raises(plugin_loader):
 
 
 def test_bad_dep_format_raises(plugin_loader):
-    with pytest.raises(InvalidComponentProjectPyProjectFileDependencyError):
+    with pytest.raises(InvalidComponentPyProjectFileDependencyError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_dep_format"
         )
@@ -150,21 +150,21 @@ def test_bad_dep_format_raises(plugin_loader):
 
 
 def test_no_module_raises(plugin_loader):
-    with pytest.raises(ComponentProjectEntryPointModuleNotFoundError):
+    with pytest.raises(ComponentEntryPointModuleNotFoundError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_no_module"
         )
 
 
 def test_bad_symbol_raises(plugin_loader):
-    with pytest.raises(ComponentProjectSymbolNotFoundError):
+    with pytest.raises(ComponentSymbolNotFoundError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_symbol"
         )
 
 
 def test_bad_interface_raises(plugin_loader):
-    with pytest.raises(ComponentProjectInterfaceError):
+    with pytest.raises(ComponentInterfaceError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_interface"
         )
@@ -178,14 +178,14 @@ def test_bad_framework_version_raises(plugin_loader):
 
 
 def test_import_error_raises_internal_error(plugin_loader):
-    with pytest.raises(InternalComponentProjectError):
+    with pytest.raises(InternalComponentError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_import_error"
         )
 
 
 def test_init_error_raises_internal_error(plugin_loader):
-    with pytest.raises(InternalComponentProjectError):
+    with pytest.raises(InternalComponentError):
         plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_init_error"
         )

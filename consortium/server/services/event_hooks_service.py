@@ -79,20 +79,20 @@ class EventHooksService:
             the enabled check is not overridden.
 
         Raises:
-            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+            ComponentEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+            ComponentSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentProjectInterfaceError: If the class does not inherit from the
+            ComponentInterfaceError: If the class does not inherit from the
                 expected base class.
             IncompatibleComponentFrameworkVersionError: If the event hook is
                 incompatible with the current framework version.
-            InternalComponentProjectError: If an unhandled exception occurs while
+            InternalComponentError: If an unhandled exception occurs while
                 loading the event hook.
         """
         event_hook = self._event_hook_registry_service.get_component_from_directory(
@@ -204,20 +204,20 @@ class EventHooksService:
                 event hook is disabled and the enabled check is not overridden.
 
         Raises:
-            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+            ComponentEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+            ComponentSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentProjectInterfaceError: If the class does not inherit from the
+            ComponentInterfaceError: If the class does not inherit from the
                 expected base class.
             IncompatibleComponentFrameworkVersionError: If the event hook is
                 incompatible with the current framework version.
-            InternalComponentProjectError: If an unhandled exception occurs while
+            InternalComponentError: If an unhandled exception occurs while
                 loading the event hook.
             ComponentAlreadyRegisteredError: If an event hook with the same ID is
                 already registered.
@@ -284,20 +284,20 @@ class EventHooksService:
             the enabled check is not overridden.
 
         Raises:
-            ComponentProjectManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentProjectManifestFileJSONError: If `manifest.json` contains
+            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidComponentManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentProjectManifestFileSchemaError: If `manifest.json` does not
+            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentProjectEntryPointModuleNotFoundError: If the entry-point module
+            ComponentEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentProjectSymbolNotFoundError: If the symbol specified in the manifest
+            ComponentSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentProjectInterfaceError: If the class does not inherit from the
+            ComponentInterfaceError: If the class does not inherit from the
                 expected base class.
             IncompatibleComponentFrameworkVersionError: If the event hook is
                 incompatible with the current framework version.
-            InternalComponentProjectError: If an unhandled exception occurs while
+            InternalComponentError: If an unhandled exception occurs while
                 loading the event hook.
         """
         event_hook = (

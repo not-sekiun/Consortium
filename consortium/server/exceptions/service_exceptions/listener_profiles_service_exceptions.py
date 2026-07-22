@@ -5,19 +5,19 @@ Exception hierarchy:
     - [`ListenerProfilesServiceError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfilesServiceError]
         - [`ListenerProfileNotFoundError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileNotFoundError]
         - [`ListenerProfileLoadingError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileLoadingError]
-            - [`InvalidListenerProfileProjectManifestFileError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileProjectManifestFileError]
-                - [`InvalidListenerProfileProjectManifestFileJSONError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileProjectManifestFileJSONError]
-                - [`InvalidListenerProfileProjectManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileProjectManifestFileSchemaError]
-            - [`InvalidListenerProfileProjectPyProjectFileError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileProjectPyProjectFileError]
-            - [`InvalidListenerProfileProjectPyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileProjectPyProjectFileTOMLError]
-            - [`InvalidListenerProfileProjectPyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileProjectPyProjectFileDependencyError]
-            - [`InvalidListenerProfileProjectFolderStructureError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileProjectFolderStructureError]
-                - [`ListenerProfileProjectManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileProjectManifestFileNotFoundError]
-                - [`ListenerProfileProjectEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileProjectEntryPointModuleNotFoundError]
-            - [`InvalidListenerProfileProjectImplementationError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileProjectImplementationError]
-                - [`ListenerProfileProjectSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileProjectSymbolNotFoundError]
-                - [`ListenerProfileProjectInterfaceError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileProjectInterfaceError]
-                - [`InternalListenerProfileProjectError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InternalListenerProfileProjectError]
+            - [`InvalidListenerProfileManifestFileError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileManifestFileError]
+                - [`InvalidListenerProfileManifestFileJSONError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileManifestFileJSONError]
+                - [`InvalidListenerProfileManifestFileSchemaError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileManifestFileSchemaError]
+            - [`InvalidListenerProfilePyProjectFileError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfilePyProjectFileError]
+            - [`InvalidListenerProfilePyProjectFileTOMLError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfilePyProjectFileTOMLError]
+            - [`InvalidListenerProfilePyProjectFileDependencyError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfilePyProjectFileDependencyError]
+            - [`InvalidListenerProfileDirectoryStructureError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileDirectoryStructureError]
+                - [`ListenerProfileManifestFileNotFoundError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileManifestFileNotFoundError]
+                - [`ListenerProfileEntryPointModuleNotFoundError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileEntryPointModuleNotFoundError]
+            - [`InvalidListenerProfileImplementationError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InvalidListenerProfileImplementationError]
+                - [`ListenerProfileSymbolNotFoundError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileSymbolNotFoundError]
+                - [`ListenerProfileInterfaceError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileInterfaceError]
+                - [`InternalListenerProfileError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.InternalListenerProfileError]
             - [`IncompatibleListenerProfileFrameworkVersionError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.IncompatibleListenerProfileFrameworkVersionError]
             - [`ListenerProfileAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileAlreadyRegisteredError]
             - [`DuplicateListenerProfileLabelError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.DuplicateListenerProfileLabelError]
@@ -81,147 +81,147 @@ class ListenerProfileLoadingError(
     _COMPONENT_TYPE = "listener profile"
 
 
-class InvalidListenerProfileProjectManifestFileError(
+class InvalidListenerProfileManifestFileError(
     ListenerProfileLoadingError,
-    comp_excs.InvalidComponentProjectManifestFileError,
+    comp_excs.InvalidComponentManifestFileError,
 ):
-    """Base exception for all errors that occur due to an invalid listener profile project
-    manifest `manifest.json` file during listener profile loading.
+    """Base exception for all errors that occur due to an invalid listener profile
+    manifest file during listener profile loading.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_MANIFEST_FILE_ERROR"
+    code = "INVALID_LISTENER_PROFILE_MANIFEST_FILE_ERROR"
 
 
-class InvalidListenerProfileProjectManifestFileJSONError(
-    InvalidListenerProfileProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileJSONError,
+class InvalidListenerProfileManifestFileJSONError(
+    InvalidListenerProfileManifestFileError,
+    comp_excs.InvalidComponentManifestFileJSONError,
 ):
-    """Raised when the listener profile project manifest file is not valid JSON during
+    """Raised when the listener profile manifest file is not valid JSON during
     listener profile loading.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_MANIFEST_FILE_JSON_ERROR"
+    code = "INVALID_LISTENER_PROFILE_MANIFEST_FILE_JSON_ERROR"
 
 
-class InvalidListenerProfileProjectManifestFileSchemaError(
-    InvalidListenerProfileProjectManifestFileError,
-    comp_excs.InvalidComponentProjectManifestFileSchemaError,
+class InvalidListenerProfileManifestFileSchemaError(
+    InvalidListenerProfileManifestFileError,
+    comp_excs.InvalidComponentManifestFileSchemaError,
 ):
-    """Raised when the listener profile project manifest file does not conform to the expected
+    """Raised when the listener profile manifest file does not conform to the expected
     JSON schema during listener profile loading.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
+    code = "INVALID_LISTENER_PROFILE_MANIFEST_FILE_SCHEMA_ERROR"
 
 
-class InvalidListenerProfileProjectPyProjectFileError(
+class InvalidListenerProfilePyProjectFileError(
     ListenerProfileLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileError,
+    comp_excs.InvalidComponentPyProjectFileError,
 ):
     """Base exception for all errors that occur due to an invalid `pyproject.toml` file
     during listener profile loading.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_PYPROJECT_FILE_ERROR"
+    code = "INVALID_LISTENER_PROFILE_PYPROJECT_FILE_ERROR"
 
 
-class InvalidListenerProfileProjectPyProjectFileTOMLError(
+class InvalidListenerProfilePyProjectFileTOMLError(
     ListenerProfileLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileTOMLError,
+    comp_excs.InvalidComponentPyProjectFileTOMLError,
 ):
     """Raised when the `pyproject.toml` file is not a valid TOML file during listener profile
     loading.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_PYPROJECT_FILE_TOML_ERROR"
+    code = "INVALID_LISTENER_PROFILE_PYPROJECT_FILE_TOML_ERROR"
 
 
-class InvalidListenerProfileProjectPyProjectFileDependencyError(
+class InvalidListenerProfilePyProjectFileDependencyError(
     ListenerProfileLoadingError,
-    comp_excs.InvalidComponentProjectPyProjectFileDependencyError,
+    comp_excs.InvalidComponentPyProjectFileDependencyError,
 ):
     """Raised when the `pyproject.toml` file contains an invalid dependency entry during
     listener profile loading.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
+    code = "INVALID_LISTENER_PROFILE_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
 
-class InvalidListenerProfileProjectFolderStructureError(
+class InvalidListenerProfileDirectoryStructureError(
     ListenerProfileLoadingError,
-    comp_excs.InvalidComponentProjectFolderStructureError,
+    comp_excs.InvalidComponentDirectoryStructureError,
 ):
-    """Base exception for all errors that occur due to an invalid listener profile root
+    """Base exception for all errors that occur due to an invalid listener profile
     directory structure during listener profile loading.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_FOLDER_STRUCTURE_ERROR"
+    code = "INVALID_LISTENER_PROFILE_DIRECTORY_STRUCTURE_ERROR"
 
 
-class ListenerProfileProjectManifestFileNotFoundError(
-    InvalidListenerProfileProjectFolderStructureError,
-    comp_excs.ComponentProjectManifestFileNotFoundError,
+class ListenerProfileManifestFileNotFoundError(
+    InvalidListenerProfileDirectoryStructureError,
+    comp_excs.ComponentManifestFileNotFoundError,
 ):
-    """Raised when the listener profile project manifest file is not found in the listener
-    profile root directory during listener profile loading.
+    """Raised when the listener profile manifest file is not found in the listener
+    profile directory during listener profile loading.
     """
 
-    code = "LISTENER_PROFILE_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
+    code = "LISTENER_PROFILE_MANIFEST_FILE_NOT_FOUND_ERROR"
 
 
-class ListenerProfileProjectEntryPointModuleNotFoundError(
-    InvalidListenerProfileProjectFolderStructureError,
-    comp_excs.ComponentProjectEntryPointModuleNotFoundError,
+class ListenerProfileEntryPointModuleNotFoundError(
+    InvalidListenerProfileDirectoryStructureError,
+    comp_excs.ComponentEntryPointModuleNotFoundError,
 ):
-    """Raised when the listener profile entry point module specified in the manifest is not
-    found in the listener profile root directory during listener profile loading.
+    """Raised when the listener profile entry point module specified in the manifest
+    file is not found in the listener profile directory during listener profile loading.
     """
 
-    code = "LISTENER_PROFILE_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
+    code = "LISTENER_PROFILE_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
 
-class InvalidListenerProfileProjectImplementationError(
+class InvalidListenerProfileImplementationError(
     ListenerProfileLoadingError,
-    comp_excs.InvalidComponentProjectImplementationError,
+    comp_excs.InvalidComponentImplementationError,
 ):
-    """Base exception for all errors that occur due to the listener profile project not
+    """Base exception for all errors that occur due to the listener profile not
     implementing the required interface during listener profile loading.
     """
 
-    code = "INVALID_LISTENER_PROFILE_PROJECT_IMPLEMENTATION_ERROR"
+    code = "INVALID_LISTENER_PROFILE_IMPLEMENTATION_ERROR"
 
 
-class ListenerProfileProjectSymbolNotFoundError(
-    InvalidListenerProfileProjectImplementationError,
-    comp_excs.ComponentProjectSymbolNotFoundError,
+class ListenerProfileSymbolNotFoundError(
+    InvalidListenerProfileImplementationError,
+    comp_excs.ComponentSymbolNotFoundError,
 ):
-    """Raised when the listener profile symbol name specified in the manifest is not found in
-    the listener profile entry point module during listener profile loading.
+    """Raised when the listener profile symbol name specified in the manifest file is
+    not found in the listener profile entry point module during listener profile loading.
     """
 
-    code = "LISTENER_PROFILE_PROJECT_SYMBOL_NOT_FOUND_ERROR"
+    code = "LISTENER_PROFILE_SYMBOL_NOT_FOUND_ERROR"
 
 
-class ListenerProfileProjectInterfaceError(
-    InvalidListenerProfileProjectImplementationError,
-    comp_excs.ComponentProjectInterfaceError,
+class ListenerProfileInterfaceError(
+    InvalidListenerProfileImplementationError,
+    comp_excs.ComponentInterfaceError,
 ):
     """Raised when the listener profile class does not implement the required interface during
     listener profile loading.
     """
 
-    code = "LISTENER_PROFILE_PROJECT_INTERFACE_ERROR"
+    code = "LISTENER_PROFILE_INTERFACE_ERROR"
 
 
-class InternalListenerProfileProjectError(
-    InvalidListenerProfileProjectImplementationError,
-    comp_excs.InternalComponentProjectError,
+class InternalListenerProfileError(
+    InvalidListenerProfileImplementationError,
+    comp_excs.InternalComponentError,
 ):
     """Raised when an unhandled exception from within the listener profile is raised during
     listener profile loading.
     """
 
-    code = "INTERNAL_LISTENER_PROFILE_PROJECT_ERROR"
+    code = "INTERNAL_LISTENER_PROFILE_ERROR"
 
 
 class IncompatibleListenerProfileFrameworkVersionError(

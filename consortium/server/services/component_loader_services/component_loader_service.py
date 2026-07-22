@@ -20,21 +20,21 @@ from consortium.server.exceptions.service_exceptions.components_service_exceptio
     ComponentDependencyError,
     ComponentDependencyNotFoundError,
     ComponentDependsOnInvalidComponentDependencyError,
+    ComponentEntryPointModuleNotFoundError,
+    ComponentInterfaceError,
     ComponentLoadingError,
+    ComponentManifestFileNotFoundError,
     ComponentNotFoundError,
-    ComponentProjectEntryPointModuleNotFoundError,
-    ComponentProjectInterfaceError,
-    ComponentProjectManifestFileNotFoundError,
-    ComponentProjectSymbolNotFoundError,
+    ComponentSymbolNotFoundError,
     DuplicateComponentLabelError,
     IncompatibleComponentDependencyVersionError,
     IncompatibleComponentFrameworkVersionError,
     IncompatibleThirdPartyDependencyVersionError,
-    InternalComponentProjectError,
-    InvalidComponentProjectManifestFileJSONError,
-    InvalidComponentProjectManifestFileSchemaError,
-    InvalidComponentProjectPyProjectFileDependencyError,
-    InvalidComponentProjectPyProjectFileTOMLError,
+    InternalComponentError,
+    InvalidComponentManifestFileJSONError,
+    InvalidComponentManifestFileSchemaError,
+    InvalidComponentPyProjectFileDependencyError,
+    InvalidComponentPyProjectFileTOMLError,
     ThirdPartyDependencyNotFoundError,
 )
 from consortium.server.services.paths_service import PathsService
@@ -53,37 +53,33 @@ from consortium.server.services.release_service import ReleaseService
 # the slots it wants replaced by its own subclasses.
 @dataclass(frozen=True)
 class ComponentLoadingExceptions:
-    manifest_file_not_found: type[ComponentProjectManifestFileNotFoundError] = (
-        ComponentProjectManifestFileNotFoundError
+    manifest_file_not_found: type[ComponentManifestFileNotFoundError] = (
+        ComponentManifestFileNotFoundError
     )
-    invalid_manifest_file_json: type[InvalidComponentProjectManifestFileJSONError] = (
-        InvalidComponentProjectManifestFileJSONError
+    invalid_manifest_file_json: type[InvalidComponentManifestFileJSONError] = (
+        InvalidComponentManifestFileJSONError
     )
-    invalid_manifest_file_schema: type[
-        InvalidComponentProjectManifestFileSchemaError
-    ] = InvalidComponentProjectManifestFileSchemaError
-    invalid_pyproject_file_toml: type[InvalidComponentProjectPyProjectFileTOMLError] = (
-        InvalidComponentProjectPyProjectFileTOMLError
+    invalid_manifest_file_schema: type[InvalidComponentManifestFileSchemaError] = (
+        InvalidComponentManifestFileSchemaError
+    )
+    invalid_pyproject_file_toml: type[InvalidComponentPyProjectFileTOMLError] = (
+        InvalidComponentPyProjectFileTOMLError
     )
     invalid_pyproject_file_dependency: type[
-        InvalidComponentProjectPyProjectFileDependencyError
-    ] = InvalidComponentProjectPyProjectFileDependencyError
+        InvalidComponentPyProjectFileDependencyError
+    ] = InvalidComponentPyProjectFileDependencyError
     third_party_dependency_not_found: type[ThirdPartyDependencyNotFoundError] = (
         ThirdPartyDependencyNotFoundError
     )
     incompatible_third_party_dependency_version: type[
         IncompatibleThirdPartyDependencyVersionError
     ] = IncompatibleThirdPartyDependencyVersionError
-    entry_point_module_not_found: type[
-        ComponentProjectEntryPointModuleNotFoundError
-    ] = ComponentProjectEntryPointModuleNotFoundError
-    symbol_not_found: type[ComponentProjectSymbolNotFoundError] = (
-        ComponentProjectSymbolNotFoundError
+    entry_point_module_not_found: type[ComponentEntryPointModuleNotFoundError] = (
+        ComponentEntryPointModuleNotFoundError
     )
-    interface_error: type[ComponentProjectInterfaceError] = (
-        ComponentProjectInterfaceError
-    )
-    internal_error: type[InternalComponentProjectError] = InternalComponentProjectError
+    symbol_not_found: type[ComponentSymbolNotFoundError] = ComponentSymbolNotFoundError
+    interface_error: type[ComponentInterfaceError] = ComponentInterfaceError
+    internal_error: type[InternalComponentError] = InternalComponentError
     incompatible_framework_version: type[IncompatibleComponentFrameworkVersionError] = (
         IncompatibleComponentFrameworkVersionError
     )
@@ -112,7 +108,7 @@ class ComponentLoaderService[Component]:
     # describes failures in the loader infrastructure itself (missing manifest,
     # bad entry point, etc.). Domain errors originate in the implementation being
     # loaded and carry their own precise semantics, so they must be re-raised
-    # directly rather than wrapped as InternalComponentProjectError.
+    # directly rather than wrapped as InternalComponentError.
     _component_framework_error: type[Exception] | tuple[type[Exception], ...]
     _manifest_json_schema: dict[str, JsonValue]
     # The set of exception classes this loader (and its registry) raise. Defaults to the
