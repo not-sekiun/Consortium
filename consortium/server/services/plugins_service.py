@@ -594,19 +594,19 @@ class PluginsService:
         # Recursively search through the framework's plugin project folders directory
         # to find all plugin project folders. If a plugin project folder is found that
         # is not already loaded (it failed to unload), load it.
-        for plugin_project_folder in self._plugins_directory.rglob("*"):
-            if plugin_project_folder.name != "manifest.json":
+        for directory in self._plugins_directory.rglob("*"):
+            if directory.name != "manifest.json":
                 continue
             plugin_loaded = False
             for plugin in self.get_all_plugins():
-                if plugin.root_directory.parent == plugin_project_folder.parent:
+                if plugin.root_directory.parent == directory.parent:
                     plugin_loaded = True
                     break
             if not plugin_loaded:
                 load_plugin_tasks.append(
                     asyncio.create_task(
                         self.load_plugin_from_directory(
-                            directory=plugin_project_folder.parent,
+                            directory=directory.parent,
                             ignore_enabled_flag=ignore_enabled_flag,
                         ),
                     ),

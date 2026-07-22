@@ -62,7 +62,7 @@ class PluginRegistryService(
         comp_excs.DuplicateComponentLabelError: DuplicatePluginLabelError,
     }
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
-        "component_project_folder": "root_directory",
+        "component_project_folder": "plugin_directory",
         "component_str": "plugin_str",
         "component_id": "plugin_id",
     }

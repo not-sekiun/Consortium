@@ -99,8 +99,8 @@ class InvalidPluginProjectManifestFileJSONError(
 
     code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
-    def __init__(self, plugin_project_folder: str):
-        super().__init__(component_project_folder=plugin_project_folder)
+    def __init__(self, plugin_directory: str):
+        super().__init__(component_project_folder=plugin_directory)
 
 
 class InvalidPluginProjectManifestFileSchemaError(
@@ -113,9 +113,9 @@ class InvalidPluginProjectManifestFileSchemaError(
 
     code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
 
-    def __init__(self, plugin_project_folder: str, json_schema_error_message: str):
+    def __init__(self, plugin_directory: str, json_schema_error_message: str):
         super().__init__(
-            component_project_folder=plugin_project_folder,
+            component_project_folder=plugin_directory,
             json_schema_error_message=json_schema_error_message,
         )
 
@@ -139,8 +139,8 @@ class InvalidPluginProjectPyProjectFileTOMLError(
 
     code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
-    def __init__(self, plugin_project_folder: str):
-        super().__init__(component_project_folder=plugin_project_folder)
+    def __init__(self, plugin_directory: str):
+        super().__init__(component_project_folder=plugin_directory)
 
 
 class InvalidPluginProjectPyProjectFileDependencyError(
@@ -153,9 +153,9 @@ class InvalidPluginProjectPyProjectFileDependencyError(
 
     code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
-    def __init__(self, plugin_project_folder: str, invalid_dependency_entry: str):
+    def __init__(self, plugin_directory: str, invalid_dependency_entry: str):
         super().__init__(
-            component_project_folder=plugin_project_folder,
+            component_project_folder=plugin_directory,
             invalid_dependency_entry=invalid_dependency_entry,
         )
 
@@ -181,8 +181,8 @@ class PluginProjectManifestFileNotFoundError(
 
     code = "PLUGIN_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
-    def __init__(self, plugin_project_folder: str):
-        super().__init__(component_project_folder=plugin_project_folder)
+    def __init__(self, plugin_directory: str):
+        super().__init__(component_project_folder=plugin_directory)
 
 
 class PluginProjectEntryPointModuleNotFoundError(
@@ -195,9 +195,9 @@ class PluginProjectEntryPointModuleNotFoundError(
 
     code = "PLUGIN_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
-    def __init__(self, plugin_project_folder: str, entry_point_module: str):
+    def __init__(self, plugin_directory: str, entry_point_module: str):
         super().__init__(
-            component_project_folder=plugin_project_folder,
+            component_project_folder=plugin_directory,
             entry_point_module=entry_point_module,
         )
 
@@ -225,12 +225,12 @@ class PluginProjectSymbolNotFoundError(
 
     def __init__(
         self,
-        plugin_project_folder: str,
+        plugin_directory: str,
         entry_point_symbol: str,
         entry_point_module: str,
     ):
         super().__init__(
-            component_project_folder=plugin_project_folder,
+            component_project_folder=plugin_directory,
             entry_point_symbol=entry_point_symbol,
             entry_point_module=entry_point_module,
         )
@@ -248,11 +248,11 @@ class PluginProjectInterfaceError(
 
     def __init__(
         self,
-        plugin_project_folder: str,
+        plugin_directory: str,
         entry_point_symbol: str,
     ):
         super().__init__(
-            component_project_folder=plugin_project_folder,
+            component_project_folder=plugin_directory,
             entry_point_symbol=entry_point_symbol,
         )
 
@@ -269,11 +269,11 @@ class InternalPluginProjectError(
 
     def __init__(
         self,
-        plugin_project_folder: str,
+        plugin_directory: str,
         internal_error_message: str,
     ):
         super().__init__(
-            component_project_folder=plugin_project_folder,
+            component_project_folder=plugin_directory,
             internal_error_message=internal_error_message,
         )
 
@@ -357,11 +357,11 @@ class ThirdPartyDependencyNotFoundError(
 
     def __init__(
         self,
-        plugin_project_folder: str,
+        plugin_directory: str,
         third_party_dependency_name: str,
     ):
         super().__init__(
-            component_project_folder=plugin_project_folder,
+            component_project_folder=plugin_directory,
             third_party_dependency_name=third_party_dependency_name,
         )
 
@@ -378,13 +378,13 @@ class IncompatibleThirdPartyDependencyVersionError(
 
     def __init__(
         self,
-        plugin_project_folder: str,
+        plugin_directory: str,
         third_party_dependency_name: str,
         required_version: str,
         installed_version: str,
     ):
         super().__init__(
-            component_project_folder=plugin_project_folder,
+            component_project_folder=plugin_directory,
             third_party_dependency_name=third_party_dependency_name,
             required_version=required_version,
             installed_version=installed_version,
