@@ -194,3 +194,15 @@ class TaskMessagesQueue[T: TaskMessage]:
                     self._queue.get_nowait()
                 self._current_estimated_memory_size = 0
             self._condition.notify_all()
+
+        # Shutdown is a state change the agent wide fan-in must observe, exactly like a
+        # put. A get_next_task_message_any waiter parked on `_outbox_activity` is not woken
+        # by the queue-local notify above, so without this it would sleep until an
+        # unrelated outbox put (or its own timeout) even though this outbox has now reached
+        # end of stream. Waking it lets it re-scan, see is_at_end_of_stream, and prune this
+        # outbox. Done after releasing `self._condition` so this queue's lock and the
+        # agent's `_outbox_activity` are never held at once, preserving the lock ordering
+        # that put relies on.
+        if self._agent is not None:
+            async with self._agent._outbox_activity:
+                self._agent._outbox_activity.notify_all()
