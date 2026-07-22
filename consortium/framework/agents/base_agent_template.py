@@ -90,7 +90,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             set of resolved option values before generator creation.
     """
 
-    _METADATA_MODEL = _AgentTemplateModel
+    _metadata_model = _AgentTemplateModel
 
     # Raise agent template framework exceptions directly from the shared metadata validation
     # instead of raising generic component exceptions and remapping them in __init_subclass__.

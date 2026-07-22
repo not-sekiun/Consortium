@@ -22,7 +22,6 @@ class ComponentsFrameworkError(BaseFrameworkError):
         detail: dict[str, JsonValue] | None = None,
         **kwargs,
     ):
-        self._kwargs = kwargs
         if message:
             super().__init__(message=message, detail=detail)
         else:

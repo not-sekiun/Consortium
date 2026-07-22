@@ -55,7 +55,6 @@ class ComponentsServiceError(BaseServiceError):
     _MESSAGE = ""
 
     def __init__(self, **kwargs):
-        self._kwargs = kwargs
         super().__init__(message=self._MESSAGE.format(**kwargs))
 
     def __init_subclass__(cls, **kwargs):

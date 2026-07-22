@@ -87,7 +87,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             set of resolved option values before listener creation.
     """
 
-    _METADATA_MODEL = _ListenerTemplateModel
+    _metadata_model = _ListenerTemplateModel
 
     # Raise listener template framework exceptions directly from the shared metadata
     # validation instead of raising generic component exceptions and remapping them in

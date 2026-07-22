@@ -68,7 +68,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             plugin's name and ID for easy identification in logs.
     """
 
-    _METADATA_MODEL = _PluginModel
+    _metadata_model = _PluginModel
 
     # Raise plugin framework exceptions directly from the shared metadata validation instead
     # of raising generic component exceptions and remapping them in __init_subclass__.
