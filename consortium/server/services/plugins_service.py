@@ -509,7 +509,7 @@ class PluginsService:
         number_of_unloaded_plugins = 0
         unload_plugin_tasks = []
         for plugin in self.get_all_plugins():
-            if plugin.root_directory.resolve().relative_to(
+            if plugin.root_directory.resolve().is_relative_to(
                 self._plugins_directory.resolve()
             ):
                 unload_plugin_tasks.append(

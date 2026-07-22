@@ -14,7 +14,7 @@ class EventHook(BaseEventHook):
         "This event hook forwards event data for any set of specific events to any set "
         "of arbitrarily specified webhooks. The particular events it listens for and "
         "webhooks it sends data to are configured through the `config.json` file in "
-        "the event hook's project folder. Currently supports Discord, Slack, and "
+        "the event hook's root directory. Currently supports Discord, Slack, and "
         "generic HTTP POST webhooks."
     )
     version = "0.1.0"
@@ -32,7 +32,7 @@ class EventHook(BaseEventHook):
             self.logger.error(
                 "Failed to load webhook sender event hook configuration file. "
                 "Configuration file `config.json` not found at the event hook's "
-                f"project folder `{self.root_directory}`.",
+                f"root directory `{self.root_directory}`.",
             )
             return
         except json.decoder.JSONDecodeError:

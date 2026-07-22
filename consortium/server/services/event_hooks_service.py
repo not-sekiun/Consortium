@@ -437,15 +437,15 @@ class EventHooksService:
         )
 
     @log_and_propagate_error_on_service_method
-    def unload_framework_event_hooks(self) -> None:
+    async def unload_framework_event_hooks(self) -> None:
         """Unloads all event hooks that were loaded from the framework's event hooks directory."""
         self._logger.info("Unloading framework event hooks...")
         unloaded_event_hooks = 0
         for event_hook in self.get_all_event_hooks():
-            if event_hook.root_directory.resolve().relative_to(
+            if event_hook.root_directory.resolve().is_relative_to(
                 self._event_hooks_directory.resolve()
             ):
-                self.unload_event_hook_by_event_hook_id(
+                await self.unload_event_hook_by_event_hook_id(
                     event_hook_id=str(event_hook.event_hook_id),
                 )
                 unloaded_event_hooks += 1
@@ -461,7 +461,7 @@ class EventHooksService:
     ) -> None:
         """Unloads all framework event hooks then reloads them from the event hooks directory."""
         self._logger.info("Reloading framework event hooks...")
-        self.unload_framework_event_hooks()
+        await self.unload_framework_event_hooks()
         await self.load_framework_event_hooks()
         self._logger.info("Reloaded framework event hooks")
 
