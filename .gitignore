@@ -29,4 +29,4 @@ site/
 test_agents/
 /test*.py
 /TODO.md
-/HANDOFF.md
+/HANDOFF*.md
