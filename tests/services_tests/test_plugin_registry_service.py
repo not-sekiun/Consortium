@@ -40,7 +40,7 @@ def _make_mock_loader():
 def _make_plugin(autostart=False, state=State.STOPPED):
     plugin = MagicMock()
     plugin.plugin_id = uuid.uuid4()
-    plugin.plugin_project_folder = pathlib.Path("/tmp/mock_plugin")
+    plugin.root_directory = pathlib.Path("/tmp/mock_plugin")
     plugin.label = "test.plugin"
     plugin.autostart = autostart
     plugin.status = MagicMock()
@@ -73,9 +73,7 @@ def test_get_component_id(registry):
 
 def test_get_component_project_folder(registry):
     plugin = _make_plugin()
-    assert (
-        registry._get_component_project_folder(plugin) == plugin.plugin_project_folder
-    )
+    assert registry._get_component_project_folder(plugin) == plugin.root_directory
 
 
 # --- _component_load_procedure ---

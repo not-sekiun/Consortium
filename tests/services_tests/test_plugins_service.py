@@ -51,7 +51,7 @@ def test_repr(plugins_service):
     assert repr(plugins_service) == "PluginsService()"
 
 
-# --- get_plugin_from_plugin_project_folder ---
+# --- get_plugin_from_directory ---
 
 
 def test_get_plugin_from_folder_enabled(plugins_service):
@@ -77,7 +77,7 @@ def test_get_plugin_from_folder_disabled_with_flag_loads(plugins_service):
     assert result is not None
 
 
-# --- get_plugins_from_plugin_project_folder_directories ---
+# --- get_all_plugins_from_directory ---
 
 
 def test_get_plugins_from_directories(plugins_service):
@@ -101,7 +101,7 @@ def test_register_plugin_delegates(plugins_service_with_mock_registry):
     registry.register_component.assert_called_once_with(component=mock_plugin)
 
 
-# --- register_plugin_from_plugin_project_folder ---
+# --- register_plugin_from_directory ---
 
 
 def test_register_plugin_from_folder_delegates(plugins_service_with_mock_registry):
@@ -117,7 +117,7 @@ def test_register_plugin_from_folder_delegates(plugins_service_with_mock_registr
     assert result == mock_plugin
 
 
-# --- load_plugin_from_plugin_project_folder ---
+# --- load_plugin_from_directory ---
 
 
 @pytest.mark.anyio
