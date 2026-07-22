@@ -30,6 +30,12 @@ Exception hierarchy:
             - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.ComponentDependencyNotRunningError]
         - [`PluginUnloadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginUnloadingError]
             - [`PluginStopTimeoutError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginStopTimeoutError]
+
+The loading, dependency, and registry exceptions below carry no `__init__` of their own: they
+are constructed by the shared component loader/registry pipeline with the generic component
+keyword arguments (`component_directory`, `component_str`, `component_id`, ...) inherited from
+their `components_service_exceptions` base. Only the unloading errors, which are raised directly
+by the plugin registry with a bespoke message, define their own constructor.
 """
 
 from consortium.server.exceptions.service_exceptions import (
@@ -66,9 +72,6 @@ class PluginNotFoundError(
 
     _COMPONENT_TYPE = "plugin"
 
-    def __init__(self, plugin_id: str):
-        super().__init__(component_id=plugin_id)
-
 
 class PluginLoadingError(PluginsServiceError, comp_excs.ComponentLoadingError):
     """Base exception for all errors that occur during the loading of a plugin."""
@@ -99,9 +102,6 @@ class InvalidPluginProjectManifestFileJSONError(
 
     code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
-    def __init__(self, plugin_directory: str):
-        super().__init__(component_directory=plugin_directory)
-
 
 class InvalidPluginProjectManifestFileSchemaError(
     InvalidPluginProjectManifestFileError,
@@ -112,12 +112,6 @@ class InvalidPluginProjectManifestFileSchemaError(
     """
 
     code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
-
-    def __init__(self, plugin_directory: str, json_schema_error_message: str):
-        super().__init__(
-            component_directory=plugin_directory,
-            json_schema_error_message=json_schema_error_message,
-        )
 
 
 class InvalidPluginProjectPyProjectFileError(
@@ -139,9 +133,6 @@ class InvalidPluginProjectPyProjectFileTOMLError(
 
     code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
-    def __init__(self, plugin_directory: str):
-        super().__init__(component_directory=plugin_directory)
-
 
 class InvalidPluginProjectPyProjectFileDependencyError(
     PluginLoadingError,
@@ -152,12 +143,6 @@ class InvalidPluginProjectPyProjectFileDependencyError(
     """
 
     code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
-
-    def __init__(self, plugin_directory: str, invalid_dependency_entry: str):
-        super().__init__(
-            component_directory=plugin_directory,
-            invalid_dependency_entry=invalid_dependency_entry,
-        )
 
 
 class InvalidPluginProjectFolderStructureError(
@@ -181,9 +166,6 @@ class PluginProjectManifestFileNotFoundError(
 
     code = "PLUGIN_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
-    def __init__(self, plugin_directory: str):
-        super().__init__(component_directory=plugin_directory)
-
 
 class PluginProjectEntryPointModuleNotFoundError(
     InvalidPluginProjectFolderStructureError,
@@ -194,12 +176,6 @@ class PluginProjectEntryPointModuleNotFoundError(
     """
 
     code = "PLUGIN_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
-
-    def __init__(self, plugin_directory: str, entry_point_module: str):
-        super().__init__(
-            component_directory=plugin_directory,
-            entry_point_module=entry_point_module,
-        )
 
 
 class InvalidPluginProjectImplementationError(
@@ -223,18 +199,6 @@ class PluginProjectSymbolNotFoundError(
 
     code = "PLUGIN_PROJECT_SYMBOL_NOT_FOUND_ERROR"
 
-    def __init__(
-        self,
-        plugin_directory: str,
-        entry_point_symbol: str,
-        entry_point_module: str,
-    ):
-        super().__init__(
-            component_directory=plugin_directory,
-            entry_point_symbol=entry_point_symbol,
-            entry_point_module=entry_point_module,
-        )
-
 
 class PluginProjectInterfaceError(
     InvalidPluginProjectImplementationError,
@@ -245,16 +209,6 @@ class PluginProjectInterfaceError(
     """
 
     code = "PLUGIN_PROJECT_INTERFACE_ERROR"
-
-    def __init__(
-        self,
-        plugin_directory: str,
-        entry_point_symbol: str,
-    ):
-        super().__init__(
-            component_directory=plugin_directory,
-            entry_point_symbol=entry_point_symbol,
-        )
 
 
 class InternalPluginProjectError(
@@ -267,16 +221,6 @@ class InternalPluginProjectError(
 
     code = "INTERNAL_PLUGIN_PROJECT_ERROR"
 
-    def __init__(
-        self,
-        plugin_directory: str,
-        internal_error_message: str,
-    ):
-        super().__init__(
-            component_directory=plugin_directory,
-            internal_error_message=internal_error_message,
-        )
-
 
 class IncompatiblePluginFrameworkVersionError(
     PluginLoadingError,
@@ -287,18 +231,6 @@ class IncompatiblePluginFrameworkVersionError(
     """
 
     code = "INCOMPATIBLE_PLUGIN_FRAMEWORK_VERSION_ERROR"
-
-    def __init__(
-        self,
-        plugin_str: str,
-        required_version: str,
-        current_version: str,
-    ):
-        super().__init__(
-            component_str=plugin_str,
-            required_version=required_version,
-            current_version=current_version,
-        )
 
 
 class PluginAlreadyRegisteredError(
@@ -311,9 +243,6 @@ class PluginAlreadyRegisteredError(
 
     code = "PLUGIN_ALREADY_REGISTERED_ERROR"
 
-    def __init__(self, plugin_str: str, plugin_id: str):
-        super().__init__(component_str=plugin_str, component_id=plugin_id)
-
 
 class DuplicatePluginLabelError(
     PluginLoadingError,
@@ -324,12 +253,6 @@ class DuplicatePluginLabelError(
     """
 
     code = "DUPLICATE_PLUGIN_LABEL_ERROR"
-
-    def __init__(self, plugin_str: str, label: str):
-        super().__init__(
-            component_str=plugin_str,
-            label=label,
-        )
 
 
 class PluginDependencyError(
@@ -355,16 +278,6 @@ class ThirdPartyDependencyNotFoundError(
 
     code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
-    def __init__(
-        self,
-        plugin_directory: str,
-        third_party_dependency_name: str,
-    ):
-        super().__init__(
-            component_directory=plugin_directory,
-            third_party_dependency_name=third_party_dependency_name,
-        )
-
 
 class IncompatibleThirdPartyDependencyVersionError(
     PluginDependencyError,
@@ -375,20 +288,6 @@ class IncompatibleThirdPartyDependencyVersionError(
     """
 
     code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
-
-    def __init__(
-        self,
-        plugin_directory: str,
-        third_party_dependency_name: str,
-        required_version: str,
-        installed_version: str,
-    ):
-        super().__init__(
-            component_directory=plugin_directory,
-            third_party_dependency_name=third_party_dependency_name,
-            required_version=required_version,
-            installed_version=installed_version,
-        )
 
 
 class ComponentDependencyNotFoundError(
@@ -401,16 +300,6 @@ class ComponentDependencyNotFoundError(
 
     code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
 
-    def __init__(
-        self,
-        plugin_str: str,
-        missing_dependency: str,
-    ):
-        super().__init__(
-            component_str=plugin_str,
-            missing_dependency=missing_dependency,
-        )
-
 
 class IncompatibleComponentDependencyVersionError(
     PluginDependencyError,
@@ -421,20 +310,6 @@ class IncompatibleComponentDependencyVersionError(
     """
 
     code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
-
-    def __init__(
-        self,
-        plugin_str: str,
-        incompatible_dependency: str,
-        required_version: str,
-        installed_version: str,
-    ):
-        super().__init__(
-            component_str=plugin_str,
-            incompatible_dependency=incompatible_dependency,
-            required_version=required_version,
-            installed_version=installed_version,
-        )
 
 
 class PluginDependsOnInvalidComponentDependencyError(
@@ -447,16 +322,6 @@ class PluginDependsOnInvalidComponentDependencyError(
 
     code = "PLUGIN_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
 
-    def __init__(
-        self,
-        plugin_str: str,
-        invalid_dependency: str,
-    ):
-        super().__init__(
-            component_str=plugin_str,
-            invalid_dependency=invalid_dependency,
-        )
-
 
 class ComponentDependencyNotRunningError(
     PluginDependencyError,
@@ -467,16 +332,6 @@ class ComponentDependencyNotRunningError(
     """
 
     code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        plugin_str: str,
-        not_running_dependency: str,
-    ):
-        super().__init__(
-            component_str=plugin_str,
-            not_running_dependency=not_running_dependency,
-        )
 
 
 class PluginUnloadingError(PluginsServiceError):

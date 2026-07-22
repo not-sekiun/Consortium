@@ -8,6 +8,9 @@ from consortium.framework._core.components.component_status import State
 from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
     PluginStopTimeoutError,
 )
+from consortium.server.services.component_loader_services.component_loader_service import (
+    ComponentExceptions,
+)
 from consortium.server.services.component_registry_services.plugin_registry_service import (
     PluginRegistryService,
 )
@@ -34,6 +37,7 @@ def _make_mock_loader():
         [],
         [],
     )
+    loader._component_exceptions = ComponentExceptions()
     return loader
 
 

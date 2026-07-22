@@ -3,69 +3,22 @@ import uuid
 
 from consortium.framework._core.components.component_status import State
 from consortium.framework.plugins.base_plugin import BasePlugin
-from consortium.server.exceptions.service_exceptions import (
-    components_service_exceptions as comp_excs,
-)
 from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
-    ComponentDependencyNotFoundError,
-    ComponentDependencyNotRunningError,
-    DuplicatePluginLabelError,
-    IncompatibleComponentDependencyVersionError,
-    IncompatiblePluginFrameworkVersionError,
-    IncompatibleThirdPartyDependencyVersionError,
-    InternalPluginProjectError,
-    InvalidPluginProjectManifestFileJSONError,
-    InvalidPluginProjectManifestFileSchemaError,
-    InvalidPluginProjectPyProjectFileDependencyError,
-    InvalidPluginProjectPyProjectFileError,
-    InvalidPluginProjectPyProjectFileTOMLError,
-    PluginAlreadyRegisteredError,
-    PluginDependsOnInvalidComponentDependencyError,
     PluginLoadingError,
-    PluginNotFoundError,
-    PluginProjectEntryPointModuleNotFoundError,
-    PluginProjectInterfaceError,
-    PluginProjectManifestFileNotFoundError,
-    PluginProjectSymbolNotFoundError,
     PluginStopTimeoutError,
-    ThirdPartyDependencyNotFoundError,
 )
-from consortium.server.services.component_registry_services.exception_remapping_component_registry_service import (
-    ExceptionRemappingComponentRegistryService,
+from consortium.server.services.component_registry_services.component_registry_service import (
+    ComponentRegistryService,
 )
 
 
+# The plugin loader carries a plugin exception set, so loading and registry errors are
+# raised as plugin types directly. This registry therefore extends the plain
+# ComponentRegistryService rather than the exception remapping variant that the other
+# domains still use.
 class PluginRegistryService(
-    ExceptionRemappingComponentRegistryService[BasePlugin, PluginLoadingError],
+    ComponentRegistryService[BasePlugin, PluginLoadingError],
 ):
-    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP = {
-        comp_excs.ComponentProjectManifestFileNotFoundError: PluginProjectManifestFileNotFoundError,
-        comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidPluginProjectManifestFileJSONError,
-        comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidPluginProjectManifestFileSchemaError,
-        comp_excs.InvalidComponentProjectPyProjectFileError: InvalidPluginProjectPyProjectFileError,
-        comp_excs.InvalidComponentProjectPyProjectFileTOMLError: InvalidPluginProjectPyProjectFileTOMLError,
-        comp_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
-        comp_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
-        comp_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidPluginProjectPyProjectFileDependencyError,
-        comp_excs.ComponentProjectEntryPointModuleNotFoundError: PluginProjectEntryPointModuleNotFoundError,
-        comp_excs.ComponentProjectSymbolNotFoundError: PluginProjectSymbolNotFoundError,
-        comp_excs.ComponentProjectInterfaceError: PluginProjectInterfaceError,
-        comp_excs.IncompatibleComponentFrameworkVersionError: IncompatiblePluginFrameworkVersionError,
-        comp_excs.InternalComponentProjectError: InternalPluginProjectError,
-        comp_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
-        comp_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
-        comp_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
-        comp_excs.ComponentDependsOnInvalidComponentDependencyError: PluginDependsOnInvalidComponentDependencyError,
-        comp_excs.ComponentNotFoundError: PluginNotFoundError,
-        comp_excs.ComponentAlreadyRegisteredError: PluginAlreadyRegisteredError,
-        comp_excs.DuplicateComponentLabelError: DuplicatePluginLabelError,
-    }
-    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
-        "component_directory": "plugin_directory",
-        "component_str": "plugin_str",
-        "component_id": "plugin_id",
-    }
-
     def _get_component_id(self, component: BasePlugin) -> uuid.UUID:
         return component.plugin_id
 
