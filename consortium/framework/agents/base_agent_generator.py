@@ -109,7 +109,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
                     method_name=method_name,
                 )
 
-        cls.project_folder = pathlib.Path(sys.modules[cls.__module__].__file__).parent
+        cls.root_directory = pathlib.Path(sys.modules[cls.__module__].__file__).parent
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         expected_attrs_and_types_map = get_type_hints(cls)

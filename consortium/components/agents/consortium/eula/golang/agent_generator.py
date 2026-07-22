@@ -19,7 +19,7 @@ class SetupDockerContainer(BaseAgentGeneratorBuildStep):
     async def build(self, parameters: dict) -> None:
         command = ["docker", "build", "-t", "agent-builder", "."]
         output = await run_command(
-            *command, working_dir=self.project_folder / "agent_source"
+            *command, working_dir=self.root_directory / "agent_source"
         )
         if output.return_code != 0:
             raise AgentGeneratorBuildStepRuntimeError(
@@ -63,7 +63,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
 
         for cmd in commands:
             output = await run_command(
-                *cmd, working_dir=self.project_folder / "agent_source"
+                *cmd, working_dir=self.root_directory / "agent_source"
             )
             if output.return_code != 0:
                 raise AgentGeneratorBuildStepRuntimeError(
@@ -78,7 +78,7 @@ class ExportAgent(BaseAgentGeneratorBuildStep):
 
     async def build(self, parameters: dict) -> None:
         self.agent_templates_payload_service.add_payload_file(
-            path=self.project_folder / "agent_source" / "agent",
+            path=self.root_directory / "agent_source" / "agent",
             name=parameters["file_name"],
             build_parameters=parameters,
         )  # Moves the file instead of copy so no cleanup is necessary afterwards
