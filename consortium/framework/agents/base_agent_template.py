@@ -11,10 +11,8 @@ from pydantic import ConfigDict, JsonValue
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.components import (
     ComponentMetadata,
+    ComponentMetadataExceptions,
     ComponentMetadataModel,
-)
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
 )
 from consortium.framework._core.framework_exceptions.agent_templates_framework_exceptions import (
     AgentTemplateOptionNotFoundError,
@@ -33,7 +31,6 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
 )
 from consortium.framework._core.utils import (
     format_docstring_to_single_line,
-    remap_exception,
 )
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_type import BaseAgentType
@@ -95,18 +92,16 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
 
     _METADATA_MODEL = _AgentTemplateModel
 
-    _COMPONENT_METADATA_EXCEPTION_MAP = {
-        components_framework_exceptions.MissingComponentConfigurationParameterError: MissingAgentTemplateConfigurationParameterError,
-        components_framework_exceptions.EmptyComponentLabelError: EmptyAgentTemplateLabelError,
-        components_framework_exceptions.InvalidComponentVersionError: InvalidAgentTemplateVersionError,
-        components_framework_exceptions.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
-        components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError: InvalidAgentTemplateDependencyVersionSpecifierError,
-        components_framework_exceptions.InvalidComponentConfigurationParameterTypeError: InvalidAgentTemplateConfigurationParameterTypeError,
-    }
-    _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
-        "component_str": "agent_template_str",
-        "component_filepath": "agent_template_filepath",
-    }
+    # Raise agent template framework exceptions directly from the shared metadata validation
+    # instead of raising generic component exceptions and remapping them in __init_subclass__.
+    _component_metadata_exceptions = ComponentMetadataExceptions(
+        missing_configuration_parameter=MissingAgentTemplateConfigurationParameterError,
+        invalid_configuration_parameter_type=InvalidAgentTemplateConfigurationParameterTypeError,
+        empty_label=EmptyAgentTemplateLabelError,
+        invalid_version=InvalidAgentTemplateVersionError,
+        invalid_framework_version_specifier=InvalidFrameworkVersionSpecifierError,
+        invalid_dependency_version_specifier=InvalidAgentTemplateDependencyVersionSpecifierError,
+    )
 
     agent_generator: type[BaseAgentGenerator]
     agent_type: type[BaseAgentType]
@@ -122,15 +117,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
         cls.compatible_listener_types = cls.compatible_listener_types or set()
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
-        try:
-            cls._validate_metadata()
-        except components_framework_exceptions.ComponentsFrameworkError as exc:
-            raise remap_exception(
-                original_exception=exc,
-                original_kwargs=exc._kwargs,
-                exception_map=cls._COMPONENT_METADATA_EXCEPTION_MAP,
-                exception_kwargs_map=cls._COMPONENT_METADATA_EXCEPTION_KWARGS_MAP,
-            ) from None
+        cls._validate_metadata()
 
         # Check that options do not have duplicate names.
         option_names = []
@@ -147,7 +134,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             function_signature = signature(cls.validating_function)
             if len(function_signature.parameters) != 1:
                 raise InvalidAgentTemplateConfigurationParameterTypeError(
-                    agent_template_str=cls.name,
+                    component_str=cls.name,
                     parameter_name="validating_function",
                     parameter_type=get_type_hints(cls)["validating_function"],
                 )

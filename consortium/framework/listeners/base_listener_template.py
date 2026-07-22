@@ -12,10 +12,8 @@ from pydantic import ConfigDict, JsonValue
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.components import (
     ComponentMetadata,
+    ComponentMetadataExceptions,
     ComponentMetadataModel,
-)
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
 )
 from consortium.framework._core.framework_exceptions.listener_templates_framework_exceptions import (
     DuplicateListenerTemplateOptionNameError,
@@ -34,7 +32,6 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
 )
 from consortium.framework._core.utils import (
     format_docstring_to_single_line,
-    remap_exception,
 )
 from consortium.framework.framework_types import (
     Primitive,
@@ -92,18 +89,17 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
 
     _METADATA_MODEL = _ListenerTemplateModel
 
-    _COMPONENT_METADATA_EXCEPTION_MAP = {
-        components_framework_exceptions.MissingComponentConfigurationParameterError: MissingListenerTemplateConfigurationParameterError,
-        components_framework_exceptions.EmptyComponentLabelError: EmptyListenerTemplateLabelError,
-        components_framework_exceptions.InvalidComponentVersionError: InvalidListenerTemplateVersionError,
-        components_framework_exceptions.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
-        components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError: InvalidListenerTemplateDependencyVersionSpecifierError,
-        components_framework_exceptions.InvalidComponentConfigurationParameterTypeError: InvalidListenerTemplateConfigurationParameterTypeError,
-    }
-    _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
-        "component_str": "listener_template_str",
-        "component_filepath": "listener_template_filepath",
-    }
+    # Raise listener template framework exceptions directly from the shared metadata
+    # validation instead of raising generic component exceptions and remapping them in
+    # __init_subclass__.
+    _component_metadata_exceptions = ComponentMetadataExceptions(
+        missing_configuration_parameter=MissingListenerTemplateConfigurationParameterError,
+        invalid_configuration_parameter_type=InvalidListenerTemplateConfigurationParameterTypeError,
+        empty_label=EmptyListenerTemplateLabelError,
+        invalid_version=InvalidListenerTemplateVersionError,
+        invalid_framework_version_specifier=InvalidFrameworkVersionSpecifierError,
+        invalid_dependency_version_specifier=InvalidListenerTemplateDependencyVersionSpecifierError,
+    )
 
     listener: type[BaseListener]
     listener_type: type[BaseListenerType]
@@ -120,15 +116,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         cls.registered_compatible_agent_types = set()
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
-        try:
-            cls._validate_metadata()
-        except components_framework_exceptions.ComponentsFrameworkError as exc:
-            raise remap_exception(
-                original_exception=exc,
-                original_kwargs=exc._kwargs,
-                exception_map=cls._COMPONENT_METADATA_EXCEPTION_MAP,
-                exception_kwargs_map=cls._COMPONENT_METADATA_EXCEPTION_KWARGS_MAP,
-            ) from None
+        cls._validate_metadata()
 
         # Check that options do not have duplicate names.
         option_names = []
@@ -145,7 +133,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             function_signature = signature(cls.validating_function)
             if len(function_signature.parameters) != 1:
                 raise InvalidListenerTemplateConfigurationParameterTypeError(
-                    listener_template_str=cls.name,
+                    component_str=cls.name,
                     parameter_name="validating_function",
                     parameter_type=get_type_hints(cls)["validating_function"],
                 )

@@ -41,18 +41,6 @@ class InvalidEventHookConfigurationParameterTypeError(
 
     code = "INVALID_EVENT_HOOK_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
-    def __init__(
-        self,
-        event_hook_str: str,
-        parameter_name: str,
-        parameter_type: str,
-    ):
-        super().__init__(
-            component_str=event_hook_str,
-            parameter_name=parameter_name,
-            parameter_type=parameter_type,
-        )
-
 
 class MissingEventHookConfigurationParameterError(
     MissingComponentConfigurationParameterError,
@@ -63,12 +51,6 @@ class MissingEventHookConfigurationParameterError(
     """
 
     code = "MISSING_EVENT_HOOK_CONFIGURATION_PARAMETER_ERROR"
-
-    def __init__(self, parameter_name: str, event_hook_str: str):
-        super().__init__(
-            component_str=event_hook_str,
-            parameter_name=parameter_name,
-        )
 
 
 class EmptyEventHookLabelError(
@@ -81,9 +63,6 @@ class EmptyEventHookLabelError(
 
     code = "EMPTY_EVENT_HOOK_LABEL_ERROR"
 
-    def __init__(self, event_hook_filepath: str):
-        super().__init__(component_filepath=event_hook_filepath)
-
 
 class InvalidEventHookVersionError(
     InvalidComponentVersionError,
@@ -94,12 +73,6 @@ class InvalidEventHookVersionError(
     """
 
     code = "INVALID_EVENT_HOOK_VERSION_ERROR"
-
-    def __init__(self, event_hook_str: str, version: str):
-        super().__init__(
-            component_str=event_hook_str,
-            version=version,
-        )
 
 
 class InvalidFrameworkVersionSpecifierError(
@@ -113,12 +86,6 @@ class InvalidFrameworkVersionSpecifierError(
 
     code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
 
-    def __init__(self, event_hook_str: str, framework_version_specifier: str):
-        super().__init__(
-            component_str=event_hook_str,
-            framework_version_specifier=framework_version_specifier,
-        )
-
 
 class InvalidEventHookDependencyVersionSpecifierError(
     InvalidComponentDependencyVersionSpecifierError,
@@ -130,13 +97,3 @@ class InvalidEventHookDependencyVersionSpecifierError(
     """
 
     code = "INVALID_EVENT_HOOK_DEPENDENCY_VERSION_SPECIFIER_ERROR"
-
-    def __init__(
-        self,
-        event_hook_str: str,
-        invalid_dependency_entry: str,
-    ):
-        super().__init__(
-            component_str=event_hook_str,
-            invalid_dependency_entry=invalid_dependency_entry,
-        )

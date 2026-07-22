@@ -3,19 +3,6 @@ from collections.abc import Callable
 from typing import Any
 
 
-def remap_exception(
-    original_exception: Exception,
-    original_kwargs: dict[str, Any],
-    exception_map: dict[type[Exception], type[Exception]],
-    exception_kwargs_map: dict[str, str],
-) -> BaseException:
-    remapped_kwargs = {
-        exception_kwargs_map.get(k, k): v for k, v in original_kwargs.items()
-    }
-    remapped_exception_class = exception_map[type(original_exception)]
-    return remapped_exception_class(**remapped_kwargs)
-
-
 # Automatically "intelligently" formats indented docstrings to a single line string by
 # replacing newline characters with empty spaces if a line ends with a space or
 # automatically adding a space if the newline does not end with a space.

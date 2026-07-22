@@ -43,18 +43,6 @@ class InvalidListenerTemplateConfigurationParameterTypeError(
 
     code = "INVALID_LISTENER_TEMPLATE_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
-    def __init__(
-        self,
-        listener_template_str: str,
-        parameter_name: str,
-        parameter_type: str,
-    ):
-        super().__init__(
-            component_str=listener_template_str,
-            parameter_name=parameter_name,
-            parameter_type=parameter_type,
-        )
-
 
 class MissingListenerTemplateConfigurationParameterError(
     MissingComponentConfigurationParameterError,
@@ -66,12 +54,6 @@ class MissingListenerTemplateConfigurationParameterError(
 
     code = "MISSING_LISTENER_TEMPLATE_CONFIGURATION_PARAMETER_ERROR"
 
-    def __init__(self, listener_template_str: str, parameter_name: str):
-        super().__init__(
-            component_str=listener_template_str,
-            parameter_name=parameter_name,
-        )
-
 
 class EmptyListenerTemplateLabelError(
     EmptyComponentLabelError,
@@ -82,9 +64,6 @@ class EmptyListenerTemplateLabelError(
     """
 
     code = "EMPTY_LISTENER_TEMPLATE_LABEL_ERROR"
-
-    def __init__(self, listener_template_str_filepath: str):
-        super().__init__(component_filepath=listener_template_str_filepath)
 
 
 class InvalidListenerTemplateVersionError(
@@ -98,12 +77,6 @@ class InvalidListenerTemplateVersionError(
 
     code = "INVALID_LISTENER_TEMPLATE_VERSION_ERROR"
 
-    def __init__(self, listener_template_str: str, version: str):
-        super().__init__(
-            component_str=listener_template_str,
-            version=version,
-        )
-
 
 class InvalidFrameworkVersionSpecifierError(
     InvalidFrameworkVersionSpecifierError,
@@ -116,16 +89,6 @@ class InvalidFrameworkVersionSpecifierError(
 
     code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
 
-    def __init__(
-        self,
-        listener_template_str: str,
-        framework_version_specifier: str,
-    ):
-        super().__init__(
-            component_str=listener_template_str,
-            framework_version_specifier=framework_version_specifier,
-        )
-
 
 class InvalidListenerTemplateDependencyVersionSpecifierError(
     InvalidComponentDependencyVersionSpecifierError,
@@ -137,16 +100,6 @@ class InvalidListenerTemplateDependencyVersionSpecifierError(
     """
 
     code = "INVALID_LISTENER_TEMPLATE_DEPENDENCY_VERSION_SPECIFIER_ERROR"
-
-    def __init__(
-        self,
-        listener_template_str: str,
-        invalid_dependency_entry: str,
-    ):
-        super().__init__(
-            component_str=listener_template_str,
-            invalid_dependency_entry=invalid_dependency_entry,
-        )
 
 
 class DuplicateListenerTemplateOptionNameError(ListenerTemplateConfigurationError):

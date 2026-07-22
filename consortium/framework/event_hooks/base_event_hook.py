@@ -9,10 +9,8 @@ from pydantic import JsonValue
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.components import (
     ComponentMetadata,
+    ComponentMetadataExceptions,
     ComponentMetadataModel,
-)
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
 )
 from consortium.framework._core.framework_exceptions.event_hooks_framework_exceptions import (
     EmptyEventHookLabelError,
@@ -22,7 +20,6 @@ from consortium.framework._core.framework_exceptions.event_hooks_framework_excep
     InvalidFrameworkVersionSpecifierError,
     MissingEventHookConfigurationParameterError,
 )
-from consortium.framework._core.utils import remap_exception
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.utils import construct_services_dataclass
@@ -67,18 +64,16 @@ class BaseEventHook(ComponentMetadata):
 
     _METADATA_MODEL = _EventHookModel
 
-    _COMPONENT_METADATA_EXCEPTION_MAP = {
-        components_framework_exceptions.MissingComponentConfigurationParameterError: MissingEventHookConfigurationParameterError,
-        components_framework_exceptions.EmptyComponentLabelError: EmptyEventHookLabelError,
-        components_framework_exceptions.InvalidComponentVersionError: InvalidEventHookVersionError,
-        components_framework_exceptions.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
-        components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError: InvalidEventHookDependencyVersionSpecifierError,
-        components_framework_exceptions.InvalidComponentConfigurationParameterTypeError: InvalidEventHookConfigurationParameterTypeError,
-    }
-    _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
-        "component_str": "event_hook_str",
-        "component_filepath": "event_hook_filepath",
-    }
+    # Raise event hook framework exceptions directly from the shared metadata validation
+    # instead of raising generic component exceptions and remapping them in __init_subclass__.
+    _component_metadata_exceptions = ComponentMetadataExceptions(
+        missing_configuration_parameter=MissingEventHookConfigurationParameterError,
+        invalid_configuration_parameter_type=InvalidEventHookConfigurationParameterTypeError,
+        empty_label=EmptyEventHookLabelError,
+        invalid_version=InvalidEventHookVersionError,
+        invalid_framework_version_specifier=InvalidFrameworkVersionSpecifierError,
+        invalid_dependency_version_specifier=InvalidEventHookDependencyVersionSpecifierError,
+    )
 
     event_types: set[EventType] | None = None
 
@@ -98,15 +93,7 @@ class BaseEventHook(ComponentMetadata):
         ).parents[0]
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
-        try:
-            cls._validate_metadata()
-        except components_framework_exceptions.ComponentsFrameworkError as exc:
-            raise remap_exception(
-                original_exception=exc,
-                original_kwargs=exc._kwargs,
-                exception_map=cls._COMPONENT_METADATA_EXCEPTION_MAP,
-                exception_kwargs_map=cls._COMPONENT_METADATA_EXCEPTION_KWARGS_MAP,
-            ) from None
+        cls._validate_metadata()
 
         super().__init_subclass__(**kwargs)
 

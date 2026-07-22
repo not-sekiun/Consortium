@@ -12,6 +12,7 @@ from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
     ComponentMetadata,
+    ComponentMetadataExceptions,
     ComponentMetadataModel,
 )
 from consortium.framework._core.framework_exceptions import (
@@ -30,7 +31,6 @@ from consortium.framework._core.framework_exceptions.plugins_framework_exception
     PluginStartError,
     PluginStopError,
 )
-from consortium.framework._core.utils import remap_exception
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import construct_services_dataclass
 
@@ -70,18 +70,16 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
     _METADATA_MODEL = _PluginModel
 
-    _COMPONENT_METADATA_EXCEPTION_MAP = {
-        components_framework_exceptions.MissingComponentConfigurationParameterError: MissingPluginConfigurationParameterError,
-        components_framework_exceptions.EmptyComponentLabelError: EmptyPluginLabelError,
-        components_framework_exceptions.InvalidComponentVersionError: InvalidPluginVersionError,
-        components_framework_exceptions.InvalidFrameworkVersionSpecifierError: InvalidFrameworkVersionSpecifierError,
-        components_framework_exceptions.InvalidComponentDependencyVersionSpecifierError: InvalidPluginDependencyVersionSpecifierError,
-        components_framework_exceptions.InvalidComponentConfigurationParameterTypeError: InvalidPluginConfigurationParameterTypeError,
-    }
-    _COMPONENT_METADATA_EXCEPTION_KWARGS_MAP = {
-        "component_str": "plugin_str",
-        "component_filepath": "plugin_filepath",
-    }
+    # Raise plugin framework exceptions directly from the shared metadata validation instead
+    # of raising generic component exceptions and remapping them in __init_subclass__.
+    _component_metadata_exceptions = ComponentMetadataExceptions(
+        missing_configuration_parameter=MissingPluginConfigurationParameterError,
+        invalid_configuration_parameter_type=InvalidPluginConfigurationParameterTypeError,
+        empty_label=EmptyPluginLabelError,
+        invalid_version=InvalidPluginVersionError,
+        invalid_framework_version_specifier=InvalidFrameworkVersionSpecifierError,
+        invalid_dependency_version_specifier=InvalidPluginDependencyVersionSpecifierError,
+    )
 
     autostart: bool = True
 
@@ -100,15 +98,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         ).parents[0]
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
-        try:
-            cls._validate_metadata()
-        except components_framework_exceptions.ComponentsFrameworkError as exc:
-            raise remap_exception(
-                original_exception=exc,
-                original_kwargs=exc._kwargs,
-                exception_map=cls._COMPONENT_METADATA_EXCEPTION_MAP,
-                exception_kwargs_map=cls._COMPONENT_METADATA_EXCEPTION_KWARGS_MAP,
-            ) from None
+        cls._validate_metadata()
 
         super().__init_subclass__(**kwargs)
 

@@ -50,18 +50,6 @@ class InvalidPluginConfigurationParameterTypeError(
 
     code = "INVALID_PLUGIN_CONFIGURATION_PARAMETER_TYPE_ERROR"
 
-    def __init__(
-        self,
-        plugin_str: str,
-        parameter_name: str,
-        parameter_type: str,
-    ):
-        super().__init__(
-            component_str=plugin_str,
-            parameter_name=parameter_name,
-            parameter_type=parameter_type,
-        )
-
 
 class MissingPluginConfigurationParameterError(
     MissingComponentConfigurationParameterError,
@@ -72,12 +60,6 @@ class MissingPluginConfigurationParameterError(
     """
 
     code = "MISSING_PLUGIN_CONFIGURATION_PARAMETER_ERROR"
-
-    def __init__(self, plugin_str: str, parameter_name: str):
-        super().__init__(
-            component_str=plugin_str,
-            parameter_name=parameter_name,
-        )
 
 
 class EmptyPluginLabelError(
@@ -90,9 +72,6 @@ class EmptyPluginLabelError(
 
     code = "EMPTY_PLUGIN_LABEL_ERROR"
 
-    def __init__(self, plugin_filepath: str):
-        super().__init__(component_filepath=plugin_filepath)
-
 
 class InvalidPluginVersionError(
     InvalidComponentVersionError,
@@ -103,12 +82,6 @@ class InvalidPluginVersionError(
     """
 
     code = "INVALID_PLUGIN_VERSION_ERROR"
-
-    def __init__(self, plugin_str: str, version: str):
-        super().__init__(
-            component_str=plugin_str,
-            version=version,
-        )
 
 
 class InvalidFrameworkVersionSpecifierError(
@@ -122,12 +95,6 @@ class InvalidFrameworkVersionSpecifierError(
 
     code = "INVALID_FRAMEWORK_VERSION_SPECIFIER_ERROR"
 
-    def __init__(self, plugin_str: str, framework_version_specifier: str):
-        super().__init__(
-            component_str=plugin_str,
-            framework_version_specifier=framework_version_specifier,
-        )
-
 
 class InvalidPluginDependencyVersionSpecifierError(
     InvalidComponentDependencyVersionSpecifierError,
@@ -139,16 +106,6 @@ class InvalidPluginDependencyVersionSpecifierError(
     """
 
     code = "INVALID_PLUGIN_DEPENDENCY_VERSION_SPECIFIER_ERROR"
-
-    def __init__(
-        self,
-        plugin_str: str,
-        invalid_dependency_entry: str,
-    ):
-        super().__init__(
-            component_str=plugin_str,
-            invalid_dependency_entry=invalid_dependency_entry,
-        )
 
 
 class PluginOperationError(
