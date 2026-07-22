@@ -1,4 +1,3 @@
-import pathlib
 import uuid
 
 from consortium.server.exceptions.service_exceptions import (
@@ -64,6 +63,3 @@ class AgentProfileRegistryService(
 
     def _get_component_id(self, component: AgentProfile) -> uuid.UUID:
         return component.agent_profile_id
-
-    def _get_component_directory(self, component: AgentProfile) -> pathlib.Path:
-        return component.root_directory

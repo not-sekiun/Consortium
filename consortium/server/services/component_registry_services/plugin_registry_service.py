@@ -1,5 +1,4 @@
 import asyncio
-import pathlib
 import uuid
 
 from consortium.framework._core.components.component_status import State
@@ -69,9 +68,6 @@ class PluginRegistryService(
 
     def _get_component_id(self, component: BasePlugin) -> uuid.UUID:
         return component.plugin_id
-
-    def _get_component_directory(self, component: BasePlugin) -> pathlib.Path:
-        return component.root_directory
 
     async def _component_load_procedure(
         self,

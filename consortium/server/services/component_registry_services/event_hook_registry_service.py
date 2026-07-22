@@ -90,9 +90,6 @@ class EventHookRegistryService(
     def _get_component_id(self, component: BaseEventHook) -> uuid.UUID:
         return component.event_hook_id
 
-    def _get_component_directory(self, component: BaseEventHook) -> pathlib.Path:
-        return component.root_directory
-
     async def _component_load_procedure(
         self,
         component: BaseEventHook,

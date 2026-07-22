@@ -27,15 +27,10 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
 
     # Each component has a different attribute name for the component ID. Provide an
     # override to get the component ID regardless of what its named.
-    # TODO: ??? Consider maybe standardizing the component ID attribute name across
+    # TODO: Consider maybe standardizing the component ID attribute name across
     #  all components. If so, remove this method.
     @abstractmethod
     def _get_component_id(self, component: Component) -> uuid.UUID: ...
-
-    # TODO: Now that every component exposes `self.root_directory`, this method could
-    #  be removed and callers could read `component.root_directory` directly.
-    @abstractmethod
-    def _get_component_directory(self, component: Component) -> pathlib.Path: ...
 
     # Runs after a component is registered.
     async def _component_load_procedure(
@@ -174,9 +169,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
         if unload_context is None:
             unload_context = {}
         component = self.get_component_by_component_id(component_id=component_id)
-        component_directory = self._get_component_directory(
-            component=component,
-        )
+        component_directory = component.root_directory
         await self.unload_component_by_component_id(
             component_id=component_id,
             context=unload_context,

@@ -74,11 +74,6 @@ def test_get_component_id(registry):
     assert registry._get_component_id(hook) == hook.event_hook_id
 
 
-def test_get_component_directory(registry):
-    hook = _make_event_hook()
-    assert registry._get_component_directory(hook) == hook.root_directory
-
-
 # --- _component_load_procedure ---
 
 

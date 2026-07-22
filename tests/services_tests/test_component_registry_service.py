@@ -18,9 +18,6 @@ class _ConcreteRegistry(ComponentRegistryService):
     def _get_component_id(self, component):
         return component._id
 
-    def _get_component_directory(self, component):
-        return component._folder
-
 
 def _make_mock_loader():
     loader = MagicMock()
@@ -31,7 +28,7 @@ def _make_mock_loader():
 def _make_component(label="comp.label", component_id=None):
     comp = MagicMock()
     comp._id = component_id or uuid.uuid4()
-    comp._folder = pathlib.Path("/tmp/test_comp")
+    comp.root_directory = pathlib.Path("/tmp/test_comp")
     comp.label = label
     comp.component_dependencies = set()
     comp.__str__ = lambda self: f"MockComponent({label})"
@@ -175,13 +172,13 @@ async def test_unload_not_found_raises(registry):
 async def test_reload_unloads_then_loads_from_folder(registry, loader):
     folder = pathlib.Path("/tmp/comp_folder")
     comp = _make_component(label="reload.comp")
-    comp._folder = folder
+    comp.root_directory = folder
 
     await registry.load_component(component=comp)
     original_id = comp._id
 
     new_comp = _make_component(label="reload.comp")
-    new_comp._folder = folder
+    new_comp.root_directory = folder
     loader.get_component_from_directory.return_value = new_comp
 
     result = await registry.reload_component_by_component_id(component_id=original_id)

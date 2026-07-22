@@ -1,4 +1,3 @@
-import pathlib
 import uuid
 
 from consortium.server.exceptions.service_exceptions import (
@@ -67,6 +66,3 @@ class ListenerProfileRegistryService(
 
     def _get_component_id(self, component: ListenerProfile) -> uuid.UUID:
         return component.listener_profile_id
-
-    def _get_component_directory(self, component: ListenerProfile) -> pathlib.Path:
-        return component.root_directory

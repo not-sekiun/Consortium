@@ -71,11 +71,6 @@ def test_get_component_id(registry):
     assert registry._get_component_id(plugin) == plugin.plugin_id
 
 
-def test_get_component_directory(registry):
-    plugin = _make_plugin()
-    assert registry._get_component_directory(plugin) == plugin.root_directory
-
-
 # --- _component_load_procedure ---
 
 
