@@ -103,9 +103,8 @@ class ComponentLoadingExceptions:
     duplicate_label: type[DuplicateComponentLabelError] = DuplicateComponentLabelError
 
 
-# Default base service that loads components from component project folders. Expects to
-# load a single component from each component project folder. Used by the plugins and
-# event hooks system.
+# Default base service that loads components from directories. Expects to
+# load a single component from each directory.
 class ComponentLoaderService[Component]:
     _component_type: type[Component]
     # Domain-specific framework error(s) that can surface during import or
@@ -266,8 +265,8 @@ class ComponentLoaderService[Component]:
         component_module: str,
         component_symbol: str,
     ) -> type[Component]:
-        # Check for a valid component project folder structure as specified by the
-        # manifest file.
+        # Check for a valid component directory structure as specified by the manifest
+        # file.
         component_file = pathlib.Path(
             component_directory,
             *component_module.split("."),

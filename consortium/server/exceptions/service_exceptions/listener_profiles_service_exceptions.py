@@ -151,8 +151,8 @@ class InvalidListenerProfileProjectFolderStructureError(
     ListenerProfileLoadingError,
     comp_excs.InvalidComponentProjectFolderStructureError,
 ):
-    """Base exception for all errors that occur due to an invalid listener profile project
-    folder structure during listener profile loading.
+    """Base exception for all errors that occur due to an invalid listener profile root
+    directory structure during listener profile loading.
     """
 
     code = "INVALID_LISTENER_PROFILE_PROJECT_FOLDER_STRUCTURE_ERROR"
@@ -163,7 +163,7 @@ class ListenerProfileProjectManifestFileNotFoundError(
     comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
     """Raised when the listener profile project manifest file is not found in the listener
-    profile project folder during listener profile loading.
+    profile root directory during listener profile loading.
     """
 
     code = "LISTENER_PROFILE_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
@@ -174,7 +174,7 @@ class ListenerProfileProjectEntryPointModuleNotFoundError(
     comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """Raised when the listener profile entry point module specified in the manifest is not
-    found in the listener profile project folder during listener profile loading.
+    found in the listener profile root directory during listener profile loading.
     """
 
     code = "LISTENER_PROFILE_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"

@@ -62,7 +62,7 @@ class AgentProfilesService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> AgentProfile | None:
-        """Instantiates an agent profile from a project folder without registering it.
+        """Instantiates an agent profile from a directory without registering it.
 
         Disabled agent profiles (as indicated by `enabled: false` in their
         `manifest.json`) are not instantiated unless `ignore_enabled_flag`
@@ -108,7 +108,7 @@ class AgentProfilesService:
             )
         else:
             self._logger.debug(
-                "Retrieved agent profile {} from agent profile project folder: {}",
+                "Retrieved agent profile {} from directory: {}",
                 repr(agent_profile),
                 str(directory),
             )
@@ -124,11 +124,10 @@ class AgentProfilesService:
         list[pathlib.Path],
         list[tuple[pathlib.Path, AgentProfileLoadingError]] | None,
     ]:
-        """Recursively scans a directory for agent profile project folders and instantiates them.
+        """Recursively scans a directory for agent profiles and instantiates them.
 
         Args:
-            directory: The directory to scan for agent profile project
-                folders.
+            directory: The directory to scan for agent profiles.
             ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
 
@@ -181,7 +180,7 @@ class AgentProfilesService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> AgentProfile | None:
-        """Loads an agent profile from a project folder, registering and activating it.
+        """Loads an agent profile from a directory, registering and activating it.
 
         Disabled profiles are skipped unless `ignore_enabled_flag` is
         `True`. After a successful load, agent type references and the compatible agent
@@ -265,7 +264,7 @@ class AgentProfilesService:
         agent_profile_id: str | uuid.UUID,
         ignore_enabled_flag: bool = False,
     ) -> AgentProfile:
-        """Unloads and reloads an agent profile from its original project folder.
+        """Unloads and reloads an agent profile from its original directory.
 
         After a successful reload, agent type references and the compatible agent type
         index for listener profiles are updated. If the profile is disabled after reload

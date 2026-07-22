@@ -151,8 +151,8 @@ class InvalidAgentProfileProjectFolderStructureError(
     AgentProfileLoadingError,
     comp_excs.InvalidComponentProjectFolderStructureError,
 ):
-    """Base exception for all errors that occur due to an invalid agent profile project
-    folder structure during agent profile loading.
+    """Base exception for all errors that occur due to an invalid agent profile root
+    directory structure during agent profile loading.
     """
 
     code = "INVALID_AGENT_PROFILE_PROJECT_FOLDER_STRUCTURE_ERROR"
@@ -163,7 +163,7 @@ class AgentProfileProjectManifestFileNotFoundError(
     comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
     """Raised when the agent profile project manifest file is not found in the agent profile
-    project folder during agent profile loading.
+    root directory during agent profile loading.
     """
 
     code = "AGENT_PROFILE_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
@@ -174,7 +174,7 @@ class AgentProfileProjectEntryPointModuleNotFoundError(
     comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """Raised when the agent profile entry point module specified in the manifest is not
-    found in the agent profile project folder during agent profile loading.
+    found in the agent profile root directory during agent profile loading.
     """
 
     code = "AGENT_PROFILE_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"

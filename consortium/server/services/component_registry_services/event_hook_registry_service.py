@@ -19,10 +19,6 @@ from consortium.server.services.component_registry_services.component_registry_s
 from consortium.server.services.events_service import EventsService
 
 
-# The event hook loader carries an event hook exception set, so loading and registry errors
-# are raised as event hook types directly. This registry therefore extends the plain
-# ComponentRegistryService rather than the exception remapping variant that the other
-# domains still use.
 class EventHookRegistryService(
     ComponentRegistryService[BaseEventHook, EventHookLoadingError],
 ):

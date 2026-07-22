@@ -59,7 +59,7 @@ class PluginsService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> BasePlugin | None:
-        """Instantiates a plugin from a project folder without registering it.
+        """Instantiates a plugin from a root directory without registering it.
 
         Disabled plugins (as indicated by `enabled: false` in their `manifest.json`)
         are not instantiated unless `ignore_enabled_flag` is `True`.
@@ -102,7 +102,7 @@ class PluginsService:
             )
         else:
             self._logger.debug(
-                "Retrieved plugin {} from plugin project folder: {}",
+                "Retrieved plugin {} from plugin root directory: {}",
                 repr(plugin),
                 str(directory),
             )
@@ -118,14 +118,14 @@ class PluginsService:
         list[pathlib.Path],
         list[tuple[pathlib.Path, PluginLoadingError]],
     ]:
-        """Recursively scans a directory for plugin project folders and instantiates them.
+        """Recursively scans a directory for plugin root directories and instantiates them.
 
         Disabled plugins (as indicated by `enabled: false` in their `manifest.json`)
         are skipped unless `ignore_enabled_flag` is `True`. Plugins that fail to
         load are collected in the returned error list rather than aborting the scan.
 
         Args:
-            directory: The directory to scan for plugin project folders.
+            directory: The directory to scan for plugin root directories.
             ignore_enabled_flag: When `True`, bypasses the `enabled` check in
                 each plugin's manifest. Defaults to `False`.
 
@@ -188,7 +188,7 @@ class PluginsService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> BasePlugin | None:
-        """Instantiates and registers a plugin from a project folder.
+        """Instantiates and registers a plugin from a root directory.
 
         Disabled plugins are skipped unless `ignore_enabled_flag` is `True`.
         This method registers the plugin but does not start it.
@@ -243,7 +243,7 @@ class PluginsService:
         ignore_enabled_flag: bool = False,
         timeout: int | None = 5,
     ) -> BasePlugin | None:
-        """Loads a plugin from a project folder, registering it and starting it if it autostarts.
+        """Loads a plugin from a root directory, registering it and starting it if it autostarts.
 
         Disabled plugins are skipped unless `ignore_enabled_flag` is `True`.
         After registration, the plugin is started when its `autostart` attribute is
@@ -336,10 +336,10 @@ class PluginsService:
         unload_timeout: int | None = 5,
         force_unload: bool = False,
     ) -> BasePlugin | None:
-        """Unloads a plugin then reloads it from its original project folder.
+        """Unloads a plugin then reloads it from its original root directory.
 
-        The plugin is stopped and deregistered, then loaded again from the project
-        folder it was originally loaded from, starting it again if it autostarts. If the
+        The plugin is stopped and deregistered, then loaded again from the root
+        directory it was originally loaded from, starting it again if it autostarts. If the
         plugin is disabled after reload and `ignore_enabled_flag` is `False`, the
         plugin will only be unloaded, not reloaded.
 
@@ -406,7 +406,7 @@ class PluginsService:
     ) -> None:
         """Discovers and loads all plugins from the framework's plugins directory.
 
-        Every plugin project folder under the framework plugins directory is discovered,
+        Every plugin root directory under the framework plugins directory is discovered,
         resolved into a dependency-respecting load order, then registered and (when the
         plugin has `autostart` set) started. Disabled plugins are skipped unless
         `ignore_enabled_flag` is set. Discovery errors, unresolved dependencies,
@@ -548,7 +548,7 @@ class PluginsService:
         """Unloads all currently loaded plugins and reloads them from disk.
 
         Every currently loaded plugin is unloaded concurrently, then the framework
-        plugins directory is rescanned and any plugin project folder that is not already
+        plugins directory is rescanned and any plugin that is not already
         loaded (for example one that failed to unload) is loaded again. Per-plugin unload
         and load failures are logged rather than raised so that one failing plugin does
         not prevent the others from being reloaded.
@@ -589,9 +589,9 @@ class PluginsService:
             if isinstance(result, PluginUnloadingError):
                 self._logger.error(result)
 
-        # Recursively search through the framework's plugin project folders directory
-        # to find all plugin project folders. If a plugin project folder is found that
-        # is not already loaded (it failed to unload), load it.
+        # Recursively search through the framework's plugins directory to find all
+        # plugins. If a plugin is found that is not already loaded (it failed to
+        # unload), load it.
         for path in self._plugins_directory.rglob("*"):
             if path.name != "manifest.json":
                 continue

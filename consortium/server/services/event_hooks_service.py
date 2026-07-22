@@ -63,7 +63,7 @@ class EventHooksService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> BaseEventHook | None:
-        """Instantiates an event hook from a project folder without registering it.
+        """Instantiates an event hook from a directory without registering it.
 
         Disabled event hooks (as indicated by `enabled: false` in their `manifest.json`)
         are not instantiated unless `ignore_enabled_flag` is `True`.
@@ -108,7 +108,7 @@ class EventHooksService:
             )
         else:
             self._logger.debug(
-                "Retrieved event hook {} from event hook project folder: {}",
+                "Retrieved event hook {} from directory: {}",
                 repr(event_hook),
                 str(directory),
             )
@@ -124,14 +124,13 @@ class EventHooksService:
         list[pathlib.Path],
         list[tuple[pathlib.Path, EventHookLoadingError]] | None,
     ]:
-        """Recursively scans a directory for event hook project folders and instantiates them.
+        """Recursively scans a directory for event hooks and instantiates them.
 
         Disabled event hooks (as indicated by `enabled: false` in their `manifest.json`)
         are skipped unless `ignore_enabled_flag` is `True`.
 
         Args:
-            directory: The directory to scan for event hook project
-                folders.
+            directory: The directory to scan for event hooks.
             ignore_enabled_flag: When `True`, bypasses the `enabled`
                 check in each event hook's manifest. Defaults to `False`.
 
@@ -189,7 +188,7 @@ class EventHooksService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> BaseEventHook | None:
-        """Instantiates and registers an event hook from a project folder.
+        """Instantiates and registers an event hook from a directory.
 
         Disabled event hooks are skipped unless `ignore_enabled_flag` is
         `True`.
@@ -269,7 +268,7 @@ class EventHooksService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> BaseEventHook | None:
-        """Instantiates, registers, and activates an event hook from a project folder.
+        """Instantiates, registers, and activates an event hook from a directory.
 
         Disabled event hooks are skipped unless `ignore_enabled_flag` is
         `True`.
@@ -346,7 +345,7 @@ class EventHooksService:
         event_hook_id: str | uuid.UUID,
         ignore_enabled_flag: bool = False,
     ) -> BaseEventHook:
-        """Unloads and reloads an event hook from its original project folder.
+        """Unloads and reloads an event hook from its original directory.
 
         If the event hook is disabled after reload and `ignore_enabled_flag`
         is `False`, the event hook will only be unloaded, not reloaded.

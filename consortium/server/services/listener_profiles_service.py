@@ -59,7 +59,7 @@ class ListenerProfilesService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> ListenerProfile | None:
-        """Instantiates a listener profile from a project folder without registering it.
+        """Instantiates a listener profile from a directory without registering it.
 
         Disabled listener profiles (as indicated by `enabled: false` in their
         `manifest.json`) are not instantiated unless
@@ -122,11 +122,10 @@ class ListenerProfilesService:
         list[pathlib.Path],
         list[tuple[pathlib.Path, ListenerProfileLoadingError]] | None,
     ]:
-        """Recursively scans a directory for listener profile project folders and instantiates them.
+        """Recursively scans a directory for listener profiles and instantiates them.
 
         Args:
-            directory: The directory to scan for listener profile project
-                folders.
+            directory: The directory to scan for listener profiles.
             ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
 
@@ -181,7 +180,7 @@ class ListenerProfilesService:
         directory: pathlib.Path,
         ignore_enabled_flag: bool = False,
     ) -> ListenerProfile | None:
-        """Loads a listener profile from a project folder, registering and activating it.
+        """Loads a listener profile from a directory, registering and activating it.
 
         Disabled profiles are skipped unless `ignore_enabled_flag` is
         `True`. After a successful load, the compatible agent type index for this
@@ -264,7 +263,7 @@ class ListenerProfilesService:
         listener_profile_id: str | uuid.UUID,
         ignore_enabled_flag: bool = False,
     ) -> ListenerProfile:
-        """Unloads and reloads a listener profile from its original project folder.
+        """Unloads and reloads a listener profile from its original directory.
 
         If the profile is disabled after reload and `ignore_enabled_flag`
         is `False`, the profile will only be unloaded, not reloaded.

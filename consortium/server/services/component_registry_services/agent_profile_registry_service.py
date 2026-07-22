@@ -9,10 +9,6 @@ from consortium.server.services.component_registry_services.component_registry_s
 )
 
 
-# The agent profile loader carries an agent profile exception set, so loading and registry
-# errors are raised as agent profile types directly. This registry therefore extends the
-# plain ComponentRegistryService rather than the exception remapping variant that the other
-# domains still use.
 class AgentProfileRegistryService(
     ComponentRegistryService[AgentProfile, AgentProfileLoadingError],
 ):

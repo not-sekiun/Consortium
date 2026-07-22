@@ -149,7 +149,7 @@ class InvalidPluginProjectFolderStructureError(
     PluginLoadingError,
     comp_excs.InvalidComponentProjectFolderStructureError,
 ):
-    """Base exception for all errors that occur due to an invalid plugin project folder
+    """Base exception for all errors that occur due to an invalid plugin root directory
     structure during plugin loading.
     """
 
@@ -160,8 +160,8 @@ class PluginProjectManifestFileNotFoundError(
     InvalidPluginProjectFolderStructureError,
     comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
-    """Raised when the plugin project manifest file is not found in the plugin project
-    folder during plugin loading.
+    """Raised when the plugin project manifest file is not found in the plugin root
+    directory during plugin loading.
     """
 
     code = "PLUGIN_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
@@ -172,7 +172,7 @@ class PluginProjectEntryPointModuleNotFoundError(
     comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """Raised when the plugin entry point module specified in the manifest is not found in
-    the plugin project folder during plugin loading.
+    the plugin root directory during plugin loading.
     """
 
     code = "PLUGIN_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"

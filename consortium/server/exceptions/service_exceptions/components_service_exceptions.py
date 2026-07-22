@@ -164,7 +164,7 @@ class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError)
 
 
 class InvalidComponentProjectFolderStructureError(ComponentLoadingError):
-    """Base exception for all errors that occur due to an invalid component project folder
+    """Base exception for all errors that occur due to an invalid component root directory
     structure during component loading.
     """
 
@@ -174,8 +174,8 @@ class InvalidComponentProjectFolderStructureError(ComponentLoadingError):
 class ComponentProjectManifestFileNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
-    """Raised when the component project manifest file is not found in the component project
-    folder during component loading.
+    """Raised when the component project manifest file is not found in the component root
+    directory during component loading.
     """
 
     code = "COMPONENT_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
@@ -183,8 +183,8 @@ class ComponentProjectManifestFileNotFoundError(
     _MESSAGE_TEMPLATE = (
         "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
         "The $COMPONENT_TYPE$ project manifest file `manifest.json` was not found in the "
-        "$COMPONENT_TYPE$ project folder. Create a `manifest.json` file in the root "
-        "directory of the folder containing your $COMPONENT_TYPE$."
+        "$COMPONENT_TYPE$ root directory. Create a `manifest.json` file in the root "
+        "directory containing your $COMPONENT_TYPE$."
     )
 
     def __init__(self, component_directory: str):
@@ -195,7 +195,7 @@ class ComponentProjectEntryPointModuleNotFoundError(
     InvalidComponentProjectFolderStructureError,
 ):
     """Raised when the component entry point module specified in the manifest is not found in
-    the component project folder during component loading.
+    the component root directory during component loading.
     """
 
     code = "COMPONENT_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"

@@ -154,7 +154,7 @@ class InvalidEventHookProjectFolderStructureError(
     EventHookLoadingError,
     comp_excs.InvalidComponentProjectFolderStructureError,
 ):
-    """Base exception for all errors that occur due to an invalid event hook project folder
+    """Base exception for all errors that occur due to an invalid event hook root directory
     structure during event hook loading.
     """
 
@@ -165,8 +165,8 @@ class EventHookProjectManifestFileNotFoundError(
     InvalidEventHookProjectFolderStructureError,
     comp_excs.ComponentProjectManifestFileNotFoundError,
 ):
-    """Raised when the event hook project manifest file is not found in the event hook project
-    folder during event hook loading.
+    """Raised when the event hook project manifest file is not found in the event hook root
+    directory during event hook loading.
     """
 
     code = "EVENT_HOOK_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
@@ -177,7 +177,7 @@ class EventHookProjectEntryPointModuleNotFoundError(
     comp_excs.ComponentProjectEntryPointModuleNotFoundError,
 ):
     """Raised when the event hook entry point module specified in the manifest is not found in
-    the event hook project folder during event hook loading.
+    the event hook root directory during event hook loading.
     """
 
     code = "EVENT_HOOK_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"

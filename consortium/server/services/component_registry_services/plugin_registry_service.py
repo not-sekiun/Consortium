@@ -12,10 +12,6 @@ from consortium.server.services.component_registry_services.component_registry_s
 )
 
 
-# The plugin loader carries a plugin exception set, so loading and registry errors are
-# raised as plugin types directly. This registry therefore extends the plain
-# ComponentRegistryService rather than the exception remapping variant that the other
-# domains still use.
 class PluginRegistryService(
     ComponentRegistryService[BasePlugin, PluginLoadingError],
 ):
