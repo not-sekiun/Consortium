@@ -114,7 +114,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
 
     def __init_subclass__(cls, **kwargs):
         cls.options = cls.options or set()
-        cls.listener_project_folder = pathlib.Path(
+        cls.root_directory = pathlib.Path(
             sys.modules[cls.__module__].__file__,
         ).parents[0]
         cls.registered_compatible_agent_types = set()

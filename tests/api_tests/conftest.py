@@ -205,8 +205,8 @@ def client(admin_client, operator_client, spectator_client, request):
 async def load_mock_listener_profiles(app):
     mock_root = pathlib.Path(__file__).parent / "mocks"
     for folder in ("mock_listener_1", "mock_listener_2"):
-        await server_singletons.listener_profiles_service.load_listener_profile_from_listener_profile_project_folder(
-            listener_profile_project_folder=mock_root / folder,
+        await server_singletons.listener_profiles_service.load_listener_profile_from_directory(
+            directory=mock_root / folder,
         )
 
 

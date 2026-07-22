@@ -54,21 +54,21 @@ class ListenerProfilesService:
         return "ListenerProfilesService()"
 
     @log_and_propagate_error_on_service_method
-    def get_listener_profile_from_listener_profile_project_folder(
+    def get_listener_profile_from_directory(
         self,
-        listener_profile_project_folder: pathlib.Path,
-        ignore_enabled_listener_profile_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> ListenerProfile | None:
         """Instantiates a listener profile from a project folder without registering it.
 
         Disabled listener profiles (as indicated by `enabled: false` in their
         `manifest.json`) are not instantiated unless
-        `ignore_enabled_listener_profile_flag` is `True`.
+        `ignore_enabled_flag` is `True`.
 
         Args:
-            listener_profile_project_folder: Path to the directory
+            directory: Path to the directory
                 containing the listener profile project files and `manifest.json`.
-            ignore_enabled_listener_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in the manifest. Defaults to `False`.
 
         Returns:
@@ -94,29 +94,29 @@ class ListenerProfilesService:
         """
         listener_profile = (
             self._listener_profile_registry_service.get_component_from_directory(
-                directory=listener_profile_project_folder,
-                ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
+                directory=directory,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if listener_profile is None:
             self._logger.debug(
                 "Skipped loading listener profile from '{}' because it was disabled",
-                str(listener_profile_project_folder),
+                str(directory),
             )
         else:
             self._logger.debug(
                 "Retrieved listener profile {} from listener profile project "
                 "folder: {}",
                 repr(listener_profile),
-                str(listener_profile_project_folder),
+                str(directory),
             )
         return listener_profile
 
     @log_and_propagate_error_on_service_method
-    def get_listener_profiles_from_listener_profile_project_folder_directories(
+    def get_all_listener_profiles_from_directory(
         self,
         directory: pathlib.Path,
-        ignore_enabled_listener_profile_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> tuple[
         list[ListenerProfile],
         list[pathlib.Path],
@@ -127,7 +127,7 @@ class ListenerProfilesService:
         Args:
             directory: The directory to scan for listener profile project
                 folders.
-            ignore_enabled_listener_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
 
         Returns:
@@ -139,7 +139,7 @@ class ListenerProfilesService:
         retrieved, skipped, errored = (
             self._listener_profile_registry_service.get_all_components_from_directory(
                 directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         self._logger.debug(
@@ -176,21 +176,21 @@ class ListenerProfilesService:
         self._logger.debug("Loaded listener profile: {}", listener_profile)
 
     @log_and_propagate_error_on_service_method
-    async def load_listener_profile_from_listener_profile_project_folder(
+    async def load_listener_profile_from_directory(
         self,
-        listener_profile_project_folder: pathlib.Path,
-        ignore_enabled_listener_profile_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> ListenerProfile | None:
         """Loads a listener profile from a project folder, registering and activating it.
 
-        Disabled profiles are skipped unless `ignore_enabled_listener_profile_flag` is
+        Disabled profiles are skipped unless `ignore_enabled_flag` is
         `True`. After a successful load, the compatible agent type index for this
         listener profile is updated.
 
         Args:
-            listener_profile_project_folder: Path to the directory
+            directory: Path to the directory
                 containing the listener profile project files and `manifest.json`.
-            ignore_enabled_listener_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in the manifest. Defaults to `False`.
 
         Returns:
@@ -216,17 +216,17 @@ class ListenerProfilesService:
         """
         listener_profile = (
             await self._listener_profile_registry_service.load_component_from_directory(
-                directory=listener_profile_project_folder,
-                ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
+                directory=directory,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if listener_profile is None:
             self._logger.warning(
                 "Listener profile could not be loaded from {} because it is "
                 "currently disabled. Either enable it in its manifest or force "
-                "load it by setting the `ignore_enabled_listener_profile_flag` to "
+                "load it by setting the `ignore_enabled_flag` to "
                 "`True`.",
-                str(listener_profile_project_folder),
+                str(directory),
             )
         else:
             server_singletons.c2_types_service._resolve_registered_compatible_agent_types_for_listener_profiles(
@@ -262,17 +262,17 @@ class ListenerProfilesService:
     async def reload_listener_profile_by_listener_profile_id(
         self,
         listener_profile_id: str | uuid.UUID,
-        ignore_enabled_listener_profile_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> ListenerProfile:
         """Unloads and reloads a listener profile from its original project folder.
 
-        If the profile is disabled after reload and `ignore_enabled_listener_profile_flag`
+        If the profile is disabled after reload and `ignore_enabled_flag`
         is `False`, the profile will only be unloaded, not reloaded.
 
         Args:
             listener_profile_id: The ID of the listener profile to
                 reload.
-            ignore_enabled_listener_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in the manifest during reload. Defaults to `False`.
 
         Returns:
@@ -286,14 +286,14 @@ class ListenerProfilesService:
         listener_profile = await (
             self._listener_profile_registry_service.reload_component_by_component_id(
                 component_id=listener_profile_id,
-                ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if listener_profile is None:
             self._logger.warning(
                 "Listener profile with ID '{}' could not be reloaded because it is "
                 "currently disabled. Either enable it in its manifest or force "
-                "reload it by setting the `ignore_enabled_listener_profile_flag` to "
+                "reload it by setting the `ignore_enabled_flag` to "
                 "`True`.",
                 listener_profile_id,
             )
@@ -308,7 +308,7 @@ class ListenerProfilesService:
     @log_and_propagate_error_on_service_method
     async def load_framework_listener_profiles(
         self,
-        ignore_enabled_listener_profile_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> None:
         """Scans the framework's listener profiles directory and loads all enabled profiles.
 
@@ -316,15 +316,13 @@ class ListenerProfilesService:
         aborting the overall load.
 
         Args:
-            ignore_enabled_listener_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
         """
         self._logger.info("Loading framework listener profiles...")
-        retrieved, skipped, errored = (
-            self.get_listener_profiles_from_listener_profile_project_folder_directories(
-                directory=self._listeners_directory,
-                ignore_enabled_listener_profile_flag=ignore_enabled_listener_profile_flag,
-            )
+        retrieved, skipped, errored = self.get_all_listener_profiles_from_directory(
+            directory=self._listeners_directory,
+            ignore_enabled_flag=ignore_enabled_flag,
         )
         for path in skipped:
             self._logger.info(
@@ -368,7 +366,7 @@ class ListenerProfilesService:
         self._logger.info("Unloading framework listener profiles...")
         unloaded_listener_profiles = 0
         for listener_profile in self.get_all_listener_profiles():
-            if listener_profile.listener_project_folder.resolve().relative_to(
+            if listener_profile.root_directory.resolve().relative_to(
                 self._listeners_directory.resolve()
             ):
                 await self.unload_listener_profile_by_listener_profile_id(

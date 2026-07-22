@@ -69,8 +69,8 @@ class ListenerProfile:
         return self.listener_template.component_dependencies
 
     @property
-    def listener_project_folder(self) -> Path:
-        return self.listener_template.listener_project_folder
+    def root_directory(self) -> Path:
+        return self.listener_template.root_directory
 
 
 class AgentProfile:

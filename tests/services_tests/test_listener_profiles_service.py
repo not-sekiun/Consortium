@@ -47,25 +47,23 @@ def test_repr(svc_with_mock_registry):
     assert repr(svc) == "ListenerProfilesService()"
 
 
-# --- get_listener_profile_from_listener_profile_project_folder ---
+# --- get_listener_profile_from_directory ---
 
 
 def test_get_from_folder_enabled(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
     folder = pathlib.Path("/tmp/listener_folder")
     mock_profile = MagicMock()
-    registry.get_component_from_component_project_folder.return_value = mock_profile
-    result = svc.get_listener_profile_from_listener_profile_project_folder(
-        listener_profile_project_folder=folder
-    )
+    registry.get_component_from_directory.return_value = mock_profile
+    result = svc.get_listener_profile_from_directory(directory=folder)
     assert result == mock_profile
 
 
 def test_get_from_folder_disabled_returns_none(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
-    registry.get_component_from_component_project_folder.return_value = None
-    result = svc.get_listener_profile_from_listener_profile_project_folder(
-        listener_profile_project_folder=pathlib.Path("/tmp/disabled")
+    registry.get_component_from_directory.return_value = None
+    result = svc.get_listener_profile_from_directory(
+        directory=pathlib.Path("/tmp/disabled")
     )
     assert result is None
 
@@ -76,15 +74,13 @@ def test_get_from_folder_disabled_returns_none(svc_with_mock_registry):
 def test_get_profiles_from_directories(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
     mock_profile = MagicMock()
-    registry.get_components_from_component_project_folder_directories.return_value = (
+    registry.get_all_components_from_directory.return_value = (
         [mock_profile],
         [],
         [],
     )
-    retrieved, skipped, errored = (
-        svc.get_listener_profiles_from_listener_profile_project_folder_directories(
-            directory=pathlib.Path("/tmp/listeners")
-        )
+    retrieved, skipped, errored = svc.get_all_listener_profiles_from_directory(
+        directory=pathlib.Path("/tmp/listeners")
     )
     assert len(retrieved) == 1
     assert skipped == []
@@ -114,15 +110,11 @@ async def test_load_listener_profile_resolves_compatible_types(svc_with_mock_reg
 async def test_load_from_folder_resolves_types(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
     mock_profile = MagicMock()
-    registry.load_component_from_component_project_folder = AsyncMock(
-        return_value=mock_profile
-    )
+    registry.load_component_from_directory = AsyncMock(return_value=mock_profile)
     folder = pathlib.Path("/tmp/listener_profile")
 
     with patch.object(_ss, "c2_types_service") as mock_c2:
-        result = await svc.load_listener_profile_from_listener_profile_project_folder(
-            listener_profile_project_folder=folder
-        )
+        result = await svc.load_listener_profile_from_directory(directory=folder)
 
     assert result == mock_profile
     mock_c2._resolve_registered_compatible_agent_types_for_listener_profiles.assert_called_once_with(
@@ -133,13 +125,11 @@ async def test_load_from_folder_resolves_types(svc_with_mock_registry):
 @pytest.mark.anyio
 async def test_load_from_folder_disabled_skips_resolution(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
-    registry.load_component_from_component_project_folder = AsyncMock(return_value=None)
+    registry.load_component_from_directory = AsyncMock(return_value=None)
     folder = pathlib.Path("/tmp/disabled_listener")
 
     with patch.object(_ss, "c2_types_service") as mock_c2:
-        result = await svc.load_listener_profile_from_listener_profile_project_folder(
-            listener_profile_project_folder=folder
-        )
+        result = await svc.load_listener_profile_from_directory(directory=folder)
 
     assert result is None
     mock_c2._resolve_registered_compatible_agent_types_for_listener_profiles.assert_not_called()

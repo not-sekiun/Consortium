@@ -60,7 +60,7 @@ class ListenerProfileRegistryService(
         comp_excs.DuplicateComponentLabelError: DuplicateListenerProfileLabelError,
     }
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
-        "component_directory": "listener_profile_project_folder",
+        "component_directory": "listener_profile_directory",
         "component_str": "listener_profile_str",
         "component_id": "listener_profile_id",
     }
@@ -69,4 +69,4 @@ class ListenerProfileRegistryService(
         return component.listener_profile_id
 
     def _get_component_directory(self, component: ListenerProfile) -> pathlib.Path:
-        return component.listener_project_folder
+        return component.root_directory
