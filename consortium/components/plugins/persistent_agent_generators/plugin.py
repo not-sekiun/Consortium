@@ -18,7 +18,7 @@ class Plugin(BasePlugin):
 
     async def on_started(self) -> None:
         persistent_agent_generators_json_file = (
-            self.plugin_project_folder / "persistent_agent_generators.json"
+            self.root_directory / "persistent_agent_generators.json"
         )
         # Save a reference so the `on_stopped` method can access it
         self.environment.persistent_agent_generators_json_file = (

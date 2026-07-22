@@ -28,7 +28,7 @@ class Plugin(BasePlugin):
     autostart = True
 
     async def on_started(self) -> None:
-        config_path = self.plugin_project_folder / "config.json"
+        config_path = self.root_directory / "config.json"
         if not config_path.exists():
             raise PluginStartError(
                 message=(
@@ -94,8 +94,8 @@ your plugin's source files. Use it to load sibling files without hard-coding abs
 paths:
 
 ```python
-config_path = self.plugin_project_folder / "config.json"
-data_path = self.plugin_project_folder / "session_data.json"
+config_path = self.root_directory / "config.json"
+data_path = self.root_directory / "session_data.json"
 ```
 
 ## self.logger

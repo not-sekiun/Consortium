@@ -18,7 +18,7 @@ class Plugin(BasePlugin):
 
     async def on_started(self) -> None:
         persistent_listeners_json_file = (
-            self.plugin_project_folder / "persistent_listeners.json"
+            self.root_directory / "persistent_listeners.json"
         )
         # Save a reference so the `on_stopped` method can access it
         self.environment.persistent_listeners_json_file = persistent_listeners_json_file

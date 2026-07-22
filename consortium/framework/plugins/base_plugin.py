@@ -95,7 +95,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
-        cls.plugin_project_folder = pathlib.Path(
+        cls.root_directory = pathlib.Path(
             sys.modules[cls.__module__].__file__,
         ).parents[0]
         cls.services = construct_services_dataclass(server_singletons=server_singletons)

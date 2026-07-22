@@ -30,7 +30,7 @@ class PluginsService:
         self,
         release_service: ReleaseService,
         plugins_directory: pathlib.Path,
-        consortium_root: pathlib.Path,
+        consortium_root: pathlib.Path,  # TODO: Pass in paths service instead
     ):
         self._plugins_directory = plugins_directory
         self._plugins = {}
@@ -54,20 +54,20 @@ class PluginsService:
         return "PluginsService()"
 
     @log_and_propagate_error_on_service_method
-    def get_plugin_from_plugin_project_folder(
+    def get_plugin_from_directory(
         self,
-        plugin_project_folder: pathlib.Path,
-        ignore_enabled_plugin_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> BasePlugin | None:
         """Instantiates a plugin from a project folder without registering it.
 
         Disabled plugins (as indicated by `enabled: false` in their `manifest.json`)
-        are not instantiated unless `ignore_enabled_plugin_flag` is `True`.
+        are not instantiated unless `ignore_enabled_flag` is `True`.
 
         Args:
-            plugin_project_folder: Path to the directory containing the plugin
+            directory: Path to the directory containing the plugin
                 project files and `manifest.json`.
-            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+            ignore_enabled_flag: When `True`, bypasses the `enabled` check in
                 the manifest. Defaults to `False`.
 
         Returns:
@@ -93,28 +93,28 @@ class PluginsService:
         """
         plugin = (
             self._plugin_registry_service.get_component_from_component_project_folder(
-                component_project_folder=plugin_project_folder,
-                ignore_enabled_component_flag=ignore_enabled_plugin_flag,
+                component_project_folder=directory,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if plugin is None:
             self._logger.debug(
                 "Skipped loading plugin from '{}' because it was disabled",
-                str(plugin_project_folder),
+                str(directory),
             )
         else:
             self._logger.debug(
                 "Retrieved plugin {} from plugin project folder: {}",
                 repr(plugin),
-                str(plugin_project_folder),
+                str(directory),
             )
         return plugin
 
     @log_and_propagate_error_on_service_method
-    def get_plugins_from_plugin_project_folder_directories(
+    def get_all_plugins_from_directory(
         self,
         directory: pathlib.Path,
-        ignore_enabled_plugin_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> tuple[
         list[BasePlugin],
         list[pathlib.Path],
@@ -123,12 +123,12 @@ class PluginsService:
         """Recursively scans a directory for plugin project folders and instantiates them.
 
         Disabled plugins (as indicated by `enabled: false` in their `manifest.json`)
-        are skipped unless `ignore_enabled_plugin_flag` is `True`. Plugins that fail to
+        are skipped unless `ignore_enabled_flag` is `True`. Plugins that fail to
         load are collected in the returned error list rather than aborting the scan.
 
         Args:
             directory: The directory to scan for plugin project folders.
-            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+            ignore_enabled_flag: When `True`, bypasses the `enabled` check in
                 each plugin's manifest. Defaults to `False`.
 
         Returns:
@@ -139,7 +139,7 @@ class PluginsService:
         retrieved, skipped, errored = (
             self._plugin_registry_service.get_components_from_component_project_folder_directories(
                 directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_plugin_flag,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         self._logger.debug(
@@ -185,20 +185,20 @@ class PluginsService:
         self._logger.debug("Registered plugin: {!r}", plugin)
 
     @log_and_propagate_error_on_service_method
-    def register_plugin_from_plugin_project_folder(
+    def register_plugin_from_directory(
         self,
-        plugin_project_folder: pathlib.Path,
-        ignore_enabled_plugin_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> BasePlugin | None:
         """Instantiates and registers a plugin from a project folder.
 
-        Disabled plugins are skipped unless `ignore_enabled_plugin_flag` is `True`.
+        Disabled plugins are skipped unless `ignore_enabled_flag` is `True`.
         This method registers the plugin but does not start it.
 
         Args:
-            plugin_project_folder: Path to the directory containing the plugin project
+            directory: Path to the directory containing the plugin project
                 files and `manifest.json`.
-            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+            ignore_enabled_flag: When `True`, bypasses the `enabled` check in
                 the manifest. Defaults to `False`.
 
         Returns:
@@ -232,29 +232,29 @@ class PluginsService:
                 required specifier.
         """
         plugin = self._plugin_registry_service.register_component_from_component_project_folder(
-            component_project_folder=plugin_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_plugin_flag,
+            component_project_folder=directory,
+            ignore_enabled_component_flag=ignore_enabled_flag,
         )
         self._logger.debug("Registered plugin: {!r}", plugin)
         return plugin
 
     @log_and_propagate_error_on_service_method
-    async def load_plugin_from_plugin_project_folder(
+    async def load_plugin_from_directory(
         self,
-        plugin_project_folder: pathlib.Path,
-        ignore_enabled_plugin_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
         timeout: int | None = 5,
     ) -> BasePlugin | None:
         """Loads a plugin from a project folder, registering it and starting it if it autostarts.
 
-        Disabled plugins are skipped unless `ignore_enabled_plugin_flag` is `True`.
+        Disabled plugins are skipped unless `ignore_enabled_flag` is `True`.
         After registration, the plugin is started when its `autostart` attribute is
         `True`.
 
         Args:
-            plugin_project_folder: Path to the directory containing the plugin project
+            directory: Path to the directory containing the plugin project
                 files and `manifest.json`.
-            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+            ignore_enabled_flag: When `True`, bypasses the `enabled` check in
                 the manifest. Defaults to `False`.
             timeout: The maximum number of seconds to wait for the plugin to start when
                 it autostarts. When `None`, waits indefinitely. Defaults to 5.
@@ -282,8 +282,8 @@ class PluginsService:
             PluginStartError: If the plugin autostarts but fails to start.
         """
         plugin = await self._plugin_registry_service.load_component_from_component_project_folder(
-            component_project_folder=plugin_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_plugin_flag,
+            component_project_folder=directory,
+            ignore_enabled_component_flag=ignore_enabled_flag,
             context={"timeout": timeout},
         )
         self._logger.success("Loaded plugin: {}", plugin)
@@ -333,7 +333,7 @@ class PluginsService:
     async def reload_plugin_by_plugin_id(
         self,
         plugin_id: str | uuid.UUID,
-        ignore_enabled_plugin_flag: bool = False,
+        ignore_enabled_flag: bool = False,
         load_timeout: int | None = 5,
         unload_timeout: int | None = 5,
         force_unload: bool = False,
@@ -342,12 +342,12 @@ class PluginsService:
 
         The plugin is stopped and deregistered, then loaded again from the project
         folder it was originally loaded from, starting it again if it autostarts. If the
-        plugin is disabled after reload and `ignore_enabled_plugin_flag` is `False`, the
+        plugin is disabled after reload and `ignore_enabled_flag` is `False`, the
         plugin will only be unloaded, not reloaded.
 
         Args:
             plugin_id: The ID of the plugin to reload.
-            ignore_enabled_plugin_flag: When `True`, bypasses the `enabled` check in
+            ignore_enabled_flag: When `True`, bypasses the `enabled` check in
                 the manifest during reload. Defaults to `False`.
             load_timeout: The maximum number of seconds to wait for the plugin to start
                 when it autostarts on reload. When `None`, waits indefinitely. Defaults
@@ -387,7 +387,7 @@ class PluginsService:
         """
         plugin = await self._plugin_registry_service.reload_component_by_component_id(
             component_id=plugin_id,
-            ignore_enabled_component_flag=ignore_enabled_plugin_flag,
+            ignore_enabled_component_flag=ignore_enabled_flag,
             load_context={
                 "timeout": load_timeout,
             },
@@ -404,27 +404,25 @@ class PluginsService:
     @log_and_propagate_error_on_service_method
     async def load_framework_plugins(
         self,
-        ignore_enabled_plugin_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> None:
         """Discovers and loads all plugins from the framework's plugins directory.
 
         Every plugin project folder under the framework plugins directory is discovered,
         resolved into a dependency-respecting load order, then registered and (when the
         plugin has `autostart` set) started. Disabled plugins are skipped unless
-        `ignore_enabled_plugin_flag` is set. Discovery errors, unresolved dependencies,
+        `ignore_enabled_flag` is set. Discovery errors, unresolved dependencies,
         circular dependencies, and per-plugin load failures are logged rather than
         raised so that a single bad plugin does not abort loading the rest.
 
         Args:
-            ignore_enabled_plugin_flag: When `True`, plugins are loaded even if they are
+            ignore_enabled_flag: When `True`, plugins are loaded even if they are
                 marked as disabled. When `False` (default), disabled plugins are skipped.
         """
         self._logger.info("Loading framework plugins...")
-        retrieved, skipped, errored = (
-            self.get_plugins_from_plugin_project_folder_directories(
-                directory=self._plugins_directory,
-                ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
-            )
+        retrieved, skipped, errored = self.get_all_plugins_from_directory(
+            directory=self._plugins_directory,
+            ignore_enabled_flag=ignore_enabled_flag,
         )
         for path in skipped:
             self._logger.info(
@@ -513,7 +511,7 @@ class PluginsService:
         number_of_unloaded_plugins = 0
         unload_plugin_tasks = []
         for plugin in self.get_all_plugins():
-            if plugin.plugin_project_folder.resolve().relative_to(
+            if plugin.root_directory.resolve().relative_to(
                 self._plugins_directory.resolve()
             ):
                 unload_plugin_tasks.append(
@@ -547,7 +545,7 @@ class PluginsService:
         self,
         force_reload: bool = False,
         timeout: None | int = 5,
-        ignore_enabled_plugin_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> None:
         """Unloads all currently loaded plugins and reloads them from disk.
 
@@ -563,7 +561,7 @@ class PluginsService:
                 (default), an unclean stop causes that plugin's unload to fail.
             timeout: The number of seconds to wait for each plugin to stop before its
                 unload is considered to have timed out. When `None`, waits indefinitely.
-            ignore_enabled_plugin_flag: When `True`, plugins are loaded even if they are
+            ignore_enabled_flag: When `True`, plugins are loaded even if they are
                 marked as disabled. When `False` (default), disabled plugins are skipped
                 when reloading.
         """
@@ -601,15 +599,15 @@ class PluginsService:
                 continue
             plugin_loaded = False
             for plugin in self.get_all_plugins():
-                if plugin.plugin_project_folder.parent == plugin_project_folder.parent:
+                if plugin.root_directory.parent == plugin_project_folder.parent:
                     plugin_loaded = True
                     break
             if not plugin_loaded:
                 load_plugin_tasks.append(
                     asyncio.create_task(
-                        self.load_plugin_from_plugin_project_folder(
-                            plugin_project_folder=plugin_project_folder.parent,
-                            ignore_enabled_plugin_flag=ignore_enabled_plugin_flag,
+                        self.load_plugin_from_directory(
+                            directory=plugin_project_folder.parent,
+                            ignore_enabled_flag=ignore_enabled_flag,
                         ),
                     ),
                 )

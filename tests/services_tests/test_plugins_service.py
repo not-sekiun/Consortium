@@ -55,24 +55,24 @@ def test_repr(plugins_service):
 
 
 def test_get_plugin_from_folder_enabled(plugins_service):
-    plugin = plugins_service.get_plugin_from_plugin_project_folder(
-        plugin_project_folder=_MOCK_PLUGINS / "mock_plugin_valid"
+    plugin = plugins_service.get_plugin_from_directory(
+        directory=_MOCK_PLUGINS / "mock_plugin_valid"
     )
     assert plugin is not None
     assert plugin.label == "consortium.tests.services.mock_plugin_valid"
 
 
 def test_get_plugin_from_folder_disabled_returns_none(plugins_service):
-    result = plugins_service.get_plugin_from_plugin_project_folder(
-        plugin_project_folder=_MOCK_PLUGINS / "mock_plugin_disabled"
+    result = plugins_service.get_plugin_from_directory(
+        directory=_MOCK_PLUGINS / "mock_plugin_disabled"
     )
     assert result is None
 
 
 def test_get_plugin_from_folder_disabled_with_flag_loads(plugins_service):
-    result = plugins_service.get_plugin_from_plugin_project_folder(
-        plugin_project_folder=_MOCK_PLUGINS / "mock_plugin_disabled",
-        ignore_enabled_plugin_flag=True,
+    result = plugins_service.get_plugin_from_directory(
+        directory=_MOCK_PLUGINS / "mock_plugin_disabled",
+        ignore_enabled_flag=True,
     )
     assert result is not None
 
@@ -81,10 +81,8 @@ def test_get_plugin_from_folder_disabled_with_flag_loads(plugins_service):
 
 
 def test_get_plugins_from_directories(plugins_service):
-    retrieved, skipped, errored = (
-        plugins_service.get_plugins_from_plugin_project_folder_directories(
-            directory=_MOCK_PLUGINS
-        )
+    retrieved, skipped, errored = plugins_service.get_all_plugins_from_directory(
+        directory=_MOCK_PLUGINS
     )
     assert isinstance(retrieved, list)
     assert isinstance(skipped, list)
@@ -111,9 +109,7 @@ def test_register_plugin_from_folder_delegates(plugins_service_with_mock_registr
     folder = pathlib.Path("/tmp/some_plugin")
     mock_plugin = MagicMock()
     registry.register_component_from_component_project_folder.return_value = mock_plugin
-    result = svc.register_plugin_from_plugin_project_folder(
-        plugin_project_folder=folder
-    )
+    result = svc.register_plugin_from_directory(directory=folder)
     registry.register_component_from_component_project_folder.assert_called_once_with(
         component_project_folder=folder,
         ignore_enabled_component_flag=False,
@@ -132,9 +128,7 @@ async def test_load_plugin_from_folder_delegates(plugins_service_with_mock_regis
     registry.load_component_from_component_project_folder = AsyncMock(
         return_value=mock_plugin
     )
-    result = await svc.load_plugin_from_plugin_project_folder(
-        plugin_project_folder=folder
-    )
+    result = await svc.load_plugin_from_directory(directory=folder)
     registry.load_component_from_component_project_folder.assert_called_once_with(
         component_project_folder=folder,
         ignore_enabled_component_flag=False,
@@ -270,9 +264,7 @@ async def test_load_framework_plugins_loads_from_directory(
         [mock_plugin],
         [],
     )
-    svc.get_plugins_from_plugin_project_folder_directories = MagicMock(
-        return_value=([], [], [])
-    )
+    svc.get_all_plugins_from_directory = MagicMock(return_value=([], [], []))
     svc.get_all_plugins = MagicMock(return_value=[])
     svc.register_plugin = MagicMock()
     await svc.load_framework_plugins()
