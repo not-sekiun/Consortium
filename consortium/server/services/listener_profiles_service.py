@@ -92,9 +92,11 @@ class ListenerProfilesService:
             InternalComponentProjectError: If an unhandled exception occurs while
                 loading the profile.
         """
-        listener_profile = self._listener_profile_registry_service.get_component_from_component_project_folder(
-            component_project_folder=listener_profile_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
+        listener_profile = (
+            self._listener_profile_registry_service.get_component_from_directory(
+                directory=listener_profile_project_folder,
+                ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
+            )
         )
         if listener_profile is None:
             self._logger.debug(
@@ -135,7 +137,7 @@ class ListenerProfilesService:
             load.
         """
         retrieved, skipped, errored = (
-            self._listener_profile_registry_service.get_components_from_component_project_folder_directories(
+            self._listener_profile_registry_service.get_all_components_from_directory(
                 directory=directory,
                 ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
             )
@@ -212,9 +214,11 @@ class ListenerProfilesService:
             InternalComponentProjectError: If an unhandled exception occurs while
                 loading the profile.
         """
-        listener_profile = await self._listener_profile_registry_service.load_component_from_component_project_folder(
-            component_project_folder=listener_profile_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
+        listener_profile = (
+            await self._listener_profile_registry_service.load_component_from_directory(
+                directory=listener_profile_project_folder,
+                ignore_enabled_component_flag=ignore_enabled_listener_profile_flag,
+            )
         )
         if listener_profile is None:
             self._logger.warning(

@@ -90,13 +90,13 @@ class InvalidComponentProjectManifestFileJSONError(
     code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
         "The $COMPONENT_TYPE$ project manifest file `manifest.json` is not a valid JSON "
         "file."
     )
 
-    def __init__(self, component_project_folder: str):
-        super().__init__(component_project_folder=component_project_folder)
+    def __init__(self, component_directory: str):
+        super().__init__(component_directory=component_directory)
 
 
 class InvalidComponentProjectManifestFileSchemaError(
@@ -109,14 +109,14 @@ class InvalidComponentProjectManifestFileSchemaError(
     code = "INVALID_COMPONENT_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
         "The $COMPONENT_TYPE$ project manifest file `manifest.json` does not conform to the "
         "expected JSON schema. {json_schema_error_message}"
     )
 
-    def __init__(self, component_project_folder: str, json_schema_error_message: str):
+    def __init__(self, component_directory: str, json_schema_error_message: str):
         super().__init__(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             json_schema_error_message=json_schema_error_message,
         )
 
@@ -135,12 +135,12 @@ class InvalidComponentProjectPyProjectFileTOMLError(ComponentLoadingError):
     code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
         "The `pyproject.toml` file specified is not a valid TOML file."
     )
 
-    def __init__(self, component_project_folder: str):
-        super().__init__(component_project_folder=component_project_folder)
+    def __init__(self, component_directory: str):
+        super().__init__(component_directory=component_directory)
 
 
 class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError):
@@ -151,15 +151,15 @@ class InvalidComponentProjectPyProjectFileDependencyError(ComponentLoadingError)
     code = "INVALID_COMPONENT_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
         "The `pyproject.toml` file specified contains the invalid dependency "
         "entry '{invalid_dependency_entry}'. Check that the dependency "
         "parameter contains entries conforming to PEP 508."
     )
 
-    def __init__(self, component_project_folder: str, invalid_dependency_entry: str):
+    def __init__(self, component_directory: str, invalid_dependency_entry: str):
         super().__init__(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             invalid_dependency_entry=invalid_dependency_entry,
         )
 
@@ -182,14 +182,14 @@ class ComponentProjectManifestFileNotFoundError(
     code = "COMPONENT_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
         "The $COMPONENT_TYPE$ project manifest file `manifest.json` was not found in the "
         "$COMPONENT_TYPE$ project folder. Create a `manifest.json` file in the root "
         "directory of the folder containing your $COMPONENT_TYPE$."
     )
 
-    def __init__(self, component_project_folder: str):
-        super().__init__(component_project_folder=component_project_folder)
+    def __init__(self, component_directory: str):
+        super().__init__(component_directory=component_directory)
 
 
 class ComponentProjectEntryPointModuleNotFoundError(
@@ -202,15 +202,15 @@ class ComponentProjectEntryPointModuleNotFoundError(
     code = "COMPONENT_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
         "The $COMPONENT_TYPE$ entry point module '{entry_point_module}' specified in the "
         "$COMPONENT_TYPE$ project's manifest file was not found. Check that the module "
         "specified in the entry point parameter exists."
     )
 
-    def __init__(self, component_project_folder: str, entry_point_module: str):
+    def __init__(self, component_directory: str, entry_point_module: str):
         super().__init__(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             entry_point_module=entry_point_module,
         )
 
@@ -231,7 +231,7 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
     code = "COMPONENT_PROJECT_SYMBOL_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load $COMPONENT_TYPE$ project at '{component_project_folder}'. The "
+        "Failed to load $COMPONENT_TYPE$ project at '{component_directory}'. The "
         "entry point symbol '{entry_point_symbol}' specified in the $COMPONENT_TYPE$ project's "
         "manifest file was not found in the $COMPONENT_TYPE$ entry point module "
         "'{entry_point_module}'. Check that the class specified in the `entry_points` "
@@ -240,12 +240,12 @@ class ComponentProjectSymbolNotFoundError(InvalidComponentProjectImplementationE
 
     def __init__(
         self,
-        component_project_folder: str,
+        component_directory: str,
         entry_point_symbol: str,
         entry_point_module: str,
     ):
         super().__init__(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             entry_point_symbol=entry_point_symbol,
             entry_point_module=entry_point_module,
         )
@@ -259,7 +259,7 @@ class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError)
     code = "COMPONENT_PROJECT_INTERFACE_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ project at '{component_project_folder}'. "
+        "Failed to load the $COMPONENT_TYPE$ project at '{component_directory}'. "
         "The entry point symbol '{entry_point_symbol}' in the $COMPONENT_TYPE$ project does "
         "not implement the required interface. Check that the symbol specified "
         "inherits from the appropriate base class."
@@ -267,11 +267,11 @@ class ComponentProjectInterfaceError(InvalidComponentProjectImplementationError)
 
     def __init__(
         self,
-        component_project_folder: str,
+        component_directory: str,
         entry_point_symbol: str,
     ):
         super().__init__(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             entry_point_symbol=entry_point_symbol,
         )
 
@@ -284,17 +284,17 @@ class InternalComponentProjectError(InvalidComponentProjectImplementationError):
     code = "INTERNAL_COMPONENT_PROJECT_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load $COMPONENT_TYPE$ project at '{component_project_folder}'. An "
+        "Failed to load $COMPONENT_TYPE$ project at '{component_directory}'. An "
         "exception occurred while loading the $COMPONENT_TYPE$: {internal_error_message}"
     )
 
     def __init__(
         self,
-        component_project_folder: str,
+        component_directory: str,
         internal_error_message: str,
     ):
         super().__init__(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             internal_error_message=internal_error_message,
         )
 
@@ -381,7 +381,7 @@ class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
     code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ '{component_project_folder}' due to a dependency "
+        "Failed to load the $COMPONENT_TYPE$ '{component_directory}' due to a dependency "
         "error. The third-party dependency '{third_party_dependency_name}' is required "
         "but not installed. Either install that dependency or remove it from the "
         "$COMPONENT_TYPE$'s definition."
@@ -389,11 +389,11 @@ class ThirdPartyDependencyNotFoundError(ComponentDependencyError):
 
     def __init__(
         self,
-        component_project_folder: str,
+        component_directory: str,
         third_party_dependency_name: str,
     ):
         super().__init__(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             third_party_dependency_name=third_party_dependency_name,
         )
 
@@ -406,7 +406,7 @@ class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
     code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
 
     _MESSAGE_TEMPLATE = (
-        "Failed to load the $COMPONENT_TYPE$ '{component_project_folder}' due to a "
+        "Failed to load the $COMPONENT_TYPE$ '{component_directory}' due to a "
         "dependency error. The $COMPONENT_TYPE$ requires the third-party dependency "
         "'{third_party_dependency_name}' of version '{required_version}' but version "
         "'{installed_version}' was found. Either install the dependency of the correct "
@@ -415,13 +415,13 @@ class IncompatibleThirdPartyDependencyVersionError(ComponentDependencyError):
 
     def __init__(
         self,
-        component_project_folder: str,
+        component_directory: str,
         third_party_dependency_name: str,
         required_version: str,
         installed_version: str,
     ):
         super().__init__(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             third_party_dependency_name=third_party_dependency_name,
             required_version=required_version,
             installed_version=installed_version,

@@ -43,17 +43,17 @@ class ExceptionRemappingComponentRegistryService(
         return wrapper
 
     @_remap_exception_decorator
-    def get_component_from_component_project_folder(
+    def get_component_from_directory(
         self,
-        component_project_folder: pathlib.Path,
+        directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> Component:
-        return super().get_component_from_component_project_folder(
-            component_project_folder=component_project_folder,
+        return super().get_component_from_directory(
+            directory=directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
 
-    def get_components_from_component_project_folder_directories(
+    def get_all_components_from_directory(
         self,
         directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
@@ -62,11 +62,9 @@ class ExceptionRemappingComponentRegistryService(
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:
-        retrieved, skipped, errored = (
-            super().get_components_from_component_project_folder_directories(
-                directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_component_flag,
-            )
+        retrieved, skipped, errored = super().get_all_components_from_directory(
+            directory=directory,
+            ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
         remapped_errored = []
         for error_tuple in errored:

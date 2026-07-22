@@ -95,9 +95,11 @@ class AgentProfilesService:
             InternalComponentProjectError: If an unhandled exception occurs while
                 loading the profile.
         """
-        agent_profile = self._agent_profile_registry_service.get_component_from_component_project_folder(
-            component_project_folder=agent_profile_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+        agent_profile = (
+            self._agent_profile_registry_service.get_component_from_directory(
+                directory=agent_profile_project_folder,
+                ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+            )
         )
         if agent_profile is None:
             self._logger.debug(
@@ -137,7 +139,7 @@ class AgentProfilesService:
             load.
         """
         retrieved, skipped, errored = (
-            self._agent_profile_registry_service.get_components_from_component_project_folder_directories(
+            self._agent_profile_registry_service.get_all_components_from_directory(
                 directory=directory,
                 ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
             )
@@ -212,9 +214,11 @@ class AgentProfilesService:
             InternalComponentProjectError: If an unhandled exception occurs while
                 loading the profile.
         """
-        agent_profile = await self._agent_profile_registry_service.load_component_from_component_project_folder(
-            component_project_folder=agent_profile_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+        agent_profile = (
+            await self._agent_profile_registry_service.load_component_from_directory(
+                directory=agent_profile_project_folder,
+                ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+            )
         )
         if agent_profile is None:
             self._logger.warning(

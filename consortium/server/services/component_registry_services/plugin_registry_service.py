@@ -62,7 +62,7 @@ class PluginRegistryService(
         comp_excs.DuplicateComponentLabelError: DuplicatePluginLabelError,
     }
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
-        "component_project_folder": "plugin_directory",
+        "component_directory": "plugin_directory",
         "component_str": "plugin_str",
         "component_id": "plugin_id",
     }
@@ -70,7 +70,7 @@ class PluginRegistryService(
     def _get_component_id(self, component: BasePlugin) -> uuid.UUID:
         return component.plugin_id
 
-    def _get_component_project_folder(self, component: BasePlugin) -> pathlib.Path:
+    def _get_component_directory(self, component: BasePlugin) -> pathlib.Path:
         return component.root_directory
 
     async def _component_load_procedure(

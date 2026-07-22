@@ -91,11 +91,9 @@ class PluginsService:
             InternalComponentProjectError: If an unhandled exception occurs while
                 loading the plugin.
         """
-        plugin = (
-            self._plugin_registry_service.get_component_from_component_project_folder(
-                component_project_folder=directory,
-                ignore_enabled_component_flag=ignore_enabled_flag,
-            )
+        plugin = self._plugin_registry_service.get_component_from_directory(
+            directory=directory,
+            ignore_enabled_component_flag=ignore_enabled_flag,
         )
         if plugin is None:
             self._logger.debug(
@@ -137,7 +135,7 @@ class PluginsService:
             `(path, error)` tuples for plugins that failed to load.
         """
         retrieved, skipped, errored = (
-            self._plugin_registry_service.get_components_from_component_project_folder_directories(
+            self._plugin_registry_service.get_all_components_from_directory(
                 directory=directory,
                 ignore_enabled_component_flag=ignore_enabled_flag,
             )
@@ -231,8 +229,8 @@ class PluginsService:
                 dependency on a registered component whose version does not satisfy the
                 required specifier.
         """
-        plugin = self._plugin_registry_service.register_component_from_component_project_folder(
-            component_project_folder=directory,
+        plugin = self._plugin_registry_service.register_component_from_directory(
+            directory=directory,
             ignore_enabled_component_flag=ignore_enabled_flag,
         )
         self._logger.debug("Registered plugin: {!r}", plugin)
@@ -281,8 +279,8 @@ class PluginsService:
                 loading the plugin.
             PluginStartError: If the plugin autostarts but fails to start.
         """
-        plugin = await self._plugin_registry_service.load_component_from_component_project_folder(
-            component_project_folder=directory,
+        plugin = await self._plugin_registry_service.load_component_from_directory(
+            directory=directory,
             ignore_enabled_component_flag=ignore_enabled_flag,
             context={"timeout": timeout},
         )

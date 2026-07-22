@@ -95,8 +95,8 @@ class EventHooksService:
             InternalComponentProjectError: If an unhandled exception occurs while
                 loading the event hook.
         """
-        event_hook = self._event_hook_registry_service.get_component_from_component_project_folder(
-            component_project_folder=event_hook_project_folder,
+        event_hook = self._event_hook_registry_service.get_component_from_directory(
+            directory=event_hook_project_folder,
             ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
         )
         if event_hook is None:
@@ -142,7 +142,7 @@ class EventHooksService:
             load.
         """
         retrieved, skipped, errored = (
-            self._event_hook_registry_service.get_components_from_component_project_folder_directories(
+            self._event_hook_registry_service.get_all_components_from_directory(
                 directory=directory,
                 ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
             )
@@ -225,9 +225,11 @@ class EventHooksService:
             DuplicateComponentLabelError: If an event hook with the same label is
                 already registered.
         """
-        event_hook = self._event_hook_registry_service.register_component_from_component_project_folder(
-            component_project_folder=event_hook_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+        event_hook = (
+            self._event_hook_registry_service.register_component_from_directory(
+                directory=event_hook_project_folder,
+                ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+            )
         )
         if event_hook is None:
             self._logger.warning(
@@ -299,9 +301,11 @@ class EventHooksService:
             InternalComponentProjectError: If an unhandled exception occurs while
                 loading the event hook.
         """
-        event_hook = await self._event_hook_registry_service.load_component_from_component_project_folder(
-            component_project_folder=event_hook_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+        event_hook = (
+            await self._event_hook_registry_service.load_component_from_directory(
+                directory=event_hook_project_folder,
+                ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+            )
         )
         if event_hook is None:
             self._logger.warning(

@@ -91,9 +91,7 @@ def test_register_from_folder_delegates_and_registers(registry, loader):
     folder = pathlib.Path("/tmp/plugin_folder")
     comp = _make_component()
     loader.get_component_from_component_project_folder.return_value = comp
-    result = registry.register_component_from_component_project_folder(
-        component_project_folder=folder
-    )
+    result = registry.register_component_from_directory(directory=folder)
     assert result == comp
     assert comp in registry.get_all_components()
 
@@ -101,9 +99,7 @@ def test_register_from_folder_delegates_and_registers(registry, loader):
 def test_register_from_folder_disabled_returns_none(registry, loader):
     folder = pathlib.Path("/tmp/disabled_folder")
     loader.get_component_from_component_project_folder.return_value = None
-    result = registry.register_component_from_component_project_folder(
-        component_project_folder=folder
-    )
+    result = registry.register_component_from_directory(directory=folder)
     assert result is None
 
 
@@ -142,9 +138,7 @@ async def test_load_from_folder_loads_enabled(registry, loader):
     folder = pathlib.Path("/tmp/plugin_folder")
     comp = _make_component(label="loaded.comp")
     loader.get_component_from_component_project_folder.return_value = comp
-    result = await registry.load_component_from_component_project_folder(
-        component_project_folder=folder
-    )
+    result = await registry.load_component_from_directory(directory=folder)
     assert result == comp
 
 
@@ -152,9 +146,7 @@ async def test_load_from_folder_loads_enabled(registry, loader):
 async def test_load_from_folder_disabled_returns_none(registry, loader):
     folder = pathlib.Path("/tmp/disabled_folder")
     loader.get_component_from_component_project_folder.return_value = None
-    result = await registry.load_component_from_component_project_folder(
-        component_project_folder=folder
-    )
+    result = await registry.load_component_from_directory(directory=folder)
     assert result is None
 
 

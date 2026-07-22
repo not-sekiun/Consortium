@@ -101,7 +101,7 @@ class InvalidListenerProfileProjectManifestFileJSONError(
     code = "INVALID_LISTENER_PROFILE_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     def __init__(self, listener_profile_project_folder: str):
-        super().__init__(component_project_folder=listener_profile_project_folder)
+        super().__init__(component_directory=listener_profile_project_folder)
 
 
 class InvalidListenerProfileProjectManifestFileSchemaError(
@@ -120,7 +120,7 @@ class InvalidListenerProfileProjectManifestFileSchemaError(
         json_schema_error_message: str,
     ):
         super().__init__(
-            component_project_folder=listener_profile_project_folder,
+            component_directory=listener_profile_project_folder,
             json_schema_error_message=json_schema_error_message,
         )
 
@@ -147,7 +147,7 @@ class InvalidListenerProfileProjectPyProjectFileTOMLError(
     code = "INVALID_LISTENER_PROFILE_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     def __init__(self, listener_profile_project_folder: str):
-        super().__init__(component_project_folder=listener_profile_project_folder)
+        super().__init__(component_directory=listener_profile_project_folder)
 
 
 class InvalidListenerProfileProjectPyProjectFileDependencyError(
@@ -166,7 +166,7 @@ class InvalidListenerProfileProjectPyProjectFileDependencyError(
         invalid_dependency_entry: str,
     ):
         super().__init__(
-            component_project_folder=listener_profile_project_folder,
+            component_directory=listener_profile_project_folder,
             invalid_dependency_entry=invalid_dependency_entry,
         )
 
@@ -193,7 +193,7 @@ class ListenerProfileProjectManifestFileNotFoundError(
     code = "LISTENER_PROFILE_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     def __init__(self, listener_profile_project_folder: str):
-        super().__init__(component_project_folder=listener_profile_project_folder)
+        super().__init__(component_directory=listener_profile_project_folder)
 
 
 class ListenerProfileProjectEntryPointModuleNotFoundError(
@@ -212,7 +212,7 @@ class ListenerProfileProjectEntryPointModuleNotFoundError(
         entry_point_module: str,
     ):
         super().__init__(
-            component_project_folder=listener_profile_project_folder,
+            component_directory=listener_profile_project_folder,
             entry_point_module=entry_point_module,
         )
 
@@ -245,7 +245,7 @@ class ListenerProfileProjectSymbolNotFoundError(
         entry_point_module: str,
     ):
         super().__init__(
-            component_project_folder=listener_profile_project_folder,
+            component_directory=listener_profile_project_folder,
             entry_point_symbol=entry_point_symbol,
             entry_point_module=entry_point_module,
         )
@@ -267,7 +267,7 @@ class ListenerProfileProjectInterfaceError(
         entry_point_symbol: str,
     ):
         super().__init__(
-            component_project_folder=listener_profile_project_folder,
+            component_directory=listener_profile_project_folder,
             entry_point_symbol=entry_point_symbol,
         )
 
@@ -288,7 +288,7 @@ class InternalListenerProfileProjectError(
         internal_error_message: str,
     ):
         super().__init__(
-            component_project_folder=listener_profile_project_folder,
+            component_directory=listener_profile_project_folder,
             internal_error_message=internal_error_message,
         )
 
@@ -379,7 +379,7 @@ class ThirdPartyDependencyNotFoundError(
         third_party_dependency_name: str,
     ):
         super().__init__(
-            component_project_folder=listener_profile_project_folder,
+            component_directory=listener_profile_project_folder,
             third_party_dependency_name=third_party_dependency_name,
         )
 
@@ -402,7 +402,7 @@ class IncompatibleThirdPartyDependencyVersionError(
         installed_version: str,
     ):
         super().__init__(
-            component_project_folder=listener_profile_project_folder,
+            component_directory=listener_profile_project_folder,
             third_party_dependency_name=third_party_dependency_name,
             required_version=required_version,
             installed_version=installed_version,

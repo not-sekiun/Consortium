@@ -34,8 +34,10 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
 
     # TODO: ??? Consider maybe standardizing this attribute name across
     #  all components. If so, remove this method.
+    # TODO: Update (Yes we are working on this, moving all attributes to
+    #  self.root_directory after that change DELETE THIS DONT FORGET
     @abstractmethod
-    def _get_component_project_folder(self, component: Component) -> pathlib.Path: ...
+    def _get_component_directory(self, component: Component) -> pathlib.Path: ...
 
     # Runs after a component is registered.
     async def _component_load_procedure(
@@ -53,19 +55,17 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
     ) -> Component:
         return component
 
-    def get_component_from_component_project_folder(
+    def get_component_from_directory(
         self,
-        component_project_folder: pathlib.Path,
+        directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> Component:
-        return (
-            self._component_loader_service.get_component_from_component_project_folder(
-                component_project_folder=component_project_folder,
-                ignore_enabled_component_flag=ignore_enabled_component_flag,
-            )
+        return self._component_loader_service.get_component_from_directory(
+            component_directory=directory,
+            ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
 
-    def get_components_from_component_project_folder_directories(
+    def get_all_components_from_directory(
         self,
         directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
@@ -74,7 +74,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]] | None,
     ]:
-        return self._component_loader_service.get_components_from_component_project_folder_directories(
+        return self._component_loader_service.get_all_components_from_directory(
             directory=directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
@@ -101,13 +101,13 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
         )
         self._components[str(component_id)] = component
 
-    def register_component_from_component_project_folder(
+    def register_component_from_directory(
         self,
-        component_project_folder: pathlib.Path,
+        directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> Component | None:
-        component = self.get_component_from_component_project_folder(
-            component_project_folder=component_project_folder,
+        component = self.get_component_from_directory(
+            directory=directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
         # If `component` is `None`, it implies a disabled component was attempted to be
@@ -137,16 +137,16 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
         self._components[str(self._get_component_id(component=component))] = component
         return component
 
-    async def load_component_from_component_project_folder(
+    async def load_component_from_directory(
         self,
-        component_project_folder: pathlib.Path,
+        directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
         context: dict | None = None,
     ) -> Component | None:
         if context is None:
             context = {}
-        component = self.get_component_from_component_project_folder(
-            component_project_folder=component_project_folder,
+        component = self.get_component_from_directory(
+            directory=directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
         if component is None:
@@ -176,15 +176,15 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
         if unload_context is None:
             unload_context = {}
         component = self.get_component_by_component_id(component_id=component_id)
-        component_project_folder = self._get_component_project_folder(
+        component_directory = self._get_component_directory(
             component=component,
         )
         await self.unload_component_by_component_id(
             component_id=component_id,
             context=unload_context,
         )
-        return await self.load_component_from_component_project_folder(
-            component_project_folder=component_project_folder,
+        return await self.load_component_from_directory(
+            directory=component_directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
             context=load_context,
         )

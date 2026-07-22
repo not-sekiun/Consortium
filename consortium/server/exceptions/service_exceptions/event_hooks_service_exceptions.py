@@ -105,7 +105,7 @@ class InvalidEventHookProjectManifestFileJSONError(
     code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     def __init__(self, event_hook_project_folder: str):
-        super().__init__(component_project_folder=event_hook_project_folder)
+        super().__init__(component_directory=event_hook_project_folder)
 
 
 class InvalidEventHookProjectManifestFileSchemaError(
@@ -120,7 +120,7 @@ class InvalidEventHookProjectManifestFileSchemaError(
 
     def __init__(self, event_hook_project_folder: str, json_schema_error_message: str):
         super().__init__(
-            component_project_folder=event_hook_project_folder,
+            component_directory=event_hook_project_folder,
             json_schema_error_message=json_schema_error_message,
         )
 
@@ -145,7 +145,7 @@ class InvalidEventHookProjectPyProjectFileTOMLError(
     code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     def __init__(self, event_hook_project_folder: str):
-        super().__init__(component_project_folder=event_hook_project_folder)
+        super().__init__(component_directory=event_hook_project_folder)
 
 
 class InvalidEventHookProjectPyProjectFileDependencyError(
@@ -160,7 +160,7 @@ class InvalidEventHookProjectPyProjectFileDependencyError(
 
     def __init__(self, event_hook_project_folder: str, invalid_dependency_entry: str):
         super().__init__(
-            component_project_folder=event_hook_project_folder,
+            component_directory=event_hook_project_folder,
             invalid_dependency_entry=invalid_dependency_entry,
         )
 
@@ -187,7 +187,7 @@ class EventHookProjectManifestFileNotFoundError(
     code = "EVENT_HOOK_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     def __init__(self, event_hook_project_folder: str):
-        super().__init__(component_project_folder=event_hook_project_folder)
+        super().__init__(component_directory=event_hook_project_folder)
 
 
 class EventHookProjectEntryPointModuleNotFoundError(
@@ -203,7 +203,7 @@ class EventHookProjectEntryPointModuleNotFoundError(
     def __init__(self, event_hook_project_folder: str, event_hook_file: str):
         super().__init__(
             entry_point_module=event_hook_file,
-            component_project_folder=event_hook_project_folder,
+            component_directory=event_hook_project_folder,
         )
 
 
@@ -235,7 +235,7 @@ class EventHookProjectSymbolNotFoundError(
         entry_point_module: str,
     ):
         super().__init__(
-            component_project_folder=event_hook_project_folder,
+            component_directory=event_hook_project_folder,
             entry_point_symbol=entry_point_symbol,
             entry_point_module=entry_point_module,
         )
@@ -257,7 +257,7 @@ class EventHookProjectInterfaceError(
         entry_point_symbol: str,
     ):
         super().__init__(
-            component_project_folder=event_hook_project_folder,
+            component_directory=event_hook_project_folder,
             entry_point_symbol=entry_point_symbol,
         )
 
@@ -278,7 +278,7 @@ class InternalEventHookProjectError(
         internal_error_message: str,
     ):
         super().__init__(
-            component_project_folder=event_hook_project_folder,
+            component_directory=event_hook_project_folder,
             internal_error_message=internal_error_message,
         )
 
@@ -365,7 +365,7 @@ class ThirdPartyDependencyNotFoundError(
         third_party_dependency_name: str,
     ):
         super().__init__(
-            component_project_folder=event_hook_project_folder,
+            component_directory=event_hook_project_folder,
             third_party_dependency_name=third_party_dependency_name,
         )
 
@@ -388,7 +388,7 @@ class IncompatibleThirdPartyDependencyVersionError(
         installed_version: str,
     ):
         super().__init__(
-            component_project_folder=event_hook_project_folder,
+            component_directory=event_hook_project_folder,
             third_party_dependency_name=third_party_dependency_name,
             required_version=required_version,
             installed_version=installed_version,

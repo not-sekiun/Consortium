@@ -58,13 +58,13 @@ class ComponentLoaderService[Component]:
 
     @staticmethod
     def _get_manifest_json_file_path(
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
     ) -> pathlib.Path:
-        return component_project_folder / "manifest.json"
+        return component_directory / "manifest.json"
 
     @staticmethod
     def _validate_manifest_json_file(
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
         manifest_file_path: pathlib.Path,
         manifest_json_schema: dict[str, Any],
     ) -> dict[str, Any]:
@@ -81,15 +81,15 @@ class ComponentLoaderService[Component]:
                 return manifest_json
         except FileNotFoundError:
             raise ComponentProjectManifestFileNotFoundError(
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
             ) from None
         except json.JSONDecodeError:
             raise InvalidComponentProjectManifestFileJSONError(
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
             ) from None
         except jsonschema.ValidationError as exc:
             raise InvalidComponentProjectManifestFileSchemaError(
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
                 json_schema_error_message=exc.message,
             ) from None
 
@@ -111,13 +111,13 @@ class ComponentLoaderService[Component]:
 
     @staticmethod
     def _get_entry_point_from_manifest_json(
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
         manifest_json: dict[str, Any],
     ) -> tuple[str, str]:
         entry_point = manifest_json["entry_point"]
         if ":" not in entry_point:
             raise InvalidComponentProjectManifestFileSchemaError(
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
                 json_schema_error_message=(
                     "The 'entry_point' field must be in the format "
                     "'module_path:SymbolName'"
@@ -128,13 +128,13 @@ class ComponentLoaderService[Component]:
 
     @staticmethod
     def _get_pyproject_toml_file_path(
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
     ) -> pathlib.Path:
-        return component_project_folder / "pyproject.toml"
+        return component_directory / "pyproject.toml"
 
     @staticmethod
     def _validate_pyproject_toml_file_third_party_dependencies(
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
         pyproject_filepath: pathlib.Path,
     ) -> set[requirements.Requirement]:
         # Check for any third party dependencies declared by the component. If they exist
@@ -146,7 +146,7 @@ class ComponentLoaderService[Component]:
                     pyproject_toml = tomllib.loads(pyproject_toml_file.read())
             except tomllib.TOMLDecodeError:
                 raise InvalidComponentProjectPyProjectFileTOMLError(
-                    component_project_folder=str(component_project_folder),
+                    component_directory=str(component_directory),
                 ) from None
             dependency_entries = pyproject_toml.get("project", {}).get(
                 "dependencies",
@@ -165,7 +165,7 @@ class ComponentLoaderService[Component]:
                 dependency_version = importlib.metadata.version(dependency.name)
                 if dependency_version not in dependency.specifier:
                     raise IncompatibleThirdPartyDependencyVersionError(
-                        component_project_folder=str(component_project_folder),
+                        component_directory=str(component_directory),
                         third_party_dependency_name=dependency.name,
                         required_version=str(dependency.specifier),
                         installed_version=dependency_version,
@@ -173,12 +173,12 @@ class ComponentLoaderService[Component]:
                 dependencies.add(dependency)
             except importlib.metadata.PackageNotFoundError:
                 raise ThirdPartyDependencyNotFoundError(
-                    component_project_folder=str(component_project_folder),
+                    component_directory=str(component_directory),
                     third_party_dependency_name=dependency.name,
                 ) from None
             except requirements.InvalidRequirement:
                 raise InvalidComponentProjectPyProjectFileDependencyError(
-                    component_project_folder=str(component_project_folder),
+                    component_directory=str(component_directory),
                     invalid_dependency_entry=entry,
                 ) from None
         return dependencies
@@ -191,16 +191,16 @@ class ComponentLoaderService[Component]:
         component_class.third_party_dependencies = dependencies
         return component_class
 
-    def _validate_component_project_folder_structure(
+    def _validate_component_directory_structure(
         self,
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
         component_module: str,
         component_symbol: str,
     ) -> type[Component]:
         # Check for a valid component project folder structure as specified by the
         # manifest file.
         component_file = pathlib.Path(
-            component_project_folder,
+            component_directory,
             *component_module.split("."),
         )
         # Append .py suffix
@@ -212,7 +212,7 @@ class ComponentLoaderService[Component]:
         if not component_file.exists():
             raise ComponentProjectEntryPointModuleNotFoundError(
                 entry_point_module=str(component_file),
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
             )
 
         # Check for valid symbol names in the required component project file.
@@ -238,7 +238,7 @@ class ComponentLoaderService[Component]:
         # This should only catch errors that are not related to the component project.
         except Exception as exc:
             raise InternalComponentProjectError(
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
                 internal_error_message=str(exc),
             ) from None
 
@@ -252,7 +252,7 @@ class ComponentLoaderService[Component]:
         except AttributeError:
             raise ComponentProjectSymbolNotFoundError(
                 entry_point_symbol=component_symbol,
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
                 entry_point_module=str(component_file),
             ) from None
 
@@ -289,13 +289,13 @@ class ComponentLoaderService[Component]:
     def _validate_component_class(
         self,
         component_class: type,
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
         component_symbol: str,
     ) -> Component:
         # Check for correct inheritance and instantiation of classes.
         if not issubclass(component_class, self._component_type):
             raise ComponentProjectInterfaceError(
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
                 entry_point_symbol=component_symbol,
             )
         try:
@@ -307,7 +307,7 @@ class ComponentLoaderService[Component]:
             raise exc from None
         except Exception as exc:
             raise InternalComponentProjectError(
-                component_project_folder=str(component_project_folder),
+                component_directory=str(component_directory),
                 internal_error_message=str(exc),
             ) from None
 
@@ -319,15 +319,15 @@ class ComponentLoaderService[Component]:
         # class after all validation has been performed.
         return component_object
 
-    def get_component_from_component_project_folder(
+    def get_component_from_directory(
         self,
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> Component | None:
         manifest_json = self._validate_manifest_json_file(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             manifest_file_path=self._get_manifest_json_file_path(
-                component_project_folder=component_project_folder,
+                component_directory=component_directory,
             ),
             manifest_json_schema=self._manifest_json_schema,
         )
@@ -335,7 +335,7 @@ class ComponentLoaderService[Component]:
             manifest_json=manifest_json,
         )
         component_module, component_symbol = self._get_entry_point_from_manifest_json(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             manifest_json=manifest_json,
         )
         if not self._validate_component_enabled(
@@ -344,13 +344,13 @@ class ComponentLoaderService[Component]:
         ):
             return None
         dependencies = self._validate_pyproject_toml_file_third_party_dependencies(
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             pyproject_filepath=self._get_pyproject_toml_file_path(
-                component_project_folder=component_project_folder,
+                component_directory=component_directory,
             ),
         )
-        component_class = self._validate_component_project_folder_structure(
-            component_project_folder=component_project_folder,
+        component_class = self._validate_component_directory_structure(
+            component_directory=component_directory,
             component_module=component_module,
             component_symbol=component_symbol,
         )
@@ -363,14 +363,14 @@ class ComponentLoaderService[Component]:
         )
         component_object = self._validate_component_class(
             component_class=component_class,
-            component_project_folder=component_project_folder,
+            component_directory=component_directory,
             component_symbol=component_symbol,
         )
         return self._post_validate_component_object(
             component_object=component_object,
         )
 
-    def get_components_from_component_project_folder_directories(
+    def get_all_components_from_directory(
         self,
         directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
@@ -381,35 +381,35 @@ class ComponentLoaderService[Component]:
     ]:
         # Recursively search through the directory to find all component project
         # folders and returns them.
-        component_project_folder_paths = []
+        component_directory_paths = []
         for path in directory.rglob("*"):
             if path.name != "manifest.json":
                 continue
-            component_project_folder_paths.append(path.parent)
+            component_directory_paths.append(path.parent)
         retrieved_components = []
         skipped_components = []
         errored_components = []
-        for component_project_folder_path in component_project_folder_paths:
+        for directory in component_directory_paths:
             try:
-                component = self.get_component_from_component_project_folder(
-                    component_project_folder=component_project_folder_path,
+                component = self.get_component_from_directory(
+                    component_directory=directory,
                     ignore_enabled_component_flag=ignore_enabled_component_flag,
                 )
                 if component:
                     retrieved_components.append(component)
                 else:
-                    skipped_components.append(component_project_folder_path)
+                    skipped_components.append(directory)
             except (
                 ComponentLoadingError,
                 ComponentConfigurationError,
                 ComponentDependencyError,
             ) as exc:
-                errored_components.append((component_project_folder_path, exc))
+                errored_components.append((directory, exc))
             # Domain framework errors escape the Component*Error hierarchy entirely,
             # so they need a separate clause to be collected rather than crashing
             # the batch load.
             except self._component_framework_error as exc:
-                errored_components.append((component_project_folder_path, exc))
+                errored_components.append((directory, exc))
         return retrieved_components, skipped_components, errored_components
 
     @staticmethod

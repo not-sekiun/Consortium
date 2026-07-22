@@ -100,7 +100,7 @@ class InvalidPluginProjectManifestFileJSONError(
     code = "INVALID_PLUGIN_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
     def __init__(self, plugin_directory: str):
-        super().__init__(component_project_folder=plugin_directory)
+        super().__init__(component_directory=plugin_directory)
 
 
 class InvalidPluginProjectManifestFileSchemaError(
@@ -115,7 +115,7 @@ class InvalidPluginProjectManifestFileSchemaError(
 
     def __init__(self, plugin_directory: str, json_schema_error_message: str):
         super().__init__(
-            component_project_folder=plugin_directory,
+            component_directory=plugin_directory,
             json_schema_error_message=json_schema_error_message,
         )
 
@@ -140,7 +140,7 @@ class InvalidPluginProjectPyProjectFileTOMLError(
     code = "INVALID_PLUGIN_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
     def __init__(self, plugin_directory: str):
-        super().__init__(component_project_folder=plugin_directory)
+        super().__init__(component_directory=plugin_directory)
 
 
 class InvalidPluginProjectPyProjectFileDependencyError(
@@ -155,7 +155,7 @@ class InvalidPluginProjectPyProjectFileDependencyError(
 
     def __init__(self, plugin_directory: str, invalid_dependency_entry: str):
         super().__init__(
-            component_project_folder=plugin_directory,
+            component_directory=plugin_directory,
             invalid_dependency_entry=invalid_dependency_entry,
         )
 
@@ -182,7 +182,7 @@ class PluginProjectManifestFileNotFoundError(
     code = "PLUGIN_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
     def __init__(self, plugin_directory: str):
-        super().__init__(component_project_folder=plugin_directory)
+        super().__init__(component_directory=plugin_directory)
 
 
 class PluginProjectEntryPointModuleNotFoundError(
@@ -197,7 +197,7 @@ class PluginProjectEntryPointModuleNotFoundError(
 
     def __init__(self, plugin_directory: str, entry_point_module: str):
         super().__init__(
-            component_project_folder=plugin_directory,
+            component_directory=plugin_directory,
             entry_point_module=entry_point_module,
         )
 
@@ -230,7 +230,7 @@ class PluginProjectSymbolNotFoundError(
         entry_point_module: str,
     ):
         super().__init__(
-            component_project_folder=plugin_directory,
+            component_directory=plugin_directory,
             entry_point_symbol=entry_point_symbol,
             entry_point_module=entry_point_module,
         )
@@ -252,7 +252,7 @@ class PluginProjectInterfaceError(
         entry_point_symbol: str,
     ):
         super().__init__(
-            component_project_folder=plugin_directory,
+            component_directory=plugin_directory,
             entry_point_symbol=entry_point_symbol,
         )
 
@@ -273,7 +273,7 @@ class InternalPluginProjectError(
         internal_error_message: str,
     ):
         super().__init__(
-            component_project_folder=plugin_directory,
+            component_directory=plugin_directory,
             internal_error_message=internal_error_message,
         )
 
@@ -361,7 +361,7 @@ class ThirdPartyDependencyNotFoundError(
         third_party_dependency_name: str,
     ):
         super().__init__(
-            component_project_folder=plugin_directory,
+            component_directory=plugin_directory,
             third_party_dependency_name=third_party_dependency_name,
         )
 
@@ -384,7 +384,7 @@ class IncompatibleThirdPartyDependencyVersionError(
         installed_version: str,
     ):
         super().__init__(
-            component_project_folder=plugin_directory,
+            component_directory=plugin_directory,
             third_party_dependency_name=third_party_dependency_name,
             required_version=required_version,
             installed_version=installed_version,

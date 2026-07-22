@@ -57,18 +57,18 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
         )
 
     # Change the return type to AgentProfile for IDE type checking
-    def get_component_from_component_project_folder(
+    def get_component_from_directory(
         self,
-        component_project_folder: pathlib.Path,
+        component_directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> AgentProfile | None:
-        return super().get_component_from_component_project_folder(
-            component_project_folder=component_project_folder,
+        return super().get_component_from_directory(
+            component_directory=component_directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
 
     # Change the return type to AgentProfile for IDE type checking
-    def get_components_from_component_project_folder_directories(
+    def get_all_components_from_directory(
         self,
         directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
@@ -77,7 +77,7 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:
-        return super().get_components_from_component_project_folder_directories(
+        return super().get_all_components_from_directory(
             directory=directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )

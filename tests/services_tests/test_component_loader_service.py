@@ -62,7 +62,7 @@ def event_hook_loader(mock_release_service):
 
 
 def test_valid_plugin_loads(plugin_loader):
-    plugin = plugin_loader.get_component_from_component_project_folder(
+    plugin = plugin_loader.get_component_from_directory(
         _MOCK_PLUGINS / "mock_plugin_valid"
     )
     assert plugin is not None
@@ -70,14 +70,14 @@ def test_valid_plugin_loads(plugin_loader):
 
 
 def test_disabled_plugin_returns_none(plugin_loader):
-    result = plugin_loader.get_component_from_component_project_folder(
+    result = plugin_loader.get_component_from_directory(
         _MOCK_PLUGINS / "mock_plugin_disabled"
     )
     assert result is None
 
 
 def test_disabled_plugin_with_ignore_flag_loads(plugin_loader):
-    result = plugin_loader.get_component_from_component_project_folder(
+    result = plugin_loader.get_component_from_directory(
         _MOCK_PLUGINS / "mock_plugin_disabled",
         ignore_enabled_component_flag=True,
     )
@@ -89,19 +89,19 @@ def test_disabled_plugin_with_ignore_flag_loads(plugin_loader):
 
 def test_missing_manifest_raises(plugin_loader, tmp_path):
     with pytest.raises(ComponentProjectManifestFileNotFoundError):
-        plugin_loader.get_component_from_component_project_folder(tmp_path)
+        plugin_loader.get_component_from_directory(tmp_path)
 
 
 def test_bad_json_manifest_raises(plugin_loader):
     with pytest.raises(InvalidComponentProjectManifestFileJSONError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_json"
         )
 
 
 def test_bad_schema_manifest_raises(plugin_loader):
     with pytest.raises(InvalidComponentProjectManifestFileSchemaError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_schema"
         )
 
@@ -109,7 +109,7 @@ def test_bad_schema_manifest_raises(plugin_loader):
 def test_bad_entry_point_format_raises(plugin_loader):
     # Entry point without colon triggers schema error from the format check.
     with pytest.raises(InvalidComponentProjectManifestFileSchemaError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_entry_point"
         )
 
@@ -119,28 +119,28 @@ def test_bad_entry_point_format_raises(plugin_loader):
 
 def test_bad_toml_raises(plugin_loader):
     with pytest.raises(InvalidComponentProjectPyProjectFileTOMLError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_toml"
         )
 
 
 def test_missing_dep_raises(plugin_loader):
     with pytest.raises(ThirdPartyDependencyNotFoundError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_missing_dep"
         )
 
 
 def test_incompatible_dep_raises(plugin_loader):
     with pytest.raises(IncompatibleThirdPartyDependencyVersionError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_incompatible_dep"
         )
 
 
 def test_bad_dep_format_raises(plugin_loader):
     with pytest.raises(InvalidComponentProjectPyProjectFileDependencyError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_dep_format"
         )
 
@@ -150,42 +150,42 @@ def test_bad_dep_format_raises(plugin_loader):
 
 def test_no_module_raises(plugin_loader):
     with pytest.raises(ComponentProjectEntryPointModuleNotFoundError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_no_module"
         )
 
 
 def test_bad_symbol_raises(plugin_loader):
     with pytest.raises(ComponentProjectSymbolNotFoundError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_symbol"
         )
 
 
 def test_bad_interface_raises(plugin_loader):
     with pytest.raises(ComponentProjectInterfaceError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_interface"
         )
 
 
 def test_bad_framework_version_raises(plugin_loader):
     with pytest.raises(IncompatibleComponentFrameworkVersionError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_bad_version"
         )
 
 
 def test_import_error_raises_internal_error(plugin_loader):
     with pytest.raises(InternalComponentProjectError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_import_error"
         )
 
 
 def test_init_error_raises_internal_error(plugin_loader):
     with pytest.raises(InternalComponentProjectError):
-        plugin_loader.get_component_from_component_project_folder(
+        plugin_loader.get_component_from_directory(
             _MOCK_PLUGINS / "mock_plugin_init_error"
         )
 
@@ -194,10 +194,8 @@ def test_init_error_raises_internal_error(plugin_loader):
 
 
 def test_scan_directory_classifies_results(plugin_loader):
-    retrieved, skipped, errored = (
-        plugin_loader.get_components_from_component_project_folder_directories(
-            _MOCK_PLUGINS
-        )
+    retrieved, skipped, errored = plugin_loader.get_all_components_from_directory(
+        _MOCK_PLUGINS
     )
     # At minimum the valid plugin should be loaded successfully.
     labels = [p.label for p in retrieved]
@@ -209,11 +207,9 @@ def test_scan_directory_classifies_results(plugin_loader):
 
 
 def test_scan_directory_ignore_enabled(plugin_loader):
-    retrieved, skipped, _ = (
-        plugin_loader.get_components_from_component_project_folder_directories(
-            _MOCK_PLUGINS,
-            ignore_enabled_component_flag=True,
-        )
+    retrieved, skipped, _ = plugin_loader.get_all_components_from_directory(
+        _MOCK_PLUGINS,
+        ignore_enabled_component_flag=True,
     )
     labels = [p.label for p in retrieved]
     assert "consortium.tests.services.mock_plugin_disabled" in labels
@@ -224,7 +220,7 @@ def test_scan_directory_ignore_enabled(plugin_loader):
 
 
 def test_valid_event_hook_loads(event_hook_loader):
-    event_hook = event_hook_loader.get_component_from_component_project_folder(
+    event_hook = event_hook_loader.get_component_from_directory(
         _MOCK_EVENT_HOOKS / "mock_event_hook_valid"
     )
     assert event_hook is not None
@@ -232,7 +228,7 @@ def test_valid_event_hook_loads(event_hook_loader):
 
 
 def test_disabled_event_hook_returns_none(event_hook_loader):
-    result = event_hook_loader.get_component_from_component_project_folder(
+    result = event_hook_loader.get_component_from_directory(
         _MOCK_EVENT_HOOKS / "mock_event_hook_disabled"
     )
     assert result is None
