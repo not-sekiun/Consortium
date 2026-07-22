@@ -10,8 +10,29 @@ from consortium.framework.listeners.base_listener_template import BaseListenerTe
 from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentLoadingError,
 )
+from consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions import (
+    ComponentDependencyNotFoundError,
+    DuplicateListenerProfileLabelError,
+    IncompatibleComponentDependencyVersionError,
+    IncompatibleListenerProfileFrameworkVersionError,
+    IncompatibleThirdPartyDependencyVersionError,
+    InternalListenerProfileProjectError,
+    InvalidListenerProfileProjectManifestFileJSONError,
+    InvalidListenerProfileProjectManifestFileSchemaError,
+    InvalidListenerProfileProjectPyProjectFileDependencyError,
+    InvalidListenerProfileProjectPyProjectFileTOMLError,
+    ListenerProfileAlreadyRegisteredError,
+    ListenerProfileDependsOnInvalidComponentDependencyError,
+    ListenerProfileNotFoundError,
+    ListenerProfileProjectEntryPointModuleNotFoundError,
+    ListenerProfileProjectInterfaceError,
+    ListenerProfileProjectManifestFileNotFoundError,
+    ListenerProfileProjectSymbolNotFoundError,
+    ThirdPartyDependencyNotFoundError,
+)
 from consortium.server.objects.c2_profile_objects import ListenerProfile
 from consortium.server.services.component_loader_services.component_loader_service import (
+    ComponentExceptions,
     ComponentLoaderService,
 )
 
@@ -31,6 +52,28 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
         "required": ["entry_point", "enabled"],
         "additionalProperties": False,
     }
+    # Raise listener profile exceptions directly from the shared loader/registry pipeline
+    # instead of raising generic component exceptions and remapping them downstream.
+    _component_exceptions = ComponentExceptions(
+        manifest_file_not_found=ListenerProfileProjectManifestFileNotFoundError,
+        invalid_manifest_file_json=InvalidListenerProfileProjectManifestFileJSONError,
+        invalid_manifest_file_schema=InvalidListenerProfileProjectManifestFileSchemaError,
+        invalid_pyproject_file_toml=InvalidListenerProfileProjectPyProjectFileTOMLError,
+        invalid_pyproject_file_dependency=InvalidListenerProfileProjectPyProjectFileDependencyError,
+        third_party_dependency_not_found=ThirdPartyDependencyNotFoundError,
+        incompatible_third_party_dependency_version=IncompatibleThirdPartyDependencyVersionError,
+        entry_point_module_not_found=ListenerProfileProjectEntryPointModuleNotFoundError,
+        symbol_not_found=ListenerProfileProjectSymbolNotFoundError,
+        interface_error=ListenerProfileProjectInterfaceError,
+        internal_error=InternalListenerProfileProjectError,
+        incompatible_framework_version=IncompatibleListenerProfileFrameworkVersionError,
+        component_dependency_not_found=ComponentDependencyNotFoundError,
+        incompatible_component_dependency_version=IncompatibleComponentDependencyVersionError,
+        depends_on_invalid_component_dependency=ListenerProfileDependsOnInvalidComponentDependencyError,
+        not_found=ListenerProfileNotFoundError,
+        already_registered=ListenerProfileAlreadyRegisteredError,
+        duplicate_label=DuplicateListenerProfileLabelError,
+    )
 
     @staticmethod
     def _post_validate_component_object(
