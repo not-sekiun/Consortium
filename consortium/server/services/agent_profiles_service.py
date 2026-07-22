@@ -19,6 +19,7 @@ from consortium.server.services.component_loader_services.agent_profile_loader_s
 from consortium.server.services.component_registry_services.agent_profile_registry_service import (
     AgentProfileRegistryService,
 )
+from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
@@ -33,12 +34,11 @@ class AgentProfilesService:
     def __init__(
         self,
         release_service: ReleaseService,
-        agents_directory: pathlib.Path,
-        consortium_root: pathlib.Path,
+        paths_service: PathsService,
     ) -> None:
-        self._agents_directory = agents_directory
+        self._agents_directory = paths_service.agents_directory
         self._agent_profile_loader_service = AgentProfileLoaderService(
-            consortium_root=consortium_root,
+            paths_service=paths_service,
             release_service=release_service,
         )
         self._agent_profile_registry_service = AgentProfileRegistryService(

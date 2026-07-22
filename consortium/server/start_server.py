@@ -17,7 +17,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
     await server_component_dependency_syncer.main()
 
     # Resolve necessary file and directory paths first. We dont do this through the
-    # `ConsortiumPathsService` because that service depends on the logging service being
+    # `PathsService` because that service depends on the logging service being
     # initialized first, which we are doing here.
     consortium_root = pathlib.Path(__file__).parents[2]
 

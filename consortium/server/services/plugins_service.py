@@ -21,6 +21,7 @@ from consortium.server.services.component_loader_services.plugin_loader_service 
 from consortium.server.services.component_registry_services.plugin_registry_service import (
     PluginRegistryService,
 )
+from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
@@ -29,13 +30,12 @@ class PluginsService:
     def __init__(
         self,
         release_service: ReleaseService,
-        plugins_directory: pathlib.Path,
-        consortium_root: pathlib.Path,  # TODO: Pass in paths service instead
+        paths_service: PathsService,
     ):
-        self._plugins_directory = plugins_directory
+        self._plugins_directory = paths_service.plugins_directory
         self._plugins = {}
         self._plugin_loader_service = PluginLoaderService(
-            consortium_root=consortium_root, release_service=release_service
+            paths_service=paths_service, release_service=release_service
         )
         self._plugin_registry_service = PluginRegistryService(
             component_loader_service=self._plugin_loader_service,

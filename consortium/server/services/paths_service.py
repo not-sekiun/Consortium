@@ -5,7 +5,7 @@ from loguru import logger
 from consortium.server.models.logging_models import LoggerType
 
 
-class ConsortiumPathsService:
+class PathsService:
     """Central registry of the filesystem paths the server depends on.
 
     Resolves and holds every well-known file and directory path relative to the
@@ -46,7 +46,7 @@ class ConsortiumPathsService:
         )
 
         # This service is located at
-        # consortium/server/services/consortium_paths_service.py, so the consortium
+        # consortium/server/services/paths_service.py, so the consortium
         # root is three levels up relative to it.
         self.consortium_root: pathlib.Path = pathlib.Path(__file__).resolve().parents[3]
 
@@ -102,10 +102,10 @@ class ConsortiumPathsService:
         self._logger.debug("Started {}", self)
 
     def __str__(self):
-        return "Consortium Paths Service"
+        return "Paths Service"
 
     def __repr__(self):
-        return "ConsortiumPathsService()"
+        return "PathsService()"
 
     def _validate_user_accounts_json_file_exist(self) -> None:
         if not self.user_accounts_json_file.exists():

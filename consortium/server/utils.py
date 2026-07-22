@@ -30,9 +30,6 @@ if TYPE_CHECKING:
     from consortium.server.services.assets_service import AssetsService
     from consortium.server.services.authorization_service import AuthorizationService
     from consortium.server.services.c2_types_service import C2TypesService
-    from consortium.server.services.consortium_paths_service import (
-        ConsortiumPathsService,
-    )
     from consortium.server.services.event_hooks_service import EventHooksService
     from consortium.server.services.events_service import EventsService
     from consortium.server.services.listener_profiles_service import (
@@ -43,6 +40,9 @@ if TYPE_CHECKING:
     )
     from consortium.server.services.listeners_service import ListenersService
     from consortium.server.services.logging_service import LoggingService
+    from consortium.server.services.paths_service import (
+        PathsService,
+    )
     from consortium.server.services.payloads_service import PayloadsService
     from consortium.server.services.plugins_service import PluginsService
     from consortium.server.services.release_service import ReleaseService
@@ -101,7 +101,7 @@ def log_and_propagate_error_on_service_method(func) -> Callable:
 class Services:
     logging_service: LoggingService | None
     authorization_service: AuthorizationService
-    consortium_paths_service: ConsortiumPathsService
+    paths_service: PathsService
     release_service: ReleaseService
     events_service: EventsService
     event_hooks_service: EventHooksService
@@ -127,7 +127,7 @@ def construct_services_dataclass(
     return Services(
         authorization_service=server_singletons.authorization_service,
         logging_service=server_singletons.logging_service,
-        consortium_paths_service=server_singletons.consortium_paths_service,
+        paths_service=server_singletons.paths_service,
         release_service=server_singletons.release_service,
         events_service=server_singletons.events_service,
         event_hooks_service=server_singletons.event_hooks_service,

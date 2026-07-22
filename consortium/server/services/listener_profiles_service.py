@@ -19,6 +19,7 @@ from consortium.server.services.component_loader_services.listener_profile_loade
 from consortium.server.services.component_registry_services.listener_profile_registry_service import (
     ListenerProfileRegistryService,
 )
+from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import log_and_propagate_error_on_service_method
 
@@ -30,13 +31,12 @@ class ListenerProfilesService:
     def __init__(
         self,
         release_service: ReleaseService,
-        listeners_directory: pathlib.Path,
-        consortium_root: pathlib.Path,
+        paths_service: PathsService,
     ) -> None:
-        self._listeners_directory = listeners_directory
+        self._listeners_directory = paths_service.listeners_directory
         self._listener_profile_loader_service = ListenerProfileLoaderService(
             release_service=release_service,
-            consortium_root=consortium_root,
+            paths_service=paths_service,
         )
         self._listener_profile_registry_service = ListenerProfileRegistryService(
             component_loader_service=self._listener_profile_loader_service,

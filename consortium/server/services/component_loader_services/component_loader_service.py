@@ -32,6 +32,7 @@ from consortium.server.exceptions.service_exceptions.components_service_exceptio
     InvalidComponentProjectPyProjectFileTOMLError,
     ThirdPartyDependencyNotFoundError,
 )
+from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
 
 Component = TypeVar("Component")
@@ -51,8 +52,8 @@ class ComponentLoaderService[Component]:
     _component_framework_error: type[Exception] | tuple[type[Exception], ...]
     _manifest_json_schema: dict[str, Any]
 
-    def __init__(self, release_service: ReleaseService, consortium_root: pathlib.Path):
-        self._consortium_root = consortium_root
+    def __init__(self, release_service: ReleaseService, paths_service: PathsService):
+        self._consortium_root = paths_service.consortium_root
         self._release = release_service.release
 
     @staticmethod

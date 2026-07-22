@@ -21,6 +21,7 @@ from consortium.server.services.component_registry_services.event_hook_registry_
     EventHookRegistryService,
 )
 from consortium.server.services.events_service import EventsService
+from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
@@ -32,13 +33,12 @@ class EventHooksService:
         self,
         events_service: EventsService,
         release_service: ReleaseService,
-        event_hooks_directory: pathlib.Path,
-        consortium_root: pathlib.Path,
+        paths_service: PathsService,
     ) -> None:
-        self._event_hooks_directory = event_hooks_directory
+        self._event_hooks_directory = paths_service.event_hooks_directory
         self._events_service = events_service
         self._event_hook_loader_service = EventHookLoaderService(
-            consortium_root=consortium_root,
+            paths_service=paths_service,
             release_service=release_service,
         )
         self._event_hook_registry_service = EventHookRegistryService(
