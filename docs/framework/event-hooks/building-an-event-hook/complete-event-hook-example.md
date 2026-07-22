@@ -53,7 +53,7 @@ class EventHook(BaseEventHook):
             self.logger.debug("[{}] {}", event.event_type, event.message)
 
     async def on_teardown(self) -> None:
-        summary_path = self.event_hook_project_folder / "last_session_summary.json"
+        summary_path = self.root_directory / "last_session_summary.json"
         summary = {
             str(event_type): count
             for event_type, count in self.environment.counts.items()

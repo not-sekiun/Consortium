@@ -104,8 +104,8 @@ class InvalidEventHookProjectManifestFileJSONError(
 
     code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
-    def __init__(self, event_hook_project_folder: str):
-        super().__init__(component_directory=event_hook_project_folder)
+    def __init__(self, event_hook_directory: str):
+        super().__init__(component_directory=event_hook_directory)
 
 
 class InvalidEventHookProjectManifestFileSchemaError(
@@ -118,9 +118,9 @@ class InvalidEventHookProjectManifestFileSchemaError(
 
     code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
 
-    def __init__(self, event_hook_project_folder: str, json_schema_error_message: str):
+    def __init__(self, event_hook_directory: str, json_schema_error_message: str):
         super().__init__(
-            component_directory=event_hook_project_folder,
+            component_directory=event_hook_directory,
             json_schema_error_message=json_schema_error_message,
         )
 
@@ -144,8 +144,8 @@ class InvalidEventHookProjectPyProjectFileTOMLError(
 
     code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
-    def __init__(self, event_hook_project_folder: str):
-        super().__init__(component_directory=event_hook_project_folder)
+    def __init__(self, event_hook_directory: str):
+        super().__init__(component_directory=event_hook_directory)
 
 
 class InvalidEventHookProjectPyProjectFileDependencyError(
@@ -158,9 +158,9 @@ class InvalidEventHookProjectPyProjectFileDependencyError(
 
     code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
 
-    def __init__(self, event_hook_project_folder: str, invalid_dependency_entry: str):
+    def __init__(self, event_hook_directory: str, invalid_dependency_entry: str):
         super().__init__(
-            component_directory=event_hook_project_folder,
+            component_directory=event_hook_directory,
             invalid_dependency_entry=invalid_dependency_entry,
         )
 
@@ -186,8 +186,8 @@ class EventHookProjectManifestFileNotFoundError(
 
     code = "EVENT_HOOK_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
-    def __init__(self, event_hook_project_folder: str):
-        super().__init__(component_directory=event_hook_project_folder)
+    def __init__(self, event_hook_directory: str):
+        super().__init__(component_directory=event_hook_directory)
 
 
 class EventHookProjectEntryPointModuleNotFoundError(
@@ -200,10 +200,10 @@ class EventHookProjectEntryPointModuleNotFoundError(
 
     code = "EVENT_HOOK_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
 
-    def __init__(self, event_hook_project_folder: str, event_hook_file: str):
+    def __init__(self, event_hook_directory: str, event_hook_file: str):
         super().__init__(
             entry_point_module=event_hook_file,
-            component_directory=event_hook_project_folder,
+            component_directory=event_hook_directory,
         )
 
 
@@ -230,12 +230,12 @@ class EventHookProjectSymbolNotFoundError(
 
     def __init__(
         self,
-        event_hook_project_folder: str,
+        event_hook_directory: str,
         entry_point_symbol: str,
         entry_point_module: str,
     ):
         super().__init__(
-            component_directory=event_hook_project_folder,
+            component_directory=event_hook_directory,
             entry_point_symbol=entry_point_symbol,
             entry_point_module=entry_point_module,
         )
@@ -253,11 +253,11 @@ class EventHookProjectInterfaceError(
 
     def __init__(
         self,
-        event_hook_project_folder: str,
+        event_hook_directory: str,
         entry_point_symbol: str,
     ):
         super().__init__(
-            component_directory=event_hook_project_folder,
+            component_directory=event_hook_directory,
             entry_point_symbol=entry_point_symbol,
         )
 
@@ -274,11 +274,11 @@ class InternalEventHookProjectError(
 
     def __init__(
         self,
-        event_hook_project_folder: str,
+        event_hook_directory: str,
         internal_error_message: str,
     ):
         super().__init__(
-            component_directory=event_hook_project_folder,
+            component_directory=event_hook_directory,
             internal_error_message=internal_error_message,
         )
 
@@ -361,11 +361,11 @@ class ThirdPartyDependencyNotFoundError(
 
     def __init__(
         self,
-        event_hook_project_folder: str,
+        event_hook_directory: str,
         third_party_dependency_name: str,
     ):
         super().__init__(
-            component_directory=event_hook_project_folder,
+            component_directory=event_hook_directory,
             third_party_dependency_name=third_party_dependency_name,
         )
 
@@ -382,13 +382,13 @@ class IncompatibleThirdPartyDependencyVersionError(
 
     def __init__(
         self,
-        event_hook_project_folder: str,
+        event_hook_directory: str,
         third_party_dependency_name: str,
         required_version: str,
         installed_version: str,
     ):
         super().__init__(
-            component_directory=event_hook_project_folder,
+            component_directory=event_hook_directory,
             third_party_dependency_name=third_party_dependency_name,
             required_version=required_version,
             installed_version=installed_version,

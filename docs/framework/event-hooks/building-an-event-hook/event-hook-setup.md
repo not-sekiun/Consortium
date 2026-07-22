@@ -46,11 +46,11 @@ self.logger.warning("Unexpected event type: {}.", event.event_type)
 ## Loading config files
 
 If your hook needs external configuration (like `webhook_sender`), load it in
-`on_setup()`. Use `self.event_hook_project_folder` to locate sibling files:
+`on_setup()`. Use `self.root_directory` to locate sibling files:
 
 ```python
 async def on_setup(self) -> None:
-    config_path = self.event_hook_project_folder / "config.json"
+    config_path = self.root_directory / "config.json"
     with config_path.open("r") as f:
         self.environment.config = json.load(f)
 ```
@@ -73,7 +73,7 @@ from consortium.framework.signal_exceptions.event_hooks_signal_exceptions import
 
 
 async def on_setup(self) -> None:
-    config_path = self.event_hook_project_folder / "config.json"
+    config_path = self.root_directory / "config.json"
     if not config_path.exists():
         raise EventHookSetupError(
             message=f"config.json not found at '{config_path}'.",

@@ -68,7 +68,7 @@ class EventHookRegistryService(
         comp_excs.DuplicateComponentLabelError: DuplicateEventHookLabelError,
     }
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
-        "component_directory": "event_hook_project_folder",
+        "component_directory": "event_hook_directory",
         "component_file": "event_hook_file",
         "component_symbol": "event_hook_symbol",
         "component_str": "event_hook_str",
@@ -91,7 +91,7 @@ class EventHookRegistryService(
         return component.event_hook_id
 
     def _get_component_directory(self, component: BaseEventHook) -> pathlib.Path:
-        return component.event_hook_project_folder
+        return component.root_directory
 
     async def _component_load_procedure(
         self,

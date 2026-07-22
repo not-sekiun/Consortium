@@ -8,7 +8,7 @@ final cleanup:
 import json
 
 async def on_teardown(self) -> None:
-    summary_path = self.event_hook_project_folder / "last_session_summary.json"
+    summary_path = self.root_directory / "last_session_summary.json"
     summary = {
         str(event_type): count
         for event_type, count in self.environment.counts.items()
@@ -18,9 +18,9 @@ async def on_teardown(self) -> None:
     self.logger.info("Session summary written to '{}'.", summary_path)
 ```
 
-`self.event_hook_project_folder` is a `pathlib.Path` pointing to the directory that
+`self.root_directory` is a `pathlib.Path` pointing to the directory that
 contains your event hook's source files. Use it exactly like
-`self.plugin_project_folder`
+`self.root_directory`
 in plugins.
 
 ## Signalling teardown failures
@@ -39,7 +39,7 @@ from consortium.framework.signal_exceptions.event_hooks_signal_exceptions import
 
 async def on_teardown(self) -> None:
     try:
-        summary_path = self.event_hook_project_folder / "last_session_summary.json"
+        summary_path = self.root_directory / "last_session_summary.json"
         with summary_path.open("w") as f:
             json.dump(self.environment.counts, f, indent=2)
     except OSError as exc:

@@ -17,8 +17,8 @@ from consortium.server.services.component_registry_services.event_hook_registry_
 def _make_mock_loader():
     loader = MagicMock()
     loader.validate_component_component_dependencies.return_value = True
-    loader.get_component_from_component_project_folder.return_value = None
-    loader.get_components_from_component_project_folder_directories.return_value = (
+    loader.get_component_from_directory.return_value = None
+    loader.get_all_components_from_directory.return_value = (
         [],
         [],
         [],
@@ -29,7 +29,7 @@ def _make_mock_loader():
 def _make_event_hook(setup_raises=False, teardown_raises=False):
     hook = MagicMock()
     hook.event_hook_id = uuid.uuid4()
-    hook.event_hook_project_folder = pathlib.Path("/tmp/mock_event_hook")
+    hook.root_directory = pathlib.Path("/tmp/mock_event_hook")
     hook.label = "test.event_hook"
     hook.event_types = {EventType.AGENT_REGISTERED}
     hook.component_dependencies = set()
@@ -74,11 +74,9 @@ def test_get_component_id(registry):
     assert registry._get_component_id(hook) == hook.event_hook_id
 
 
-def test_get_component_project_folder(registry):
+def test_get_component_directory(registry):
     hook = _make_event_hook()
-    assert (
-        registry._get_component_project_folder(hook) == hook.event_hook_project_folder
-    )
+    assert registry._get_component_directory(hook) == hook.root_directory
 
 
 # --- _component_load_procedure ---

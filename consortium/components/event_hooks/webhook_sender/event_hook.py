@@ -24,7 +24,7 @@ class EventHook(BaseEventHook):
 
     async def on_setup(self) -> None:
         try:
-            with (self.event_hook_project_folder / "config.json").open(
+            with (self.root_directory / "config.json").open(
                 "r",
             ) as config_file:
                 config = json.load(config_file)
@@ -32,7 +32,7 @@ class EventHook(BaseEventHook):
             self.logger.error(
                 "Failed to load webhook sender event hook configuration file. "
                 "Configuration file `config.json` not found at the event hook's "
-                f"project folder `{self.event_hook_project_folder}`.",
+                f"project folder `{self.root_directory}`.",
             )
             return
         except json.decoder.JSONDecodeError:

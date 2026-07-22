@@ -58,20 +58,20 @@ class EventHooksService:
         return "EventHooksService()"
 
     @log_and_propagate_error_on_service_method
-    def get_event_hook_from_event_hook_project_folder(
+    def get_event_hook_from_directory(
         self,
-        event_hook_project_folder: pathlib.Path,
-        ignore_enabled_event_hook_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> BaseEventHook | None:
         """Instantiates an event hook from a project folder without registering it.
 
         Disabled event hooks (as indicated by `enabled: false` in their `manifest.json`)
-        are not instantiated unless `ignore_enabled_event_hook_flag` is `True`.
+        are not instantiated unless `ignore_enabled_flag` is `True`.
 
         Args:
-            event_hook_project_folder: Path to the directory containing
+            directory: Path to the directory containing
                 the event hook project files and `manifest.json`.
-            ignore_enabled_event_hook_flag: When `True`, bypasses the `enabled`
+            ignore_enabled_flag: When `True`, bypasses the `enabled`
                 check in the manifest. Defaults to `False`.
 
         Returns:
@@ -96,29 +96,29 @@ class EventHooksService:
                 loading the event hook.
         """
         event_hook = self._event_hook_registry_service.get_component_from_directory(
-            directory=event_hook_project_folder,
-            ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+            directory=directory,
+            ignore_enabled_component_flag=ignore_enabled_flag,
         )
         if event_hook is None:
             self._logger.debug(
                 "Skipped retrieving event hook from '{}' because it was disabled."
                 "Either enable it in its manifest or force retrieve it by setting the "
-                "`ignore_enabled_event_hook_flag` to `True`.",
-                str(event_hook_project_folder),
+                "`ignore_enabled_flag` to `True`.",
+                str(directory),
             )
         else:
             self._logger.debug(
                 "Retrieved event hook {} from event hook project folder: {}",
                 repr(event_hook),
-                str(event_hook_project_folder),
+                str(directory),
             )
         return event_hook
 
     @log_and_propagate_error_on_service_method
-    def get_event_hooks_from_event_hook_project_folder_directories(
+    def get_all_event_hooks_from_directory(
         self,
         directory: pathlib.Path,
-        ignore_enabled_event_hook_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> tuple[
         list[BaseEventHook],
         list[pathlib.Path],
@@ -127,12 +127,12 @@ class EventHooksService:
         """Recursively scans a directory for event hook project folders and instantiates them.
 
         Disabled event hooks (as indicated by `enabled: false` in their `manifest.json`)
-        are skipped unless `ignore_enabled_event_hook_flag` is `True`.
+        are skipped unless `ignore_enabled_flag` is `True`.
 
         Args:
             directory: The directory to scan for event hook project
                 folders.
-            ignore_enabled_event_hook_flag: When `True`, bypasses the `enabled`
+            ignore_enabled_flag: When `True`, bypasses the `enabled`
                 check in each event hook's manifest. Defaults to `False`.
 
         Returns:
@@ -144,7 +144,7 @@ class EventHooksService:
         retrieved, skipped, errored = (
             self._event_hook_registry_service.get_all_components_from_directory(
                 directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         self._logger.debug(
@@ -184,20 +184,20 @@ class EventHooksService:
         return event_hook
 
     @log_and_propagate_error_on_service_method
-    def register_event_hook_from_event_hook_project_folder(
+    def register_event_hook_from_directory(
         self,
-        event_hook_project_folder: pathlib.Path,
-        ignore_enabled_event_hook_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> BaseEventHook | None:
         """Instantiates and registers an event hook from a project folder.
 
-        Disabled event hooks are skipped unless `ignore_enabled_event_hook_flag` is
+        Disabled event hooks are skipped unless `ignore_enabled_flag` is
         `True`.
 
         Args:
-            event_hook_project_folder: Path to the directory containing
+            directory: Path to the directory containing
                 the event hook project files and `manifest.json`.
-            ignore_enabled_event_hook_flag: When `True`, bypasses the `enabled`
+            ignore_enabled_flag: When `True`, bypasses the `enabled`
                 check in the manifest. Defaults to `False`.
 
         Returns:
@@ -227,16 +227,16 @@ class EventHooksService:
         """
         event_hook = (
             self._event_hook_registry_service.register_component_from_directory(
-                directory=event_hook_project_folder,
-                ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+                directory=directory,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if event_hook is None:
             self._logger.warning(
                 "Skipped registering event hook from '{}' because it was disabled. Either "
                 "enable it in its manifest or force register it by setting the "
-                "`ignore_enabled_event_hook_flag` to `True`.",
-                str(event_hook_project_folder),
+                "`ignore_enabled_flag` to `True`.",
+                str(directory),
             )
         else:
             self._logger.info("Registered event hook: {}", event_hook)
@@ -264,20 +264,20 @@ class EventHooksService:
         return event_hook
 
     @log_and_propagate_error_on_service_method
-    async def load_event_hook_from_event_hook_project_folder(
+    async def load_event_hook_from_directory(
         self,
-        event_hook_project_folder: pathlib.Path,
-        ignore_enabled_event_hook_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> BaseEventHook | None:
         """Instantiates, registers, and activates an event hook from a project folder.
 
-        Disabled event hooks are skipped unless `ignore_enabled_event_hook_flag` is
+        Disabled event hooks are skipped unless `ignore_enabled_flag` is
         `True`.
 
         Args:
-            event_hook_project_folder: Path to the directory containing
+            directory: Path to the directory containing
                 the event hook project files and `manifest.json`.
-            ignore_enabled_event_hook_flag: When `True`, bypasses the `enabled`
+            ignore_enabled_flag: When `True`, bypasses the `enabled`
                 check in the manifest. Defaults to `False`.
 
         Returns:
@@ -303,16 +303,16 @@ class EventHooksService:
         """
         event_hook = (
             await self._event_hook_registry_service.load_component_from_directory(
-                directory=event_hook_project_folder,
-                ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+                directory=directory,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if event_hook is None:
             self._logger.warning(
                 "Skipped loading event hook from '{}' because it was disabled. Either "
                 "enable it in its manifest or force load it by setting the "
-                "`ignore_enabled_event_hook_flag` to `True`.",
-                str(event_hook_project_folder),
+                "`ignore_enabled_flag` to `True`.",
+                str(directory),
             )
         else:
             self._logger.info("Loaded event hook: {}", event_hook)
@@ -344,16 +344,16 @@ class EventHooksService:
     async def reload_event_hook_by_event_hook_id(
         self,
         event_hook_id: str | uuid.UUID,
-        ignore_enabled_event_hook_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> BaseEventHook:
         """Unloads and reloads an event hook from its original project folder.
 
-        If the event hook is disabled after reload and `ignore_enabled_event_hook_flag`
+        If the event hook is disabled after reload and `ignore_enabled_flag`
         is `False`, the event hook will only be unloaded, not reloaded.
 
         Args:
             event_hook_id: The ID of the event hook to reload.
-            ignore_enabled_event_hook_flag: When `True`, bypasses the `enabled` check
+            ignore_enabled_flag: When `True`, bypasses the `enabled` check
                 in the manifest during reload. Defaults to `False`.
 
         Returns:
@@ -366,7 +366,7 @@ class EventHooksService:
         event_hook = (
             await self._event_hook_registry_service.reload_component_by_component_id(
                 component_id=event_hook_id,
-                ignore_enabled_component_flag=ignore_enabled_event_hook_flag,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if event_hook is None:
@@ -375,7 +375,7 @@ class EventHooksService:
                 "because it is currently disabled. As a result, the event hook has "
                 "only been unloaded but not loaded back. Either enable it in its "
                 "manifest and load it again or force load it by setting the "
-                "`ignore_enabled_event_hook_flag` to `True`.",
+                "`ignore_enabled_flag` to `True`.",
                 event_hook_id,
             )
         else:
@@ -386,7 +386,7 @@ class EventHooksService:
     @log_and_propagate_error_on_service_method
     async def load_framework_event_hooks(
         self,
-        ignore_enabled_event_hook_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> None:
         """Scans the framework's event hooks directory and loads all enabled event hooks.
 
@@ -394,16 +394,14 @@ class EventHooksService:
         aborting the overall load.
 
         Args:
-            ignore_enabled_event_hook_flag: When `True`, bypasses the `enabled`
+            ignore_enabled_flag: When `True`, bypasses the `enabled`
                 check in each event hook's manifest. Defaults to `False`.
 
         """
         self._logger.info("Loading framework event hooks...")
-        retrieved, skipped, errored = (
-            self.get_event_hooks_from_event_hook_project_folder_directories(
-                directory=self._event_hooks_directory,
-                ignore_enabled_event_hook_flag=ignore_enabled_event_hook_flag,
-            )
+        retrieved, skipped, errored = self.get_all_event_hooks_from_directory(
+            directory=self._event_hooks_directory,
+            ignore_enabled_flag=ignore_enabled_flag,
         )
         for path in skipped:
             self._logger.info(
@@ -444,7 +442,7 @@ class EventHooksService:
         self._logger.info("Unloading framework event hooks...")
         unloaded_event_hooks = 0
         for event_hook in self.get_all_event_hooks():
-            if event_hook.event_hook_project_folder.resolve().relative_to(
+            if event_hook.root_directory.resolve().relative_to(
                 self._event_hooks_directory.resolve()
             ):
                 self.unload_event_hook_by_event_hook_id(

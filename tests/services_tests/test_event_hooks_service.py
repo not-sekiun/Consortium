@@ -64,28 +64,28 @@ def test_repr(event_hooks_service):
     assert repr(event_hooks_service) == "EventHooksService()"
 
 
-# --- get_event_hook_from_event_hook_project_folder ---
+# --- get_event_hook_from_directory ---
 
 
 def test_get_event_hook_from_folder_enabled(event_hooks_service):
-    hook = event_hooks_service.get_event_hook_from_event_hook_project_folder(
-        event_hook_project_folder=_MOCK_EVENT_HOOKS / "mock_event_hook_valid"
+    hook = event_hooks_service.get_event_hook_from_directory(
+        directory=_MOCK_EVENT_HOOKS / "mock_event_hook_valid"
     )
     assert hook is not None
     assert hook.label == "consortium.tests.services.mock_event_hook_valid"
 
 
 def test_get_event_hook_from_folder_disabled_returns_none(event_hooks_service):
-    result = event_hooks_service.get_event_hook_from_event_hook_project_folder(
-        event_hook_project_folder=_MOCK_EVENT_HOOKS / "mock_event_hook_disabled"
+    result = event_hooks_service.get_event_hook_from_directory(
+        directory=_MOCK_EVENT_HOOKS / "mock_event_hook_disabled"
     )
     assert result is None
 
 
 def test_get_event_hook_from_folder_disabled_with_flag(event_hooks_service):
-    result = event_hooks_service.get_event_hook_from_event_hook_project_folder(
-        event_hook_project_folder=_MOCK_EVENT_HOOKS / "mock_event_hook_disabled",
-        ignore_enabled_event_hook_flag=True,
+    result = event_hooks_service.get_event_hook_from_directory(
+        directory=_MOCK_EVENT_HOOKS / "mock_event_hook_disabled",
+        ignore_enabled_flag=True,
     )
     assert result is not None
 
@@ -95,7 +95,7 @@ def test_get_event_hook_from_folder_disabled_with_flag(event_hooks_service):
 
 def test_get_event_hooks_from_directories(event_hooks_service):
     retrieved, skipped, errored = (
-        event_hooks_service.get_event_hooks_from_event_hook_project_folder_directories(
+        event_hooks_service.get_all_event_hooks_from_directory(
             directory=_MOCK_EVENT_HOOKS
         )
     )
@@ -121,12 +121,10 @@ def test_register_event_hook_from_folder_delegates(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
     folder = pathlib.Path("/tmp/some_hook")
     mock_hook = MagicMock()
-    registry.register_component_from_component_project_folder.return_value = mock_hook
-    result = svc.register_event_hook_from_event_hook_project_folder(
-        event_hook_project_folder=folder
-    )
-    registry.register_component_from_component_project_folder.assert_called_once_with(
-        component_project_folder=folder,
+    registry.register_component_from_directory.return_value = mock_hook
+    result = svc.register_event_hook_from_directory(directory=folder)
+    registry.register_component_from_directory.assert_called_once_with(
+        directory=folder,
         ignore_enabled_component_flag=False,
     )
     assert result == mock_hook
@@ -135,10 +133,8 @@ def test_register_event_hook_from_folder_delegates(svc_with_mock_registry):
 def test_register_event_hook_from_folder_disabled_returns_none(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
     folder = pathlib.Path("/tmp/disabled_hook")
-    registry.register_component_from_component_project_folder.return_value = None
-    result = svc.register_event_hook_from_event_hook_project_folder(
-        event_hook_project_folder=folder
-    )
+    registry.register_component_from_directory.return_value = None
+    result = svc.register_event_hook_from_directory(directory=folder)
     assert result is None
 
 
@@ -163,14 +159,10 @@ async def test_load_event_hook_from_folder_delegates(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
     folder = pathlib.Path("/tmp/some_hook")
     mock_hook = MagicMock()
-    registry.load_component_from_component_project_folder = AsyncMock(
-        return_value=mock_hook
-    )
-    result = await svc.load_event_hook_from_event_hook_project_folder(
-        event_hook_project_folder=folder
-    )
-    registry.load_component_from_component_project_folder.assert_called_once_with(
-        component_project_folder=folder,
+    registry.load_component_from_directory = AsyncMock(return_value=mock_hook)
+    result = await svc.load_event_hook_from_directory(directory=folder)
+    registry.load_component_from_directory.assert_called_once_with(
+        directory=folder,
         ignore_enabled_component_flag=False,
     )
     assert result == mock_hook
@@ -181,9 +173,9 @@ async def test_load_event_hook_from_folder_disabled_returns_none(
     svc_with_mock_registry,
 ):
     svc, registry = svc_with_mock_registry
-    registry.load_component_from_component_project_folder = AsyncMock(return_value=None)
-    result = await svc.load_event_hook_from_event_hook_project_folder(
-        event_hook_project_folder=pathlib.Path("/tmp/disabled")
+    registry.load_component_from_directory = AsyncMock(return_value=None)
+    result = await svc.load_event_hook_from_directory(
+        directory=pathlib.Path("/tmp/disabled")
     )
     assert result is None
 
@@ -259,7 +251,7 @@ def test_get_all_event_hooks_delegates(svc_with_mock_registry):
 async def test_load_framework_event_hooks_registers_and_loads(svc_with_mock_registry):
     svc, registry = svc_with_mock_registry
     mock_hook = MagicMock()
-    svc.get_event_hooks_from_event_hook_project_folder_directories = MagicMock(
+    svc.get_all_event_hooks_from_directory = MagicMock(
         return_value=([mock_hook], [], [])
     )
     svc.load_event_hook = AsyncMock(return_value=mock_hook)

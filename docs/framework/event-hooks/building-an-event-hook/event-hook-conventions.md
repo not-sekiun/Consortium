@@ -49,7 +49,7 @@ Service calls are synchronous and should be used in `on_triggered()` without awa
 | `self.environment`               | `SimpleNamespace` | Mutable runtime state namespace          |
 | `self.services`                  | `SimpleNamespace` | Framework services namespace             |
 | `self.logger`                    | `loguru.Logger`   | Hook-scoped logger                       |
-| `self.event_hook_project_folder` | `pathlib.Path`    | Path to this hook's source directory     |
+| `self.root_directory`            | `pathlib.Path`    | Path to this hook's source directory     |
 
 See the [Complete Event Hook Example](complete-event-hook-example.md) for all of these
 concepts combined into one event hook.

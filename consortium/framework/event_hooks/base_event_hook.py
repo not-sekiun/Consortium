@@ -55,7 +55,7 @@ class BaseEventHook(ComponentMetadata):
             components, defined using PEP 440 specifiers.
         third_party_dependencies: Third-party library dependencies required for this
             event hook to function.
-        event_hook_project_folder: Filesystem path to the project directory containing
+        root_directory: Filesystem path to the project directory containing
             this event hook's source code.
         environment: Namespace for storing hook-specific state shared across event
             invocations without naming conflicts.
@@ -93,7 +93,7 @@ class BaseEventHook(ComponentMetadata):
 
     def __init_subclass__(cls, **kwargs):
         cls.event_types = cls.event_types or set()
-        cls.event_hook_project_folder = pathlib.Path(
+        cls.root_directory = pathlib.Path(
             sys.modules[cls.__module__].__file__,
         ).parents[0]
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
