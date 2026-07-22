@@ -16,8 +16,8 @@ from consortium.framework._core.framework_exceptions.agent_capabilities_framewor
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError,
 )
-from consortium.framework._core.task_messages_queue import TaskMessagesQueue
 from consortium.framework.agents import BaseAgentCapability, TaskInputMessageModel
+from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,

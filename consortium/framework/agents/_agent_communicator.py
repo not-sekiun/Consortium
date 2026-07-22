@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:
 
 class _AgentCommunicator:
     def __init__(self, agent: Agent, task: AgentTask):
-        from consortium.framework._core.task_messages_queue import TaskMessagesQueue
+        from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
         # Importing here to avoid circular import
 
         self.agent = agent
