@@ -5,76 +5,27 @@ from consortium.framework.event_hooks.base_event_hook import BaseEventHook
 from consortium.framework.signal_exceptions import (
     event_hooks_signal_exceptions as event_hook_framework_excs,
 )
-from consortium.server.exceptions.service_exceptions import (
-    components_service_exceptions as comp_excs,
-)
 from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
-    ComponentDependencyNotFoundError,
-    ComponentDependencyNotRunningError,
-    DuplicateEventHookLabelError,
-    EventHookAlreadyRegisteredError,
-    EventHookDependsOnInvalidComponentDependencyError,
     EventHookLoadingError,
-    EventHookNotFoundError,
-    EventHookProjectEntryPointModuleNotFoundError,
-    EventHookProjectInterfaceError,
-    EventHookProjectManifestFileNotFoundError,
-    EventHookProjectSymbolNotFoundError,
     EventHookSetupError,
     EventHookTeardownError,
-    IncompatibleComponentDependencyVersionError,
-    IncompatibleEventHookFrameworkVersionError,
-    IncompatibleThirdPartyDependencyVersionError,
-    InternalEventHookProjectError,
-    InvalidEventHookProjectManifestFileJSONError,
-    InvalidEventHookProjectManifestFileSchemaError,
-    InvalidEventHookProjectPyProjectFileDependencyError,
-    InvalidEventHookProjectPyProjectFileError,
-    InvalidEventHookProjectPyProjectFileTOMLError,
-    ThirdPartyDependencyNotFoundError,
 )
 from consortium.server.services.component_loader_services.component_loader_service import (
     ComponentLoaderService,
 )
-from consortium.server.services.component_registry_services.exception_remapping_component_registry_service import (
-    ExceptionRemappingComponentRegistryService,
+from consortium.server.services.component_registry_services.component_registry_service import (
+    ComponentRegistryService,
 )
 from consortium.server.services.events_service import EventsService
 
 
+# The event hook loader carries an event hook exception set, so loading and registry errors
+# are raised as event hook types directly. This registry therefore extends the plain
+# ComponentRegistryService rather than the exception remapping variant that the other
+# domains still use.
 class EventHookRegistryService(
-    ExceptionRemappingComponentRegistryService[BaseEventHook, EventHookLoadingError],
+    ComponentRegistryService[BaseEventHook, EventHookLoadingError],
 ):
-    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP = {
-        comp_excs.ComponentProjectManifestFileNotFoundError: EventHookProjectManifestFileNotFoundError,
-        comp_excs.InvalidComponentProjectManifestFileJSONError: InvalidEventHookProjectManifestFileJSONError,
-        comp_excs.InvalidComponentProjectManifestFileSchemaError: InvalidEventHookProjectManifestFileSchemaError,
-        comp_excs.InvalidComponentProjectPyProjectFileError: InvalidEventHookProjectPyProjectFileError,
-        comp_excs.InvalidComponentProjectPyProjectFileTOMLError: InvalidEventHookProjectPyProjectFileTOMLError,
-        comp_excs.IncompatibleThirdPartyDependencyVersionError: IncompatibleThirdPartyDependencyVersionError,
-        comp_excs.ThirdPartyDependencyNotFoundError: ThirdPartyDependencyNotFoundError,
-        comp_excs.InvalidComponentProjectPyProjectFileDependencyError: InvalidEventHookProjectPyProjectFileDependencyError,
-        comp_excs.ComponentProjectEntryPointModuleNotFoundError: EventHookProjectEntryPointModuleNotFoundError,
-        comp_excs.ComponentProjectSymbolNotFoundError: EventHookProjectSymbolNotFoundError,
-        comp_excs.ComponentProjectInterfaceError: EventHookProjectInterfaceError,
-        comp_excs.IncompatibleComponentFrameworkVersionError: IncompatibleEventHookFrameworkVersionError,
-        comp_excs.InternalComponentProjectError: InternalEventHookProjectError,
-        comp_excs.ComponentDependencyNotFoundError: ComponentDependencyNotFoundError,
-        comp_excs.IncompatibleComponentDependencyVersionError: IncompatibleComponentDependencyVersionError,
-        comp_excs.ComponentDependencyNotRunningError: ComponentDependencyNotRunningError,
-        comp_excs.ComponentDependsOnInvalidComponentDependencyError: EventHookDependsOnInvalidComponentDependencyError,
-        comp_excs.ComponentNotFoundError: EventHookNotFoundError,
-        comp_excs.ComponentAlreadyRegisteredError: EventHookAlreadyRegisteredError,
-        comp_excs.DuplicateComponentLabelError: DuplicateEventHookLabelError,
-    }
-    _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
-        "component_directory": "event_hook_directory",
-        "component_file": "event_hook_file",
-        "component_symbol": "event_hook_symbol",
-        "component_str": "event_hook_str",
-        "component_id": "event_hook_id",
-    }
-
     def __init__(
         self,
         component_loader_service: ComponentLoaderService,

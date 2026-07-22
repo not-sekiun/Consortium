@@ -1,22 +1,21 @@
 import pathlib
 import uuid
 
+from consortium.framework._core.components.component_metadata import ComponentMetadata
 from consortium.framework._core.utils import remap_exception
-from consortium.server.exceptions.service_exceptions import (
-    components_service_exceptions as comp_excs,
+from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
+    ComponentDependencyError,
+    ComponentLoadingError,
 )
 from consortium.server.services.component_registry_services.component_registry_service import (
     ComponentRegistryService,
 )
-from consortium.server.services.component_registry_services.component_registry_service_types import (
-    Component,
-    ComponentLoadingError,
-)
 
 
-class ExceptionRemappingComponentRegistryService(
-    ComponentRegistryService[Component, ComponentLoadingError],
-):
+class ExceptionRemappingComponentRegistryService[
+    Component: ComponentMetadata,
+    ComponentLoadingErrorT: ComponentLoadingError,
+](ComponentRegistryService[Component, ComponentLoadingErrorT]):
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_MAP: dict[type[Exception], type[Exception]]
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP: dict[str, str]
 
@@ -30,8 +29,8 @@ class ExceptionRemappingComponentRegistryService(
             try:
                 return func(self, *args, **kwargs)
             except (
-                comp_excs.ComponentLoadingError,
-                comp_excs.ComponentDependencyError,
+                ComponentLoadingError,
+                ComponentDependencyError,
             ) as exc:
                 raise remap_exception(
                     original_exception=exc,
@@ -74,8 +73,8 @@ class ExceptionRemappingComponentRegistryService(
             if isinstance(
                 error,
                 (
-                    comp_excs.ComponentLoadingError,
-                    comp_excs.ComponentDependencyError,
+                    ComponentLoadingError,
+                    ComponentDependencyError,
                 ),
             ):
                 remapped_errored.append(

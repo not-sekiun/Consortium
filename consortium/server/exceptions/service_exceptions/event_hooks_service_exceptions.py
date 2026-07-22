@@ -32,6 +32,12 @@ Exception hierarchy:
             - [`EventHookSetupError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookSetupError]
             - [`EventHookTriggerError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookTriggerError]
             - [`EventHookTeardownError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookTeardownError]
+
+The loading, dependency, and registry exceptions below carry no `__init__` of their own: they
+are constructed by the shared component loader/registry pipeline with the generic component
+keyword arguments (`component_directory`, `component_str`, `component_id`, ...) inherited from
+their `components_service_exceptions` base. Only the operation errors, which are raised directly
+by the event hook registry with a bespoke message, define their own constructor.
 """
 
 from pydantic import JsonValue
@@ -69,9 +75,6 @@ class EventHookNotFoundError(
     code = "EVENT_HOOK_NOT_FOUND_ERROR"
     _COMPONENT_TYPE = "event hook"
 
-    def __init__(self, event_hook_id: str):
-        super().__init__(component_id=event_hook_id)
-
 
 class EventHookLoadingError(
     EventHooksServiceError,
@@ -104,9 +107,6 @@ class InvalidEventHookProjectManifestFileJSONError(
 
     code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
-    def __init__(self, event_hook_directory: str):
-        super().__init__(component_directory=event_hook_directory)
-
 
 class InvalidEventHookProjectManifestFileSchemaError(
     InvalidEventHookProjectManifestFileError,
@@ -117,12 +117,6 @@ class InvalidEventHookProjectManifestFileSchemaError(
     """
 
     code = "INVALID_EVENT_HOOK_PROJECT_MANIFEST_FILE_SCHEMA_ERROR"
-
-    def __init__(self, event_hook_directory: str, json_schema_error_message: str):
-        super().__init__(
-            component_directory=event_hook_directory,
-            json_schema_error_message=json_schema_error_message,
-        )
 
 
 class InvalidEventHookProjectPyProjectFileError(
@@ -144,9 +138,6 @@ class InvalidEventHookProjectPyProjectFileTOMLError(
 
     code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
-    def __init__(self, event_hook_directory: str):
-        super().__init__(component_directory=event_hook_directory)
-
 
 class InvalidEventHookProjectPyProjectFileDependencyError(
     EventHookLoadingError,
@@ -157,12 +148,6 @@ class InvalidEventHookProjectPyProjectFileDependencyError(
     """
 
     code = "INVALID_EVENT_HOOK_PROJECT_PYPROJECT_FILE_DEPENDENCY_ERROR"
-
-    def __init__(self, event_hook_directory: str, invalid_dependency_entry: str):
-        super().__init__(
-            component_directory=event_hook_directory,
-            invalid_dependency_entry=invalid_dependency_entry,
-        )
 
 
 class InvalidEventHookProjectFolderStructureError(
@@ -186,9 +171,6 @@ class EventHookProjectManifestFileNotFoundError(
 
     code = "EVENT_HOOK_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
-    def __init__(self, event_hook_directory: str):
-        super().__init__(component_directory=event_hook_directory)
-
 
 class EventHookProjectEntryPointModuleNotFoundError(
     InvalidEventHookProjectFolderStructureError,
@@ -199,12 +181,6 @@ class EventHookProjectEntryPointModuleNotFoundError(
     """
 
     code = "EVENT_HOOK_PROJECT_ENTRY_POINT_MODULE_NOT_FOUND_ERROR"
-
-    def __init__(self, event_hook_directory: str, event_hook_file: str):
-        super().__init__(
-            entry_point_module=event_hook_file,
-            component_directory=event_hook_directory,
-        )
 
 
 class InvalidEventHookProjectImplementationError(
@@ -228,18 +204,6 @@ class EventHookProjectSymbolNotFoundError(
 
     code = "EVENT_HOOK_PROJECT_SYMBOL_NOT_FOUND_ERROR"
 
-    def __init__(
-        self,
-        event_hook_directory: str,
-        entry_point_symbol: str,
-        entry_point_module: str,
-    ):
-        super().__init__(
-            component_directory=event_hook_directory,
-            entry_point_symbol=entry_point_symbol,
-            entry_point_module=entry_point_module,
-        )
-
 
 class EventHookProjectInterfaceError(
     InvalidEventHookProjectImplementationError,
@@ -250,16 +214,6 @@ class EventHookProjectInterfaceError(
     """
 
     code = "EVENT_HOOK_PROJECT_INTERFACE_ERROR"
-
-    def __init__(
-        self,
-        event_hook_directory: str,
-        entry_point_symbol: str,
-    ):
-        super().__init__(
-            component_directory=event_hook_directory,
-            entry_point_symbol=entry_point_symbol,
-        )
 
 
 class InternalEventHookProjectError(
@@ -272,16 +226,6 @@ class InternalEventHookProjectError(
 
     code = "INTERNAL_EVENT_HOOK_PROJECT_ERROR"
 
-    def __init__(
-        self,
-        event_hook_directory: str,
-        internal_error_message: str,
-    ):
-        super().__init__(
-            component_directory=event_hook_directory,
-            internal_error_message=internal_error_message,
-        )
-
 
 class IncompatibleEventHookFrameworkVersionError(
     EventHookLoadingError,
@@ -292,18 +236,6 @@ class IncompatibleEventHookFrameworkVersionError(
     """
 
     code = "INCOMPATIBLE_EVENT_HOOK_FRAMEWORK_VERSION_ERROR"
-
-    def __init__(
-        self,
-        event_hook_str: str,
-        required_version: str,
-        current_version: str,
-    ):
-        super().__init__(
-            component_str=event_hook_str,
-            required_version=required_version,
-            current_version=current_version,
-        )
 
 
 class EventHookAlreadyRegisteredError(
@@ -316,9 +248,6 @@ class EventHookAlreadyRegisteredError(
 
     code = "EVENT_HOOK_ALREADY_REGISTERED_ERROR"
 
-    def __init__(self, event_hook_str: str, event_hook_id: str):
-        super().__init__(component_str=event_hook_str, component_id=event_hook_id)
-
 
 class DuplicateEventHookLabelError(
     EventHookLoadingError,
@@ -329,12 +258,6 @@ class DuplicateEventHookLabelError(
     """
 
     code = "DUPLICATE_EVENT_HOOK_LABEL_ERROR"
-
-    def __init__(self, event_hook_str: str, label: str):
-        super().__init__(
-            component_str=event_hook_str,
-            label=label,
-        )
 
 
 class EventHookDependencyError(
@@ -359,16 +282,6 @@ class ThirdPartyDependencyNotFoundError(
 
     code = "THIRD_PARTY_DEPENDENCY_NOT_FOUND_ERROR"
 
-    def __init__(
-        self,
-        event_hook_directory: str,
-        third_party_dependency_name: str,
-    ):
-        super().__init__(
-            component_directory=event_hook_directory,
-            third_party_dependency_name=third_party_dependency_name,
-        )
-
 
 class IncompatibleThirdPartyDependencyVersionError(
     EventHookDependencyError,
@@ -379,20 +292,6 @@ class IncompatibleThirdPartyDependencyVersionError(
     """
 
     code = "INCOMPATIBLE_THIRD_PARTY_DEPENDENCY_VERSION_ERROR"
-
-    def __init__(
-        self,
-        event_hook_directory: str,
-        third_party_dependency_name: str,
-        required_version: str,
-        installed_version: str,
-    ):
-        super().__init__(
-            component_directory=event_hook_directory,
-            third_party_dependency_name=third_party_dependency_name,
-            required_version=required_version,
-            installed_version=installed_version,
-        )
 
 
 class ComponentDependencyNotFoundError(
@@ -405,16 +304,6 @@ class ComponentDependencyNotFoundError(
 
     code = "COMPONENT_DEPENDENCY_NOT_FOUND_ERROR"
 
-    def __init__(
-        self,
-        event_hook_str: str,
-        missing_dependency: str,
-    ):
-        super().__init__(
-            component_str=event_hook_str,
-            missing_dependency=missing_dependency,
-        )
-
 
 class IncompatibleComponentDependencyVersionError(
     EventHookDependencyError,
@@ -425,20 +314,6 @@ class IncompatibleComponentDependencyVersionError(
     """
 
     code = "INCOMPATIBLE_COMPONENT_DEPENDENCY_VERSION_ERROR"
-
-    def __init__(
-        self,
-        event_hook_str: str,
-        incompatible_dependency: str,
-        required_version: str,
-        installed_version: str,
-    ):
-        super().__init__(
-            component_str=event_hook_str,
-            incompatible_dependency=incompatible_dependency,
-            required_version=required_version,
-            installed_version=installed_version,
-        )
 
 
 class EventHookDependsOnInvalidComponentDependencyError(
@@ -451,16 +326,6 @@ class EventHookDependsOnInvalidComponentDependencyError(
 
     code = "EVENT_HOOK_DEPENDS_ON_INVALID_COMPONENT_DEPENDENCY_ERROR"
 
-    def __init__(
-        self,
-        event_hook_str: str,
-        invalid_dependency: str,
-    ):
-        super().__init__(
-            component_str=event_hook_str,
-            invalid_dependency=invalid_dependency,
-        )
-
 
 class ComponentDependencyNotRunningError(
     EventHookDependencyError,
@@ -471,16 +336,6 @@ class ComponentDependencyNotRunningError(
     """
 
     code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        event_hook_str: str,
-        not_running_dependency: str,
-    ):
-        super().__init__(
-            component_str=event_hook_str,
-            not_running_dependency=not_running_dependency,
-        )
 
 
 class EventHookOperationError(EventHooksServiceError):

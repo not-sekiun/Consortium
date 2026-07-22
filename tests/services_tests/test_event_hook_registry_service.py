@@ -9,6 +9,9 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
     EventHookSetupError,
     EventHookTeardownError,
 )
+from consortium.server.services.component_loader_services.component_loader_service import (
+    ComponentExceptions,
+)
 from consortium.server.services.component_registry_services.event_hook_registry_service import (
     EventHookRegistryService,
 )
@@ -23,6 +26,7 @@ def _make_mock_loader():
         [],
         [],
     )
+    loader._component_exceptions = ComponentExceptions()
     return loader
 
 

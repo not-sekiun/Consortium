@@ -15,7 +15,6 @@ from consortium.server.exceptions.service_exceptions.components_service_exceptio
 )
 from consortium.server.objects.c2_profile_objects import AgentProfile
 from consortium.server.services.component_loader_services.component_loader_service import (
-    Component,
     ComponentLoaderService,
 )
 
@@ -67,13 +66,13 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
 
-    # Change the return type to AgentProfile for IDE type checking
+    # TODO: The return type does not match same type mismatch issue as above comment
     def get_all_components_from_directory(
         self,
         directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> tuple[
-        list[Component],
+        list[AgentProfile],
         list[pathlib.Path],
         list[tuple[pathlib.Path, ComponentLoadingError]],
     ]:

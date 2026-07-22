@@ -2,10 +2,9 @@ import pathlib
 import uuid
 from abc import ABC, abstractmethod
 
+from consortium.framework._core.components import ComponentMetadata
 from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
-    ComponentAlreadyRegisteredError,
-    ComponentNotFoundError,
-    DuplicateComponentLabelError,
+    ComponentLoadingError,
 )
 from consortium.server.services.component_loader_services.component_loader_service import (
     ComponentLoaderService,
@@ -13,7 +12,10 @@ from consortium.server.services.component_loader_services.component_loader_servi
 from consortium.server.utils import normalize_uuid
 
 
-class ComponentRegistryService[Component, ComponentLoadingError](ABC):
+class ComponentRegistryService[
+    Component: ComponentMetadata,
+    ComponentLoadingErrorT: ComponentLoadingError,
+](ABC):
     _component_loader_service: ComponentLoaderService[Component]
 
     def __init__(
@@ -23,6 +25,10 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
     ) -> None:
         self._component_loader_service = component_loader_service
         self._component_framework_directory = component_framework_directory
+        # The registry raises from the same exception set the loader carries, so a domain
+        # surfaces its own registry errors (already registered, duplicate label, not found)
+        # directly. Defaults to the generic component exceptions.
+        self._component_exceptions = component_loader_service._component_exceptions
         self._components = {}
 
     # Each component has a different attribute name for the component ID. Provide an
@@ -65,7 +71,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
     ) -> tuple[
         list[Component],
         list[pathlib.Path],
-        list[tuple[pathlib.Path, ComponentLoadingError]] | None,
+        list[tuple[pathlib.Path, ComponentLoadingErrorT]] | None,
     ]:
         return self._component_loader_service.get_all_components_from_directory(
             directory=directory,
@@ -75,7 +81,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
     def register_component(self, component: Component) -> None:
         component_id = self._get_component_id(component=component)
         if str(component_id) in self._components:
-            raise ComponentAlreadyRegisteredError(
+            raise self._component_exceptions.already_registered(
                 component_str=str(component),
                 component_id=str(component_id),
             )
@@ -84,7 +90,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
             for component in self._components.values()
             if component.label
         ]:
-            raise DuplicateComponentLabelError(
+            raise self._component_exceptions.duplicate_label(
                 component_str=str(component),
                 label=component.label,
             )
@@ -119,7 +125,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
         if context is None:
             context = {}
         if str(self._get_component_id(component=component)) in self._components:
-            raise ComponentAlreadyRegisteredError(
+            raise self._component_exceptions.already_registered(
                 component_str=str(component),
                 component_id=str(self._get_component_id(component=component)),
             )
@@ -186,7 +192,9 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
         try:
             return self._components[component_id]
         except KeyError:
-            raise ComponentNotFoundError(component_id=component_id) from None
+            raise self._component_exceptions.not_found(
+                component_id=component_id
+            ) from None
 
     def get_components_by_label(self, label: str) -> list[Component]:
         return [

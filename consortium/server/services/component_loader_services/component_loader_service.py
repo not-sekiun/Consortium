@@ -4,24 +4,29 @@ import json
 import pathlib
 import sys
 import tomllib
-from typing import Any, TypeVar
+from dataclasses import dataclass
+from typing import Any
 
 import jsonschema
 import packaging.requirements as requirements
 import packaging.version as version
+from pydantic import JsonValue
 
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentConfigurationError,
 )
 from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
+    ComponentAlreadyRegisteredError,
     ComponentDependencyError,
     ComponentDependencyNotFoundError,
     ComponentDependsOnInvalidComponentDependencyError,
     ComponentLoadingError,
+    ComponentNotFoundError,
     ComponentProjectEntryPointModuleNotFoundError,
     ComponentProjectInterfaceError,
     ComponentProjectManifestFileNotFoundError,
     ComponentProjectSymbolNotFoundError,
+    DuplicateComponentLabelError,
     IncompatibleComponentDependencyVersionError,
     IncompatibleComponentFrameworkVersionError,
     IncompatibleThirdPartyDependencyVersionError,
@@ -35,7 +40,67 @@ from consortium.server.exceptions.service_exceptions.components_service_exceptio
 from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
 
-Component = TypeVar("Component")
+
+# A per-domain set of exception classes raised across the component loading and registry
+# pipeline. The shared loader and registry raise from this set (via self._exceptions.<slot>)
+# so a domain (plugins, event hooks, listener profiles, agent profiles) can surface its own
+# exception types directly, without a downstream remapping layer converting generic
+# component errors into domain errors.
+#
+# Every slot defaults to the generic component exception, so a domain that does not override
+# a slot transparently raises the generic type and behaves exactly as it would have before an
+# exception set was introduced. A domain opts in by constructing a ComponentExceptions with
+# the slots it wants replaced by its own subclasses.
+@dataclass(frozen=True)
+class ComponentExceptions:
+    manifest_file_not_found: type[ComponentProjectManifestFileNotFoundError] = (
+        ComponentProjectManifestFileNotFoundError
+    )
+    invalid_manifest_file_json: type[InvalidComponentProjectManifestFileJSONError] = (
+        InvalidComponentProjectManifestFileJSONError
+    )
+    invalid_manifest_file_schema: type[
+        InvalidComponentProjectManifestFileSchemaError
+    ] = InvalidComponentProjectManifestFileSchemaError
+    invalid_pyproject_file_toml: type[InvalidComponentProjectPyProjectFileTOMLError] = (
+        InvalidComponentProjectPyProjectFileTOMLError
+    )
+    invalid_pyproject_file_dependency: type[
+        InvalidComponentProjectPyProjectFileDependencyError
+    ] = InvalidComponentProjectPyProjectFileDependencyError
+    third_party_dependency_not_found: type[ThirdPartyDependencyNotFoundError] = (
+        ThirdPartyDependencyNotFoundError
+    )
+    incompatible_third_party_dependency_version: type[
+        IncompatibleThirdPartyDependencyVersionError
+    ] = IncompatibleThirdPartyDependencyVersionError
+    entry_point_module_not_found: type[
+        ComponentProjectEntryPointModuleNotFoundError
+    ] = ComponentProjectEntryPointModuleNotFoundError
+    symbol_not_found: type[ComponentProjectSymbolNotFoundError] = (
+        ComponentProjectSymbolNotFoundError
+    )
+    interface_error: type[ComponentProjectInterfaceError] = (
+        ComponentProjectInterfaceError
+    )
+    internal_error: type[InternalComponentProjectError] = InternalComponentProjectError
+    incompatible_framework_version: type[IncompatibleComponentFrameworkVersionError] = (
+        IncompatibleComponentFrameworkVersionError
+    )
+    component_dependency_not_found: type[ComponentDependencyNotFoundError] = (
+        ComponentDependencyNotFoundError
+    )
+    incompatible_component_dependency_version: type[
+        IncompatibleComponentDependencyVersionError
+    ] = IncompatibleComponentDependencyVersionError
+    depends_on_invalid_component_dependency: type[
+        ComponentDependsOnInvalidComponentDependencyError
+    ] = ComponentDependsOnInvalidComponentDependencyError
+    not_found: type[ComponentNotFoundError] = ComponentNotFoundError
+    already_registered: type[ComponentAlreadyRegisteredError] = (
+        ComponentAlreadyRegisteredError
+    )
+    duplicate_label: type[DuplicateComponentLabelError] = DuplicateComponentLabelError
 
 
 # Default base service that loads components from component project folders. Expects to
@@ -50,7 +115,11 @@ class ComponentLoaderService[Component]:
     # loaded and carry their own precise semantics, so they must be re-raised
     # directly rather than wrapped as InternalComponentProjectError.
     _component_framework_error: type[Exception] | tuple[type[Exception], ...]
-    _manifest_json_schema: dict[str, Any]
+    _manifest_json_schema: dict[str, JsonValue]
+    # The set of exception classes this loader (and its registry) raise. Defaults to the
+    # generic component exceptions; a domain loader overrides slots with its own subclasses
+    # so domain errors are raised directly instead of being remapped downstream.
+    _component_exceptions: ComponentExceptions = ComponentExceptions()
 
     def __init__(self, release_service: ReleaseService, paths_service: PathsService):
         self._consortium_root = paths_service.consortium_root
@@ -62,8 +131,8 @@ class ComponentLoaderService[Component]:
     ) -> pathlib.Path:
         return component_directory / "manifest.json"
 
-    @staticmethod
     def _validate_manifest_json_file(
+        self,
         component_directory: pathlib.Path,
         manifest_file_path: pathlib.Path,
         manifest_json_schema: dict[str, Any],
@@ -80,15 +149,15 @@ class ComponentLoaderService[Component]:
                 )
                 return manifest_json
         except FileNotFoundError:
-            raise ComponentProjectManifestFileNotFoundError(
+            raise self._component_exceptions.manifest_file_not_found(
                 component_directory=str(component_directory),
             ) from None
         except json.JSONDecodeError:
-            raise InvalidComponentProjectManifestFileJSONError(
+            raise self._component_exceptions.invalid_manifest_file_json(
                 component_directory=str(component_directory),
             ) from None
         except jsonschema.ValidationError as exc:
-            raise InvalidComponentProjectManifestFileSchemaError(
+            raise self._component_exceptions.invalid_manifest_file_schema(
                 component_directory=str(component_directory),
                 json_schema_error_message=exc.message,
             ) from None
@@ -109,14 +178,14 @@ class ComponentLoaderService[Component]:
             return False
         return True
 
-    @staticmethod
     def _get_entry_point_from_manifest_json(
+        self,
         component_directory: pathlib.Path,
         manifest_json: dict[str, Any],
     ) -> tuple[str, str]:
         entry_point = manifest_json["entry_point"]
         if ":" not in entry_point:
-            raise InvalidComponentProjectManifestFileSchemaError(
+            raise self._component_exceptions.invalid_manifest_file_schema(
                 component_directory=str(component_directory),
                 json_schema_error_message=(
                     "The 'entry_point' field must be in the format "
@@ -132,8 +201,8 @@ class ComponentLoaderService[Component]:
     ) -> pathlib.Path:
         return component_directory / "pyproject.toml"
 
-    @staticmethod
     def _validate_pyproject_toml_file_third_party_dependencies(
+        self,
         component_directory: pathlib.Path,
         pyproject_filepath: pathlib.Path,
     ) -> set[requirements.Requirement]:
@@ -145,7 +214,7 @@ class ComponentLoaderService[Component]:
                 with pyproject_filepath.open("r") as pyproject_toml_file:
                     pyproject_toml = tomllib.loads(pyproject_toml_file.read())
             except tomllib.TOMLDecodeError:
-                raise InvalidComponentProjectPyProjectFileTOMLError(
+                raise self._component_exceptions.invalid_pyproject_file_toml(
                     component_directory=str(component_directory),
                 ) from None
             dependency_entries = pyproject_toml.get("project", {}).get(
@@ -164,7 +233,7 @@ class ComponentLoaderService[Component]:
                 # the module.
                 dependency_version = importlib.metadata.version(dependency.name)
                 if dependency_version not in dependency.specifier:
-                    raise IncompatibleThirdPartyDependencyVersionError(
+                    raise self._component_exceptions.incompatible_third_party_dependency_version(
                         component_directory=str(component_directory),
                         third_party_dependency_name=dependency.name,
                         required_version=str(dependency.specifier),
@@ -172,12 +241,12 @@ class ComponentLoaderService[Component]:
                     )
                 dependencies.add(dependency)
             except importlib.metadata.PackageNotFoundError:
-                raise ThirdPartyDependencyNotFoundError(
+                raise self._component_exceptions.third_party_dependency_not_found(
                     component_directory=str(component_directory),
                     third_party_dependency_name=dependency.name,
                 ) from None
             except requirements.InvalidRequirement:
-                raise InvalidComponentProjectPyProjectFileDependencyError(
+                raise self._component_exceptions.invalid_pyproject_file_dependency(
                     component_directory=str(component_directory),
                     invalid_dependency_entry=entry,
                 ) from None
@@ -210,7 +279,7 @@ class ComponentLoaderService[Component]:
         # these can be raised by missing third party dependencies instead of a missing
         # component file.
         if not component_file.exists():
-            raise ComponentProjectEntryPointModuleNotFoundError(
+            raise self._component_exceptions.entry_point_module_not_found(
                 entry_point_module=str(component_file),
                 component_directory=str(component_directory),
             )
@@ -237,7 +306,7 @@ class ComponentLoaderService[Component]:
             raise exc from None
         # This should only catch errors that are not related to the component project.
         except Exception as exc:
-            raise InternalComponentProjectError(
+            raise self._component_exceptions.internal_error(
                 component_directory=str(component_directory),
                 internal_error_message=str(exc),
             ) from None
@@ -250,7 +319,7 @@ class ComponentLoaderService[Component]:
             )
             return component_class
         except AttributeError:
-            raise ComponentProjectSymbolNotFoundError(
+            raise self._component_exceptions.symbol_not_found(
                 entry_point_symbol=component_symbol,
                 component_directory=str(component_directory),
                 entry_point_module=str(component_file),
@@ -278,7 +347,7 @@ class ComponentLoaderService[Component]:
             and version.Version(self._release.version)
             not in component_framework_version
         ):
-            raise IncompatibleComponentFrameworkVersionError(
+            raise self._component_exceptions.incompatible_framework_version(
                 component_str=str(component_class),
                 required_version=str(
                     component_class.compatible_framework_version,
@@ -294,7 +363,7 @@ class ComponentLoaderService[Component]:
     ) -> Component:
         # Check for correct inheritance and instantiation of classes.
         if not issubclass(component_class, self._component_type):
-            raise ComponentProjectInterfaceError(
+            raise self._component_exceptions.interface_error(
                 component_directory=str(component_directory),
                 entry_point_symbol=component_symbol,
             )
@@ -306,7 +375,7 @@ class ComponentLoaderService[Component]:
         except self._component_framework_error as exc:
             raise exc from None
         except Exception as exc:
-            raise InternalComponentProjectError(
+            raise self._component_exceptions.internal_error(
                 component_directory=str(component_directory),
                 internal_error_message=str(exc),
             ) from None
@@ -412,8 +481,8 @@ class ComponentLoaderService[Component]:
                 errored_components.append((directory, exc))
         return retrieved_components, skipped_components, errored_components
 
-    @staticmethod
     def validate_component_component_dependencies(
+        self,
         component: Component,
         registered_components: list[Component],
     ) -> bool:
@@ -424,7 +493,7 @@ class ComponentLoaderService[Component]:
         for dependency in component.component_dependencies:
             # Check dependency exists
             if dependency.name not in label_registered_component_map:
-                raise ComponentDependencyNotFoundError(
+                raise self._component_exceptions.component_dependency_not_found(
                     component_str=str(component),
                     missing_dependency=dependency.name,
                 ) from None
@@ -433,7 +502,7 @@ class ComponentLoaderService[Component]:
                 and label_registered_component_map[dependency.name].version
                 not in dependency.specifier
             ):
-                raise IncompatibleComponentDependencyVersionError(
+                raise self._component_exceptions.incompatible_component_dependency_version(
                     component_str=str(component),
                     incompatible_dependency=dependency.name,
                     required_version=str(dependency.specifier),
@@ -508,7 +577,7 @@ class ComponentLoaderService[Component]:
                         skipped_components.append(
                             (
                                 skipped_component,
-                                ComponentDependsOnInvalidComponentDependencyError(
+                                self._component_exceptions.depends_on_invalid_component_dependency(
                                     component_str=str(skipped_component),
                                     invalid_dependency=dep_label,
                                 ),

@@ -9,6 +9,9 @@ from consortium.server.exceptions.service_exceptions.components_service_exceptio
     ComponentNotFoundError,
     DuplicateComponentLabelError,
 )
+from consortium.server.services.component_loader_services.component_loader_service import (
+    ComponentExceptions,
+)
 from consortium.server.services.component_registry_services.component_registry_service import (
     ComponentRegistryService,
 )
@@ -22,6 +25,9 @@ class _ConcreteRegistry(ComponentRegistryService):
 def _make_mock_loader():
     loader = MagicMock()
     loader.validate_component_component_dependencies.return_value = True
+    # The registry raises registry-level errors from the loader's exception set; give the
+    # mock the default (generic) set so those raises produce real exception instances.
+    loader._component_exceptions = ComponentExceptions()
     return loader
 
 
