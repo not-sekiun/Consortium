@@ -26,7 +26,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
 
     async def build(self, parameters: dict) -> None:
         with open(
-            self.project_folder / "agent_source" / "agent.py",
+            self.root_directory / "agent_source" / "agent.py",
         ) as file:
             template_source_code = file.read()
             source_code = multiple_string_replace(

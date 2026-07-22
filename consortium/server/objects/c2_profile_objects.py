@@ -126,5 +126,5 @@ class AgentProfile:
         return self.agent_template.component_dependencies
 
     @property
-    def agent_project_folder(self) -> Path:
-        return self.agent_template.agent_project_folder
+    def root_directory(self) -> Path:
+        return self.agent_template.root_directory

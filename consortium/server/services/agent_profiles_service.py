@@ -57,21 +57,21 @@ class AgentProfilesService:
         return "AgentProfilesService()"
 
     @log_and_propagate_error_on_service_method
-    def get_agent_profile_from_agent_profile_project_folder(
+    def get_agent_profile_from_directory(
         self,
-        agent_profile_project_folder: pathlib.Path,
-        ignore_enabled_agent_profile_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> AgentProfile | None:
         """Instantiates an agent profile from a project folder without registering it.
 
         Disabled agent profiles (as indicated by `enabled: false` in their
-        `manifest.json`) are not instantiated unless `ignore_enabled_agent_profile_flag`
+        `manifest.json`) are not instantiated unless `ignore_enabled_flag`
         is `True`.
 
         Args:
-            agent_profile_project_folder: Path to the directory
+            directory: Path to the directory
                 containing the agent profile project files and `manifest.json`.
-            ignore_enabled_agent_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in the manifest. Defaults to `False`.
 
         Returns:
@@ -97,28 +97,28 @@ class AgentProfilesService:
         """
         agent_profile = (
             self._agent_profile_registry_service.get_component_from_directory(
-                directory=agent_profile_project_folder,
-                ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+                directory=directory,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if agent_profile is None:
             self._logger.debug(
                 "Skipped loading agent profile from '{}' because it was disabled",
-                str(agent_profile_project_folder),
+                str(directory),
             )
         else:
             self._logger.debug(
                 "Retrieved agent profile {} from agent profile project folder: {}",
                 repr(agent_profile),
-                str(agent_profile_project_folder),
+                str(directory),
             )
         return agent_profile
 
     @log_and_propagate_error_on_service_method
-    def get_agent_profiles_from_agent_profile_project_folder_directories(
+    def get_all_agent_profiles_from_directory(
         self,
         directory: pathlib.Path,
-        ignore_enabled_agent_profile_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> tuple[
         list[AgentProfile],
         list[pathlib.Path],
@@ -129,7 +129,7 @@ class AgentProfilesService:
         Args:
             directory: The directory to scan for agent profile project
                 folders.
-            ignore_enabled_agent_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
 
         Returns:
@@ -141,7 +141,7 @@ class AgentProfilesService:
         retrieved, skipped, errored = (
             self._agent_profile_registry_service.get_all_components_from_directory(
                 directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         self._logger.debug(
@@ -176,21 +176,21 @@ class AgentProfilesService:
         self._logger.debug("Loaded agent profile: {}", agent_profile)
 
     @log_and_propagate_error_on_service_method
-    async def load_agent_profile_from_agent_profile_project_folder(
+    async def load_agent_profile_from_directory(
         self,
-        agent_profile_project_folder: pathlib.Path,
-        ignore_enabled_agent_profile_flag: bool = False,
+        directory: pathlib.Path,
+        ignore_enabled_flag: bool = False,
     ) -> AgentProfile | None:
         """Loads an agent profile from a project folder, registering and activating it.
 
-        Disabled profiles are skipped unless `ignore_enabled_agent_profile_flag` is
+        Disabled profiles are skipped unless `ignore_enabled_flag` is
         `True`. After a successful load, agent type references and the compatible agent
         type index for listener profiles are updated.
 
         Args:
-            agent_profile_project_folder: Path to the directory
+            directory: Path to the directory
                 containing the agent profile project files and `manifest.json`.
-            ignore_enabled_agent_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in the manifest. Defaults to `False`.
 
         Returns:
@@ -216,17 +216,17 @@ class AgentProfilesService:
         """
         agent_profile = (
             await self._agent_profile_registry_service.load_component_from_directory(
-                directory=agent_profile_project_folder,
-                ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+                directory=directory,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if agent_profile is None:
             self._logger.warning(
                 "Agent profile could not be loaded from {} because it is "
                 "currently disabled. Either enable it in its manifest or force "
-                "load it by setting the `ignore_enabled_agent_profile_flag` to "
+                "load it by setting the `ignore_enabled_flag` to "
                 "`True`.",
-                str(agent_profile_project_folder),
+                str(directory),
             )
         else:
             server_singletons.c2_types_service._resolve_agent_type_references()
@@ -263,18 +263,18 @@ class AgentProfilesService:
     async def reload_agent_profile_by_agent_profile_id(
         self,
         agent_profile_id: str | uuid.UUID,
-        ignore_enabled_agent_profile_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> AgentProfile:
         """Unloads and reloads an agent profile from its original project folder.
 
         After a successful reload, agent type references and the compatible agent type
         index for listener profiles are updated. If the profile is disabled after reload
-        and `ignore_enabled_agent_profile_flag` is `False`, the profile will only be
+        and `ignore_enabled_flag` is `False`, the profile will only be
         unloaded, not reloaded.
 
         Args:
             agent_profile_id: The ID of the agent profile to reload.
-            ignore_enabled_agent_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in the manifest during reload. Defaults to `False`.
 
         Returns:
@@ -287,14 +287,14 @@ class AgentProfilesService:
         agent_profile = await (
             self._agent_profile_registry_service.reload_component_by_component_id(
                 component_id=agent_profile_id,
-                ignore_enabled_component_flag=ignore_enabled_agent_profile_flag,
+                ignore_enabled_component_flag=ignore_enabled_flag,
             )
         )
         if agent_profile is None:
             self._logger.warning(
                 "Agent profile with ID '{}' could not be reloaded because it is "
                 "currently disabled. Either enable it in its manifest or force "
-                "reload it by setting the `ignore_enabled_agent_profile_flag` to "
+                "reload it by setting the `ignore_enabled_flag` to "
                 "`True`.",
                 agent_profile_id,
             )
@@ -308,7 +308,7 @@ class AgentProfilesService:
     @log_and_propagate_error_on_service_method
     async def load_framework_agent_profiles(
         self,
-        ignore_enabled_agent_profile_flag: bool = False,
+        ignore_enabled_flag: bool = False,
     ) -> None:
         """Scans the framework's agent profiles directory and loads all enabled profiles.
 
@@ -316,15 +316,13 @@ class AgentProfilesService:
         aborting the overall load.
 
         Args:
-            ignore_enabled_agent_profile_flag: When `True`, bypasses the
+            ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
         """
         self._logger.info("Loading framework agent profiles...")
-        retrieved, skipped, errored = (
-            self.get_agent_profiles_from_agent_profile_project_folder_directories(
-                directory=self._agents_directory,
-                ignore_enabled_agent_profile_flag=ignore_enabled_agent_profile_flag,
-            )
+        retrieved, skipped, errored = self.get_all_agent_profiles_from_directory(
+            directory=self._agents_directory,
+            ignore_enabled_flag=ignore_enabled_flag,
         )
         for path in skipped:
             self._logger.info(
@@ -368,7 +366,7 @@ class AgentProfilesService:
         self._logger.info("Unloading framework agent profiles...")
         unloaded_agent_profiles = 0
         for agent_profile in self.get_all_agent_profiles():
-            if agent_profile.agent_project_folder.resolve().relative_to(
+            if agent_profile.root_directory.resolve().relative_to(
                 self._agents_directory.resolve()
             ):
                 await self.unload_agent_profile_by_agent_profile_id(

@@ -103,7 +103,7 @@ async def test_load_listener_profile_resolves_compatible_types(svc_with_mock_reg
     )
 
 
-# --- load_listener_profile_from_project_folder ---
+# --- load_listener_profile_from_directory ---
 
 
 @pytest.mark.anyio

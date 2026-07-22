@@ -214,8 +214,10 @@ async def load_mock_listener_profiles(app):
 async def load_mock_agent_profiles(app):
     mock_root = pathlib.Path(__file__).parent / "mocks"
     for folder in ("mock_agent_1", "mock_agent_2"):
-        await server_singletons.agent_profiles_service.load_agent_profile_from_agent_profile_project_folder(
-            agent_profile_project_folder=mock_root / folder,
+        await (
+            server_singletons.agent_profiles_service.load_agent_profile_from_directory(
+                directory=mock_root / folder,
+            )
         )
 
 

@@ -32,10 +32,8 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
     @abstractmethod
     def _get_component_id(self, component: Component) -> uuid.UUID: ...
 
-    # TODO: ??? Consider maybe standardizing this attribute name across
-    #  all components. If so, remove this method.
-    # TODO: Update (Yes we are working on this, moving all attributes to
-    #  self.root_directory after that change DELETE THIS DONT FORGET
+    # TODO: Now that every component exposes `self.root_directory`, this method could
+    #  be removed and callers could read `component.root_directory` directly.
     @abstractmethod
     def _get_component_directory(self, component: Component) -> pathlib.Path: ...
 

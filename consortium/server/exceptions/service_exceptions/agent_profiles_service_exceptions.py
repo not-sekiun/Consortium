@@ -100,8 +100,8 @@ class InvalidAgentProfileProjectManifestFileJSONError(
 
     code = "INVALID_AGENT_PROFILE_PROJECT_MANIFEST_FILE_JSON_ERROR"
 
-    def __init__(self, agent_profile_project_folder: str):
-        super().__init__(component_directory=agent_profile_project_folder)
+    def __init__(self, agent_profile_directory: str):
+        super().__init__(component_directory=agent_profile_directory)
 
 
 class InvalidAgentProfileProjectManifestFileSchemaError(
@@ -116,11 +116,11 @@ class InvalidAgentProfileProjectManifestFileSchemaError(
 
     def __init__(
         self,
-        agent_profile_project_folder: str,
+        agent_profile_directory: str,
         json_schema_error_message: str,
     ):
         super().__init__(
-            component_directory=agent_profile_project_folder,
+            component_directory=agent_profile_directory,
             json_schema_error_message=json_schema_error_message,
         )
 
@@ -146,8 +146,8 @@ class InvalidAgentProfileProjectPyProjectFileTOMLError(
 
     code = "INVALID_AGENT_PROFILE_PROJECT_PYPROJECT_FILE_TOML_ERROR"
 
-    def __init__(self, agent_profile_project_folder: str):
-        super().__init__(component_directory=agent_profile_project_folder)
+    def __init__(self, agent_profile_directory: str):
+        super().__init__(component_directory=agent_profile_directory)
 
 
 class InvalidAgentProfileProjectPyProjectFileDependencyError(
@@ -162,11 +162,11 @@ class InvalidAgentProfileProjectPyProjectFileDependencyError(
 
     def __init__(
         self,
-        agent_profile_project_folder: str,
+        agent_profile_directory: str,
         invalid_dependency_entry: str,
     ):
         super().__init__(
-            component_directory=agent_profile_project_folder,
+            component_directory=agent_profile_directory,
             invalid_dependency_entry=invalid_dependency_entry,
         )
 
@@ -192,8 +192,8 @@ class AgentProfileProjectManifestFileNotFoundError(
 
     code = "AGENT_PROFILE_PROJECT_MANIFEST_FILE_NOT_FOUND_ERROR"
 
-    def __init__(self, agent_profile_project_folder: str):
-        super().__init__(component_directory=agent_profile_project_folder)
+    def __init__(self, agent_profile_directory: str):
+        super().__init__(component_directory=agent_profile_directory)
 
 
 class AgentProfileProjectEntryPointModuleNotFoundError(
@@ -208,11 +208,11 @@ class AgentProfileProjectEntryPointModuleNotFoundError(
 
     def __init__(
         self,
-        agent_profile_project_folder: str,
+        agent_profile_directory: str,
         entry_point_module: str,
     ):
         super().__init__(
-            component_directory=agent_profile_project_folder,
+            component_directory=agent_profile_directory,
             entry_point_module=entry_point_module,
         )
 
@@ -240,12 +240,12 @@ class AgentProfileProjectSymbolNotFoundError(
 
     def __init__(
         self,
-        agent_profile_project_folder: str,
+        agent_profile_directory: str,
         entry_point_symbol: str,
         entry_point_module: str,
     ):
         super().__init__(
-            component_directory=agent_profile_project_folder,
+            component_directory=agent_profile_directory,
             entry_point_symbol=entry_point_symbol,
             entry_point_module=entry_point_module,
         )
@@ -263,11 +263,11 @@ class AgentProfileProjectInterfaceError(
 
     def __init__(
         self,
-        agent_profile_project_folder: str,
+        agent_profile_directory: str,
         entry_point_symbol: str,
     ):
         super().__init__(
-            component_directory=agent_profile_project_folder,
+            component_directory=agent_profile_directory,
             entry_point_symbol=entry_point_symbol,
         )
 
@@ -284,11 +284,11 @@ class InternalAgentProfileProjectError(
 
     def __init__(
         self,
-        agent_profile_project_folder: str,
+        agent_profile_directory: str,
         internal_error_message: str,
     ):
         super().__init__(
-            component_directory=agent_profile_project_folder,
+            component_directory=agent_profile_directory,
             internal_error_message=internal_error_message,
         )
 
@@ -375,11 +375,11 @@ class ThirdPartyDependencyNotFoundError(
 
     def __init__(
         self,
-        agent_profile_project_folder: str,
+        agent_profile_directory: str,
         third_party_dependency_name: str,
     ):
         super().__init__(
-            component_directory=agent_profile_project_folder,
+            component_directory=agent_profile_directory,
             third_party_dependency_name=third_party_dependency_name,
         )
 
@@ -396,13 +396,13 @@ class IncompatibleThirdPartyDependencyVersionError(
 
     def __init__(
         self,
-        agent_profile_project_folder: str,
+        agent_profile_directory: str,
         third_party_dependency_name: str,
         required_version: str,
         installed_version: str,
     ):
         super().__init__(
-            component_directory=agent_profile_project_folder,
+            component_directory=agent_profile_directory,
             third_party_dependency_name=third_party_dependency_name,
             required_version=required_version,
             installed_version=installed_version,

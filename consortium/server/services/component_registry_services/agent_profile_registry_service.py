@@ -57,7 +57,7 @@ class AgentProfileRegistryService(
         comp_excs.DuplicateComponentLabelError: DuplicateAgentProfileLabelError,
     }
     _COMPONENT_REGISTRY_SERVICE_EXCEPTION_KWARGS_MAP = {
-        "component_directory": "agent_profile_project_folder",
+        "component_directory": "agent_profile_directory",
         "component_str": "agent_profile_str",
         "component_id": "agent_profile_id",
     }
@@ -66,4 +66,4 @@ class AgentProfileRegistryService(
         return component.agent_profile_id
 
     def _get_component_directory(self, component: AgentProfile) -> pathlib.Path:
-        return component.agent_project_folder
+        return component.root_directory
