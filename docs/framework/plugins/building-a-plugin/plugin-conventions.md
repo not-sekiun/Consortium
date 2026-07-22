@@ -49,7 +49,7 @@ Every plugin instance has these attributes:
 | `self.environment`           | `SimpleNamespace` | Mutable runtime state namespace                              |
 | `self.services`              | `SimpleNamespace` | Framework services namespace                                 |
 | `self.logger`                | `loguru.Logger`   | Plugin-scoped logger                                         |
-| `self.plugin_project_folder` | `pathlib.Path`    | Path to this plugin's source directory                       |
+| `self.root_directory`        | `pathlib.Path`    | Path to this plugin's source directory                       |
 
 Do not set attributes directly on `self` for runtime state. Use `self.environment`
 instead. Framework-managed attributes like `self.stop_event` and `self.status` should

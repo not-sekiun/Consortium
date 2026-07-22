@@ -59,11 +59,11 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
     # Change the return type to AgentProfile for IDE type checking
     def get_component_from_directory(
         self,
-        component_directory: pathlib.Path,
+        directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> AgentProfile | None:
         return super().get_component_from_directory(
-            component_directory=component_directory,
+            directory=directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
 

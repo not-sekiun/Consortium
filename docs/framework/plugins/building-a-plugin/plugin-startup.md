@@ -87,9 +87,9 @@ Do not store state as direct instance attributes (`self.interval = 30`). Using
 `self.environment` keeps runtime state clearly separate from class-level configuration
 and from the framework-managed attributes on `self`.
 
-## self.plugin_project_folder
+## self.root_directory
 
-`self.plugin_project_folder` is a `pathlib.Path` pointing to the directory that contains
+`self.root_directory` is a `pathlib.Path` pointing to the directory that contains
 your plugin's source files. Use it to load sibling files without hard-coding absolute
 paths:
 

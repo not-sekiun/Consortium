@@ -7,6 +7,7 @@ import pytest
 import consortium.server.server_singletons as _ss
 from consortium.server.services.agent_profiles_service import AgentProfilesService
 from consortium.server.services.release_service import ReleaseService
+from tests.services_tests.mocks.paths_service import make_mock_paths_service
 
 _HERE = pathlib.Path(__file__).parent
 _CONSORTIUM_ROOT = _HERE.parent.parent
@@ -23,8 +24,10 @@ def release_service():
 def svc_with_mock_registry(release_service, tmp_path):
     svc = AgentProfilesService(
         release_service=release_service,
-        agents_directory=tmp_path,
-        consortium_root=_CONSORTIUM_ROOT,
+        paths_service=make_mock_paths_service(
+            agents_directory=tmp_path,
+            consortium_root=_CONSORTIUM_ROOT,
+        ),
     )
     mock_registry = MagicMock()
     mock_registry.get_all_components.return_value = []

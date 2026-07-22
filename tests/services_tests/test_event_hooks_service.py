@@ -7,6 +7,7 @@ import pytest
 from consortium.server.services.event_hooks_service import EventHooksService
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.release_service import ReleaseService
+from tests.services_tests.mocks.paths_service import make_mock_paths_service
 
 _HERE = pathlib.Path(__file__).parent
 _MOCK_EVENT_HOOKS = _HERE / "mocks" / "event_hooks"
@@ -29,8 +30,10 @@ def event_hooks_service(release_service, events_service):
     return EventHooksService(
         events_service=events_service,
         release_service=release_service,
-        event_hooks_directory=_MOCK_EVENT_HOOKS,
-        consortium_root=_CONSORTIUM_ROOT,
+        paths_service=make_mock_paths_service(
+            event_hooks_directory=_MOCK_EVENT_HOOKS,
+            consortium_root=_CONSORTIUM_ROOT,
+        ),
     )
 
 
@@ -39,8 +42,10 @@ def svc_with_mock_registry(release_service, events_service):
     svc = EventHooksService(
         events_service=events_service,
         release_service=release_service,
-        event_hooks_directory=_MOCK_EVENT_HOOKS,
-        consortium_root=_CONSORTIUM_ROOT,
+        paths_service=make_mock_paths_service(
+            event_hooks_directory=_MOCK_EVENT_HOOKS,
+            consortium_root=_CONSORTIUM_ROOT,
+        ),
     )
     mock_registry = MagicMock()
     mock_registry.get_all_components.return_value = []

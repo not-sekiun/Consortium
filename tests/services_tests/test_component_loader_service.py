@@ -28,6 +28,7 @@ from consortium.server.services.component_loader_services.event_hook_loader_serv
 from consortium.server.services.component_loader_services.plugin_loader_service import (
     PluginLoaderService,
 )
+from tests.services_tests.mocks.paths_service import make_mock_paths_service
 
 _HERE = pathlib.Path(__file__).parent
 _MOCK_PLUGINS = _HERE / "mocks" / "plugins"
@@ -46,7 +47,7 @@ def mock_release_service():
 def plugin_loader(mock_release_service):
     return PluginLoaderService(
         release_service=mock_release_service,
-        consortium_root=_CONSORTIUM_ROOT,
+        paths_service=make_mock_paths_service(consortium_root=_CONSORTIUM_ROOT),
     )
 
 
@@ -54,7 +55,7 @@ def plugin_loader(mock_release_service):
 def event_hook_loader(mock_release_service):
     return EventHookLoaderService(
         release_service=mock_release_service,
-        consortium_root=_CONSORTIUM_ROOT,
+        paths_service=make_mock_paths_service(consortium_root=_CONSORTIUM_ROOT),
     )
 
 

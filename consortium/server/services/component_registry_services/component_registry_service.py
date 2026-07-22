@@ -61,7 +61,7 @@ class ComponentRegistryService[Component, ComponentLoadingError](ABC):
         ignore_enabled_component_flag: bool = False,
     ) -> Component:
         return self._component_loader_service.get_component_from_directory(
-            component_directory=directory,
+            directory=directory,
             ignore_enabled_component_flag=ignore_enabled_component_flag,
         )
 

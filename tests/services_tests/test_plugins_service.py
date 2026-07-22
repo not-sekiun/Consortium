@@ -6,6 +6,7 @@ import pytest
 
 from consortium.server.services.plugins_service import PluginsService
 from consortium.server.services.release_service import ReleaseService
+from tests.services_tests.mocks.paths_service import make_mock_paths_service
 
 _HERE = pathlib.Path(__file__).parent
 _MOCK_PLUGINS = _HERE / "mocks" / "plugins"
@@ -22,8 +23,10 @@ def release_service():
 def plugins_service(release_service):
     return PluginsService(
         release_service=release_service,
-        plugins_directory=_MOCK_PLUGINS,
-        consortium_root=_CONSORTIUM_ROOT,
+        paths_service=make_mock_paths_service(
+            plugins_directory=_MOCK_PLUGINS,
+            consortium_root=_CONSORTIUM_ROOT,
+        ),
     )
 
 
@@ -31,8 +34,10 @@ def plugins_service(release_service):
 def plugins_service_with_mock_registry(release_service):
     svc = PluginsService(
         release_service=release_service,
-        plugins_directory=_MOCK_PLUGINS,
-        consortium_root=_CONSORTIUM_ROOT,
+        paths_service=make_mock_paths_service(
+            plugins_directory=_MOCK_PLUGINS,
+            consortium_root=_CONSORTIUM_ROOT,
+        ),
     )
     mock_registry = MagicMock()
     mock_registry.get_all_components.return_value = []
@@ -108,10 +113,10 @@ def test_register_plugin_from_folder_delegates(plugins_service_with_mock_registr
     svc, registry = plugins_service_with_mock_registry
     folder = pathlib.Path("/tmp/some_plugin")
     mock_plugin = MagicMock()
-    registry.register_component_from_component_project_folder.return_value = mock_plugin
+    registry.register_component_from_directory.return_value = mock_plugin
     result = svc.register_plugin_from_directory(directory=folder)
-    registry.register_component_from_component_project_folder.assert_called_once_with(
-        component_project_folder=folder,
+    registry.register_component_from_directory.assert_called_once_with(
+        directory=folder,
         ignore_enabled_component_flag=False,
     )
     assert result == mock_plugin
@@ -125,12 +130,10 @@ async def test_load_plugin_from_folder_delegates(plugins_service_with_mock_regis
     svc, registry = plugins_service_with_mock_registry
     folder = pathlib.Path("/tmp/some_plugin")
     mock_plugin = MagicMock()
-    registry.load_component_from_component_project_folder = AsyncMock(
-        return_value=mock_plugin
-    )
+    registry.load_component_from_directory = AsyncMock(return_value=mock_plugin)
     result = await svc.load_plugin_from_directory(directory=folder)
-    registry.load_component_from_component_project_folder.assert_called_once_with(
-        component_project_folder=folder,
+    registry.load_component_from_directory.assert_called_once_with(
+        directory=folder,
         ignore_enabled_component_flag=False,
         context={"timeout": 5},
     )

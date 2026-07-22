@@ -28,8 +28,8 @@ def _closing_side_effect(exc: Exception):
 def _make_mock_loader():
     loader = MagicMock()
     loader.validate_component_component_dependencies.return_value = True
-    loader.get_component_from_component_project_folder.return_value = None
-    loader.get_components_from_component_project_folder_directories.return_value = (
+    loader.get_component_from_directory.return_value = None
+    loader.get_all_components_from_directory.return_value = (
         [],
         [],
         [],
@@ -71,9 +71,9 @@ def test_get_component_id(registry):
     assert registry._get_component_id(plugin) == plugin.plugin_id
 
 
-def test_get_component_project_folder(registry):
+def test_get_component_directory(registry):
     plugin = _make_plugin()
-    assert registry._get_component_project_folder(plugin) == plugin.root_directory
+    assert registry._get_component_directory(plugin) == plugin.root_directory
 
 
 # --- _component_load_procedure ---

@@ -321,13 +321,13 @@ class ComponentLoaderService[Component]:
 
     def get_component_from_directory(
         self,
-        component_directory: pathlib.Path,
+        directory: pathlib.Path,
         ignore_enabled_component_flag: bool = False,
     ) -> Component | None:
         manifest_json = self._validate_manifest_json_file(
-            component_directory=component_directory,
+            component_directory=directory,
             manifest_file_path=self._get_manifest_json_file_path(
-                component_directory=component_directory,
+                component_directory=directory,
             ),
             manifest_json_schema=self._manifest_json_schema,
         )
@@ -335,7 +335,7 @@ class ComponentLoaderService[Component]:
             manifest_json=manifest_json,
         )
         component_module, component_symbol = self._get_entry_point_from_manifest_json(
-            component_directory=component_directory,
+            component_directory=directory,
             manifest_json=manifest_json,
         )
         if not self._validate_component_enabled(
@@ -344,13 +344,13 @@ class ComponentLoaderService[Component]:
         ):
             return None
         dependencies = self._validate_pyproject_toml_file_third_party_dependencies(
-            component_directory=component_directory,
+            component_directory=directory,
             pyproject_filepath=self._get_pyproject_toml_file_path(
-                component_directory=component_directory,
+                component_directory=directory,
             ),
         )
         component_class = self._validate_component_directory_structure(
-            component_directory=component_directory,
+            component_directory=directory,
             component_module=component_module,
             component_symbol=component_symbol,
         )
@@ -363,7 +363,7 @@ class ComponentLoaderService[Component]:
         )
         component_object = self._validate_component_class(
             component_class=component_class,
-            component_directory=component_directory,
+            component_directory=directory,
             component_symbol=component_symbol,
         )
         return self._post_validate_component_object(
@@ -392,7 +392,7 @@ class ComponentLoaderService[Component]:
         for directory in component_directory_paths:
             try:
                 component = self.get_component_from_directory(
-                    component_directory=directory,
+                    directory=directory,
                     ignore_enabled_component_flag=ignore_enabled_component_flag,
                 )
                 if component:

@@ -18,7 +18,7 @@ class _ConcreteRegistry(ComponentRegistryService):
     def _get_component_id(self, component):
         return component._id
 
-    def _get_component_project_folder(self, component):
+    def _get_component_directory(self, component):
         return component._folder
 
 
@@ -84,13 +84,13 @@ def test_register_component_empty_label_allowed(registry):
     assert len(registry.get_all_components()) == 2
 
 
-# --- register_component_from_component_project_folder ---
+# --- register_component_from_directory ---
 
 
 def test_register_from_folder_delegates_and_registers(registry, loader):
     folder = pathlib.Path("/tmp/plugin_folder")
     comp = _make_component()
-    loader.get_component_from_component_project_folder.return_value = comp
+    loader.get_component_from_directory.return_value = comp
     result = registry.register_component_from_directory(directory=folder)
     assert result == comp
     assert comp in registry.get_all_components()
@@ -98,7 +98,7 @@ def test_register_from_folder_delegates_and_registers(registry, loader):
 
 def test_register_from_folder_disabled_returns_none(registry, loader):
     folder = pathlib.Path("/tmp/disabled_folder")
-    loader.get_component_from_component_project_folder.return_value = None
+    loader.get_component_from_directory.return_value = None
     result = registry.register_component_from_directory(directory=folder)
     assert result is None
 
@@ -130,14 +130,14 @@ async def test_load_component_default_empty_context(registry):
     assert result == comp
 
 
-# --- load_component_from_component_project_folder ---
+# --- load_component_from_directory ---
 
 
 @pytest.mark.anyio
 async def test_load_from_folder_loads_enabled(registry, loader):
     folder = pathlib.Path("/tmp/plugin_folder")
     comp = _make_component(label="loaded.comp")
-    loader.get_component_from_component_project_folder.return_value = comp
+    loader.get_component_from_directory.return_value = comp
     result = await registry.load_component_from_directory(directory=folder)
     assert result == comp
 
@@ -145,7 +145,7 @@ async def test_load_from_folder_loads_enabled(registry, loader):
 @pytest.mark.anyio
 async def test_load_from_folder_disabled_returns_none(registry, loader):
     folder = pathlib.Path("/tmp/disabled_folder")
-    loader.get_component_from_component_project_folder.return_value = None
+    loader.get_component_from_directory.return_value = None
     result = await registry.load_component_from_directory(directory=folder)
     assert result is None
 
@@ -182,7 +182,7 @@ async def test_reload_unloads_then_loads_from_folder(registry, loader):
 
     new_comp = _make_component(label="reload.comp")
     new_comp._folder = folder
-    loader.get_component_from_component_project_folder.return_value = new_comp
+    loader.get_component_from_directory.return_value = new_comp
 
     result = await registry.reload_component_by_component_id(component_id=original_id)
     # Original component was removed; new one was loaded.
