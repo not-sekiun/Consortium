@@ -10,11 +10,32 @@ from consortium.framework._core.framework_exceptions.agent_templates_framework_e
     AgentTemplatesFrameworkError,
 )
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
+from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
+    AgentProfileAlreadyRegisteredError,
+    AgentProfileDependsOnInvalidComponentDependencyError,
+    AgentProfileNotFoundError,
+    AgentProfileProjectEntryPointModuleNotFoundError,
+    AgentProfileProjectInterfaceError,
+    AgentProfileProjectManifestFileNotFoundError,
+    AgentProfileProjectSymbolNotFoundError,
+    ComponentDependencyNotFoundError,
+    DuplicateAgentProfileLabelError,
+    IncompatibleAgentProfileFrameworkVersionError,
+    IncompatibleComponentDependencyVersionError,
+    IncompatibleThirdPartyDependencyVersionError,
+    InternalAgentProfileProjectError,
+    InvalidAgentProfileProjectManifestFileJSONError,
+    InvalidAgentProfileProjectManifestFileSchemaError,
+    InvalidAgentProfileProjectPyProjectFileDependencyError,
+    InvalidAgentProfileProjectPyProjectFileTOMLError,
+    ThirdPartyDependencyNotFoundError,
+)
 from consortium.server.exceptions.service_exceptions.components_service_exceptions import (
     ComponentLoadingError,
 )
 from consortium.server.objects.c2_profile_objects import AgentProfile
 from consortium.server.services.component_loader_services.component_loader_service import (
+    ComponentExceptions,
     ComponentLoaderService,
 )
 
@@ -35,6 +56,28 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
         "required": ["entry_point", "enabled"],
         "additionalProperties": False,
     }
+    # Raise agent profile exceptions directly from the shared loader/registry pipeline
+    # instead of raising generic component exceptions and remapping them downstream.
+    _component_exceptions = ComponentExceptions(
+        manifest_file_not_found=AgentProfileProjectManifestFileNotFoundError,
+        invalid_manifest_file_json=InvalidAgentProfileProjectManifestFileJSONError,
+        invalid_manifest_file_schema=InvalidAgentProfileProjectManifestFileSchemaError,
+        invalid_pyproject_file_toml=InvalidAgentProfileProjectPyProjectFileTOMLError,
+        invalid_pyproject_file_dependency=InvalidAgentProfileProjectPyProjectFileDependencyError,
+        third_party_dependency_not_found=ThirdPartyDependencyNotFoundError,
+        incompatible_third_party_dependency_version=IncompatibleThirdPartyDependencyVersionError,
+        entry_point_module_not_found=AgentProfileProjectEntryPointModuleNotFoundError,
+        symbol_not_found=AgentProfileProjectSymbolNotFoundError,
+        interface_error=AgentProfileProjectInterfaceError,
+        internal_error=InternalAgentProfileProjectError,
+        incompatible_framework_version=IncompatibleAgentProfileFrameworkVersionError,
+        component_dependency_not_found=ComponentDependencyNotFoundError,
+        incompatible_component_dependency_version=IncompatibleComponentDependencyVersionError,
+        depends_on_invalid_component_dependency=AgentProfileDependsOnInvalidComponentDependencyError,
+        not_found=AgentProfileNotFoundError,
+        already_registered=AgentProfileAlreadyRegisteredError,
+        duplicate_label=DuplicateAgentProfileLabelError,
+    )
 
     @staticmethod
     def _post_validate_component_object(
