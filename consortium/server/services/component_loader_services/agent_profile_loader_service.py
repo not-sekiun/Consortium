@@ -35,8 +35,8 @@ from consortium.server.exceptions.service_exceptions.components_service_exceptio
 )
 from consortium.server.objects.c2_profile_objects import AgentProfile
 from consortium.server.services.component_loader_services.component_loader_service import (
-    ComponentExceptions,
     ComponentLoaderService,
+    ComponentLoadingExceptions,
 )
 
 
@@ -58,7 +58,7 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
     }
     # Raise agent profile exceptions directly from the shared loader/registry pipeline
     # instead of raising generic component exceptions and remapping them downstream.
-    _component_exceptions = ComponentExceptions(
+    _component_exceptions = ComponentLoadingExceptions(
         manifest_file_not_found=AgentProfileProjectManifestFileNotFoundError,
         invalid_manifest_file_json=InvalidAgentProfileProjectManifestFileJSONError,
         invalid_manifest_file_schema=InvalidAgentProfileProjectManifestFileSchemaError,

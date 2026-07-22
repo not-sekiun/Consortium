@@ -32,8 +32,8 @@ from consortium.server.exceptions.service_exceptions.listener_profiles_service_e
 )
 from consortium.server.objects.c2_profile_objects import ListenerProfile
 from consortium.server.services.component_loader_services.component_loader_service import (
-    ComponentExceptions,
     ComponentLoaderService,
+    ComponentLoadingExceptions,
 )
 
 
@@ -54,7 +54,7 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
     }
     # Raise listener profile exceptions directly from the shared loader/registry pipeline
     # instead of raising generic component exceptions and remapping them downstream.
-    _component_exceptions = ComponentExceptions(
+    _component_exceptions = ComponentLoadingExceptions(
         manifest_file_not_found=ListenerProfileProjectManifestFileNotFoundError,
         invalid_manifest_file_json=InvalidListenerProfileProjectManifestFileJSONError,
         invalid_manifest_file_schema=InvalidListenerProfileProjectManifestFileSchemaError,

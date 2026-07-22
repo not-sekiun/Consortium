@@ -23,8 +23,8 @@ from consortium.server.exceptions.service_exceptions.plugins_service_exceptions 
     ThirdPartyDependencyNotFoundError,
 )
 from consortium.server.services.component_loader_services.component_loader_service import (
-    ComponentExceptions,
     ComponentLoaderService,
+    ComponentLoadingExceptions,
 )
 
 
@@ -42,7 +42,7 @@ class PluginLoaderService(ComponentLoaderService[BasePlugin]):
     }
     # Raise plugin exceptions directly from the shared loader/registry pipeline instead
     # of raising generic component exceptions and remapping them downstream.
-    _component_exceptions = ComponentExceptions(
+    _component_exceptions = ComponentLoadingExceptions(
         manifest_file_not_found=PluginProjectManifestFileNotFoundError,
         invalid_manifest_file_json=InvalidPluginProjectManifestFileJSONError,
         invalid_manifest_file_schema=InvalidPluginProjectManifestFileSchemaError,

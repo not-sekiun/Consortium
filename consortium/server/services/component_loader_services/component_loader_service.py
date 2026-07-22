@@ -52,7 +52,7 @@ from consortium.server.services.release_service import ReleaseService
 # exception set was introduced. A domain opts in by constructing a ComponentExceptions with
 # the slots it wants replaced by its own subclasses.
 @dataclass(frozen=True)
-class ComponentExceptions:
+class ComponentLoadingExceptions:
     manifest_file_not_found: type[ComponentProjectManifestFileNotFoundError] = (
         ComponentProjectManifestFileNotFoundError
     )
@@ -119,7 +119,7 @@ class ComponentLoaderService[Component]:
     # The set of exception classes this loader (and its registry) raise. Defaults to the
     # generic component exceptions; a domain loader overrides slots with its own subclasses
     # so domain errors are raised directly instead of being remapped downstream.
-    _component_exceptions: ComponentExceptions = ComponentExceptions()
+    _component_exceptions: ComponentLoadingExceptions = ComponentLoadingExceptions()
 
     def __init__(self, release_service: ReleaseService, paths_service: PathsService):
         self._consortium_root = paths_service.consortium_root

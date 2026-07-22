@@ -10,7 +10,7 @@ from consortium.server.exceptions.service_exceptions.components_service_exceptio
     DuplicateComponentLabelError,
 )
 from consortium.server.services.component_loader_services.component_loader_service import (
-    ComponentExceptions,
+    ComponentLoadingExceptions,
 )
 from consortium.server.services.component_registry_services.component_registry_service import (
     ComponentRegistryService,
@@ -27,7 +27,7 @@ def _make_mock_loader():
     loader.validate_component_component_dependencies.return_value = True
     # The registry raises registry-level errors from the loader's exception set; give the
     # mock the default (generic) set so those raises produce real exception instances.
-    loader._component_exceptions = ComponentExceptions()
+    loader._component_exceptions = ComponentLoadingExceptions()
     return loader
 
 
