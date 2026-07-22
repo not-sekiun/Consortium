@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from consortium.server.server import Server
 
 # This service is first to instantiate because it registers a default sink pre-config
-# such that every other service below it can log messges that are properly formatted
+# such that every other service below it can log messages that are properly formatted
 logging_service = LoggingService()
 
 
