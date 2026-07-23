@@ -50,7 +50,7 @@ def _check_all_url_endpoints_unique(
 
 
 class AgentTemplate(BaseAgentTemplate):
-    label = "consortium.agents.eula.python"
+    label = "consortium.agents.eula_python"
     name = "Consortium Python Eula Agent"
     description = (
         "The canonical Consortium agent, Eula, written in pure python that "

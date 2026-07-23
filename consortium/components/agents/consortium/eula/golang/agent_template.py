@@ -80,7 +80,7 @@ def _check_goos_and_goarch_compatibility(parameters: JSONObject) -> None:
 
 
 class AgentTemplate(BaseAgentTemplate):
-    label = "consortium.agents.eula.golang"
+    label = "consortium.agents.eula_golang"
     name = "Consortium Golang Eula Agent"
     description = (
         "The canonical Consortium agent, Eula, written in golang that communicates "

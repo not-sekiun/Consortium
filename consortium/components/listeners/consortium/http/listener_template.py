@@ -38,7 +38,7 @@ def _validate_all_url_endpoints_unique(
 
 
 class ListenerTemplate(BaseListenerTemplate):
-    label = "consortium.listeners.consortium_http"
+    label = "consortium.listeners.http_consortium"
     name = "Consortium HTTP Listener"
     description = (
         "The canonical Consortium listener implementation that communicates over the "

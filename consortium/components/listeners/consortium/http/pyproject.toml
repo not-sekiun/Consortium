@@ -1,5 +1,5 @@
 [project]
-name = "consortium.agents.http-agent"
+name = "consortium.listeners.http_consortium"
 version = "0.1.0"
 dependencies = [
     "aiohttp",

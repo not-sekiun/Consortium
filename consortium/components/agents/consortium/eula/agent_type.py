@@ -16,7 +16,7 @@ from .agent_capabilities.upload import UploadCapability
 
 
 class AgentType(BaseAgentType):
-    name = "eula_multi"
+    name = "eula"
     agent_capabilities = {
         DisconnectCapability,
         KillCapability,

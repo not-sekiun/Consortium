@@ -8,7 +8,7 @@ from .listener_type import ListenerType
 
 
 class ListenerTemplate(BaseListenerTemplate):
-    label = "consortium.listeners.consortium_reverse_tcp"
+    label = "consortium.listeners.reverse_tcp_consortium"
     name = "Consortium Reverse TCP Listener"
     description = (
         "The canonical Consortium listener implementation that communicates over the "

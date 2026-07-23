@@ -5,8 +5,8 @@ requires-python = ">=3.14"
 [manifest]
 members = [
     "consortium",
-    "consortium-agents-http-agent",
-    "consortium-http-agent",
+    "consortium-agents-eula-python",
+    "consortium-listeners-http-consortium",
 ]
 
 [[package]]
@@ -275,18 +275,7 @@ docs = [
 ]
 
 [[package]]
-name = "consortium-agents-http-agent"
-version = "0.1.0"
-source = { virtual = "consortium/components/listeners/consortium/http" }
-dependencies = [
-    { name = "aiohttp" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "aiohttp" }]
-
-[[package]]
-name = "consortium-http-agent"
+name = "consortium-agents-eula-python"
 version = "0.1.0"
 source = { virtual = "consortium/components/agents/consortium/eula/python" }
 dependencies = [
@@ -299,6 +288,17 @@ requires-dist = [
     { name = "pyinstaller", specifier = ">=6.0" },
     { name = "python-minifier", specifier = ">=3.2.0" },
 ]
+
+[[package]]
+name = "consortium-listeners-http-consortium"
+version = "0.1.0"
+source = { virtual = "consortium/components/listeners/consortium/http" }
+dependencies = [
+    { name = "aiohttp" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "aiohttp" }]
 
 [[package]]
 name = "coverage"

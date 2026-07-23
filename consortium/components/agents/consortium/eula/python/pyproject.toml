@@ -1,5 +1,5 @@
 [project]
-name = "consortium-http-agent"
+name = "consortium.agents.eula_python"
 version = "0.1.0"
 dependencies = [
     "pyinstaller>=6.0",
