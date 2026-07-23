@@ -292,7 +292,6 @@ class Agent:
     def status(self) -> AgentStatus:
         if self._listener_id is None:
             return AgentStatus.UNREACHABLE
-
         try:
             listener = server_singletons.listeners_service.get_listener_by_listener_id(
                 listener_id=self._listener_id

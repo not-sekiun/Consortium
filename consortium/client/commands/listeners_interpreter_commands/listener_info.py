@@ -10,6 +10,7 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import (
     BaseConnectedCommand,
 )
+from consortium.client.utils.event_log_command_utils import create_event_log_table
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
@@ -27,6 +28,9 @@ class ListenerInfoCommand(BaseConnectedCommand):
         """
         Examples:
           info 123e4567-e89b-12d3-a456-42661417400
+          info 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 event log entries (tail)
+          info 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 event log entries
+          info 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 entries starting from 5th from end
         """,
     )
     group = "Listener Management Commands"
@@ -36,6 +40,28 @@ class ListenerInfoCommand(BaseConnectedCommand):
             "listener_id",
             help="ID of the listener to display information for.",
             nargs=1,
+        )
+        parser.add_argument(
+            "-l",
+            "--limit",
+            help=(
+                "Maximum number of event log entries to return. "
+                "When specified without --offset, returns the last N entries (tail). "
+                "Must be a positive integer. Default is 10."
+            ),
+            type=int,
+            default=None,
+        )
+        parser.add_argument(
+            "-o",
+            "--offset",
+            help=(
+                "Starting position in the event log. Positive values start from the "
+                "beginning, negative values offset from the end. "
+                "If not specified, returns the tail (last N entries based on limit)."
+            ),
+            type=int,
+            default=None,
         )
 
     async def run(
@@ -48,6 +74,8 @@ class ListenerInfoCommand(BaseConnectedCommand):
 
             listener = await rest_api.get_listener_by_listener_id(
                 parsed_args.listener_id[0],
+                limit=parsed_args.limit,
+                offset=parsed_args.offset,
             )
             table = Table(title="Listener Information", highlight=True)
             table.add_column("Information")
@@ -108,7 +136,14 @@ class ListenerInfoCommand(BaseConnectedCommand):
                 f"'{listener['creating_listener_template']['name']}' "
                 f"({listener['creating_listener_template']['listener_template_id']})",
             )
+
+            event_log_table = create_event_log_table(
+                event_log=listener["event_log"],
+                title="Listener Event Log",
+            )
+
             console.print(table, "")
+            console.print(event_log_table, "")
         except SystemExit:
             pass
 

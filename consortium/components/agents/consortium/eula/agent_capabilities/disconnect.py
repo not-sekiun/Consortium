@@ -21,5 +21,6 @@ class DisconnectCapability(BaseAgentCapability):
     }
 
     async def on_execute(self):
+        disconnect_response = (await self.recv_from_agent()).to_outcome()
         self.agent.mark_as_inactive()
-        return (await self.recv_from_agent()).to_outcome()
+        return disconnect_response

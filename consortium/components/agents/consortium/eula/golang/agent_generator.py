@@ -55,8 +55,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                 "docker",
                 "cp",
                 f"{container_id}:/agent_builder/agent",
-                parameters["file_name"]
-                + (".exe" if parameters["os"] == "windows" else ""),
+                "agent",
             ],  # Copy agent to host machine
             ["docker", "rm", "-f", container_id],  # Remove container
         ]
@@ -79,7 +78,8 @@ class ExportAgent(BaseAgentGeneratorBuildStep):
     async def build(self, parameters: dict) -> None:
         self.agent_templates_payload_service.add_payload_file(
             path=self.root_directory / "agent_source" / "agent",
-            name=parameters["file_name"],
+            name=parameters["file_name"]
+            + (".exe" if parameters["os"] == "windows" else ""),
             build_parameters=parameters,
         )  # Moves the file instead of copy so no cleanup is necessary afterwards
 

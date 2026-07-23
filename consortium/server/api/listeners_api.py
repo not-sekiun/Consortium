@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, Query
 from pydantic import UUID4, JsonValue
 
 import consortium.server.server_singletons as server_singletons
@@ -108,9 +108,18 @@ def get_all_listeners(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENERS)),
     ],
+    limit: Annotated[
+        int, Query(gt=0, description="Maximum number of event log entries to return")
+    ] = 10,
+    offset: Annotated[
+        int | None,
+        Query(
+            description="Starting position in the event log. Negative values offset from the end. If None and limit is provided, returns the tail (last N entries)."
+        ),
+    ] = None,
 ) -> list[ListenerModel]:
     return [
-        ListenerModel(**listener.to_json())
+        ListenerModel(**listener.to_json(limit=limit, offset=offset))
         for listener in _listeners_service.get_all_listeners()
     ]
 
@@ -136,10 +145,21 @@ def get_listener_by_listener_id(
             AuthorizeUserRequest(UserPermissions.READ_LISTENER_BY_LISTENER_ID),
         ),
     ],
+    limit: Annotated[
+        int, Query(gt=0, description="Maximum number of event log entries to return")
+    ] = 10,
+    offset: Annotated[
+        int | None,
+        Query(
+            description="Starting position in the event log. Negative values offset from the end. If None and limit is provided, returns the tail (last N entries)."
+        ),
+    ] = None,
 ) -> ListenerModel:
     try:
         return ListenerModel(
-            **_listeners_service.get_listener_by_listener_id(listener_id).to_json(),
+            **_listeners_service.get_listener_by_listener_id(listener_id).to_json(
+                limit=limit, offset=offset
+            ),
         )
     except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(

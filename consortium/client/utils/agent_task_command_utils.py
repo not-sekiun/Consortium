@@ -1,7 +1,7 @@
 from rich.table import Table
 
+from consortium.client.utils.event_log_command_utils import create_event_log_table
 from consortium.client.utils.formatter_utils import (
-    format_agent_task_event_type_string_with_color,
     format_agent_task_status_string_with_color,
     format_datetime_as_human_readable_str,
     format_dict_as_multi_line_key_value_string,
@@ -57,30 +57,9 @@ def create_task_info_and_task_events_tables(task: dict) -> tuple[Table, Table]:
         else "N/A",
     )
 
-    event_log = task["event_log"]
-    total_count = event_log["total_count"]
-    entries = event_log["entries"]
-    task_events_table = Table(
-        title=(
-            f"Task Events Information (showing {len(entries)} of {total_count} entries)"
-        ),
-        highlight=True,
+    task_events_table = create_event_log_table(
+        event_log=task["event_log"],
+        title="Task Events Information",
     )
-    task_events_table.add_column("#", justify="right")
-    task_events_table.add_column("Status")
-    task_events_table.add_column("Message")
-    task_events_table.add_column("Datetime Reported")
-    for entry in entries:
-        task_events_table.add_row(
-            str(entry["sequence"]),
-            format_agent_task_event_type_string_with_color(
-                event_type_str=entry["event_type"]
-            ),
-            entry["message"],
-            format_datetime_as_human_readable_str(
-                datetime_str=entry["datetime_reported"],
-                include_elapsed_time=True,
-            ),
-        )
 
     return task_info_table, task_events_table

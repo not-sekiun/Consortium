@@ -6,6 +6,9 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
+from tests.api_tests.framework_components_json_response_schemas import (
+    EVENT_LOG_JSON_SCHEMA,
+)
 from tests.api_tests.utils import get_all_listener_ids, validate_response
 
 pytestmark = pytest.mark.anyio
@@ -50,6 +53,7 @@ LISTENER_JSON_SCHEMA = {
             },
             "required": ["state", "error"],
         },
+        "event_log": EVENT_LOG_JSON_SCHEMA,
         "datetime_created": {"type": "string"},
         "connected_agents": {"type": "array"},
         "creating_listener_template": {"type": "object"},
@@ -61,6 +65,7 @@ LISTENER_JSON_SCHEMA = {
         "listener_id",
         "parameters",
         "status",
+        "event_log",
     ],
 }
 ALL_LISTENERS_JSON_SCHEMA = {

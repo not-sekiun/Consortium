@@ -112,6 +112,7 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
+            self.connected_agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
             try:
                 task_message = await self.connected_agents_service.get_next_task_message_sequential(
                     agent_id=agent_id,

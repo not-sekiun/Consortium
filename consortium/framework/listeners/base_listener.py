@@ -12,6 +12,8 @@ from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleFatalContext,
 )
+from consortium.framework._core.event_logging.event_log import EventLog
+from consortium.framework._core.event_logging.event_logger import EventLogger
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
     ComponentNotRunningError,
@@ -71,6 +73,10 @@ class BaseListener(ComponentLifeCycle):
             operations of agents connected to this listener.
         logger: Listener-specific logger instance, automatically tagged with the
             listener's name and ID for easy identification in logs.
+        event_logger: Listener-specific event logger used to record structured,
+            client-facing lifecycle events (successes, failures, informational
+            messages, progress updates). Entries are optionally mirrored to the
+            listener's system logger.
         creating_listener_template: Reference to the listener template that created
             this instance. Set automatically during creation.
     """
@@ -148,6 +154,10 @@ class BaseListener(ComponentLifeCycle):
             logger_name=f"Listener - {self}",
             logger_type=LoggerType.LISTENER_LOGGER,
         )
+        self.event_logger = EventLogger(
+            event_log=EventLog(subject_id=self.listener_id),
+            logger=self.logger,
+        )
 
         super().__init__()
 
@@ -208,7 +218,9 @@ class BaseListener(ComponentLifeCycle):
             error: The runtime error describing what went wrong during listener
                 execution, including the error message and any diagnostic detail.
         """
-        self.logger.error(error)
+        # Recording through the event logger both surfaces the failure in the
+        # client-facing event log and mirrors it to the listener's system logger.
+        self.event_logger.failure(str(error))
 
     async def on_fatal(
         self,
@@ -292,13 +304,21 @@ class BaseListener(ComponentLifeCycle):
                 listener_str=str(self),
             ) from None
 
-    def to_json(self) -> dict[str, JsonValue]:
+    def to_json(
+        self, limit: int = 10, offset: int | None = None
+    ) -> dict[str, JsonValue]:
         """Serialize the listener's current state to a JSON-compatible dictionary.
+
+        Args:
+            limit: Maximum number of event log entries to include.
+            offset: Sequence offset to start the event log window from. If None, the
+                tail (most recent entries up to limit) is returned.
 
         Returns:
             A dictionary containing the listener ID, name, description, endpoint,
-            listener type, parameters, status, creation timestamp, connected agents
-            as references, and the creating listener template as a reference.
+            listener type, parameters, status, creation timestamp, event log,
+            connected agents as references, and the creating listener template as a
+            reference.
         """
         return {
             "listener_id": str(self.listener_id),
@@ -308,6 +328,7 @@ class BaseListener(ComponentLifeCycle):
             "listener_type": self.listener_type.to_json(),
             "parameters": self.parameters,
             "status": self.status.to_json(),
+            "event_log": self.event_logger.to_json(limit=limit, offset=offset),
             "datetime_created": self.datetime_created.isoformat(),
             "connected_agents": [
                 agent.to_json_reference() for agent in self.connected_agents

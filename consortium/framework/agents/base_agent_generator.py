@@ -14,6 +14,8 @@ from consortium.framework._core.components import (
     ComponentLifeCycleFatalContext,
     State,
 )
+from consortium.framework._core.event_logging.event_log import EventLog
+from consortium.framework._core.event_logging.event_logger import EventLogger
 from consortium.framework._core.framework_exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorAlreadyRunningError,
     AgentGeneratorBuildStepConfigurationParameterTypeError,
@@ -67,6 +69,10 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     Attributes:
         name: Unique display name for this build step. Required.
         description: Human-readable explanation of what this step does.
+        event_logger: Event logger shared with the owning agent generator, so events
+            recorded by every build step appear together in the generator's single
+            consolidated event log. Injected by the generator before the step runs;
+            None until then.
     """
 
     name: str
@@ -87,6 +93,10 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             logger_name=f"Agent Generator Build Step {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
         )
+        # Injected by the owning agent generator in run() so every build step reports
+        # into the generator's shared event log. Mirrors to this step's own system
+        # logger.
+        self.event_logger: EventLogger | None = None
         self.agent_templates_payload_service = agent_templates_payload_service
 
         super().__init__()
@@ -196,7 +206,12 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     @final
     async def on_errored(self, error: AgentGeneratorBuildStepRuntimeError) -> None:
         self.datetime_stopped = utc_now()
-        self.logger.error(error)
+        # Record into the shared event log when available (it is injected by the
+        # generator before the step runs), otherwise fall back to the system logger.
+        if self.event_logger is not None:
+            self.event_logger.failure(str(error))
+        else:
+            self.logger.error(error)
 
     async def on_fatal(
         self,
@@ -228,22 +243,26 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         self,
         parameters: dict,
         environment: types.SimpleNamespace,
+        event_logger: EventLogger,
     ) -> None:
         """Start this build step with the provided parameters and environment, blocking until done.
 
         This is the entry point called by BaseAgentGenerator during pipeline execution.
-        It injects the shared environment and parameter set before starting the component
-        lifecycle.
+        It injects the shared environment, parameter set, and event logger before
+        starting the component lifecycle.
 
         Args:
             parameters: Key-value configuration parameters forwarded from the generator.
             environment: Shared namespace that allows steps to read and write state
                 across the pipeline.
+            event_logger: Event logger sharing the generator's event log, so events
+                recorded by this step appear alongside those of every other step.
         """
-        # Override `environment` set during initialization to the ones provided by the
-        # AgentGenerator.
+        # Override `environment` and `event_logger` set during initialization to the
+        # ones provided by the AgentGenerator.
         self.environment = environment
         self.parameters = parameters
+        self.event_logger = event_logger
         await super().start()
         await self.wait_until_stopped()
 
@@ -252,6 +271,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         self.datetime_started = None
         self.datetime_stopped = None
         self.parameters = {}
+        self.event_logger = None
         super().reset()
 
     def to_json(self) -> dict[str, JsonValue]:
@@ -335,6 +355,10 @@ class BaseAgentGenerator(ComponentLifeCycle):
     Attributes:
         agent_generator_build_steps: Ordered sequence of build step classes. Declared
             at the class level and converted to instances in __init__.
+        event_logger: Generator-wide event logger. Every build step is given a child
+            logger that shares this logger's underlying event log, so all build steps
+            report into one consolidated, client-facing event log. Entries are
+            optionally mirrored to the relevant system logger.
     """
 
     agent_generator_build_steps: list[type[BaseAgentGeneratorBuildStep]] = None
@@ -408,6 +432,10 @@ class BaseAgentGenerator(ComponentLifeCycle):
         self.logger = logger.bind(
             logger_name=f"Agent Generator {self}",
             logger_type=LoggerType.GENERATOR_LOGGER,
+        )
+        self.event_logger = EventLogger(
+            event_log=EventLog(subject_id=self.agent_generator_id),
+            logger=self.logger,
         )
 
         self._current_agent_generator_build_step = None
@@ -493,11 +521,29 @@ class BaseAgentGenerator(ComponentLifeCycle):
         for agent_generator_build_step in self.agent_generator_build_steps:
             agent_generator_build_step.reset()
 
-        for agent_generator_build_step in self.agent_generator_build_steps:
+        total_build_steps = len(self.agent_generator_build_steps)
+        for build_step_number, agent_generator_build_step in enumerate(
+            self.agent_generator_build_steps, start=1
+        ):
             self._current_agent_generator_build_step = agent_generator_build_step
+
+            # Report the pipeline's orchestration progress into the shared event log
+            # and hand each step a child logger over that same log so any events the
+            # step records itself land alongside these orchestration events.
+            self.event_logger.update_progress(
+                percent_complete=((build_step_number - 1) / total_build_steps) * 100,
+                message=f"Running build step '{agent_generator_build_step.name}'",
+            )
+            self.event_logger.info(
+                f"Running build step '{agent_generator_build_step.name}' "
+                f"({build_step_number}/{total_build_steps})"
+            )
             await agent_generator_build_step.run(
                 parameters=self.parameters,
                 environment=self.environment,
+                event_logger=self.event_logger.create_child_logger(
+                    logger=agent_generator_build_step.logger,
+                ),
             )
 
             # Since we are in the agent generator's on_running() method to communicate
@@ -521,6 +567,13 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
             if self.stop_event.is_set():
                 break
+        else:
+            # Every build step ran without the pipeline being stopped early.
+            self.event_logger.update_progress(
+                percent_complete=100.0,
+                message="All build steps completed",
+            )
+            self.event_logger.success("All build steps completed successfully")
 
     async def on_stopped(self) -> None:
         """Hook invoked when the generator is stopped before all steps complete.
@@ -542,7 +595,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
         Args:
             error: The structured runtime error describing what failed and why.
         """
-        self.logger.error(error)
+        # Recording through the event logger both surfaces the failure in the
+        # client-facing event log and mirrors it to the generator's system logger.
+        self.event_logger.failure(str(error))
 
     async def on_fatal(
         self,
@@ -634,13 +689,20 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 agent_generator_str=str(self),
             ) from None
 
-    def to_json(self) -> dict[str, JsonValue]:
+    def to_json(
+        self, limit: int = 10, offset: int | None = None
+    ) -> dict[str, JsonValue]:
         """Serialize the generator's current state to a JSON-compatible dictionary.
+
+        Args:
+            limit: Maximum number of event log entries to include.
+            offset: Sequence offset to start the event log window from. If None, the
+                tail (most recent entries up to limit) is returned.
 
         Returns:
             A dictionary containing the generator ID, name, description, parameters,
-            status, creation timestamp, build step states, agent type, compatible
-            listener types, and a reference to the creating agent template.
+            status, creation timestamp, event log, build step states, agent type,
+            compatible listener types, and a reference to the creating agent template.
         """
         return {
             "agent_generator_id": str(self.agent_generator_id),
@@ -648,6 +710,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
             "description": self.description,
             "parameters": self.parameters,
             "status": self.status.to_json(),
+            "event_log": self.event_logger.to_json(limit=limit, offset=offset),
             "datetime_created": self.datetime_created.isoformat(),
             "agent_generator_build_steps": [
                 agent_generator_build_step.to_json()

@@ -7,5 +7,6 @@ class KillCapability(BaseAgentCapability):
     authors = {"Sekiun (github.com/not-sekiun)"}
 
     async def on_execute(self):
+        kill_response = (await self.recv_from_agent()).to_outcome()
         self.agent.mark_as_inactive()
-        return (await self.recv_from_agent()).to_outcome()
+        return kill_response

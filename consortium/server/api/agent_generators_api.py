@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, Query
 from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
@@ -107,9 +107,18 @@ def get_all_agent_generators(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_GENERATORS)),
     ],
+    limit: Annotated[
+        int, Query(gt=0, description="Maximum number of event log entries to return")
+    ] = 10,
+    offset: Annotated[
+        int | None,
+        Query(
+            description="Starting position in the event log. Negative values offset from the end. If None and limit is provided, returns the tail (last N entries)."
+        ),
+    ] = None,
 ) -> list[AgentGeneratorModel]:
     return [
-        AgentGeneratorModel(**agent_generator.to_json())
+        AgentGeneratorModel(**agent_generator.to_json(limit=limit, offset=offset))
         for agent_generator in _agent_generators_service.get_all_agent_generators()
     ]
 
@@ -135,12 +144,21 @@ def get_agent_generator_by_agent_generator_id(
             ),
         ),
     ],
+    limit: Annotated[
+        int, Query(gt=0, description="Maximum number of event log entries to return")
+    ] = 10,
+    offset: Annotated[
+        int | None,
+        Query(
+            description="Starting position in the event log. Negative values offset from the end. If None and limit is provided, returns the tail (last N entries)."
+        ),
+    ] = None,
 ) -> AgentGeneratorModel:
     try:
         return AgentGeneratorModel(
             **_agent_generators_service.get_agent_generator_by_agent_generator_id(
                 agent_generator_id,
-            ).to_json(),
+            ).to_json(limit=limit, offset=offset),
         )
     except svc_excs.AgentGeneratorNotFoundError as exc:
         raise api_excs.AgentGeneratorNotFoundError.from_consortium_exception(

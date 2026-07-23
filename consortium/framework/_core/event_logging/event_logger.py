@@ -189,6 +189,34 @@ class EventLogger:
         """Clear the current progress update on the event log."""
         self._event_log.clear_progress()
 
+    def create_child_logger(
+        self,
+        logger: Any = None,
+        mirror_to_logger: bool | None = None,
+    ) -> EventLogger:
+        """Create a new event logger that shares this logger's underlying event log.
+
+        The returned logger writes into the same event log as this one, so entries
+        recorded through either logger appear together in a single consolidated log.
+        The child mirrors its entries to its own provided system logger, allowing
+        sub-components (such as an agent generator's build steps) to report into one
+        shared event log while still attributing their mirrored log lines to their own
+        system logger.
+
+        Args:
+            logger: System logger the child mirrors its entries to. If None, the child
+                records to the shared event log without mirroring.
+            mirror_to_logger: Default mirroring behaviour for the child. If None, the
+                parent's current default is inherited.
+        """
+        return EventLogger(
+            event_log=self._event_log,
+            logger=logger,
+            mirror_to_logger=self.mirror_to_logger
+            if mirror_to_logger is None
+            else mirror_to_logger,
+        )
+
     def get_events(
         self, limit: int = 10, offset: int | None = None
     ) -> list[EventLogEntryModel]:

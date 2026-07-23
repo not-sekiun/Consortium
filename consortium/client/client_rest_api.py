@@ -208,20 +208,30 @@ class RestAPI:
 
     # Wrapper methods for the /api/listeners API endpoint.
     @_requires_authentication
-    async def get_all_listeners(self) -> list[dict[str, JsonValue]]:
+    async def get_all_listeners(
+        self,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[dict[str, JsonValue]]:
+        params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/listeners/all",
+            params=params if params else None,
         )
 
     @_requires_authentication
     async def get_listener_by_listener_id(
         self,
         listener_id: str,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> dict[str, JsonValue]:
+        params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/listeners/{listener_id}",
+            params=params if params else None,
         )
 
     @_requires_authentication
@@ -305,20 +315,30 @@ class RestAPI:
 
     # Wrapper methods for the /api/agent-generators API endpoint.
     @_requires_authentication
-    async def get_all_agent_generators(self) -> list[dict[str, JsonValue]]:
+    async def get_all_agent_generators(
+        self,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[dict[str, JsonValue]]:
+        params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agent-generators/all",
+            params=params if params else None,
         )
 
     @_requires_authentication
     async def get_agent_generator_by_agent_generator_id(
         self,
         agent_generator_id: str,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> dict[str, JsonValue]:
+        params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}",
+            params=params if params else None,
         )
 
     @_requires_authentication
@@ -394,7 +414,7 @@ class RestAPI:
         limit: int | None = None,
         offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
-        params = self._build_task_events_params(limit, offset)
+        params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/tasks",
@@ -408,7 +428,7 @@ class RestAPI:
         limit: int | None = None,
         offset: int | None = None,
     ):
-        params = self._build_task_events_params(limit, offset)
+        params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/tasks/{task_id}",
@@ -422,7 +442,7 @@ class RestAPI:
         limit: int | None = None,
         offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
-        params = self._build_task_events_params(limit, offset)
+        params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -437,7 +457,7 @@ class RestAPI:
         offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
         params = {"status": "QUEUED"}
-        params.update(self._build_task_events_params(limit, offset))
+        params.update(self._build_event_log_params(limit, offset))
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -452,7 +472,7 @@ class RestAPI:
         offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
         params = {"status": "RUNNING"}
-        params.update(self._build_task_events_params(limit, offset))
+        params.update(self._build_event_log_params(limit, offset))
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -467,7 +487,7 @@ class RestAPI:
         offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
         params = {"status": "COMPLETED"}
-        params.update(self._build_task_events_params(limit, offset))
+        params.update(self._build_event_log_params(limit, offset))
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
@@ -482,7 +502,7 @@ class RestAPI:
         limit: int | None = None,
         offset: int | None = None,
     ):
-        params = self._build_task_events_params(limit, offset)
+        params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks/{task_id}",
@@ -689,7 +709,7 @@ class RestAPI:
             yield chunk
 
     @staticmethod
-    def _build_task_events_params(
+    def _build_event_log_params(
         limit: int | None,
         offset: int | None,
     ) -> dict[str, JsonValue]:

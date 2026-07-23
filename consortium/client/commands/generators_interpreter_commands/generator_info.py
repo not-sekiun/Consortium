@@ -11,6 +11,7 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import (
     BaseConnectedCommand,
 )
+from consortium.client.utils.event_log_command_utils import create_event_log_table
 from consortium.client.utils.formatter_utils import (
     format_agent_generator_state_string_with_color,
     format_argparse_epilog,
@@ -29,6 +30,9 @@ class GeneratorInfoCommand(BaseConnectedCommand):
         """
         Examples:
           info 123e4567-e89b-12d3-a456-42661417400
+          info 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 event log entries (tail)
+          info 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 event log entries
+          info 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 entries starting from 5th from end
         """,
     )
     group = "Agent Generator Management Commands"
@@ -38,6 +42,28 @@ class GeneratorInfoCommand(BaseConnectedCommand):
             "agent_generator_id",
             help="ID of the agent generator to display information for.",
             nargs=1,
+        )
+        parser.add_argument(
+            "-l",
+            "--limit",
+            help=(
+                "Maximum number of event log entries to return. "
+                "When specified without --offset, returns the last N entries (tail). "
+                "Must be a positive integer. Default is 10."
+            ),
+            type=int,
+            default=None,
+        )
+        parser.add_argument(
+            "-o",
+            "--offset",
+            help=(
+                "Starting position in the event log. Positive values start from the "
+                "beginning, negative values offset from the end. "
+                "If not specified, returns the tail (last N entries based on limit)."
+            ),
+            type=int,
+            default=None,
         )
 
     async def run(
@@ -50,6 +76,8 @@ class GeneratorInfoCommand(BaseConnectedCommand):
 
             agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
                 agent_generator_id=parsed_args.agent_generator_id[0],
+                limit=parsed_args.limit,
+                offset=parsed_args.offset,
             )
 
             # Build steps table
@@ -185,8 +213,14 @@ class GeneratorInfoCommand(BaseConnectedCommand):
                 f"{agent_generator['creating_agent_template']['agent_template_id']}",
             )
 
+            event_log_table = create_event_log_table(
+                event_log=agent_generator["event_log"],
+                title="Agent Generator Event Log",
+            )
+
             console.print(agent_generator_info_table, "")
             console.print(build_steps_table, "")
+            console.print(event_log_table, "")
             if build_step_errors_panel is not None:
                 console.print(build_step_errors_panel, "")
         except SystemExit:

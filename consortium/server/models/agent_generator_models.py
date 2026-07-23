@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from consortium.framework._core.components.component_status import State
+from consortium.framework._core.event_logging.event_log_models import EventLogModel
 from consortium.server.models.agent_template_models import (
     LiveAgentTemplateReferenceModel,
 )
@@ -33,6 +34,7 @@ class AgentGeneratorModel(BaseModel):
     compatible_listener_types: list[str]
     parameters: dict[str, Any]
     status: StatusModel
+    event_log: EventLogModel
     datetime_created: str
     agent_generator_build_steps: list[AgentGeneratorBuildStepModel]
     creating_agent_template: LiveAgentTemplateReferenceModel

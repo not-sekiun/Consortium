@@ -23,6 +23,58 @@ STATUS_JSON_SCHEMA = {
     "additionalProperties": False,
 }
 
+# Shared schema for the event log attached to tasks, listeners, and agent generators.
+EVENT_LOG_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "current_progress": {
+            "anyOf": [
+                {"type": "null"},
+                {
+                    "type": "object",
+                    "properties": {
+                        "percent_complete": {"type": "number"},
+                        "message": {"type": ["string", "null"]},
+                        "data": {"type": "object"},
+                        "datetime_reported": {"type": "string"},
+                    },
+                    "required": [
+                        "percent_complete",
+                        "message",
+                        "data",
+                        "datetime_reported",
+                    ],
+                    "additionalProperties": False,
+                },
+            ],
+        },
+        "total_count": {"type": "integer"},
+        "entries": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "sequence": {"type": "integer"},
+                    "event_type": {"type": "string"},
+                    "message": {"type": ["string", "null"]},
+                    "data": {"type": "object"},
+                    "datetime_reported": {"type": "string"},
+                },
+                "required": [
+                    "sequence",
+                    "event_type",
+                    "message",
+                    "data",
+                    "datetime_reported",
+                ],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "required": ["current_progress", "total_count", "entries"],
+    "additionalProperties": False,
+}
+
 # JSON schemas for the /api/agent-templates endpoints
 MITRE_ATTACK_TECHNIQUE_JSON_SCHEMA = {
     "type": "object",
@@ -157,6 +209,7 @@ AGENT_GENERATOR_JSON_SCHEMA = {
         "name": {"type": "string"},
         "description": {"type": "string"},
         "status": STATUS_JSON_SCHEMA,
+        "event_log": EVENT_LOG_JSON_SCHEMA,
         "agent_type": AGENT_TYPE_JSON_SCHEMA,
         "creating_agent_template": {
             "type": "object",
@@ -204,6 +257,7 @@ AGENT_GENERATOR_JSON_SCHEMA = {
         "name",
         "description",
         "status",
+        "event_log",
         "creating_agent_template",
         "datetime_created",
         "parameters",
