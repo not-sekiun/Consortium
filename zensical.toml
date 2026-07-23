@@ -129,11 +129,12 @@ nav = [
         { "Framework" = [
             "reference/framework/agents-reference.md",
             "reference/framework/agent-generator-utilities-reference.md",
+            "reference/framework/event-hooks-reference.md",
+            "reference/framework/event-logger-reference.md",
+            "reference/framework/framework-types-reference.md",
             "reference/framework/listeners-reference.md",
             "reference/framework/options-reference.md",
             "reference/framework/plugins-reference.md",
-            "reference/framework/event-hooks-reference.md",
-            "reference/framework/framework-types-reference.md"
         ] },
         { "Services" = [
             "reference/services/agent-file-manager-service-reference.md",

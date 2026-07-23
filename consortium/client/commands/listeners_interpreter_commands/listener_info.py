@@ -10,6 +10,7 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import (
     BaseConnectedCommand,
 )
+from consortium.client.utils.argparse_utils import positive_int
 from consortium.client.utils.event_log_command_utils import create_event_log_table
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
@@ -49,7 +50,7 @@ class ListenerInfoCommand(BaseConnectedCommand):
                 "When specified without --offset, returns the last N entries (tail). "
                 "Must be a positive integer. Default is 10."
             ),
-            type=int,
+            type=positive_int,
             default=None,
         )
         parser.add_argument(
