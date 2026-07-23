@@ -37,6 +37,7 @@ docs = [
 [tool.uv.workspace]
 members = [
     "consortium/components/agents/consortium/eula/python",
+    "consortium/components/event_hooks/webhook_sender",
     "consortium/components/listeners/consortium/http",
 ]
 

@@ -6,6 +6,7 @@ requires-python = ">=3.14"
 members = [
     "consortium",
     "consortium-agents-eula-python",
+    "consortium-event-hooks-webhook-sender",
     "consortium-listeners-http-consortium",
 ]
 
@@ -287,6 +288,21 @@ dependencies = [
 requires-dist = [
     { name = "pyinstaller", specifier = ">=6.0" },
     { name = "python-minifier", specifier = ">=3.2.0" },
+]
+
+[[package]]
+name = "consortium-event-hooks-webhook-sender"
+version = "0.1.0"
+source = { virtual = "consortium/components/event_hooks/webhook_sender" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "jsonschema" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiohttp" },
+    { name = "jsonschema" },
 ]
 
 [[package]]

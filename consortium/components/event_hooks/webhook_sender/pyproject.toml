@@ -1,0 +1,7 @@
+[project]
+name = "consortium.event_hooks.webhook_sender"
+version = "0.1.0"
+dependencies = [
+    "aiohttp",
+    "jsonschema",
+]
