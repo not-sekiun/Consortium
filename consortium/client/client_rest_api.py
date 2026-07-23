@@ -208,16 +208,13 @@ class RestAPI:
 
     # Wrapper methods for the /api/listeners API endpoint.
     @_requires_authentication
-    async def get_all_listeners(
-        self,
-        limit: int | None = None,
-        offset: int | None = None,
-    ) -> list[dict[str, JsonValue]]:
-        params = self._build_event_log_params(limit, offset)
+    async def get_all_listeners(self) -> list[dict[str, JsonValue]]:
+        # Collection responses omit per-resource event log entries, so this endpoint
+        # takes no limit/offset. Use get_listener_by_listener_id to page a specific
+        # listener's event log.
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/listeners/all",
-            params=params if params else None,
         )
 
     @_requires_authentication
@@ -315,16 +312,13 @@ class RestAPI:
 
     # Wrapper methods for the /api/agent-generators API endpoint.
     @_requires_authentication
-    async def get_all_agent_generators(
-        self,
-        limit: int | None = None,
-        offset: int | None = None,
-    ) -> list[dict[str, JsonValue]]:
-        params = self._build_event_log_params(limit, offset)
+    async def get_all_agent_generators(self) -> list[dict[str, JsonValue]]:
+        # Collection responses omit per-resource event log entries, so this endpoint
+        # takes no limit/offset. Use get_agent_generator_by_agent_generator_id to page a
+        # specific generator's event log.
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agent-generators/all",
-            params=params if params else None,
         )
 
     @_requires_authentication
@@ -409,16 +403,12 @@ class RestAPI:
         )
 
     @_requires_authentication
-    async def get_all_agent_tasks(
-        self,
-        limit: int | None = None,
-        offset: int | None = None,
-    ) -> list[dict[str, JsonValue]]:
-        params = self._build_event_log_params(limit, offset)
+    async def get_all_agent_tasks(self) -> list[dict[str, JsonValue]]:
+        # Collection responses omit per-task event log entries, so this endpoint takes no
+        # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/tasks",
-            params=params if params else None,
         )
 
     @_requires_authentication
@@ -439,59 +429,51 @@ class RestAPI:
     async def get_all_agent_tasks_by_agent_id(
         self,
         agent_id: str,
-        limit: int | None = None,
-        offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
-        params = self._build_event_log_params(limit, offset)
+        # Collection responses omit per-task event log entries, so this endpoint takes no
+        # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
-            params=params if params else None,
         )
 
     @_requires_authentication
     async def get_all_queued_tasks_by_agent_id(
         self,
         agent_id: str,
-        limit: int | None = None,
-        offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
-        params = {"status": "QUEUED"}
-        params.update(self._build_event_log_params(limit, offset))
+        # Collection responses omit per-task event log entries, so this endpoint takes no
+        # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
-            params=params,
+            params={"status": "QUEUED"},
         )
 
     @_requires_authentication
     async def get_all_running_agent_tasks_by_agent_id(
         self,
         agent_id: str,
-        limit: int | None = None,
-        offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
-        params = {"status": "RUNNING"}
-        params.update(self._build_event_log_params(limit, offset))
+        # Collection responses omit per-task event log entries, so this endpoint takes no
+        # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
-            params=params,
+            params={"status": "RUNNING"},
         )
 
     @_requires_authentication
     async def get_all_completed_tasks_by_agent_id(
         self,
         agent_id: str,
-        limit: int | None = None,
-        offset: int | None = None,
     ) -> list[dict[str, JsonValue]]:
-        params = {"status": "COMPLETED"}
-        params.update(self._build_event_log_params(limit, offset))
+        # Collection responses omit per-task event log entries, so this endpoint takes no
+        # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/agents/{agent_id}/tasks",
-            params=params,
+            params={"status": "COMPLETED"},
         )
 
     @_requires_authentication

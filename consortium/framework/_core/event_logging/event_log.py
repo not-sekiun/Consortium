@@ -132,15 +132,20 @@ class EventLog:
         )
 
     def to_json(
-        self, limit: int = 10, offset: int | None = None
+        self, limit: int = 10, offset: int | None = None, include_entries: bool = True
     ) -> dict[str, JsonValue]:
         return {
             "current_progress": self.current_progress.model_dump(mode="json")
             if self.current_progress is not None
             else None,
             "total_count": self.total_count,
+            # Collection endpoints pass include_entries=False so the potentially large
+            # per-resource entry list is dropped; total_count still reports how many
+            # entries exist so clients can page them via the detail endpoint.
             "entries": [
                 event.model_dump(mode="json")
                 for event in self.get_events(limit=limit, offset=offset)
-            ],
+            ]
+            if include_entries
+            else [],
         }

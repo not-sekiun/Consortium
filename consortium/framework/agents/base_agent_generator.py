@@ -690,7 +690,10 @@ class BaseAgentGenerator(ComponentLifeCycle):
             ) from None
 
     def to_json(
-        self, limit: int = 10, offset: int | None = None
+        self,
+        limit: int = 10,
+        offset: int | None = None,
+        include_event_log_entries: bool = True,
     ) -> dict[str, JsonValue]:
         """Serialize the generator's current state to a JSON-compatible dictionary.
 
@@ -698,6 +701,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
             limit: Maximum number of event log entries to include.
             offset: Sequence offset to start the event log window from. If None, the
                 tail (most recent entries up to limit) is returned.
+            include_event_log_entries: When False, the event log's entries list is
+                omitted (its total count and current progress are still included). Used
+                by collection endpoints to keep list responses bounded.
 
         Returns:
             A dictionary containing the generator ID, name, description, parameters,
@@ -710,7 +716,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
             "description": self.description,
             "parameters": self.parameters,
             "status": self.status.to_json(),
-            "event_log": self.event_logger.to_json(limit=limit, offset=offset),
+            "event_log": self.event_logger.to_json(
+                limit=limit, offset=offset, include_entries=include_event_log_entries
+            ),
             "datetime_created": self.datetime_created.isoformat(),
             "agent_generator_build_steps": [
                 agent_generator_build_step.to_json()

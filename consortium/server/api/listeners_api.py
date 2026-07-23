@@ -111,27 +111,12 @@ def get_all_listeners(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENERS)),
     ],
-    limit: Annotated[
-        int,
-        Query(
-            gt=0,
-            description=(
-                "Maximum number of event log entries to return. Values above "
-                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
-            ),
-        ),
-    ] = 10,
-    offset: Annotated[
-        int | None,
-        Query(
-            description="Starting position in the event log. Negative values offset from the end. If None and limit is provided, returns the tail (last N entries)."
-        ),
-    ] = None,
 ) -> list[ListenerModel]:
+    # Collection responses omit per-resource event log entries so the total response
+    # stays bounded regardless of how many listeners exist. Use the detail endpoint to
+    # page a specific listener's event log via limit/offset.
     return [
-        ListenerModel(
-            **listener.to_json(limit=clamp_event_log_limit(limit), offset=offset)
-        )
+        ListenerModel(**listener.to_json(include_event_log_entries=False))
         for listener in _listeners_service.get_all_listeners()
     ]
 

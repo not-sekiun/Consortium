@@ -110,27 +110,12 @@ def get_all_agent_generators(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_GENERATORS)),
     ],
-    limit: Annotated[
-        int,
-        Query(
-            gt=0,
-            description=(
-                "Maximum number of event log entries to return. Values above "
-                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
-            ),
-        ),
-    ] = 10,
-    offset: Annotated[
-        int | None,
-        Query(
-            description="Starting position in the event log. Negative values offset from the end. If None and limit is provided, returns the tail (last N entries)."
-        ),
-    ] = None,
 ) -> list[AgentGeneratorModel]:
+    # Collection responses omit per-resource event log entries so the total response
+    # stays bounded regardless of how many generators exist. Use the detail endpoint to
+    # page a specific generator's event log via limit/offset.
     return [
-        AgentGeneratorModel(
-            **agent_generator.to_json(limit=clamp_event_log_limit(limit), offset=offset)
-        )
+        AgentGeneratorModel(**agent_generator.to_json(include_event_log_entries=False))
         for agent_generator in _agent_generators_service.get_all_agent_generators()
     ]
 

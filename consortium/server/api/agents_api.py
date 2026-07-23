@@ -132,28 +132,13 @@ def get_all_agent_tasks(
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS))
     ],
     status: AgentTaskState | None = None,
-    limit: Annotated[
-        int,
-        Query(
-            gt=0,
-            description=(
-                "Maximum number of task events to return. Values above "
-                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
-            ),
-        ),
-    ] = 10,
-    offset: Annotated[
-        int | None,
-        Query(
-            description="Starting position in task event log. Negative values offset from the end. If offset is `None` and `limit` is provided, returns the last `N` entries."
-        ),
-    ] = None,
 ) -> list[AgentTaskModel]:
+    # Collection responses omit per-task event log entries so the total response stays
+    # bounded regardless of how many tasks exist. Use the detail endpoint to page a
+    # specific task's event log via limit/offset.
     tasks = _agents_service.get_all_agent_tasks(status=status)
     return [
-        AgentTaskModel(
-            **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
-        )
+        AgentTaskModel(**task.to_json(include_event_log_entries=False))
         for task in tasks
     ]
 
@@ -221,22 +206,6 @@ def get_all_agent_tasks_by_agent_id(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
     ],
     status: AgentTaskState | None = None,
-    limit: Annotated[
-        int,
-        Query(
-            gt=0,
-            description=(
-                "Maximum number of task events to return. Values above "
-                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
-            ),
-        ),
-    ] = 10,
-    offset: Annotated[
-        int | None,
-        Query(
-            description="Starting position in task events log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
-        ),
-    ] = None,
 ) -> list[AgentTaskModel]:
     try:
         tasks = _agents_service.get_all_agent_tasks_by_agent_id(
@@ -247,10 +216,11 @@ def get_all_agent_tasks_by_agent_id(
             consortium_exception=exc
         ) from None
 
+    # Collection responses omit per-task event log entries so the total response stays
+    # bounded regardless of how many tasks exist. Use the detail endpoint to page a
+    # specific task's event log via limit/offset.
     return [
-        AgentTaskModel(
-            **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
-        )
+        AgentTaskModel(**task.to_json(include_event_log_entries=False))
         for task in tasks
     ]
 

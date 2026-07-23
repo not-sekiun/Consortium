@@ -260,18 +260,26 @@ class EventLogger:
         """
         return self._event_log.get_events(limit=limit, offset=offset)
 
-    def to_json(self, limit: int = 10, offset: int | None = None) -> dict[str, Any]:
+    def to_json(
+        self, limit: int = 10, offset: int | None = None, include_entries: bool = True
+    ) -> dict[str, Any]:
         """Serialize the wrapped log to a JSON-compatible dict.
 
         Args:
             limit: Maximum number of entries to include.
             offset: Sequence offset to start from; see :class:`EventLog`.
+            include_entries: When False, the entries list is omitted (serialized as an
+                empty list) while current progress and total count are still reported.
+                Used by collection endpoints to keep responses bounded regardless of how
+                many resources they return.
 
         Returns:
             A JSON-compatible dict with the current progress, total entry count, and
             the selected window of entries.
         """
-        return self._event_log.to_json(limit=limit, offset=offset)
+        return self._event_log.to_json(
+            limit=limit, offset=offset, include_entries=include_entries
+        )
 
     @property
     def subject_id(self) -> uuid.UUID:

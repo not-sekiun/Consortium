@@ -141,13 +141,20 @@ class AgentTask:
             f")"
         )
 
-    def to_json(self, limit: int = 10, offset: int | None = None) -> dict[str, Any]:
+    def to_json(
+        self,
+        limit: int = 10,
+        offset: int | None = None,
+        include_event_log_entries: bool = True,
+    ) -> dict[str, Any]:
         return {
             "task_id": str(self.task_id),
             "command": self.command,
             "arguments": self.arguments,
             "status": self.status.to_json(),
-            "event_log": self.event_logger.to_json(limit=limit, offset=offset),
+            "event_log": self.event_logger.to_json(
+                limit=limit, offset=offset, include_entries=include_event_log_entries
+            ),
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_started": self.datetime_started.isoformat()
             if self.datetime_started is not None
