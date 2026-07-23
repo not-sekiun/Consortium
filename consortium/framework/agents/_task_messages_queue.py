@@ -90,15 +90,15 @@ class TaskMessagesQueue[T: TaskMessage]:
         # anywhere, so admit it regardless of size to avoid blocking forever.
         return self._queue.empty()
 
-    def empty(self) -> bool:
-        return self._queue.empty()
-
     def is_at_end_of_stream(self) -> bool:
         # True once the queue is shut down and fully drained: no more messages will ever
         # be produced (put is closed) and none remain buffered. Readers use this to know
         # an outbox can be discarded. Both reads are plain and lock free; once shut down
         # and empty the state is terminal, so observing it without the lock is safe.
         return self._shutdown and self._queue.empty()
+
+    def empty(self) -> bool:
+        return self._queue.empty()
 
     def full(self) -> bool:
         if self._maximum_memory_size is None:

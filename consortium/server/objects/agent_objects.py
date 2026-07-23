@@ -374,7 +374,7 @@ class Agent:
         self,
         task_id: str | uuid.UUID,
         timeout: float | None = None,
-    ) -> TaskInputMessageModel | TaskOutputMessageModel | None:
+    ) -> TaskLaunchMessageModel | TaskInputMessageModel | None:
         """Get the next task message produced by the capability for the specified task.
 
         Reads follow the task's outbox lifecycle, not the capability's: a capability may
@@ -453,7 +453,7 @@ class Agent:
 
     async def get_next_task_message_sequential(
         self, timeout: float | None = None
-    ) -> TaskInputMessageModel | TaskOutputMessageModel | None:
+    ) -> TaskInputMessageModel | TaskLaunchMessageModel | None:
         """Get the next task message from the earliest tasked outbox, draining it
         completely (including any messages a streamed-and-exited capability left behind)
         before moving on to the next one."""
@@ -492,7 +492,7 @@ class Agent:
 
     async def get_next_task_message_any(
         self, timeout: float | None = None
-    ) -> TaskLaunchMessageModel | TaskOutputMessageModel | None:
+    ) -> TaskLaunchMessageModel | TaskInputMessageModel | None:
         """Get the first available task message from any tasked outbox.
 
         Waits across every tracked outbox at once and returns the first available

@@ -157,3 +157,31 @@ class AgentCapabilityExecutionError(AgentCapabilitiesFrameworkError):
             ),
             detail=detail,
         )
+
+
+class AgentCommunicationEndOfStreamError(AgentCapabilitiesFrameworkError):
+    """Raised when a communicator reaches the end of a task's message stream.
+
+    A communicator is coordinated with the remote endpoint for the lifetime of a task, so
+    it should never observe end of stream while waiting for a message from the agent.
+    Observing it means the inbox was shut down out from under a coordinated read, which is
+    a genuine error rather than the normal termination signal the outbox-side readers rely
+    on.
+    """
+
+    code = "AGENT_COMMUNICATION_END_OF_STREAM_ERROR"
+
+    def __init__(
+        self,
+        agent_id: str,
+        name: str,
+        task_id: str,
+        command: str,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to receive message from agent '{name}' ({agent_id}). Reached "
+                f"the end of the message stream for task '{command}' ({task_id}) "
+                f"unexpectedly while waiting for a message from the agent."
+            ),
+        )
