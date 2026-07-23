@@ -12,6 +12,8 @@ from consortium.framework._core.components import (
     ComponentMetadataExceptions,
     ComponentMetadataModel,
 )
+from consortium.framework._core.event_logging.event_log import EventLog
+from consortium.framework._core.event_logging.event_logger import EventLogger
 from consortium.framework._core.framework_exceptions.event_hooks_framework_exceptions import (
     EmptyEventHookLabelError,
     InvalidEventHookConfigurationParameterTypeError,
@@ -60,6 +62,9 @@ class BaseEventHook(ComponentMetadata):
             services.
         logger: Event-hook-specific logger instance, automatically tagged with the
             hook's name and ID for traceability in logs.
+        event_logger: Event-hook-specific event logger used to record structured,
+            client-facing events (successes, failures, informational messages).
+            Entries are optionally mirrored to the hook's system logger.
     """
 
     _metadata_model = _EventHookModel
@@ -81,6 +86,10 @@ class BaseEventHook(ComponentMetadata):
         self.event_hook_id: uuid.UUID = uuid.uuid4()
         self.logger = logger.bind(
             logger_name=f"Event Hook - {self}",
+        )
+        self.event_logger: EventLogger = EventLogger(
+            event_log=EventLog(subject_id=self.event_hook_id),
+            logger=self.logger,
         )
         self.environment: types.SimpleNamespace = types.SimpleNamespace()
 
@@ -141,13 +150,20 @@ class BaseEventHook(ComponentMetadata):
         hook stops receiving events.
         """
 
-    def to_json(self) -> dict[str, JsonValue]:
+    def to_json(
+        self, limit: int = 10, offset: int | None = None
+    ) -> dict[str, JsonValue]:
         """Serialize the event hook's metadata to a JSON-compatible dictionary.
+
+        Args:
+            limit: Maximum number of event log entries to include.
+            offset: Sequence offset to start the event log window from. If None, the
+                tail (most recent entries up to limit) is returned.
 
         Returns:
             A dictionary containing the event hook ID, label, name, description,
             authors, version, framework compatibility, component dependencies,
-            subscribed event types, and third-party dependencies.
+            subscribed event types, third-party dependencies, and event log.
         """
         return {
             "event_hook_id": str(self.event_hook_id),
@@ -160,6 +176,7 @@ class BaseEventHook(ComponentMetadata):
             "component_dependencies": list(map(str, self.component_dependencies)),
             "event_types": list(map(str, self.event_types)),
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
+            "event_log": self.event_logger.to_json(limit=limit, offset=offset),
         }
 
     def to_json_reference(self) -> dict[str, str]:

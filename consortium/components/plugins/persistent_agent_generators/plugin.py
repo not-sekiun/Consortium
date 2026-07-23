@@ -26,24 +26,23 @@ class Plugin(BasePlugin):
         )
 
         if not persistent_agent_generators_json_file.exists():
-            self.logger.info(
+            self.event_logger.info(
                 "No persistent agent generators file found. Creating new persistent "
-                "agent generators file at: {}",
-                persistent_agent_generators_json_file,
+                f"agent generators file at: {persistent_agent_generators_json_file}",
             )
             with persistent_agent_generators_json_file.open("w") as file:
                 file.write("{}")
             return
 
-        self.logger.info(
-            "Loading persistent agent generators from: {}",
-            persistent_agent_generators_json_file,
+        self.event_logger.info(
+            "Loading persistent agent generators from: "
+            f"{persistent_agent_generators_json_file}",
         )
         with persistent_agent_generators_json_file.open("r") as file:
             content = file.read().strip()
             # Handle empty file
             if not content:
-                self.logger.warning(
+                self.event_logger.warning(
                     "Persistent agent generators JSON file is empty. "
                     "Treating as no persistent generators."
                 )
@@ -61,18 +60,17 @@ class Plugin(BasePlugin):
         for agent_template_label, agent_generators in json_data.items():
             for agent_generator_data in agent_generators:
                 if agent_template_label not in label_to_agent_template_map:
-                    self.logger.warning(
+                    self.event_logger.warning(
                         "No agent template was found with the label "
-                        "'{}' from the persistent agent generators "
+                        f"'{agent_template_label}' from the persistent agent generators "
                         "file. The corresponding agent profile may have been relabelled "
                         "or removed. Skipping...",
-                        agent_template_label,
                     )
                     continue
                 agent_template = label_to_agent_template_map[agent_template_label]
                 agent_generator_name = agent_generator_data["name"]
-                self.logger.success(
-                    "Creating agent generator '{}'...", agent_generator_name
+                self.event_logger.success(
+                    f"Creating agent generator '{agent_generator_name}'..."
                 )
                 self.services.agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
                     agent_template_id=str(agent_template.agent_template_id),
@@ -115,11 +113,10 @@ class Plugin(BasePlugin):
             )
 
         if not persistent_agent_generators_json_file.exists():
-            self.logger.warning(
+            self.event_logger.warning(
                 "No persistent agent generators file found even after plugin was "
                 "started. Creating new persistent agent generators file at: "
-                "{}",
-                persistent_agent_generators_json_file,
+                f"{persistent_agent_generators_json_file}",
             )
             with persistent_agent_generators_json_file.open("w") as file:
                 file.write("{}")

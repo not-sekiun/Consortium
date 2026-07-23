@@ -48,21 +48,21 @@ class Plugin(BasePlugin):
             try:
                 async with session.get(latest_release_json_file_url) as response:
                     if response.status != 200:
-                        self.logger.error(
-                            "Failed to retrieve latest release data. HTTP response status "
-                            "code '{}' returned when querying for new release data.",
-                            response.status,
+                        self.event_logger.failure(
+                            "Failed to retrieve latest release data. HTTP response "
+                            f"status code '{response.status}' returned when querying "
+                            "for new release data.",
                         )
                         return None
                     raw_data = await response.text()
                     return json.loads(raw_data)
             except aiohttp.ClientError as exc:
-                self.logger.error(
+                self.event_logger.failure(
                     f"Failed to retrieve latest release data: {exc}",
                 )
                 return None
             except json.JSONDecodeError as exc:
-                self.logger.error(
+                self.event_logger.failure(
                     f"Failed to parse latest release data: {exc}",
                 )
                 return None
@@ -82,12 +82,12 @@ class Plugin(BasePlugin):
         current_release = self.services.release_service.release
 
         if latest_release_datetime > current_release.datetime:
-            self.logger.info("New release found")
-            self.logger.info(
+            self.event_logger.info("New release found")
+            self.event_logger.info(
                 f"- Current release: '{current_release.codename}' "
                 f"(v{current_release.version}) released at {current_release.datetime_released}",
             )
-            self.logger.info(
+            self.event_logger.info(
                 f"- Latest release: '{json_data['codename']}' (v{json_data['version']}) "
                 f"released at {json_data['datetime_released']}",
             )
@@ -100,35 +100,35 @@ class Plugin(BasePlugin):
                     # update the framework without letting anything else start up. This
                     # also helps prevent log messages from other plugins/components from
                     # interleaving with the update process messages.
-                    self.logger.info("[1/3] Changing to project root...")
+                    self.event_logger.info("[1/3] Changing to project root...")
                     os.chdir(
                         str(
                             self.services.consortium_paths_service.consortium_root.resolve()
                         )
                     )
-                    self.logger.info("[2/3] Pulling new release...")
+                    self.event_logger.info("[2/3] Pulling new release...")
                     return_code, stdout, stderr = self._run_cmd_with_spinner(
                         "git pull",
                         "Pulling new release via `git pull`...",
                     )
                     if return_code != 0:
-                        self.logger.error(
+                        self.event_logger.failure(
                             f"Failed to pull new release via `git pull`: "
                             f"{stderr.decode().strip()}",
                         )
                         return
-                    self.logger.info("[3/3] Installing new dependencies...")
+                    self.event_logger.info("[3/3] Installing new dependencies...")
                     return_code, stdout, stderr = self._run_cmd_with_spinner(
                         "uv sync",
                         "Installing new dependencies via `uv sync`...",
                     )
                     if return_code != 0:
-                        self.logger.error(
+                        self.event_logger.failure(
                             f"- Failed to pull install new dependencies via `uv sync`: "
                             f"{stderr.decode().strip()}",
                         )
                         return
-                    self.logger.success(
+                    self.event_logger.success(
                         "Done. Restart the framework (CTRL-C) to apply updates."
                     )
                     return
@@ -137,4 +137,4 @@ class Plugin(BasePlugin):
                 else:
                     continue
         else:
-            self.logger.info("Already on latest release")
+            self.event_logger.info("Already on latest release")

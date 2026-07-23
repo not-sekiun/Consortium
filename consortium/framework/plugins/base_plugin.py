@@ -15,6 +15,8 @@ from consortium.framework._core.components import (
     ComponentMetadataExceptions,
     ComponentMetadataModel,
 )
+from consortium.framework._core.event_logging.event_log import EventLog
+from consortium.framework._core.event_logging.event_logger import EventLogger
 from consortium.framework._core.framework_exceptions import (
     components_framework_exceptions,
 )
@@ -66,6 +68,10 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             lifecycle hook calls without naming conflicts.
         logger: Plugin-specific logger instance, automatically tagged with the
             plugin's name and ID for easy identification in logs.
+        event_logger: Plugin-specific event logger used to record structured,
+            client-facing lifecycle events (successes, failures, informational
+            messages, progress updates). Entries are optionally mirrored to the
+            plugin's system logger.
     """
 
     _metadata_model = _PluginModel
@@ -89,6 +95,10 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         self.logger: loguru.Logger = loguru.logger.bind(
             logger_name=f"Plugin - {self}",
             logger_type=LoggerType.PLUGIN_LOGGER,
+        )
+        self.event_logger: EventLogger = EventLogger(
+            event_log=EventLog(subject_id=self.plugin_id),
+            logger=self.logger,
         )
         super().__init__()
 
@@ -151,7 +161,9 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             error: The runtime error describing what went wrong during plugin
                 execution, including the error message and any diagnostic detail.
         """
-        self.logger.error(error)
+        # Recording through the event logger both surfaces the failure in the
+        # client-facing event log and mirrors it to the plugin's system logger.
+        self.event_logger.failure(str(error))
 
     async def on_fatal(
         self,
@@ -235,12 +247,20 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
                 plugin_str=str(self),
             ) from None
 
-    def to_json(self) -> dict[str, JsonValue]:
+    def to_json(
+        self, limit: int = 10, offset: int | None = None
+    ) -> dict[str, JsonValue]:
         """Serialize the plugin's metadata and current state to a JSON-compatible dictionary.
+
+        Args:
+            limit: Maximum number of event log entries to include.
+            offset: Sequence offset to start the event log window from. If None, the
+                tail (most recent entries up to limit) is returned.
 
         Returns:
             A dictionary containing the plugin ID, label, name, description, version,
-            framework compatibility, authors, dependencies, autostart flag, and status.
+            framework compatibility, authors, dependencies, autostart flag, status, and
+            event log.
         """
         return {
             "plugin_id": str(self.plugin_id),
@@ -254,6 +274,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
             "autostart": self.autostart,
             "status": self.status.to_json(),
+            "event_log": self.event_logger.to_json(limit=limit, offset=offset),
         }
 
     def to_json_reference(self) -> dict[str, str]:

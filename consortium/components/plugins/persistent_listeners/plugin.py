@@ -24,23 +24,22 @@ class Plugin(BasePlugin):
         self.environment.persistent_listeners_json_file = persistent_listeners_json_file
 
         if not persistent_listeners_json_file.exists():
-            self.logger.info(
+            self.event_logger.info(
                 "No persistent listeners file found. Creating new persistent "
-                "listeners file at: {}",
-                persistent_listeners_json_file,
+                f"listeners file at: {persistent_listeners_json_file}",
             )
             with persistent_listeners_json_file.open("w") as file:
                 file.write("{}")
             return
 
-        self.logger.info(
-            "Loading persistent listeners from: {}", persistent_listeners_json_file
+        self.event_logger.info(
+            f"Loading persistent listeners from: {persistent_listeners_json_file}"
         )
         with persistent_listeners_json_file.open("r") as file:
             content = file.read().strip()
             # Handle empty file
             if not content:
-                self.logger.warning(
+                self.event_logger.warning(
                     "Persistent listeners JSON file is empty. "
                     "Treating as no persistent listeners."
                 )
@@ -59,12 +58,11 @@ class Plugin(BasePlugin):
         for listener_template_label, listeners in json_data.items():
             for listener_data in listeners:
                 if listener_template_label not in label_to_listener_template_map:
-                    self.logger.warning(
+                    self.event_logger.warning(
                         "No listener template was found with the label "
-                        "'{}' from the persistent listeners "
+                        f"'{listener_template_label}' from the persistent listeners "
                         "file. The corresponding listener profile may have been "
                         "relabelled or removed. Skipping...",
-                        listener_template_label,
                     )
                     continue
                 listener_template = label_to_listener_template_map[
@@ -72,8 +70,8 @@ class Plugin(BasePlugin):
                 ]
                 listener_name = listener_data["name"]
                 if listener_data["previously_running"]:
-                    self.logger.success(
-                        "Creating and starting listener '{}'...", listener_name
+                    self.event_logger.success(
+                        f"Creating and starting listener '{listener_name}'..."
                     )
                     listener = self.services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
@@ -87,7 +85,7 @@ class Plugin(BasePlugin):
                         listener_id=str(listener.listener_id),
                     )
                 else:
-                    self.logger.success("Creating listener '{}'...", listener_name)
+                    self.event_logger.success(f"Creating listener '{listener_name}'...")
                     self.services.listeners_service.create_listener_from_listener_template_by_listener_template_id(
                         listener_template_id=str(
                             listener_template.listener_template_id,
@@ -123,11 +121,10 @@ class Plugin(BasePlugin):
             )
 
         if not persistent_listeners_json_file.exists():
-            self.logger.warning(
+            self.event_logger.warning(
                 "No persistent listeners file found even after plugin was "
                 "started. Creating new persistent listeners file at: "
-                "{}",
-                persistent_listeners_json_file,
+                f"{persistent_listeners_json_file}",
             )
             with persistent_listeners_json_file.open("w") as file:
                 file.write("{}")

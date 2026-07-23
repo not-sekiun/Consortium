@@ -29,14 +29,14 @@ class EventHook(BaseEventHook):
             ) as config_file:
                 config = json.load(config_file)
         except FileNotFoundError:
-            self.logger.error(
+            self.event_logger.failure(
                 "Failed to load webhook sender event hook configuration file. "
                 "Configuration file `config.json` not found at the event hook's "
                 f"root directory `{self.root_directory}`.",
             )
             return
         except json.decoder.JSONDecodeError:
-            self.logger.error(
+            self.event_logger.failure(
                 "Failed to load webhook sender event hook configuration "
                 "file. The configuration file does not contain valid JSON "
                 "data.",
@@ -76,20 +76,18 @@ class EventHook(BaseEventHook):
         try:
             jsonschema.validate(config, config_json_schema)
         except jsonschema.ValidationError as exc:
-            self.logger.error(
+            self.event_logger.failure(
                 "Failed to load webhook sender event hook configuration "
                 "file. The configuration file's format does not match the "
-                "expected configuration file JSON schema: {}",
-                exc.message,
+                f"expected configuration file JSON schema: {exc.message}",
             )
             return
 
         for event in config["events"]:
             if event not in EventType:
-                self.logger.warning(
-                    "The provided string '{}' in the set of event types to send is not "
-                    "a valid event type.",
-                    event,
+                self.event_logger.warning(
+                    f"The provided string '{event}' in the set of event types to send "
+                    "is not a valid event type.",
                 )
                 continue
             self.event_types.add(event)
@@ -113,23 +111,15 @@ class EventHook(BaseEventHook):
                     if response.status == 200 or response.status == 204:
                         return
                     else:
-                        self.logger.warning(
-                            "Failed to send event data to webhook at '{}'. "
-                            "Received unexpected status code {}. "
-                            "Retrying... (Attempt {}/{})",
-                            webhook_url,
-                            response.status,
-                            i + 1,
-                            max_retries,
+                        self.event_logger.warning(
+                            f"Failed to send event data to webhook at '{webhook_url}'. "
+                            f"Received unexpected status code {response.status}. "
+                            f"Retrying... (Attempt {i + 1}/{max_retries})",
                         )
             except aiohttp.ClientError as exc:
-                self.logger.warning(
-                    "Failed to send event data to webhook at '{}'. "
-                    "Error: {}. Retrying... (Attempt {}/{})",
-                    webhook_url,
-                    str(exc),
-                    i + 1,
-                    max_retries,
+                self.event_logger.warning(
+                    f"Failed to send event data to webhook at '{webhook_url}'. "
+                    f"Error: {exc}. Retrying... (Attempt {i + 1}/{max_retries})",
                 )
             await asyncio.sleep(retry_delay_seconds)
 

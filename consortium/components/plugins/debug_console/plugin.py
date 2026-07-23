@@ -140,7 +140,7 @@ class Plugin(BasePlugin):
     autostart = True
 
     async def on_started(self) -> None:
-        self.logger.info(
+        self.event_logger.info(
             "Debug interpreter is now running. All framework services are available in "
             "the current environment. You can tab complete services along with their "
             "API methods.",
@@ -238,7 +238,7 @@ class Plugin(BasePlugin):
                     ).rstrip(" ")
 
                     if expression in ("exit", "exit()"):
-                        self.logger.success(
+                        self.event_logger.success(
                             "Exited the debug interpreter. Use CTRL-C to stop the "
                             "server.",
                         )
@@ -344,7 +344,7 @@ class Plugin(BasePlugin):
                             temporary_function_identifier=random_identifier,
                         )
                 except KeyboardInterrupt:
-                    self.logger.info("Use 'exit' to exit the debug interpreter")
+                    self.event_logger.info("Use 'exit' to exit the debug interpreter")
                 except Exception as exc:
                     _print_custom_formatted_exception_message(
                         exc=exc,
