@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pydantic import UUID4, BaseModel, Field
 
+from consortium.server.utils import utc_now
+
 
 class UserAccountReferenceModel(BaseModel):
     user_account_id: UUID4
@@ -16,11 +18,11 @@ class UserModel(BaseModel):
     role: str = Field(examples=["string"])
     user_account: UserAccountReferenceModel
     datetime_connected: datetime = Field(
-        default_factory=datetime.now,
+        default_factory=utc_now,
         examples=["string"],
     )
     datetime_last_active: datetime = Field(
-        default_factory=datetime.now,
+        default_factory=utc_now,
         examples=["string"],
     )
 

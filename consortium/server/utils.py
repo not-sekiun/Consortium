@@ -5,6 +5,7 @@ import types
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
@@ -52,6 +53,15 @@ if TYPE_CHECKING:
 
 def normalize_uuid(value: str | uuid.UUID) -> str:
     return str(value)
+
+
+def utc_now() -> datetime:
+    # Timezone-aware UTC timestamp. Use this everywhere a datetime is persisted or
+    # serialized so stored and emitted timestamps carry an explicit UTC offset instead
+    # of an ambiguous naive local time. A naive datetime.now() is only correct when the
+    # producer and consumer share a timezone; utc_now removes that hidden assumption.
+    # Displaying in local time stays the consumer's job (the client already converts).
+    return datetime.now(UTC)
 
 
 def log_and_propagate_error_on_service_method(func) -> Callable:

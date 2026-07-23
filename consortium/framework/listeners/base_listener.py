@@ -29,7 +29,7 @@ from consortium.framework._core.framework_exceptions.listeners_framework_excepti
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.connected_agents_service import ConnectedAgentsService
-from consortium.server.utils import construct_services_dataclass
+from consortium.server.utils import construct_services_dataclass, utc_now
 
 if TYPE_CHECKING:
     from consortium.framework.listeners.base_listener_template import (
@@ -138,7 +138,7 @@ class BaseListener(ComponentLifeCycle):
         self.endpoint: str = endpoint
         self.parameters: dict[str, Any] = parameters
 
-        self.datetime_created: datetime = datetime.now()
+        self.datetime_created: datetime = utc_now()
         self.listener_id: uuid.UUID = uuid.uuid4()
         self.environment: SimpleNamespace = SimpleNamespace()
         self.connected_agents_service: ConnectedAgentsService = ConnectedAgentsService(

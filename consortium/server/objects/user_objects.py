@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 import jwt
 
@@ -9,12 +8,13 @@ from consortium.server.server_jwt_config import (
     JSON_WEB_TOKEN_EXPIRATION_DURATION,
     JSON_WEB_TOKEN_SECRET_KEY,
 )
+from consortium.server.utils import utc_now
 
 
 class JSONWebToken:
     def __init__(self):
         self.subject = uuid.uuid4()
-        self.issued_at = datetime.now()
+        self.issued_at = utc_now()
         self.expires = self.issued_at + JSON_WEB_TOKEN_EXPIRATION_DURATION
         self.access_token = jwt.encode(
             {
@@ -38,7 +38,7 @@ class User:
         self.user_account = user_account
         self.user_id = uuid.uuid4()
         self.display_name = user_account.username
-        self.datetime_connected = datetime.now()
+        self.datetime_connected = utc_now()
         self.datetime_last_active = self.datetime_connected
         self.json_web_token = JSONWebToken()
 

@@ -6,7 +6,7 @@ import tempfile
 import uuid
 from collections import deque
 from collections.abc import Generator
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import BinaryIO, Literal, TextIO
 
 from pydantic import JsonValue
@@ -19,6 +19,7 @@ from consortium.server.exceptions.object_exceptions.repository_object_exceptions
     RepositoryFileAlreadyExistsError,
     RepositoryFileDoesNotExistError,
 )
+from consortium.server.utils import utc_now
 
 _DEFAULT_CHUNK_SIZE = 64000  # 64 KB, mimics shutil.copyfileobj default chunk size
 
@@ -39,7 +40,7 @@ class RepositoryFile:
         self.description = description
         self.path = path
         self.extension = self.path.suffix  # includes the leading period
-        self.datetime_created = datetime.now()
+        self.datetime_created = utc_now()
         self.is_directory = False
         self.data = data if data is not None else {}
 
@@ -82,7 +83,7 @@ class RepositoryFile:
     def datetime_modified(self) -> datetime | None:
         if not self.exists_on_disk:
             return None
-        return datetime.fromtimestamp(self.path.stat().st_mtime)
+        return datetime.fromtimestamp(self.path.stat().st_mtime, UTC)
 
     def compute_md5_checksum(self, force_checksum_refresh: bool = False) -> str | None:
         current_fingerprint = (self.size, self.datetime_modified)
@@ -239,7 +240,7 @@ class RepositoryDirectory:
         # Directories don't have an extension but we keep extension as `None` to be
         # symmetric with `RepositoryFile` for JSON serialization.
         self.extension = None
-        self.datetime_created = datetime.now()
+        self.datetime_created = utc_now()
         self.is_directory = True
         self.data = data if data is not None else {}
 
@@ -328,7 +329,7 @@ class RepositoryDirectory:
     def datetime_modified(self) -> datetime | None:
         if not self.exists_on_disk:
             return None
-        return datetime.fromtimestamp(self.path.stat().st_mtime)
+        return datetime.fromtimestamp(self.path.stat().st_mtime, UTC)
 
     def compute_md5_checksum(self, force_checksum_refresh: bool = False) -> str | None:
         if not self.exists_on_disk:

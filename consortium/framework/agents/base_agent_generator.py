@@ -3,7 +3,6 @@ import sys
 import traceback
 import types
 import uuid
-from datetime import datetime
 from typing import TYPE_CHECKING, Any, final, get_type_hints
 
 from loguru import logger
@@ -42,7 +41,7 @@ from consortium.framework.signal_exceptions import (
     _component_signal_exceptions as sig_excs,
 )
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.utils import construct_services_dataclass
+from consortium.server.utils import construct_services_dataclass, utc_now
 
 if TYPE_CHECKING:
     # This is used for type checking BaseAgentGeneratorBuildStep another runtime import
@@ -176,7 +175,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
 
     @final
     async def on_started(self) -> None:
-        self.datetime_started = datetime.now()
+        self.datetime_started = utc_now()
 
     @final
     async def on_running(self) -> None:
@@ -184,19 +183,19 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
 
     @final
     async def on_completed(self) -> None:
-        self.datetime_stopped = datetime.now()
+        self.datetime_stopped = utc_now()
 
     @final
     async def on_stopped(self) -> None:
-        self.datetime_stopped = datetime.now()
+        self.datetime_stopped = utc_now()
 
     @final
     async def on_cancelled(self) -> None:
-        self.datetime_stopped = datetime.now()
+        self.datetime_stopped = utc_now()
 
     @final
     async def on_errored(self, error: AgentGeneratorBuildStepRuntimeError) -> None:
-        self.datetime_stopped = datetime.now()
+        self.datetime_stopped = utc_now()
         self.logger.error(error)
 
     async def on_fatal(
@@ -403,7 +402,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
             )
             for agent_generator_build_step in self.__class__.agent_generator_build_steps
         ]
-        self.datetime_created = datetime.now()
+        self.datetime_created = utc_now()
         self.environment = types.SimpleNamespace()
 
         self.logger = logger.bind(

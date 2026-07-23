@@ -1,7 +1,6 @@
 import asyncio
 import uuid
 from collections.abc import AsyncGenerator
-from datetime import datetime
 from enum import StrEnum
 from typing import Any, get_type_hints
 
@@ -53,7 +52,11 @@ from consortium.server.exceptions.service_exceptions.repository_service_exceptio
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
-from consortium.server.utils import generate_random_human_readable_name, normalize_uuid
+from consortium.server.utils import (
+    generate_random_human_readable_name,
+    normalize_uuid,
+    utc_now,
+)
 
 
 class AgentStatus(StrEnum):
@@ -204,8 +207,8 @@ class Agent:
             logger_name=f"Agent {self}",
             logger_type=LoggerType.AGENT_LOGGER,
         )
-        self.datetime_first_checked_in = datetime.now()
-        self.datetime_last_checked_in = datetime.now()
+        self.datetime_first_checked_in = utc_now()
+        self.datetime_last_checked_in = utc_now()
 
         # By default, agents are considered ACTIVE when created. `self._status` is used
         # to track the reported status of the agent while the framework may
@@ -422,7 +425,7 @@ class Agent:
             and task.status.state == AgentTaskState.QUEUED
         ):
             task.status._transition_to_running()
-            task.datetime_started = datetime.now()
+            task.datetime_started = utc_now()
 
         return task_message
 
@@ -953,7 +956,7 @@ class Agent:
             # the task's completion datetime. The outbox is intentionally left in
             # self._task_outboxes so any buffered output can still be drained.
             self._task_inboxes.pop(str(task_launch_message.task_id), None)
-            task.datetime_completed = datetime.now()
+            task.datetime_completed = utc_now()
 
             # Finally we fire the event to notify all event handlers that a task has
             # completed

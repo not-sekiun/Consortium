@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 from typing import Any
 
 from loguru import logger
@@ -13,6 +12,7 @@ from consortium.server.models.agent_task_models import (
     AgentTaskState,
 )
 from consortium.server.models.logging_models import LoggerType
+from consortium.server.utils import utc_now
 
 
 # TODO: Find some way to subsume into Component Status, Component Status should be made
@@ -117,7 +117,7 @@ class AgentTask:
         self.command = command
         self.arguments = arguments
         self.status = AgentTaskStatus()
-        self.datetime_created = datetime.now()
+        self.datetime_created = utc_now()
         self.datetime_started = None
         self.datetime_completed = None
         self._logger = logger.bind(

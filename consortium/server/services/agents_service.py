@@ -1,7 +1,6 @@
 import asyncio
 import uuid
 from collections.abc import AsyncGenerator, AsyncIterable
-from datetime import datetime
 from typing import Any
 
 from loguru import logger
@@ -29,6 +28,7 @@ from consortium.server.services.events_service import EventsService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
+    utc_now,
 )
 
 
@@ -186,7 +186,7 @@ class AgentsService:
                 data=agent.to_json(),
             )
         )
-        agent.datetime_last_checked_in = datetime.now()
+        agent.datetime_last_checked_in = utc_now()
         agent.mark_as_active()
         self._logger.debug("Checked in agent {!r}", agent)
 
