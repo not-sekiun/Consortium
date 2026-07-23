@@ -18,7 +18,7 @@ class State(enum.StrEnum):
 
 
 class Status:
-    _VALID_STATE_TRANSITIONS = {
+    _valid_state_transitions = {
         # `reset()` can be called on an INITIALIZED component to re-initialize it.
         # `reset()` should be idempotent so we allow transitioning from INITIALIZED to
         # INITIALIZED.
@@ -97,7 +97,7 @@ class Status:
         new_state: State,
         error: ComponentRuntimeError | None = None,
     ):
-        if new_state not in self._VALID_STATE_TRANSITIONS[self.state]:
+        if new_state not in self._valid_state_transitions[self.state]:
             raise AssertionError(
                 f"Invalid status transition from current status '{self.state}' to new "
                 f"status '{new_state}'.",

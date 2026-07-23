@@ -62,7 +62,7 @@ class DownloadCapability(BaseAgentCapability):
                 chunks.append(msg.payload.data)
             elif msg.data.get("type") == "end_of_transfer":
                 break
-        self.emit_artifact(message=f"Downloaded '{header.data['path']}'")
+        self.log_artifact(message=f"Downloaded '{header.data['path']}'")
         return Success(message="Download complete.")
 
 

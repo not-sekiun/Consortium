@@ -29,9 +29,9 @@ def create_task_info_and_task_events_tables(task: dict) -> tuple[Table, Table]:
     )
     task_info_table.add_row(
         "Current Progress",
-        f"{task['current_progress']['message']} "
-        f"({task['current_progress']['percent_complete']}% complete)"
-        if task["current_progress"]
+        f"{task['event_log']['current_progress']['message']} "
+        f"({task['event_log']['current_progress']['percent_complete']}% complete)"
+        if task["event_log"]["current_progress"]
         else "N/A",
     )
     task_info_table.add_row(
@@ -57,9 +57,9 @@ def create_task_info_and_task_events_tables(task: dict) -> tuple[Table, Table]:
         else "N/A",
     )
 
-    events = task["events"]
-    total_count = events["total_count"]
-    entries = events["entries"]
+    event_log = task["event_log"]
+    total_count = event_log["total_count"]
+    entries = event_log["entries"]
     task_events_table = Table(
         title=(
             f"Task Events Information (showing {len(entries)} of {total_count} entries)"
@@ -70,17 +70,15 @@ def create_task_info_and_task_events_tables(task: dict) -> tuple[Table, Table]:
     task_events_table.add_column("Status")
     task_events_table.add_column("Message")
     task_events_table.add_column("Datetime Reported")
-    for event in entries:
+    for entry in entries:
         task_events_table.add_row(
-            str(event["sequence"]),
+            str(entry["sequence"]),
             format_agent_task_event_type_string_with_color(
-                event_type_str=event["event_type"]
+                event_type_str=entry["event_type"]
             ),
-            event["message"],
-            # TODO: Remove, events dont have percent complete?
-            # f"{event['percent_complete']}%",
+            entry["message"],
             format_datetime_as_human_readable_str(
-                datetime_str=event["datetime_reported"],
+                datetime_str=entry["datetime_reported"],
                 include_elapsed_time=True,
             ),
         )

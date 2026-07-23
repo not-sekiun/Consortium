@@ -28,7 +28,8 @@ class Listener(BaseListener):
             raise ListenerStartError(
                 f"Cannot bind to {local_host}:{local_port}: {exc}",
             ) from None
-        self.logger.info("TCP JSON Listener ready on {}:{}.", local_host, local_port)
+        self.logger.info("TCP JSON Listener ready on {}:{}.", local_host,
+                         local_port)
 ```
 
 ## self.parameters

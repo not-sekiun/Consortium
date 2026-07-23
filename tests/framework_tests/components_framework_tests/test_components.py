@@ -42,7 +42,7 @@ _ERROR_STATES = (State.ERRORED, State.FATAL)
 
 _LEGAL_EDGES = [
     (source, destination)
-    for source, destinations in Status._VALID_STATE_TRANSITIONS.items()
+    for source, destinations in Status._valid_state_transitions.items()
     for destination in destinations
 ]
 
@@ -50,7 +50,7 @@ _ILLEGAL_EDGES = [
     (source, destination)
     for source in State
     for destination in State
-    if destination not in Status._VALID_STATE_TRANSITIONS[source]
+    if destination not in Status._valid_state_transitions[source]
 ]
 
 
@@ -217,7 +217,7 @@ def test_status_forbids_an_error_for_non_error_states(destination: State):
     # STARTED/RUNNING/INITIALIZED so pick a source that can reach the destination.
     status.state = next(
         source
-        for source, destinations in Status._VALID_STATE_TRANSITIONS.items()
+        for source, destinations in Status._valid_state_transitions.items()
         if destination in destinations
     )
 

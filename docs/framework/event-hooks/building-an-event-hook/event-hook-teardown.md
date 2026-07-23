@@ -7,6 +7,7 @@ final cleanup:
 ```python
 import json
 
+
 async def on_teardown(self) -> None:
     summary_path = self.root_directory / "last_session_summary.json"
     summary = {

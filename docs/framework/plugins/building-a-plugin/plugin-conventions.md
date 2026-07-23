@@ -14,6 +14,7 @@ async def on_running(self) -> None:
         self.logger.info(self._build_report(agents))
         ...
 
+
 def _build_report(self, agents: list) -> str:
     # Private helper: formats agent data for the log line
     if not agents:

@@ -136,7 +136,7 @@ class UploadCapability(BaseAgentCapability):
         is_dir = asset.is_directory
         target_name = asset.name
 
-        self.update_progress(
+        self.event_logger.update_progress(
             message=f"Starting upload of {'directory' if is_dir else 'file'} '{target_name}'",
             percent_complete=0,
         )
@@ -185,7 +185,7 @@ class UploadCapability(BaseAgentCapability):
                             payload=chunk,
                         )
 
-                        self.update_progress(
+                        self.event_logger.update_progress(
                             message=f"Uploading {display_path}: {uploaded_bytes}/{file_size} bytes",
                             percent_complete=round(uploaded_bytes / file_size * 100, 2)
                             if file_size
@@ -232,7 +232,7 @@ class UploadCapability(BaseAgentCapability):
         # Finalize
         if success:
             await self.send_to_agent(data={"type": "end_of_transfer"})
-            self.emit_artifact(
+            self.event_logger.artifact(
                 message=f"Uploaded {'directory' if is_dir else 'file'} '{target_name}'"
             )
             return Success(message="Upload complete")

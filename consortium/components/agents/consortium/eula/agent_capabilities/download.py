@@ -83,7 +83,7 @@ class DownloadCapability(BaseAgentCapability):
 
         is_dir = header.data["type"] == "directory"
         target_name = pathlib.Path(header.data["path"]).name
-        self.update_progress(
+        self.event_logger.update_progress(
             message=f"Starting download of {header.data['type']} '{target_name}'",
             percent_complete=0,
         )
@@ -102,7 +102,7 @@ class DownloadCapability(BaseAgentCapability):
                     current_file = pathlib.Path(response.data["path"])
                     current_file_size = response.data.get("size", 0)
                     downloaded_bytes = 0
-                    self.update_progress(
+                    self.event_logger.update_progress(
                         message=f"Starting download of file '{current_file}'",
                         percent_complete=0,
                     )
@@ -114,7 +114,7 @@ class DownloadCapability(BaseAgentCapability):
                             message=f"Failed to decompress file chunk: {exc}"
                         )
                     downloaded_bytes += len(chunk)
-                    self.update_progress(
+                    self.event_logger.update_progress(
                         message=(
                             f"Downloading {current_file}: "
                             f"{downloaded_bytes}/{current_file_size} bytes"
@@ -126,15 +126,17 @@ class DownloadCapability(BaseAgentCapability):
                         else 0,
                     )
                 case "directory":
-                    self.update_progress(
+                    self.event_logger.update_progress(
                         message=f"Created new directory '{response.data['path']}'",
                         percent_complete=100,
                     )
                 case "end_of_file":
-                    self.emit_artifact(message=f"Downloaded file '{current_file}'")
+                    self.event_logger.artifact(
+                        message=f"Downloaded file '{current_file}'"
+                    )
                 case "end_of_transfer":
                     if is_dir:
-                        self.emit_artifact(
+                        self.event_logger.artifact(
                             message=f"Downloaded directory '{target_name}'"
                         )
                     return Success(message="Download complete")

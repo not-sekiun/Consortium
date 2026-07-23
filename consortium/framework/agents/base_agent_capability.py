@@ -30,7 +30,6 @@ from consortium.framework.options import (
 from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
     AgentCapabilityLaunchError,
 )
-from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.objects.mitre_attack_objects import (
     # MitreAttackTechniqueID,
     resolve_mitre_attack_technique_id,
@@ -262,69 +261,9 @@ class BaseAgentCapability(_AgentCommunicator):
             f")"
         )
 
-    def update_progress(
-        self,
-        percent_complete: float = 0,
-        message: str | None = None,
-        data: dict[str, JsonValue] | None = None,
-    ):
-        """Report a partial progress update for the currently running task.
-
-        Args:
-            percent_complete: Completion percentage as a value from 0.0 to 100.0.
-            message: Optional human-readable status message to accompany the update.
-            data: Optional structured data to include with the progress event.
-        """
-        self.task.update_progress(
-            percent_complete=percent_complete, message=message, data=data
-        )
-
-    def emit_success(self, message: str, data: dict[str, JsonValue] | None = None):
-        """Emit a SUCCESS event on the current task's event stream.
-
-        Args:
-            message: Human-readable description of the successful action or result.
-            data: Optional structured data to include with the event.
-        """
-        self.task.append_event(
-            event_type=AgentTaskEventType.SUCCESS, message=message, data=data or {}
-        )
-
-    def emit_info(self, message: str, data: dict[str, JsonValue] | None = None):
-        """Emit an INFO event on the current task's event stream.
-
-        Args:
-            message: Human-readable informational message to record.
-            data: Optional structured data to include with the event.
-        """
-        self.task.append_event(
-            event_type=AgentTaskEventType.INFO, message=message, data=data or {}
-        )
-
-    def emit_failure(self, message: str, data: dict[str, JsonValue] | None = None):
-        """Emit a FAILURE event on the current task's event stream.
-
-        Args:
-            message: Human-readable description of the failure condition.
-            data: Optional structured diagnostic data to include with the event.
-        """
-        self.task.append_event(
-            event_type=AgentTaskEventType.FAILURE, message=message, data=data or {}
-        )
-
-    def emit_artifact(self, message: str, data: dict[str, JsonValue] | None = None):
-        """Emit an ARTIFACT event on the current task's event stream.
-
-        Used to signal that the capability has produced a file, binary blob, or
-        other collectible output associated with this task.
-
-        Args:
-            message: Human-readable description or filename of the artifact.
-            data: Optional structured metadata to attach to the artifact event.
-        """
-        self.task.append_event(
-            event_type=AgentTaskEventType.ARTIFACT, message=message, data=data or {}
-        )
+    @property
+    def event_logger(self):
+        return self.task.event_logger
 
     async def on_launch(
         self,
@@ -374,7 +313,7 @@ class BaseAgentCapability(_AgentCommunicator):
         Returns:
             The outcome from on_execute. Return Success or Failure to opt in to an
             explicit terminal event and task transition; return None when the capability
-            reported everything it needs to via emit_* events, in which case the task is
+            reported everything it needs to via log_* entries, in which case the task is
             assumed to have completed normally.
 
         Raises:

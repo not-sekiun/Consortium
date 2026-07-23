@@ -187,15 +187,15 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
 
         if (
             agent_id == self.interpreter_context.agent["agent_id"]
-            and task["events"]["entries"]
+            and task["event_log"]["entries"]
         ):
             print_info(f"{message}")
 
             events_summary_lines = []
-            for event in task["events"]["entries"]:
-                sequence = event["sequence"]
-                event_type = event["event_type"]
-                message = event["message"]
+            for entry in task["event_log"]["entries"]:
+                sequence = entry["sequence"]
+                event_type = entry["event_type"]
+                message = entry["message"]
 
                 events_summary_lines.append(
                     f"[dim white][{sequence}][/] "
@@ -206,7 +206,7 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
             console.print(
                 Panel(
                     "\n".join(events_summary_lines),
-                    title=f"Events summary ({len(task['events']['entries'])}/{task['events']['total_count']} entries displayed)",
+                    title=f"Events summary ({len(task['event_log']['entries'])}/{task['event_log']['total_count']} entries displayed)",
                     title_align="left",
                     expand=False,
                 )

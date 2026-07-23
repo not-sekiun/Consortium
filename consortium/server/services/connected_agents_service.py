@@ -166,7 +166,7 @@ class ConnectedAgentsService:
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
         timeout: float | None = None,
-    ) -> TaskInputMessageModel | TaskOutputMessageModel | None:
+    ) -> TaskInputMessageModel | TaskOutputMessageModel | None | object:
         """Get the next task message produced by a running capability for a specific task
         on an agent connected to this listener.
 
@@ -177,9 +177,9 @@ class ConnectedAgentsService:
                 indefinitely. If 0, polls without blocking.
 
         Returns:
-            The next task message produced by the task's capability, or None if the
-            capability has finished (end of stream) or the timeout elapsed before a
-            message was produced.
+            The next task message produced by the task's capability, `None` if the timeout
+            elapsed before a message was produced (poll again), or END_OF_STREAM if the
+            capability has finished and its outbox is fully drained (move on).
 
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected

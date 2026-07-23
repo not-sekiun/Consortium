@@ -93,12 +93,12 @@ class TaskInfoCommand(BaseConnectedCommand):
         console.print(task_info_table, "")
 
         if raw:
-            events = task["events"]
-            entries = events["entries"]
-            total_count = events["total_count"]
+            event_log = task["event_log"]
+            entries = event_log["entries"]
+            total_count = event_log["total_count"]
             print(f"Task Events (showing {len(entries)} of {total_count} entries)\n")
-            for event in entries:
-                print(event["message"])
+            for entry in entries:
+                print(entry["message"])
             print()
         else:
             console.print(task_events_table, "")

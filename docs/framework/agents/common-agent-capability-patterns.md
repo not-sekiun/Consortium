@@ -2,7 +2,7 @@
 
 This page is a cookbook. If you are thinking "I have a pattern X that I want to implement, what does X look like?", find the matching pattern below, copy the stripped-down recipe, and grow it from there.
 
-Every recipe is a plain `on_execute` written against `BaseAgentCapability`. There are no template base classes to inherit from: the loop is yours, and the framework only provides the primitives (`send_to_agent`, `recv_from_agent`, the `emit_*` events) and two small opt-in helpers (`idle_attempts` and `duplex`).
+Every recipe is a plain `on_execute` written against `BaseAgentCapability`. There are no template base classes to inherit from: the loop is yours, and the framework only provides the primitives (`send_to_agent`, `recv_from_agent`, the `log_*` events) and two small opt-in helpers (`idle_attempts` and `duplex`).
 
 !!! info "The rule of thumb"
     If you can read your `on_execute` top to bottom and see the whole exchange, you are doing it right. Reach for a helper only when the plain loop gets genuinely hard to write correctly.
@@ -27,15 +27,15 @@ sequenceDiagram
 
 1. `on_launch(task_launch_message)` runs first. Override it for pre-flight work: validate options, strip server-side arguments, enrich the message. Return the message to send, or raise `AgentCapabilityLaunchError` to deny the launch.
 2. The framework sends the launch message to the agent.
-3. `on_execute()` runs. This is where your pattern lives. Talk to the agent with `send_to_agent` and `recv_from_agent`, report progress with `update_progress` and the `emit_*` events.
+3. `on_execute()` runs. This is where your pattern lives. Talk to the agent with `send_to_agent` and `recv_from_agent`, report progress with `update_progress` and the `log_*` event log entries.
 4. Return an outcome.
 
-| Return value | Meaning |
-| --- | --- |
-| `Success` | The task succeeded: an explicit terminal event is recorded. |
-| `Failure` | The task failed: an explicit terminal event is recorded. |
-| `None` | The task completed normally. Use this when everything worth reporting already went out via `emit_*` events. |
-| raise | The task is errored. Uncaught exceptions, including `TimeoutError` from `recv_from_agent`, end up here. |
+| Return value | Meaning                                                                                                               |
+| --- |-----------------------------------------------------------------------------------------------------------------------|
+| `Success` | The task succeeded: an explicit terminal event is recorded.                                                           |
+| `Failure` | The task failed: an explicit terminal event is recorded.                                                              |
+| `None` | The task completed normally. Use this when everything worth reporting already went out via `log_*` event log entries. |
+| raise | The task is errored. Uncaught exceptions, including `TimeoutError` from `recv_from_agent`, end up here.               |
 
 !!! tip "Launch versus input messages"
     The launch message is a handshake: it carries the command and arguments and is sent exactly once, by the framework. Inside `on_execute` you only ever build `TaskInputMessageModel` instances (or let `send_to_agent(data=...)` build them for you), so it is impossible to send a launch twice.
@@ -59,7 +59,7 @@ async for attempt in idle_attempts(timeouts=[5, 15, 60]):
         response = await self.recv_from_agent(timeout=attempt.timeout)
         break
     except TimeoutError:
-        self.emit_info(f"Agent quiet after {attempt.elapsed:.0f}s, waiting longer")
+        self.info(f"Agent quiet after {attempt.elapsed:.0f}s, waiting longer")
 else:
     return Failure(message="Agent never responded")
 ```
@@ -140,7 +140,7 @@ class DownloadFile(BaseAgentCapability):
                         percent_complete=downloaded / file_size * 100 if file_size else 0,
                     )
                 case "end_of_file":
-                    self.emit_artifact(message=f"Downloaded '{file_path.name}'")
+                    self.log_artifact(message=f"Downloaded '{file_path.name}'")
                     return Success(message=f"Downloaded '{file_path.name}'")
                 case unknown:
                     return Failure(message=f"Unknown message type: {unknown}")
@@ -149,7 +149,7 @@ class DownloadFile(BaseAgentCapability):
 The shape to copy: consume the header before the loop, then `recv` at the top of the loop and `match` on the message type. Sequence lives in code order, state lives in locals, and every way out of the exchange is a visible `return`.
 
 !!! tip "Ephemeral versus recorded events"
-    `update_progress` overwrites the task status and is safe to call per chunk. The `emit_*` events append to the task's event log, so save them for things worth keeping, like a finished artifact.
+    `update_progress` overwrites the task status and is safe to call per chunk. The `log_*` entries append to the task's event log, so save them for things worth keeping, like a finished artifact.
 
 ## Pattern 3: Outgoing stream
 

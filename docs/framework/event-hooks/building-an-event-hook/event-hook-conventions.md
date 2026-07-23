@@ -10,6 +10,7 @@ async def on_triggered(self, event) -> None:
     self._record_event(event)
     self.logger.info("[{}] {}", event.event_type, event.message)
 
+
 def _record_event(self, event) -> None:
     # Private: updates internal counters, not part of the hook's interface
     if event.event_type in self.environment.counts:

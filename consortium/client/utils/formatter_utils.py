@@ -295,10 +295,10 @@ def format_agent_task_event_type_string_with_color(
     event_type_string_to_colored_event_type_map = {
         "SUCCESS": "[bold green]SUCCESS[/]",
         "INFO": "[bold cyan]INFO[/]",
+        "WARNING": "[bold yellow]WARNING[/]",
         "FAILURE": "[bold red]FAILURE[/]",
         "ARTIFACT": "[bold yellow]ARTIFACT[/]",
         "ERROR": "[bold red]ERROR[/]",
-        "COMPLETED": "[bold white]COMPLETED[/]",
     }
     return event_type_string_to_colored_event_type_map.get(
         event_type_str, event_type_str

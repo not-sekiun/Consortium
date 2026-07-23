@@ -53,7 +53,7 @@ class DownloadCapability(BaseAgentCapability):
     }
 
     async def on_launch(
-        self, task_message: TaskLaunchMessageModel
+            self, task_message: TaskLaunchMessageModel
     ) -> TaskLaunchMessageModel:
         # Remove destination before sending -- it is a server-side concern only
         task_message.arguments.pop("destination", None)
@@ -95,7 +95,7 @@ class DownloadCapability(BaseAgentCapability):
             else:
                 return Failure(message=f"Unexpected message type: {msg_type}")
 
-        self.emit_artifact(message=f"Downloaded '{filename}'")
+        self.log_artifact(message=f"Downloaded '{filename}'")
         return Success(message=f"Download of '{filename}' complete.")
 ```
 
@@ -142,10 +142,12 @@ called from `on_execute()` at any point:
 | Method                                                  | When to use                                                                               |
 |---------------------------------------------------------|-------------------------------------------------------------------------------------------|
 | `self.update_progress(percent_complete, message, data)` | Ephemeral progress update; overwrites the current status without adding a permanent event |
-| `self.emit_success(message, data)`                      | Emit a SUCCESS event visible in the task timeline                                         |
-| `self.emit_info(message, data)`                         | Emit an INFO event                                                                        |
-| `self.emit_failure(message, data)`                      | Emit a FAILURE event                                                                      |
-| `self.emit_artifact(message, data)`                     | Signal that the capability produced a collectible output (file, screenshot, etc.)         |
+| `self.log_success(message, data)`                       | Log a SUCCESS event log entry visible in the task timeline                                |
+| `self.log_info(message, data)`                          | Log an INFO event log entry                                                               |
+| `self.log_failure(message, data)`                       | Log a FAILURE event log entry                                                             |
+| `self.log_warning(message, data)`                       | Log a WARNING event log entry                                                             |
+| `self.log_error(message, data)`                         | Log an ERROR event log entry                                                              |
+| `self.log_artifact(message, data)`                      | Signal that the capability produced a collectible output (file, screenshot, etc.)         |
 
 ## TaskOutputMessageModel
 

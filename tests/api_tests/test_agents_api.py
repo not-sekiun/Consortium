@@ -39,13 +39,22 @@ AGENT_TASK_JSON_SCHEMA = {
             },
             "required": ["state"],
         },
-        "events": {
+        "event_log": {
             "type": "object",
             "properties": {
+                "current_progress": {
+                    "type": ["object", "null"],
+                    "properties": {
+                        "percent_complete": {"type": "number"},
+                        "message": {"type": ["string", "null"]},
+                        "data": {"type": "object"},
+                        "datetime_reported": {"type": "string"},
+                    },
+                },
                 "total_count": {"type": "integer"},
                 "entries": {"type": "array"},
             },
-            "required": ["total_count", "entries"],
+            "required": ["current_progress", "total_count", "entries"],
         },
         "datetime_created": {"type": "string"},
     },
@@ -54,7 +63,7 @@ AGENT_TASK_JSON_SCHEMA = {
         "command",
         "arguments",
         "status",
-        "events",
+        "event_log",
         "datetime_created",
     ],
 }

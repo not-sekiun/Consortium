@@ -17,7 +17,10 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
     OptionValueValidationError,
 )
 from consortium.framework.agents import BaseAgentCapability, TaskInputMessageModel
-from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
+from consortium.framework.agents._task_messages_queue import (
+    END_OF_STREAM,
+    TaskMessagesQueue,
+)
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
@@ -26,8 +29,8 @@ from consortium.framework.agents.agent_outcomes import Failure, Success
 from consortium.framework.event_hooks import EventType
 from consortium.framework.listeners import BaseListener
 from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
-    AgentCapabilityExecutionError as AgentCapabilityExecutionSignal,
-    AgentCapabilityLaunchError as AgentCapabilityLaunchSignal,
+    AgentCapabilityExecutionError as AgentCapabilityExecutionSignalError,
+    AgentCapabilityLaunchError as AgentCapabilityLaunchSignalError,
 )
 from consortium.server import server_singletons as server_singletons
 from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
@@ -48,7 +51,6 @@ from consortium.server.exceptions.service_exceptions.listeners_service_exception
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
     ResourceNotFoundError,
 )
-from consortium.server.models.agent_task_models import AgentTaskEventType
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
 from consortium.server.utils import generate_random_human_readable_name, normalize_uuid
@@ -374,35 +376,40 @@ class Agent:
         self,
         task_id: str | uuid.UUID,
         timeout: float | None = None,
-    ) -> TaskLaunchMessageModel | TaskInputMessageModel | None:
+    ) -> TaskLaunchMessageModel | TaskInputMessageModel | None | object:
         """Get the next task message produced by the capability for the specified task.
 
         Reads follow the task's outbox lifecycle, not the capability's: a capability may
         stream messages and then exit, and those buffered messages must remain readable
-        until drained. The outbox is tracked until it reaches end of stream (shut down
-        and fully drained), at which point it is dropped and this returns None."""
+        until drained.
+
+        Returns the next task message, or `None` when `timeout` elapses with nothing
+        available (a transient "nothing yet, poll again" signal). Returns END_OF_STREAM
+        once the outbox is exhausted (shut down and fully drained, or never produced), at
+        which point the outbox is dropped and every subsequent read returns
+        END_OF_STREAM."""
         task = self.get_task_by_task_id(task_id=task_id)
 
         # The outbox is tracked independently of self._task_inboxes (which only lives
         # while the capability is running to accept results). A missing outbox means it
-        # was never produced or has already been fully drained to end of stream.
+        # was never produced or has already been fully drained, so the stream is over.
         outbox = self._task_outboxes.get(str(task.task_id))
         if outbox is None:
-            return None
+            return END_OF_STREAM
 
         try:
             task_message = await outbox.get(timeout=timeout)
         except TimeoutError:
-            # A timeout means "nothing available yet"; the queue returns `None` on its
-            # own for end of stream. We collapse the timeout to `None` here so agent
-            # level callers get a single "no message" signal to poll on.
+            # A timeout means "nothing available yet". We surface it as `None` (distinct
+            # from END_OF_STREAM) so callers can tell a transient miss they should poll
+            # again from an exhausted stream they should move on from.
             return None
 
-        if task_message is None:
+        if task_message is END_OF_STREAM:
             # End of stream: the capability finished and the outbox is fully drained, so
-            # drop it. Subsequent reads for this task return None.
+            # drop it. Subsequent reads for this task return END_OF_STREAM.
             self._task_outboxes.pop(str(task.task_id), None)
-            return None
+            return END_OF_STREAM
 
         # The launch message is the first thing a capability puts on its outbox. Popping
         # it is the point at which the agent has acknowledged and picked up the task, so
@@ -456,18 +463,42 @@ class Agent:
     ) -> TaskInputMessageModel | TaskLaunchMessageModel | None:
         """Get the next task message from the earliest tasked outbox, draining it
         completely (including any messages a streamed-and-exited capability left behind)
-        before moving on to the next one."""
-        ready, timeout = await self._wait_for_a_readable_outbox(timeout=timeout)
-        if not ready:
-            return None
+        before moving on to the next one.
 
-        # Dictionaries preserve insertion order, so the first tracked outbox is the
-        # earliest tasked one. We drain it completely (its end of stream drops it from
-        # self._task_outboxes) before the next call moves on to the following outbox.
-        task_id = next(iter(self._task_outboxes))
-        return await self.get_next_task_message_by_task_id(
-            task_id=task_id, timeout=timeout
-        )
+        End of stream is a per-outbox concept, but the set of outboxes this muxes over
+        has no collective end (a new task can always start), so this never surfaces
+        END_OF_STREAM: when the earliest outbox is exhausted it is dropped and this
+        transparently advances to the next one. Returns the next message, or `None` when
+        `timeout` elapses with nothing produced."""
+        loop = asyncio.get_running_loop()
+        deadline = None if timeout is None else loop.time() + timeout
+
+        while True:
+            # Clamp to 0.0 rather than early-returning on an exhausted budget: a
+            # timeout of 0 must still get one non-blocking poll of the earliest outbox
+            # below, and the budget is ultimately enforced by the waits it feeds.
+            remaining = None if deadline is None else max(deadline - loop.time(), 0.0)
+
+            ready, remaining = await self._wait_for_a_readable_outbox(timeout=remaining)
+            if not ready:
+                return None
+
+            # Dictionaries preserve insertion order, so the first tracked outbox is the
+            # earliest tasked one. We drain it completely before moving on: only once it
+            # reaches end of stream (which drops it from self._task_outboxes) do we
+            # advance to the following outbox.
+            task_id = next(iter(self._task_outboxes))
+            task_message = await self.get_next_task_message_by_task_id(
+                task_id=task_id, timeout=remaining
+            )
+            if task_message is END_OF_STREAM:
+                # Earliest outbox exhausted and dropped; advance to the next one. A shut
+                # down, drained outbox returns END_OF_STREAM immediately, so this is
+                # instantaneous and the loop stays bounded by the number of outboxes;
+                # the budget is enforced by the reads above.
+                continue
+            # A message, or `None` if the budget elapsed with nothing produced.
+            return task_message
 
     def _first_outbox_with_pending_message(self) -> str | None:
         # Scan tracked outboxes in insertion order and return the task ID of the first
@@ -538,10 +569,11 @@ class Agent:
             task_message = await self.get_next_task_message_by_task_id(
                 task_id=task_id, timeout=0
             )
-            if task_message is not None:
+            if task_message is not None and task_message is not END_OF_STREAM:
                 return task_message
-            # The message was taken by another reader or the outbox drained to end of
-            # stream between the scan and the read. Loop and wait for the next one.
+            # `None` (the message was taken by another reader) or END_OF_STREAM (the
+            # outbox drained to end of stream) between the scan and the read. Loop and
+            # wait for the next one.
 
     async def drain_task_messages_by_task_id(
         self, task_id: str | uuid.UUID
@@ -551,7 +583,9 @@ class Agent:
             task_message = await self.get_next_task_message_by_task_id(
                 task_id=task_id, timeout=None
             )
-            if task_message is None:
+            # With timeout=None the read only ever returns a message or END_OF_STREAM
+            # (never a `None` timeout), so end of stream is the sole terminating signal.
+            if task_message is END_OF_STREAM:
                 break
             yield task_message
 
@@ -798,8 +832,7 @@ class Agent:
                             task,
                         )
                     task.status._transition_to_succeeded()
-                    task.append_event(
-                        event_type=AgentTaskEventType.SUCCESS,
+                    task.event_logger.success(
                         message=task_outcome.message,
                         data=task_outcome.data,
                     )
@@ -813,17 +846,16 @@ class Agent:
                             detail=task_outcome.data,
                         )
                     )
-                    task.append_event(
-                        event_type=AgentTaskEventType.FAILURE,
+                    task.event_logger.failure(
                         message=task_outcome.message,
                         data=task_outcome.data,
                     )
                 elif task_outcome is None:
-                    # None = the capability used the emit-only events pattern and
+                    # None = the capability used the log-only events pattern and
                     # completed normally without opting in to an explicit outcome. Treat
                     # it as a normal completion: transition to SUCCEEDED without
                     # appending a duplicate terminal event (the capability already
-                    # emitted whatever events it wanted via emit_*).
+                    # logged whatever events it wanted via log_*).
                     if task.status.state == AgentTaskState.QUEUED:
                         self.logger.warning(
                             "Agent {} completed task {} normally but the task never left "
@@ -842,7 +874,7 @@ class Agent:
                         task,
                         task_outcome,
                     )
-            except AgentCapabilityLaunchSignal as exc:
+            except AgentCapabilityLaunchSignalError as exc:
                 # Deliberately raised from on_launch to deny a task from starting, for
                 # example when a pre-launch validation check fails. This is the launch
                 # (validation) analogue of the execution error below; both are reported
@@ -854,12 +886,11 @@ class Agent:
                         detail=exc.detail,
                     )
                 )
-                task.append_event(
-                    event_type=AgentTaskEventType.FAILURE,
+                task.event_logger.failure(
                     message=exc.message,
                     data={"detail": exc.detail},
                 )
-            except AgentCapabilityExecutionSignal as exc:
+            except AgentCapabilityExecutionSignalError as exc:
                 # Deliberately raised from on_execute to stop a running capability with a
                 # runtime error. Reported as ERRORED with the execution base message.
                 task.status._transition_to_errored(
@@ -869,8 +900,7 @@ class Agent:
                         detail=exc.detail,
                     )
                 )
-                task.append_event(
-                    event_type=AgentTaskEventType.FAILURE,
+                task.event_logger.failure(
                     message=exc.message,
                     data={"detail": exc.detail},
                 )
@@ -904,9 +934,9 @@ class Agent:
                             ),
                         )
                     )
-                    task.append_event(
-                        event_type=AgentTaskEventType.FAILURE,
+                    task.event_logger.error(
                         message=formatted_exception,
+                        data={"type": exc.__class__.__name__, "message": str(exc)},
                     )
                 except Exception as transition_exc:
                     self.logger.error(

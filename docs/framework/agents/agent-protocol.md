@@ -241,27 +241,27 @@ When implementing an agent for a custom listener, ensure the agent:
 ```python
 # Registration
 response = post("/register", {
-    "payload_id": PAYLOAD_ID,
-    "user": os.getlogin(),
-    "is_admin": is_admin(),
-    "os": platform.system(),
-    "hostname": socket.gethostname(),
-    ...
+  "payload_id": PAYLOAD_ID,
+  "user": os.getlogin(),
+  "is_admin": is_admin(),
+  "os": platform.system(),
+  "hostname": socket.gethostname(),
+  ...
 })
 agent_id = response["agent_id"]
 
 # Main loop
 while True:
-    # Poll for tasks
-    tasks = get("/tasks", headers={"Cookie": agent_id})
-    for task in tasks:
-        result = execute(task["command"], task["arguments"])
-        post("/results", {
-            "task_id": task["task_id"],
-            "success": result.success,
-            "message": result.message,
-            "data": result.data,
-        }, headers={"Cookie": agent_id})
+  # Poll for tasks
+  tasks = get("/tasks", headers={"Cookie": agent_id})
+  for task in tasks:
+    result = execute(task["command"], task["arguments"])
+    post("/results", {
+      "task_id": task["task_id"],
+      "success": result.success,
+      "message": result.message,
+      "data": result.data,
+    }, headers={"Cookie": agent_id})
 
-    sleep(SLEEP_TIME + random_jitter(SLEEP_TIME_JITTER))
+  sleep(SLEEP_TIME + random_jitter(SLEEP_TIME_JITTER))
 ```

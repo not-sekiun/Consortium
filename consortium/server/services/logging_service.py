@@ -46,6 +46,7 @@ class LoggingService:
         logger_type_to_color_str_map = {
             LoggerType.LISTENER_LOGGER: "<bold><blue>",
             LoggerType.AGENT_LOGGER: "<bold><red>",
+            LoggerType.AGENT_TASK_LOGGER: "<bold><red>",
             LoggerType.GENERATOR_LOGGER: "<bold><green>",
             LoggerType.EVENT_HOOK_LOGGER: "<bold><yellow>",
             LoggerType.PLUGIN_LOGGER: "<bold><cyan>",

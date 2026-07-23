@@ -8,6 +8,7 @@ from pydantic import JsonValue
 from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
     AgentCommunicationEndOfStreamError,
 )
+from consortium.framework.agents._task_messages_queue import END_OF_STREAM
 from consortium.framework.agents.agent_message_models import (
     TaskInputMessageModel,
     TaskLaunchMessageModel,
@@ -108,11 +109,11 @@ class _AgentCommunicator:
             task_message = await self._task_messages_inbox.get(timeout=timeout)
 
         # A communicator is coordinated with the remote endpoint for the lifetime of the
-        # task, so it should never observe end of stream (a `None` from the inbox) while
-        # waiting for a result. If it does the inbox was shut down out from under a
+        # task, so it should never observe end of stream (END_OF_STREAM from the inbox)
+        # while waiting for a result. If it does the inbox was shut down out from under a
         # coordinated read, which is a genuine error rather than the normal termination
         # signal the outbox-side readers rely on.
-        if task_message is None:
+        if task_message is END_OF_STREAM:
             raise AgentCommunicationEndOfStreamError(
                 agent_id=str(self.agent.agent_id),
                 name=self.agent.name,

@@ -14,6 +14,17 @@ if typing.TYPE_CHECKING:
 
 TaskMessage = TaskLaunchMessageModel | TaskInputMessageModel | TaskOutputMessageModel
 
+# END_OF_STREAM is the marker `get` returns once a queue has been shut down and fully
+# drained: no further messages will ever be produced. It lets readers distinguish an
+# exhausted stream from a timeout (which raises TimeoutError) and from a still-open but
+# momentarily empty queue. Callers compare against it by identity (`result is
+# END_OF_STREAM`).
+#
+# Defined with the object() trick: a bare, unique object whose only meaningful property
+# is its identity. This is a deliberate placeholder for first class sentinel support
+# (PEP 661, targeted for Python 3.15), at which point this becomes a proper Sentinel.
+END_OF_STREAM = object()
+
 
 def _deep_getsizeof(obj, seen: set[int]) -> int:
     # Recursively estimate the in-memory footprint of a container and its
@@ -50,8 +61,8 @@ class TaskMessagesQueue[T: TaskMessage]:
         # messages. notify_all is used whenever either side changes state.
         self._condition = asyncio.Condition()
         # Once shut down no further messages may be put. Consumers keep draining any
-        # buffered messages, then `get` returns `None` (end of stream). This is the
-        # single signal the `drain_*` loops use to know a producer has finished.
+        # buffered messages, then `get` returns END_OF_STREAM. This is the single signal
+        # the `drain_*` loops use to know a producer has finished.
         self._shutdown = False
         # When set (the outbox queues are constructed with the owning agent), every
         # successful put also signals the agent's shared outbox activity condition. That
@@ -155,7 +166,7 @@ class TaskMessagesQueue[T: TaskMessage]:
         self,
         # 0 means get without waiting, None means no timeout
         timeout: float | None = None,
-    ) -> T | None:
+    ) -> T | object:
         loop = asyncio.get_running_loop()
         deadline = None if timeout is None else loop.time() + timeout
 
@@ -163,13 +174,13 @@ class TaskMessagesQueue[T: TaskMessage]:
             while self._queue.empty():
                 # Buffered messages are always served first (above); reaching here
                 # with an empty and shut down queue means the producer is finished
-                # and nothing more will ever arrive. `None` is the end of stream
-                # signal the `drain_*` loops terminate on.
+                # and nothing more will ever arrive. END_OF_STREAM is the end of
+                # stream marker the `drain_*` loops terminate on.
                 if self._shutdown:
-                    return None
+                    return END_OF_STREAM
                 # timeout=0 falls through to the deadline check and raises
                 # immediately; a timeout is "nothing yet, keep waiting", distinct
-                # from the `None` end of stream above.
+                # from the END_OF_STREAM end of stream above.
                 remaining = None if deadline is None else deadline - loop.time()
                 if remaining is not None and remaining <= 0:
                     raise TimeoutError
