@@ -263,6 +263,16 @@ class BaseAgentCapability(_AgentCommunicator):
 
     @property
     def event_logger(self):
+        """Event logger for reporting this capability's execution as it runs.
+
+        Shared with the owning task, so events recorded here (success, failure, info,
+        warning, error, artifact, and progress updates) appear in the task's event log
+        and are surfaced to the client. Entries are also mirrored to the task's system
+        logger.
+
+        Returns:
+            The event logger shared with the owning task.
+        """
         return self.task.event_logger
 
     async def on_launch(
@@ -313,8 +323,8 @@ class BaseAgentCapability(_AgentCommunicator):
         Returns:
             The outcome from on_execute. Return Success or Failure to opt in to an
             explicit terminal event and task transition; return None when the capability
-            reported everything it needs to via log_* entries, in which case the task is
-            assumed to have completed normally.
+            reported everything it needs to through the event logger, in which case the
+            task is assumed to have completed normally.
 
         Raises:
             AgentCapabilityLaunchError: If on_launch denies the launch, either by raising

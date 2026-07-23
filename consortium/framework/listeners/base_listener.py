@@ -212,7 +212,7 @@ class BaseListener(ComponentLifeCycle):
         """Called when a runtime error occurs during the listener's execution.
 
         Override to add custom error handling or alerting logic in addition to or
-        instead of the default error logging.
+        instead of the default behaviour of recording the error as a failure event.
 
         Args:
             error: The runtime error describing what went wrong during listener

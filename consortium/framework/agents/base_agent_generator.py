@@ -542,7 +542,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 parameters=self.parameters,
                 environment=self.environment,
                 event_logger=self.event_logger.create_child_logger(
-                    logger=agent_generator_build_step.logger,
+                    system_logger=agent_generator_build_step.logger,
                 ),
             )
 

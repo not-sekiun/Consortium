@@ -10,6 +10,20 @@ from consortium.framework._core.event_logging.event_log_models import (
 
 
 class EventLogger:
+    """Public interface for recording structured events against a component's event log.
+
+    An event logger wraps an internal event log and exposes typed methods (success,
+    failure, info, warning, error, artifact) for recording client-facing events, along
+    with progress reporting (update_progress, clear_progress). Each recorded event is
+    optionally mirrored to a system logger (loguru), so events surface both in the
+    client-facing event log and in the server's log stream.
+
+    Framework components (agent tasks, listeners, agent generators, plugins, and event
+    hooks) each expose an event logger as `self.event_logger` for reporting their
+    activity. Related sub-components can share a single underlying event log through
+    create_child_logger so their events appear together in one consolidated log.
+    """
+
     # loguru has no native FAILURE or ARTIFACT level, so they're mapped to the
     # closest equivalent. Adjust this mapping if a different one is preferred.
     _LOGURU_LEVELS: dict[EventLogEntryType, str] = {
@@ -27,10 +41,21 @@ class EventLogger:
         system_logger: Any = None,
         mirror_to_logger: bool = True,
     ):
+        """Wrap an event log and, optionally, a system logger to mirror entries to.
+
+        Args:
+            event_log: The underlying event log that recorded events are appended to.
+            system_logger: Optional loguru logger that recorded events are mirrored to
+                at the mapped severity level. If None, events are recorded to the event
+                log only.
+            mirror_to_logger: Whether to mirror events to the system logger by default.
+                Individual logging calls can override this per call via their own
+                mirror_to_logger argument.
+        """
         self.mirror_to_logger = mirror_to_logger
 
         self._event_log = event_log
-        self._logger = system_logger
+        self._system_logger = system_logger
 
     def _mirror_entry(
         self,
@@ -41,8 +66,8 @@ class EventLogger:
         should_log = (
             mirror_to_logger if mirror_to_logger is not None else self.mirror_to_logger
         )
-        if should_log and self._logger is not None:
-            self._logger.log(self._LOGURU_LEVELS[entry_type], message)
+        if should_log and self._system_logger is not None:
+            self._system_logger.log(self._LOGURU_LEVELS[entry_type], message)
 
     def log_event(
         self,
@@ -191,7 +216,7 @@ class EventLogger:
 
     def create_child_logger(
         self,
-        logger: Any = None,
+        system_logger: Any = None,
         mirror_to_logger: bool | None = None,
     ) -> EventLogger:
         """Create a new event logger that shares this logger's underlying event log.
@@ -204,14 +229,18 @@ class EventLogger:
         system logger.
 
         Args:
-            logger: System logger the child mirrors its entries to. If None, the child
-                records to the shared event log without mirroring.
+            system_logger: System logger the child mirrors its entries to. If None, the
+                child records to the shared event log without mirroring.
             mirror_to_logger: Default mirroring behaviour for the child. If None, the
                 parent's current default is inherited.
+
+        Returns:
+            A new event logger backed by this logger's event log, mirroring to the
+            provided system logger.
         """
         return EventLogger(
             event_log=self._event_log,
-            system_logger=logger,
+            system_logger=system_logger,
             mirror_to_logger=self.mirror_to_logger
             if mirror_to_logger is None
             else mirror_to_logger,
@@ -225,6 +254,9 @@ class EventLogger:
         Args:
             limit: Maximum number of event log entries to return.
             offset: Sequence offset to start from
+
+        Returns:
+            The selected window of event log entries, ordered by sequence.
         """
         return self._event_log.get_events(limit=limit, offset=offset)
 
@@ -234,20 +266,38 @@ class EventLogger:
         Args:
             limit: Maximum number of entries to include.
             offset: Sequence offset to start from; see :class:`EventLog`.
+
+        Returns:
+            A JSON-compatible dict with the current progress, total entry count, and
+            the selected window of entries.
         """
         return self._event_log.to_json(limit=limit, offset=offset)
 
     @property
     def subject_id(self) -> uuid.UUID:
-        """The UUID of the subject this log is attached to."""
+        """The UUID of the subject this log is attached to.
+
+        Returns:
+            The UUID of the subject (task, listener, generator, plugin, or event hook)
+            this log belongs to.
+        """
         return self._event_log.subject_id
 
     @property
     def current_progress(self) -> CurrentProgressModel | None:
-        """The most recently reported progress update, if any."""
+        """The most recently reported progress update, if any.
+
+        Returns:
+            The most recently reported progress update, or None if none has been
+            reported.
+        """
         return self._event_log.current_progress
 
     @property
     def total_count(self) -> int:
-        """Total number of entries in the wrapped log."""
+        """Total number of entries in the wrapped log.
+
+        Returns:
+            The total number of entries recorded in the wrapped event log.
+        """
         return self._event_log.total_count
