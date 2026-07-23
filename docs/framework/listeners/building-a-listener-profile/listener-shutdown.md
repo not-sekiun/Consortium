@@ -12,7 +12,7 @@ the running loop will have already unblocked. Use `on_stopped()` to tear down wh
     if hasattr(self.environment, "server"):
         self.environment.server.close()
         await self.environment.server.wait_closed()
-self.logger.info("TCP JSON Listener stopped.")
+        self.logger.info("TCP JSON Listener stopped.")
 ```
 
 ## on_cancelled
