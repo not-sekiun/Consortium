@@ -89,7 +89,7 @@ class BaseEventHook(ComponentMetadata):
         )
         self.event_logger: EventLogger = EventLogger(
             event_log=EventLog(subject_id=self.event_hook_id),
-            logger=self.logger,
+            system_logger=self.logger,
         )
         self.environment: types.SimpleNamespace = types.SimpleNamespace()
 

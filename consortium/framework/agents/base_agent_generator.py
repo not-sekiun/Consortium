@@ -435,7 +435,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
         )
         self.event_logger = EventLogger(
             event_log=EventLog(subject_id=self.agent_generator_id),
-            logger=self.logger,
+            system_logger=self.logger,
         )
 
         self._current_agent_generator_build_step = None

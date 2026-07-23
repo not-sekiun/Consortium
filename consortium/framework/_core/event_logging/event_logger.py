@@ -24,13 +24,13 @@ class EventLogger:
     def __init__(
         self,
         event_log: EventLog,
-        logger: Any = None,
+        system_logger: Any = None,
         mirror_to_logger: bool = True,
     ):
         self.mirror_to_logger = mirror_to_logger
 
         self._event_log = event_log
-        self._logger = logger
+        self._logger = system_logger
 
     def _mirror_entry(
         self,
@@ -211,7 +211,7 @@ class EventLogger:
         """
         return EventLogger(
             event_log=self._event_log,
-            logger=logger,
+            system_logger=logger,
             mirror_to_logger=self.mirror_to_logger
             if mirror_to_logger is None
             else mirror_to_logger,

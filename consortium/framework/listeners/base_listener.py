@@ -156,7 +156,7 @@ class BaseListener(ComponentLifeCycle):
         )
         self.event_logger = EventLogger(
             event_log=EventLog(subject_id=self.listener_id),
-            logger=self.logger,
+            system_logger=self.logger,
         )
 
         super().__init__()

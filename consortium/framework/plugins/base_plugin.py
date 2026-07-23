@@ -98,7 +98,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         )
         self.event_logger: EventLogger = EventLogger(
             event_log=EventLog(subject_id=self.plugin_id),
-            logger=self.logger,
+            system_logger=self.logger,
         )
         super().__init__()
 
