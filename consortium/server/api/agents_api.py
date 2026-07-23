@@ -28,7 +28,10 @@ from consortium.server.models.agent_task_models import (
     AgentTaskState,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_dependencies import AuthorizeUserRequest
+from consortium.server.server_dependencies import (
+    AuthorizeUserRequest,
+)
+from consortium.server.utils import MAX_EVENT_LOG_LIMIT, clamp_event_log_limit
 
 router = APIRouter(
     prefix="/api/agents",
@@ -130,7 +133,14 @@ def get_all_agent_tasks(
     ],
     status: AgentTaskState | None = None,
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of task events to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of task events to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -141,7 +151,10 @@ def get_all_agent_tasks(
 ) -> list[AgentTaskModel]:
     tasks = _agents_service.get_all_agent_tasks(status=status)
     return [
-        AgentTaskModel(**task.to_json(limit=limit, offset=offset)) for task in tasks
+        AgentTaskModel(
+            **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
+        )
+        for task in tasks
     ]
 
 
@@ -162,7 +175,14 @@ def get_agent_task_by_task_id(
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_AGENT_TASK_BY_TASK_ID))
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of task events to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of task events to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -178,7 +198,9 @@ def get_agent_task_by_task_id(
             consortium_exception=exc
         ) from None
 
-    return AgentTaskModel(**task.to_json(limit=limit, offset=offset))
+    return AgentTaskModel(
+        **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
+    )
 
 
 @router.get(
@@ -200,7 +222,14 @@ def get_all_agent_tasks_by_agent_id(
     ],
     status: AgentTaskState | None = None,
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of task events to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of task events to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -219,7 +248,10 @@ def get_all_agent_tasks_by_agent_id(
         ) from None
 
     return [
-        AgentTaskModel(**task.to_json(limit=limit, offset=offset)) for task in tasks
+        AgentTaskModel(
+            **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
+        )
+        for task in tasks
     ]
 
 
@@ -271,7 +303,14 @@ def get_agent_tasks_by_agent_id_and_task_id(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of task events to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of task events to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -284,7 +323,9 @@ def get_agent_tasks_by_agent_id_and_task_id(
         task = _agents_service.get_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id, task_id=task_id
         )
-        return AgentTaskModel(**task.to_json(limit=limit, offset=offset))
+        return AgentTaskModel(
+            **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
+        )
         # return _convert_agent_task_model_to_api_response_model(task, limit, offset)
     except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
@@ -319,7 +360,14 @@ async def task_agent_by_agent_id(
         None, Depends(AuthorizeUserRequest(UserPermissions.TASK_AGENT_BY_AGENT_ID))
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of task events to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of task events to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -353,7 +401,9 @@ async def task_agent_by_agent_id(
             consortium_exception=exc
         ) from None
 
-    return AgentTaskModel(**task.to_json(limit=limit, offset=offset))
+    return AgentTaskModel(
+        **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
+    )
 
 
 @router.patch(

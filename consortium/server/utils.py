@@ -264,3 +264,16 @@ def generate_random_human_readable_name():
         "VIRGO",
     ]
     return f"{random.choice(colors).upper()} {random.choice(celestials).upper()}"
+
+
+MAX_EVENT_LOG_LIMIT = 1000
+
+
+# Hard server-side ceiling on how many event log entries a single request may return.
+# Event logs are held in memory, so this bounds response size and memory use regardless
+# of what a client asks for. Requests above this value are clamped down to it rather than
+# rejected, so callers that pass a large number to mean "everything" still succeed.
+def clamp_event_log_limit(limit: int) -> int:
+    # Callers still validate the lower bound (gt=0) at the query layer; this only caps
+    # the upper bound before the value reaches the event log.
+    return min(limit, MAX_EVENT_LOG_LIMIT)

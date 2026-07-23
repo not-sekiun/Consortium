@@ -24,7 +24,10 @@ from consortium.server.exceptions.service_exceptions import (
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_dependencies import AuthorizeUserRequest
+from consortium.server.server_dependencies import (
+    AuthorizeUserRequest,
+)
+from consortium.server.utils import MAX_EVENT_LOG_LIMIT, clamp_event_log_limit
 
 router = APIRouter(
     prefix="/api/agent-generators",
@@ -108,7 +111,14 @@ def get_all_agent_generators(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_GENERATORS)),
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of event log entries to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of event log entries to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -118,7 +128,9 @@ def get_all_agent_generators(
     ] = None,
 ) -> list[AgentGeneratorModel]:
     return [
-        AgentGeneratorModel(**agent_generator.to_json(limit=limit, offset=offset))
+        AgentGeneratorModel(
+            **agent_generator.to_json(limit=clamp_event_log_limit(limit), offset=offset)
+        )
         for agent_generator in _agent_generators_service.get_all_agent_generators()
     ]
 
@@ -145,7 +157,14 @@ def get_agent_generator_by_agent_generator_id(
         ),
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of event log entries to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of event log entries to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -158,7 +177,7 @@ def get_agent_generator_by_agent_generator_id(
         return AgentGeneratorModel(
             **_agent_generators_service.get_agent_generator_by_agent_generator_id(
                 agent_generator_id,
-            ).to_json(limit=limit, offset=offset),
+            ).to_json(limit=clamp_event_log_limit(limit), offset=offset),
         )
     except svc_excs.AgentGeneratorNotFoundError as exc:
         raise api_excs.AgentGeneratorNotFoundError.from_consortium_exception(

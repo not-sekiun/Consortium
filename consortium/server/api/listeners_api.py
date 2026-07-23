@@ -24,7 +24,10 @@ from consortium.server.exceptions.service_exceptions import (
 )
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_dependencies import AuthorizeUserRequest
+from consortium.server.server_dependencies import (
+    AuthorizeUserRequest,
+)
+from consortium.server.utils import MAX_EVENT_LOG_LIMIT, clamp_event_log_limit
 
 router = APIRouter(
     prefix="/api/listeners",
@@ -109,7 +112,14 @@ def get_all_listeners(
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENERS)),
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of event log entries to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of event log entries to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -119,7 +129,9 @@ def get_all_listeners(
     ] = None,
 ) -> list[ListenerModel]:
     return [
-        ListenerModel(**listener.to_json(limit=limit, offset=offset))
+        ListenerModel(
+            **listener.to_json(limit=clamp_event_log_limit(limit), offset=offset)
+        )
         for listener in _listeners_service.get_all_listeners()
     ]
 
@@ -146,7 +158,14 @@ def get_listener_by_listener_id(
         ),
     ],
     limit: Annotated[
-        int, Query(gt=0, description="Maximum number of event log entries to return")
+        int,
+        Query(
+            gt=0,
+            description=(
+                "Maximum number of event log entries to return. Values above "
+                f"{MAX_EVENT_LOG_LIMIT} are capped to {MAX_EVENT_LOG_LIMIT}."
+            ),
+        ),
     ] = 10,
     offset: Annotated[
         int | None,
@@ -158,7 +177,7 @@ def get_listener_by_listener_id(
     try:
         return ListenerModel(
             **_listeners_service.get_listener_by_listener_id(listener_id).to_json(
-                limit=limit, offset=offset
+                limit=clamp_event_log_limit(limit), offset=offset
             ),
         )
     except consortium_exceptions.ListenerNotFoundError as exc:
