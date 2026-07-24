@@ -2,7 +2,7 @@ import asyncio
 import pathlib
 import uuid
 from functools import wraps
-from typing import TYPE_CHECKING, BinaryIO, Literal, TextIO
+from typing import TYPE_CHECKING, Any, BinaryIO, Literal, TextIO
 
 from loguru import logger
 from pydantic import JsonValue
@@ -19,6 +19,12 @@ from consortium.server.utils import log_and_propagate_error_on_service_method
 
 if TYPE_CHECKING:
     from consortium.server.services.user_accounts_service import UserAccountsService
+
+# Sentinel distinguishing "leave the asset's stored data untouched" from an explicit
+# request to rebuild it. This matters because `user_account_id=None` is itself a
+# meaningful value (an asset attributed to no uploading user account), so it cannot
+# double as "do not update the data".
+_UNSET: Any = object()
 
 
 class AssetsService:
@@ -352,6 +358,61 @@ class AssetsService:
             )
         )
         self._logger.debug("Added asset directory: {!r}", asset)
+        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
+
+    @log_and_propagate_error_on_service_method
+    async def update_asset_by_resource_id(
+        self,
+        resource_id: str | uuid.UUID,
+        name: str | None = None,
+        description: str | None = None,
+        user_account_id: str | uuid.UUID | None = _UNSET,
+    ) -> Asset:
+        """Updates an asset's mutable metadata.
+
+        `name` and `description` are updated in place when provided. The asset's stored
+        `data` is only rebuilt when `user_account_id` is passed, mirroring the attribution
+        parameter of the asset creation methods: the given user account is resolved into a
+        stored reference exactly as it would be on creation. When `user_account_id` is
+        omitted the existing `data` is left untouched. An `ASSET_UPDATED` event is emitted.
+
+        Args:
+            resource_id: The ID of the asset to update.
+            name: A new human-readable display name for the asset. When `None`, the
+                existing name is preserved.
+            description: A new description for the asset. When `None`, the existing
+                description is preserved.
+            user_account_id: When provided, rebuilds the asset's attribution data from
+                this user account ID (or clears attribution when `None`). When omitted
+                entirely, the asset's existing data is left unchanged.
+
+        Returns:
+            The updated asset resource.
+
+        Raises:
+            RepositoryResourceNotFoundError: If no asset with the given ID exists.
+            UserAccountIDNotFoundError: If `user_account_id` is provided but no user
+                account with that ID exists.
+        """
+        data = None
+        if user_account_id is not _UNSET:
+            data = self._build_asset_resource_data(user_account_id=user_account_id)
+
+        asset = await asyncio.to_thread(
+            self._repository_service.update_resource_by_resource_id,
+            resource_id=resource_id,
+            name=name,
+            description=description,
+            data=data,
+        )
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event_type=EventType.ASSET_UPDATED,
+                message=f"Updated asset: {asset.resource_id}",
+                data=asset.to_json(),
+            )
+        )
+        self._logger.debug("Updated asset: {!r}", asset)
         return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method

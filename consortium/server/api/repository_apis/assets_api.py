@@ -7,6 +7,7 @@ from consortium.server.api.repository_apis._repository_api_factory import (
     create_download_resource_by_resource_id_endpoint,
     create_get_all_resources_endpoint,
     create_get_resource_by_resource_id_endpoint,
+    create_update_resource_by_resource_id_endpoint,
     create_upload_resource_endpoint,
 )
 from consortium.server.exceptions.api_exceptions import (
@@ -93,6 +94,23 @@ router.add_api_route(
         422: {"model": RequestValidationErrorResponse},
     },
     name="Delete Asset By Resource ID",
+)
+router.add_api_route(
+    path="/{resource_id}",
+    endpoint=create_update_resource_by_resource_id_endpoint(
+        update_resource_by_resource_id_handler=_assets_service.update_asset_by_resource_id,
+        update_resource_by_resource_id_permission=UserPermissions.UPDATE_ASSET_BY_ASSET_ID,
+        response_model_class=AssetModel,
+    ),
+    methods=["PATCH"],
+    responses={
+        200: {"model": AssetModel},
+        404: {
+            "model": _resource_not_found_error.to_pydantic_model(),
+        },
+        422: {"model": RequestValidationErrorResponse},
+    },
+    name="Update Asset By Resource ID",
 )
 router.add_api_route(
     path="/download/{resource_id}",

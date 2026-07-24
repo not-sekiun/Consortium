@@ -36,6 +36,15 @@ class UpdateDisplayNameRequestBodyModel(BaseModel):
     display_name: str
 
 
+# Shared request body for the PATCH endpoints of the repository-backed APIs
+# (/api/assets, /api/artifacts, /api/payloads). Only `name` and `description` are
+# exposed over the REST API; a resource's `data` (its metadata contract) is never
+# updatable over the endpoint and is intentionally omitted here.
+class UpdateRepositoryResourceRequestBodyModel(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+
 class UploadAssetRequestBodyModel(BaseModel):
     file: UploadFile
     is_directory: bool

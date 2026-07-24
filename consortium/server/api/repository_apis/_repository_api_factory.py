@@ -31,7 +31,10 @@ from consortium.server.exceptions.service_exceptions import (
 from consortium.server.models.repository_models import (
     RepositoryResourceModel,
 )
-from consortium.server.models.request_body_models import UploadAssetRequestBodyModel
+from consortium.server.models.request_body_models import (
+    UpdateRepositoryResourceRequestBodyModel,
+    UploadAssetRequestBodyModel,
+)
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
@@ -239,6 +242,42 @@ def create_upload_resource_endpoint(
         return response_model_class.model_validate(resource.to_json())
 
     return upload_repository_resource
+
+
+def create_update_resource_by_resource_id_endpoint(
+    update_resource_by_resource_id_handler: Callable[..., Any],
+    update_resource_by_resource_id_permission: UserPermissions,
+    response_model_class: type[RepositoryResourceModel] = RepositoryResourceModel,
+) -> Callable:
+    # Only `name` and `description` are ever forwarded to the handler here. A resource's
+    # `data` (its metadata contract) is deliberately not updatable over the REST API even
+    # though the underlying service methods support rebuilding it, so it is never read
+    # from the request body.
+    async def update_repository_resource_by_resource_id(
+        resource_id: UUID4,
+        _: Annotated[
+            None,
+            Depends(
+                AuthorizeUserRequest(update_resource_by_resource_id_permission),
+            ),
+        ],
+        update_repository_resource_request_body: UpdateRepositoryResourceRequestBodyModel,
+    ):
+        try:
+            repository_resource = update_resource_by_resource_id_handler(
+                resource_id=str(resource_id),
+                name=update_repository_resource_request_body.name,
+                description=update_repository_resource_request_body.description,
+            )
+            repository_resource = await repository_resource
+        except svc_excs.ResourceNotFoundError as exc:
+            raise api_excs.RepositoryResourceNotFoundError.from_consortium_exception(
+                consortium_exception=exc,
+            ) from None
+
+        return response_model_class.model_validate(repository_resource.to_json())
+
+    return update_repository_resource_by_resource_id
 
 
 def create_delete_resource_by_resource_id_endpoint(

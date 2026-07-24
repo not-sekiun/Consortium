@@ -7,6 +7,7 @@ from consortium.server.api.repository_apis._repository_api_factory import (
     create_download_resource_by_resource_id_endpoint,
     create_get_all_resources_endpoint,
     create_get_resource_by_resource_id_endpoint,
+    create_update_resource_by_resource_id_endpoint,
 )
 from consortium.server.exceptions.api_exceptions import (
     repository_api_exceptions as api_excs,
@@ -91,6 +92,23 @@ router.add_api_route(
         422: {"model": RequestValidationErrorResponse},
     },
     name="Get Artifact By Resource ID",
+)
+router.add_api_route(
+    path="/{resource_id}",
+    endpoint=create_update_resource_by_resource_id_endpoint(
+        update_resource_by_resource_id_handler=_artifacts_service.update_artifact_by_resource_id,
+        update_resource_by_resource_id_permission=UserPermissions.UPDATE_ARTIFACT_BY_ARTIFACT_ID,
+        response_model_class=ArtifactModel,
+    ),
+    methods=["PATCH"],
+    responses={
+        200: {"model": ArtifactModel},
+        404: {
+            "model": _resource_not_found_error.to_pydantic_model(),
+        },
+        422: {"model": RequestValidationErrorResponse},
+    },
+    name="Update Artifact By Resource ID",
 )
 router.add_api_route(
     path="/download/{resource_id}",

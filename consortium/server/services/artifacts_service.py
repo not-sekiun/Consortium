@@ -2,7 +2,7 @@ import asyncio
 import pathlib
 import uuid
 from functools import wraps
-from typing import TYPE_CHECKING, BinaryIO, Literal, TextIO
+from typing import TYPE_CHECKING, Any, BinaryIO, Literal, TextIO
 
 from loguru import logger
 from pydantic import JsonValue
@@ -18,6 +18,12 @@ from consortium.server.utils import log_and_propagate_error_on_service_method
 
 if TYPE_CHECKING:
     from consortium.server.services.agents_service import AgentsService
+
+# Sentinel distinguishing "leave the artifact's stored data untouched" from an explicit
+# request to rebuild it. This matters because `agent_id=None` is itself a meaningful
+# value (an artifact attributed to no producing agent), so it cannot double as "do not
+# update the data".
+_UNSET: Any = object()
 
 
 class ArtifactsService:
@@ -351,6 +357,61 @@ class ArtifactsService:
             )
         )
         self._logger.debug("Added artifact directory: {!r}", artifact)
+        return Artifact(resource=artifact, agents_service=self._agents_service)
+
+    @log_and_propagate_error_on_service_method
+    async def update_artifact_by_resource_id(
+        self,
+        resource_id: str | uuid.UUID,
+        name: str | None = None,
+        description: str | None = None,
+        agent_id: str | uuid.UUID | None = _UNSET,
+    ) -> Artifact:
+        """Updates an artifact's mutable metadata.
+
+        `name` and `description` are updated in place when provided. The artifact's stored
+        `data` is only rebuilt when `agent_id` is passed, mirroring the attribution
+        parameter of the artifact creation methods: the given agent is resolved into a
+        stored reference exactly as it would be on creation. When `agent_id` is omitted the
+        existing `data` is left untouched. An `ARTIFACT_UPDATED` event is emitted.
+
+        Args:
+            resource_id: The ID of the artifact to update.
+            name: A new human-readable display name for the artifact. When `None`, the
+                existing name is preserved.
+            description: A new description for the artifact. When `None`, the existing
+                description is preserved.
+            agent_id: When provided, rebuilds the artifact's attribution data from this
+                agent ID (or clears attribution when `None`). When omitted entirely, the
+                artifact's existing data is left unchanged.
+
+        Returns:
+            The updated artifact resource.
+
+        Raises:
+            RepositoryResourceNotFoundError: If no artifact with the given ID exists.
+            AgentNotFoundError: If `agent_id` is provided but no agent with that ID is
+                registered.
+        """
+        data = None
+        if agent_id is not _UNSET:
+            data = self._build_artifact_resource_data(agent_id=agent_id)
+
+        artifact = await asyncio.to_thread(
+            self._repository_service.update_resource_by_resource_id,
+            resource_id=resource_id,
+            name=name,
+            description=description,
+            data=data,
+        )
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event_type=EventType.ARTIFACT_UPDATED,
+                message=f"Updated artifact: {artifact.resource_id}",
+                data=artifact.to_json(),
+            )
+        )
+        self._logger.debug("Updated artifact: {!r}", artifact)
         return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method

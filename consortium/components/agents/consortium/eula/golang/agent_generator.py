@@ -76,7 +76,7 @@ class ExportAgent(BaseAgentGeneratorBuildStep):
     description = "Export the compiled agent binary as a payload"
 
     async def build(self, parameters: dict) -> None:
-        self.agent_templates_payload_service.add_payload_file(
+        await self.agent_templates_payload_service.add_payload_file(
             path=self.root_directory / "agent_source" / "agent",
             name=parameters["file_name"]
             + (".exe" if parameters["os"] == "windows" else ""),

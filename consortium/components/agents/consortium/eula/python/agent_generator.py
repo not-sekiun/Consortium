@@ -55,7 +55,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
             source_code = python_minifier.minify(source_code)
 
         if parameters["format"] == "script":
-            self.agent_templates_payload_service.create_payload_file(
+            await self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,
                 content=source_code,
                 name=f"{parameters['file_name']}.py",
@@ -99,13 +99,13 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                     )
                 exe_path = exe_candidates[0]
 
-                self.agent_templates_payload_service.add_payload_file(
+                await self.agent_templates_payload_service.add_payload_file(
                     build_parameters=parameters,
                     path=exe_path,
                     name=exe_path.name,
                 )
         elif parameters["format"] == "oneliner":
-            self.agent_templates_payload_service.create_payload_file(
+            await self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,
                 content='python -c "import base64; exec(base64.b64decode('
                 + repr(base64.b64encode(source_code.encode()).decode())

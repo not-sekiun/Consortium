@@ -489,6 +489,49 @@ class RepositoryService:
 
         return repository_directory
 
+    def update_resource_by_resource_id(
+        self,
+        resource_id: str | uuid.UUID,
+        name: str | None = None,
+        description: str | None = None,
+        data: dict[str, JsonValue] | None = None,
+    ) -> RepositoryFile | RepositoryDirectory:
+        """Updates a repository resource's metadata.
+
+        Metadata is persisted after the update.
+
+        Args:
+            resource_id: The ID of the resource to update.
+            name: A new human-readable name for the resource. When `None`, the
+                existing name is preserved.
+            description: A new description for the resource. When `None`, the
+                existing description is preserved.
+            data: New additional metadata to associate with the resource. When `None`,
+                the existing data is preserved.
+
+        Returns:
+            The updated repository resource.
+
+        Raises:
+            RepositoryResourceNotFoundError: If no resource with the given ID exists.
+        """
+        resource_id = normalize_uuid(resource_id)
+
+        resource = self.get_resource_by_resource_id(
+            resource_id=resource_id,
+        )
+
+        if name is not None:
+            resource.name = name
+        if description is not None:
+            resource.description = description
+        if data is not None:
+            resource.data = data
+
+        self.save_repository_metadata()
+
+        return resource
+
     def delete_resource_by_resource_id(
         self,
         resource_id: str | uuid.UUID,

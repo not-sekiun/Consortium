@@ -50,7 +50,7 @@ class AgentTemplatesPayloadsService:
         return self._payloads_service.reserve_resource_id()
 
     @log_and_propagate_error_on_service_method
-    def create_payload_file(
+    async def create_payload_file(
         self,
         build_parameters: dict[str, Any],
         content: str | bytes | IO | Generator[bytes] | Generator[str],
@@ -84,7 +84,7 @@ class AgentTemplatesPayloadsService:
             ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
-        return self._payloads_service.create_payload_file(
+        return await self._payloads_service.create_payload_file(
             agent_template_id=self._agent_template_id,
             build_parameters=build_parameters,
             content=content,
@@ -95,7 +95,7 @@ class AgentTemplatesPayloadsService:
         )
 
     @log_and_propagate_error_on_service_method
-    def create_payload_directory(
+    async def create_payload_directory(
         self,
         build_parameters: dict[str, Any],
         content: bytes | Generator[bytes] | BinaryIO,
@@ -132,7 +132,7 @@ class AgentTemplatesPayloadsService:
             ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
-        return self._payloads_service.create_payload_directory(
+        return await self._payloads_service.create_payload_directory(
             agent_template_id=self._agent_template_id,
             build_parameters=build_parameters,
             content=content,
@@ -144,7 +144,7 @@ class AgentTemplatesPayloadsService:
         )
 
     @log_and_propagate_error_on_service_method
-    def add_payload_file(
+    async def add_payload_file(
         self,
         build_parameters: dict[str, Any],
         path: pathlib.Path | str,
@@ -182,7 +182,7 @@ class AgentTemplatesPayloadsService:
             ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
-        return self._payloads_service.add_payload_file(
+        return await self._payloads_service.add_payload_file(
             agent_template_id=self._agent_template_id,
             build_parameters=build_parameters,
             path=path,
@@ -194,7 +194,7 @@ class AgentTemplatesPayloadsService:
         )
 
     @log_and_propagate_error_on_service_method
-    def add_payload_directory(
+    async def add_payload_directory(
         self,
         build_parameters: dict[str, Any],
         path: pathlib.Path | str,
@@ -233,7 +233,7 @@ class AgentTemplatesPayloadsService:
             ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
         """
-        return self._payloads_service.add_payload_directory(
+        return await self._payloads_service.add_payload_directory(
             agent_template_id=self._agent_template_id,
             build_parameters=build_parameters,
             path=path,
@@ -245,7 +245,7 @@ class AgentTemplatesPayloadsService:
         )
 
     @log_and_propagate_error_on_service_method
-    def delete_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> None:
+    async def delete_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> None:
         """Deletes a payload's repository resource and its associated metadata.
 
         Forwards to `PayloadsService.delete_payload_by_resource_id`. A
@@ -261,10 +261,10 @@ class AgentTemplatesPayloadsService:
             Nothing.
 
         Raises:
-            RepositroyResourceNotFoundError: If neither payload metadata nor a matching repository
+            RepositoryResourceNotFoundError: If neither payload metadata nor a matching repository
                 resource exists.
         """
-        self._payloads_service.delete_payload_by_resource_id(
+        await self._payloads_service.delete_payload_by_resource_id(
             resource_id=payload_id,
         )
 

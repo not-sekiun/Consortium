@@ -104,7 +104,7 @@ class PayloadsService:
         return resource_id
 
     @log_and_propagate_error_on_service_method
-    def create_payload_file(
+    async def create_payload_file(
         self,
         agent_template_id: str | uuid.UUID,
         build_parameters: dict[str, Any],
@@ -153,7 +153,10 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        resource = self._repository_service.create_file(
+        # Offload the blocking repository disk I/O to a worker thread so it does not
+        # block the event loop, mirroring the assets and artifacts services.
+        resource = await asyncio.to_thread(
+            self._repository_service.create_file,
             content=content,
             name=name,
             description=description,
@@ -183,7 +186,7 @@ class PayloadsService:
         return payload
 
     @log_and_propagate_error_on_service_method
-    def add_payload_file(
+    async def add_payload_file(
         self,
         agent_template_id: str | uuid.UUID,
         build_parameters: dict[str, Any],
@@ -236,7 +239,8 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        resource = self._repository_service.add_file(
+        resource = await asyncio.to_thread(
+            self._repository_service.add_file,
             path=path,
             name=name,
             description=description,
@@ -267,7 +271,7 @@ class PayloadsService:
         return payload
 
     @log_and_propagate_error_on_service_method
-    def create_payload_directory(
+    async def create_payload_directory(
         self,
         agent_template_id: str | uuid.UUID,
         build_parameters: dict[str, Any],
@@ -319,7 +323,8 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        resource = self._repository_service.create_directory(
+        resource = await asyncio.to_thread(
+            self._repository_service.create_directory,
             content=content,
             archive_file_format=archive_file_format,
             name=name,
@@ -349,7 +354,7 @@ class PayloadsService:
         return payload
 
     @log_and_propagate_error_on_service_method
-    def add_payload_directory(
+    async def add_payload_directory(
         self,
         agent_template_id: str | uuid.UUID,
         build_parameters: dict[str, Any],
@@ -403,7 +408,8 @@ class PayloadsService:
         agent_template.create_agent_generator(
             parameters=build_parameters,
         )
-        resource = self._repository_service.add_directory(
+        resource = await asyncio.to_thread(
+            self._repository_service.add_directory,
             path=path,
             name=name,
             description=description,
@@ -434,7 +440,91 @@ class PayloadsService:
         return payload
 
     @log_and_propagate_error_on_service_method
-    def delete_payload_by_resource_id(self, resource_id: str | uuid.UUID) -> None:
+    async def update_payload_by_resource_id(
+        self,
+        resource_id: str | uuid.UUID,
+        name: str | None = None,
+        description: str | None = None,
+        agent_template_id: str | uuid.UUID | None = None,
+        build_parameters: dict[str, Any] | None = None,
+        payload_data: dict[str, Any] | None = None,
+    ) -> Payload:
+        """Updates a payload's mutable metadata.
+
+        `name` and `description` are updated in place when provided. The payload's stored
+        `data` is only rebuilt when `agent_template_id` is passed, mirroring the parameters
+        of the payload creation methods: the agent template is resolved and the supplied
+        `build_parameters` are validated against it exactly as they would be on creation
+        before the new metadata is recorded. When `agent_template_id` is omitted the
+        existing `data` is left untouched. Emits a `PAYLOAD_UPDATED` event.
+
+        Args:
+            resource_id: The ID of the payload to update.
+            name: A new human-readable name for the payload. When `None`, the existing
+                name is preserved.
+            description: A new description for the payload. When `None`, the existing
+                description is preserved.
+            agent_template_id: When provided, rebuilds the payload's `data` from this agent
+                template. When omitted, the payload's existing data is left unchanged.
+            build_parameters: Parameters used to build the agent generator from the
+                template (validated against the template). Only used, and defaulted to an
+                empty mapping, when `agent_template_id` is provided.
+            payload_data: Arbitrary metadata attached to the payload. Only used when
+                `agent_template_id` is provided.
+
+        Returns:
+            The updated payload.
+
+        Raises:
+            RepositoryResourceNotFoundError: If no payload with the given ID exists.
+            AgentTemplateNotFoundError: If `agent_template_id` is provided but no agent
+                template with that ID exists.
+        """
+        resource_id = normalize_uuid(resource_id)
+
+        data = None
+        if agent_template_id is not None:
+            # Validate the (possibly new) build parameters against the agent template and
+            # confirm the agent template exists, exactly as the create methods do.
+            agent_template = (
+                self._agent_templates_service.get_agent_template_by_agent_template_id(
+                    agent_template_id=agent_template_id,
+                )
+            )
+            agent_template.create_agent_generator(
+                parameters=build_parameters if build_parameters is not None else {},
+            )
+            data = self._build_payload_resource_data(
+                agent_template=agent_template,
+                build_parameters=build_parameters
+                if build_parameters is not None
+                else {},
+                payload_data=payload_data,
+            )
+
+        resource = await asyncio.to_thread(
+            self._repository_service.update_resource_by_resource_id,
+            resource_id=resource_id,
+            name=name,
+            description=description,
+            data=data,
+        )
+        payload = Payload(
+            resource=resource,
+            agent_templates_service=self._agent_templates_service,
+        )
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event_type=EventType.PAYLOAD_UPDATED,
+                message=f"Updated payload: {resource.resource_id}",
+                data=payload.to_json(),
+            )
+        )
+        self._logger.debug("Updated payload: {}", str(resource_id))
+        return payload
+
+    @log_and_propagate_error_on_service_method
+    async def delete_payload_by_resource_id(self, resource_id: str | uuid.UUID) -> None:
         """Deletes a payload from disk and the repository.
 
         A payload is "just" a repository resource whose `data` field carries the payload
@@ -461,7 +551,10 @@ class PayloadsService:
         )
         payload_json = payload.to_json()
 
-        self._repository_service.delete_resource_by_resource_id(resource_id=resource_id)
+        await asyncio.to_thread(
+            self._repository_service.delete_resource_by_resource_id,
+            resource_id=resource_id,
+        )
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_DELETED,
