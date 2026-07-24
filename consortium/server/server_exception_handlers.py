@@ -102,7 +102,9 @@ def register_server_exception_handlers(app: FastAPI) -> None:
 
         return JSONResponse(
             status_code=422,
-            content=UnprocessableEntityError(detail=exc.errors()).to_json(),
+            content=UnprocessableEntityError(
+                detail={"validation_errors": exc.errors()}
+            ).to_json(),
         )
 
     # All the custom exceptions that contain the error data to return to the client

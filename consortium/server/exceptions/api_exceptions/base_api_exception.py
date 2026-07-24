@@ -9,6 +9,7 @@ from consortium.server.exceptions.object_exceptions.base_object_exception import
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceError,
 )
+from consortium.server.models.error_models import ErrorModel
 
 
 class BaseAPIError(Exception):
@@ -20,27 +21,7 @@ class BaseAPIError(Exception):
     # with the same name will cause the OpenAPI schema to attempt name mangling leading
     # to ugly schema names. Note that _pydantic_models is a dict that is shared amongst
     # all instances of this class and its subclasses.
-    _pydantic_models: dict[tuple[type, bool], type[BaseModel]] = {}
-
-    # We do not combine the normal and null detail error models into a single model
-    # because an error response will only ever return ONE of the two, not possibly
-    # either.
-    class DetailErrorModel(BaseModel):
-        code: str
-        message: str
-        detail: dict[str, JsonValue]
-
-    # Using detail: Any | None = None or Any = None as the pydantic field does not work,
-    # the swagger UI refuses to properly render the response model hence the model
-    # splitting. `detail: type[None]` (rather than `detail: None`) is deliberate: it makes
-    # Pydantic emit an untyped `{"title": "Detail"}` schema for this field instead of a
-    # `{"type": "null"}` one. OpenAPI client generators (openapi-generator's Python
-    # codegen, 7.17+) have no branch for a null-only property and crash on it, whereas an
-    # untyped property is handled fine. The example still carries the null detail value.
-    class NullDetailErrorModel(BaseModel):
-        code: str
-        message: str
-        detail: type[None]
+    _pydantic_models: dict[type, type[BaseModel]] = {}
 
     def __init__(
         self,
@@ -64,25 +45,23 @@ class BaseAPIError(Exception):
         }
 
     def to_pydantic_model(self) -> type[BaseModel]:
-        cache_key = (self.__class__, self.detail is None)
+        cache_key = self.__class__
         # Prevent duplication of pydantic models to keep the OpenAPI schema clean. We
-        # check if an instance of the exception already has a created pydantic error
-        # model and also if the detail is None or not and reuse it if it already exists.
-        # This makes it so that the same exception class with different messages reuses
-        # the model
+        # check if the exception class already has a created pydantic error model and
+        # reuse it if it exists. This makes it so that the same exception class with
+        # different messages reuses the model.
         if cache_key in self._pydantic_models:
             return self._pydantic_models[cache_key]
 
+        # ErrorModel carries a nullable detail (anyOf: [object, null]). The null branch
+        # types the null detail rather than leaving it untyped ("any"), while the object
+        # branch gives OpenAPI client generators (openapi-generator's Python codegen,
+        # 7.17+) a concrete type to map to. A null-only `{"type": "null"}` property has no
+        # such branch and crashes those generators. Which shape a specific endpoint
+        # returns (object vs null) is documented by the per-response example below.
         pydantic_model = create_model(
             f"{self.__class__.__name__}Model",
-            error=(
-                (
-                    self.__class__.DetailErrorModel
-                    if self.detail is not None
-                    else self.__class__.NullDetailErrorModel
-                ),
-                ...,
-            ),
+            error=(ErrorModel, ...),
         )
         pydantic_model.model_config = ConfigDict(
             json_schema_extra={

@@ -11,7 +11,7 @@ STATUS_JSON_SCHEMA = {
                     "properties": {
                         "code": {"type": "string"},
                         "message": {"type": "string"},
-                        "detail": {},
+                        "detail": {"type": ["object", "null"]},
                     },
                     "required": ["code", "message", "detail"],
                     "additionalProperties": False,
@@ -193,7 +193,7 @@ AGENT_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA = {
                     "enum": ["AGENT_TEMPLATE_NOT_FOUND_ERROR"],
                 },
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },

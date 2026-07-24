@@ -6,4 +6,4 @@ from pydantic import BaseModel, JsonValue
 class ErrorModel(BaseModel):
     code: str
     message: str
-    detail: dict[str, JsonValue]
+    detail: dict[str, JsonValue] | None

@@ -79,7 +79,7 @@ AGENT_NOT_FOUND_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {"type": "string", "enum": ["AGENT_NOT_FOUND_ERROR"]},
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },
@@ -94,7 +94,7 @@ AGENT_TASK_NOT_FOUND_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {"type": "string", "enum": ["AGENT_TASK_NOT_FOUND_ERROR"]},
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },
@@ -112,7 +112,7 @@ AGENT_CAPABILITY_NOT_FOUND_ERROR_JSON_SCHEMA = {
                     "enum": ["AGENT_CAPABILITY_NOT_FOUND_ERROR"],
                 },
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },

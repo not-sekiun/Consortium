@@ -46,7 +46,9 @@ _invalid_uuid_error = InvalidUUIDError(
     resource_name="resource", uuid_value="<uuid_value>"
 )
 _unprocessable_entity_error = UnprocessableEntityError(
-    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
+    detail={
+        "validation_errors": [{"loc": ["string", 0], "msg": "string", "type": "string"}]
+    },
 )
 
 # Agents.

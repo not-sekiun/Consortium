@@ -50,7 +50,7 @@ USER_NOT_FOUND_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {"type": "string", "enum": ["USER_NOT_FOUND_ERROR"]},
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },

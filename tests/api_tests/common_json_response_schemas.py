@@ -7,7 +7,7 @@ INVALID_UUID_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {"type": "string", "enum": ["INVALID_UUID_ERROR"]},
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },
@@ -22,7 +22,7 @@ FORBIDDEN_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {"type": "string", "enum": ["FORBIDDEN_ERROR"]},
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },
@@ -39,7 +39,7 @@ NOT_FOUND_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {"type": "string", "enum": ["NOT_FOUND_ERROR"]},
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },
@@ -54,7 +54,7 @@ METHOD_NOT_ALLOWED_ERROR_JSON_SCHEMA = {
             "properties": {
                 "code": {"type": "string", "enum": ["METHOD_NOT_ALLOWED_ERROR"]},
                 "message": {"type": "string"},
-                "detail": {},
+                "detail": {"type": ["object", "null"]},
             },
             "required": ["code", "message", "detail"],
         },
@@ -70,15 +70,23 @@ UNPROCESSABLE_ENTITY_ERROR_JSON_SCHEMA = {
                 "code": {"type": "string", "enum": ["UNPROCESSABLE_ENTITY_ERROR"]},
                 "message": {"type": "string"},
                 "detail": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "loc": {"type": "array", "items": {"type": "string"}},
-                            "msg": {"type": "string"},
-                            "type": {"type": "string"},
-                        },
-                        "required": ["loc", "msg", "type"],
+                    "type": "object",
+                    "properties": {
+                        "validation_errors": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "loc": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                    },
+                                    "msg": {"type": "string"},
+                                    "type": {"type": "string"},
+                                },
+                                "required": ["loc", "msg", "type"],
+                            },
+                        }
                     },
                 },
             },
