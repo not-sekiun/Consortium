@@ -34,11 +34,15 @@ def ping_capability(context):
         success=True,
     )
     for _ in range(context.arguments["iterations"]):
-        context.connection.get_task_input_message_from_listener()
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=True,
-        )
+        ping = context.connection.get_task_input_message_from_listener()
+        try:
+            context.connection.post_task_message_to_listener(
+                task_id=context.task_id,
+                success=True,
+                data={"sequence": ping.data["sequence"]},
+            )
+        except urllib.error.HTTPError:
+            continue
 
 
 def sleep_capability(context):
@@ -492,8 +496,11 @@ def rm_capability(context):
         path = os.path.expandvars(path)
 
     try:
-        if recursive:
-            shutil.rmtree(path)
+        if os.path.isdir(path):
+            if recursive:
+                shutil.rmtree(path)
+            else:
+                os.rmdir(path)
         else:
             os.remove(path)
     except (
@@ -501,6 +508,7 @@ def rm_capability(context):
         NotADirectoryError,
         IsADirectoryError,
         PermissionError,
+        OSError,
     ) as exc:
         context.connection.post_task_message_to_listener(
             task_id=context.task_id,
@@ -573,7 +581,8 @@ def cp_capability(context):
     try:
         if os.path.isdir(source):
             if recursive:
-                shutil.rmtree(destination)
+                if os.path.exists(destination):
+                    shutil.rmtree(destination)
                 shutil.copytree(source, destination)
             else:
                 context.connection.post_task_message_to_listener(
