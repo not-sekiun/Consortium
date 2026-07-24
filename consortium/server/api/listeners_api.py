@@ -1,7 +1,7 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Query
-from pydantic import UUID4, JsonValue
+from fastapi import APIRouter, Depends, Query
+from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.framework_exceptions import (
@@ -23,6 +23,7 @@ from consortium.server.exceptions.service_exceptions import (
     listeners_service_exceptions as consortium_exceptions,
 )
 from consortium.server.models.listener_models import ListenerModel
+from consortium.server.models.request_body_models import UpdateListenerRequestBodyModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import (
     AuthorizeUserRequest,
@@ -348,10 +349,12 @@ async def update_listener_by_listener_id(
             ),
         ),
     ],
-    name: Annotated[str | None, Body(embed=True)] = None,
-    description: Annotated[str | None, Body(embed=True)] = None,
-    parameters: Annotated[dict[str, JsonValue] | None, Body(embed=True)] = None,
+    update_listener_request_body: UpdateListenerRequestBodyModel,
 ) -> ListenerModel:
+    name = update_listener_request_body.name
+    description = update_listener_request_body.description
+    parameters = update_listener_request_body.parameters
+
     try:
         listener = _listeners_service.update_listener_by_listener_id(
             listener_id=listener_id,

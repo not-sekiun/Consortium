@@ -14,7 +14,7 @@ import tempfile
 from collections.abc import Callable
 from typing import Annotated, Any, Literal
 
-from fastapi import Depends, Form, UploadFile
+from fastapi import Depends, Form
 from fastapi.responses import FileResponse
 from pydantic import UUID4
 from starlette.background import BackgroundTask
@@ -31,6 +31,7 @@ from consortium.server.exceptions.service_exceptions import (
 from consortium.server.models.repository_models import (
     RepositoryResourceModel,
 )
+from consortium.server.models.request_body_models import UploadAssetRequestBodyModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.objects.user_objects import User
 from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
@@ -159,18 +160,16 @@ def create_upload_resource_endpoint(
         # only the assets API exposes an upload endpoint, whose create handlers accept a
         # `user_account_id`.
         uploading_user: Annotated[User, Depends(get_current_user)],
-        file: UploadFile,
-        name: str | None = Form(default=None),
-        description: str | None = Form(default=None),
-        is_directory: bool = Form(...),
-        directory_archive_file_format: Literal[
-            ".zip",
-            ".tar",
-            ".tar.gz",
-            ".tar.bz2",
-            ".tar.xz",
-        ] = Form(default=None),
+        upload_asset_request_body: Annotated[UploadAssetRequestBodyModel, Form()],
     ):
+        file = upload_asset_request_body.file
+        name = upload_asset_request_body.name
+        description = upload_asset_request_body.description
+        is_directory = upload_asset_request_body.is_directory
+        directory_archive_file_format = (
+            upload_asset_request_body.directory_archive_file_format
+        )
+
         if is_directory:
             if directory_archive_file_format:
                 file_extension = directory_archive_file_format

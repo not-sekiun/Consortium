@@ -59,7 +59,7 @@ class Server:
             logger_name="Server", logger_type=LoggerType.SERVER_LOGGER
         )
         self._app = FastAPI(
-            swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+            # swagger_ui_parameters={"defaultModelsExpandDepth": -1},
             lifespan=self._lifespan,
         )
 

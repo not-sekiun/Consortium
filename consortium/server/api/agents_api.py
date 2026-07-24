@@ -1,6 +1,6 @@
-from typing import Annotated, Any
+from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
@@ -26,6 +26,10 @@ from consortium.server.models.agent_models import (
 from consortium.server.models.agent_task_models import (
     AgentTaskModel,
     AgentTaskState,
+)
+from consortium.server.models.request_body_models import (
+    AgentTaskRequestBodyModel,
+    UpdateAgentRequestBodyModel,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import (
@@ -324,8 +328,7 @@ def get_agent_tasks_by_agent_id_and_task_id(
 )
 async def task_agent_by_agent_id(
     agent_id: UUID4,
-    command: Annotated[str, Body()],
-    arguments: Annotated[dict[str, Any] | list, Body()],
+    agent_task_request_body: AgentTaskRequestBodyModel,
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.TASK_AGENT_BY_AGENT_ID))
     ],
@@ -346,6 +349,9 @@ async def task_agent_by_agent_id(
         ),
     ] = None,
 ) -> AgentTaskModel:
+    command = agent_task_request_body.command
+    arguments = agent_task_request_body.arguments
+
     try:
         task = await _agents_service.task_agent_by_agent_id(
             agent_id=agent_id, command=command, arguments=arguments
@@ -392,9 +398,11 @@ async def update_agent_by_agent_id(
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.UPDATE_AGENT_BY_AGENT_ID))
     ],
-    name: Annotated[str | None, Body(embed=True)] = None,
-    description: Annotated[str | None, Body(embed=True)] = None,
+    update_agent_request_body: UpdateAgentRequestBodyModel,
 ) -> AgentModel:
+    name = update_agent_request_body.name
+    description = update_agent_request_body.description
+
     try:
         agent = _agents_service.update_agent_by_agent_id(
             agent_id=agent_id, name=name, description=description

@@ -1,6 +1,6 @@
-from typing import Annotated, Any
+from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
@@ -23,6 +23,9 @@ from consortium.server.exceptions.service_exceptions import (
     agent_generators_service_exceptions as svc_excs,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
+from consortium.server.models.request_body_models import (
+    UpdateAgentGeneratorRequestBodyModel,
+)
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import (
     AuthorizeUserRequest,
@@ -345,10 +348,12 @@ async def update_agent_generator_by_agent_generator_id(
             ),
         ),
     ],
-    name: Annotated[str | None, Body(embed=True)] = None,
-    description: Annotated[str | None, Body(embed=True)] = None,
-    parameters: Annotated[dict[str, Any] | None, Body(embed=True)] = None,
+    update_agent_generator_request_body: UpdateAgentGeneratorRequestBodyModel,
 ) -> AgentGeneratorModel:
+    name = update_agent_generator_request_body.name
+    description = update_agent_generator_request_body.description
+    parameters = update_agent_generator_request_body.parameters
+
     try:
         agent_generator = (
             _agent_generators_service.update_agent_generator_by_agent_generator_id(

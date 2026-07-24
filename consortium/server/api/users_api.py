@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Depends
 from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
@@ -16,6 +16,9 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 )
 from consortium.server.exceptions.service_exceptions import (
     users_service_exceptions as svc_excs,
+)
+from consortium.server.models.request_body_models import (
+    UpdateDisplayNameRequestBodyModel,
 )
 from consortium.server.models.user_models import UserModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -104,13 +107,15 @@ async def get_user_by_user_id(
     },
 )
 async def update_own_display_name(
-    display_name: Annotated[str, Body(embed=True)],
+    update_display_name_request_body: UpdateDisplayNameRequestBodyModel,
     user: Annotated[User, Depends(get_current_user)],
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.UPDATE_OWN_USER)),
     ],
 ) -> UserModel:
+    display_name = update_display_name_request_body.display_name
+
     try:
         updated_user = _users_service.update_user_display_name_by_user_id(
             user_id=str(user.user_id),
@@ -138,12 +143,14 @@ async def update_own_display_name(
 )
 async def update_user_display_name_by_user_id(
     user_id: UUID4,
-    display_name: Annotated[str, Body(embed=True)],
+    update_display_name_request_body: UpdateDisplayNameRequestBodyModel,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.UPDATE_USER_BY_USER_ID)),
     ],
 ) -> UserModel:
+    display_name = update_display_name_request_body.display_name
+
     try:
         user = _users_service.update_user_display_name_by_user_id(
             user_id=str(user_id),

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Depends
 from pydantic import UUID4
 
 import consortium.server.server_singletons as server_singletons
@@ -18,6 +18,9 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 )
 from consortium.server.exceptions.service_exceptions import (
     user_accounts_service_exceptions as svc_excs,
+)
+from consortium.server.models.request_body_models import (
+    CreateUserAccountRequestBodyModel,
 )
 from consortium.server.models.request_data_models import (
     UpdateOwnUserAccountRequestDataModel,
@@ -170,14 +173,16 @@ async def get_user_account_by_user_account_id(
     },
 )
 async def create_user_account(
-    username: Annotated[str, Body()],
-    password: Annotated[str, Body()],
-    role: Annotated[str, Body()],
+    create_user_account_request_body: CreateUserAccountRequestBodyModel,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.CREATE_USER_ACCOUNT)),
     ],
 ) -> UserAccountModel:
+    username = create_user_account_request_body.username
+    password = create_user_account_request_body.password
+    role = create_user_account_request_body.role
+
     try:
         new_user_account = _user_accounts_service.create_user_account(
             username=username,
