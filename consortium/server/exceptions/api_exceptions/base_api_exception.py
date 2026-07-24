@@ -32,11 +32,15 @@ class BaseAPIError(Exception):
 
     # Using detail: Any | None = None or Any = None as the pydantic field does not work,
     # the swagger UI refuses to properly render the response model hence the model
-    # splitting
+    # splitting. `detail: type[None]` (rather than `detail: None`) is deliberate: it makes
+    # Pydantic emit an untyped `{"title": "Detail"}` schema for this field instead of a
+    # `{"type": "null"}` one. OpenAPI client generators (openapi-generator's Python
+    # codegen, 7.17+) have no branch for a null-only property and crash on it, whereas an
+    # untyped property is handled fine. The example still carries the null detail value.
     class NullDetailErrorModel(BaseModel):
         code: str
         message: str
-        detail: None
+        detail: type[None]
 
     def __init__(
         self,
