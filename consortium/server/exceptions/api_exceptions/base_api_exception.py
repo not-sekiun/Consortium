@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from pydantic import BaseModel, ConfigDict, JsonValue, create_model
 
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
@@ -13,15 +15,15 @@ from consortium.server.models.error_models import ErrorModel
 
 
 class BaseAPIError(Exception):
-    status_code: int
-    code: str | None = None
+    status_code: ClassVar[int]
+    code: ClassVar[str | None] = None
 
     # This ensures that there is ever only a single instance of the pydantic model
     # within the entire framework. This is important because duplicate pydantic models
     # with the same name will cause the OpenAPI schema to attempt name mangling leading
     # to ugly schema names. Note that _pydantic_models is a dict that is shared amongst
     # all instances of this class and its subclasses.
-    _pydantic_models: dict[type, type[BaseModel]] = {}
+    _pydantic_models: ClassVar[dict[type, type[BaseModel]]] = {}
 
     def __init__(
         self,

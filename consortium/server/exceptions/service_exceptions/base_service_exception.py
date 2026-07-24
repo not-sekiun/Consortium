@@ -4,6 +4,8 @@ Exception hierarchy:
 - [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
 """
 
+from typing import ClassVar
+
 from pydantic import JsonValue
 
 
@@ -21,7 +23,7 @@ class BaseServiceError(Exception):
             the error, or None when there is no such context.
     """
 
-    code: str = "BASE_SERVICE_ERROR"
+    code: ClassVar[str] = "BASE_SERVICE_ERROR"
 
     def __init__(self, message: str = "", detail: dict[str, JsonValue] | None = None):
         self.message: str = message
