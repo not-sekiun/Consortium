@@ -34,13 +34,13 @@ class BuildScript(BaseAgentGeneratorBuildStep):
         )
 
         if parameters["format"] == "script":
-            self.agent_templates_payload_service.create_payload_file(
+            await self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,
                 content=source,
                 name="agent.py",
             )
         elif parameters["format"] == "oneliner":
-            self.agent_templates_payload_service.create_payload_file(
+            await self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,
                 content='python -c "' + repr(source) + '"',
                 name="agent.txt",
@@ -75,12 +75,14 @@ runtime.
 Use `self.agent_templates_payload_service` to store build artifacts for later retrieval
 via the REST API:
 
-| Method                                                 | Description                                                                 |
-|--------------------------------------------------------|-----------------------------------------------------------------------------|
-| `create_payload_file(build_parameters, content, name)` | Create a new text file in the payload store; `content` is a string          |
-| `add_payload_file(build_parameters, path, name)`       | Copy an existing file from `path` (a `pathlib.Path`) into the payload store |
+| Method                                                       | Description                                                                 |
+|--------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `await create_payload_file(build_parameters, content, name)` | Create a new text file in the payload store; `content` is a string          |
+| `await add_payload_file(build_parameters, path, name)`       | Copy an existing file from `path` (a `pathlib.Path`) into the payload store |
 
-Both methods require `build_parameters` (the full parameters dict) to tag the artifact
+These methods are coroutines: their disk I/O is offloaded to a worker thread so it does
+not block the event loop, so they must be awaited from within the step's `async def
+build`. Both require `build_parameters` (the full parameters dict) to tag the artifact
 with its provenance. Stored artifacts are retrievable via the REST API after the build
 completes.
 

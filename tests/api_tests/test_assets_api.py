@@ -270,6 +270,121 @@ async def test_upload_directory_asset_without_extension_returns_415(admin_client
     )
 
 
+async def test_update_asset_requires_admin_or_operator(
+    admin_client, operator_client, client
+):
+    """PATCH /api/assets/{id} returns 403 for spectators, 404 for admin/operator."""
+    fake_uuid = "00000000-0000-4000-8000-000000000023"
+    if client in (admin_client, operator_client):
+        validate_response(
+            test_response=await client.patch(
+                f"/api/assets/{fake_uuid}", json={"name": "new-name"}
+            ),
+            expected_json_schema=RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA,
+            expected_status_code=404,
+        )
+    else:
+        validate_response(
+            test_response=await client.patch(
+                f"/api/assets/{fake_uuid}", json={"name": "new-name"}
+            ),
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+            expected_status_code=403,
+        )
+
+
+async def test_update_asset_by_invalid_uuid_returns_422(admin_client):
+    """PATCH /api/assets/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/assets/not-a-uuid", json={"name": "new-name"}
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_asset_updates_name_and_description(admin_client):
+    """PATCH /api/assets/{id} updates the asset's name and description."""
+    upload_response = await admin_client.post(
+        "/api/assets/upload",
+        data={"is_directory": "false"},
+        files={"file": ("test.txt", io.BytesIO(b"hello world"), "text/plain")},
+    )
+    asset_id = upload_response.json()["resource_id"]
+
+    response = await admin_client.patch(
+        f"/api/assets/{asset_id}",
+        json={"name": "renamed.txt", "description": "an updated description"},
+    )
+    validate_response(
+        test_response=response,
+        expected_json_schema=ASSET_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    body = response.json()
+    assert body["name"] == "renamed.txt"
+    assert body["description"] == "an updated description"
+
+    await admin_client.delete(f"/api/assets/{asset_id}")
+
+
+async def test_update_asset_partial_update_preserves_other_fields(admin_client):
+    """PATCH /api/assets/{id} with only a description leaves the name untouched."""
+    upload_response = await admin_client.post(
+        "/api/assets/upload",
+        data={"is_directory": "false"},
+        files={"file": ("original.txt", io.BytesIO(b"hello world"), "text/plain")},
+    )
+    asset_id = upload_response.json()["resource_id"]
+
+    response = await admin_client.patch(
+        f"/api/assets/{asset_id}",
+        json={"description": "only the description changed"},
+    )
+    validate_response(
+        test_response=response,
+        expected_json_schema=ASSET_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    body = response.json()
+    assert body["name"] == "original.txt"
+    assert body["description"] == "only the description changed"
+
+    await admin_client.delete(f"/api/assets/{asset_id}")
+
+
+async def test_update_asset_does_not_update_data_over_endpoint(admin_client):
+    """PATCH /api/assets/{id} ignores a `data` field: only name/description are mutable."""
+    upload_response = await admin_client.post(
+        "/api/assets/upload",
+        data={"is_directory": "false"},
+        files={"file": ("test.txt", io.BytesIO(b"hello world"), "text/plain")},
+    )
+    asset_id = upload_response.json()["resource_id"]
+    original_user_account = upload_response.json()["data"]["user_account"]
+
+    response = await admin_client.patch(
+        f"/api/assets/{asset_id}",
+        json={
+            "name": "renamed.txt",
+            "data": {"user_account": {"username": "hacker", "role": "ADMIN"}},
+        },
+    )
+    validate_response(
+        test_response=response,
+        expected_json_schema=ASSET_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    body = response.json()
+    assert body["name"] == "renamed.txt"
+    # The `data` field from the request body is ignored: the stored attribution is
+    # unchanged from what was recorded at upload.
+    assert body["data"]["user_account"] == original_user_account
+
+    await admin_client.delete(f"/api/assets/{asset_id}")
+
+
 async def test_upload_directory_asset_with_non_archive_extension_returns_415(
     admin_client,
 ):

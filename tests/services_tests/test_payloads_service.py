@@ -1,3 +1,4 @@
+import asyncio
 import pathlib
 import uuid
 from unittest.mock import MagicMock, patch
@@ -158,11 +159,13 @@ def test_create_payload_file_persists_reference_and_metadata(
     )
 
     with patch("asyncio.create_task"):
-        payload = service.create_payload_file(
-            agent_template_id="ignored-by-mock",
-            build_parameters={"foo": "bar"},
-            content="payload-bytes",
-            payload_data={"baz": 1},
+        payload = asyncio.run(
+            service.create_payload_file(
+                agent_template_id="ignored-by-mock",
+                build_parameters={"foo": "bar"},
+                content="payload-bytes",
+                payload_data={"baz": 1},
+            )
         )
 
     # The generating agent template is stored as an immutable point-in-time reference
@@ -189,10 +192,12 @@ def test_create_payload_file_emits_payload_created_event(
         _make_agent_template()
     )
     with patch("asyncio.create_task"):
-        service.create_payload_file(
-            agent_template_id="ignored-by-mock",
-            build_parameters={},
-            content="payload-bytes",
+        asyncio.run(
+            service.create_payload_file(
+                agent_template_id="ignored-by-mock",
+                build_parameters={},
+                content="payload-bytes",
+            )
         )
     events_service.trigger_event.assert_called_once()
     assert (
@@ -298,7 +303,7 @@ def test_delete_payload_removes_resource_and_emits_event(
     resource_id = str(resource.resource_id)
 
     with patch("asyncio.create_task"):
-        service.delete_payload_by_resource_id(resource_id=resource_id)
+        asyncio.run(service.delete_payload_by_resource_id(resource_id=resource_id))
 
     assert service.get_all_payloads() == []
     with pytest.raises(ResourceNotFoundError):
@@ -313,7 +318,9 @@ def test_delete_payload_removes_resource_and_emits_event(
 def test_delete_payload_not_found_raises(service: PayloadsService):
     with pytest.raises(ResourceNotFoundError):
         with patch("asyncio.create_task"):
-            service.delete_payload_by_resource_id(resource_id=str(uuid.uuid4()))
+            asyncio.run(
+                service.delete_payload_by_resource_id(resource_id=str(uuid.uuid4()))
+            )
 
 
 def test_delete_payload_not_found_leaves_repository_untouched(
@@ -323,7 +330,9 @@ def test_delete_payload_not_found_leaves_repository_untouched(
     resource = _create_payload_resource(repo_service)
     with pytest.raises(ResourceNotFoundError):
         with patch("asyncio.create_task"):
-            service.delete_payload_by_resource_id(resource_id=str(uuid.uuid4()))
+            asyncio.run(
+                service.delete_payload_by_resource_id(resource_id=str(uuid.uuid4()))
+            )
     # The unrelated resource still exists.
     assert (
         repo_service.get_resource_by_resource_id(

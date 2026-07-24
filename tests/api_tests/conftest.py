@@ -79,54 +79,49 @@ def configure_logging():
     )
 
 
-# assets_service and artifacts_service in server_singletons.py are module-level
-# singletons pointed at the real ./data/server/assets and ./data/server/artifacts
+# assets_service, artifacts_service and payloads_service in server_singletons.py are
+# module-level singletons pointed at the real ./data/server/{assets,artifacts,payloads}
 # directories, and _server_startup_procedure loads their repository metadata on
 # startup. Since `app` is a single session-scoped fixture shared by every api_tests
 # module, the redirect must happen before `app` starts the server (see the `app`
 # fixture's dependency below) so no test run ever touches the real data directories.
 @pytest.fixture(scope="session")
-def throwaway_assets_and_artifacts_repositories(
+def throwaway_repositories(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Iterator[None]:
-    original_assets_repository_service = (
-        server_singletons.assets_service._repository_service
-    )
-    original_artifacts_repository_service = (
-        server_singletons.artifacts_service._repository_service
-    )
+    services_and_temp_names = [
+        (server_singletons.assets_service, "assets_repo"),
+        (server_singletons.artifacts_service, "artifacts_repo"),
+        (server_singletons.payloads_service, "payloads_repo"),
+    ]
 
-    assets_directory = tmp_path_factory.mktemp("assets_repo")
-    artifacts_directory = tmp_path_factory.mktemp("artifacts_repo")
-    server_singletons.assets_service._repository_service = RepositoryService(
-        repository_directory_path=assets_directory
-    )
-    server_singletons.assets_service.repository_directory_path = assets_directory
-    server_singletons.artifacts_service._repository_service = RepositoryService(
-        repository_directory_path=artifacts_directory
-    )
-    server_singletons.artifacts_service.repository_directory_path = artifacts_directory
+    original_repository_services = {
+        id(service): service._repository_service
+        for service, _ in services_and_temp_names
+    }
+    throwaway_directories = []
+    for service, temp_name in services_and_temp_names:
+        directory = tmp_path_factory.mktemp(temp_name)
+        throwaway_directories.append(directory)
+        service._repository_service = RepositoryService(
+            repository_directory_path=directory
+        )
+        service.repository_directory_path = directory
 
     yield
 
-    server_singletons.assets_service._repository_service = (
-        original_assets_repository_service
-    )
-    server_singletons.assets_service.repository_directory_path = (
-        original_assets_repository_service.repository_directory_path
-    )
-    server_singletons.artifacts_service._repository_service = (
-        original_artifacts_repository_service
-    )
-    server_singletons.artifacts_service.repository_directory_path = (
-        original_artifacts_repository_service.repository_directory_path
-    )
-    shutil.rmtree(assets_directory, ignore_errors=True)
-    shutil.rmtree(artifacts_directory, ignore_errors=True)
+    for service, _ in services_and_temp_names:
+        original_repository_service = original_repository_services[id(service)]
+        service._repository_service = original_repository_service
+        service.repository_directory_path = (
+            original_repository_service.repository_directory_path
+        )
+    for directory in throwaway_directories:
+        shutil.rmtree(directory, ignore_errors=True)
 
 
 @pytest.fixture(scope="session")
-async def app(configure_logging, throwaway_assets_and_artifacts_repositories):
+async def app(configure_logging, throwaway_repositories):
     """Initialize the FastAPI app once for the entire test session."""
     server = Server(
         server_config=ServerConfigModel(

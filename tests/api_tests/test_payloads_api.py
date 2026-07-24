@@ -1,5 +1,6 @@
 import pytest
 
+import consortium.server.server_singletons as server_singletons
 from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
@@ -8,6 +9,29 @@ from tests.api_tests.test_assets_api import RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
+
+
+def _seed_payload(name: str, description: str) -> str:
+    # No payload upload/create endpoint is exposed, so seed a payload directly on the
+    # payloads repository (redirected to a throwaway directory for the test session)
+    # with a `data` field that satisfies the persistent payload metadata contract. The
+    # agent template reference does not need to resolve to a live template:
+    # `resolved_agent_template` is nullable.
+    resource = server_singletons.payloads_service._repository_service.create_file(
+        content=b"payload content",
+        name=name,
+        description=description,
+        data={
+            "agent_template": {
+                "label": "consortium.agents.mock_1",
+                "name": "Mock Agent 1",
+            },
+            "build_parameters": {},
+            "payload_data": {},
+        },
+    )
+    return str(resource.resource_id)
+
 
 # Full resolved agent template, matching AgentTemplateModel. This is what
 # `resolved_agent_template` holds when the persistent reference resolves at read-time.
@@ -167,6 +191,94 @@ async def test_download_payload_requires_admin_or_operator(
             expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
             expected_status_code=403,
         )
+
+
+async def test_update_payload_requires_admin_or_operator(
+    admin_client, operator_client, client
+):
+    """PATCH /api/payloads/{id} returns 403 for spectators, 404 for admin/operator."""
+    fake_uuid = "00000000-0000-4000-8000-000000000043"
+    if client in (admin_client, operator_client):
+        validate_response(
+            test_response=await client.patch(
+                f"/api/payloads/{fake_uuid}", json={"name": "new-name"}
+            ),
+            expected_json_schema=RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA,
+            expected_status_code=404,
+        )
+    else:
+        validate_response(
+            test_response=await client.patch(
+                f"/api/payloads/{fake_uuid}", json={"name": "new-name"}
+            ),
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+            expected_status_code=403,
+        )
+
+
+async def test_update_payload_by_invalid_uuid_returns_422(admin_client):
+    """PATCH /api/payloads/{id} with non-UUID4 string returns 422."""
+    validate_response(
+        test_response=await admin_client.patch(
+            "/api/payloads/not-a-uuid", json={"name": "new-name"}
+        ),
+        expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
+        expected_status_code=422,
+    )
+
+
+async def test_update_payload_updates_name_and_description(admin_client):
+    """PATCH /api/payloads/{id} updates the payload's name and description."""
+    payload_id = _seed_payload(name="original", description="original description")
+
+    response = await admin_client.patch(
+        f"/api/payloads/{payload_id}",
+        json={"name": "renamed", "description": "an updated description"},
+    )
+    validate_response(
+        test_response=response,
+        expected_json_schema=PAYLOAD_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    body = response.json()
+    assert body["name"] == "renamed"
+    assert body["description"] == "an updated description"
+
+    await admin_client.delete(f"/api/payloads/{payload_id}")
+
+
+async def test_update_payload_does_not_update_data_over_endpoint(admin_client):
+    """PATCH /api/payloads/{id} ignores a `data` field: only name/description mutable."""
+    payload_id = _seed_payload(name="original", description="original description")
+
+    response = await admin_client.patch(
+        f"/api/payloads/{payload_id}",
+        json={
+            "name": "renamed",
+            "data": {
+                "agent_template": {"label": "spoofed", "name": "spoofed"},
+                "build_parameters": {"spoofed": True},
+                "payload_data": {"spoofed": True},
+            },
+        },
+    )
+    validate_response(
+        test_response=response,
+        expected_json_schema=PAYLOAD_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    body = response.json()
+    assert body["name"] == "renamed"
+    # The `data` field from the request body is ignored: the stored metadata is
+    # unchanged from what was recorded at creation.
+    assert body["data"]["agent_template"] == {
+        "label": "consortium.agents.mock_1",
+        "name": "Mock Agent 1",
+    }
+    assert body["data"]["build_parameters"] == {}
+    assert body["data"]["payload_data"] == {}
+
+    await admin_client.delete(f"/api/payloads/{payload_id}")
 
 
 async def test_get_payload_by_invalid_uuid_returns_422(admin_client):

@@ -1222,7 +1222,7 @@ class BuildScript(BaseAgentGeneratorBuildStep):
 
     async def build(self, parameters: dict) -> None:
         # Store build artifacts via self.agent_templates_payload_service.
-        self.agent_templates_payload_service.create_payload_file(
+        await self.agent_templates_payload_service.create_payload_file(
             build_parameters=parameters,
             content="# generated agent payload\\n",
             name="agent.py",

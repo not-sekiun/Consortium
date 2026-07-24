@@ -95,7 +95,7 @@ class BuildScript(BaseAgentGeneratorBuildStep):
             "REMOTE_PORT = 4444",
             f"REMOTE_PORT = {repr(parameters['remote_port'])}",
         )
-        self.agent_templates_payload_service.create_payload_file(
+        await self.agent_templates_payload_service.create_payload_file(
             build_parameters=parameters,
             content=source,
             name="agent.py",
