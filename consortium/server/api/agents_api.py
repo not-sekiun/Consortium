@@ -345,6 +345,29 @@ async def update_agent_by_agent_id(
 
 
 @router.delete(
+    "/{agent_id}",
+    status_code=204,
+    responses={
+        204: {},
+        404: {"model": _agent_not_found_error.to_pydantic_model()},
+        422: {"model": RequestValidationErrorResponse},
+    },
+)
+def delete_agent_by_agent_id(
+    agent_id: UUID4,
+    _: Annotated[
+        None, Depends(AuthorizeUserRequest(UserPermissions.DELETE_AGENT_BY_AGENT_ID))
+    ],
+) -> None:
+    try:
+        _agents_service.delete_agent_by_agent_id(agent_id=agent_id)
+    except svc_excs.AgentNotFoundError as exc:
+        raise api_excs.AgentNotFoundError.from_consortium_exception(
+            consortium_exception=exc
+        ) from None
+
+
+@router.delete(
     "/{agent_id}/tasks/queued/{task_id}",
     status_code=204,
     responses={

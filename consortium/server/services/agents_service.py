@@ -167,6 +167,33 @@ class AgentsService:
         self._logger.debug("- {!r}", agent)
 
     @log_and_propagate_error_on_service_method
+    def delete_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
+        """Deletes a registered agent from the service and emits an `AGENT_DELETED` event.
+
+        Unlike `deregister_agent_by_agent_id`, which reflects an agent that has left of
+        its own accord, this is an operator-initiated removal of the agent regardless of
+        whether it is still active.
+
+        Args:
+            agent_id: The ID of the agent to delete.
+
+        Raises:
+            AgentNotFoundError: If no agent with the given ID is registered.
+        """
+        agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        del self._agents[str(agent.agent_id)]
+
+        asyncio.create_task(
+            self._events_service.trigger_event(
+                event_type=EventType.AGENT_DELETED,
+                message=f"Deleted agent: {agent}",
+                data=agent.to_json(),
+            )
+        )
+        self._logger.info("Deleted agent: {}", agent)
+        self._logger.debug("- {!r}", agent)
+
+    @log_and_propagate_error_on_service_method
     def check_in_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         """Records a check-in from an agent, updating its last activity timestamp and marking it active.
 

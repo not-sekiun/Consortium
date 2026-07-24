@@ -1,3 +1,6 @@
+from consortium.client.commands.agents_interpreter_commands.agent_delete import (
+    AgentDeleteCommand,
+)
 from consortium.client.commands.agents_interpreter_commands.agent_describe import (
     AgentDescribeCommand,
 )
@@ -67,5 +70,6 @@ AGENTS_INTERPRETER_COMMANDS = [
     TaskListCommand(),
     AgentDescribeCommand(),
     AgentRenameCommand(),
+    AgentDeleteCommand(),
     WatchCommand(),
 ]

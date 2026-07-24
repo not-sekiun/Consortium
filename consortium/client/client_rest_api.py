@@ -503,6 +503,16 @@ class RestAPI:
             json=new_agent_attributes,
         )
 
+    @_requires_authentication
+    async def delete_agent_by_agent_id(
+        self,
+        agent_id: str,
+    ) -> None:
+        return await self._make_api_request(
+            method="DELETE",
+            url=f"{self._api_base_url}/agents/{agent_id}",
+        )
+
     # Wrapper methods for the /api/users API endpoint.
     @_requires_authentication
     async def get_user_info_by_user_id(

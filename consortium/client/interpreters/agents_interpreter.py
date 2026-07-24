@@ -62,7 +62,7 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         # Register commands that take the agent ID as the first positional argument to
         # autocomplete with.
         agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
-        for command in ["info", "interact", "t-list", "rename", "describe"]:
+        for command in ["info", "interact", "t-list", "rename", "describe", "delete"]:
             completions_dict[command] = agent_ids_completion
 
         # Register commands that take the task ID as the first positional
@@ -113,8 +113,18 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in")
 
         completions_dict = self.completer.get_completions_dict()
-        for command in ["info", "interact", "t-list", "rename", "describe"]:
+        for command in ["info", "interact", "t-list", "rename", "describe", "delete"]:
             completions_dict[command][agent["agent_id"]] = None
+        self.completer.set_completions_dict(completions_dict)
+
+    async def _agent_deleted_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        agent = event["data"]
+        completions_dict = self.completer.get_completions_dict()
+        for command in ["info", "interact", "t-list", "rename", "describe", "delete"]:
+            completions_dict[command].pop(agent["agent_id"], None)
         self.completer.set_completions_dict(completions_dict)
 
     async def _asset_created_event_handler(
@@ -169,6 +179,10 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             event_handler=self._agent_tasked_event_handler,
         )
         await self.client_session.websockets_api.subscribe_to_event(
+            event_type="AGENT_DELETED",
+            event_handler=self._agent_deleted_event_handler,
+        )
+        await self.client_session.websockets_api.subscribe_to_event(
             event_type="ASSET_CREATED",
             event_handler=self._asset_created_event_handler,
         )
@@ -200,6 +214,10 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="AGENT_TASKED",
             event_handler=self._agent_tasked_event_handler,
+        )
+        await self.client_session.websockets_api.unsubscribe_from_event(
+            event_type="AGENT_DELETED",
+            event_handler=self._agent_deleted_event_handler,
         )
         await self.client_session.websockets_api.unsubscribe_from_event(
             event_type="ASSET_CREATED",
