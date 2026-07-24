@@ -84,21 +84,21 @@ func (c *Connection) RegisterWithListener(agentData info.SystemInfo) (string, er
 	return registrationResponse.AgentID, nil
 }
 
-func (c *Connection) GetTasksFromListener() ([]taskLaunchMessage, error) {
+func (c *Connection) GetTaskMessageFromListener() (taskLaunchMessage, error) {
 	resp, err := http.Get(c.listenerBaseUrl + c.tasksUrlPaths[rand.Intn(len(c.tasksUrlPaths))])
 	if err != nil {
-		return []taskLaunchMessage{}, err
+		return taskLaunchMessage{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return []taskLaunchMessage{}, fmt.Errorf("Invalid response: %s", resp.Status)
+		return taskLaunchMessage{}, fmt.Errorf("Invalid response: %s", resp.Status)
 	}
 
-	var tasks []taskLaunchMessage
-	err = json.NewDecoder(resp.Body).Decode(&tasks)
+	var task taskLaunchMessage
+	err = json.NewDecoder(resp.Body).Decode(&task)
 	if err != nil {
-		return []taskLaunchMessage{}, err
+		return taskLaunchMessage{}, err
 	}
-	return tasks, nil
+	return task, nil
 }

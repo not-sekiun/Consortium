@@ -1,5 +1,6 @@
 import functools
 import inspect
+import operator
 import random
 import types
 import uuid
@@ -7,6 +8,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
+
+from pydantic import BaseModel, RootModel, create_model
 
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
@@ -22,6 +25,9 @@ if TYPE_CHECKING:
     from fastapi.routing import APIRoute
     from loguru import Logger
 
+    from consortium.server.exceptions.api_exceptions.base_api_exception import (
+        BaseAPIError,
+    )
     from consortium.server.services.agent_generators_service import (
         AgentGeneratorsService,
     )
@@ -62,6 +68,37 @@ def use_route_name_as_operation_id(route: APIRoute) -> str:
     # factory routes set an explicit per-router `name=` (for example "Get All Assets")
     # for exactly this reason.
     return route.name
+
+
+# Cache of the union response models created by `create_union_response_model`, keyed by
+# the model name. A given union (for example an invalid-UUID or unprocessable-entity 422)
+# is declared on many endpoints, so caching guarantees a single class per name. Two
+# distinct classes sharing a name would make the OpenAPI schema mangle both names, which
+# is exactly the ugliness this helper exists to avoid.
+_union_response_models: dict[str, type[BaseModel]] = {}
+
+
+def create_union_response_model(
+    name: str,
+    exceptions: tuple[BaseAPIError, ...],
+) -> type[BaseModel]:
+    # Build a single named model for an error response whose body may be one of several
+    # error shapes. Passing a bare union (`A | B`) as a route's response `model` leaves
+    # the union anonymous, so OpenAPI client generators invent ugly names like
+    # `Response404GetAgentTasksByAgentIdAndTaskId`. Wrapping the union in a named
+    # RootModel gives the schema a stable component name (`name`) that generators reuse
+    # verbatim, and endpoints sharing the same union share the one component.
+    if name in _union_response_models:
+        return _union_response_models[name]
+
+    # `to_pydantic_model()` returns the cached, named pydantic model for each API
+    # exception, so the union is over already-named components.
+    error_models = tuple(exception.to_pydantic_model() for exception in exceptions)
+    union_type = functools.reduce(operator.or_, error_models)
+    union_response_model = create_model(name, __base__=RootModel[union_type])
+
+    _union_response_models[name] = union_response_model
+    return union_response_model
 
 
 def normalize_uuid(value: str | uuid.UUID) -> str:
