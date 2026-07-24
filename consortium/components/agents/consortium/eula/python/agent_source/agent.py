@@ -421,11 +421,18 @@ def cd_capability(context):
 
 
 def pwd_capability(context):
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message=os.getcwd(),
-    )
+    try:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=True,
+            message=os.getcwd(),
+        )
+    except FileNotFoundError as exc:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to get current working directory. {exc}",
+        )
 
 
 def ls_capability(context):
@@ -435,29 +442,13 @@ def ls_capability(context):
     if expand:
         path = os.path.expandvars(path)
 
-    if not os.path.exists(path):
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Failed to list directory. Path '{path}' does not exist.",
-        )
-        return
-
-    if not os.path.isdir(path):
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Failed to list directory. Path '{path}' is not a directory.",
-        )
-        return
-
     try:
         entries = os.listdir(path)
-    except PermissionError:
+    except (FileNotFoundError, PermissionError, NotADirectoryError) as exc:
         context.connection.post_task_message_to_listener(
             task_id=context.task_id,
             success=False,
-            message=f"Permission denied listing directory '{path}'.",
+            message=f"Failed to list directory for '{path}'. {exc}",
         )
         return
 
@@ -474,7 +465,12 @@ def cat_capability(context):
     try:
         with open(path) as file:
             content = file.read()
-    except (FileNotFoundError, PermissionError, UnicodeDecodeError) as exc:
+    except (
+        FileNotFoundError,
+        PermissionError,
+        UnicodeDecodeError,
+        IsADirectoryError,
+    ) as exc:
         context.connection.post_task_message_to_listener(
             task_id=context.task_id,
             success=False,
@@ -500,7 +496,12 @@ def rm_capability(context):
             shutil.rmtree(path)
         else:
             os.remove(path)
-    except (FileNotFoundError, NotADirectoryError, IsADirectoryError) as exc:
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        IsADirectoryError,
+        PermissionError,
+    ) as exc:
         context.connection.post_task_message_to_listener(
             task_id=context.task_id,
             success=False,
@@ -511,7 +512,7 @@ def rm_capability(context):
     context.connection.post_task_message_to_listener(
         task_id=context.task_id,
         success=True,
-        message=f"Successfully removed '{path}'. ",
+        message=f"Successfully removed '{path}'.",
     )
 
 
@@ -526,7 +527,13 @@ def mv_capability(context):
 
     try:
         shutil.move(source, destination)
-    except (FileNotFoundError, NotADirectoryError, IsADirectoryError) as exc:
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        IsADirectoryError,
+        PermissionError,
+        shutil.Error,
+    ) as exc:
         context.connection.post_task_message_to_listener(
             task_id=context.task_id,
             success=False,
@@ -537,7 +544,7 @@ def mv_capability(context):
     context.connection.post_task_message_to_listener(
         task_id=context.task_id,
         success=True,
-        message=f"Successfully moved '{source}' to '{destination}'. ",
+        message=f"Successfully moved '{source}' to '{destination}'.",
     )
 
 
@@ -551,52 +558,48 @@ def cp_capability(context):
     if expand:
         source = os.path.expandvars(source)
         destination = os.path.expandvars(destination)
+
     if os.path.exists(destination) and not overwrite:
         context.connection.post_task_message_to_listener(
             task_id=context.task_id,
             success=False,
-            message=f"Failed to copy. Path '{destination}' already exists.",
+            message=(
+                f"Failed to copy '{source}' to '{destination}'. Destination path "
+                f"already exists and overwrite option is not set."
+            ),
         )
         return
 
     try:
         if os.path.isdir(source):
             if recursive:
+                shutil.rmtree(destination)
                 shutil.copytree(source, destination)
             else:
                 context.connection.post_task_message_to_listener(
                     task_id=context.task_id,
                     success=False,
                     message=(
-                        f"Failed to copy. Source '{source}' is a directory and the "
-                        f"recursive option is not set."
+                        f"Failed to copy '{source}' to '{destination}'. Source path to "
+                        "be copied is a directory but the recursive option was not "
+                        "set."
                     ),
                 )
                 return
         else:
             shutil.copy2(source, destination)
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError) as exc:
         context.connection.post_task_message_to_listener(
             task_id=context.task_id,
             success=False,
-            message=f"Failed to copy. Source '{source}' does not exist.",
-        )
-        return
-    except PermissionError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=(
-                f"Failed to copy. Permission denied for source '{source}' or "
-                f"destination '{destination}'."
-            ),
+            message=f"Failed to copy '{source}' to '{destination}'. {exc}",
         )
         return
 
     context.connection.post_task_message_to_listener(
         task_id=context.task_id,
         success=True,
-        message=f"Copied {source} to '{destination}'.",
+        message=f"Copied '{source}' to '{destination}'.",
     )
 
 
