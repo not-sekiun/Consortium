@@ -1,5 +1,9 @@
 package connection
 
+import (
+	"json"
+)
+
 type TaskData struct {
 	Command   string
 	Arguments map[string]any
@@ -23,4 +27,11 @@ type taskOutputMessage struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
+}
+
+type TaskMessage struct {
+	TaskID    string          `json:"task_id"`
+	Command   string          `json:"command,omitempty"`
+	Arguments json.RawMessage `json:"arguments,omitempty"`
+	Data      json.RawMessage `json:"data"`
 }

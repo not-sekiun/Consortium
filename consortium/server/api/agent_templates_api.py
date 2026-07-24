@@ -14,16 +14,16 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
-    UnprocessableEntityError,
-)
-from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
-    InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
     agent_templates_service_exceptions as svc_excs,
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.models.agent_template_models import AgentTemplateModel
+from consortium.server.models.union_response_models import (
+    AgentTemplateOptionsValidationErrorResponse,
+    RequestValidationErrorResponse,
+)
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import AuthorizeUserRequest
 
@@ -48,30 +48,6 @@ _agent_template_not_found_error = (
         )
     )
 )
-_agent_template_option_value_error = api_excs.AgentTemplateOptionValueValidationError.from_consortium_exception(
-    consortium_exception=agent_templates_framework_exceptions.AgentTemplateOptionValueValidationError(
-        agent_template_str="<agent_template>",
-        option_name="<option_str>",
-        option_value="<option_value>",
-        error_message="<error_message>",
-    )
-)
-_agent_template_option_not_found_error = api_excs.AgentTemplateOptionNotFoundError.from_consortium_exception(
-    consortium_exception=agent_templates_framework_exceptions.AgentTemplateOptionNotFoundError(
-        agent_template_str="<agent_template>", option_name="<option_str>"
-    )
-)
-_missing_required_agent_template_option_error = api_excs.MissingRequiredAgentTemplateOptionError.from_consortium_exception(
-    consortium_exception=agent_templates_framework_exceptions.MissingRequiredAgentTemplateOptionError(
-        agent_template_str="<agent_template>", option_name="<option_str>"
-    )
-)
-_unprocessable_entity_error = UnprocessableEntityError(
-    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
-)
-_invalid_uuid_error = InvalidUUIDError(
-    resource_name="agent template", uuid_value="<uuid_value>"
-)
 
 
 @router.post(
@@ -80,13 +56,7 @@ _invalid_uuid_error = InvalidUUIDError(
     responses={
         201: {"model": AgentGeneratorModel},
         404: {"model": _agent_template_not_found_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _agent_template_option_value_error.to_pydantic_model()
-            | _agent_template_option_not_found_error.to_pydantic_model()
-            | _missing_required_agent_template_option_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": AgentTemplateOptionsValidationErrorResponse},
     },
 )
 async def create_agent_generator_through_agent_template_by_agent_template_id(
@@ -151,10 +121,7 @@ def get_all_agent_templates(
     responses={
         200: {"model": AgentTemplateModel},
         404: {"model": _agent_template_not_found_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 def get_agent_template_by_agent_template_id(

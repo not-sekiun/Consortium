@@ -15,15 +15,14 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
-    UnprocessableEntityError,
-)
-from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
-    InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
     repository_service_exceptions as svc_excs,
 )
 from consortium.server.models.repository_models import ArtifactModel
+from consortium.server.models.union_response_models import (
+    RequestValidationErrorResponse,
+)
 from consortium.server.objects.user_account_objects import UserPermissions
 
 router = APIRouter(
@@ -46,13 +45,6 @@ _resource_not_found_error = (
         ),
     )
 )
-_invalid_uuid_error = InvalidUUIDError(
-    resource_name="resource", uuid_value="<uuid_value>"
-)
-_unprocessable_entity_error = UnprocessableEntityError(
-    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
-)
-
 router.add_api_route(
     path="/all",
     endpoint=create_get_all_resources_endpoint(
@@ -78,10 +70,7 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
     name="Delete Artifact By Resource ID",
     methods=["DELETE"],
@@ -99,10 +88,7 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
     name="Get Artifact By Resource ID",
 )
@@ -118,10 +104,7 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
     name="Download Artifact By Resource ID",
 )

@@ -9,16 +9,15 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
-    UnprocessableEntityError,
-)
-from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
-    InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
     users_service_exceptions as svc_excs,
 )
 from consortium.server.models.request_body_models import (
     UpdateDisplayNameRequestBodyModel,
+)
+from consortium.server.models.union_response_models import (
+    RequestValidationErrorResponse,
 )
 from consortium.server.models.user_models import UserModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -39,10 +38,6 @@ router = APIRouter(
 _users_service = server_singletons.users_service
 
 _user_not_found_error = api_excs.UserNotFoundError(user_id="<user_id>")
-_unprocessable_entity_error = UnprocessableEntityError(
-    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
-)
-_invalid_uuid_error = InvalidUUIDError(resource_name="user", uuid_value="<uuid_value>")
 
 
 @router.get("/me", responses={200: {"model": UserModel}})
@@ -76,10 +71,7 @@ async def get_all_users(
     responses={
         200: {"model": UserModel},
         404: {"model": _user_not_found_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model(),
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 async def get_user_by_user_id(
@@ -135,10 +127,7 @@ async def update_own_display_name(
     responses={
         200: {"model": UserModel},
         404: {"model": _user_not_found_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model(),
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 async def update_user_display_name_by_user_id(

@@ -14,16 +14,18 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
-    UnprocessableEntityError,
-)
-from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
-    InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
     listeners_service_exceptions as consortium_exceptions,
 )
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.models.request_body_models import UpdateListenerRequestBodyModel
+from consortium.server.models.union_response_models import (
+    ListenerStartConflictErrorResponse,
+    ListenerStopConflictErrorResponse,
+    ListenerUpdateValidationErrorResponse,
+    RequestValidationErrorResponse,
+)
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import (
     AuthorizeUserRequest,
@@ -54,50 +56,12 @@ _listener_already_running_error = (
         ),
     )
 )
-_listener_start_error = api_excs.ListenerStartError.from_consortium_exception(
-    consortium_exception=listeners_framework_exceptions.ListenerStartError(
-        listener_str="<listener_string>",
-        error_message="<error_message>",
-        detail={"<key>": "<value>"},
-    ),
-)
 _listener_not_running_error = (
     api_excs.ListenerNotRunningError.from_consortium_exception(
         consortium_exception=listeners_framework_exceptions.ListenerNotRunningError(
             listener_str="<listener_string>",
         ),
     )
-)
-_listener_stop_error = api_excs.ListenerStopError.from_consortium_exception(
-    consortium_exception=listeners_framework_exceptions.ListenerStopError(
-        listener_str="<listener_string>",
-        error_message="<error_message>",
-        detail={"<key>": "<value>"},
-    ),
-)
-_invalid_listener_parameter_name_error = (
-    api_excs.InvalidListenerParameterNameError.from_consortium_exception(
-        consortium_exception=consortium_exceptions.InvalidListenerParameterNameError(
-            listener_str="<listener_str>",
-            parameter_name="<parameter_name>",
-        ),
-    )
-)
-_invalid_listener_parameter_value_error = (
-    api_excs.InvalidListenerParameterValueError.from_consortium_exception(
-        consortium_exception=consortium_exceptions.InvalidListenerParameterValueError(
-            listener_str="<listener_str>",
-            parameter_name="<parameter_name>",
-            parameter_value="<parameter_value>",
-            error_message="<error_message>",
-        ),
-    )
-)
-_unprocessable_entity_error = UnprocessableEntityError(
-    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
-)
-_invalid_uuid_error = InvalidUUIDError(
-    resource_name="listener", uuid_value="<uuid_value>"
 )
 
 
@@ -129,10 +93,7 @@ def get_all_listeners(
         404: {
             "model": _listener_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 def get_listener_by_listener_id(
@@ -180,14 +141,8 @@ def get_listener_by_listener_id(
         404: {
             "model": _listener_not_found_error.to_pydantic_model(),
         },
-        409: {
-            "model": _listener_already_running_error.to_pydantic_model()
-            | _listener_start_error.to_pydantic_model(),
-        },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        409: {"model": ListenerStartConflictErrorResponse},
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 async def start_listener_by_listener_id(
@@ -232,14 +187,8 @@ async def start_listener_by_listener_id(
         404: {
             "model": _listener_not_found_error.to_pydantic_model(),
         },
-        409: {
-            "model": _listener_not_running_error.to_pydantic_model()
-            | _listener_stop_error.to_pydantic_model(),
-        },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        409: {"model": ListenerStopConflictErrorResponse},
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 async def stop_listener_by_listener_id(
@@ -287,10 +236,7 @@ async def stop_listener_by_listener_id(
         409: {
             "model": _listener_not_running_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 async def cancel_listener_by_listener_id(
@@ -331,12 +277,7 @@ async def cancel_listener_by_listener_id(
             "model": _listener_not_found_error.to_pydantic_model(),
         },
         409: {"model": _listener_already_running_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _invalid_listener_parameter_name_error.to_pydantic_model()
-            | _invalid_listener_parameter_value_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": ListenerUpdateValidationErrorResponse},
     },
 )
 async def update_listener_by_listener_id(
@@ -391,10 +332,7 @@ async def update_listener_by_listener_id(
             "model": _listener_not_found_error.to_pydantic_model(),
         },
         409: {"model": _listener_already_running_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model(),
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 async def delete_listener_by_listener_id(

@@ -11,7 +11,6 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
-    UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
     InvalidUUIDError,
@@ -25,6 +24,12 @@ from consortium.server.models.request_body_models import (
 from consortium.server.models.request_data_models import (
     UpdateOwnUserAccountRequestDataModel,
     UpdateUserAccountByUserAccountIDRequestDataModel,
+)
+from consortium.server.models.union_response_models import (
+    OwnUserAccountUpdateValidationErrorResponse,
+    RequestValidationErrorResponse,
+    UserAccountCreationValidationErrorResponse,
+    UserAccountUpdateValidationErrorResponse,
 )
 from consortium.server.models.user_account_models import UserAccountModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -53,41 +58,6 @@ _user_account_username_already_exists_error_during_creation = api_excs.UserAccou
     consortium_exception=svc_excs.UserAccountUsernameAlreadyExistsError._during_user_account_creation(
         username="<username>",
     ),
-)
-_empty_user_account_username_error_during_creation = api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
-    consortium_exception=svc_excs.EmptyUserAccountUsernameError()._during_user_account_creation(),
-)
-_empty_user_account_password_error_during_creation = api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
-    consortium_exception=svc_excs.EmptyUserAccountPasswordError()._during_user_account_creation(),
-)
-_invalid_user_account_role_error_during_creation = api_excs.InvalidUserAccountRoleError.from_consortium_exception(
-    consortium_exception=svc_excs.InvalidUserAccountRoleError._during_user_account_creation(
-        role="<role>",
-    ),
-)
-_user_account_username_already_exists_error_during_modification = api_excs.UserAccountUsernameAlreadyExistsError.from_consortium_exception(
-    consortium_exception=svc_excs.UserAccountUsernameAlreadyExistsError._during_user_account_modification(
-        username="<username>",
-        user_account_str="<user_account>",
-    ),
-)
-_empty_user_account_username_error_during_modification = api_excs.EmptyUserAccountUsernameError.from_consortium_exception(
-    consortium_exception=svc_excs.EmptyUserAccountUsernameError()._during_user_account_modification(
-        user_account_str="<user_account>"
-    ),
-)
-_empty_user_account_password_error_during_modification = api_excs.EmptyUserAccountPasswordError.from_consortium_exception(
-    consortium_exception=svc_excs.EmptyUserAccountPasswordError()._during_user_account_modification(
-        user_account_str="<user_account>"
-    ),
-)
-_invalid_user_account_role_error_during_modification = api_excs.InvalidUserAccountRoleError.from_consortium_exception(
-    consortium_exception=svc_excs.InvalidUserAccountRoleError._during_user_account_modification(
-        user_account_str="<user_account>", role="<role>"
-    ),
-)
-_unprocessable_entity_error = UnprocessableEntityError(
-    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}],
 )
 _invalid_uuid_error = InvalidUUIDError(
     resource_name="user account", uuid_value="<uuid_value>"
@@ -164,12 +134,7 @@ async def get_user_account_by_user_account_id(
         409: {
             "model": _user_account_username_already_exists_error_during_creation.to_pydantic_model()
         },
-        422: {
-            "model": _empty_user_account_username_error_during_creation.to_pydantic_model()
-            | _empty_user_account_password_error_during_creation.to_pydantic_model()
-            | _invalid_user_account_role_error_during_creation.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model(),
-        },
+        422: {"model": UserAccountCreationValidationErrorResponse},
     },
 )
 async def create_user_account(
@@ -221,12 +186,7 @@ async def create_user_account(
         404: {
             "model": _user_account_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _user_account_username_already_exists_error_during_modification.to_pydantic_model()
-            | _empty_user_account_username_error_during_modification.to_pydantic_model()
-            | _empty_user_account_password_error_during_modification.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model(),
-        },
+        422: {"model": OwnUserAccountUpdateValidationErrorResponse},
     },
 )
 async def update_own_user_account(
@@ -291,14 +251,7 @@ async def update_own_user_account(
         404: {
             "model": _user_account_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _user_account_username_already_exists_error_during_modification.to_pydantic_model()
-            | _empty_user_account_username_error_during_modification.to_pydantic_model()
-            | _empty_user_account_password_error_during_modification.to_pydantic_model()
-            | _invalid_user_account_role_error_during_modification.to_pydantic_model()
-            | _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model(),
-        },
+        422: {"model": UserAccountUpdateValidationErrorResponse},
     },
 )
 async def update_user_account_by_user_account_id(
@@ -360,10 +313,7 @@ async def update_user_account_by_user_account_id(
         404: {
             "model": _user_account_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model(),
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 async def delete_user_account_by_user_account_id(

@@ -14,7 +14,6 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
-    UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
     InvalidUUIDError,
@@ -25,6 +24,12 @@ from consortium.server.exceptions.service_exceptions import (
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.models.request_body_models import (
     UpdateAgentGeneratorRequestBodyModel,
+)
+from consortium.server.models.union_response_models import (
+    AgentGeneratorStartConflictErrorResponse,
+    AgentGeneratorStopConflictErrorResponse,
+    AgentGeneratorUpdateValidationErrorResponse,
+    RequestValidationErrorResponse,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_dependencies import (
@@ -63,40 +68,6 @@ _agent_generator_not_running_error = api_excs.AgentGeneratorNotRunningError.from
         agent_generator_str="<agent_generator_str>"
     )
 )
-_agent_generator_start_error = api_excs.AgentGeneratorStartError.from_consortium_exception(
-    consortium_exception=agent_generators_framework_exceptions.AgentGeneratorStartError(
-        agent_generator_str="<agent_generator_str>",
-        error_message="<error_message>",
-        detail={"<key>": "<value>"},
-    )
-)
-_agent_generator_stop_error = api_excs.AgentGeneratorStopError.from_consortium_exception(
-    consortium_exception=agent_generators_framework_exceptions.AgentGeneratorStopError(
-        agent_generator_str="<agent_generator_str>",
-        error_message="<error_message>",
-        detail={"<key>": "<value>"},
-    )
-)
-_invalid_agent_generator_parameter_name_error = (
-    api_excs.InvalidAgentGeneratorParameterNameError.from_consortium_exception(
-        consortium_exception=svc_excs.InvalidAgentGeneratorParameterNameError(
-            parameter_name="<parameter_name>", agent_generator_str="<agent_generator>"
-        )
-    )
-)
-_invalid_agent_generator_parameter_value_error = (
-    api_excs.InvalidAgentGeneratorParameterValueError.from_consortium_exception(
-        consortium_exception=svc_excs.InvalidAgentGeneratorParameterValueError(
-            agent_generator_str="<agent_generator>",
-            parameter_name="<parameter_name>",
-            parameter_value="<parameter_value>",
-            error_message="<error_message>",
-        )
-    )
-)
-_unprocessable_entity_error = UnprocessableEntityError(
-    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
-)
 _invalid_uuid_error = InvalidUUIDError(
     resource_name="agent generator", uuid_value="<uuid_value>"
 )
@@ -128,10 +99,7 @@ def get_all_agent_generators(
     responses={
         200: {"model": AgentGeneratorModel},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
 )
 def get_agent_generator_by_agent_generator_id(
@@ -178,14 +146,8 @@ def get_agent_generator_by_agent_generator_id(
     responses={
         202: {},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
-        409: {
-            "model": _agent_generator_already_running_error.to_pydantic_model()
-            | _agent_generator_start_error.to_pydantic_model()
-        },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        409: {"model": AgentGeneratorStartConflictErrorResponse},
+        422: {"model": RequestValidationErrorResponse},
     },
     status_code=202,
 )
@@ -232,14 +194,8 @@ async def start_agent_generator_by_agent_generator_id(
     responses={
         202: {},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
-        409: {
-            "model": _agent_generator_not_running_error.to_pydantic_model()
-            | _agent_generator_stop_error.to_pydantic_model()
-        },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        409: {"model": AgentGeneratorStopConflictErrorResponse},
+        422: {"model": RequestValidationErrorResponse},
     },
     status_code=202,
 )
@@ -285,10 +241,7 @@ async def stop_agent_generator_by_agent_generator_id(
         202: {},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {"model": _agent_generator_not_running_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
     status_code=202,
 )
@@ -330,12 +283,7 @@ async def cancel_agent_generator_by_agent_generator_id(
         200: {"model": AgentGeneratorModel},
         404: {"model": _agent_generator_not_found_error.to_pydantic_model()},
         409: {"model": _agent_generator_already_running_error.to_pydantic_model()},
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _invalid_agent_generator_parameter_name_error.to_pydantic_model()
-            | _invalid_agent_generator_parameter_value_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": AgentGeneratorUpdateValidationErrorResponse},
     },
 )
 async def update_agent_generator_by_agent_generator_id(

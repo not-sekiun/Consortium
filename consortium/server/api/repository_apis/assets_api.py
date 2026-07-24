@@ -16,15 +16,15 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     ForbiddenError,
     InternalServerError,
     MethodNotAllowedError,
-    UnprocessableEntityError,
-)
-from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
-    InvalidUUIDError,
 )
 from consortium.server.exceptions.service_exceptions import (
     repository_service_exceptions as svc_excs,
 )
 from consortium.server.models.repository_models import AssetModel
+from consortium.server.models.union_response_models import (
+    AssetUploadArchiveFormatErrorResponse,
+    RequestValidationErrorResponse,
+)
 from consortium.server.objects.user_account_objects import UserPermissions
 
 router = APIRouter(
@@ -47,22 +47,6 @@ _resource_not_found_error = (
         ),
     )
 )
-_invalid_resource_directory_archive_file_format_error = (
-    api_excs.InvalidRepositoryDirectoryArchiveFileFormatError()
-)
-_resource_directory_archive_file_format_not_specified_error = (
-    api_excs.RepositoryDirectoryArchiveFileFormatNotSpecifiedError()
-)
-_repository_directory_file_not_archive_file_error = (
-    api_excs.RepositoryDirectoryFileNotArchiveFileError()
-)
-_invalid_uuid_error = InvalidUUIDError(
-    resource_name="resource", uuid_value="<uuid_value>"
-)
-_unprocessable_entity_error = UnprocessableEntityError(
-    detail=[{"loc": ["string", 0], "msg": "string", "type": "string"}]
-)
-
 router.add_api_route(
     path="/all",
     endpoint=create_get_all_resources_endpoint(
@@ -89,10 +73,7 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
     name="Get Asset By Resource ID",
 )
@@ -109,10 +90,7 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
     name="Delete Asset By Resource ID",
 )
@@ -128,10 +106,7 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model()
-            | _unprocessable_entity_error.to_pydantic_model()
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
     name="Download Asset By Resource ID",
 )
@@ -146,11 +121,7 @@ router.add_api_route(
     methods=["POST"],
     responses={
         200: {"model": AssetModel},
-        415: {
-            "model": _resource_directory_archive_file_format_not_specified_error.to_pydantic_model()
-            | _invalid_resource_directory_archive_file_format_error.to_pydantic_model()
-            | _repository_directory_file_not_archive_file_error.to_pydantic_model()
-        },
+        415: {"model": AssetUploadArchiveFormatErrorResponse},
     },
     name="Upload Asset",
 )
