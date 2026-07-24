@@ -14,7 +14,7 @@ router = APIRouter(
     responses={
         401: {"description": "Unauthorized"},
     },
-    tags=["Login API"],
+    tags=["Login"],
 )
 
 _user_accounts_service = server_singletons.user_accounts_service

@@ -19,6 +19,7 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
 )
 
 if TYPE_CHECKING:
+    from fastapi.routing import APIRoute
     from loguru import Logger
 
     from consortium.server.services.agent_generators_service import (
@@ -49,6 +50,18 @@ if TYPE_CHECKING:
     from consortium.server.services.release_service import ReleaseService
     from consortium.server.services.user_accounts_service import UserAccountsService
     from consortium.server.services.users_service import UsersService
+
+
+def use_route_name_as_operation_id(route: APIRoute) -> str:
+    # FastAPI's default operationId is `{route.name}_{path}_{method}`, which makes
+    # OpenAPI client generators emit long, mangled method names like
+    # `get_all_agents_api_agents_all_get`. Returning just the route name yields clean
+    # client methods (`get_all_agents`). This is passed to FastAPI via
+    # `generate_unique_id_function`. Route names must be unique across the whole app:
+    # decorator routes use their (unique) handler function name, and the repository
+    # factory routes set an explicit per-router `name=` (for example "Get All Assets")
+    # for exactly this reason.
+    return route.name
 
 
 def normalize_uuid(value: str | uuid.UUID) -> str:

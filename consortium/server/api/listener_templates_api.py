@@ -35,7 +35,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["Listener Templates API"],
+    tags=["Listener Templates"],
 )
 
 _listener_templates_service = server_singletons.listener_templates_service

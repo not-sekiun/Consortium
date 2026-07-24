@@ -47,6 +47,7 @@ from consortium.server.server_middleware import (
     check_if_server_is_shutting_down,
     log_rest_api_requests_and_responses,
 )
+from consortium.server.utils import use_route_name_as_operation_id
 
 
 class Server:
@@ -59,8 +60,11 @@ class Server:
             logger_name="Server", logger_type=LoggerType.SERVER_LOGGER
         )
         self._app = FastAPI(
-            # swagger_ui_parameters={"defaultModelsExpandDepth": -1},
             lifespan=self._lifespan,
+            # Use each route's name as its OpenAPI operationId so generated API clients
+            # get clean method names (`get_all_agents`) instead of the default
+            # path-and-method-mangled ones (`get_all_agents_api_agents_all_get`).
+            generate_unique_id_function=use_route_name_as_operation_id,
         )
 
         # Configure custom api endpoints.

@@ -45,7 +45,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["Agents API"],
+    tags=["Agents"],
 )
 
 _agents_service = server_singletons.agents_service

@@ -34,7 +34,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["Artifacts API"],
+    tags=["Artifacts"],
 )
 
 _artifacts_service = server_singletons.artifacts_service

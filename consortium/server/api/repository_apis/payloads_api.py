@@ -33,7 +33,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["Payloads API"],
+    tags=["Payloads"],
 )
 
 _payloads_service = server_singletons.payloads_service

@@ -35,7 +35,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["Assets API"],
+    tags=["Assets"],
 )
 
 _assets_service = server_singletons.assets_service

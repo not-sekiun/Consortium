@@ -33,7 +33,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["Logout API"],
+    tags=["Logout"],
 )
 
 _users_service = server_singletons.users_service

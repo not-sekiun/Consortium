@@ -39,7 +39,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["User Accounts API"],
+    tags=["User Accounts"],
 )
 
 _user_accounts_service = server_singletons.user_accounts_service

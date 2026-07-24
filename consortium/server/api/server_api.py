@@ -20,7 +20,7 @@ router = APIRouter(
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["Server API"],
+    tags=["Server"],
 )
 
 _server = server_singletons.server
