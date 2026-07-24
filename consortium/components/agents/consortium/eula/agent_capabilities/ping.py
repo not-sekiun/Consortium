@@ -46,22 +46,38 @@ class PingCapability(BaseAgentCapability):
         received = 0
         timed_out = 0
         latencies = []
-        for _ in range(self.task_launch_message.arguments["iterations"]):
+        for ping_sequence in range(self.task_launch_message.arguments["iterations"]):
             await asyncio.sleep(1)
             started = datetime.now()
-            self.event_logger.info("Sending ping...")
+            self.event_logger.info(f"Sending ping {ping_sequence}...")
             try:
-                _pong = await self.send_and_recv_from_agent()
-                delta = datetime.now() - started
-                latencies.append(delta)
-                latency_str = format_latency(delta.total_seconds())
-                self.event_logger.success(
-                    message=f"Received pong. Latency: {latency_str}"
-                )
-                received += 1
+                await self.send_to_agent(data={"sequence": ping_sequence})
+
+                timeout = self.task_launch_message.arguments["timeout"]
+                while True:
+                    pong = await self.recv_from_agent(timeout=timeout)
+                    pong_sequence = pong.data["sequence"]
+                    if pong_sequence == ping_sequence:
+                        delta = datetime.now() - started
+                        latencies.append(delta)
+                        latency_str = format_latency(delta.total_seconds())
+                        self.event_logger.success(
+                            message=f"Received pong {pong_sequence}. Latency: {latency_str}"
+                        )
+                        received += 1
+                        break
+                    # We received a late pong response from an earlier ping in time,
+                    # silently discard it and update the timeout to wait for to continue
+                    # waiting for our current pong response. Clamp the timeout to 0
+                    # seconds
+                    timeout = max(
+                        0, timeout - (datetime.now() - started).total_seconds()
+                    )
             except TimeoutError:
                 latency_str = format_latency((datetime.now() - started).total_seconds())
-                self.event_logger.failure(message=f"Ping timed out after {latency_str}")
+                self.event_logger.failure(
+                    message=f"Ping {ping_sequence} timed out after {latency_str}"
+                )
                 timed_out += 1
 
         total = received + timed_out
