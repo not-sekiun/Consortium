@@ -32,20 +32,29 @@ class PingCapability(BaseAgentCapability):
 
     async def on_execute(self):
         def format_latency(seconds: float) -> str:
-            return f"{seconds * 1000:.1g} ms" if seconds < 1 else f"{seconds:.3g} s"
+            return (
+                "<1ms"
+                if seconds < 0.001
+                else f"{seconds * 1000:.0f}ms"
+                if seconds < 1
+                else f"{seconds:.0f}s"
+            )
 
         # Get ready message first from next agent check in before measuring latency
         await self.recv_from_agent()
 
         received = 0
         timed_out = 0
+        latencies = []
         for _ in range(self.task_launch_message.arguments["iterations"]):
             await asyncio.sleep(1)
             started = datetime.now()
             self.event_logger.info("Sending ping...")
             try:
                 _pong = await self.send_and_recv_from_agent()
-                latency_str = format_latency((datetime.now() - started).total_seconds())
+                delta = datetime.now() - started
+                latencies.append(delta)
+                latency_str = format_latency(delta.total_seconds())
                 self.event_logger.success(
                     message=f"Received pong. Latency: {latency_str}"
                 )
@@ -59,10 +68,10 @@ class PingCapability(BaseAgentCapability):
         summary = (
             f"Ping complete: {total} sent, {received} received, {timed_out} timed out."
         )
-        if self.environment.latencies:
-            avg_latency = sum(
-                latency.total_seconds() for latency in self.environment.latencies
-            ) / len(self.environment.latencies)
+        if latencies:
+            avg_latency = sum(latency.total_seconds() for latency in latencies) / len(
+                latencies
+            )
             avg_latency_str = format_latency(seconds=avg_latency)
             summary += f" Average latency: {avg_latency_str}"
         self.event_logger.info(message=summary)
