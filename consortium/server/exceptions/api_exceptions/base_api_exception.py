@@ -1,6 +1,4 @@
-from typing import Generic, TypeVar
-
-from pydantic import BaseModel, JsonValue, create_model
+from pydantic import BaseModel, ConfigDict, JsonValue, create_model
 
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
@@ -12,8 +10,6 @@ from consortium.server.exceptions.service_exceptions.base_service_exception impo
     BaseServiceError,
 )
 
-T = TypeVar("T")
-
 
 class BaseAPIError(Exception):
     status_code: int
@@ -22,17 +18,17 @@ class BaseAPIError(Exception):
     # This ensures that there is ever only a single instance of the pydantic model
     # within the entire framework. This is important because duplicate pydantic models
     # with the same name will cause the OpenAPI schema to attempt name mangling leading
-    # to ugly schema names. Note that _pydantic_models is a list that is shared amongst
+    # to ugly schema names. Note that _pydantic_models is a dict that is shared amongst
     # all instances of this class and its subclasses.
-    _pydantic_models = []
+    _pydantic_models: dict[tuple[type, bool], type[BaseModel]] = {}
 
-    # We do not combine the non-null and null detail error models into a single model
+    # We do not combine the normal and null detail error models into a single model
     # because an error response will only ever return ONE of the two, not possibly
     # either.
-    class NonNullDetailErrorModel(BaseModel, Generic[T]):
+    class DetailErrorModel(BaseModel):
         code: str
         message: str
-        detail: T
+        detail: dict[str, JsonValue]
 
     # Using detail: Any | None = None or Any = None as the pydantic field does not work,
     # the swagger UI refuses to properly render the response model hence the model
@@ -40,7 +36,7 @@ class BaseAPIError(Exception):
     class NullDetailErrorModel(BaseModel):
         code: str
         message: str
-        detail: type[None]
+        detail: None
 
     def __init__(
         self,
@@ -64,29 +60,28 @@ class BaseAPIError(Exception):
         }
 
     def to_pydantic_model(self) -> type[BaseModel]:
-        # Prevent duplication of pydantic models to keep the OpenAPI schema clean.
-        for existing_pydantic_model in self._pydantic_models:
-            # Check if the existing pydantic model is functionally the same as the
-            # current one
-            if (
-                existing_pydantic_model.model_config["json_schema_extra"]["examples"][0]
-                == self.to_json()
-            ):
-                return existing_pydantic_model
+        cache_key = (self.__class__, self.detail is None)
+        # Prevent duplication of pydantic models to keep the OpenAPI schema clean. We
+        # check if an instance of the exception already has a created pydantic error
+        # model and also if the detail is None or not and reuse it if it already exists.
+        # This makes it so that the same exception class with different messages reuses
+        # the model
+        if cache_key in self._pydantic_models:
+            return self._pydantic_models[cache_key]
 
         pydantic_model = create_model(
             f"{self.__class__.__name__}Model",
             error=(
                 (
-                    self.__class__.NonNullDetailErrorModel[type(self.detail)]
+                    self.__class__.DetailErrorModel
                     if self.detail is not None
                     else self.__class__.NullDetailErrorModel
                 ),
                 ...,
             ),
         )
-        pydantic_model.model_config = {
-            "json_schema_extra": {
+        pydantic_model.model_config = ConfigDict(
+            json_schema_extra={
                 "examples": [
                     {
                         "error": {
@@ -101,9 +96,9 @@ class BaseAPIError(Exception):
                         },
                     },
                 ],
-            },
-        }
-        self._pydantic_models.append(pydantic_model)
+            }
+        )
+        self._pydantic_models[cache_key] = pydantic_model
         return pydantic_model
 
     @classmethod
