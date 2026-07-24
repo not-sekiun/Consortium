@@ -19,13 +19,6 @@ class MvCapability(BaseAgentCapability):
             value_type=str,
         ),
         SingleValueOption(
-            name="recursive",
-            description="Whether to move directories recursively.",
-            value_type=bool,
-            required=False,
-            default_value=False,
-        ),
-        SingleValueOption(
             name="expand",
             description=(
                 "Whether to expand environment variables in the source and destination "

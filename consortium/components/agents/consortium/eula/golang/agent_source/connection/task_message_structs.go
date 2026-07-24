@@ -1,7 +1,7 @@
 package connection
 
 import (
-	"json"
+	"encoding/json"
 )
 
 type TaskData struct {
