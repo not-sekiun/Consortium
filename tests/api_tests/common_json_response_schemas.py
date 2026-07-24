@@ -76,18 +76,29 @@ UNPROCESSABLE_ENTITY_ERROR_JSON_SCHEMA = {
                             "type": "array",
                             "items": {
                                 "type": "object",
+                                # Typed according to pydantic v2, documentation from
+                                # https://pydantic.dev/docs/validation/latest/errors/errors/
+                                # with documentation of the ErrorDetail object here
+                                # https://pydantic.dev/docs/validation/latest/api/pydantic-core/pydantic_core/#pydantic_core.ErrorDetails
                                 "properties": {
+                                    "ctx": {},
                                     "loc": {
                                         "type": "array",
-                                        "items": {"type": "string"},
+                                        # first location is the field, subsequent ones
+                                        # are subfields/indices
+                                        "items": {"type": ["string", "integer"]},
                                     },
+                                    "input": {},
                                     "msg": {"type": "string"},
                                     "type": {"type": "string"},
+                                    "url": {"type": "string"},
                                 },
-                                "required": ["loc", "msg", "type"],
+                                "additionalProperties": False,
+                                "required": ["type", "loc", "msg", "input"],
                             },
                         }
                     },
+                    "required": ["validation_errors"],
                 },
             },
             "required": ["code", "message", "detail"],
