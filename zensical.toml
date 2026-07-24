@@ -120,7 +120,7 @@ nav = [
     ] },
     { "Scripts" = [
         "scripts/scripts-overview.md",
-        "scripts/create-component-project.md",
+        "scripts/manage-components.md",
         "scripts/manage-repository.md",
         "scripts/generate-distilled-mitre-attack-data.md"
     ] },

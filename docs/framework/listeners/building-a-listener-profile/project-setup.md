@@ -25,10 +25,9 @@ the contract the `Listener` class exists to satisfy.
 
     Rather than creating these files by hand, you can generate a ready-to-edit listener
     profile (directory, `manifest.json`, and commented `listener_type.py`,
-    `listener_template.py`, and `listener.py` files) with the
-    [`create_component_project.py`](../../../scripts/create-component-project.md)
-    scaffolder. This guide is still worth reading to understand what the generated files
-    do.
+    `listener_template.py`, and `listener.py` files) with the **Create** action of the
+    [component manager](../../../scripts/manage-components.md) (`manage_components.py`).
+    This guide is still worth reading to understand what the generated files do.
 
 ## Setting up the project files
 

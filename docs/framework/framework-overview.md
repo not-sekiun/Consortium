@@ -17,11 +17,12 @@ information on each type of component, check the following pages:
 
 !!! tip "Scaffold a component instead of writing it by hand"
 
-    The [`create_component_project.py`](../scripts/create-component-project.md)
-    scaffolder generates a ready-to-edit project for any of the four component types,
-    with the directory, `manifest.json`, and commented reference stubs already in place.
-    The concepts below still apply, and understanding them makes the generated files
-    much easier to work with.
+    The **Create** action of the
+    [component manager](../scripts/manage-components.md) (`manage_components.py`)
+    generates a ready-to-edit project for any of the four component types, with the
+    directory, `manifest.json`, and commented reference stubs already in place. The
+    concepts below still apply, and understanding them makes the generated files much
+    easier to work with.
 
 ## The four component types
 
@@ -245,5 +246,5 @@ framework:
 - Build one end to end: [Listeners](listeners/listeners-overview.md),
   [Agents](agents/agents-overview.md), [Plugins](plugins/plugins-overview.md),
   [Event Hooks](event-hooks/event-hooks-overview.md).
-- Skip the boilerplate with the
-  [component scaffolder](../scripts/create-component-project.md).
+- Skip the boilerplate with the **Create** action of the
+  [component manager](../scripts/manage-components.md).
