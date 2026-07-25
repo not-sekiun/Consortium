@@ -6,6 +6,7 @@ from consortium.client.models.interpreter_signal_models import (
     ExitClientSessionSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import BaseDisconnectedCommand
 from consortium.client.utils.client_session_command_utils import (
     disconnect_client_session,
@@ -23,6 +24,7 @@ class ClientSessionDisconnectCommand(BaseDisconnectedCommand):
         """,
     )
     group = "Client Session Management Commands"
+    autocompletes = Autocomplete.CLIENT_SESSION_ID
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

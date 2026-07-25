@@ -7,6 +7,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.agent_command_utils import display_agent_info
 from consortium.client.utils.formatter_utils import (
@@ -28,6 +29,7 @@ class ArtifactInfoCommand(BaseConnectedCommand):
         """,
     )
     group = "Artifact Management Commands"
+    autocompletes = Autocomplete.ARTIFACT_ID
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

@@ -5,6 +5,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import (
     BaseConnectedCommand,
 )
@@ -25,6 +26,7 @@ class ListenerUpdateCommand(BaseConnectedCommand):
     )
     epilog = format_value_type_specification_epilog()
     group = "Listener Management Commands"
+    autocompletes = Autocomplete.LISTENER_ID_WITH_PARAMETERS
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

@@ -14,6 +14,10 @@ from consortium.client.interpreters.listeners_interpreter import (
 from consortium.client.models.interpreter_context_models import (
     UseListenerTemplateInterpreterContext,
 )
+from consortium.client.repl_interface.autocompletes import (
+    Autocomplete,
+    AutocompleteResolutions,
+)
 
 if TYPE_CHECKING:
     from consortium.client.client_session import ClientSession
@@ -55,29 +59,11 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
             interpreter_context=interpreter_context,
         )
 
-    async def _initialize_autocomplete(
-        self,
-        all_listeners: list[dict[str, Any]],
-        all_listener_templates: list[dict[str, Any]],
-    ) -> None:
+    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
         listener_template = self.interpreter_context.listener_template
-
-        completions_dict = self.completer.get_completions_dict()
-
-        options_completion = dict.fromkeys(listener_template["options"])
-        for command in ["opt-info", "set", "reset", "unset"]:
-            completions_dict[command] = options_completion
-
-        self.completer.set_completions_dict(completions_dict)
-
-        # We run the parent method after we have updated the autocomplete with this
-        # interpreter's commands to ensure that when it is called, the autocomplete
-        # updating will account for these new commands when autocompleting the help
-        # command.
-        await super()._initialize_autocomplete(
-            all_listeners=all_listeners,
-            all_listener_templates=all_listener_templates,
-        )
+        return super()._get_autocomplete_resolutions() | {
+            Autocomplete.TEMPLATE_OPTION: list(listener_template["options"]),
+        }
 
     # When switching into the UseListenerTemplateInterpreter, we don't want to list all
     # listeners and listener templates, this was done in the parent listener

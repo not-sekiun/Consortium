@@ -8,6 +8,10 @@ from consortium.client.models.context_models import (
     DisconnectedContext,
 )
 from consortium.client.models.interpreter_signal_models import InterpreterSignal
+from consortium.client.repl_interface.autocompletes import (
+    AutocompleteSpec,
+    normalize_autocompletes,
+)
 
 
 class BaseCommand[
@@ -17,6 +21,9 @@ class BaseCommand[
     description: str = ""
     epilog: str = ""
     group: str = ""
+    # Declared in the shorthand form described in `AutocompleteSpec` and normalized to
+    # a nested dictionary by `__init_subclass__`
+    autocompletes: AutocompleteSpec = None
 
     def __init__(self):
         self.parser = ArgumentParser(
@@ -36,7 +43,13 @@ class BaseCommand[
         # `BaseConnectedCommand` and `BaseDisconnectedCommand`
         if ABC in cls.__bases__ or inspect.isabstract(cls):
             return
+
         cls.summary = f"description: {cls.description}\n{cls().parser.format_usage()}"
+
+        # Normalize autocompletes to the standard nested dictionary format terminated
+        # by `None` expected by autocompletion dictionaries. Any runtime sentinels in
+        # there stay untouched until an interpreter resolves them.
+        cls.autocompletes = normalize_autocompletes(cls.autocompletes)
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         return None

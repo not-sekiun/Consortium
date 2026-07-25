@@ -5,6 +5,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import BaseDisconnectedCommand
 from consortium.client.utils.client_session_command_utils import rename_client_session
 from consortium.client.utils.formatter_utils import format_argparse_epilog
@@ -20,6 +21,7 @@ class ClientSessionRenameCommand(BaseDisconnectedCommand):
         """,
     )
     group = "Client Session Management Commands"
+    autocompletes = Autocomplete.CLIENT_SESSION_ID
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

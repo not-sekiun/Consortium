@@ -10,6 +10,10 @@ from consortium.client.commands.listeners_interpreter_commands import (
     ListenerTemplateListCommand,
 )
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
+from consortium.client.repl_interface.autocompletes import (
+    Autocomplete,
+    AutocompleteResolutions,
+)
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
@@ -39,6 +43,11 @@ class ListenersInterpreter(BaseConnectedInterpreter):
         if commands is None:
             commands = COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS
 
+        # Runtime data the autocomplete sentinels of this interpreter's commands are
+        # resolved against
+        self._all_listeners: list[dict[str, Any]] = []
+        self._all_listener_templates: list[dict[str, Any]] = []
+
         super().__init__(
             prompt=prompt,
             commands=commands,
@@ -53,42 +62,31 @@ class ListenersInterpreter(BaseConnectedInterpreter):
         )
         return all_listeners, all_listener_templates
 
-    async def _initialize_autocomplete(
+    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super()._get_autocomplete_resolutions() | {
+            Autocomplete.LISTENER_ID: [
+                listener["listener_id"] for listener in self._all_listeners
+            ],
+            # Every listener ID additionally carries the parameter names of that
+            # specific listener underneath it
+            Autocomplete.LISTENER_ID_WITH_PARAMETERS: {
+                listener["listener_id"]: dict.fromkeys(listener["parameters"])
+                for listener in self._all_listeners
+            },
+            Autocomplete.LISTENER_TEMPLATE_ID: [
+                listener_template["listener_template_id"]
+                for listener_template in self._all_listener_templates
+            ],
+        }
+
+    def _initialize_autocomplete(
         self,
         all_listeners: list[dict[str, Any]],
         all_listener_templates: list[dict[str, Any]],
     ) -> None:
-        completions_dict = self.completer.get_completions_dict()
-
-        listener_ids_completion = {
-            listener["listener_id"]: None for listener in all_listeners
-        }
-        for command in [
-            "start",
-            "stop",
-            "cancel",
-            "delete",
-            "info",
-            "rename",
-            "describe",
-        ]:
-            completions_dict[command] = listener_ids_completion
-
-        completions_dict["update"] = {
-            listener["listener_id"]: dict.fromkeys(listener["parameters"])
-            for listener in all_listeners
-        }
-
-        listener_template_ids_completion = {
-            listener_template["listener_template_id"]: None
-            for listener_template in all_listener_templates
-        }
-        for command in ["lt-info", "use"]:
-            completions_dict[command] = listener_template_ids_completion
-
-        completions_dict["help"] = dict.fromkeys(self.commands)
-
-        self.completer.set_completions_dict(completions_dict)
+        self._all_listeners = all_listeners
+        self._all_listener_templates = all_listener_templates
+        self.refresh_autocomplete()
 
     @staticmethod
     def _list_all_listeners_and_listener_templates(
@@ -112,7 +110,7 @@ class ListenersInterpreter(BaseConnectedInterpreter):
             all_listeners,
             all_listener_templates,
         ) = await self._get_all_listeners_and_listener_templates()
-        await self._initialize_autocomplete(
+        self._initialize_autocomplete(
             all_listeners=all_listeners,
             all_listener_templates=all_listener_templates,
         )
@@ -147,7 +145,7 @@ class ListenersInterpreter(BaseConnectedInterpreter):
             all_listeners,
             all_listener_templates,
         ) = await self._get_all_listeners_and_listener_templates()
-        await self._initialize_autocomplete(
+        self._initialize_autocomplete(
             all_listeners=all_listeners,
             all_listener_templates=all_listener_templates,
         )

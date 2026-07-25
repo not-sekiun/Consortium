@@ -3,6 +3,8 @@ import shutil
 import tempfile
 from argparse import ArgumentParser
 
+from prompt_toolkit.completion import PathCompleter
+
 from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
@@ -24,6 +26,7 @@ class AssetUploadCommand(BaseConnectedCommand):
         """,
     )
     group = "Asset Management Commands"
+    autocompletes = PathCompleter()
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

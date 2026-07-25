@@ -8,6 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
@@ -27,6 +28,7 @@ class HelpCommand(BaseCommand[AnyContext]):
           help banner
         """,
     )
+    autocompletes = Autocomplete.COMMANDS
 
     def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

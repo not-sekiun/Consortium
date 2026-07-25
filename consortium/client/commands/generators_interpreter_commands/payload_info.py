@@ -7,6 +7,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.agent_template_command_utils import (
     display_agent_template_info,
@@ -31,6 +32,7 @@ class PayloadInfoCommand(BaseConnectedCommand):
         """,
     )
     group = "Payload Management Commands"
+    autocompletes = Autocomplete.PAYLOAD_ID
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

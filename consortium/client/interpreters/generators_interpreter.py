@@ -10,6 +10,10 @@ from consortium.client.commands.generators_interpreter_commands import (
     GeneratorListCommand,
 )
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
+from consortium.client.repl_interface.autocompletes import (
+    Autocomplete,
+    AutocompleteResolutions,
+)
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
@@ -21,17 +25,6 @@ if TYPE_CHECKING:
 COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS = [
     command for command in CORE_COMMANDS if command.name != "generators"
 ] + GENERATORS_INTERPRETER_COMMANDS
-
-# Commands that take a payload resource ID as their first positional argument, and so
-# autocomplete against the set of known payload IDs. Kept as a single source of truth so
-# the autocompleter population stays in sync as payload commands are added.
-PAYLOAD_ID_COMPLETION_COMMANDS = [
-    "pl-info",
-    "pl-rm",
-    "pl-dl",
-    "pl-rename",
-    "pl-describe",
-]
 
 
 class GeneratorsInterpreter(BaseConnectedInterpreter):
@@ -48,6 +41,12 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             )
         if commands is None:
             commands = COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS
+
+        # Runtime data the autocomplete sentinels of this interpreter's commands are
+        # resolved against
+        self._all_agent_generators: list[dict[str, Any]] = []
+        self._all_agent_templates: list[dict[str, Any]] = []
+        self._all_payloads: list[dict[str, Any]] = []
 
         super().__init__(
             prompt=prompt,
@@ -68,61 +67,39 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
     async def _get_all_payloads(self) -> list[dict[str, Any]]:
         return await self.client_session.rest_api.get_all_payloads()
 
-    async def _initialize_autocomplete(
+    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super()._get_autocomplete_resolutions() | {
+            Autocomplete.AGENT_GENERATOR_ID: [
+                agent_generator["agent_generator_id"]
+                for agent_generator in self._all_agent_generators
+            ],
+            # Every agent generator ID additionally carries the parameter names of that
+            # specific agent generator underneath it
+            Autocomplete.AGENT_GENERATOR_ID_WITH_PARAMETERS: {
+                agent_generator["agent_generator_id"]: dict.fromkeys(
+                    agent_generator["parameters"],
+                )
+                for agent_generator in self._all_agent_generators
+            },
+            Autocomplete.AGENT_TEMPLATE_ID: [
+                agent_template["agent_template_id"]
+                for agent_template in self._all_agent_templates
+            ],
+            Autocomplete.PAYLOAD_ID: [
+                payload["resource_id"] for payload in self._all_payloads
+            ],
+        }
+
+    def _initialize_autocomplete(
         self,
         all_agent_generators: list[dict[str, Any]],
         all_agent_templates: list[dict[str, Any]],
         all_payloads: list[dict[str, Any]],
     ) -> None:
-        completions_dict = self.completer.get_completions_dict()
-
-        # Register commands that take the agent generator ID as the first positional
-        # argument to autocomplete with.
-        agent_generator_ids_completion = {
-            agent_generator["agent_generator_id"]: None
-            for agent_generator in all_agent_generators
-        }
-        for command in [
-            "start",
-            "stop",
-            "cancel",
-            "delete",
-            "info",
-            "rename",
-            "describe",
-        ]:
-            completions_dict[command] = agent_generator_ids_completion
-
-        # Register the "update" command to autocomplete with the agent generator ID as
-        # the first positional argument and the parameters of the agent generator as
-        # the second positional argument.
-        completions_dict["update"] = {
-            agent_generator["agent_generator_id"]: dict.fromkeys(
-                agent_generator["parameters"]
-            )
-            for agent_generator in all_agent_generators
-        }
-
-        # Register commands that take the agent template ID as the first positional
-        # argument to autocomplete with.
-        agent_template_ids_completion = {
-            agent_template["agent_template_id"]: None
-            for agent_template in all_agent_templates
-        }
-        for command in ["at-info", "use"]:
-            completions_dict[command] = agent_template_ids_completion
-
-        # Register payload commands that take the payload's resource ID as the first
-        # positional argument to autocomplete with.
-        payload_ids_completion = {
-            payload["resource_id"]: None for payload in all_payloads
-        }
-        for command in PAYLOAD_ID_COMPLETION_COMMANDS:
-            completions_dict[command] = payload_ids_completion
-
-        completions_dict["help"] = dict.fromkeys(self.commands)
-
-        self.completer.set_completions_dict(completions_dict)
+        self._all_agent_generators = all_agent_generators
+        self._all_agent_templates = all_agent_templates
+        self._all_payloads = all_payloads
+        self.refresh_autocomplete()
 
     async def _agent_generator_created_or_removed_event_handler(
         self,
@@ -133,7 +110,7 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             all_agent_templates,
         ) = await self._get_all_agent_generators_and_agent_templates()
         all_payloads = await self._get_all_payloads()
-        await self._initialize_autocomplete(
+        self._initialize_autocomplete(
             all_agent_generators=all_agent_generators,
             all_agent_templates=all_agent_templates,
             all_payloads=all_payloads,
@@ -148,7 +125,7 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             all_agent_templates,
         ) = await self._get_all_agent_generators_and_agent_templates()
         all_payloads = await self._get_all_payloads()
-        await self._initialize_autocomplete(
+        self._initialize_autocomplete(
             all_agent_generators=all_agent_generators,
             all_agent_templates=all_agent_templates,
             all_payloads=all_payloads,
@@ -203,7 +180,7 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             all_agent_templates,
         ) = await self._get_all_agent_generators_and_agent_templates()
         all_payloads = await self._get_all_payloads()
-        await self._initialize_autocomplete(
+        self._initialize_autocomplete(
             all_agent_generators=all_agent_generators,
             all_agent_templates=all_agent_templates,
             all_payloads=all_payloads,

@@ -16,12 +16,14 @@ from consortium.client.commands.interact_agent_interpreter_commands.agent_capabi
     construct_agent_capability_command,
 )
 from consortium.client.interpreters.agents_interpreter import (
-    ARTIFACT_ID_COMPLETION_COMMANDS,
-    ASSET_ID_COMPLETION_COMMANDS,
     COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS,
 )
 from consortium.client.models.interpreter_context_models import (
     InteractAgentInterpreterContext,
+)
+from consortium.client.repl_interface.autocompletes import (
+    Autocomplete,
+    AutocompleteResolutions,
 )
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
@@ -47,6 +49,15 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         interpreter_context: InteractAgentInterpreterContext,
     ):
         agent = interpreter_context.agent
+
+        # Runtime IDs the autocomplete sentinels of this interpreter's commands are
+        # resolved against. Held as dictionaries so that the event handlers can add and
+        # remove single IDs while preserving insertion order.
+        self._agent_ids: dict[str, None] = {}
+        self._task_ids: dict[str, None] = {}
+        self._asset_ids: dict[str, None] = {}
+        self._artifact_ids: dict[str, None] = {}
+
         super().__init__(
             prompt=HTML(
                 f"<b>Consortium (<ansired>Agents</ansired>: "
@@ -120,63 +131,39 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
                 agent_capability_command
             )
 
+    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super()._get_autocomplete_resolutions() | {
+            Autocomplete.AGENT_ID: self._agent_ids,
+            Autocomplete.AGENT_TASK_ID: self._task_ids,
+            Autocomplete.ASSET_ID: self._asset_ids,
+            Autocomplete.ARTIFACT_ID: self._artifact_ids,
+        }
+
+    # The agent capability commands this interpreter registers dynamically carry no
+    # autocompletes of their own, they are picked up by the rebuild purely by being
+    # registered as commands.
     async def _initialize_autocompleter(self) -> None:
         all_agents = await self.client_session.rest_api.get_all_agents()
         all_assets = await self.client_session.rest_api.get_all_assets()
         all_artifacts = await self.client_session.rest_api.get_all_artifacts()
-
-        completions_dict = self.completer.get_completions_dict()
-
-        # Register commands that take the agent ID as the first positional argument to
-        # autocomplete with.
-        agent_ids_completion = {agent["agent_id"]: None for agent in all_agents}
-        for command in ["info", "interact", "t-list", "rename", "describe"]:
-            completions_dict[command] = agent_ids_completion
-
-        # Register commands that take the task ID as a positional argument
         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
-        task_ids_completion = {task["task_id"]: None for task in all_tasks}
-        for command in ["t-info", "watch"]:
-            completions_dict[command] = task_ids_completion
 
-        # Register commands that take the asset resource ID as the first positional
-        # argument to autocomplete with.
-        assets_completion = {asset["resource_id"]: None for asset in all_assets}
-        for command in ASSET_ID_COMPLETION_COMMANDS:
-            completions_dict[command] = assets_completion
+        self._agent_ids = dict.fromkeys(agent["agent_id"] for agent in all_agents)
+        self._task_ids = dict.fromkeys(task["task_id"] for task in all_tasks)
+        self._asset_ids = dict.fromkeys(asset["resource_id"] for asset in all_assets)
+        self._artifact_ids = dict.fromkeys(
+            artifact["resource_id"] for artifact in all_artifacts
+        )
 
-        # Register commands that take the artifact resource ID as the first positional
-        # argument to autocomplete with.
-        artifacts_completion = {
-            artifact["resource_id"]: None for artifact in all_artifacts
-        }
-        for command in ARTIFACT_ID_COMPLETION_COMMANDS:
-            completions_dict[command] = artifacts_completion
-
-        # Register each agent capability command to the autocompleter without any
-        # argument completions.
-        agent_capabilities = self.interpreter_context.agent["agent_type"][
-            "agent_capabilities"
-        ]
-        for agent_capability_name in agent_capabilities:
-            completions_dict[agent_capability_name] = None
-
-        # Register the help command to autocomplete with all available commands. This
-        # includes all the newly added agent capability commands that are dynamically
-        # added before this method is called.
-        completions_dict["help"] = dict.fromkeys(self.commands)
-
-        self.completer.set_completions_dict(completions_dict)
+        self.refresh_autocomplete()
 
     async def _agent_tasked_event_handler(
         self,
         event: dict[str, Any],
     ) -> None:
         task = event["data"]["task"]
-        completions_dict = self.completer.get_completions_dict()
-        completions_dict["t-info"][task["task_id"]] = None
-        completions_dict["watch"][task["task_id"]] = None
-        self.completer.set_completions_dict(completions_dict)
+        self._task_ids[task["task_id"]] = None
+        self.refresh_autocomplete()
 
     async def _agent_task_completed_event_handler(
         self,
@@ -220,52 +207,42 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         agent = event["data"]
         print_success(f"New agent '{agent['name']}' ({agent['agent_id']}) checked in")
 
-        completions_dict = self.completer.get_completions_dict()
-        for command in ["info", "interact", "t-list", "rename", "describe"]:
-            completions_dict[command][agent["agent_id"]] = None
-        self.completer.set_completions_dict(completions_dict)
+        self._agent_ids[agent["agent_id"]] = None
+        self.refresh_autocomplete()
 
     async def _asset_created_event_handler(
         self,
         event: dict[str, Any],
     ) -> None:
         # The ASSET_CREATED event carries the created asset's JSON as its data payload,
-        # so its resource ID can be added to every asset ID completion set directly.
+        # so its resource ID can be added to the asset ID completion set directly.
         asset = event["data"]
-        completions_dict = self.completer.get_completions_dict()
-        for command in ASSET_ID_COMPLETION_COMMANDS:
-            completions_dict[command][asset["resource_id"]] = None
-        self.completer.set_completions_dict(completions_dict)
+        self._asset_ids[asset["resource_id"]] = None
+        self.refresh_autocomplete()
 
     async def _asset_deleted_event_handler(
         self,
         event: dict[str, Any],
     ) -> None:
         asset = event["data"]
-        completions_dict = self.completer.get_completions_dict()
-        for command in ASSET_ID_COMPLETION_COMMANDS:
-            completions_dict[command].pop(asset["resource_id"], None)
-        self.completer.set_completions_dict(completions_dict)
+        self._asset_ids.pop(asset["resource_id"], None)
+        self.refresh_autocomplete()
 
     async def _artifact_created_event_handler(
         self,
         event: dict[str, Any],
     ) -> None:
         artifact = event["data"]
-        completions_dict = self.completer.get_completions_dict()
-        for command in ARTIFACT_ID_COMPLETION_COMMANDS:
-            completions_dict[command][artifact["resource_id"]] = None
-        self.completer.set_completions_dict(completions_dict)
+        self._artifact_ids[artifact["resource_id"]] = None
+        self.refresh_autocomplete()
 
     async def _artifact_deleted_event_handler(
         self,
         event: dict[str, Any],
     ) -> None:
         artifact = event["data"]
-        completions_dict = self.completer.get_completions_dict()
-        for command in ARTIFACT_ID_COMPLETION_COMMANDS:
-            completions_dict[command].pop(artifact["resource_id"], None)
-        self.completer.set_completions_dict(completions_dict)
+        self._artifact_ids.pop(artifact["resource_id"], None)
+        self.refresh_autocomplete()
 
     # Single source of truth for this interpreter's event subscriptions, so that setup
     # and teardown can never drift apart.

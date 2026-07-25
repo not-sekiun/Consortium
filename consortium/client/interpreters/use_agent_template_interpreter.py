@@ -14,6 +14,10 @@ from consortium.client.interpreters.generators_interpreter import (
 from consortium.client.models.interpreter_context_models import (
     UseAgentTemplateInterpreterContext,
 )
+from consortium.client.repl_interface.autocompletes import (
+    Autocomplete,
+    AutocompleteResolutions,
+)
 
 if TYPE_CHECKING:
     from consortium.client.client_session import ClientSession
@@ -55,31 +59,11 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
             interpreter_context=interpreter_context,
         )
 
-    async def _initialize_autocomplete(
-        self,
-        all_agent_generators: list[dict[str, Any]],
-        all_agent_templates: list[dict[str, Any]],
-        all_payloads: list[dict[str, Any]],
-    ) -> None:
+    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
         agent_template = self.interpreter_context.agent_template
-
-        completions_dict = self.completer.get_completions_dict()
-
-        options_completion = dict.fromkeys(agent_template["options"])
-        for command in ["opt-info", "set", "reset", "unset"]:
-            completions_dict[command] = options_completion
-
-        self.completer.set_completions_dict(completions_dict)
-
-        # We run the parent method after we have updated the autocomplete with this
-        # interpreter's commands to ensure that when it is called, the autocomplete
-        # updating will account for these new commands when autocompleting the help
-        # command.
-        await super()._initialize_autocomplete(
-            all_agent_generators=all_agent_generators,
-            all_agent_templates=all_agent_templates,
-            all_payloads=all_payloads,
-        )
+        return super()._get_autocomplete_resolutions() | {
+            Autocomplete.TEMPLATE_OPTION: list(agent_template["options"]),
+        }
 
     # When switching into the UseAgentTemplateInterpreter, we don't want to list all
     # agent generators and agent templates, this was done in the parent generators

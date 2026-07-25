@@ -5,6 +5,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.agent_command_utils import rename_agent
 from consortium.client.utils.formatter_utils import format_argparse_epilog
@@ -20,6 +21,7 @@ class AgentRenameCommand(BaseConnectedCommand):
         """,
     )
     group = "Agent Management Commands"
+    autocompletes = Autocomplete.AGENT_ID
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

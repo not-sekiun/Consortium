@@ -11,6 +11,10 @@ from consortium.client.commands.home_interpreter_commands import (
     InteractClientSessionCommand,
 )
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
+from consortium.client.repl_interface.autocompletes import (
+    Autocomplete,
+    AutocompleteResolutions,
+)
 from consortium.client.repl_interface.base_interpreter import (
     BaseDisconnectedInterpreter,
 )
@@ -52,18 +56,15 @@ class DisconnectedInterpreter(BaseDisconnectedInterpreter):
             all_client_sessions=all_client_sessions
         )
 
-    async def on_loop(self) -> None:
-        all_client_sessions = client_sessions_service.get_all_client_sessions()
-
-        completions_dict = self.completer.get_completions_dict()
-
-        client_session_ids_completion = {
-            str(client_session.client_session_id): None
-            for client_session in all_client_sessions
+    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super()._get_autocomplete_resolutions() | {
+            Autocomplete.CLIENT_SESSION_ID: [
+                str(client_session.client_session_id)
+                for client_session in client_sessions_service.get_all_client_sessions()
+            ],
         }
-        for command in ["disconnect", "info", "interact", "rename", "describe"]:
-            completions_dict[command] = client_session_ids_completion
 
-        completions_dict["help"] = dict.fromkeys(self.commands)
-
-        self.completer.set_completions_dict(completions_dict)
+    # Client sessions can be created and removed from anywhere in the client, so the
+    # completions are rebuilt on every prompt rather than off the back of an event.
+    async def on_loop(self) -> None:
+        self.refresh_autocomplete()

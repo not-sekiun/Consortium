@@ -5,6 +5,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import (
     BaseConnectedCommand,
 )
@@ -26,6 +27,7 @@ class ListenerTemplateSetOptionCommand(BaseConnectedCommand):
     description = "Set the current listener template's option to a specific value"
     epilog = format_value_type_specification_epilog()
     group = "Listener Template Management Commands"
+    autocompletes = Autocomplete.TEMPLATE_OPTION
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

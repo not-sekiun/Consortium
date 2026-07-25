@@ -10,6 +10,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
 from consortium.client.utils.agent_task_command_utils import (
     create_task_info_and_task_events_tables,
@@ -33,6 +34,7 @@ class WatchCommand(BaseConnectedCommand):
         """,
     )
     group = "Tasks and Results Management Commands"
+    autocompletes = Autocomplete.AGENT_TASK_ID
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(

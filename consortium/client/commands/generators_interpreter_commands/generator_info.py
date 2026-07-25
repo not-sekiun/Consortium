@@ -8,6 +8,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import (
     BaseConnectedCommand,
 )
@@ -37,6 +38,7 @@ class GeneratorInfoCommand(BaseConnectedCommand):
         """,
     )
     group = "Agent Generator Management Commands"
+    autocompletes = Autocomplete.AGENT_GENERATOR_ID
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
