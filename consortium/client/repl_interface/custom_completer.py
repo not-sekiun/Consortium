@@ -1,5 +1,3 @@
-import copy
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, NestedCompleter, PathCompleter
 from prompt_toolkit.document import Document
@@ -16,9 +14,6 @@ class CustomCompleter(Completer):
         self._completions_dict = completions_dict
         self._nested_completer = NestedCompleter.from_nested_dict(completions_dict)
         self._path_completer = PathCompleter(expanduser=True)
-
-    def get_completions_dict(self) -> CompletionsDict:
-        return copy.deepcopy(self._completions_dict)
 
     def set_completions_dict(self, completions_dict: CompletionsDict) -> None:
         self._completions_dict = completions_dict

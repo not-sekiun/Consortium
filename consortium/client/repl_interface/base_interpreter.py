@@ -86,42 +86,6 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
             for command in commands
         }
 
-    # Rebuilds the whole completions dictionary from what the commands themselves
-    # declare, so autocompletion can never drift away from the commands it completes.
-    def build_completions_dict(
-        self,
-        resolutions: AutocompleteResolutions | None = None,
-    ) -> CompletionsDict:
-        # The commands of the current interpreter are always resolvable so they are
-        # provided here rather than by every interpreter individually
-        resolutions = {Autocomplete.COMMANDS: list(self.commands)} | dict(
-            resolutions or {},
-        )
-        # Keyed by the name the command is registered under rather than by
-        # `command.name`, since dynamically registered commands (agent capabilities)
-        # can be registered under a deconflicted name
-        return {
-            name: resolve_autocompletes(
-                autocompletes=command.autocompletes,
-                resolutions=resolutions,
-            )
-            for name, command in self.commands.items()
-        }
-
-    # The values this interpreter's commands declare their autocompletes against.
-    # Overridden by interpreters that hold runtime data, calling `super()` first when
-    # they extend another interpreter's resolutions.
-    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
-        return {}
-
-    # Called by interpreters whenever the data behind their sentinels changes
-    def refresh_autocomplete(self) -> None:
-        self.completer.set_completions_dict(
-            self.build_completions_dict(
-                resolutions=self._get_autocomplete_resolutions(),
-            ),
-        )
-
     # We provide a function because it needs to be called on every prompt update. The
     # name of the session can be renamed at any moment. Just passing in `HTML` object
     # to the `bottom_toolbar` parameter does not cause that `HTML` object to be updated
@@ -220,6 +184,42 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
                 raw_input=parsed_command.raw_input,
                 interpreter_context=self.interpreter_context,
             )
+        )
+
+    # Rebuilds the whole completions dictionary from what the commands themselves
+    # declare, so autocompletion can never drift away from the commands it completes.
+    def build_completions_dict(
+        self,
+        resolutions: AutocompleteResolutions | None = None,
+    ) -> CompletionsDict:
+        # The commands of the current interpreter are always resolvable so they are
+        # provided here rather than by every interpreter individually
+        resolutions = {Autocomplete.COMMANDS: list(self.commands)} | dict(
+            resolutions or {},
+        )
+        # Keyed by the name the command is registered under rather than by
+        # `command.name`, since dynamically registered commands (agent capabilities)
+        # can be registered under a deconflicted name
+        return {
+            name: resolve_autocompletes(
+                autocompletes=command.autocompletes,
+                resolutions=resolutions,
+            )
+            for name, command in self.commands.items()
+        }
+
+    # The values this interpreter's commands declare their autocompletes against.
+    # Overridden by interpreters that hold runtime data, calling `super()` first when
+    # they extend another interpreter's resolutions.
+    def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return {}
+
+    # Called by interpreters whenever the data behind their sentinels changes
+    def refresh_autocomplete(self) -> None:
+        self.completer.set_completions_dict(
+            self.build_completions_dict(
+                resolutions=self.get_autocomplete_resolutions(),
+            ),
         )
 
     async def on_loop(self) -> None: ...

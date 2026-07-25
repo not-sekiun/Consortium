@@ -59,9 +59,9 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
             interpreter_context=interpreter_context,
         )
 
-    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+    def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
         agent_template = self.interpreter_context.agent_template
-        return super()._get_autocomplete_resolutions() | {
+        return super().get_autocomplete_resolutions() | {
             Autocomplete.TEMPLATE_OPTION: list(agent_template["options"]),
         }
 

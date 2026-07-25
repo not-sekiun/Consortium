@@ -67,8 +67,8 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
     async def _get_all_payloads(self) -> list[dict[str, Any]]:
         return await self.client_session.rest_api.get_all_payloads()
 
-    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
-        return super()._get_autocomplete_resolutions() | {
+    def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super().get_autocomplete_resolutions() | {
             Autocomplete.AGENT_GENERATOR_ID: [
                 agent_generator["agent_generator_id"]
                 for agent_generator in self._all_agent_generators

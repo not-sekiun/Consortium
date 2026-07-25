@@ -53,8 +53,8 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             interpreter_context=interpreter_context,
         )
 
-    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
-        return super()._get_autocomplete_resolutions() | {
+    def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super().get_autocomplete_resolutions() | {
             Autocomplete.AGENT_ID: self._agent_ids,
             Autocomplete.AGENT_TASK_ID: self._task_ids,
             Autocomplete.ASSET_ID: self._asset_ids,

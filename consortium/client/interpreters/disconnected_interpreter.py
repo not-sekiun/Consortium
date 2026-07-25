@@ -56,8 +56,8 @@ class DisconnectedInterpreter(BaseDisconnectedInterpreter):
             all_client_sessions=all_client_sessions
         )
 
-    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
-        return super()._get_autocomplete_resolutions() | {
+    def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super().get_autocomplete_resolutions() | {
             Autocomplete.CLIENT_SESSION_ID: [
                 str(client_session.client_session_id)
                 for client_session in client_sessions_service.get_all_client_sessions()

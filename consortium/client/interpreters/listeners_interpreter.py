@@ -62,8 +62,8 @@ class ListenersInterpreter(BaseConnectedInterpreter):
         )
         return all_listeners, all_listener_templates
 
-    def _get_autocomplete_resolutions(self) -> AutocompleteResolutions:
-        return super()._get_autocomplete_resolutions() | {
+    def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super().get_autocomplete_resolutions() | {
             Autocomplete.LISTENER_ID: [
                 listener["listener_id"] for listener in self._all_listeners
             ],
