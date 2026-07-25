@@ -14,7 +14,10 @@ from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.artifact_objects import Artifact
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    run_async_background_task,
+)
 
 if TYPE_CHECKING:
     from consortium.server.services.agents_service import AgentsService
@@ -162,8 +165,8 @@ class ArtifactsService:
             resource_id=resource_id,
             data=self._build_artifact_resource_data(agent_id=agent_id),
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ARTIFACT_CREATED,
                 message=f"Created artifact: {artifact.resource_id}",
                 data=artifact.to_json(),
@@ -223,8 +226,8 @@ class ArtifactsService:
             copy=copy,
             data=self._build_artifact_resource_data(agent_id=agent_id),
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ARTIFACT_CREATED,
                 message=f"Added artifact: {artifact.resource_id}",
                 data=artifact.to_json(),
@@ -287,8 +290,8 @@ class ArtifactsService:
             resource_id=resource_id,
             data=self._build_artifact_resource_data(agent_id=agent_id),
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ARTIFACT_CREATED,
                 message=f"Created artifact directory: {artifact.resource_id}",
                 data=artifact.to_json(),
@@ -349,8 +352,8 @@ class ArtifactsService:
             copy=copy,
             data=self._build_artifact_resource_data(agent_id=agent_id),
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ARTIFACT_CREATED,
                 message=f"Added artifact directory: {artifact.resource_id}",
                 data=artifact.to_json(),
@@ -404,8 +407,8 @@ class ArtifactsService:
             description=description,
             data=data,
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ARTIFACT_UPDATED,
                 message=f"Updated artifact: {artifact.resource_id}",
                 data=artifact.to_json(),
@@ -439,8 +442,8 @@ class ArtifactsService:
             self._repository_service.delete_resource_by_resource_id,
             resource_id=resource_id,
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ARTIFACT_DELETED,
                 message=f"Deleted artifact: {resource_id}",
                 data=artifact_json,

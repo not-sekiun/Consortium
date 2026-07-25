@@ -353,14 +353,14 @@ async def update_agent_by_agent_id(
         422: {"model": RequestValidationErrorResponse},
     },
 )
-def delete_agent_by_agent_id(
+async def delete_agent_by_agent_id(
     agent_id: UUID4,
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.DELETE_AGENT_BY_AGENT_ID))
     ],
 ) -> None:
     try:
-        _agents_service.delete_agent_by_agent_id(agent_id=agent_id)
+        await _agents_service.delete_agent_by_agent_id(agent_id=agent_id)
     except svc_excs.AgentNotFoundError as exc:
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc

@@ -1,4 +1,3 @@
-import asyncio
 import uuid
 
 from loguru import logger
@@ -15,6 +14,7 @@ from consortium.server.services.events_service import EventsService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
+    run_async_background_task,
 )
 
 
@@ -146,8 +146,8 @@ class UsersService:
         user = User(user_account=user_account)
         self._users[str(user.user_id)] = user
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.USER_LOGGED_IN,
                 message=f"User logged in: {user}",
                 data=user.to_json(),
@@ -174,8 +174,8 @@ class UsersService:
 
         deleted_user = self._users.pop(str(user.user_id))
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.USER_LOGGED_OUT,
                 message=f"User logged out: {deleted_user}",
                 data={"user_id": str(user.user_id)},

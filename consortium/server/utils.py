@@ -1,10 +1,11 @@
+import asyncio
 import functools
 import inspect
 import operator
 import random
 import types
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -327,3 +328,14 @@ def clamp_event_log_limit(limit: int) -> int:
     # Callers still validate the lower bound (gt=0) at the query layer; this only caps
     # the upper bound before the value reaches the event log.
     return min(limit, MAX_EVENT_LOG_LIMIT)
+
+
+_background_tasks = set()
+
+
+# Running fire and forget background tasks safely. The _coroutine set is needed since
+# tasks are only held onto by a weak reference and may be GCed at any time.
+def run_async_background_task(coroutine: Coroutine) -> None:
+    task = asyncio.create_task(coroutine)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)

@@ -1,4 +1,3 @@
-import asyncio
 import copy
 import uuid
 from typing import Any
@@ -26,6 +25,7 @@ from consortium.server.services.events_service import EventsService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
+    run_async_background_task,
 )
 
 
@@ -145,8 +145,8 @@ class AgentGeneratorsService:
             agent_generator
         )
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_GENERATOR_CREATED,
                 message=f"Created agent generator: {agent_generator}",
                 data=agent_generator.to_json(),
@@ -186,8 +186,8 @@ class AgentGeneratorsService:
             agent_generator
         )
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_GENERATOR_ADDED,
                 message=f"Added agent generator: {agent_generator}",
                 data=agent_generator.to_json(),
@@ -233,8 +233,8 @@ class AgentGeneratorsService:
             str(agent_generator.agent_generator_id)
         )
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_GENERATOR_REMOVED,
                 message=f"Removed agent generator: {removed_agent_generator}",
                 data=removed_agent_generator.to_json(),
@@ -405,8 +405,8 @@ class AgentGeneratorsService:
         # Only fire events for meaningful changes, skip firing if a no-op update
         # occurred.
         if updated:
-            asyncio.create_task(
-                self._events_service.trigger_event(
+            run_async_background_task(
+                coroutine=self._events_service.trigger_event(
                     event_type=EventType.AGENT_GENERATOR_UPDATED,
                     message=f"Updated agent generator: {agent_generator}",
                     data={
@@ -451,10 +451,12 @@ class AgentGeneratorsService:
         if blocking:
             await agent_generator.wait_until_started()
 
-        await self._events_service.trigger_event(
-            event_type=EventType.AGENT_GENERATOR_STARTED,
-            message=f"Started agent generator: {agent_generator}",
-            data=agent_generator.to_json(),
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.AGENT_GENERATOR_STARTED,
+                message=f"Started agent generator: {agent_generator}",
+                data=agent_generator.to_json(),
+            )
         )
         self._logger.info("Started agent generator: {}", agent_generator)
         self._logger.debug("- {!r}", agent_generator)
@@ -486,10 +488,12 @@ class AgentGeneratorsService:
         if blocking:
             await agent_generator.wait_until_stopped()
 
-        await self._events_service.trigger_event(
-            event_type=EventType.AGENT_GENERATOR_STOPPED,
-            message=f"Stopped agent generator: {agent_generator}",
-            data=agent_generator.to_json(),
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.AGENT_GENERATOR_STOPPED,
+                message=f"Stopped agent generator: {agent_generator}",
+                data=agent_generator.to_json(),
+            )
         )
         self._logger.info("Stopped agent generator: {}", agent_generator)
         self._logger.debug("- {!r}", agent_generator)
@@ -522,10 +526,12 @@ class AgentGeneratorsService:
         if blocking:
             await agent_generator.wait_until_stopped()
 
-        await self._events_service.trigger_event(
-            event_type=EventType.AGENT_GENERATOR_CANCELLED,
-            message=f"Cancelled agent generator: {agent_generator}",
-            data=agent_generator.to_json(),
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.AGENT_GENERATOR_CANCELLED,
+                message=f"Cancelled agent generator: {agent_generator}",
+                data=agent_generator.to_json(),
+            )
         )
         self._logger.info("Cancelled agent generator: {}", agent_generator)
         self._logger.debug("- {!r}", agent_generator)

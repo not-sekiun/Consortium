@@ -1,4 +1,3 @@
-import asyncio
 import uuid
 from collections.abc import AsyncGenerator, AsyncIterable
 from typing import Any
@@ -28,6 +27,7 @@ from consortium.server.services.events_service import EventsService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
+    run_async_background_task,
     utc_now,
 )
 
@@ -131,8 +131,8 @@ class AgentsService:
         )
         self._agents[str(agent.agent_id)] = agent
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_REGISTERED,
                 message=f"Registered agent: {agent}",
                 data=agent.to_json(),
@@ -156,8 +156,8 @@ class AgentsService:
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         del self._agents[str(agent.agent_id)]
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_DEREGISTERED,
                 message=f"Deregistered agent: {agent}",
                 data=agent.to_json(),
@@ -167,7 +167,7 @@ class AgentsService:
         self._logger.debug("- {!r}", agent)
 
     @log_and_propagate_error_on_service_method
-    def delete_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
+    async def delete_agent_by_agent_id(self, agent_id: str | uuid.UUID) -> None:
         """Deletes a registered agent from the service and emits an `AGENT_DELETED` event.
 
         Unlike `deregister_agent_by_agent_id`, which reflects an agent that has left of
@@ -187,8 +187,8 @@ class AgentsService:
         task_ids = [str(task.task_id) for task in agent.get_all_tasks()]
         del self._agents[str(agent.agent_id)]
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_DELETED,
                 message=f"Deleted agent: {agent}",
                 data={
@@ -213,8 +213,8 @@ class AgentsService:
             AgentNotFoundError: If no agent with the given ID is registered.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_CHECKED_IN,
                 message=f"Checked in agent: {agent}",
                 data=agent.to_json(),
@@ -617,13 +617,15 @@ class AgentsService:
         task = AgentTask(command=command, arguments=arguments)
         await agent.submit_task(task=task)
 
-        await self._events_service.trigger_event(
-            event_type=EventType.AGENT_TASKED,
-            message=f"Tasked agent: {agent}",
-            data={
-                "agent_id": str(agent.agent_id),
-                "task": task.to_json(),
-            },
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.AGENT_TASKED,
+                message=f"Tasked agent: {agent}",
+                data={
+                    "agent_id": str(agent.agent_id),
+                    "task": task.to_json(),
+                },
+            )
         )
         self._logger.info("Tasked agent {} with task {}", agent, task)
         self._logger.debug("Tasked agent {!r} with task {!r}", agent, task)
@@ -689,8 +691,8 @@ class AgentsService:
             }
 
         if updated:
-            asyncio.create_task(
-                self._events_service.trigger_event(
+            run_async_background_task(
+                coroutine=self._events_service.trigger_event(
                     event_type=EventType.AGENT_UPDATED,
                     message=f"Updated agent: {agent}",
                     data=agent.to_json(),

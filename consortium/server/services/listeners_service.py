@@ -1,4 +1,3 @@
-import asyncio
 import copy
 import uuid
 from typing import Any
@@ -29,6 +28,7 @@ from consortium.server.services.listener_templates_service import (
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
+    run_async_background_task,
 )
 
 
@@ -131,8 +131,8 @@ class ListenersService:
             parameters=parameters,
         )
         self._listeners[str(listener.listener_id)] = listener
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.LISTENER_CREATED,
                 message=f"Created listener: {listener}",
                 data=listener.to_json(),
@@ -162,8 +162,8 @@ class ListenersService:
                 listener_id=str(listener.listener_id),
             )
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.LISTENER_ADDED,
                 message=f"Added listener: {listener}",
                 data=listener.to_json(),
@@ -191,8 +191,8 @@ class ListenersService:
             )
 
         removed_listener = self._listeners.pop(str(listener.listener_id))
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.LISTENER_REMOVED,
                 message=f"Removed listener: {removed_listener}",
                 data=removed_listener.to_json(),
@@ -353,8 +353,8 @@ class ListenersService:
         # Only fire events for meaningful changes, skip firing if a no-op update
         # occurred.
         if updated:
-            asyncio.create_task(
-                self._events_service.trigger_event(
+            run_async_background_task(
+                coroutine=self._events_service.trigger_event(
                     event_type=EventType.LISTENER_UPDATED,
                     message=f"Updated listener: {listener}",
                     data={
@@ -397,10 +397,12 @@ class ListenersService:
         if blocking:
             await listener.wait_until_started()
 
-        await self._events_service.trigger_event(
-            event_type=EventType.LISTENER_STARTED,
-            message=f"Started listener: {listener}",
-            data=listener.to_json(),
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.LISTENER_STARTED,
+                message=f"Started listener: {listener}",
+                data=listener.to_json(),
+            )
         )
         self._logger.info("Started listener: {}", listener)
         self._logger.debug("- {!r}", listener)
@@ -432,10 +434,12 @@ class ListenersService:
         if blocking:
             await listener.wait_until_stopped()
 
-        await self._events_service.trigger_event(
-            event_type=EventType.LISTENER_STOPPED,
-            message=f"Stopped listener: {listener}",
-            data=listener.to_json(),
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.LISTENER_STOPPED,
+                message=f"Stopped listener: {listener}",
+                data=listener.to_json(),
+            )
         )
         self._logger.info("Stopped listener: {}", listener)
         self._logger.debug("- {!r}", listener)
@@ -468,10 +472,12 @@ class ListenersService:
         if blocking:
             await listener.wait_until_stopped()
 
-        await self._events_service.trigger_event(
-            event_type=EventType.LISTENER_CANCELLED,
-            message=f"Cancelled listener: {listener}",
-            data=listener.to_json(),
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.LISTENER_CANCELLED,
+                message=f"Cancelled listener: {listener}",
+                data=listener.to_json(),
+            )
         )
         self._logger.info("Cancelled listener: {}", listener)
         self._logger.debug("- {!r}", listener)

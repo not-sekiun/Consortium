@@ -20,6 +20,7 @@ from consortium.server.services.repository_service import RepositoryService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
+    run_async_background_task,
 )
 
 
@@ -172,8 +173,8 @@ class PayloadsService:
             agent_templates_service=self._agent_templates_service,
         )
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
                 message=f"Created payload: {resource.resource_id}",
                 data=payload.to_json(),
@@ -257,8 +258,8 @@ class PayloadsService:
             agent_templates_service=self._agent_templates_service,
         )
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
                 message=f"Created payload: {resource.resource_id}",
                 data=payload.to_json(),
@@ -340,8 +341,8 @@ class PayloadsService:
             resource=resource,
             agent_templates_service=self._agent_templates_service,
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
                 message=f"Created payload: {resource.resource_id}",
                 data=payload.to_json(),
@@ -426,8 +427,8 @@ class PayloadsService:
             agent_templates_service=self._agent_templates_service,
         )
 
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_CREATED,
                 message=f"Created payload: {resource.resource_id}",
                 data=payload.to_json(),
@@ -513,8 +514,8 @@ class PayloadsService:
             resource=resource,
             agent_templates_service=self._agent_templates_service,
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_UPDATED,
                 message=f"Updated payload: {resource.resource_id}",
                 data=payload.to_json(),
@@ -555,8 +556,8 @@ class PayloadsService:
             self._repository_service.delete_resource_by_resource_id,
             resource_id=resource_id,
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.PAYLOAD_DELETED,
                 message=f"Deleted payload: {resource_id}",
                 data=payload_json,

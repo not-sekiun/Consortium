@@ -15,7 +15,10 @@ from consortium.server.models.user_account_models import (
 from consortium.server.objects.asset_objects import Asset
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    run_async_background_task,
+)
 
 if TYPE_CHECKING:
     from consortium.server.services.user_accounts_service import UserAccountsService
@@ -166,8 +169,8 @@ class AssetsService:
             resource_id=resource_id,
             data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ASSET_CREATED,
                 message=f"Created asset: {asset.resource_id}",
                 data=asset.to_json(),
@@ -226,8 +229,8 @@ class AssetsService:
             copy=copy,
             data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ASSET_CREATED,
                 message=f"Added asset: {asset.resource_id}",
                 data=asset.to_json(),
@@ -289,8 +292,8 @@ class AssetsService:
             resource_id=resource_id,
             data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ASSET_CREATED,
                 message=f"Created asset directory: {asset.resource_id}",
                 data=asset.to_json(),
@@ -350,8 +353,8 @@ class AssetsService:
             copy=copy,
             data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ASSET_CREATED,
                 message=f"Added asset directory: {asset.resource_id}",
                 data=asset.to_json(),
@@ -405,8 +408,8 @@ class AssetsService:
             description=description,
             data=data,
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ASSET_UPDATED,
                 message=f"Updated asset: {asset.resource_id}",
                 data=asset.to_json(),
@@ -438,8 +441,8 @@ class AssetsService:
             self._repository_service.delete_resource_by_resource_id,
             resource_id=resource_id,
         )
-        asyncio.create_task(
-            self._events_service.trigger_event(
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
                 event_type=EventType.ASSET_DELETED,
                 message=f"Deleted asset: {resource_id}",
                 data=asset_json,
