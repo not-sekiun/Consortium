@@ -704,6 +704,18 @@ class RestAPI:
         )
 
     @_requires_authentication
+    async def update_payload_by_resource_id(
+        self,
+        resource_id: str,
+        new_payload_attributes: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
+        return await self._make_api_request(
+            method="PATCH",
+            url=f"{self._api_base_url}/payloads/{resource_id}",
+            json=new_payload_attributes,
+        )
+
+    @_requires_authentication
     async def delete_payload_by_resource_id(
         self,
         resource_id: str,

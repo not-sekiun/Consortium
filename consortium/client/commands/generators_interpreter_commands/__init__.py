@@ -34,6 +34,9 @@ from consortium.client.commands.generators_interpreter_commands.generator_update
 from consortium.client.commands.generators_interpreter_commands.generators_list import (
     GeneratorListCommand,
 )
+from consortium.client.commands.generators_interpreter_commands.payload_describe import (
+    PayloadDescribeCommand,
+)
 from consortium.client.commands.generators_interpreter_commands.payload_download import (
     PayloadDownloadCommand,
 )
@@ -45,6 +48,9 @@ from consortium.client.commands.generators_interpreter_commands.payload_list imp
 )
 from consortium.client.commands.generators_interpreter_commands.payload_remove import (
     PayloadRemoveCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.payload_rename import (
+    PayloadRenameCommand,
 )
 
 GENERATORS_INTERPRETER_COMMANDS = [
@@ -64,4 +70,6 @@ GENERATORS_INTERPRETER_COMMANDS = [
     PayloadInfoCommand(),
     PayloadListCommand(),
     PayloadRemoveCommand(),
+    PayloadDescribeCommand(),
+    PayloadRenameCommand(),
 ]

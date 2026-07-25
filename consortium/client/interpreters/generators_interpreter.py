@@ -22,6 +22,17 @@ COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS = [
     command for command in CORE_COMMANDS if command.name != "generators"
 ] + GENERATORS_INTERPRETER_COMMANDS
 
+# Commands that take a payload resource ID as their first positional argument, and so
+# autocomplete against the set of known payload IDs. Kept as a single source of truth so
+# the autocompleter population stays in sync as payload commands are added.
+PAYLOAD_ID_COMPLETION_COMMANDS = [
+    "pl-info",
+    "pl-rm",
+    "pl-dl",
+    "pl-rename",
+    "pl-describe",
+]
+
 
 class GeneratorsInterpreter(BaseConnectedInterpreter):
     def __init__(
@@ -106,7 +117,7 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         payload_ids_completion = {
             payload["resource_id"]: None for payload in all_payloads
         }
-        for command in ["pl-info", "pl-rm", "pl-dl"]:
+        for command in PAYLOAD_ID_COMPLETION_COMMANDS:
             completions_dict[command] = payload_ids_completion
 
         completions_dict["help"] = dict.fromkeys(self.commands)
