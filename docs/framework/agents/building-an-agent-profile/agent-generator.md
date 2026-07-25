@@ -78,7 +78,7 @@ via the REST API:
 | Method                                                       | Description                                                                 |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------|
 | `await create_payload_file(build_parameters, content, name)` | Create a new text file in the payload store; `content` is a string          |
-| `await add_payload_file(build_parameters, path, name)`       | Copy an existing file from `path` (a `pathlib.Path`) into the payload store |
+| `await add_payload_file(build_parameters, path, name)`       | Register an existing file from `path` (a `pathlib.Path`) into the payload store, moving it by default; pass `copy=True` to leave the original in place |
 
 These methods are coroutines: their disk I/O is offloaded to a worker thread so it does
 not block the event loop, so they must be awaited from within the step's `async def

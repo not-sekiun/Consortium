@@ -340,3 +340,40 @@ def test_delete_payload_not_found_leaves_repository_untouched(
         ).resource_id
         == resource.resource_id
     )
+
+
+# ---------------------------------------------------------------------------
+# update_payload_by_resource_id
+# ---------------------------------------------------------------------------
+
+
+def test_update_payload_with_agent_template_id_defaults_omitted_params_to_empty(
+    service: PayloadsService,
+    repo_service: RepositoryService,
+    agent_templates_service: MagicMock,
+):
+    # Passing `agent_template_id` rebuilds the payload's `data`. When both
+    # `build_parameters` and `payload_data` are omitted they must be intentionally
+    # defaulted to empty mappings, replacing whatever the payload previously carried.
+    resource = _create_payload_resource(
+        repo_service, build_parameters={"foo": "bar"}, payload_data={"baz": 1}
+    )
+    agent_templates_service.get_agent_template_by_agent_template_id.return_value = (
+        _make_agent_template()
+    )
+
+    with patch("asyncio.create_task"):
+        payload = asyncio.run(
+            service.update_payload_by_resource_id(
+                resource_id=str(resource.resource_id),
+                agent_template_id="ignored-by-mock",
+            )
+        )
+
+    assert payload.data["build_parameters"] == {}
+    assert payload.data["payload_data"] == {}
+    # The rebuilt data still references the (mocked) agent template.
+    assert payload.data["agent_template"] == {
+        "label": "test.label",
+        "name": "Test Template",
+    }

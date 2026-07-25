@@ -55,7 +55,15 @@ class PingCapability(BaseAgentCapability):
 
                 timeout = self.task_launch_message.arguments["timeout"]
                 while True:
-                    pong = await self.recv_from_agent(timeout=timeout)
+                    # Derive the time left to wait from the original configured timeout
+                    # and the total time elapsed since this ping was sent, clamped to a
+                    # floor of 0. Discarding stale pongs must not push the deadline out
+                    # past the configured timeout, so the remaining time is always
+                    # recomputed from the fixed deadline rather than decremented.
+                    remaining_timeout = max(
+                        0, timeout - (datetime.now() - started).total_seconds()
+                    )
+                    pong = await self.recv_from_agent(timeout=remaining_timeout)
                     pong_sequence = pong.data["sequence"]
                     if pong_sequence == ping_sequence:
                         delta = datetime.now() - started
@@ -67,12 +75,8 @@ class PingCapability(BaseAgentCapability):
                         received += 1
                         break
                     # We received a late pong response from an earlier ping in time,
-                    # silently discard it and update the timeout to wait for to continue
-                    # waiting for our current pong response. Clamp the timeout to 0
-                    # seconds
-                    timeout = max(
-                        0, timeout - (datetime.now() - started).total_seconds()
-                    )
+                    # silently discard it and keep waiting for our current pong response
+                    # until the original deadline elapses.
             except TimeoutError:
                 latency_str = format_latency((datetime.now() - started).total_seconds())
                 self.event_logger.failure(

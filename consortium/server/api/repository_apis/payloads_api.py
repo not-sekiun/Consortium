@@ -24,6 +24,9 @@ from consortium.server.exceptions.service_exceptions import (
     repository_service_exceptions as svc_excs,
 )
 from consortium.server.models.repository_models import PayloadModel
+from consortium.server.models.union_response_models import (
+    RequestValidationErrorResponse,
+)
 from consortium.server.objects.user_account_objects import UserPermissions
 
 router = APIRouter(
@@ -115,9 +118,7 @@ router.add_api_route(
         404: {
             "model": _resource_not_found_error.to_pydantic_model(),
         },
-        422: {
-            "model": _invalid_uuid_error.to_pydantic_model(),
-        },
+        422: {"model": RequestValidationErrorResponse},
     },
     name="Update Payload By Resource ID",
 )

@@ -246,13 +246,12 @@ class AgentTemplatesPayloadsService:
 
     @log_and_propagate_error_on_service_method
     async def delete_payload_by_payload_id(self, payload_id: str | uuid.UUID) -> None:
-        """Deletes a payload's repository resource and its associated metadata.
+        """Deletes a payload's repository resource.
 
-        Forwards to `PayloadsService.delete_payload_by_resource_id`. A
-        `PAYLOAD_DELETED` event is only emitted when both the metadata and the
-        repository resource existed prior to deletion. If only one side exists, a
-        warning is logged and the orphaned side is cleaned up without emitting an
-        event.
+        Forwards to `PayloadsService.delete_payload_by_resource_id`. A payload is just a
+        repository resource whose `data` field carries its metadata, so deleting the
+        resource removes the payload in full and a `PAYLOAD_DELETED` event is emitted
+        unconditionally on success.
 
         Args:
             payload_id: The ID of the payload to delete.
@@ -261,8 +260,7 @@ class AgentTemplatesPayloadsService:
             Nothing.
 
         Raises:
-            RepositoryResourceNotFoundError: If neither payload metadata nor a matching repository
-                resource exists.
+            RepositoryResourceNotFoundError: If no payload with the given ID exists.
         """
         await self._payloads_service.delete_payload_by_resource_id(
             resource_id=payload_id,

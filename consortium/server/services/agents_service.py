@@ -181,13 +181,20 @@ class AgentsService:
             AgentNotFoundError: If no agent with the given ID is registered.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        # Snapshot the agent's task IDs before removal. They vanish along with the agent
+        # (tasks are held on the agent object), so consumers such as the client
+        # autocompleter need this snapshot to prune the now-dangling task references.
+        task_ids = [str(task.task_id) for task in agent.get_all_tasks()]
         del self._agents[str(agent.agent_id)]
 
         asyncio.create_task(
             self._events_service.trigger_event(
                 event_type=EventType.AGENT_DELETED,
                 message=f"Deleted agent: {agent}",
-                data=agent.to_json(),
+                data={
+                    "agent": agent.to_json(),
+                    "task_ids": task_ids,
+                },
             )
         )
         self._logger.info("Deleted agent: {}", agent)

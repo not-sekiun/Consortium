@@ -121,10 +121,18 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        agent = event["data"]
+        # The AGENT_DELETED event carries the deleted agent's JSON alongside a snapshot
+        # of the task IDs it owned at deletion time. The agent's tasks are removed along
+        # with the agent server side, so both the agent ID and every one of its task IDs
+        # must be pruned from their respective completion sets.
+        agent = event["data"]["agent"]
+        task_ids = event["data"]["task_ids"]
         completions_dict = self.completer.get_completions_dict()
         for command in ["info", "interact", "t-list", "rename", "describe", "delete"]:
             completions_dict[command].pop(agent["agent_id"], None)
+        for command in ["t-info", "watch"]:
+            for task_id in task_ids:
+                completions_dict[command].pop(task_id, None)
         self.completer.set_completions_dict(completions_dict)
 
     async def _asset_created_event_handler(
