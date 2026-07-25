@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import PathCompleter
 
+from consortium.client.client_websockets_events_api import EventHandler
 from consortium.client.commands.agents_interpreter_commands import (
     AGENTS_INTERPRETER_COMMANDS,
     AgentListCommand,
@@ -26,11 +27,23 @@ COMBINED_AGENTS_INTERPRETER_CORE_COMMANDS = [
 # Commands that take an asset resource ID as their first positional argument, and so
 # autocomplete against the set of known asset IDs. Kept as a single source of truth so
 # the initial autocompleter population and the asset event handlers stay in sync.
-ASSET_ID_COMPLETION_COMMANDS = ["as-dl", "as-info", "as-rm"]
+ASSET_ID_COMPLETION_COMMANDS = [
+    "as-dl",
+    "as-info",
+    "as-rm",
+    "as-rename",
+    "as-describe",
+]
 
 # Commands that take an artifact resource ID as their first positional argument, and so
 # autocomplete against the set of known artifact IDs.
-ARTIFACT_ID_COMPLETION_COMMANDS = ["ar-dl", "ar-info", "ar-rm"]
+ARTIFACT_ID_COMPLETION_COMMANDS = [
+    "ar-dl",
+    "ar-info",
+    "ar-rm",
+    "ar-rename",
+    "ar-describe",
+]
 
 
 class AgentsInterpreter(BaseConnectedInterpreter):
@@ -177,34 +190,22 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             completions_dict[command].pop(artifact["resource_id"], None)
         self.completer.set_completions_dict(completions_dict)
 
+    # Single source of truth for this interpreter's event subscriptions, so that setup
+    # and teardown can never drift apart.
+    def _get_event_handlers(self) -> dict[str, EventHandler]:
+        return {
+            "AGENT_REGISTERED": self._agent_registered_event_handler,
+            "AGENT_TASKED": self._agent_tasked_event_handler,
+            "AGENT_DELETED": self._agent_deleted_event_handler,
+            "ASSET_CREATED": self._asset_created_event_handler,
+            "ASSET_DELETED": self._asset_deleted_event_handler,
+            "ARTIFACT_CREATED": self._artifact_created_event_handler,
+            "ARTIFACT_DELETED": self._artifact_deleted_event_handler,
+        }
+
     async def _setup_event_handlers(self) -> None:
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="AGENT_REGISTERED",
-            event_handler=self._agent_registered_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="AGENT_TASKED",
-            event_handler=self._agent_tasked_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="AGENT_DELETED",
-            event_handler=self._agent_deleted_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="ASSET_CREATED",
-            event_handler=self._asset_created_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="ASSET_DELETED",
-            event_handler=self._asset_deleted_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="ARTIFACT_CREATED",
-            event_handler=self._artifact_created_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="ARTIFACT_DELETED",
-            event_handler=self._artifact_deleted_event_handler,
+        await self.client_session.websockets_api.subscribe_to_events(
+            event_handlers=self._get_event_handlers(),
         )
         await self.client_session.websockets_api.start()
 
@@ -215,33 +216,8 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="AGENT_REGISTERED",
-            event_handler=self._agent_registered_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="AGENT_TASKED",
-            event_handler=self._agent_tasked_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="AGENT_DELETED",
-            event_handler=self._agent_deleted_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="ASSET_CREATED",
-            event_handler=self._asset_created_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="ASSET_DELETED",
-            event_handler=self._asset_deleted_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="ARTIFACT_CREATED",
-            event_handler=self._artifact_created_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="ARTIFACT_DELETED",
-            event_handler=self._artifact_deleted_event_handler,
+        await self.client_session.websockets_api.unsubscribe_from_events(
+            event_handlers=self._get_event_handlers(),
         )
 
     async def on_enter(self) -> None:

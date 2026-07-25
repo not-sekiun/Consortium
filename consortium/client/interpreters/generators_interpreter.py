@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI, HTML
 
+from consortium.client.client_websockets_events_api import EventHandler
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.generators_interpreter_commands import (
     GENERATORS_INTERPRETER_COMMANDS,
@@ -142,22 +143,23 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             all_payloads=all_payloads,
         )
 
+    # Single source of truth for this interpreter's event subscriptions, so that setup
+    # and teardown can never drift apart.
+    def _get_event_handlers(self) -> dict[str, EventHandler]:
+        return {
+            "AGENT_GENERATOR_CREATED": (
+                self._agent_generator_created_or_removed_event_handler
+            ),
+            "AGENT_GENERATOR_REMOVED": (
+                self._agent_generator_created_or_removed_event_handler
+            ),
+            "PAYLOAD_CREATED": self._payload_created_or_removed_event_handler,
+            "PAYLOAD_DELETED": self._payload_created_or_removed_event_handler,
+        }
+
     async def _setup_event_handlers(self) -> None:
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="AGENT_GENERATOR_CREATED",
-            event_handler=self._agent_generator_created_or_removed_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="AGENT_GENERATOR_REMOVED",
-            event_handler=self._agent_generator_created_or_removed_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="PAYLOAD_CREATED",
-            event_handler=self._payload_created_or_removed_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="PAYLOAD_DELETED",
-            event_handler=self._payload_created_or_removed_event_handler,
+        await self.client_session.websockets_api.subscribe_to_events(
+            event_handlers=self._get_event_handlers(),
         )
         await self.client_session.websockets_api.start()
 
@@ -168,21 +170,8 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="AGENT_GENERATOR_CREATED",
-            event_handler=self._agent_generator_created_or_removed_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="AGENT_GENERATOR_REMOVED",
-            event_handler=self._agent_generator_created_or_removed_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="PAYLOAD_CREATED",
-            event_handler=self._payload_created_or_removed_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="PAYLOAD_DELETED",
-            event_handler=self._payload_created_or_removed_event_handler,
+        await self.client_session.websockets_api.unsubscribe_from_events(
+            event_handlers=self._get_event_handlers(),
         )
 
     @staticmethod

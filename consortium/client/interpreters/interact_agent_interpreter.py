@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any
 from prompt_toolkit import HTML
 from rich.panel import Panel
 
+from consortium.client.client_websockets_events_api import EventHandler
 from consortium.client.commands.core_commands.agents import AgentsCommand
 from consortium.client.commands.interact_agent_interpreter_commands import (
     INTERACT_AGENT_INTERPRETER_COMMANDS,
@@ -266,31 +267,22 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
             completions_dict[command].pop(artifact["resource_id"], None)
         self.completer.set_completions_dict(completions_dict)
 
+    # Single source of truth for this interpreter's event subscriptions, so that setup
+    # and teardown can never drift apart.
+    def _get_event_handlers(self) -> dict[str, EventHandler]:
+        return {
+            "AGENT_TASK_COMPLETED": self._agent_task_completed_event_handler,
+            "AGENT_TASKED": self._agent_tasked_event_handler,
+            "ASSET_CREATED": self._asset_created_event_handler,
+            "ASSET_DELETED": self._asset_deleted_event_handler,
+            "ARTIFACT_CREATED": self._artifact_created_event_handler,
+            "ARTIFACT_DELETED": self._artifact_deleted_event_handler,
+        }
+
     async def _setup_event_handlers(self) -> None:
         # Register all relevant event handlers first
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="AGENT_TASK_COMPLETED",
-            event_handler=self._agent_task_completed_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="AGENT_TASKED",
-            event_handler=self._agent_tasked_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="ASSET_CREATED",
-            event_handler=self._asset_created_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="ASSET_DELETED",
-            event_handler=self._asset_deleted_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="ARTIFACT_CREATED",
-            event_handler=self._artifact_created_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="ARTIFACT_DELETED",
-            event_handler=self._artifact_deleted_event_handler,
+        await self.client_session.websockets_api.subscribe_to_events(
+            event_handlers=self._get_event_handlers(),
         )
         # Start the websocket connection to listen for all registered events.
         await self.client_session.websockets_api.start()
@@ -302,29 +294,8 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="AGENT_TASK_COMPLETED",
-            event_handler=self._agent_task_completed_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="AGENT_TASKED",
-            event_handler=self._agent_tasked_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="ASSET_CREATED",
-            event_handler=self._asset_created_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="ASSET_DELETED",
-            event_handler=self._asset_deleted_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="ARTIFACT_CREATED",
-            event_handler=self._artifact_created_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="ARTIFACT_DELETED",
-            event_handler=self._artifact_deleted_event_handler,
+        await self.client_session.websockets_api.unsubscribe_from_events(
+            event_handlers=self._get_event_handlers(),
         )
 
     async def on_enter(self) -> None:

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import ANSI, HTML
 
+from consortium.client.client_websockets_events_api import EventHandler
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.listeners_interpreter_commands import (
     LISTENERS_INTERPRETER_COMMANDS,
@@ -116,14 +117,17 @@ class ListenersInterpreter(BaseConnectedInterpreter):
             all_listener_templates=all_listener_templates,
         )
 
+    # Single source of truth for this interpreter's event subscriptions, so that setup
+    # and teardown can never drift apart.
+    def _get_event_handlers(self) -> dict[str, EventHandler]:
+        return {
+            "LISTENER_CREATED": self._listener_created_or_removed_event_handler,
+            "LISTENER_REMOVED": self._listener_created_or_removed_event_handler,
+        }
+
     async def _setup_event_handlers(self) -> None:
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="LISTENER_CREATED",
-            event_handler=self._listener_created_or_removed_event_handler,
-        )
-        await self.client_session.websockets_api.subscribe_to_event(
-            event_type="LISTENER_REMOVED",
-            event_handler=self._listener_created_or_removed_event_handler,
+        await self.client_session.websockets_api.subscribe_to_events(
+            event_handlers=self._get_event_handlers(),
         )
         await self.client_session.websockets_api.start()
 
@@ -134,13 +138,8 @@ class ListenersInterpreter(BaseConnectedInterpreter):
         await self.client_session.websockets_api.stop()
         # Remove all relevant event handlers to prevent them from firing in other
         # interpreters.
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="LISTENER_CREATED",
-            event_handler=self._listener_created_or_removed_event_handler,
-        )
-        await self.client_session.websockets_api.unsubscribe_from_event(
-            event_type="LISTENER_REMOVED",
-            event_handler=self._listener_created_or_removed_event_handler,
+        await self.client_session.websockets_api.unsubscribe_from_events(
+            event_handlers=self._get_event_handlers(),
         )
 
     async def on_enter(self) -> None:

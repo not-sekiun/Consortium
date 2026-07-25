@@ -22,6 +22,10 @@ from consortium.client.exceptions.websockets_api_exceptions import (
 )
 from consortium.client.models.logging_models import LoggerType
 
+# An event handler is any coroutine function taking the raw event message dictionary as
+# its only argument.
+EventHandler = Callable[[dict[str, Any]], Awaitable[None]]
+
 _websockets_api_generic_response_json_schema = {
     "type": "object",
     "properties": {
@@ -127,7 +131,7 @@ class WebsocketsEventsAPI:
     async def subscribe_to_event(
         self,
         event_type: str,
-        event_handler: Callable[[dict[str, Any]], Awaitable[None]],
+        event_handler: EventHandler,
     ):
         if event_type not in self._event_handlers:
             # If the event type is not valid, the server will return an error response.
@@ -142,7 +146,7 @@ class WebsocketsEventsAPI:
     async def unsubscribe_from_event(
         self,
         event_type: str,
-        event_handler: Callable[[dict[str, Any]], Awaitable[None]] | None,
+        event_handler: EventHandler | None,
     ):
         if event_type not in self._event_handlers:
             raise EventTypeNotSubscribedError(event_type=event_type)
@@ -157,6 +161,35 @@ class WebsocketsEventsAPI:
             raise EventHandlerNotSubscribedError(event_type=event_type)
 
         self._event_handlers[event_type].remove(event_handler)
+
+    async def subscribe_to_events(
+        self,
+        event_handlers: dict[str, EventHandler],
+    ) -> None:
+        # Bulk subscribe every event type in `event_handlers` to its handler. Callers
+        # such as the interpreters register a whole set of handlers at once, so this
+        # collapses what would otherwise be one near-identical `subscribe_to_event` call
+        # per event type. The same handler may be mapped from several event types since
+        # the keys are the event types.
+        for event_type, event_handler in event_handlers.items():
+            await self.subscribe_to_event(
+                event_type=event_type,
+                event_handler=event_handler,
+            )
+
+    async def unsubscribe_from_events(
+        self,
+        event_handlers: dict[str, EventHandler | None],
+    ) -> None:
+        # The inverse of `subscribe_to_events`, intended to be called with the same
+        # mapping that was passed to it so that a caller's handlers are all removed
+        # together. A `None` handler unsubscribes every handler registered for that event
+        # type, matching the behaviour of `unsubscribe_from_event`.
+        for event_type, event_handler in event_handlers.items():
+            await self.unsubscribe_from_event(
+                event_type=event_type,
+                event_handler=event_handler,
+            )
 
     async def get_all_events(self):
         return (await self._send_and_recv_message(action="get_all_events"))["data"]

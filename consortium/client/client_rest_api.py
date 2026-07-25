@@ -561,6 +561,18 @@ class RestAPI:
         )
 
     @_requires_authentication
+    async def update_asset_by_resource_id(
+        self,
+        resource_id: str,
+        new_asset_attributes: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
+        return await self._make_api_request(
+            method="PATCH",
+            url=f"{self._api_base_url}/assets/{resource_id}",
+            json=new_asset_attributes,
+        )
+
+    @_requires_authentication
     async def delete_asset_by_resource_id(
         self,
         resource_id: str,
@@ -638,6 +650,18 @@ class RestAPI:
         return await self._make_api_request(
             method="GET",
             url=f"{self._api_base_url}/artifacts/{resource_id}",
+        )
+
+    @_requires_authentication
+    async def update_artifact_by_resource_id(
+        self,
+        resource_id: str,
+        new_artifact_attributes: dict[str, JsonValue],
+    ) -> dict[str, JsonValue]:
+        return await self._make_api_request(
+            method="PATCH",
+            url=f"{self._api_base_url}/artifacts/{resource_id}",
+            json=new_artifact_attributes,
         )
 
     @_requires_authentication
