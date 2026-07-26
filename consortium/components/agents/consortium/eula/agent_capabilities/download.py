@@ -14,7 +14,6 @@ class DownloadCapability(BaseAgentCapability):
     name = "download"
     description = "Download a file or directory from the agent"
     authors = {"Sekiun (github.com/not-sekiun)"}
-    is_atomic = True
     options = {
         SingleValueOption(
             name="source",

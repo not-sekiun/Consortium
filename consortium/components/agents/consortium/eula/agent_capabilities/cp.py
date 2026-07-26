@@ -6,7 +6,6 @@ class CpCapability(BaseAgentCapability):
     name = "cp"
     description = "Copy files and directories on the agent."
     authors = {"Sekiun (github.com/not-sekiun)"}
-    is_atomic = True
     options = {
         SingleValueOption(
             name="source",

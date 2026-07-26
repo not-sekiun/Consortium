@@ -8,7 +8,6 @@ class LsCapability(BaseAgentCapability):
         "List directory contents on the agent at the current working directory."
     )
     authors = {"Sekiun (github.com/not-sekiun)"}
-    is_atomic = True
     options = {
         SingleValueOption(
             name="path",

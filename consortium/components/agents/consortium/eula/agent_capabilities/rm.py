@@ -6,7 +6,6 @@ class RmCapability(BaseAgentCapability):
     name = "rm"
     description = "Remove files and directories on the agent."
     authors = {"Sekiun (github.com/not-sekiun)"}
-    is_atomic = True
     options = {
         SingleValueOption(
             name="path",

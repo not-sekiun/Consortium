@@ -6,7 +6,6 @@ class CdCapability(BaseAgentCapability):
     name = "cd"
     description = "Change directory on the agent"
     authors = {"Sekiun (github.com/not-sekiun)"}
-    is_atomic = True
     options = {
         SingleValueOption(
             name="path",

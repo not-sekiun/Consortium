@@ -6,7 +6,6 @@ class CatCapability(BaseAgentCapability):
     name = "cat"
     description = "Display the contents of a file"
     authors = {"Sekiun (github.com/not-sekiun)"}
-    is_atomic = True
     options = {
         SingleValueOption(
             name="path",

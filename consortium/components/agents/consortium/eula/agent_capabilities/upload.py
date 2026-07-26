@@ -22,7 +22,6 @@ class UploadCapability(BaseAgentCapability):
     name = "upload"
     description = "Upload a file or directory to the agent"
     authors = {"Sekiun (github.com/not-sekiun)"}
-    is_atomic = True
     options = {
         SingleValueOption(
             name="source_asset",

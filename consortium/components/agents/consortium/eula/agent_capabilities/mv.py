@@ -6,7 +6,6 @@ class MvCapability(BaseAgentCapability):
     name = "mv"
     description = "Move or rename files and directories on the agent."
     authors = {"Sekiun (github.com/not-sekiun)"}
-    is_atomic = True
     options = {
         SingleValueOption(
             name="source",
