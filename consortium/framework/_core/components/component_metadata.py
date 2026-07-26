@@ -56,7 +56,7 @@ class ComponentMetadataModel(BaseModel):
 
 
 class ComponentMetadata:
-    _metadata_model = ComponentMetadataModel
+    _component_metadata_model = ComponentMetadataModel
     # The set of configuration exceptions raised while validating this component's metadata.
     # Defaults to the generic component framework exceptions; a domain base class overrides
     # slots with its own subclasses so domain errors are raised directly instead of being
@@ -75,7 +75,7 @@ class ComponentMetadata:
     def _get_metadata_fields(cls) -> dict[str, Any]:
         return {
             key: getattr(cls, key)
-            for key in cls._metadata_model.model_fields.keys()
+            for key in cls._component_metadata_model.model_fields.keys()
             if hasattr(cls, key)
         }
 
@@ -106,7 +106,7 @@ class ComponentMetadata:
 
         # Check all class attributes are of the expected type
         try:
-            cls._metadata_model(
+            cls._component_metadata_model(
                 **cls._get_metadata_fields(),
             )
         except ValidationError as exc:

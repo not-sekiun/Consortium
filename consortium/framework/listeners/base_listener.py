@@ -334,7 +334,7 @@ class BaseListener(ComponentLifeCycle):
             "creating_listener_template": self.creating_listener_template.to_json_reference(),
         }
 
-    def to_json_reference(self) -> dict[str, str]:
+    def to_json_reference(self) -> dict[str, JsonValue]:
         """Serialize a compact reference to this listener.
 
         Returns:

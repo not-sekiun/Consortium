@@ -12,6 +12,7 @@ import packaging.requirements as requirements
 import packaging.version as version
 from pydantic import JsonValue
 
+from consortium.framework._core.components import ComponentMetadata
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentConfigurationError,
 )
@@ -101,7 +102,7 @@ class ComponentLoadingExceptions:
 
 # Default base service that loads components from directories. Expects to
 # load a single component from each directory.
-class ComponentLoaderService[Component]:
+class ComponentLoaderService[Component: ComponentMetadata]:
     _component_type: type[Component]
     # Domain-specific framework error(s) that can surface during import or
     # instantiation of a component. These are distinct from Component*Error, which

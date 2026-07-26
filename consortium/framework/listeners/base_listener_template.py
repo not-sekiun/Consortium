@@ -48,7 +48,7 @@ from consortium.framework.options import (
 )
 from consortium.server.utils import construct_services_dataclass
 
-Options = (
+type Options = (
     SingleValueOption
     | ChoiceValueOption
     | ListValueOption
@@ -57,7 +57,7 @@ Options = (
 )
 
 
-class _ListenerTemplateModel(ComponentMetadataModel):
+class _ListenerTemplateMetadataModel(ComponentMetadataModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     listener: type[BaseListener]
@@ -87,8 +87,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             set of resolved option values before listener creation.
     """
 
-    _metadata_model = _ListenerTemplateModel
-
+    _component_metadata_model = _ListenerTemplateMetadataModel
     # Raise listener template framework exceptions directly from the shared metadata
     # validation instead of raising generic component exceptions and remapping them in
     # __init_subclass__.
@@ -342,7 +341,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             else None,
         }
 
-    def to_json_reference(self) -> dict[str, str]:
+    def to_json_reference(self) -> dict[str, JsonValue]:
         """Serialize a compact reference to this listener template.
 
         Returns:

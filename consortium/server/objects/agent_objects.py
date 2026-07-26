@@ -790,7 +790,7 @@ class Agent:
             "agent_data": self.agent_data,
         }
 
-    def to_json_reference(self) -> dict[str, str]:
+    def to_json_reference(self) -> dict[str, JsonValue]:
         return {
             "agent_id": str(self.agent_id),
             "name": self.name,

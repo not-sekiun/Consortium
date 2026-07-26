@@ -300,7 +300,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             "status": self.status.to_json(),
         }
 
-    def to_json_reference(self) -> dict[str, str]:
+    def to_json_reference(self) -> dict[str, JsonValue]:
         """Serialize a compact reference to this build step.
 
         Returns:
@@ -711,7 +711,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
             "creating_agent_template": self.creating_agent_template.to_json_reference(),
         }
 
-    def to_json_reference(self) -> dict[str, str]:
+    def to_json_reference(self) -> dict[str, JsonValue]:
         """Serialize a compact reference to this generator.
 
         Returns:

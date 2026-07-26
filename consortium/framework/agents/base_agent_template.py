@@ -47,7 +47,7 @@ from consortium.framework.options import (
 )
 from consortium.server.utils import construct_services_dataclass
 
-Options = (
+type Options = (
     SingleValueOption
     | ChoiceValueOption
     | ListValueOption
@@ -56,7 +56,7 @@ Options = (
 )
 
 
-class _AgentTemplateModel(ComponentMetadataModel):
+class _AgentTemplateMetadataModel(ComponentMetadataModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     agent_generator: type[BaseAgentGenerator]
@@ -90,8 +90,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             set of resolved option values before generator creation.
     """
 
-    _metadata_model = _AgentTemplateModel
-
+    _component_metadata_model = _AgentTemplateMetadataModel
     # Raise agent template framework exceptions directly from the shared metadata validation
     # instead of raising generic component exceptions and remapping them in __init_subclass__.
     _component_metadata_exceptions = ComponentMetadataExceptions(
@@ -307,7 +306,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             else None,
         }
 
-    def to_json_reference(self) -> dict[str, str]:
+    def to_json_reference(self) -> dict[str, JsonValue]:
         """Serialize a compact reference to this agent template.
 
         Returns:

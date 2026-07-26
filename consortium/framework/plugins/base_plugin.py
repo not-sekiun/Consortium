@@ -35,7 +35,7 @@ from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import construct_services_dataclass
 
 
-class _PluginModel(ComponentMetadataModel):
+class _PluginMetadataModel(ComponentMetadataModel):
     autostart: bool = True
 
 
@@ -72,8 +72,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             plugin's system logger.
     """
 
-    _metadata_model = _PluginModel
-
+    _component_metadata_model = _PluginMetadataModel
     # Raise plugin framework exceptions directly from the shared metadata validation instead
     # of raising generic component exceptions and remapping them in __init_subclass__.
     _component_metadata_exceptions = ComponentMetadataExceptions(
@@ -267,7 +266,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             "event_log": self.event_logger.to_json(limit=limit, offset=offset),
         }
 
-    def to_json_reference(self) -> dict[str, str]:
+    def to_json_reference(self) -> dict[str, JsonValue]:
         """Serialize a compact reference to this plugin.
 
         Returns:

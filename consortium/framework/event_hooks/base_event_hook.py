@@ -27,7 +27,7 @@ from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.utils import construct_services_dataclass
 
 
-class _EventHookModel(ComponentMetadataModel):
+class _EventHookMetadataModel(ComponentMetadataModel):
     event_types: set[EventType] | None = None
 
 
@@ -67,8 +67,7 @@ class BaseEventHook(ComponentMetadata):
             Entries are optionally mirrored to the hook's system logger.
     """
 
-    _metadata_model = _EventHookModel
-
+    _component_metadata_model = _EventHookMetadataModel
     # Raise event hook framework exceptions directly from the shared metadata validation
     # instead of raising generic component exceptions and remapping them in __init_subclass__.
     _component_metadata_exceptions = ComponentMetadataExceptions(
@@ -179,7 +178,7 @@ class BaseEventHook(ComponentMetadata):
             "event_log": self.event_logger.to_json(limit=limit, offset=offset),
         }
 
-    def to_json_reference(self) -> dict[str, str]:
+    def to_json_reference(self) -> dict[str, JsonValue]:
         """Serialize a compact reference to this event hook.
 
         Returns:
