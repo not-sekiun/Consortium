@@ -2,7 +2,7 @@ import re
 from collections.abc import Callable
 from typing import get_type_hints
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     InvalidOptionConfigurationParameterTypeError,
@@ -267,7 +267,7 @@ class DictionaryValueOption(BaseOption[dict[str, Primitive]]):
 
     def to_json(
         self,
-    ) -> dict[str, str | bool | dict[str, Primitive] | None]:
+    ) -> dict[str, JsonValue]:
         """Serialize the option and its constraints to a JSON-compatible dictionary.
 
         Returns:

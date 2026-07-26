@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import get_type_hints
 
 from pydantic import BaseModel, JsonValue, ValidationError
@@ -23,7 +24,7 @@ class _BaseOptionParametersModel(BaseModel):
     required: bool
 
 
-class BaseOption[ValueType]:
+class BaseOption[ValueType](ABC):
     option_type: OptionType
 
     def __init__(
@@ -63,11 +64,10 @@ class BaseOption[ValueType]:
 
     # Every concrete option type carries a different set of parameters, so each one
     # builds its own representation rather than inheriting one from here.
-    def __repr__(self) -> str:
-        raise NotImplementedError(
-            f"'{type(self).__name__}' must implement '__repr__'.",
-        )
+    @abstractmethod
+    def __repr__(self) -> str: ...
 
+    @abstractmethod
     def validate_value(self, value: ValueType) -> None:
         """
         Validate the value of the option.
@@ -79,6 +79,7 @@ class BaseOption[ValueType]:
             OptionValueValidationError: If the value is invalid.
         """
 
+    @abstractmethod
     def to_json(self) -> dict[str, JsonValue]:
         """
         Convert the option to a JSON serializable dictionary.
@@ -86,13 +87,6 @@ class BaseOption[ValueType]:
         Returns:
             The JSON serializable dictionary representation of the option.
         """
-        return {
-            "name": self.name,
-            "description": self.description,
-            "required": self.required,
-            "default_value": self.default_value,
-            "value": self._value,
-        }
 
     def _validate_option_arguments(self) -> None:
         # We manually check the `self.name` parameter first because every other error

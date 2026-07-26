@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import get_type_hints
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, JsonValue, ValidationError
 
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     InvalidOptionConfigurationParameterTypeError,
@@ -301,9 +301,7 @@ class ListValueOption(BaseOption[list[Primitive]]):
                 validating_function=self.validating_function,
             )
 
-    def to_json(
-        self,
-    ) -> dict[str, Primitive | list[Primitive] | None]:
+    def to_json(self) -> dict[str, JsonValue]:
         """Serialize the option and its constraints to a JSON-compatible dictionary.
 
         Returns:

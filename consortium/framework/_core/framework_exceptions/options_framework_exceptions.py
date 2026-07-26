@@ -152,8 +152,8 @@ class InvalidOptionValueRangeError(OptionConfigurationError):
             "greater_than",
             "greater_than_or_equal_to",
         ],
-        minimum_range: int,
-        maximum_range: int,
+        minimum_range: int | float,
+        maximum_range: int | float,
     ):
         # `greater_than` parameter cannot be greater than the `less_than` parameter.
         if (
