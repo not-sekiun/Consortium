@@ -184,7 +184,6 @@ return Failure(task_output_message=header)   # wrap an existing message model
 | `self.authors`                 | `set[str]`                       | Author identifiers                                                     |
 | `self.requires_admin`          | `bool`                           | Whether elevated privileges are required                               |
 | `self.supported_oses`          | `set[SupportedOS]`               | Platform restrictions                                                  |
-| `self.is_atomic`               | `bool`                           | Whether this maps to a single MITRE ATT&CK step                        |
 | `self.options`                 | `dict`                           | Name-keyed option definitions (converted from set at class definition) |
 | `self.mitre_attack_techniques` | `list`                           | Resolved MITRE ATT&CK technique objects                                |
 | `self.launch_message`          | `TaskLaunchMessageModel \| None` | The message sent on the most recent `execute()` call                   |
