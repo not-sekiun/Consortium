@@ -266,6 +266,15 @@ class BaseAgentCapability(_AgentCommunicator):
         )
 
     @property
+    def logger(self):
+        """System logger for reporting this capability's execution as it runs.
+
+        Returns:
+            The system logger shared with the owning task.
+        """
+        return self.task.logger
+
+    @property
     def event_logger(self):
         """Event logger for reporting this capability's execution as it runs.
 

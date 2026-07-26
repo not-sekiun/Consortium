@@ -120,12 +120,12 @@ class AgentTask:
         self.datetime_created = utc_now()
         self.datetime_started = None
         self.datetime_completed = None
-        self._logger = logger.bind(
+        self.logger = logger.bind(
             logger_name=f"Agent Task - {self}",
             logger_type=LoggerType.AGENT_TASK_LOGGER,
         )
         self.event_logger = EventLogger(
-            event_log=EventLog(subject_id=self.task_id), system_logger=self._logger
+            event_log=EventLog(subject_id=self.task_id), system_logger=self.logger
         )
 
     def __str__(self) -> str:

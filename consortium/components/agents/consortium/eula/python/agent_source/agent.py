@@ -266,7 +266,7 @@ def download_capability(context):
                     success=True,
                     data={
                         "type": "directory",
-                        # Includes the base dir within the relative path
+                        # Excludes the base dir within the relative path
                         "path": os.path.relpath(dir_path, base_parent),
                     },
                 )
