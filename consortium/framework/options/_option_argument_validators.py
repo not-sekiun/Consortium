@@ -16,12 +16,14 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
 
 def validate_string_length_arguments(
     option_name: str,
-    option_value_type: type,
+    option_value_type: type | None,
     minimum_length: int | None,
     maximum_length: int | None,
 ) -> None:
     if minimum_length is not None or maximum_length is not None:
-        if not issubclass(option_value_type, str):
+        # An option that declares no value type accepts any primitive, so a length
+        # bound is just as inapplicable as it is on a non-string value type.
+        if option_value_type is None or not issubclass(option_value_type, str):
             raise InvalidOptionConfigurationParameterTypeError(
                 option_str=option_name,
                 error_message=(
@@ -53,7 +55,7 @@ def validate_string_length_arguments(
 
 def validate_numeric_range_arguments(
     option_name: str,
-    option_value_type: type,
+    option_value_type: type | None,
     greater_than: int | float | None,
     less_than: int | float | None,
     greater_than_or_equal_to: int | float | None,
@@ -67,8 +69,10 @@ def validate_numeric_range_arguments(
     }
 
     for parameter_name, parameter_value in parameters.items():
-        if parameter_value is not None and not issubclass(
-            option_value_type, (int, float)
+        # An option that declares no value type accepts any primitive, so a numeric
+        # bound is just as inapplicable as it is on a non-numeric value type.
+        if parameter_value is not None and (
+            option_value_type is None or not issubclass(option_value_type, (int, float))
         ):
             raise InvalidOptionConfigurationParameterTypeError(
                 option_str=option_name,
@@ -97,6 +101,17 @@ def validate_numeric_range_arguments(
             )
     if greater_than_or_equal_to is not None:
         if less_than is not None and greater_than_or_equal_to > less_than:
+            raise InvalidOptionValueRangeError(
+                option_name=option_name,
+                minimum_range_parameter_name="less_than",
+                maximum_range_parameter_name="greater_than_or_equal_to",
+                minimum_range=less_than,
+                maximum_range=greater_than_or_equal_to,
+            )
+        if (
+            less_than_or_equal_to is not None
+            and greater_than_or_equal_to > less_than_or_equal_to
+        ):
             raise InvalidOptionValueRangeError(
                 option_name=option_name,
                 minimum_range_parameter_name="less_than_or_equal_to",

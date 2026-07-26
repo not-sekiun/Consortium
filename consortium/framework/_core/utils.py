@@ -26,7 +26,7 @@ def format_docstring_to_single_line(docstring: str) -> str:
 
 
 def resolve_validating_function_string(
-    validating_function: Callable[[Any], None],
+    validating_function: Callable[[Any], None] | None,
 ) -> str | None:
     # If a validating function is present, we want to display the docstring
     # of the function in the JSON output. If the function does not have a docstring, we
