@@ -10,6 +10,7 @@ from pydantic import JsonValue
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.components import (
     ComponentLifeCycle,
+    ComponentLifeCycleExceptions,
     ComponentLifeCycleFatalContext,
     ComponentMetadata,
     ComponentMetadataExceptions,
@@ -17,9 +18,6 @@ from consortium.framework._core.components import (
 )
 from consortium.framework._core.event_logging.event_log import EventLog
 from consortium.framework._core.event_logging.event_logger import EventLogger
-from consortium.framework._core.framework_exceptions import (
-    components_framework_exceptions,
-)
 from consortium.framework._core.framework_exceptions.plugins_framework_exceptions import (
     EmptyPluginLabelError,
     InvalidFrameworkVersionSpecifierError,
@@ -85,6 +83,15 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         invalid_version=InvalidPluginVersionError,
         invalid_framework_version_specifier=InvalidFrameworkVersionSpecifierError,
         invalid_dependency_version_specifier=InvalidPluginDependencyVersionSpecifierError,
+    )
+    # Raise plugin errors directly from the shared lifecycle instead of raising generic
+    # component errors and remapping them here, which would format the message twice.
+    _component_life_cycle_exceptions = ComponentLifeCycleExceptions(
+        start=PluginStartError,
+        stop=PluginStopError,
+        runtime=PluginRuntimeError,
+        not_running=PluginNotRunningError,
+        already_running=PluginAlreadyRunningError,
     )
 
     autostart: bool = True
@@ -194,6 +201,16 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             traceback.format_exc(),
         )
 
+    # start(), stop() and cancel() below add no behaviour and exist purely to carry their
+    # documentation. The documentation generator infers docstrings statically and does not
+    # follow the MRO, so the plugin specific `Raises:` entries have to be physically
+    # present on this class to be published.
+    #
+    # Do NOT reintroduce a try/except here to convert component errors into plugin errors.
+    # The lifecycle already raises the plugin errors directly via
+    # `_component_life_cycle_exceptions`; catching and re-raising would pass an already
+    # formatted message back through a second template and nest the prefix.
+
     async def start(self) -> None:
         """Start the plugin and begin executing its main loop.
 
@@ -201,18 +218,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             PluginAlreadyRunningError: If the plugin is already in a running state.
             PluginStartError: If the plugin fails to start due to a lifecycle error.
         """
-        try:
-            await super().start()
-        except components_framework_exceptions.ComponentAlreadyRunningError:
-            raise PluginAlreadyRunningError(
-                plugin_str=str(self),
-            ) from None
-        except components_framework_exceptions.ComponentStartError as exc:
-            raise PluginStartError(
-                plugin_str=str(self),
-                error_message=exc.message,
-                detail=exc.detail,
-            ) from None
+        await super().start()
 
     async def stop(self) -> None:
         """Stop the plugin and exit its main loop.
@@ -221,18 +227,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             PluginNotRunningError: If the plugin is not currently running.
             PluginStopError: If the plugin fails to stop cleanly.
         """
-        try:
-            await super().stop()
-        except components_framework_exceptions.ComponentNotRunningError:
-            raise PluginNotRunningError(
-                plugin_str=str(self),
-            ) from None
-        except components_framework_exceptions.ComponentStopError as exc:
-            raise PluginStopError(
-                plugin_str=str(self),
-                error_message=exc.message,
-                detail=exc.detail,
-            ) from None
+        await super().stop()
 
     async def cancel(self) -> None:
         """Cancel the plugin run immediately.
@@ -240,12 +235,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         Raises:
             PluginNotRunningError: If the plugin is not currently running.
         """
-        try:
-            await super().cancel()
-        except components_framework_exceptions.ComponentNotRunningError:
-            raise PluginNotRunningError(
-                plugin_str=str(self),
-            ) from None
+        await super().cancel()
 
     def to_json(
         self, limit: int = 10, offset: int | None = None
@@ -289,29 +279,3 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             "label": self.label,
             "name": self.name,
         }
-
-    def _construct_component_runtime_error_from_framework_runtime_error(
-        self,
-        error: components_framework_exceptions.ComponentRuntimeError,
-    ) -> PluginRuntimeError:
-        return PluginRuntimeError(
-            plugin_str=str(self),
-            error_message=error.message,
-            detail=error.detail,
-        )
-
-    def _construct_component_runtime_error_from_unhandled_exception(
-        self,
-        exc: Exception,
-    ) -> PluginRuntimeError:
-        return PluginRuntimeError(
-            plugin_str=str(self),
-            error_message=(
-                f"An unhandled exception was raised while running. "
-                f"{type(exc).__name__}: {exc}"
-            ),
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        )

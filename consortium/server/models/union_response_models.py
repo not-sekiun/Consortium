@@ -105,14 +105,14 @@ _agent_capability_not_found_error = (
 _listener_already_running_error = (
     listeners_api_exceptions.ListenerAlreadyRunningError.from_consortium_exception(
         consortium_exception=listeners_framework_exceptions.ListenerAlreadyRunningError(
-            listener_str="<listener_string>",
+            component_str="<listener_string>",
         ),
     )
 )
 _listener_start_error = (
     listeners_api_exceptions.ListenerStartError.from_consortium_exception(
         consortium_exception=listeners_framework_exceptions.ListenerStartError(
-            listener_str="<listener_string>",
+            component_str="<listener_string>",
             error_message="<error_message>",
             detail={"<key>": "<value>"},
         ),
@@ -121,14 +121,14 @@ _listener_start_error = (
 _listener_not_running_error = (
     listeners_api_exceptions.ListenerNotRunningError.from_consortium_exception(
         consortium_exception=listeners_framework_exceptions.ListenerNotRunningError(
-            listener_str="<listener_string>",
+            component_str="<listener_string>",
         ),
     )
 )
 _listener_stop_error = (
     listeners_api_exceptions.ListenerStopError.from_consortium_exception(
         consortium_exception=listeners_framework_exceptions.ListenerStopError(
-            listener_str="<listener_string>",
+            component_str="<listener_string>",
             error_message="<error_message>",
             detail={"<key>": "<value>"},
         ),
@@ -152,24 +152,24 @@ _invalid_listener_parameter_value_error = listeners_api_exceptions.InvalidListen
 # Agent generators.
 _agent_generator_already_running_error = agent_generators_api_exceptions.AgentGeneratorAlreadyRunningError.from_consortium_exception(
     consortium_exception=agent_generators_framework_exceptions.AgentGeneratorAlreadyRunningError(
-        agent_generator_str="<agent_generator_str>",
+        component_str="<agent_generator_str>",
     ),
 )
 _agent_generator_start_error = agent_generators_api_exceptions.AgentGeneratorStartError.from_consortium_exception(
     consortium_exception=agent_generators_framework_exceptions.AgentGeneratorStartError(
-        agent_generator_str="<agent_generator_str>",
+        component_str="<agent_generator_str>",
         error_message="<error_message>",
         detail={"<key>": "<value>"},
     ),
 )
 _agent_generator_not_running_error = agent_generators_api_exceptions.AgentGeneratorNotRunningError.from_consortium_exception(
     consortium_exception=agent_generators_framework_exceptions.AgentGeneratorNotRunningError(
-        agent_generator_str="<agent_generator_str>",
+        component_str="<agent_generator_str>",
     ),
 )
 _agent_generator_stop_error = agent_generators_api_exceptions.AgentGeneratorStopError.from_consortium_exception(
     consortium_exception=agent_generators_framework_exceptions.AgentGeneratorStopError(
-        agent_generator_str="<agent_generator_str>",
+        component_str="<agent_generator_str>",
         error_message="<error_message>",
         detail={"<key>": "<value>"},
     ),

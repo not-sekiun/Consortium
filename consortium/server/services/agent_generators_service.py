@@ -226,7 +226,7 @@ class AgentGeneratorsService:
         )
         if agent_generator.status.state == State.RUNNING:
             raise AgentGeneratorAlreadyRunningError(
-                agent_generator_str=str(agent_generator),
+                component_str=str(agent_generator),
             )
 
         removed_agent_generator = self._agent_generators.pop(
@@ -302,7 +302,7 @@ class AgentGeneratorsService:
             # reflected in the agent generator.
             if agent_generator.status.state == State.RUNNING:
                 raise AgentGeneratorAlreadyRunningError(
-                    agent_generator_str=str(agent_generator),
+                    component_str=str(agent_generator),
                 )
 
             # Fill in any missing parameters with values from the existing set of

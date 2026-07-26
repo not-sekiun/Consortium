@@ -1,6 +1,7 @@
 import abc
 import asyncio
 import enum
+from dataclasses import dataclass
 
 from consortium.framework._core.components.component_status import State, Status
 from consortium.framework._core.framework_exceptions import (
@@ -9,6 +10,33 @@ from consortium.framework._core.framework_exceptions import (
 from consortium.framework.signal_exceptions import (
     _component_signal_exceptions as sig_excs,
 )
+
+
+# A per-domain set of the framework error classes raised by the lifecycle. The lifecycle
+# raises from this set (via self._component_life_cycle_exceptions.<slot>) so a domain
+# (listeners, plugins, agent generators) surfaces its own framework error types directly,
+# without a base class catching the generic error and remapping it into a domain error.
+#
+# That remapping is what this set exists to prevent. The operation errors render their
+# message from a template that embeds `error_message`, so re-wrapping an already
+# constructed error passes a formatted message back through a second template and nests
+# the prefix ("Failed to start the listener X. Failed to start the component X. ...").
+# Raising the domain class here formats the message exactly once.
+#
+# Every slot defaults to the generic component framework error, so a domain that does not
+# override a slot transparently raises the generic type. A domain opts in by constructing
+# a ComponentLifeCycleExceptions with the slots it wants replaced by its own subclasses.
+@dataclass(frozen=True)
+class ComponentLifeCycleExceptions:
+    start: type[frmwrk_excs.ComponentStartError] = frmwrk_excs.ComponentStartError
+    stop: type[frmwrk_excs.ComponentStopError] = frmwrk_excs.ComponentStopError
+    runtime: type[frmwrk_excs.ComponentRuntimeError] = frmwrk_excs.ComponentRuntimeError
+    not_running: type[frmwrk_excs.ComponentNotRunningError] = (
+        frmwrk_excs.ComponentNotRunningError
+    )
+    already_running: type[frmwrk_excs.ComponentAlreadyRunningError] = (
+        frmwrk_excs.ComponentAlreadyRunningError
+    )
 
 
 # Provide additional context to the `on_fatal` handler denoting which part of the
@@ -25,6 +53,12 @@ class ComponentLifeCycleFatalContext(enum.StrEnum):
 # They handle starting, stopping, cancelling and manage status transitions based on
 # signalling errors raised from hook methods.
 class ComponentLifeCycle(abc.ABC):
+    # The set of framework errors this component's lifecycle raises. Defaults to the
+    # generic component framework errors; a domain base class overrides slots with its
+    # own subclasses so domain errors are raised directly instead of being remapped by
+    # the base class.
+    _component_life_cycle_exceptions = ComponentLifeCycleExceptions()
+
     def __init__(self):
         self.status = Status()
         self.stop_event = asyncio.Event()
@@ -66,7 +100,7 @@ class ComponentLifeCycle(abc.ABC):
     async def start(self) -> None:
         async with self._lifecycle_lock:
             if self.status.state in (State.RUNNING, State.STARTED):
-                raise frmwrk_excs.ComponentAlreadyRunningError(
+                raise self._component_life_cycle_exceptions.already_running(
                     component_str=str(self),
                 )
 
@@ -82,7 +116,13 @@ class ComponentLifeCycle(abc.ABC):
             except sig_excs.ComponentStartError as exc:
                 self.status._transition_to_initialized()
                 self._start_concluded.set()
-                raise frmwrk_excs.ComponentStartError(
+                # `error_message` must always be a raw signal message, never another
+                # framework error's already formatted `.message`. This is the only place
+                # a start failure is wrapped, so the prefix cannot be applied twice.
+                # Chain rather than sever: the signal exception (and whatever it was
+                # itself raised from) stays reachable as __cause__ for tracebacks and
+                # logs, while `.message` remains the single line the API serializes.
+                raise self._component_life_cycle_exceptions.start(
                     component_str=str(self),
                     error_message=exc.message,
                     detail=exc.detail,
@@ -101,7 +141,7 @@ class ComponentLifeCycle(abc.ABC):
     async def stop(self) -> None:
         async with self._lifecycle_lock:
             if self.status.state != State.RUNNING:
-                raise frmwrk_excs.ComponentNotRunningError(
+                raise self._component_life_cycle_exceptions.not_running(
                     component_str=str(self),
                 )
 
@@ -124,7 +164,7 @@ class ComponentLifeCycle(abc.ABC):
                 # runtime task is still live. Restoring RUNNING leaves the component
                 # exactly as it was, ready to be stopped again later.
                 self.status._transition_to_running()
-                raise frmwrk_excs.ComponentStopError(
+                raise self._component_life_cycle_exceptions.stop(
                     component_str=str(self),
                     error_message=exc.message,
                     detail=exc.detail,
@@ -151,7 +191,7 @@ class ComponentLifeCycle(abc.ABC):
     async def cancel(self) -> None:
         async with self._lifecycle_lock:
             if self.status.state != State.RUNNING:
-                raise frmwrk_excs.ComponentNotRunningError(
+                raise self._component_life_cycle_exceptions.not_running(
                     component_str=str(self),
                 )
 
@@ -222,7 +262,7 @@ class ComponentLifeCycle(abc.ABC):
         # loop task, which would then transition the freshly reset status back to
         # RUNNING.
         if self.status.state in (State.STARTED, State.RUNNING, State.STOPPING):
-            raise frmwrk_excs.ComponentAlreadyRunningError(
+            raise self._component_life_cycle_exceptions.already_running(
                 component_str=str(self),
             )
         self.status._transition_to_initialized()
@@ -233,7 +273,7 @@ class ComponentLifeCycle(abc.ABC):
         self,
         error: sig_excs.ComponentRuntimeError,
     ) -> frmwrk_excs.ComponentRuntimeError:
-        return frmwrk_excs.ComponentRuntimeError(
+        return self._component_life_cycle_exceptions.runtime(
             component_str=str(self),
             error_message=error.message,
             detail=error.detail,
@@ -243,7 +283,7 @@ class ComponentLifeCycle(abc.ABC):
         self,
         exc: Exception,
     ) -> frmwrk_excs.ComponentRuntimeError:
-        return frmwrk_excs.ComponentRuntimeError(
+        return self._component_life_cycle_exceptions.runtime(
             component_str=str(self),
             error_message=(
                 f"An unhandled exception was raised while running. "

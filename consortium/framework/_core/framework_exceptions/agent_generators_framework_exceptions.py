@@ -1,5 +1,3 @@
-from pydantic import JsonValue
-
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
     ComponentNotRunningError,
@@ -270,18 +268,6 @@ class AgentGeneratorStartError(ComponentStartError, AgentGeneratorOperationError
 
     code = "AGENT_GENERATOR_START_ERROR"
 
-    def __init__(
-        self,
-        agent_generator_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            component_str=agent_generator_str,
-            error_message=error_message,
-            detail=detail,
-        )
-
 
 class AgentGeneratorRuntimeError(ComponentRuntimeError, AgentGeneratorOperationError):
     """Raised when an agent generator encounters an unhandled error at runtime during
@@ -289,18 +275,6 @@ class AgentGeneratorRuntimeError(ComponentRuntimeError, AgentGeneratorOperationE
     """
 
     code = "AGENT_GENERATOR_RUNTIME_ERROR"
-
-    def __init__(
-        self,
-        agent_generator_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            component_str=agent_generator_str,
-            error_message=error_message,
-            detail=detail,
-        )
 
 
 class AgentGeneratorBuildStepRuntimeError(
@@ -314,35 +288,11 @@ class AgentGeneratorBuildStepRuntimeError(
     code = "AGENT_GENERATOR_BUILD_STEP_RUNTIME_ERROR"
     _COMPONENT_TYPE = "agent generator build step"
 
-    def __init__(
-        self,
-        agent_generator_build_step_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            component_str=agent_generator_build_step_str,
-            error_message=error_message,
-            detail=detail,
-        )
-
 
 class AgentGeneratorStopError(ComponentStopError, AgentGeneratorOperationError):
     """Raised when an agent generator fails to stop during agent generator operation."""
 
     code = "AGENT_GENERATOR_STOP_ERROR"
-
-    def __init__(
-        self,
-        agent_generator_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            component_str=agent_generator_str,
-            error_message=error_message,
-            detail=detail,
-        )
 
 
 class AgentGeneratorStateError(
@@ -363,12 +313,6 @@ class AgentGeneratorNotRunningError(ComponentNotRunningError, AgentGeneratorStat
 
     code = "AGENT_GENERATOR_NOT_RUNNING_ERROR"
 
-    def __init__(
-        self,
-        agent_generator_str: str,
-    ):
-        super().__init__(component_str=agent_generator_str)
-
 
 class AgentGeneratorAlreadyRunningError(
     ComponentAlreadyRunningError,
@@ -380,9 +324,3 @@ class AgentGeneratorAlreadyRunningError(
     """
 
     code = "AGENT_GENERATOR_ALREADY_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        agent_generator_str: str,
-    ):
-        super().__init__(component_str=agent_generator_str)

@@ -1,5 +1,3 @@
-from pydantic import JsonValue
-
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
     ComponentConfigurationError,
@@ -124,18 +122,6 @@ class PluginStartError(ComponentStartError, PluginOperationError):
 
     code = "PLUGIN_START_ERROR"
 
-    def __init__(
-        self,
-        plugin_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            detail=detail,
-            component_str=plugin_str,
-            error_message=error_message,
-        )
-
 
 class PluginRuntimeError(
     ComponentRuntimeError,
@@ -147,35 +133,11 @@ class PluginRuntimeError(
 
     code = "PLUGIN_RUNTIME_ERROR"
 
-    def __init__(
-        self,
-        plugin_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            detail=detail,
-            component_str=plugin_str,
-            error_message=error_message,
-        )
-
 
 class PluginStopError(ComponentStopError, PluginOperationError):
     """Raised when a plugin fails to stop during plugin operation."""
 
     code = "PLUGIN_STOP_ERROR"
-
-    def __init__(
-        self,
-        plugin_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            detail=detail,
-            component_str=plugin_str,
-            error_message=error_message,
-        )
 
 
 class PluginStateError(
@@ -199,12 +161,6 @@ class PluginNotRunningError(
 
     code = "PLUGIN_NOT_RUNNING_ERROR"
 
-    def __init__(
-        self,
-        plugin_str: str,
-    ):
-        super().__init__(component_str=plugin_str)
-
 
 class PluginAlreadyRunningError(
     ComponentAlreadyRunningError,
@@ -215,9 +171,3 @@ class PluginAlreadyRunningError(
     """
 
     code = "PLUGIN_ALREADY_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        plugin_str: str,
-    ):
-        super().__init__(component_str=plugin_str)

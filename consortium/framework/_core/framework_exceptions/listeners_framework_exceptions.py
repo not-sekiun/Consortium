@@ -1,5 +1,3 @@
-from pydantic import JsonValue
-
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
     ComponentNotRunningError,
@@ -38,18 +36,6 @@ class ListenerStartError(ComponentStartError, ListenerOperationError):
 
     code = "LISTENER_START_ERROR"
 
-    def __init__(
-        self,
-        listener_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            component_str=listener_str,
-            error_message=error_message,
-            detail=detail,
-        )
-
 
 class ListenerRuntimeError(ComponentRuntimeError, ListenerOperationError):
     """Raised when a listener encounters an unhandled error at runtime during listener
@@ -58,35 +44,11 @@ class ListenerRuntimeError(ComponentRuntimeError, ListenerOperationError):
 
     code = "LISTENER_RUNTIME_ERROR"
 
-    def __init__(
-        self,
-        listener_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            component_str=listener_str,
-            error_message=error_message,
-            detail=detail,
-        )
-
 
 class ListenerStopError(ComponentStopError, ListenerOperationError):
     """Raised when a listener fails to stop during listener operation."""
 
     code = "LISTENER_STOP_ERROR"
-
-    def __init__(
-        self,
-        listener_str: str,
-        error_message: str,
-        detail: dict[str, JsonValue],
-    ):
-        super().__init__(
-            component_str=listener_str,
-            error_message=error_message,
-            detail=detail,
-        )
 
 
 class ListenerStateError(
@@ -110,12 +72,6 @@ class ListenerNotRunningError(
 
     code = "LISTENER_NOT_RUNNING_ERROR"
 
-    def __init__(
-        self,
-        listener_str: str,
-    ):
-        super().__init__(component_str=listener_str)
-
 
 class ListenerAlreadyRunningError(
     ComponentAlreadyRunningError,
@@ -126,12 +82,6 @@ class ListenerAlreadyRunningError(
     """
 
     code = "LISTENER_ALREADY_RUNNING_ERROR"
-
-    def __init__(
-        self,
-        listener_str: str,
-    ):
-        super().__init__(component_str=listener_str)
 
 
 class ListenerCreationError(ListenersFrameworkError):

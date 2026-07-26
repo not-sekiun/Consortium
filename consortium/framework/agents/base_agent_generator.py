@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.components import (
     ComponentLifeCycle,
+    ComponentLifeCycleExceptions,
     ComponentLifeCycleFatalContext,
     State,
 )
@@ -33,11 +34,7 @@ from consortium.framework._core.framework_exceptions.agent_generators_framework_
     MissingAgentGeneratorConfigurationParameterError,
 )
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
-    ComponentAlreadyRunningError,
     ComponentNotRunningError,
-    ComponentRuntimeError,
-    ComponentStartError,
-    ComponentStopError,
 )
 from consortium.framework.signal_exceptions import (
     _component_signal_exceptions as sig_excs,
@@ -77,6 +74,13 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
 
     name: str
     description: str = ""
+
+    # Only the runtime slot has a build step specific class. The remaining slots keep the
+    # generic component errors, so a build step start or stop failure reports as a
+    # component exactly as it did before this set existed.
+    _component_life_cycle_exceptions = ComponentLifeCycleExceptions(
+        runtime=AgentGeneratorBuildStepRuntimeError,
+    )
 
     def __init__(self, agent_templates_payload_service: AgentTemplatesPayloadsService):
         """Initialize the build step with a reference to the agent templates payload service.
@@ -305,32 +309,6 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             "name": self.name,
         }
 
-    def _construct_component_runtime_error_from_framework_runtime_error(
-        self,
-        error: ComponentRuntimeError,
-    ) -> AgentGeneratorBuildStepRuntimeError:
-        return AgentGeneratorBuildStepRuntimeError(
-            agent_generator_build_step_str=str(self),
-            error_message=error.message,
-            detail=error.detail,
-        )
-
-    def _construct_component_runtime_error_from_unhandled_exception(
-        self,
-        exc: Exception,
-    ) -> AgentGeneratorBuildStepRuntimeError:
-        return AgentGeneratorBuildStepRuntimeError(
-            agent_generator_build_step_str=str(self),
-            error_message=(
-                f"An unhandled exception was raised while running. "
-                f"{type(exc).__name__}: {exc}"
-            ),
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        )
-
 
 class _BaseAgentGeneratorParametersModel(BaseModel):
     name: str
@@ -362,6 +340,17 @@ class BaseAgentGenerator(ComponentLifeCycle):
     """
 
     agent_generator_build_steps: list[type[BaseAgentGeneratorBuildStep]] = None
+
+    # Raise agent generator errors directly from the shared lifecycle instead of raising
+    # generic component errors and remapping them here, which would format the message
+    # twice.
+    _component_life_cycle_exceptions = ComponentLifeCycleExceptions(
+        start=AgentGeneratorStartError,
+        stop=AgentGeneratorStopError,
+        runtime=AgentGeneratorRuntimeError,
+        not_running=AgentGeneratorNotRunningError,
+        already_running=AgentGeneratorAlreadyRunningError,
+    )
 
     def __init__(
         self,
@@ -625,6 +614,17 @@ class BaseAgentGenerator(ComponentLifeCycle):
             traceback.format_exc(),
         )
 
+    # start() and cancel() below add no behaviour and exist purely to carry their
+    # documentation. The documentation generator infers docstrings statically and does not
+    # follow the MRO, so the agent generator specific `Raises:` entries have to be
+    # physically present on this class to be published. stop() does carry behaviour, in
+    # the build step teardown below.
+    #
+    # Do NOT reintroduce a try/except in any of them to convert component errors into
+    # agent generator errors. The lifecycle already raises the agent generator errors
+    # directly via `_component_life_cycle_exceptions`; catching and re-raising would pass
+    # an already formatted message back through a second template and nest the prefix.
+
     async def start(self) -> None:
         """Start the agent generator and begin executing its build pipeline.
 
@@ -632,18 +632,15 @@ class BaseAgentGenerator(ComponentLifeCycle):
             AgentGeneratorAlreadyRunningError: If the generator is already in a running state.
             AgentGeneratorStartError: If the generator fails to start due to a lifecycle error.
         """
-        try:
-            await super().start()
-        except ComponentAlreadyRunningError:
-            raise AgentGeneratorAlreadyRunningError(
-                agent_generator_str=str(self),
-            ) from None
-        except ComponentStartError as exc:
-            raise AgentGeneratorStartError(
-                agent_generator_str=str(self),
-                error_message=exc.message,
-                detail=exc.detail,
-            ) from None
+        await super().start()
+
+    async def cancel(self) -> None:
+        """Cancel the agent generator run.
+
+        Raises:
+            AgentGeneratorNotRunningError: If the generator is not currently running.
+        """
+        await super().cancel()
 
     async def stop(self) -> None:
         """Stop the generator and interrupt the currently executing build step.
@@ -654,18 +651,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
             AgentGeneratorNotRunningError: If the generator is not currently running.
             AgentGeneratorStopError: If the generator fails to stop cleanly.
         """
-        try:
-            await super().stop()
-        except ComponentNotRunningError:
-            raise AgentGeneratorNotRunningError(
-                agent_generator_str=str(self),
-            ) from None
-        except ComponentStopError as exc:
-            raise AgentGeneratorStopError(
-                agent_generator_str=str(self),
-                error_message=exc.message,
-                detail=exc.detail,
-            ) from None
+        await super().stop()
 
         if self._current_agent_generator_build_step is not None:
             try:
@@ -675,19 +661,6 @@ class BaseAgentGenerator(ComponentLifeCycle):
             # non-overridable we should not have a *StopError raised from there.
             except ComponentNotRunningError:
                 pass
-
-    async def cancel(self) -> None:
-        """Cancel the agent generator run.
-
-        Raises:
-            AgentGeneratorNotRunningError: If the generator is not currently running.
-        """
-        try:
-            await super().cancel()
-        except ComponentNotRunningError:
-            raise AgentGeneratorNotRunningError(
-                agent_generator_str=str(self),
-            ) from None
 
     def to_json(
         self,
@@ -744,29 +717,3 @@ class BaseAgentGenerator(ComponentLifeCycle):
             "agent_generator_id": str(self.agent_generator_id),
             "name": self.name,
         }
-
-    def _construct_component_runtime_error_from_framework_runtime_error(
-        self,
-        error: ComponentRuntimeError,
-    ) -> AgentGeneratorRuntimeError:
-        return AgentGeneratorRuntimeError(
-            agent_generator_str=str(self),
-            error_message=error.message,
-            detail=error.detail,
-        )
-
-    def _construct_component_runtime_error_from_unhandled_exception(
-        self,
-        exc: Exception,
-    ) -> AgentGeneratorRuntimeError:
-        return AgentGeneratorRuntimeError(
-            agent_generator_str=str(self),
-            error_message=(
-                f"An unhandled exception was raised while running. "
-                f"{type(exc).__name__}: {exc}"
-            ),
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        )

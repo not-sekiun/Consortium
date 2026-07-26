@@ -52,14 +52,14 @@ _listener_not_found_error = api_excs.ListenerNotFoundError.from_consortium_excep
 _listener_already_running_error = (
     api_excs.ListenerAlreadyRunningError.from_consortium_exception(
         consortium_exception=listeners_framework_exceptions.ListenerAlreadyRunningError(
-            listener_str="<listener_string>",
+            component_str="<listener_string>",
         ),
     )
 )
 _listener_not_running_error = (
     api_excs.ListenerNotRunningError.from_consortium_exception(
         consortium_exception=listeners_framework_exceptions.ListenerNotRunningError(
-            listener_str="<listener_string>",
+            component_str="<listener_string>",
         ),
     )
 )
@@ -203,8 +203,8 @@ async def stop_listener_by_listener_id(
             listener_id=listener_id
         )
     except listeners_framework_exceptions.ListenerStopError as exc:
-        raise api_excs.ListenerStopError(
-            message=exc.message, detail=exc.detail
+        raise api_excs.ListenerStopError.from_consortium_exception(
+            consortium_exception=exc,
         ) from None
     except consortium_exceptions.ListenerNotFoundError as exc:
         raise api_excs.ListenerNotFoundError.from_consortium_exception(

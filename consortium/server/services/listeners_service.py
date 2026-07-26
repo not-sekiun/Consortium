@@ -187,7 +187,7 @@ class ListenersService:
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
         if listener.status.state == State.RUNNING:
             raise ListenerAlreadyRunningError(
-                listener_str=str(listener),
+                component_str=str(listener),
             )
 
         removed_listener = self._listeners.pop(str(listener.listener_id))
@@ -256,7 +256,7 @@ class ListenersService:
             # reflected in the listener.
             if listener.status.state == State.RUNNING:
                 raise ListenerAlreadyRunningError(
-                    listener_str=str(listener),
+                    component_str=str(listener),
                 )
 
             # Fill in any missing parameters with values from the existing set of

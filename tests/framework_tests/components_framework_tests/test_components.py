@@ -7,6 +7,7 @@ from packaging import requirements, specifiers, version
 
 from consortium.framework._core.components import (
     ComponentLifeCycle,
+    ComponentLifeCycleExceptions,
     ComponentLifeCycleFatalContext,
     ComponentMetadata,
     State,
@@ -1198,3 +1199,196 @@ def test_metadata_validation_is_a_one_shot():
 
     with pytest.raises(frmwrk_excs.InvalidComponentConfigurationParameterTypeError):
         _Component._validate_metadata()
+
+
+# ---------------------------------------------------------------------------
+# Life cycle exception set
+# ---------------------------------------------------------------------------
+
+
+# A domain that overrides the life cycle exception set, standing in for BaseListener and
+# friends. The message templates render "$C_LOWER$" as "widget", so a message that was
+# formatted twice is visible as a repeated prefix.
+class _WidgetsFrameworkError(frmwrk_excs.ComponentsFrameworkError):
+    code = "WIDGETS_FRAMEWORK_ERROR"
+
+    _COMPONENT_TYPE = "widget"
+
+
+class _WidgetStartError(frmwrk_excs.ComponentStartError, _WidgetsFrameworkError):
+    code = "WIDGET_START_ERROR"
+
+
+class _WidgetStopError(frmwrk_excs.ComponentStopError, _WidgetsFrameworkError):
+    code = "WIDGET_STOP_ERROR"
+
+
+class _WidgetRuntimeError(frmwrk_excs.ComponentRuntimeError, _WidgetsFrameworkError):
+    code = "WIDGET_RUNTIME_ERROR"
+
+
+class _WidgetNotRunningError(
+    frmwrk_excs.ComponentNotRunningError,
+    _WidgetsFrameworkError,
+):
+    code = "WIDGET_NOT_RUNNING_ERROR"
+
+
+class _WidgetAlreadyRunningError(
+    frmwrk_excs.ComponentAlreadyRunningError,
+    _WidgetsFrameworkError,
+):
+    code = "WIDGET_ALREADY_RUNNING_ERROR"
+
+
+class _WidgetComponent(_RecordingComponent):
+    _component_life_cycle_exceptions = ComponentLifeCycleExceptions(
+        start=_WidgetStartError,
+        stop=_WidgetStopError,
+        runtime=_WidgetRuntimeError,
+        not_running=_WidgetNotRunningError,
+        already_running=_WidgetAlreadyRunningError,
+    )
+
+    def __str__(self) -> str:
+        return "test-widget"
+
+
+@pytest.fixture
+def widget_component() -> _WidgetComponent:
+    return _WidgetComponent()
+
+
+def test_life_cycle_exception_set_defaults_to_the_generic_component_errors():
+    instance = _RecordingComponent()
+
+    exceptions = instance._component_life_cycle_exceptions
+
+    assert exceptions.start is frmwrk_excs.ComponentStartError
+    assert exceptions.stop is frmwrk_excs.ComponentStopError
+    assert exceptions.runtime is frmwrk_excs.ComponentRuntimeError
+    assert exceptions.not_running is frmwrk_excs.ComponentNotRunningError
+    assert exceptions.already_running is frmwrk_excs.ComponentAlreadyRunningError
+
+
+# REGRESSION: the domain error used to be produced by the domain base class catching the
+# generic component error and re-raising, which fed an already formatted message back
+# through a second template and nested the prefix ("Failed to start the widget X. Failed
+# to start the component X. ..."). The life cycle now raises the domain class directly, so
+# the prefix is applied exactly once.
+async def test_start_error_formats_the_message_exactly_once(
+    widget_component: _WidgetComponent,
+):
+    widget_component.behaviours["on_started"] = _raises(
+        sig_excs.ComponentStartError(message="raw signal message."),
+    )
+
+    with pytest.raises(_WidgetStartError) as exc_info:
+        await widget_component.start()
+
+    message = exc_info.value.message
+    assert message.count("Failed to start the") == 1
+    assert "Failed to start the component" not in message
+    assert message == "Failed to start the widget test-widget. raw signal message."
+
+
+async def test_stop_error_formats_the_message_exactly_once():
+    widget_component = _WidgetComponent()
+    widget_component.behaviours["on_running"] = widget_component.stop_event.wait
+    widget_component.behaviours["on_stopped"] = _raises(
+        sig_excs.ComponentStopError(message="raw signal message."),
+    )
+    await _bring_to_running(widget_component)
+
+    with pytest.raises(_WidgetStopError) as exc_info:
+        await widget_component.stop()
+
+    message = exc_info.value.message
+    assert message.count("Failed to stop the") == 1
+    assert "Failed to stop the component" not in message
+    assert message == "Failed to stop the widget test-widget. raw signal message."
+
+
+async def test_runtime_error_formats_the_message_exactly_once(
+    widget_component: _WidgetComponent,
+):
+    widget_component.behaviours["on_running"] = _raises(
+        sig_excs.ComponentRuntimeError(message="raw signal message."),
+    )
+
+    await widget_component.start()
+    await _settle()
+
+    assert widget_component.status.state is State.ERRORED
+    error = widget_component.status.error
+    assert isinstance(error, _WidgetRuntimeError)
+    assert error.message.count("Failed to run the") == 1
+    assert error.message == "Failed to run the widget test-widget. raw signal message."
+
+
+# The state guards carry no `error_message`, so they cannot nest, but they must still be
+# raised as the domain class rather than the generic component class.
+async def test_state_guards_raise_the_domain_error(
+    widget_component: _WidgetComponent,
+):
+    with pytest.raises(_WidgetNotRunningError):
+        await widget_component.stop()
+
+    with pytest.raises(_WidgetNotRunningError):
+        await widget_component.cancel()
+
+    widget_component.behaviours["on_running"] = widget_component.stop_event.wait
+    await _bring_to_running(widget_component)
+
+    with pytest.raises(_WidgetAlreadyRunningError):
+        await widget_component.start()
+
+
+async def test_start_error_raises_from_none(
+    widget_component: _WidgetComponent,
+):
+    origin = OSError("address already in use")
+    signal_error = sig_excs.ComponentStartError(message="could not bind.")
+    signal_error.__cause__ = origin
+    widget_component.behaviours["on_started"] = _raises(signal_error)
+
+    with pytest.raises(_WidgetStartError) as exc_info:
+        await widget_component.start()
+
+    assert exc_info.value.__cause__ is None
+
+
+async def test_stop_error_raises_from_none():
+    widget_component = _WidgetComponent()
+    widget_component.behaviours["on_running"] = widget_component.stop_event.wait
+    signal_error = sig_excs.ComponentStopError(message="could not flush.")
+    widget_component.behaviours["on_stopped"] = _raises(signal_error)
+    await _bring_to_running(widget_component)
+
+    with pytest.raises(_WidgetStopError) as exc_info:
+        await widget_component.stop()
+
+    assert exc_info.value.__cause__ is None
+
+
+# A domain that overrides only some slots keeps the generic error for the rest. This is
+# the shape BaseAgentGeneratorBuildStep uses: a build step specific runtime error, generic
+# component errors everywhere else.
+async def test_partial_exception_set_falls_back_to_the_generic_errors():
+    class _PartialComponent(_RecordingComponent):
+        _component_life_cycle_exceptions = ComponentLifeCycleExceptions(
+            runtime=_WidgetRuntimeError,
+        )
+
+    instance = _PartialComponent()
+    instance.behaviours["on_started"] = _raises(
+        sig_excs.ComponentStartError(message="raw signal message."),
+    )
+
+    with pytest.raises(frmwrk_excs.ComponentStartError) as exc_info:
+        await instance.start()
+
+    assert not isinstance(exc_info.value, _WidgetStartError)
+    assert exc_info.value.message == (
+        "Failed to start the component test-component. raw signal message."
+    )

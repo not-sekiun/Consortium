@@ -60,12 +60,12 @@ _agent_generator_not_found_error = (
 )
 _agent_generator_already_running_error = api_excs.AgentGeneratorAlreadyRunningError.from_consortium_exception(
     consortium_exception=agent_generators_framework_exceptions.AgentGeneratorAlreadyRunningError(
-        agent_generator_str="<agent_generator_str>"
+        component_str="<agent_generator_str>"
     )
 )
 _agent_generator_not_running_error = api_excs.AgentGeneratorNotRunningError.from_consortium_exception(
     consortium_exception=agent_generators_framework_exceptions.AgentGeneratorNotRunningError(
-        agent_generator_str="<agent_generator_str>"
+        component_str="<agent_generator_str>"
     )
 )
 _invalid_uuid_error = InvalidUUIDError(
