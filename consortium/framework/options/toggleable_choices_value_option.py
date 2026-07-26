@@ -7,6 +7,7 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
+from consortium.framework._core.utils import resolve_validation_error_parameter
 from consortium.framework.options import OptionType
 from consortium.framework.options._base_option import BaseOption
 
@@ -67,15 +68,14 @@ class ToggleableChoicesValueOption(BaseOption[dict[str, bool]]):
                 available_values=available_values,
             )
         except ValidationError as exc:
-            parameter_name = exc.errors()[0]["loc"][0]
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_ToggleableChoicesValueParametersModel),
+            )
             raise InvalidOptionConfigurationParameterTypeError(
                 option_str=name,
                 parameter_name=parameter_name,
-                parameter_type=str(
-                    get_type_hints(_ToggleableChoicesValueParametersModel)[
-                        parameter_name
-                    ]
-                ),
+                parameter_type=parameter_type,
             ) from None
 
         super().__init__(

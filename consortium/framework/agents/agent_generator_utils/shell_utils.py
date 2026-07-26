@@ -46,6 +46,10 @@ class AsyncProcess:
             **self.kwargs,
         )
 
+        # `stdout` is only ever `None` when the process was spawned without a pipe for
+        # it, which cannot happen here because we always request one above.
+        assert process.stdout is not None
+
         # Read output line-by-line as it comes in
         while True:
             line = await process.stdout.readline()

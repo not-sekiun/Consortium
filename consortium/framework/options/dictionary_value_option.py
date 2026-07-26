@@ -8,7 +8,10 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
-from consortium.framework._core.utils import resolve_validating_function_string
+from consortium.framework._core.utils import (
+    resolve_validating_function_string,
+    resolve_validation_error_parameter,
+)
 from consortium.framework.framework_types import Primitive, PrimitiveType
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options._option_argument_validators import (
@@ -147,13 +150,14 @@ class DictionaryValueOption(BaseOption[dict[str, Primitive]]):
                 validating_function=validating_function,
             )
         except ValidationError as exc:
-            parameter_name = exc.errors()[0]["loc"][0]
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_DictionaryValueParametersModel),
+            )
             raise InvalidOptionConfigurationParameterTypeError(
                 option_str=name,
                 parameter_name=parameter_name,
-                parameter_type=str(
-                    get_type_hints(_DictionaryValueParametersModel)[parameter_name]
-                ),
+                parameter_type=parameter_type,
             ) from None
 
         super().__init__(

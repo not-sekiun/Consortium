@@ -1,5 +1,4 @@
 import pathlib
-import sys
 import traceback
 import types
 import uuid
@@ -31,6 +30,7 @@ from consortium.framework._core.framework_exceptions.plugins_framework_exception
     PluginStartError,
     PluginStopError,
 )
+from consortium.framework._core.utils import resolve_component_filepath
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import construct_services_dataclass
 
@@ -111,7 +111,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
     def __init_subclass__(cls, **kwargs):
         cls.root_directory = pathlib.Path(
-            sys.modules[cls.__module__].__file__,
+            resolve_component_filepath(cls),
         ).parents[0]
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
@@ -277,5 +277,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         return {
             "plugin_id": str(self.plugin_id),
             "label": self.label,
-            "name": self.name,
+            # `name` is declared optional so component authors can omit it, and metadata
+            # validation falls it back to the label when it was not declared.
+            "name": self.name or self.label,
         }

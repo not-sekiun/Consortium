@@ -1,4 +1,3 @@
-import sys
 from typing import get_type_hints
 
 from pydantic import BaseModel, JsonValue, ValidationError
@@ -8,6 +7,10 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
     InvalidDefaultValueError,
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError,
+)
+from consortium.framework._core.utils import (
+    resolve_component_filepath,
+    resolve_validation_error_parameter,
 )
 from consortium.framework.options.option_types import OptionType
 
@@ -58,7 +61,12 @@ class BaseOption[ValueType]:
     def __str__(self) -> str:
         return f"{self.name} ({self.option_type})"
 
-    def __repr__(self) -> str: ...
+    # Every concrete option type carries a different set of parameters, so each one
+    # builds its own representation rather than inheriting one from here.
+    def __repr__(self) -> str:
+        raise NotImplementedError(
+            f"'{type(self).__name__}' must implement '__repr__'.",
+        )
 
     def validate_value(self, value: ValueType) -> None:
         """
@@ -98,7 +106,7 @@ class BaseOption[ValueType]:
             )
         if not self.name:
             raise EmptyOptionNameError(
-                option_filepath=sys.modules[self.__module__].__file__,
+                option_filepath=resolve_component_filepath(type(self)),
             )
 
         try:
@@ -108,13 +116,14 @@ class BaseOption[ValueType]:
                 required=self.required,
             )
         except ValidationError as exc:
-            parameter_name = exc.errors()[0]["loc"][0]
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_BaseOptionParametersModel),
+            )
             raise InvalidOptionConfigurationParameterTypeError(
                 option_str=self.name,
                 parameter_name=parameter_name,
-                parameter_type=str(
-                    get_type_hints(_BaseOptionParametersModel)[parameter_name]
-                ),
+                parameter_type=parameter_type,
             ) from None
 
     def _validate_option_configuration(self):

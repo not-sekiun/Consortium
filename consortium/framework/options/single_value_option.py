@@ -6,7 +6,10 @@ from pydantic import BaseModel, JsonValue, ValidationError
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     InvalidOptionConfigurationParameterTypeError,
 )
-from consortium.framework._core.utils import resolve_validating_function_string
+from consortium.framework._core.utils import (
+    resolve_validating_function_string,
+    resolve_validation_error_parameter,
+)
 from consortium.framework.framework_types import Primitive, PrimitiveType
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options._option_argument_validators import (
@@ -150,13 +153,14 @@ class SingleValueOption(BaseOption):
                 validating_function=validating_function,
             )
         except ValidationError as exc:
-            parameter_name = exc.errors()[0]["loc"][0]
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_SingleValueParametersModel),
+            )
             raise InvalidOptionConfigurationParameterTypeError(
                 option_str=name,
                 parameter_name=parameter_name,
-                parameter_type=str(
-                    get_type_hints(_SingleValueParametersModel)[parameter_name]
-                ),
+                parameter_type=parameter_type,
             ) from None
 
         super().__init__(

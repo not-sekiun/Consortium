@@ -1,5 +1,4 @@
 import pathlib
-import sys
 import types
 import uuid
 
@@ -22,6 +21,7 @@ from consortium.framework._core.framework_exceptions.event_hooks_framework_excep
     InvalidFrameworkVersionSpecifierError,
     MissingEventHookConfigurationParameterError,
 )
+from consortium.framework._core.utils import resolve_component_filepath
 from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.utils import construct_services_dataclass
@@ -98,7 +98,7 @@ class BaseEventHook(ComponentMetadata):
     def __init_subclass__(cls, **kwargs):
         cls.event_types = cls.event_types or set()
         cls.root_directory = pathlib.Path(
-            sys.modules[cls.__module__].__file__,
+            resolve_component_filepath(cls),
         ).parents[0]
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 

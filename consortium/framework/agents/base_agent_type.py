@@ -1,4 +1,3 @@
-import sys
 from typing import get_type_hints
 
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
@@ -7,6 +6,10 @@ from consortium.framework._core.framework_exceptions.c2_types_framework_exceptio
     AgentTypeConfigurationParameterTypeError,
     DuplicateAgentCapabilityNameError,
     EmptyAgentTypeNameError,
+)
+from consortium.framework._core.utils import (
+    resolve_component_filepath,
+    resolve_validation_error_parameter,
 )
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
 
@@ -48,17 +51,19 @@ class BaseAgentType:
                 agent_capabilities=cls.agent_capabilities,
             )
         except ValidationError as exc:
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_BaseAgentTypeModel),
+            )
             raise AgentTypeConfigurationParameterTypeError(
-                agent_type_filepath=sys.modules[cls.__module__].__file__,
-                parameter_name=str(exc.errors()[0]["loc"][0]),
-                parameter_type=get_type_hints(_BaseAgentTypeModel)[
-                    exc.errors()[0]["loc"][0]
-                ],
+                agent_type_filepath=resolve_component_filepath(cls),
+                parameter_name=parameter_name,
+                parameter_type=parameter_type,
             ) from None
 
         if not cls.name:
             raise EmptyAgentTypeNameError(
-                agent_type_filepath=sys.modules[cls.__module__].__file__,
+                agent_type_filepath=resolve_component_filepath(cls),
             )
 
         # Check for duplicate agent capability names
@@ -68,7 +73,7 @@ class BaseAgentType:
                 seen.add(agent_capability.name)
             else:
                 raise DuplicateAgentCapabilityNameError(
-                    agent_type_filepath=sys.modules[cls.__module__].__file__,
+                    agent_type_filepath=resolve_component_filepath(cls),
                     agent_capability_name=agent_capability.name,
                 )
 

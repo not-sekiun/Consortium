@@ -1,5 +1,4 @@
 import pathlib
-import sys
 import traceback
 import types
 import uuid
@@ -35,6 +34,10 @@ from consortium.framework._core.framework_exceptions.agent_generators_framework_
 )
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentNotRunningError,
+)
+from consortium.framework._core.utils import (
+    resolve_component_filepath,
+    resolve_validation_error_parameter,
 )
 from consortium.framework.signal_exceptions import (
     _component_signal_exceptions as sig_excs,
@@ -116,13 +119,11 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         ):
             if method_name in cls.__dict__:
                 raise AgentGeneratorBuildStepOverridesFinalMethodError(
-                    agent_generator_build_step_filepath=sys.modules[
-                        cls.__module__
-                    ].__file__,
+                    agent_generator_build_step_filepath=resolve_component_filepath(cls),
                     method_name=method_name,
                 )
 
-        cls.root_directory = pathlib.Path(sys.modules[cls.__module__].__file__).parent
+        cls.root_directory = pathlib.Path(resolve_component_filepath(cls)).parent
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         expected_attrs_and_types_map = get_type_hints(cls)
@@ -131,9 +132,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         for attr in expected_attrs_and_types_map.keys():
             if not hasattr(cls, attr):
                 raise MissingAgentGeneratorBuildStepConfigurationParameterError(
-                    agent_generator_build_step_filepath=sys.modules[
-                        cls.__module__
-                    ].__file__,
+                    agent_generator_build_step_filepath=resolve_component_filepath(cls),
                     parameter_name=attr,
                 )
 
@@ -144,11 +143,14 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
                 description=cls.description,
             )
         except ValidationError as exc:
-            attr = exc.errors()[0]["loc"][0]
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=expected_attrs_and_types_map,
+            )
             raise AgentGeneratorBuildStepConfigurationParameterTypeError(
                 agent_generator_build_step_str=cls.name,
-                parameter_name=attr,
-                parameter_type=str(expected_attrs_and_types_map[attr]),
+                parameter_name=parameter_name,
+                parameter_type=parameter_type,
             ) from None
 
     def __str__(self) -> str:
@@ -391,14 +393,15 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 parameters=parameters,
             )
         except ValidationError as exc:
-            for err in exc.errors():
-                raise AgentGeneratorCreationParameterTypeError(
-                    agent_generator_str=name,
-                    parameter_name=err["loc"][0],
-                    parameter_type=str(
-                        get_type_hints(_BaseAgentGeneratorParametersModel)[err["loc"]]
-                    ),
-                ) from None
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_BaseAgentGeneratorParametersModel),
+            )
+            raise AgentGeneratorCreationParameterTypeError(
+                agent_generator_str=name,
+                parameter_name=parameter_name,
+                parameter_type=parameter_type,
+            ) from None
 
         self.name = name
         self.description = description
@@ -433,16 +436,16 @@ class BaseAgentGenerator(ComponentLifeCycle):
     def __init_subclass__(cls, **kwargs):
         if "on_running" in cls.__dict__:
             raise AgentGeneratorOverridesFinalMethodError(
-                agent_generator_filepath=sys.modules[cls.__module__].__file__,
+                agent_generator_filepath=resolve_component_filepath(cls),
                 method_name="on_running",
             )
 
-        cls.root_directory = pathlib.Path(sys.modules[cls.__module__].__file__).parent
+        cls.root_directory = pathlib.Path(resolve_component_filepath(cls)).parent
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
 
         if not hasattr(cls, "agent_generator_build_steps"):
             raise MissingAgentGeneratorConfigurationParameterError(
-                agent_generator_filepath=sys.modules[cls.__module__].__file__,
+                agent_generator_filepath=resolve_component_filepath(cls),
                 parameter_name="agent_generator_build_steps",
             )
         if cls.agent_generator_build_steps is None:
@@ -453,12 +456,14 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 agent_generator_build_steps=cls.agent_generator_build_steps,
             )
         except ValidationError as exc:
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_BaseAgentGeneratorModel),
+            )
             raise AgentGeneratorConfigurationParameterTypeError(
-                agent_generator_filepath=sys.modules[cls.__module__].__file__,
-                parameter_name=str(exc.errors()[0]["loc"][0]),
-                parameter_type=get_type_hints(_BaseAgentGeneratorModel)[
-                    exc.errors()[0]["loc"][0]
-                ],
+                agent_generator_filepath=resolve_component_filepath(cls),
+                parameter_name=parameter_name,
+                parameter_type=parameter_type,
             ) from None
 
         # Enforce that build step names are unique within the agent generator so they
@@ -469,7 +474,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 seen.add(agent_generator_build_step.name)
             else:
                 raise DuplicateAgentGeneratorBuildStepNameError(
-                    agent_generator_filepath=sys.modules[cls.__module__].__file__,
+                    agent_generator_filepath=resolve_component_filepath(cls),
                     agent_generator_build_step_name=agent_generator_build_step.name,
                 )
 

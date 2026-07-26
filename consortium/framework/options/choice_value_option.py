@@ -7,6 +7,7 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
     InvalidOptionConfigurationParameterTypeError,
     OptionValueValidationError as OptionValueValidationFrameworkError,
 )
+from consortium.framework._core.utils import resolve_validation_error_parameter
 from consortium.framework.framework_types import Primitive
 from consortium.framework.options._base_option import BaseOption
 from consortium.framework.options.option_types import OptionType
@@ -83,13 +84,14 @@ class ChoiceValueOption(BaseOption[Primitive]):
                 available_values=available_values,
             )
         except ValidationError as exc:
-            parameter_name = exc.errors()[0]["loc"][0]
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_ChoiceValueParametersModel),
+            )
             raise InvalidOptionConfigurationParameterTypeError(
                 option_str=name,
                 parameter_name=parameter_name,
-                parameter_type=str(
-                    get_type_hints(_ChoiceValueParametersModel)[parameter_name]
-                ),
+                parameter_type=parameter_type,
             ) from None
 
         super().__init__(

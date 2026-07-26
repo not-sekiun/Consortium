@@ -1,4 +1,3 @@
-import sys
 from typing import get_type_hints
 
 from pydantic import BaseModel, JsonValue, ValidationError
@@ -6,6 +5,10 @@ from pydantic import BaseModel, JsonValue, ValidationError
 from consortium.framework._core.framework_exceptions.c2_types_framework_exceptions import (
     EmptyListenerTypeNameError,
     ListenerTypeConfigurationParameterTypeError,
+)
+from consortium.framework._core.utils import (
+    resolve_component_filepath,
+    resolve_validation_error_parameter,
 )
 
 
@@ -37,23 +40,25 @@ class BaseListenerType:
                 name=cls.name,
             )
         except ValidationError as exc:
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_BaseListenerTypeModel),
+            )
             raise ListenerTypeConfigurationParameterTypeError(
-                listener_type_filepath=sys.modules[cls.__module__].__file__,
-                parameter_name=str(exc.errors()[0]["loc"][0]),
-                parameter_type=get_type_hints(_BaseListenerTypeModel)[
-                    exc.errors()[0]["loc"][0]
-                ],
+                listener_type_filepath=resolve_component_filepath(cls),
+                parameter_name=parameter_name,
+                parameter_type=parameter_type,
             ) from None
 
         if not isinstance(cls.name, str):
             raise ListenerTypeConfigurationParameterTypeError(
-                listener_type_filepath=sys.modules[cls.__module__].__file__,
+                listener_type_filepath=resolve_component_filepath(cls),
                 parameter_name="name",
                 parameter_type="str",
             )
         if not cls.name:
             raise EmptyListenerTypeNameError(
-                listener_type_filepath=sys.modules[cls.__module__].__file__,
+                listener_type_filepath=resolve_component_filepath(cls),
             )
 
     def __str__(self) -> str:

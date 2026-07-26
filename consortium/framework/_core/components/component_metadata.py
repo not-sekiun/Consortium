@@ -1,4 +1,3 @@
-import sys
 from dataclasses import dataclass
 from typing import Any, get_type_hints
 
@@ -12,6 +11,10 @@ from consortium.framework._core.framework_exceptions.components_framework_except
     InvalidComponentVersionError,
     InvalidFrameworkVersionSpecifierError,
     MissingComponentConfigurationParameterError,
+)
+from consortium.framework._core.utils import (
+    resolve_component_filepath,
+    resolve_validation_error_parameter,
 )
 
 
@@ -89,7 +92,7 @@ class ComponentMetadata:
         component_str = (
             cls.label
             if hasattr(cls, "label")
-            else f"{cls.__name__} ({sys.modules[cls.__module__].__file__})"
+            else f"{cls.__name__} ({resolve_component_filepath(cls)})"
         )
         expected_attrs_and_types_map = get_type_hints(cls)
 
@@ -107,22 +110,23 @@ class ComponentMetadata:
                 **cls._get_metadata_fields(),
             )
         except ValidationError as exc:
-            errors = exc.errors()
-            # A field level error carries the offending field name in loc[0]. A model
-            # level error has an empty loc, so fall back to the first declared field
-            # rather than indexing into nothing.
-            loc = errors[0]["loc"] if errors else ()
-            attr = loc[0] if loc else next(iter(cls._get_metadata_fields()), "label")
+            # A model level error carries an empty location, so fall back to the first
+            # declared field rather than reporting no field at all.
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=expected_attrs_and_types_map,
+                fallback_parameter_name=next(iter(cls._get_metadata_fields()), "label"),
+            )
             raise cls._component_metadata_exceptions.invalid_configuration_parameter_type(
                 component_str=component_str,
-                parameter_name=str(attr),
-                parameter_type=str(expected_attrs_and_types_map.get(attr, attr)),
+                parameter_name=parameter_name,
+                parameter_type=parameter_type,
             ) from None
 
         # Perform semantic checking of specific attributes and reassign as needed
         if not cls.label:
             raise cls._component_metadata_exceptions.empty_label(
-                component_filepath=sys.modules[cls.__module__].__file__,
+                component_filepath=resolve_component_filepath(cls),
             )
         cls.name = cls.label if cls.name is None else cls.name
         try:

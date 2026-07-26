@@ -160,6 +160,6 @@ def random_name(
     format_func = formatting_to_str_format_func_map.get(formatting, str.upper)
     rand_color = format_func(random.choice(colors))
     rand_celestial = format_func(random.choice(celestials))
-    spacing = spacing_to_char_map.get(spacing, " ")
+    spacing_char = spacing_to_char_map.get(spacing, " ")
 
-    return f"{rand_color}{spacing}{rand_celestial}"
+    return f"{rand_color}{spacing_char}{rand_celestial}"

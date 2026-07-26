@@ -1,4 +1,3 @@
-import sys
 from collections.abc import Callable
 from enum import StrEnum
 from inspect import signature
@@ -14,7 +13,11 @@ from consortium.framework._core.framework_exceptions.agent_capabilities_framewor
     InvalidAgentCapabilityConfigurationParameterTypeError,
     MissingAgentCapabilityConfigurationParameterError,
 )
-from consortium.framework._core.utils import format_docstring_to_single_line
+from consortium.framework._core.utils import (
+    format_docstring_to_single_line,
+    resolve_component_filepath,
+    resolve_validation_error_parameter,
+)
 from consortium.framework.agents._agent_communicator import _AgentCommunicator
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
@@ -160,7 +163,7 @@ class BaseAgentCapability(_AgentCommunicator):
                 parameter_name="name",
                 # Since the agent template cannot be identified by name we identify
                 # it by the filepath it was declared in.
-                agent_capability_filepath=sys.modules[cls.__module__].__file__,
+                agent_capability_filepath=resolve_component_filepath(cls),
             )
 
         cls.options = cls.options or set()
@@ -180,17 +183,19 @@ class BaseAgentCapability(_AgentCommunicator):
                 validating_function=cls.validating_function,
             )
         except ValidationError as exc:
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_BaseAgentCapabilityModel),
+            )
             raise InvalidAgentCapabilityConfigurationParameterTypeError(
-                agent_capability_str=sys.modules[cls.__module__].__file__,
-                parameter_name=exc.errors()[0]["loc"][0],
-                parameter_type=get_type_hints(_BaseAgentCapabilityModel)[
-                    exc.errors()[0]["loc"][0]
-                ],
+                agent_capability_str=resolve_component_filepath(cls),
+                parameter_name=parameter_name,
+                parameter_type=parameter_type,
             ) from None
 
         if not cls.name:
             raise EmptyAgentCapabilityNameError(
-                agent_capability_filepath=sys.modules[cls.__module__].__file__,
+                agent_capability_filepath=resolve_component_filepath(cls),
             )
         # Normalize supported OSes to enum values if any valid supported OSes are
         # provided as strings. Otherwise, leave as is to allow for declaration of
@@ -255,7 +260,6 @@ class BaseAgentCapability(_AgentCommunicator):
             f"requires_admin={self.requires_admin!r}, "
             f"supported_oses={self.supported_oses!r}, "
             f"mitre_attack_techniques={self.mitre_attack_techniques!r}, "
-            f"is_atomic={self.is_atomic!r}, "
             f"options={self.options!r}, "
             f"validating_function={self.validating_function!r}"
             f")"

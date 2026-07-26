@@ -23,6 +23,7 @@ from consortium.framework._core.framework_exceptions.listeners_framework_excepti
     ListenerStartError,
     ListenerStopError,
 )
+from consortium.framework._core.utils import resolve_validation_error_parameter
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.connected_agents_service import ConnectedAgentsService
 from consortium.server.utils import construct_services_dataclass, utc_now
@@ -133,14 +134,14 @@ class BaseListener(ComponentLifeCycle):
                 parameters=parameters,
             )
         except ValidationError as exc:
+            parameter_name, parameter_type = resolve_validation_error_parameter(
+                exc=exc,
+                parameter_types=get_type_hints(_BaseListenerParametersModel),
+            )
             raise ListenerCreationParameterTypeError(
                 listener_str=name,
-                parameter_name=str(exc.errors()[0]["loc"][0]),
-                parameter_type=str(
-                    get_type_hints(_BaseListenerParametersModel)[
-                        exc.errors()[0]["loc"][0]
-                    ]
-                ),
+                parameter_name=parameter_name,
+                parameter_type=parameter_type,
             ) from None
 
         self.name: str = name

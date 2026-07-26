@@ -1,5 +1,4 @@
 import pathlib
-import sys
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -31,6 +30,7 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
 )
 from consortium.framework._core.utils import (
     format_docstring_to_single_line,
+    resolve_component_filepath,
 )
 from consortium.framework.agents.base_agent_generator import BaseAgentGenerator
 from consortium.framework.agents.base_agent_type import BaseAgentType
@@ -112,7 +112,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
     def __init_subclass__(cls, **kwargs):
         cls.options = cls.options or set()
         cls.root_directory = pathlib.Path(
-            sys.modules[cls.__module__].__file__,
+            resolve_component_filepath(cls),
         ).parents[0]
         cls.compatible_listener_types = cls.compatible_listener_types or set()
         cls.services = construct_services_dataclass(server_singletons=server_singletons)

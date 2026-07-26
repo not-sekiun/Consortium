@@ -1,5 +1,4 @@
 import pathlib
-import sys
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -32,6 +31,7 @@ from consortium.framework._core.framework_exceptions.options_framework_exception
 )
 from consortium.framework._core.utils import (
     format_docstring_to_single_line,
+    resolve_component_filepath,
 )
 from consortium.framework.framework_types import (
     Primitive,
@@ -111,7 +111,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
     def __init_subclass__(cls, **kwargs):
         cls.options = cls.options or set()
         cls.root_directory = pathlib.Path(
-            sys.modules[cls.__module__].__file__,
+            resolve_component_filepath(cls),
         ).parents[0]
         cls.registered_compatible_agent_types = set()
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
