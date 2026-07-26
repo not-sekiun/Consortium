@@ -147,9 +147,11 @@ class DownloadCapability(BaseAgentCapability):
                             message=f"Created new directory '{response.data['path']}'",
                             percent_complete=100,
                         )
-                        (pathlib.Path(temp_dir) / response.data["path"]).mkdir(
-                            parents=True, exist_ok=True
-                        )
+                        (
+                            pathlib.Path(temp_dir)
+                            / path_basename
+                            / response.data["path"]
+                        ).mkdir(parents=True, exist_ok=True)
                     case "end_of_file":
                         self.event_logger.artifact(
                             message=f"Downloaded file '{current_file.relative_to(temp_dir)}'"

@@ -209,14 +209,16 @@ def download_capability(context):
         return
 
     def send_file(file_path, relative_path=None):
-        display_path = relative_path if relative_path else os.path.basename(file_path)
         try:
             context.connection.post_task_message_to_listener(
                 task_id=context.task_id,
                 success=True,
                 data={
                     "type": "file",
-                    "path": display_path,
+                    # Exclude the base dir within the relative path
+                    "path": relative_path
+                    if relative_path
+                    else os.path.basename(file_path),
                     "size": os.path.getsize(file_path),
                 },
             )
@@ -255,7 +257,6 @@ def download_capability(context):
             success=True,
             data={"type": "directory", "path": os.path.basename(directory_path)},
         )
-        base_parent = os.path.dirname(os.path.normpath(directory_path))
         for root, dirs, files in os.walk(directory_path):
             for directory in dirs:
                 dir_path = os.path.join(root, directory)
@@ -266,8 +267,8 @@ def download_capability(context):
                     success=True,
                     data={
                         "type": "directory",
-                        # Excludes the base dir within the relative path
-                        "path": os.path.relpath(dir_path, base_parent),
+                        # Exclude the base dir within the relative path
+                        "path": os.path.relpath(dir_path),
                     },
                 )
             for file in files:
