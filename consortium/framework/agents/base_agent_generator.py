@@ -715,10 +715,12 @@ class BaseAgentGenerator(ComponentLifeCycle):
         """Serialize a compact reference to this generator.
 
         Returns:
-            A dictionary containing only the generator ID and name, suitable for
-            embedding as a lightweight foreign key reference in other JSON objects.
+            A dictionary containing only the generator ID, name, and agent type,
+            suitable for embedding as a lightweight foreign key reference in other
+            JSON objects.
         """
         return {
             "agent_generator_id": str(self.agent_generator_id),
             "name": self.name,
+            "agent_type": self.agent_type.name,
         }

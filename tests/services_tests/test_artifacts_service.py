@@ -157,13 +157,12 @@ async def test_create_file_with_agent_id_stores_reference(
     agents_service: MagicMock,
 ):
     agent_id = uuid.uuid4()
-    agent_type_json = {"name": "test_agent_type", "agent_capabilities": {}}
     # `name` is a reserved MagicMock constructor kwarg (it labels the mock rather than
     # setting a `.name` attribute), so it must be assigned after construction to be read
-    # back as the plain string the AgentReferenceModel expects.
+    # back as the plain string `PersistentAgentReferenceModel` expects.
     mock_agent = MagicMock(agent_id=agent_id)
     mock_agent.name = "agent-name"
-    mock_agent.agent_type.to_json.return_value = agent_type_json
+    mock_agent.agent_type.name = "test_agent_type"
     agents_service.get_agent_by_agent_id.return_value = mock_agent
 
     with patch("asyncio.create_task"):
@@ -176,7 +175,7 @@ async def test_create_file_with_agent_id_stores_reference(
         "agent": {
             "agent_id": str(agent_id),
             "name": "agent-name",
-            "agent_type": agent_type_json,
+            "agent_type": "test_agent_type",
         },
     }
     agents_service.get_agent_by_agent_id.assert_called_once_with(agent_id=agent_id)

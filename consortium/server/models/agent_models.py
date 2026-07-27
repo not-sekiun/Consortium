@@ -3,12 +3,10 @@ from typing import Any
 from pydantic import BaseModel
 
 from consortium.server.models.c2_type_models import AgentTypeModel
+from consortium.server.models.listener_and_agent_reference_models import (
+    ListenerReferenceModel,
+)
 from consortium.server.objects.agent_objects import AgentStatus
-
-
-class ConnectedListenerReferenceModel(BaseModel):
-    listener_id: str
-    name: str
 
 
 class AgentModel(BaseModel):
@@ -30,11 +28,5 @@ class AgentModel(BaseModel):
     datetime_first_checked_in: str
     datetime_last_checked_in: str
     status: AgentStatus
-    connected_listener: ConnectedListenerReferenceModel | None
+    connected_listener: ListenerReferenceModel | None
     agent_data: dict[str, Any] | None
-
-
-class AgentReferenceModel(BaseModel):
-    agent_id: str
-    name: str
-    agent_type: AgentTypeModel

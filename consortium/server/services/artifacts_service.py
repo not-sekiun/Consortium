@@ -8,8 +8,9 @@ from loguru import logger
 from pydantic import JsonValue
 
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.models.agent_models import AgentReferenceModel
-from consortium.server.models.c2_type_models import AgentTypeModel
+from consortium.server.models.listener_and_agent_reference_models import (
+    PersistentAgentReferenceModel,
+)
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.artifact_objects import Artifact
 from consortium.server.services.events_service import EventsService
@@ -66,10 +67,14 @@ class ArtifactsService:
             return {"agent": None}
 
         agent = self._agents_service.get_agent_by_agent_id(agent_id=agent_id)
-        agent_reference = AgentReferenceModel(
+        # The persistent reference is built here rather than from the agent's own
+        # `to_json_reference`, which is the live form embedding the full agent type
+        # descriptor. Only the agent type's name is recorded: the descriptor itself
+        # belongs to the live agent type registry and would go stale once on disk.
+        agent_reference = PersistentAgentReferenceModel(
             agent_id=str(agent.agent_id),
             name=agent.name,
-            agent_type=AgentTypeModel.model_validate(agent.agent_type.to_json()),
+            agent_type=agent.agent_type.name,
         )
         return {"agent": agent_reference.model_dump(mode="json")}
 

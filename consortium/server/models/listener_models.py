@@ -5,14 +5,12 @@ from pydantic import BaseModel
 from consortium.framework._core.event_logging.event_log_models import EventLogModel
 from consortium.server.models.c2_type_models import ListenerTypeModel
 from consortium.server.models.component_models import StatusModel
+from consortium.server.models.listener_and_agent_reference_models import (
+    LiveAgentReferenceModel,
+)
 from consortium.server.models.listener_template_models import (
     ListenerTemplateReferenceModel,
 )
-
-
-class ConnectedAgentReferenceModel(BaseModel):
-    agent_id: str
-    name: str
 
 
 class ListenerModel(BaseModel):
@@ -25,5 +23,5 @@ class ListenerModel(BaseModel):
     status: StatusModel
     event_log: EventLogModel
     datetime_created: str
-    connected_agents: list[ConnectedAgentReferenceModel]
+    connected_agents: list[LiveAgentReferenceModel]
     creating_listener_template: ListenerTemplateReferenceModel

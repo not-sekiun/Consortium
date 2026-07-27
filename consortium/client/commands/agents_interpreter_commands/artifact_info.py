@@ -93,7 +93,7 @@ class ArtifactInfoCommand(BaseConnectedCommand):
             table.add_row("Type", "DIRECTORY" if artifact["is_directory"] else "FILE")
             table.add_row(
                 "Produced By Agent",
-                f"{agent['name']} ({agent['agent_id']}) of type '{agent['agent_type']['name']}'"
+                f"{agent['name']} ({agent['agent_id']}) of type '{agent['agent_type']}'"
                 if agent
                 else "N/A",
             )

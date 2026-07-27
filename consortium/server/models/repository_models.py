@@ -2,10 +2,13 @@ from datetime import datetime
 
 from pydantic import UUID4, BaseModel, JsonValue
 
-from consortium.server.models.agent_models import AgentModel, AgentReferenceModel
+from consortium.server.models.agent_models import AgentModel
 from consortium.server.models.agent_template_models import (
     AgentTemplateModel,
     PersistentAgentTemplateReferenceModel,
+)
+from consortium.server.models.listener_and_agent_reference_models import (
+    PersistentAgentReferenceModel,
 )
 from consortium.server.models.user_account_models import (
     LiveUserAccountReferenceModel,
@@ -59,7 +62,7 @@ class PersistentArtifactDataModel(BaseModel):
     # manager service (for example directly by a plugin) that do not attribute a
     # producing agent, as well as legacy resources whose `data` field predates this
     # attribution, still validate.
-    agent: AgentReferenceModel | None = None
+    agent: PersistentAgentReferenceModel | None = None
 
 
 # This data model is what is resolved at runtime by the artifact service

@@ -193,9 +193,9 @@ class UploadCapability(BaseAgentCapability):
                 # Signal file completion
                 await self.send_to_agent(data={"type": "end_of_file"})
                 return True
-            except PermissionError:
-                await self.send_to_agent(
-                    message=f"Permission denied reading local file '{file_path}'",
+            except PermissionError as exc:
+                self.event_logger.error(
+                    message=f"Failed to upload asset '{target_name}': {exc}"
                 )
                 return False
 
@@ -236,4 +236,4 @@ class UploadCapability(BaseAgentCapability):
             )
             return Success(message="Upload complete")
         else:
-            return Failure(message="Upload failed during transfer.")
+            return Failure(message="Upload failed during transfer")

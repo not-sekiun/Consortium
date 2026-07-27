@@ -66,7 +66,7 @@ class BaseListener(ComponentLifeCycle):
             user-defined methods without naming conflicts.
         connected_agents_service: Internal manager for handling the lifecycles and
             operations of agents connected to this listener.
-        logger: Listener-specific logger instance, automatically tagged with the
+        logger: Listener-specific system logger instance, automatically tagged with the
             listener's name and ID for easy identification in logs.
         event_logger: Listener-specific event logger used to record structured,
             client-facing lifecycle events (successes, failures, informational
@@ -338,10 +338,14 @@ class BaseListener(ComponentLifeCycle):
         """Serialize a compact reference to this listener.
 
         Returns:
-            A dictionary containing only the listener ID and name, suitable for
-            embedding as a lightweight foreign key reference in other JSON objects.
+            A dictionary containing only the listener ID, name, and listener type,
+            suitable for embedding as a lightweight foreign key reference in other
+            JSON objects.
         """
+        # A live reference: the listener is in memory here, so the full listener type
+        # descriptor is embedded, mirroring `Agent.to_json_reference`.
         return {
             "listener_id": str(self.listener_id),
             "name": self.name,
+            "listener_type": self.listener_type.to_json(),
         }

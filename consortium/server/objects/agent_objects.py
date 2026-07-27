@@ -761,18 +761,14 @@ class Agent:
         self._status = AgentStatus.INACTIVE
 
     def to_json(self) -> dict[str, JsonValue]:
-        connected_listener = self.connected_listener
-        if connected_listener:
-            connected_listener_json = connected_listener.to_json_reference()
-        else:
-            connected_listener_json = None
-
         return {
             "agent_id": str(self.agent_id),
             "name": self.name,
             "description": self.description,
             "endpoint": self.endpoint,
-            "agent_type": self.agent_type.to_json() if self.agent_type else None,
+            # An agent cannot be constructed without a resolvable agent type (see
+            # `AgentTypeResolutionError` in `__init__`), so this is never `None`.
+            "agent_type": self.agent_type.to_json(),
             "user": self.user,
             "is_admin": self.is_admin,
             "os": self.os,
@@ -786,14 +782,20 @@ class Agent:
             "datetime_first_checked_in": self.datetime_first_checked_in.isoformat(),
             "datetime_last_checked_in": self.datetime_last_checked_in.isoformat(),
             "status": self.status,
-            "connected_listener": connected_listener_json,
+            "connected_listener": self.connected_listener.to_json_reference()
+            if self.connected_listener is not None
+            else None,
             "agent_data": self.agent_data,
         }
 
     def to_json_reference(self) -> dict[str, JsonValue]:
+        # A live reference: the agent is in memory here, so the full agent type
+        # descriptor is embedded. Persistent references (recorded against artifacts)
+        # instead store the agent type by name, see `PersistentAgentReferenceModel`.
         return {
             "agent_id": str(self.agent_id),
             "name": self.name,
+            "agent_type": self.agent_type.to_json(),
         }
 
     async def _start_agent_capability(

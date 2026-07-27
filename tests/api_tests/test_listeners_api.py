@@ -7,6 +7,7 @@ from tests.api_tests.common_json_response_schemas import (
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.framework_components_json_response_schemas import (
+    AGENT_TYPE_JSON_SCHEMA,
     EVENT_LOG_JSON_SCHEMA,
 )
 from tests.api_tests.utils import get_all_listener_ids, validate_response
@@ -55,7 +56,20 @@ LISTENER_JSON_SCHEMA = {
         },
         "event_log": EVENT_LOG_JSON_SCHEMA,
         "datetime_created": {"type": "string"},
-        "connected_agents": {"type": "array"},
+        # Live references to the agents currently connected to the listener. Unlike the
+        # persistent reference artifacts record, these embed the full agent type.
+        "connected_agents": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "agent_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "agent_type": AGENT_TYPE_JSON_SCHEMA,
+                },
+                "required": ["agent_id", "name", "agent_type"],
+            },
+        },
         "creating_listener_template": {"type": "object"},
     },
     "required": [

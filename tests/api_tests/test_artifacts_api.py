@@ -40,11 +40,24 @@ AGENT_JSON_SCHEMA = {
         "datetime_first_checked_in": {"type": "string"},
         "datetime_last_checked_in": {"type": "string"},
         "status": {"type": "string"},
+        # Live reference to the listener the agent is connected to, embedding the full
+        # listener type descriptor.
         "connected_listener": {
             "type": ["object", "null"],
             "properties": {
                 "listener_id": {"type": "string"},
                 "name": {"type": "string"},
+                "listener_type": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "registered_compatible_agent_types": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                    },
+                    "required": ["name", "registered_compatible_agent_types"],
+                },
             },
         },
         "agent_data": {"type": ["object", "null"]},
@@ -96,14 +109,9 @@ ARTIFACT_JSON_SCHEMA = {
                     "properties": {
                         "agent_id": {"type": "string"},
                         "name": {"type": "string"},
-                        "agent_type": {
-                            "type": "object",
-                            "properties": {
-                                "name": {"type": "string"},
-                                "agent_capabilities": {"type": "object"},
-                            },
-                            "required": ["name", "agent_capabilities"],
-                        },
+                        # The reference records the agent type by name only; the full
+                        # type descriptor is reachable through `resolved_agent`.
+                        "agent_type": {"type": "string"},
                     },
                 },
                 # Live read-time resolution of `agent`, `None` when the producing agent

@@ -40,6 +40,7 @@ class AliasCommand(BaseCommand[AnyContext]):
           A global alias will expand as a token anywhere.
         """,
     )
+    autocompletes = {"list": None, "set": None, "unset": None}
 
     @staticmethod
     def _write_aliases_to_alias_file(aliases: dict[str, Alias]) -> None:
