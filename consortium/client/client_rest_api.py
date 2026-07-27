@@ -492,6 +492,18 @@ class RestAPI:
         )
 
     @_requires_authentication
+    async def delete_queued_agent_task_by_task_id(
+        self,
+        task_id: str,
+    ) -> None:
+        # Only queued tasks can be deleted: once an agent has picked a task up there is
+        # nothing left to remove from its queue.
+        return await self._make_api_request(
+            method="DELETE",
+            url=f"{self._api_base_url}/agents/agents/tasks/{task_id}",
+        )
+
+    @_requires_authentication
     async def update_agent_by_agent_id(
         self,
         agent_id: str,

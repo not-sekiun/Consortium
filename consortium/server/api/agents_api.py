@@ -12,7 +12,9 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerError,
     MethodNotAllowedError,
 )
-from consortium.server.exceptions.object_exceptions import agent_object_exceptions
+from consortium.server.exceptions.object_exceptions import (
+    agent_object_exceptions as obj_excs,
+)
 from consortium.server.exceptions.service_exceptions import (
     agents_service_exceptions as svc_excs,
 )
@@ -55,15 +57,11 @@ _agent_not_found_error = api_excs.AgentNotFoundError.from_consortium_exception(
     consortium_exception=svc_excs.AgentNotFoundError(agent_id="string"),
 )
 _agent_task_not_found_error = api_excs.AgentTaskNotFoundError.from_consortium_exception(
-    consortium_exception=agent_object_exceptions.AgentTaskNotFoundError(
-        task_id="string"
-    ),
+    consortium_exception=obj_excs.AgentTaskNotFoundError(task_id="string"),
 )
 _agent_result_not_found_error = (
     api_excs.AgentResultNotFoundError.from_consortium_exception(
-        consortium_exception=agent_object_exceptions.AgentResultIDNotFoundError(
-            result_id="string"
-        ),
+        consortium_exception=obj_excs.AgentResultIDNotFoundError(result_id="string"),
     )
 )
 
@@ -134,7 +132,7 @@ def get_agent_task_by_task_id(
 ) -> AgentTaskModel:
     try:
         task = _agents_service.get_agent_task_by_task_id(task_id=task_id)
-    except agent_object_exceptions.AgentTaskNotFoundError as exc:
+    except obj_excs.AgentTaskNotFoundError as exc:
         raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -244,7 +242,7 @@ def get_agent_tasks_by_agent_id_and_task_id(
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_object_exceptions.AgentTaskNotFoundError as exc:
+    except obj_excs.AgentTaskNotFoundError as exc:
         raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -292,19 +290,19 @@ async def task_agent_by_agent_id(
         raise api_excs.AgentNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_object_exceptions.AgentCapabilityNotFoundError as exc:
+    except obj_excs.AgentCapabilityNotFoundError as exc:
         raise api_excs.AgentCapabilityNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_object_exceptions.AgentCapabilityOptionNotFoundError as exc:
+    except obj_excs.AgentCapabilityOptionNotFoundError as exc:
         raise api_excs.AgentCapabilityOptionNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_object_exceptions.AgentCapabilityOptionValueValidationError as exc:
+    except obj_excs.AgentCapabilityOptionValueValidationError as exc:
         raise api_excs.AgentCapabilityOptionValueValidationError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except agent_object_exceptions.MissingRequiredAgentCapabilityOptionError as exc:
+    except obj_excs.MissingRequiredAgentCapabilityOptionError as exc:
         raise api_excs.MissingRequiredAgentCapabilityOptionError.from_consortium_exception(
             consortium_exception=exc
         ) from None
@@ -368,16 +366,15 @@ async def delete_agent_by_agent_id(
 
 
 @router.delete(
-    "/{agent_id}/tasks/queued/{task_id}",
+    "/agents/tasks/{task_id}",
     status_code=204,
     responses={
         204: {},
-        404: {"model": AgentOrAgentTaskNotFoundErrorResponse},
+        404: {"model": _agent_task_not_found_error.to_pydantic_model()},
         422: {"model": RequestValidationErrorResponse},
     },
 )
-async def delete_queued_agent_task_by_agent_id_and_task_id(
-    agent_id: UUID4,
+async def delete_queued_agent_task_by_task_id(
     task_id: UUID4,
     _: Annotated[
         None,
@@ -385,14 +382,8 @@ async def delete_queued_agent_task_by_agent_id_and_task_id(
     ],
 ) -> None:
     try:
-        await _agents_service.delete_queued_agent_task_by_agent_id_and_task_id(
-            agent_id=agent_id, task_id=task_id
-        )
-    except svc_excs.AgentNotFoundError as exc:
-        raise api_excs.AgentNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-    except agent_object_exceptions.AgentTaskNotFoundError as exc:
+        await _agents_service.delete_queued_agent_task_by_task_id(task_id=task_id)
+    except obj_excs.AgentTaskNotFoundError as exc:
         raise api_excs.AgentTaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None

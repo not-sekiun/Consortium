@@ -21,7 +21,7 @@ Three concepts are involved:
 - A **payload** is the concrete artifact a generator produces, which can be downloaded
   and
   delivered to a target. Payloads are covered
-  in [Managing Payloads](managing-payloads.md).
+  in [Managing Payloads](../resource-management/managing-payloads.md).
 
 As with listeners, you do not author templates from the client: you create generators
 *from* templates. Configuring a template and creating a generator happens in the "use
@@ -32,9 +32,10 @@ template" context, covered in [Using Agent Templates](using-agent-templates.md).
 
 On entry, the Generators interpreter lists all current agent generators and all
 available
-agent templates. It subscribes to `AGENT_GENERATOR_CREATED`, `AGENT_GENERATOR_REMOVED`,
-`PAYLOAD_CREATED`, and `PAYLOAD_DELETED` events so its listings and completions stay
-current.
+agent templates. It subscribes to `AGENT_GENERATOR_CREATED` and `AGENT_GENERATOR_REMOVED`
+events so its listings and completions stay current. Payload completions are kept current
+for every connected interpreter (see
+[Managing Payloads](../resource-management/managing-payloads.md)).
 
 Commands available here:
 
@@ -52,13 +53,11 @@ Commands available here:
 | `rename <generator_id>`                 | Rename a generator                                               |
 | `describe <generator_id>`               | Attach a description to a generator                              |
 | `delete <generator_id>`                 | Delete a generator                                               |
-| `pl-list`                               | List all payloads                                                |
-| `pl-info <payload_id>`                  | Show details of a payload                                        |
-| `pl-dl <payload_id>`                    | Download a payload                                               |
-| `pl-rm <payload_id>`                    | Remove a payload                                                 |
 
-Generator IDs, template IDs, payload IDs, and (for `update`) parameter names all tab
-complete.
+Generator IDs, template IDs, and (for `update`) parameter names all tab complete. The
+`payload` command used to work with the payloads a generator produces is available here
+as it is in every connected interpreter, covered in
+[Managing Payloads](../resource-management/managing-payloads.md).
 
 ## The typical workflow
 
@@ -70,10 +69,10 @@ complete.
    See [Using Agent Templates](using-agent-templates.md).
 4. Back in the Generators interpreter, confirm the generator and its payloads with
    `list`
-   and `pl-list`.
-5. Download the produced payload with `pl-dl <payload_id>` and deliver it to a target.
-   See
-   [Managing Payloads](managing-payloads.md).
+   and `payload list`.
+5. Download the produced payload with `payload download <payload_id>` and deliver it to
+   a target. See
+   [Managing Payloads](../resource-management/managing-payloads.md).
 
 When a delivered payload runs and connects back through its compatible listener, the
 agent

@@ -39,13 +39,15 @@ nav = [
         ] },
         { "Agent Generators" = [
             "client/agent-generators/setting-up-agent-generators.md",
-            "client/agent-generators/using-agent-templates.md",
-            "client/agent-generators/managing-payloads.md"
+            "client/agent-generators/using-agent-templates.md"
         ] },
         { "Agents" = [
-            "client/agents/tasking-agents.md",
-            "client/agents/managing-assets.md",
-            "client/agents/managing-artifacts.md"
+            "client/agents/tasking-agents.md"
+        ] },
+        { "Resource Management" = [
+            "client/resource-management/managing-assets.md",
+            "client/resource-management/managing-artifacts.md",
+            "client/resource-management/managing-payloads.md"
         ] },
         "client/aliases-and-resource-files.md"
     ] },

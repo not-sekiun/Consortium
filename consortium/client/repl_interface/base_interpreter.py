@@ -1,3 +1,5 @@
+from typing import Any
+
 from aiohttp import ClientConnectionError
 from prompt_toolkit import ANSI, HTML, PromptSession, print_formatted_text
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -10,6 +12,10 @@ from websockets.exceptions import ConnectionClosed
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_session import ClientSession
+from consortium.client.client_websockets_events_api import EventHandler
+from consortium.client.commands.resource_management_commands import (
+    RESOURCE_MANAGEMENT_COMMANDS,
+)
 from consortium.client.exceptions.client_interpreter_exceptions import (
     UnclosedQuotesError,
 )
@@ -228,9 +234,19 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
 
     async def on_exit(self) -> None: ...
 
+    # Wrappers around the `on_enter` and `on_exit` hooks the interpreters implement, so
+    # that setup and teardown shared by a whole family of interpreters (see
+    # `BaseConnectedInterpreter`) can be run around them without every interpreter
+    # having to remember to call `super()`.
+    async def _enter(self) -> None:
+        await self.on_enter()
+
+    async def _exit(self) -> None:
+        await self.on_exit()
+
     async def run(self) -> InterpreterSignal:
         try:
-            await self.on_enter()
+            await self._enter()
 
             while True:
                 try:
@@ -247,7 +263,7 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
                         case ContinueSignal():
                             continue
                         case InterpreterSignal():
-                            await self.on_exit()
+                            await self._exit()
                             return interpreter_signal
                         case _:
                             raise AssertionError(
@@ -329,7 +345,131 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
         )
 
 
-class BaseConnectedInterpreter(_BaseInterpreter[ClientSession]): ...
+# Repository resources (assets, artifacts and payloads) belong to the server rather
+# than to any one interpreter, so every connected interpreter registers the resource
+# management commands and resolves the resource ID autocompletes they declare. Both are
+# handled here rather than by the individual interpreters so that no interpreter can be
+# left without them.
+class BaseConnectedInterpreter(_BaseInterpreter[ClientSession]):
+    def __init__(
+        self,
+        prompt: str | ANSI | HTML | list[tuple[str, str]],
+        commands: list[BaseCommand],
+        client_session: ClientSession,
+        interpreter_context: BaseInterpreterContext,
+    ):
+        # Runtime IDs the resource autocomplete sentinels are resolved against. Held as
+        # dictionaries so that the event handlers can add and remove single IDs while
+        # preserving insertion order. Assigned before `super().__init__` since building
+        # the completions dictionary resolves against them.
+        self._asset_ids: dict[str, None] = {}
+        self._artifact_ids: dict[str, None] = {}
+        self._payload_ids: dict[str, None] = {}
+        # Tracked so that teardown only ever unsubscribes handlers that were actually
+        # subscribed (see `_enter`)
+        self._resource_event_handlers_subscribed = False
+
+        # An interpreter that registers a command of its own under one of these names
+        # keeps its own command
+        registered_command_names = {command.name for command in commands}
+        super().__init__(
+            prompt=prompt,
+            commands=commands
+            + [
+                command
+                for command in RESOURCE_MANAGEMENT_COMMANDS
+                if command.name not in registered_command_names
+            ],
+            client_session=client_session,
+            interpreter_context=interpreter_context,
+        )
+
+    def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
+        return super().get_autocomplete_resolutions() | {
+            Autocomplete.ASSET_ID: self._asset_ids,
+            Autocomplete.ARTIFACT_ID: self._artifact_ids,
+            Autocomplete.PAYLOAD_ID: self._payload_ids,
+        }
+
+    async def _initialize_resource_autocompletes(self) -> None:
+        all_assets = await self.client_session.rest_api.get_all_assets()
+        all_artifacts = await self.client_session.rest_api.get_all_artifacts()
+        all_payloads = await self.client_session.rest_api.get_all_payloads()
+
+        self._asset_ids = dict.fromkeys(asset["resource_id"] for asset in all_assets)
+        self._artifact_ids = dict.fromkeys(
+            artifact["resource_id"] for artifact in all_artifacts
+        )
+        self._payload_ids = dict.fromkeys(
+            payload["resource_id"] for payload in all_payloads
+        )
+
+        self.refresh_autocomplete()
+
+    # Every resource event carries the resource's JSON as its data payload, so the
+    # resource ID can be added to or removed from its completion set directly.
+    async def _asset_created_event_handler(self, event: dict[str, Any]) -> None:
+        self._asset_ids[event["data"]["resource_id"]] = None
+        self.refresh_autocomplete()
+
+    async def _asset_deleted_event_handler(self, event: dict[str, Any]) -> None:
+        self._asset_ids.pop(event["data"]["resource_id"], None)
+        self.refresh_autocomplete()
+
+    async def _artifact_created_event_handler(self, event: dict[str, Any]) -> None:
+        self._artifact_ids[event["data"]["resource_id"]] = None
+        self.refresh_autocomplete()
+
+    async def _artifact_deleted_event_handler(self, event: dict[str, Any]) -> None:
+        self._artifact_ids.pop(event["data"]["resource_id"], None)
+        self.refresh_autocomplete()
+
+    async def _payload_created_event_handler(self, event: dict[str, Any]) -> None:
+        self._payload_ids[event["data"]["resource_id"]] = None
+        self.refresh_autocomplete()
+
+    async def _payload_deleted_event_handler(self, event: dict[str, Any]) -> None:
+        self._payload_ids.pop(event["data"]["resource_id"], None)
+        self.refresh_autocomplete()
+
+    # Single source of truth for the resource event subscriptions, so that setup and
+    # teardown can never drift apart.
+    def _get_resource_event_handlers(self) -> dict[str, EventHandler]:
+        return {
+            "ASSET_CREATED": self._asset_created_event_handler,
+            "ASSET_DELETED": self._asset_deleted_event_handler,
+            "ARTIFACT_CREATED": self._artifact_created_event_handler,
+            "ARTIFACT_DELETED": self._artifact_deleted_event_handler,
+            "PAYLOAD_CREATED": self._payload_created_event_handler,
+            "PAYLOAD_DELETED": self._payload_deleted_event_handler,
+        }
+
+    async def _enter(self) -> None:
+        # Run after the interpreter's own `on_enter` since it is that hook which starts
+        # the websockets message handler loop. Subscribing to events that nothing is
+        # consuming would leave those event messages sitting unread on the websocket
+        # connection, so interpreters that never start the loop (the home interpreter)
+        # get the one off resource ID fetch below and no live updates.
+        await super()._enter()
+        await self._initialize_resource_autocompletes()
+        if self.client_session.websockets_api.running:
+            await self.client_session.websockets_api.subscribe_to_events(
+                event_handlers=self._get_resource_event_handlers(),
+            )
+            self._resource_event_handlers_subscribed = True
+
+    async def _exit(self) -> None:
+        # Unsubscribed before the interpreter's own `on_exit` runs, since that hook
+        # stops the websockets message handler loop and disconnects the client session.
+        if (
+            self._resource_event_handlers_subscribed
+            and self.client_session.websockets_api.connected
+        ):
+            await self.client_session.websockets_api.unsubscribe_from_events(
+                event_handlers=self._get_resource_event_handlers(),
+            )
+            self._resource_event_handlers_subscribed = False
+        await super()._exit()
 
 
 class BaseDisconnectedInterpreter(_BaseInterpreter[None]): ...

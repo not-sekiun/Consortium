@@ -395,7 +395,6 @@ def upload_capability(context):
             context.connection.post_task_message_to_listener(
                 task_id=context.task_id,
                 success=True,
-                message="Upload transfer processed successfully.",
             )
             break
         else:

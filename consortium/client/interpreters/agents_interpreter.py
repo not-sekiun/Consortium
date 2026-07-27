@@ -39,8 +39,6 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         # remove single IDs while preserving insertion order.
         self._agent_ids: dict[str, None] = {}
         self._task_ids: dict[str, None] = {}
-        self._asset_ids: dict[str, None] = {}
-        self._artifact_ids: dict[str, None] = {}
 
         super().__init__(
             prompt=ANSI(
@@ -57,24 +55,16 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         return super().get_autocomplete_resolutions() | {
             Autocomplete.AGENT_ID: self._agent_ids,
             Autocomplete.AGENT_TASK_ID: self._task_ids,
-            Autocomplete.ASSET_ID: self._asset_ids,
-            Autocomplete.ARTIFACT_ID: self._artifact_ids,
         }
 
     async def _initialize_autocompleter(
         self,
         all_agents: list[dict[str, Any]],
     ) -> None:
-        all_assets = await self.client_session.rest_api.get_all_assets()
-        all_artifacts = await self.client_session.rest_api.get_all_artifacts()
         all_tasks = await self.client_session.rest_api.get_all_agent_tasks()
 
         self._agent_ids = dict.fromkeys(agent["agent_id"] for agent in all_agents)
         self._task_ids = dict.fromkeys(task["task_id"] for task in all_tasks)
-        self._asset_ids = dict.fromkeys(asset["resource_id"] for asset in all_assets)
-        self._artifact_ids = dict.fromkeys(
-            artifact["resource_id"] for artifact in all_artifacts
-        )
 
         self.refresh_autocomplete()
 
@@ -111,51 +101,14 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             self._task_ids.pop(task_id, None)
         self.refresh_autocomplete()
 
-    async def _asset_created_event_handler(
-        self,
-        event: dict[str, Any],
-    ) -> None:
-        # The ASSET_CREATED event carries the created asset's JSON as its data payload,
-        # so its resource ID can be added to the asset ID completion set directly.
-        asset = event["data"]
-        self._asset_ids[asset["resource_id"]] = None
-        self.refresh_autocomplete()
-
-    async def _asset_deleted_event_handler(
-        self,
-        event: dict[str, Any],
-    ) -> None:
-        asset = event["data"]
-        self._asset_ids.pop(asset["resource_id"], None)
-        self.refresh_autocomplete()
-
-    async def _artifact_created_event_handler(
-        self,
-        event: dict[str, Any],
-    ) -> None:
-        artifact = event["data"]
-        self._artifact_ids[artifact["resource_id"]] = None
-        self.refresh_autocomplete()
-
-    async def _artifact_deleted_event_handler(
-        self,
-        event: dict[str, Any],
-    ) -> None:
-        artifact = event["data"]
-        self._artifact_ids.pop(artifact["resource_id"], None)
-        self.refresh_autocomplete()
-
     # Single source of truth for this interpreter's event subscriptions, so that setup
-    # and teardown can never drift apart.
+    # and teardown can never drift apart. The asset and artifact events are subscribed
+    # to by `BaseConnectedInterpreter` on behalf of every connected interpreter.
     def _get_event_handlers(self) -> dict[str, EventHandler]:
         return {
             "AGENT_REGISTERED": self._agent_registered_event_handler,
             "AGENT_TASKED": self._agent_tasked_event_handler,
             "AGENT_DELETED": self._agent_deleted_event_handler,
-            "ASSET_CREATED": self._asset_created_event_handler,
-            "ASSET_DELETED": self._asset_deleted_event_handler,
-            "ARTIFACT_CREATED": self._artifact_created_event_handler,
-            "ARTIFACT_DELETED": self._artifact_deleted_event_handler,
         }
 
     async def _setup_event_handlers(self) -> None:

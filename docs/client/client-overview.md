@@ -69,9 +69,9 @@ agents.
 | Disconnected          | `Consortium`                      | A limited mode entered when no session is connected         |
 | Listeners             | `Consortium (Listeners)`          | List, start, stop, and manage listeners                     |
 | Use Listener Template | `Consortium (Listeners: <name>)`  | Configure a listener template and create a listener from it |
-| Generators            | `Consortium (Generators)`         | Manage agent generators and payloads                        |
+| Generators            | `Consortium (Generators)`         | Manage agent generators                                     |
 | Use Agent Template    | `Consortium (Generators: <name>)` | Configure an agent template and create a generator from it  |
-| Agents                | `Consortium (Agents)`             | List agents, inspect tasks, and manage assets               |
+| Agents                | `Consortium (Agents)`             | List agents and inspect their tasks                         |
 | Interact Agent        | `Consortium (Agents: <name>)`     | Task a single agent through its capabilities                |
 
 The current interpreter is always reflected in the prompt, colored by area (listeners in
@@ -134,6 +134,31 @@ Other core commands available across interpreters:
 See [Aliases and Resource Files](aliases-and-resource-files.md) for automating repeated
 command sequences.
 
+## Resource management commands
+
+Assets, artifacts, and payloads are **repository resources**: they belong to the server
+rather than to any one interpreter. Each is managed through a single command whose
+operations are sub-commands, and all three are available in every connected interpreter,
+listed together under the **Resource Management Commands** group in `help`.
+
+| Command    | Description                                                       |
+|------------|-------------------------------------------------------------------|
+| `asset`    | List, inspect, upload, download, rename, describe, remove assets  |
+| `artifact` | List, inspect, download, rename, describe, remove artifacts       |
+| `payload`  | List, inspect, download, rename, describe, remove payloads        |
+
+```text
+asset list                   # run a sub-command
+asset --help                 # list a command's sub-commands
+asset upload --help          # show one sub-command's arguments and examples
+```
+
+Sub-command names and resource IDs tab complete, and the completions stay current as the
+server emits resource events. See
+[Managing Assets](resource-management/managing-assets.md),
+[Managing Artifacts](resource-management/managing-artifacts.md), and
+[Managing Payloads](resource-management/managing-payloads.md).
+
 ## Where to go next
 
 - [Managing Client Sessions](client-sessions/managing-client-sessions.md): connect to
@@ -141,8 +166,10 @@ command sequences.
 - [Setting Up Listeners](listeners/setting-up-listeners.md) and
   [Using Listener Templates](listeners/using-listener-templates.md): stand up the
   network components agents connect through.
-- [Setting Up Agent Generators](agent-generators/setting-up-agent-generators.md),
-  [Using Agent Templates](agent-generators/using-agent-templates.md), and
-  [Managing Payloads](agent-generators/managing-payloads.md): produce agents.
-- [Tasking Agents](agents/tasking-agents.md) and
-  [Managing Assets](agents/managing-assets.md): drive agents once they check in.
+- [Setting Up Agent Generators](agent-generators/setting-up-agent-generators.md) and
+  [Using Agent Templates](agent-generators/using-agent-templates.md): produce agents.
+- [Tasking Agents](agents/tasking-agents.md): drive agents once they check in.
+- [Managing Assets](resource-management/managing-assets.md),
+  [Managing Artifacts](resource-management/managing-artifacts.md), and
+  [Managing Payloads](resource-management/managing-payloads.md): work with the files
+  that move between the client, the server, and your targets.

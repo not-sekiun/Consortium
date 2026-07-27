@@ -708,9 +708,8 @@ class AgentsService:
         return agent
 
     @log_and_propagate_error_on_service_method
-    async def delete_queued_agent_task_by_agent_id_and_task_id(
+    async def delete_queued_agent_task_by_task_id(
         self,
-        agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
     ):
         """Deletes a queued (not yet dispatched) task from the specified agent's task queue.
@@ -727,5 +726,17 @@ class AgentsService:
             AgentTaskNotFoundError: If the agent has no queued task with the given
                 task ID.
         """
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        await agent.delete_queued_task_by_task_id(task_id=task_id)
+        for agent in self._agents.values():
+            try:
+                task = agent.get_task_by_task_id(task_id=task_id)
+                agent.delete_queued_task_by_task_id(task_id=task_id)
+                self._logger.debug(
+                    "Deleted task {} from agent {}",
+                    task_id,
+                    agent,
+                )
+                return task
+            except AgentTaskNotFoundError:
+                continue
+
+        raise AgentTaskNotFoundError(task_id=task_id) from None

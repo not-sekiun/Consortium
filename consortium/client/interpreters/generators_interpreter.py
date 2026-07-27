@@ -46,7 +46,6 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         # resolved against
         self._all_agent_generators: list[dict[str, Any]] = []
         self._all_agent_templates: list[dict[str, Any]] = []
-        self._all_payloads: list[dict[str, Any]] = []
 
         super().__init__(
             prompt=prompt,
@@ -63,9 +62,6 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             await self.client_session.rest_api.get_all_agent_templates()
         )
         return all_agent_generators, all_agent_templates
-
-    async def _get_all_payloads(self) -> list[dict[str, Any]]:
-        return await self.client_session.rest_api.get_all_payloads()
 
     def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
         return super().get_autocomplete_resolutions() | {
@@ -85,20 +81,15 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
                 agent_template["agent_template_id"]
                 for agent_template in self._all_agent_templates
             ],
-            Autocomplete.PAYLOAD_ID: [
-                payload["resource_id"] for payload in self._all_payloads
-            ],
         }
 
     def _initialize_autocomplete(
         self,
         all_agent_generators: list[dict[str, Any]],
         all_agent_templates: list[dict[str, Any]],
-        all_payloads: list[dict[str, Any]],
     ) -> None:
         self._all_agent_generators = all_agent_generators
         self._all_agent_templates = all_agent_templates
-        self._all_payloads = all_payloads
         self.refresh_autocomplete()
 
     async def _agent_generator_created_or_removed_event_handler(
@@ -109,30 +100,14 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             all_agent_generators,
             all_agent_templates,
         ) = await self._get_all_agent_generators_and_agent_templates()
-        all_payloads = await self._get_all_payloads()
         self._initialize_autocomplete(
             all_agent_generators=all_agent_generators,
             all_agent_templates=all_agent_templates,
-            all_payloads=all_payloads,
-        )
-
-    async def _payload_created_or_removed_event_handler(
-        self,
-        _event: dict[str, Any],
-    ) -> None:
-        (
-            all_agent_generators,
-            all_agent_templates,
-        ) = await self._get_all_agent_generators_and_agent_templates()
-        all_payloads = await self._get_all_payloads()
-        self._initialize_autocomplete(
-            all_agent_generators=all_agent_generators,
-            all_agent_templates=all_agent_templates,
-            all_payloads=all_payloads,
         )
 
     # Single source of truth for this interpreter's event subscriptions, so that setup
-    # and teardown can never drift apart.
+    # and teardown can never drift apart. The payload events are subscribed to by
+    # `BaseConnectedInterpreter` on behalf of every connected interpreter.
     def _get_event_handlers(self) -> dict[str, EventHandler]:
         return {
             "AGENT_GENERATOR_CREATED": (
@@ -141,8 +116,6 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             "AGENT_GENERATOR_REMOVED": (
                 self._agent_generator_created_or_removed_event_handler
             ),
-            "PAYLOAD_CREATED": self._payload_created_or_removed_event_handler,
-            "PAYLOAD_DELETED": self._payload_created_or_removed_event_handler,
         }
 
     async def _setup_event_handlers(self) -> None:
@@ -179,11 +152,9 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
             all_agent_generators,
             all_agent_templates,
         ) = await self._get_all_agent_generators_and_agent_templates()
-        all_payloads = await self._get_all_payloads()
         self._initialize_autocomplete(
             all_agent_generators=all_agent_generators,
             all_agent_templates=all_agent_templates,
-            all_payloads=all_payloads,
         )
         await self._setup_event_handlers()
         self._list_all_agent_generators_and_agent_templates(

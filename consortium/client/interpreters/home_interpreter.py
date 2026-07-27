@@ -49,6 +49,12 @@ class HomeInterpreter(BaseConnectedInterpreter):
             ],
         }
 
+    async def on_enter(self) -> None:
+        await self.client_session.websockets_api.start()
+
+    async def on_exit(self) -> None:
+        await self.client_session.websockets_api.stop()
+
     # Client sessions can be created and removed from anywhere in the client, so the
     # completions are rebuilt on every prompt rather than off the back of an event.
     async def on_loop(self) -> None:

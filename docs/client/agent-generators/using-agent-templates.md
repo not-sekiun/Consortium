@@ -62,8 +62,8 @@ set callback_host 10.0.0.5      # configure options as needed
 set callback_port 8443
 create                          # create and start the generator
 generators                      # return to the Generators interpreter
-pl-list                         # find the produced payload
+payload list                    # find the produced payload
 ```
 
 With a payload produced, download it and deliver it to a target. See
-[Managing Payloads](managing-payloads.md).
+[Managing Payloads](../resource-management/managing-payloads.md).
