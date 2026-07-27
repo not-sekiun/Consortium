@@ -17,12 +17,12 @@ from consortium.server.exceptions.object_exceptions.agent_object_exceptions impo
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )
-from consortium.server.models.agent_task_models import (
-    AgentTaskState,
-)
 from consortium.server.models.logging_models import LoggerType
+from consortium.server.models.task_models import (
+    TaskState,
+)
 from consortium.server.objects.agent_objects import Agent
-from consortium.server.objects.agent_task_objects import AgentTask
+from consortium.server.objects.task_objects import Task
 from consortium.server.services.events_service import EventsService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
@@ -475,9 +475,7 @@ class AgentsService:
         return all_agents
 
     @log_and_propagate_error_on_service_method
-    def get_all_agent_tasks(
-        self, status: AgentTaskState | None = None
-    ) -> list[AgentTask]:
+    def get_all_agent_tasks(self, status: TaskState | None = None) -> list[Task]:
         """Returns all tasks across every registered agent, optionally filtered by state.
 
         Args:
@@ -504,7 +502,7 @@ class AgentsService:
         return all_tasks
 
     @log_and_propagate_error_on_service_method
-    def get_agent_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
+    def get_agent_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
         """Returns a task by its ID, searching across all registered agents.
 
         Args:
@@ -532,8 +530,8 @@ class AgentsService:
 
     @log_and_propagate_error_on_service_method
     def get_all_agent_tasks_by_agent_id(
-        self, agent_id: str | uuid.UUID, status: AgentTaskState | None = None
-    ) -> list[AgentTask]:
+        self, agent_id: str | uuid.UUID, status: TaskState | None = None
+    ) -> list[Task]:
         """Returns all tasks for a specific agent, optionally filtered by state.
 
         Args:
@@ -569,7 +567,7 @@ class AgentsService:
         self,
         agent_id: str | uuid.UUID,
         task_id: str | uuid.UUID,
-    ) -> AgentTask:
+    ) -> Task:
         """Returns a specific task belonging to a specific agent.
 
         Args:
@@ -598,7 +596,7 @@ class AgentsService:
         agent_id: str | uuid.UUID,
         command: str,
         arguments: dict[str, Any],
-    ) -> AgentTask:
+    ) -> Task:
         """Queues a command for execution on the specified agent and emits an `AGENT_TASKED` event.
 
         Args:
@@ -614,7 +612,7 @@ class AgentsService:
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
 
-        task = AgentTask(command=command, arguments=arguments)
+        task = Task(command=command, arguments=arguments)
         await agent.submit_task(task=task)
 
         run_async_background_task(

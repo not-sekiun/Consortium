@@ -51,7 +51,7 @@ from consortium.server.exceptions.service_exceptions.repository_service_exceptio
     ResourceNotFoundError,
 )
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
+from consortium.server.objects.task_objects import Task, TaskState
 from consortium.server.utils import (
     generate_random_human_readable_name,
     normalize_uuid,
@@ -313,7 +313,7 @@ class Agent:
 
         return self._status
 
-    async def submit_task(self, task: AgentTask) -> None:
+    async def submit_task(self, task: Task) -> None:
         if task.command not in self.agent_type.agent_capabilities:
             raise AgentCapabilityNotFoundError(
                 command=task.command,
@@ -421,7 +421,7 @@ class Agent:
         # then exited) and is only now being drained is not transitioned.
         if (
             isinstance(task_message, TaskLaunchMessageModel)
-            and task.status.state == AgentTaskState.QUEUED
+            and task.status.state == TaskState.QUEUED
         ):
             task.status._transition_to_running()
             task.datetime_started = utc_now()
@@ -634,7 +634,7 @@ class Agent:
             )
             return False
 
-        if task.status.state != AgentTaskState.RUNNING:
+        if task.status.state != TaskState.RUNNING:
             self.logger.warning(
                 "Agent {} received a task output message for task {} with status {} "
                 "that is not running. The message was dropped.",
@@ -672,32 +672,32 @@ class Agent:
 
     def get_all_tasks(
         self,
-        state: AgentTaskState | None = None,
-    ) -> list[AgentTask]:
+        state: TaskState | None = None,
+    ) -> list[Task]:
         if state is not None:
             return [task for task in self._tasks.values() if task.status.state == state]
         return list(self._tasks.values())
 
-    def get_all_queued_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(state=AgentTaskState.QUEUED)
+    def get_all_queued_tasks(self) -> list[Task]:
+        return self.get_all_tasks(state=TaskState.QUEUED)
 
-    def get_all_running_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(state=AgentTaskState.RUNNING)
+    def get_all_running_tasks(self) -> list[Task]:
+        return self.get_all_tasks(state=TaskState.RUNNING)
 
-    def get_all_succeeded_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(state=AgentTaskState.SUCCEEDED)
+    def get_all_succeeded_tasks(self) -> list[Task]:
+        return self.get_all_tasks(state=TaskState.SUCCEEDED)
 
-    def get_all_failed_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(state=AgentTaskState.FAILED)
+    def get_all_failed_tasks(self) -> list[Task]:
+        return self.get_all_tasks(state=TaskState.FAILED)
 
-    def get_all_errored_tasks(self) -> list[AgentTask]:
-        return self.get_all_tasks(state=AgentTaskState.ERRORED)
+    def get_all_errored_tasks(self) -> list[Task]:
+        return self.get_all_tasks(state=TaskState.ERRORED)
 
     def get_task_by_task_id(
         self,
         task_id: str | uuid.UUID,
-        state: AgentTaskState | None = None,
-    ) -> AgentTask:
+        state: TaskState | None = None,
+    ) -> Task:
         task_id = normalize_uuid(value=task_id)
 
         for task in self.get_all_tasks(state=state):
@@ -705,20 +705,20 @@ class Agent:
                 return task
         raise AgentTaskNotFoundError(task_id=task_id)
 
-    def get_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
-        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.QUEUED)
+    def get_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
+        return self.get_task_by_task_id(task_id=task_id, state=TaskState.QUEUED)
 
-    def get_running_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
-        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.RUNNING)
+    def get_running_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
+        return self.get_task_by_task_id(task_id=task_id, state=TaskState.RUNNING)
 
-    def get_succeeded_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
-        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.SUCCEEDED)
+    def get_succeeded_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
+        return self.get_task_by_task_id(task_id=task_id, state=TaskState.SUCCEEDED)
 
-    def get_failed_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
-        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.FAILED)
+    def get_failed_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
+        return self.get_task_by_task_id(task_id=task_id, state=TaskState.FAILED)
 
-    def get_errored_task_by_task_id(self, task_id: str | uuid.UUID) -> AgentTask:
-        return self.get_task_by_task_id(task_id=task_id, state=AgentTaskState.ERRORED)
+    def get_errored_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
+        return self.get_task_by_task_id(task_id=task_id, state=TaskState.ERRORED)
 
     async def _discard_task_runtime(self, task_id: str) -> None:
         # Tear down everything a task might still surface so that once it is deleted there
@@ -747,7 +747,7 @@ class Agent:
     async def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
         try:
             task = self.get_queued_task_by_task_id(task_id=task_id)
-            if task.status.state != AgentTaskState.QUEUED:
+            if task.status.state != TaskState.QUEUED:
                 raise AgentTaskNotFoundError(task_id=str(task_id))
             await self._discard_task_runtime(str(task.task_id))
             del self._tasks[str(task.task_id)]
@@ -801,11 +801,11 @@ class Agent:
     async def _start_agent_capability(
         self,
         agent_capability: type[BaseAgentCapability],
-        task: AgentTask,
+        task: Task,
     ) -> None:
         async def _agent_capability_task_handler(
             agent_capability: BaseAgentCapability,
-            task: AgentTask,
+            task: Task,
         ):
             # Strip redundant information from the task to create the initial task
             # message
@@ -826,7 +826,7 @@ class Agent:
                     # without the agent ever popping its launch message (never
                     # transitioned through RUNNING). This is allowed for now but is
                     # likely a capability bug, warn so it can be investigated.
-                    if task.status.state == AgentTaskState.QUEUED:
+                    if task.status.state == TaskState.QUEUED:
                         self.logger.warning(
                             "Agent {} completed task {} to SUCCESS but the task never "
                             "left QUEUED, its launch message was never popped so it was "
@@ -860,7 +860,7 @@ class Agent:
                     # it as a normal completion: transition to SUCCEEDED without
                     # appending a duplicate terminal event (the capability already
                     # logged whatever events it wanted via log_*).
-                    if task.status.state == AgentTaskState.QUEUED:
+                    if task.status.state == TaskState.QUEUED:
                         self.logger.warning(
                             "Agent {} completed task {} normally but the task never left "
                             "QUEUED, its launch message was never popped so it was never "

@@ -20,7 +20,7 @@ class AgentsObjectError(BaseObjectError):
 
 
 class AgentTaskNotFoundError(AgentsObjectError):
-    """Raised when the requested agent task was not found."""
+    """Raised when the requested task for a particular agent was not found."""
 
     code = "AGENT_TASK_NOT_FOUND_ERROR"
 
@@ -28,39 +28,6 @@ class AgentTaskNotFoundError(AgentsObjectError):
         super().__init__(
             f"Failed to find the requested agent task. No agent task was found with "
             f"the provided task ID '{task_id}'.",
-        )
-
-
-class AgentResultNotFoundError(AgentsObjectError):
-    """Base exception for errors raised when a requested agent result is not found."""
-
-    code = "AGENT_RESULT_NOT_FOUND_ERROR"
-
-
-class AgentResultIDNotFoundError(AgentResultNotFoundError):
-    """Raised when the requested agent result with the provided result ID was not found."""
-
-    code = "AGENT_RESULT_ID_NOT_FOUND_ERROR"
-
-    def __init__(self, result_id: str):
-        super().__init__(
-            f"Failed to find the requested agent result. No agent result was found "
-            f"with the provided result ID '{result_id}'.",
-        )
-
-
-class AgentResultTaskIDNotFoundError(AgentResultNotFoundError):
-    """Raised when no agent result was found for the agent task with the provided task
-    ID.
-    """
-
-    code = "AGENT_RESULT_TASK_ID_NOT_FOUND_ERROR"
-
-    def __init__(self, task_id: str):
-        super().__init__(
-            f"Failed to find the requested agent result. No agent result was found "
-            f"that corresponded with the agent task with the provided task ID "
-            f"'{task_id}'.",
         )
 
 

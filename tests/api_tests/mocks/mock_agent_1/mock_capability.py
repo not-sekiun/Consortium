@@ -4,7 +4,7 @@ from datetime import datetime
 from consortium.framework.agents.agent_message_models import TaskLaunchMessageModel
 from consortium.framework.agents.agent_outcomes import Success
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability
-from consortium.server.models.agent_task_models import AgentTaskState
+from consortium.server.models.task_models import TaskState
 
 
 class MockCapability(BaseAgentCapability):
@@ -15,8 +15,8 @@ class MockCapability(BaseAgentCapability):
     async def execute(self, task_launch_message: TaskLaunchMessageModel) -> Success:
         # Transition QUEUED -> RUNNING directly, mirroring what get_next_task_message
         # does, so the framework can then transition RUNNING -> SUCCEEDED on return.
-        if self.task.status.state == AgentTaskState.QUEUED:
-            self.task.status.state = AgentTaskState.RUNNING
+        if self.task.status.state == TaskState.QUEUED:
+            self.task.status.state = TaskState.RUNNING
             self.task.datetime_started = datetime.now()
         return Success(message="mock success", data={"result": "ok"})
 

@@ -7,7 +7,7 @@ from consortium.framework._core.event_logging.event_log_models import EventLogMo
 from consortium.server.models.error_models import ErrorModel
 
 
-class AgentTaskState(StrEnum):
+class TaskState(StrEnum):
     QUEUED = "QUEUED"
     RUNNING = "RUNNING"
     SUCCEEDED = "SUCCEEDED"
@@ -15,16 +15,16 @@ class AgentTaskState(StrEnum):
     ERRORED = "ERRORED"
 
 
-class AgentTaskStatusModel(BaseModel):
-    state: AgentTaskState
+class TaskStatusModel(BaseModel):
+    state: TaskState
     error: ErrorModel | None
 
 
-class AgentTaskModel(BaseModel):
+class TaskModel(BaseModel):
     task_id: UUID4
     command: str
     arguments: dict[str, JsonValue]
-    status: AgentTaskStatusModel
+    status: TaskStatusModel
     event_log: EventLogModel
     datetime_created: datetime
     datetime_started: datetime | None = None

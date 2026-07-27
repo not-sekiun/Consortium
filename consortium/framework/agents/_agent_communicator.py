@@ -17,11 +17,11 @@ from consortium.framework.agents.agent_message_models import (
 
 if typing.TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
-    from consortium.server.objects.agent_task_objects import AgentTask
+    from consortium.server.objects.task_objects import Task
 
 
 class _AgentCommunicator:
-    def __init__(self, agent: Agent, task: AgentTask):
+    def __init__(self, agent: Agent, task: Task):
         from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
         # Importing here to avoid circular import
 

@@ -11,7 +11,7 @@ from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
 )
 from consortium.server.objects.agent_objects import Agent
-from consortium.server.objects.agent_task_objects import AgentTask, AgentTaskState
+from consortium.server.objects.task_objects import Task, TaskState
 
 
 def _make_agent() -> Agent:
@@ -28,15 +28,15 @@ def _make_agent() -> Agent:
     return agent
 
 
-def _add_outbox(agent: Agent) -> tuple[AgentTask, TaskMessagesQueue]:
-    task = AgentTask(command="mock_cmd", arguments={})
+def _add_outbox(agent: Agent) -> tuple[Task, TaskMessagesQueue]:
+    task = Task(command="mock_cmd", arguments={})
     agent._tasks[str(task.task_id)] = task
     outbox = TaskMessagesQueue(agent=agent)
     agent._task_outboxes[str(task.task_id)] = outbox
     return task, outbox
 
 
-def _input(task: AgentTask, **data) -> TaskInputMessageModel:
+def _input(task: Task, **data) -> TaskInputMessageModel:
     return TaskInputMessageModel(task_id=task.task_id, data=data)
 
 
@@ -93,7 +93,7 @@ async def test_get_by_id_returns_end_of_stream_when_exhausted_and_drops_outbox()
 async def test_get_by_id_returns_end_of_stream_for_missing_outbox():
     # A task with no outbox (never produced or already drained) reports end of stream.
     agent = _make_agent()
-    task = AgentTask(command="mock_cmd", arguments={})
+    task = Task(command="mock_cmd", arguments={})
     agent._tasks[str(task.task_id)] = task
 
     result = await agent.get_next_task_message_by_task_id(
@@ -109,14 +109,14 @@ async def test_get_by_id_launch_message_transitions_task_to_running():
     task, outbox = _add_outbox(agent)
     launch = TaskLaunchMessageModel(task_id=task.task_id, command=task.command)
     await outbox.put(launch)
-    assert task.status.state == AgentTaskState.QUEUED
+    assert task.status.state == TaskState.QUEUED
 
     result = await agent.get_next_task_message_by_task_id(
         task_id=task.task_id, timeout=0
     )
 
     assert result is launch
-    assert task.status.state == AgentTaskState.RUNNING
+    assert task.status.state == TaskState.RUNNING
     assert task.datetime_started is not None
 
 

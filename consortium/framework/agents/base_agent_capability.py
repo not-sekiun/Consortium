@@ -44,7 +44,7 @@ from consortium.server.utils import construct_services_dataclass
 
 if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
-    from consortium.server.objects.agent_task_objects import AgentTask
+    from consortium.server.objects.task_objects import Task
 
 
 class SupportedOS(StrEnum):
@@ -146,7 +146,7 @@ class BaseAgentCapability(_AgentCommunicator):
     validating_function: Callable[[dict[str, JsonValue]], None] | None = None
     task_launch_message: TaskLaunchMessageModel | None = None
 
-    def __init__(self, agent: Agent, task: AgentTask):
+    def __init__(self, agent: Agent, task: Task):
         """Initialize the capability with the agent and task context for this execution.
 
         Args:

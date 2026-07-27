@@ -21,13 +21,13 @@ from consortium.server.exceptions.service_exceptions import (
 from consortium.server.models.agent_models import (
     AgentModel,
 )
-from consortium.server.models.agent_task_models import (
-    AgentTaskModel,
-    AgentTaskState,
-)
 from consortium.server.models.request_body_models import (
     AgentTaskRequestBodyModel,
     UpdateAgentRequestBodyModel,
+)
+from consortium.server.models.task_models import (
+    TaskModel,
+    TaskState,
 )
 from consortium.server.models.union_response_models import (
     AgentOrAgentTaskNotFoundErrorResponse,
@@ -81,29 +81,28 @@ def get_all_agents(
 @router.get(
     "/tasks",
     responses={
-        200: {"model": list[AgentTaskModel]},
+        200: {"model": list[TaskModel]},
     },
 )
 def get_all_agent_tasks(
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS))
     ],
-    status: AgentTaskState | None = None,
-) -> list[AgentTaskModel]:
+    status: TaskState | None = None,
+) -> list[TaskModel]:
     # Collection responses omit per-task event log entries so the total response stays
     # bounded regardless of how many tasks exist. Use the detail endpoint to page a
     # specific task's event log via limit/offset.
     tasks = _agents_service.get_all_agent_tasks(status=status)
     return [
-        AgentTaskModel(**task.to_json(include_event_log_entries=False))
-        for task in tasks
+        TaskModel(**task.to_json(include_event_log_entries=False)) for task in tasks
     ]
 
 
 @router.get(
     "/tasks/{task_id}",
     responses={
-        200: {"model": AgentTaskModel},
+        200: {"model": TaskModel},
         404: {"model": _agent_task_not_found_error.to_pydantic_model()},
         422: {"model": RequestValidationErrorResponse},
     },
@@ -129,7 +128,7 @@ def get_agent_task_by_task_id(
             description="Starting position in task events log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
         ),
     ] = None,
-) -> AgentTaskModel:
+) -> TaskModel:
     try:
         task = _agents_service.get_agent_task_by_task_id(task_id=task_id)
     except obj_excs.AgentTaskNotFoundError as exc:
@@ -137,15 +136,13 @@ def get_agent_task_by_task_id(
             consortium_exception=exc
         ) from None
 
-    return AgentTaskModel(
-        **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
-    )
+    return TaskModel(**task.to_json(limit=clamp_event_log_limit(limit), offset=offset))
 
 
 @router.get(
     "/{agent_id}/tasks",
     responses={
-        200: {"model": list[AgentTaskModel]},
+        200: {"model": list[TaskModel]},
         404: {"model": _agent_not_found_error.to_pydantic_model()},
         422: {"model": RequestValidationErrorResponse},
     },
@@ -156,8 +153,8 @@ def get_all_agent_tasks_by_agent_id(
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS_BY_AGENT_ID)),
     ],
-    status: AgentTaskState | None = None,
-) -> list[AgentTaskModel]:
+    status: TaskState | None = None,
+) -> list[TaskModel]:
     try:
         tasks = _agents_service.get_all_agent_tasks_by_agent_id(
             agent_id=agent_id, status=status
@@ -171,8 +168,7 @@ def get_all_agent_tasks_by_agent_id(
     # bounded regardless of how many tasks exist. Use the detail endpoint to page a
     # specific task's event log via limit/offset.
     return [
-        AgentTaskModel(**task.to_json(include_event_log_entries=False))
-        for task in tasks
+        TaskModel(**task.to_json(include_event_log_entries=False)) for task in tasks
     ]
 
 
@@ -201,7 +197,7 @@ def get_agent_by_agent_id(
 @router.get(
     "/{agent_id}/tasks/{task_id}",
     responses={
-        200: {"model": AgentTaskModel},
+        200: {"model": TaskModel},
         404: {"model": AgentOrAgentTaskNotFoundErrorResponse},
         422: {"model": RequestValidationErrorResponse},
     },
@@ -229,12 +225,12 @@ def get_agent_tasks_by_agent_id_and_task_id(
             description="Starting position in task events log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
         ),
     ] = None,
-) -> AgentTaskModel:
+) -> TaskModel:
     try:
         task = _agents_service.get_agent_task_by_agent_id_and_task_id(
             agent_id=agent_id, task_id=task_id
         )
-        return AgentTaskModel(
+        return TaskModel(
             **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
         )
         # return _convert_agent_task_model_to_api_response_model(task, limit, offset)
@@ -251,7 +247,7 @@ def get_agent_tasks_by_agent_id_and_task_id(
 @router.post(
     "/{agent_id}/tasks",
     responses={
-        200: {"model": AgentTaskModel},
+        200: {"model": TaskModel},
         404: {"model": _agent_not_found_error.to_pydantic_model()},
         422: {"model": AgentTaskingValidationErrorResponse},
     },
@@ -278,7 +274,7 @@ async def task_agent_by_agent_id(
             description="Starting position in task events log. Negative values offset from end. If None and limit is provided, returns the tail (last N entries)."
         ),
     ] = None,
-) -> AgentTaskModel:
+) -> TaskModel:
     command = agent_task_request_body.command
     arguments = agent_task_request_body.arguments
 
@@ -307,9 +303,7 @@ async def task_agent_by_agent_id(
             consortium_exception=exc
         ) from None
 
-    return AgentTaskModel(
-        **task.to_json(limit=clamp_event_log_limit(limit), offset=offset)
-    )
+    return TaskModel(**task.to_json(limit=clamp_event_log_limit(limit), offset=offset))
 
 
 @router.patch(

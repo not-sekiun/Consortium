@@ -188,7 +188,7 @@ return Failure(task_output_message=header)   # wrap an existing message model
 | `self.mitre_attack_techniques` | `list`                           | Resolved MITRE ATT&CK technique objects                                |
 | `self.launch_message`          | `TaskLaunchMessageModel \| None` | The message sent on the most recent `execute()` call                   |
 | `self.agent`                   | `Agent`                          | The agent this execution is running against                            |
-| `self.task`                    | `AgentTask`                      | The task record tracking this execution                                |
+| `self.task`                    | `Task`                      | The task record tracking this execution                                |
 | `self.services`                | namespace                        | All framework services                                                 |
 
 `SupportedOS` is a `StrEnum` with values `WINDOWS`, `LINUX`, `MACOS`, `ANDROID`, `IOS`,
