@@ -119,6 +119,9 @@ configured delay and poll again.
 Each task object in the array is a `TaskLaunchMessageModel` serialized via
 `to_json()`. The agent executes each task independently:
 
+`to_json()` is the server-side serialization method. Agent implementations should depend
+on the JSON object shape shown above, rather than on that Python method name.
+
 - `command`: the capability name to execute (e.g. `"shell"`, `"info"`, `"download"`)
 - `arguments`: the validated option values provided by the operator
 - `data`: additional structured data; may be empty

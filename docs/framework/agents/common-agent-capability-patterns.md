@@ -98,6 +98,9 @@ class Whoami(BaseAgentCapability):
 !!! info "The one-liner"
     The inherited default is `return (await self.recv_from_agent()).to_outcome()`. Only override `on_execute` when you need a timeout or want to post-process the response, as above.
 
+    `to_outcome()` converts the received `TaskOutputMessageModel` into `Success` or
+    `Failure` according to its `success` field, preserving its message and data.
+
 ## Pattern 2: Incoming stream
 
 One launch, many responses. The agent streams messages back until it signals the end; your loop consumes them and decides when the exchange is over.
@@ -258,7 +261,10 @@ class StepSimulation(BaseAgentCapability):
 
 ## Pattern 5: Bidirectional stream
 
-Both directions flow at once: you send inputs while the agent streams outputs, with neither side waiting on the other. Termination follows a half-close model borrowed from gRPC: running out of things to send only closes the sending side, and the receiving side owns the end of the exchange.
+Both directions flow at once: you send inputs while the agent streams outputs, with
+neither side waiting on the other. The application protocol must define its terminal
+messages. A capability should return only after the receive side determines that the
+exchange is complete; returning closes the framework's task-message queues.
 
 ```mermaid
 sequenceDiagram
@@ -268,7 +274,7 @@ sequenceDiagram
     par sending
         C->>A: command
         C->>A: command
-        Note over C,A: sender done: half-close
+        C->>A: end of input
     and receiving
         A->>C: output
         A->>C: output
@@ -279,10 +285,57 @@ sequenceDiagram
 Use it when the two directions are genuinely independent: streaming control commands while output streams back, live steering of a long-running render.
 
 Consortium does not provide a duplex helper. Implement this pattern only when the two
-directions are truly independent, using an `asyncio.TaskGroup`, an `asyncio.Queue`, and
-the existing `send_to_agent()` and `recv_from_agent()` primitives. Ensure that leaving
-the capability cancels and awaits the sender task, and report received progress through
+directions are truly independent, using an `asyncio.TaskGroup` and the existing
+`send_to_agent()` and `recv_from_agent()` primitives. Ensure that leaving the capability
+cancels and awaits the sender task, and report received progress through
 `self.event_logger.update_progress()`.
+
+```python
+import asyncio
+
+
+class LiveRender(BaseAgentCapability):
+    name = "live_render"
+    description = "Send render controls while streaming render progress."
+
+    async def on_execute(self) -> Success | Failure | None:
+        controls = self.task_launch_message.arguments["controls"]
+
+        async def send_controls() -> None:
+            for control in controls:
+                await self.send_to_agent(data={"type": "control", "value": control})
+            await self.send_to_agent(data={"type": "end_of_input"})
+
+        async def receive_output() -> Success | Failure:
+            while True:
+                response = await self.recv_from_agent(timeout=60)
+                if not response.success:
+                    return Failure(task_output_message=response)
+
+                match response.data.get("type"):
+                    case "progress":
+                        self.event_logger.update_progress(
+                            message=response.message,
+                            percent_complete=response.data.get("percent", 0),
+                        )
+                    case "complete":
+                        return response.to_outcome()
+                    case unknown:
+                        return Failure(message=f"Unexpected message type: {unknown}")
+
+        async with asyncio.TaskGroup() as task_group:
+            sender = task_group.create_task(send_controls())
+            receiver = task_group.create_task(receive_output())
+            outcome = await receiver
+            if not sender.done():
+                sender.cancel()
+
+        return outcome
+```
+
+The sender may finish before the agent's final output arrives. Conversely, a terminal
+output can arrive before every control is sent; cancelling and awaiting the sender keeps
+the capability from leaving a background task behind.
 
 !!! tip "Reactive sending"
     An async generator cannot see incoming messages, which is fine for independent streams. If a received message must trigger a new send (for example the agent asks for a frame to be resent), bridge the two loops with an `asyncio.Queue`: the receive loop puts work on the queue, and the outgoing generator yields from it.
@@ -299,6 +352,6 @@ the capability cancels and awaits the sender task, and report received progress 
 | Incoming stream | 1 (launch) | many | none | Download, tail progress |
 | Outgoing stream | many | 1 | none | Upload, feed a dataset |
 | Lock-step stream | many | many | each input built from the previous response | Simulation stepping, cursor paging |
-| Bidirectional stream | many | many | independent, half-close termination | Live steering, command streaming |
+| Bidirectional stream | many | many | independent, protocol-defined termination | Live steering, command streaming |
 
 When in doubt start with the simplest pattern that could work and let the loop grow. Moving from request-response to an incoming stream is adding a `while` loop, not changing base classes.

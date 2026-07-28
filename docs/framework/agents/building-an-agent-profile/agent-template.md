@@ -100,8 +100,18 @@ no explicit name is provided to `create_agent_generator()`:
 
 ```python
 def resolve_agent_generator_name(self, parameters: dict) -> str:
-    return parameters["name"]
+    requested_name = str(parameters.get("name", "")).strip()
+    if requested_name:
+        return requested_name
+    return (
+        f"{self.name} ({parameters['format']} -> "
+        f"{parameters['remote_host']}:{parameters['remote_port']})"
+    )
 ```
+
+An explicit `name` passed to `create_agent_generator()` takes precedence over this
+method. Use `resolve_agent_generator_name()` to create a useful default when the caller
+does not provide one.
 
 ## Complete template
 
@@ -162,5 +172,11 @@ class AgentTemplate(BaseAgentTemplate):
     }
 
     def resolve_agent_generator_name(self, parameters: dict) -> str:
-        return parameters["name"]
+        requested_name = str(parameters.get("name", "")).strip()
+        if requested_name:
+            return requested_name
+        return (
+            f"{self.name} ({parameters['format']} -> "
+            f"{parameters['remote_host']}:{parameters['remote_port']})"
+        )
 ```

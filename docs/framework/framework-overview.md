@@ -214,9 +214,18 @@ version, the component is not loaded and the framework reports why.
     framework verifies the package is present; it never fetches anything. You must install
     third-party dependencies into the same environment the server runs in yourself. For
     the standard `uv`-managed setup, where each component is a workspace package, that
-    means `uv add <package>` from within the component's package (then
-    `uv sync --all-packages`), which matches how the rest of the project manages
-    dependencies.
+     means `uv add <package>` from within the component's package (then
+     `uv sync --all-packages`), which matches how the rest of the project manages
+     dependencies.
+
+For a component that is a `uv` workspace package, the usual workflow is:
+
+1. From the component project's root directory, run `uv add <package>`.
+2. Let `uv` update that component's `pyproject.toml` and the workspace lockfile.
+3. Run `uv sync --all-packages` so the server environment contains the dependency.
+
+The framework's load-time check then verifies the installed package and its version; it
+does not replace either of the installation steps above.
 
 ### Component dependencies (on other components)
 
