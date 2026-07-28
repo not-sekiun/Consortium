@@ -43,5 +43,6 @@ attribute. Task dispatch looks up capabilities by name from this dict.
 | `name`               | `str` | Yes      | Unique type identifier across the installation |
 | `agent_capabilities` | `set` | Yes      | All capabilities this agent type supports      |
 
-`name` must be non-empty and unique. The framework validates this at class definition
-time.
+`name` must be non-empty; the framework validates that at class definition time. During
+profile loading it also resolves the registered agent types and rejects two distinct
+agent type classes that use the same name.

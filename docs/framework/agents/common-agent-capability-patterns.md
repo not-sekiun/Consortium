@@ -152,7 +152,10 @@ class DownloadFile(BaseAgentCapability):
 The shape to copy: consume the header before the loop, then `recv` at the top of the loop and `match` on the message type. Sequence lives in code order, state lives in locals, and every way out of the exchange is a visible `return`.
 
 !!! tip "Ephemeral versus recorded events"
-    `update_progress` overwrites the task status and is safe to call per chunk. The `log_*` entries append to the task's event log, so save them for things worth keeping, like a finished artifact.
+    `update_progress` overwrites the task status and is safe to call per chunk. The
+    `success`, `info`, `warning`, `failure`, `error`, and `artifact` methods append to
+    the task's event log, so save them for things worth keeping, like a finished
+    artifact.
 
 ## Pattern 3: Outgoing stream
 

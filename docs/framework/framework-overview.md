@@ -121,8 +121,10 @@ free-form and can be changed at any time without consequence, because nothing re
 a component by its name.
 
 - For plugins and event hooks, `name` is a class attribute the author sets.
-- For listener and agent **instances**, the operator sets the name when they create the
-  instance (a single agent profile can produce many differently-named running agents).
+- Listener and agent profiles also have a class-level `name`, but that is the name of
+  the profile. Each running listener or agent has its own separate instance name,
+  supplied when it is created or registered and editable by the operator. A single
+  agent profile can therefore produce many differently named running agents.
 
 If a component omits `name`, the framework falls back to using the `label` as the display
 name.
@@ -189,7 +191,8 @@ separately:
 ### Third-party dependencies (PyPI packages)
 
 If a component imports a package that is not part of the standard library or the
-framework, declare it in a `pyproject.toml` sitting next to the manifest:
+framework, declare it in a `pyproject.toml` in the component project's root directory,
+next to `manifest.json`:
 
 ```toml
 [project]

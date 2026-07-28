@@ -127,7 +127,7 @@ communication methods to exchange messages with the agent:
 |--------------------------------------------------|-----------------|----------------------------------------------------------------------|
 | `await self.recv_from_agent(timeout=None)`       | Agent -> server | Blocks until the next `TaskOutputMessageModel` arrives for this task |
 | `await self.send_to_agent(data={}, payload=b"")` | Server -> agent | Sends a `TaskInputMessageModel` for multi-turn exchanges             |
-| `await self.send_and_recv_from_agent(data={})`   | Round trip      | Shorthand: send then immediately await reply                         |
+| `await self.send_and_recv_from_agent(data={}, payload=None, timeout=None)` | Round trip | Sends a task-input message, then waits for its reply; `timeout` covers the whole round trip |
 
 `recv_from_agent` blocks until the agent submits a result with the matching `task_id`.
 Call it once per expected message. For multi-message exchanges the agent must submit
@@ -160,8 +160,10 @@ The object returned by `recv_from_agent()`:
 | `data`    | `dict`            | Structured result payload                           |
 | `payload` | `Payload \| None` | Optional binary output                              |
 
-`payload.data` returns the raw bytes synchronously. Use `await payload.load()` for
-streamed payloads.
+For an in-memory payload, `payload.data` returns the raw bytes synchronously. For a
+streamed payload it raises `ValueError`; use `await payload.load()` to buffer the whole
+stream into memory, or iterate over `payload` asynchronously when it should remain
+streamed.
 
 ## Success and Failure
 
@@ -187,7 +189,7 @@ return Failure(task_output_message=header)   # wrap an existing message model
 | `self.mitre_attack_techniques` | `list`                           | Resolved MITRE ATT&CK technique objects                                |
 | `self.task_launch_message`     | `TaskLaunchMessageModel \| None` | The message sent on the most recent `execute()` call                   |
 | `self.agent`                   | `Agent`                          | The agent this execution is running against                            |
-| `self.task`                    | `Task`                      | The task record tracking this execution                                |
+| `self.task`                    | `Task`                      | The task record for this execution, including its identity and task-scoped state       |
 | `self.services`                | namespace                        | All framework services                                                 |
 
 `SupportedOS` is a `StrEnum` with values `WINDOWS`, `LINUX`, `MACOS`, `ANDROID`, `IOS`,
