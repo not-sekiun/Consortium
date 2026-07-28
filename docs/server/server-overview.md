@@ -36,7 +36,7 @@ with command line flags:
 | `-s`, `--server-config`     | Path to a custom server configuration file.              |
 | `-l`, `--logging-config`    | Path to a custom logging configuration file.             |
 | `--debug`                   | Raise the log level to `DEBUG` for this run.             |
-| `--reload`                  | Restart the server automatically when source files change.|
+| `--reload`                  | Restart the server automatically when files in the framework component directories change.|
 
 ```shell
 uv run consortium.py server -s path/to/server_config.json -l path/to/logging_config.json

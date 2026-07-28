@@ -10,9 +10,9 @@ import asyncio
 import json
 
 from consortium.framework.plugins import BasePlugin
-from consortium.framework.signal_exceptions.plugins_signal_exceptions import
-
-PluginStartError
+from consortium.framework.signal_exceptions.plugins_signal_exceptions import (
+    PluginStartError,
+)
 
 
 class Plugin(BasePlugin):

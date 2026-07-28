@@ -2,7 +2,7 @@
 
 This page is a cookbook. If you are thinking "I have a pattern X that I want to implement, what does X look like?", find the matching pattern below, copy the stripped-down recipe, and grow it from there.
 
-Every recipe is a plain `on_execute` written against `BaseAgentCapability`. There are no template base classes to inherit from: the loop is yours, and the framework only provides the primitives (`send_to_agent`, `recv_from_agent`, the `log_*` events) and two small opt-in helpers (`idle_attempts` and `duplex`).
+Every recipe is a plain `on_execute` written against `BaseAgentCapability`. There are no template base classes to inherit from: the loop is yours, and the framework provides the communication primitives (`send_to_agent`, `recv_from_agent`) plus `self.event_logger` for task events.
 
 !!! info "The rule of thumb"
     If you can read your `on_execute` top to bottom and see the whole exchange, you are doing it right. Reach for a helper only when the plain loop gets genuinely hard to write correctly.
@@ -16,7 +16,7 @@ sequenceDiagram
     participant F as Framework
     participant C as Capability
     participant A as Agent
-    F->>C: on_launch(launch_message)
+    F->>C: on_launch(task_launch_message)
     C-->>F: (possibly modified) launch message
     F->>A: send launch message
     F->>C: on_execute()
@@ -27,14 +27,14 @@ sequenceDiagram
 
 1. `on_launch(task_launch_message)` runs first. Override it for pre-flight work: validate options, strip server-side arguments, enrich the message. Return the message to send, or raise `AgentCapabilityLaunchError` to deny the launch.
 2. The framework sends the launch message to the agent.
-3. `on_execute()` runs. This is where your pattern lives. Talk to the agent with `send_to_agent` and `recv_from_agent`, report progress with `update_progress` and the `log_*` event log entries.
+3. `on_execute()` runs. This is where your pattern lives. Talk to the agent with `send_to_agent` and `recv_from_agent`, and report progress or task events through `self.event_logger`.
 4. Return an outcome.
 
 | Return value | Meaning                                                                                                               |
 | --- |-----------------------------------------------------------------------------------------------------------------------|
 | `Success` | The task succeeded: an explicit terminal event is recorded.                                                           |
 | `Failure` | The task failed: an explicit terminal event is recorded.                                                              |
-| `None` | The task completed normally. Use this when everything worth reporting already went out via `log_*` event log entries. |
+| `None` | The task completed normally. Use this when everything worth reporting already went out through `self.event_logger`. |
 | raise | The task is errored. Uncaught exceptions, including `TimeoutError` from `recv_from_agent`, end up here.               |
 
 !!! tip "Launch versus input messages"
@@ -51,15 +51,18 @@ except TimeoutError:
     return Failure(message="Agent did not respond within 30 seconds")
 ```
 
-When you want to wait several times with growing patience, use the `idle_attempts` helper. It only does the schedule bookkeeping: the loop body stays yours.
+When you want to wait several times with growing patience, keep the timeout schedule in
+your capability and retry explicitly:
 
 ```python
-async for attempt in idle_attempts(timeouts=[5, 15, 60]):
+for timeout in (5, 15, 60):
     try:
-        response = await self.recv_from_agent(timeout=attempt.timeout)
+        response = await self.recv_from_agent(timeout=timeout)
         break
     except TimeoutError:
-        self.info(f"Agent quiet after {attempt.elapsed:.0f}s, waiting longer")
+        self.event_logger.info(
+            f"Agent quiet after {timeout}s, waiting longer",
+        )
 else:
     return Failure(message="Agent never responded")
 ```
@@ -135,12 +138,12 @@ class DownloadFile(BaseAgentCapability):
             match response.data.get("type"):
                 case "chunk":
                     downloaded += len(response.payload.data)
-                    self.update_progress(
+                    self.event_logger.update_progress(
                         message=f"Downloading {file_path.name}",
                         percent_complete=downloaded / file_size * 100 if file_size else 0,
                     )
                 case "end_of_file":
-                    self.log_artifact(message=f"Downloaded '{file_path.name}'")
+                    self.event_logger.artifact(message=f"Downloaded '{file_path.name}'")
                     return Success(message=f"Downloaded '{file_path.name}'")
                 case unknown:
                     return Failure(message=f"Unknown message type: {unknown}")
@@ -239,7 +242,7 @@ class StepSimulation(BaseAgentCapability):
             if not state.success:
                 return Failure(task_output_message=state)
 
-            self.update_progress(
+            self.event_logger.update_progress(
                 message=f"Step {step + 1}/{max_steps}",
                 percent_complete=(step + 1) / max_steps * 100,
             )
@@ -272,47 +275,18 @@ sequenceDiagram
 
 Use it when the two directions are genuinely independent: streaming control commands while output streams back, live steering of a long-running render.
 
-This is the one pattern where the plain-loop version is hard to get right: you need two concurrent tasks, correct cancellation on exit, and a send-side crash must not leave the receive side blocked forever. The `duplex` helper owns exactly that plumbing and nothing more. Your side of the exchange is an async generator of inputs plus an ordinary receive loop:
-
-```python
-class SteerRender(BaseAgentCapability):
-    name = "steer_render"
-    description = "Stream render commands while frames stream back."
-
-    async def commands(self) -> AsyncIterator[TaskInputMessageModel]:
-        for command in self.task_launch_message.arguments["commands"]:
-            yield self.create_task_input_message(data={"command": command})
-        # Falling off the end of the generator is the half-close: sending
-        # stops, receiving continues below.
-
-    async def on_execute(self) -> Success | Failure | None:
-        async with duplex(self, outgoing=self.commands()) as incoming:
-            async for frame in incoming:
-                if not frame.success:
-                    return Failure(task_output_message=frame)
-                if frame.data.get("state") == "done":
-                    return frame.to_outcome()
-                self.update_progress(
-                    message="Rendering",
-                    percent_complete=frame.data.get("percent", 0),
-                )
-```
-
-What `duplex` guarantees:
-
-| Event | Behavior |
-| --- | --- |
-| `outgoing` generator ends | Half-close: sending stops, `incoming` keeps yielding. |
-| `outgoing` generator raises | The exception surfaces inside your `async for` promptly, so a dead sender cannot leave you blocked on `recv`. |
-| Your block exits (return, break, raise) | The send task is cancelled and awaited cleanly. The receive side owns termination. |
-
-Inside the block you can also call `await incoming.recv(timeout=...)` directly instead of `async for` when you want per-message timeouts, and combine it with `idle_attempts` as shown earlier.
+Consortium does not provide a duplex helper. Implement this pattern only when the two
+directions are truly independent, using an `asyncio.TaskGroup`, an `asyncio.Queue`, and
+the existing `send_to_agent()` and `recv_from_agent()` primitives. Ensure that leaving
+the capability cancels and awaits the sender task, and report received progress through
+`self.event_logger.update_progress()`.
 
 !!! tip "Reactive sending"
     An async generator cannot see incoming messages, which is fine for independent streams. If a received message must trigger a new send (for example the agent asks for a frame to be resent), bridge the two loops with an `asyncio.Queue`: the receive loop puts work on the queue, and the outgoing generator yields from it.
 
 !!! info "Escape hatch"
-    `duplex` is opt-in. If its half-close model does not fit, drop it and run your own `asyncio.TaskGroup` against `send_to_agent` and `recv_from_agent`. The primitives are always available.
+    Use an `asyncio.TaskGroup` only when this concurrency is necessary. The basic
+    communication primitives are always available.
 
 ## Choosing a pattern
 

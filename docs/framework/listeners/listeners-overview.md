@@ -101,7 +101,7 @@ a couple of transitions are omitted from the diagram for clarity:
 `ERRORED` and `FATAL` are the only states that carry an error; transitions into them
 must supply a `ComponentRuntimeError`, and transitions into any other state must not.
 Valid transitions are enforced by `Status._transition_to_state()` in
-`consortium/framework/_components/_component_status.py`; any other transition raises
+`consortium/framework/_core/components/component_status.py`; any other transition raises
 an `AssertionError`.
 
 ## The agent-listener protocol

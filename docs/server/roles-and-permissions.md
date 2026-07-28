@@ -120,6 +120,7 @@ REST API endpoint (or Events WebSockets API) they authorize.
 | `READ_AGENT_TASK_BY_TASK_ID`                   | Read an agent task by its task ID.                   |
 | `TASK_AGENT_BY_AGENT_ID`                       | Task an agent by its agent ID.                       |
 | `UPDATE_AGENT_BY_AGENT_ID`                     | Update an agent by its agent ID.                     |
+| `DELETE_AGENT_BY_AGENT_ID`                     | Delete an agent by its agent ID.                     |
 | `DELETE_AGENT_TASK_BY_TASK_ID`                 | Delete an agent task by its task ID.                 |
 
 ### Events WebSockets API
@@ -136,6 +137,7 @@ REST API endpoint (or Events WebSockets API) they authorize.
 | `DOWNLOAD_ASSETS`          | Download assets from the server.  |
 | `READ_ALL_ASSETS`          | Read all assets.                  |
 | `READ_ASSET_BY_ASSET_ID`   | Read an asset by its asset ID.    |
+| `UPDATE_ASSET_BY_ASSET_ID` | Update an asset by its asset ID.  |
 | `DELETE_ASSET_BY_ASSET_ID` | Delete an asset by its asset ID.  |
 
 ### Artifacts
@@ -145,6 +147,7 @@ REST API endpoint (or Events WebSockets API) they authorize.
 | `DOWNLOAD_ARTIFACTS`             | Download artifacts from the server.    |
 | `READ_ALL_ARTIFACTS`             | Read all artifacts.                    |
 | `READ_ARTIFACT_BY_ARTIFACT_ID`   | Read an artifact by its artifact ID.   |
+| `UPDATE_ARTIFACT_BY_ARTIFACT_ID` | Update an artifact by its artifact ID. |
 | `DELETE_ARTIFACT_BY_ARTIFACT_ID` | Delete an artifact by its artifact ID. |
 
 ### Payloads
@@ -154,4 +157,5 @@ REST API endpoint (or Events WebSockets API) they authorize.
 | `DOWNLOAD_PAYLOADS`            | Download payloads from the server.   |
 | `READ_ALL_PAYLOADS`            | Read all payloads.                   |
 | `READ_PAYLOAD_BY_PAYLOAD_ID`   | Read a payload by its payload ID.    |
+| `UPDATE_PAYLOAD_BY_PAYLOAD_ID` | Update a payload by its payload ID.  |
 | `DELETE_PAYLOAD_BY_PAYLOAD_ID` | Delete a payload by its payload ID.  |

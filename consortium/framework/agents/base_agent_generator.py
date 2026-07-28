@@ -69,10 +69,19 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     Attributes:
         name: Unique display name for this build step. Required.
         description: Human-readable explanation of what this step does.
+        datetime_started: UTC timestamp at which the most recent run started, or None.
+        datetime_stopped: UTC timestamp at which the most recent run stopped, or None.
+        environment: Shared mutable namespace passed between build steps in a pipeline.
+        parameters: Configuration parameters supplied by the owning agent generator.
+        logger: System logger for this build step.
         event_logger: Event logger shared with the owning agent generator, so events
             recorded by every build step appear together in the generator's single
             consolidated event log. Injected by the generator before the step runs;
             None until then.
+        agent_templates_payload_service: Service used to store and retrieve payload
+            artifacts associated with the creating agent template.
+        root_directory: Directory containing the concrete build step's source file.
+        services: Server services exposed to the concrete build step.
     """
 
     name: str
@@ -191,26 +200,53 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
 
     @final
     async def on_started(self) -> None:
+        """Record the start time for the current build-step run.
+
+        This method is final and must not be overridden.
+        """
         self.datetime_started = utc_now()
 
     @final
     async def on_running(self) -> None:
+        """Execute the concrete build implementation with the current parameters.
+
+        This method is final and must not be overridden.
+        """
         await self.build(parameters=self.parameters)
 
     @final
     async def on_completed(self) -> None:
+        """Record the stop time after the build step completes successfully.
+
+        This method is final and must not be overridden.
+        """
         self.datetime_stopped = utc_now()
 
     @final
     async def on_stopped(self) -> None:
+        """Record the stop time after the build step is stopped.
+
+        This method is final and must not be overridden.
+        """
         self.datetime_stopped = utc_now()
 
     @final
     async def on_cancelled(self) -> None:
+        """Record the stop time after the build step is cancelled.
+
+        This method is final and must not be overridden.
+        """
         self.datetime_stopped = utc_now()
 
     @final
     async def on_errored(self, error: AgentGeneratorBuildStepRuntimeError) -> None:
+        """Record the stop time and log a build-step runtime error.
+
+        This method is final and must not be overridden.
+
+        Args:
+            error: The runtime error raised while the build step was executing.
+        """
         self.datetime_stopped = utc_now()
         # Record into the shared event log when available (it is injected by the
         # generator before the step runs), otherwise fall back to the system logger.
@@ -335,10 +371,25 @@ class BaseAgentGenerator(ComponentLifeCycle):
     Attributes:
         agent_generator_build_steps: Ordered sequence of build step classes. Declared
             at the class level and converted to instances in __init__.
+        name: Human-readable label for this generator run.
+        description: Optional description of the generator run.
+        parameters: Configuration values forwarded to every build step.
+        agent_generator_id: Unique identifier for this generator instance.
+        agent_templates_payload_service: Service used to access agent-template payloads.
+        datetime_created: UTC timestamp at which this generator instance was created.
+        environment: Shared mutable namespace available to all build steps.
+        logger: System logger for this generator.
         event_logger: Generator-wide event logger. Every build step is given a child
             logger that shares this logger's underlying event log, so all build steps
             report into one consolidated, client-facing event log. Entries are
             optionally mirrored to the relevant system logger.
+        root_directory: Directory containing the concrete generator's source file.
+        services: Server services exposed to the concrete generator.
+        agent_type: Agent type assigned to the concrete generator during loading.
+        compatible_listener_types: Listener types assigned during loading that can
+            create this generator's agents.
+        creating_agent_template: Agent template that created this generator, assigned
+            during loading.
     """
 
     agent_generator_build_steps: list[type[BaseAgentGeneratorBuildStep]] = None
@@ -510,6 +561,13 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
     @final
     async def on_running(self) -> None:
+        """Run build steps sequentially and report pipeline progress.
+
+        This method is final and must not be overridden.
+
+        Raises:
+            ComponentRuntimeError: If a build step enters an errored or fatal state.
+        """
         # Reset each build step before running them in case the agent generator is
         # started more than once.
         for agent_generator_build_step in self.agent_generator_build_steps:

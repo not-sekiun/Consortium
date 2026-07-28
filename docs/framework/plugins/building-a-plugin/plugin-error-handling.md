@@ -7,9 +7,9 @@ The framework transitions the plugin to `ERRORED`, calls `on_errored()`, and end
 main Task. The server keeps running.
 
 ```python
-from consortium.framework.signal_exceptions.plugins_signal_exceptions import
-
-PluginRuntimeError
+from consortium.framework.signal_exceptions.plugins_signal_exceptions import (
+    PluginRuntimeError,
+)
 
 
 async def on_running(self) -> None:

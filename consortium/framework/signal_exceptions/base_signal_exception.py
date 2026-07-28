@@ -5,6 +5,13 @@ from pydantic import JsonValue
 
 
 class BaseSignalException(Exception):
+    """Base exception for recoverable framework signals.
+
+    Attributes:
+        message: Human-readable explanation of the signal.
+        detail: Optional JSON-compatible metadata that provides structured context.
+    """
+
     def __init__(self, message: str, detail: dict[str, JsonValue] | None = None):
         if detail is None:
             detail = {}

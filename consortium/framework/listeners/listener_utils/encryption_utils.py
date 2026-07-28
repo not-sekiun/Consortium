@@ -4,15 +4,15 @@ import string
 
 def generate_token(length: int = 32, generate_as_bytes: bool = False) -> str | bytes:
     """
-    Generate a random value of a particular max_length using a cryptographically secure
-    random number generator as provided by the Python `secrets` module.
+    Generate cryptographically secure random bytes or their hexadecimal representation.
 
     Args:
         length:
-            The max_length of the value to generate. The default max_length is 32.
+            Number of random bytes to generate. A hexadecimal string contains twice
+            this number of characters. The default is 32.
         generate_as_bytes:
-            Whether to generate the value as bytes or as a hexadecimal string. The
-            default value is `False` to generate as a hexadecimal string.
+            Whether to return bytes instead of a hexadecimal string. The default is
+            ``False``.
 
     Returns:
         The generated value as either a hexadecimal string or as bytes.
@@ -28,15 +28,14 @@ def generate_string(
     length: int = 32,
 ) -> str:
     """
-    Generate a random string from a given set of characters using a cryptographically
-    secure random number generator as provided by the Python `secrets` module.
+    Generate a cryptographically secure random string from a supplied character set.
 
     Args:
         characters_sample:
             The set of characters to sample from when generating the string. The default
-            value is a set of alphanumeric characters in lowercase.
+            value is uppercase ASCII letters and digits.
         length:
-            The max_length of the string to generate. The default max_length is 32.
+            Number of characters to generate. The default is 32.
 
     Returns:
         The generated string.

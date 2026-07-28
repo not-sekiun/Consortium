@@ -65,9 +65,9 @@ dependencies, and it is registered as a member of the workspace in the root
 ```toml title="pyproject.toml"
 [tool.uv.workspace]
 members = [
-    "consortium\\components\\plugins\\auto_updater",
-    "consortium\\components\\listeners\\consortium\\http",
-    "consortium\\components\\agents\\consortium\\http",
+    "consortium/components/agents/consortium/eula/python",
+    "consortium/components/event_hooks/webhook_sender",
+    "consortium/components/listeners/consortium/http",
 ]
 ```
 

@@ -41,7 +41,7 @@ By default the client reads its connection details from
     The `username` and `password` must correspond to an existing user account in the
     server's [`user_accounts.json`](../server/user-accounts.md) file.
 
-To use a configuration file from a different location, pass `-c/--config`:
+To use a configuration file from a different location, pass `-c/--client-config`:
 
 ```shell
 uv run consortium.py client -c path/to/custom_client_config.json

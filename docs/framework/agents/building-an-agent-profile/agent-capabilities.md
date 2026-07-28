@@ -8,8 +8,8 @@ a result.
 ## The capability lifecycle
 
 ```
-execute(task_message) called by the framework
-  -> on_launch(task_message)    # mutate or abort before the message is sent
+execute(task_launch_message) called by the framework
+  -> on_launch(task_launch_message)    # mutate or deny before the message is sent
   -> framework transmits message to the agent
   -> on_execute()               # await and interpret the agent's response(s)
   -> returns Success, Failure, or None
@@ -70,7 +70,7 @@ class DownloadCapability(BaseAgentCapability):
         received = 0
         chunks = []
 
-        self.update_progress(
+        self.event_logger.update_progress(
             message=f"Starting download of '{filename}'.",
             percent_complete=0,
         )
@@ -86,7 +86,7 @@ class DownloadCapability(BaseAgentCapability):
                 chunks.append(msg.payload.data)
                 received += len(msg.payload.data)
                 pct = round(received / total_bytes * 100, 1) if total_bytes else 0
-                self.update_progress(
+                self.event_logger.update_progress(
                     message=f"Downloading '{filename}': {received}/{total_bytes} bytes",
                     percent_complete=pct,
                 )
@@ -95,25 +95,24 @@ class DownloadCapability(BaseAgentCapability):
             else:
                 return Failure(message=f"Unexpected message type: {msg_type}")
 
-        self.log_artifact(message=f"Downloaded '{filename}'")
+        self.event_logger.artifact(message=f"Downloaded '{filename}'")
         return Success(message=f"Download of '{filename}' complete.")
 ```
 
 ## on_launch
 
-`on_launch(task_message)` is called before the message is transmitted. Return the
-(possibly modified) `TaskLaunchMessageModel` to proceed, or return `None` to abort the
-launch without sending anything. Raising `AgentCapabilityLaunchError` also aborts and
-surfaces as a `Failure`:
+`on_launch(task_launch_message)` is called before the message is transmitted. Return
+the (possibly modified) `TaskLaunchMessageModel` to proceed. To deny the launch without
+sending anything, raise `AgentCapabilityLaunchError`:
 
 ```python
 from consortium.framework.signal_exceptions import AgentCapabilityLaunchError
 
 
-async def on_launch(self, task_message):
+async def on_launch(self, task_launch_message):
     if not self._check_precondition():
         raise AgentCapabilityLaunchError("Precondition not met.")
-    return task_message
+    return task_launch_message
 ```
 
 Common uses: stripping server-side arguments before the agent sees them, mutating
@@ -141,13 +140,13 @@ called from `on_execute()` at any point:
 
 | Method                                                  | When to use                                                                               |
 |---------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| `self.update_progress(percent_complete, message, data)` | Ephemeral progress update; overwrites the current status without adding a permanent event |
-| `self.log_success(message, data)`                       | Log a SUCCESS event log entry visible in the task timeline                                |
-| `self.log_info(message, data)`                          | Log an INFO event log entry                                                               |
-| `self.log_failure(message, data)`                       | Log a FAILURE event log entry                                                             |
-| `self.log_warning(message, data)`                       | Log a WARNING event log entry                                                             |
-| `self.log_error(message, data)`                         | Log an ERROR event log entry                                                              |
-| `self.log_artifact(message, data)`                      | Signal that the capability produced a collectible output (file, screenshot, etc.)         |
+| `self.event_logger.update_progress(percent_complete, message, data)` | Ephemeral progress update; overwrites the current status without adding a permanent event |
+| `self.event_logger.success(message, data)`                       | Log a SUCCESS event log entry visible in the task timeline                                |
+| `self.event_logger.info(message, data)`                          | Log an INFO event log entry                                                               |
+| `self.event_logger.failure(message, data)`                       | Log a FAILURE event log entry                                                             |
+| `self.event_logger.warning(message, data)`                       | Log a WARNING event log entry                                                             |
+| `self.event_logger.error(message, data)`                         | Log an ERROR event log entry                                                              |
+| `self.event_logger.artifact(message, data)`                      | Signal that the capability produced a collectible output (file, screenshot, etc.)         |
 
 ## TaskOutputMessageModel
 
@@ -186,7 +185,7 @@ return Failure(task_output_message=header)   # wrap an existing message model
 | `self.supported_oses`          | `set[SupportedOS]`               | Platform restrictions                                                  |
 | `self.options`                 | `dict`                           | Name-keyed option definitions (converted from set at class definition) |
 | `self.mitre_attack_techniques` | `list`                           | Resolved MITRE ATT&CK technique objects                                |
-| `self.launch_message`          | `TaskLaunchMessageModel \| None` | The message sent on the most recent `execute()` call                   |
+| `self.task_launch_message`     | `TaskLaunchMessageModel \| None` | The message sent on the most recent `execute()` call                   |
 | `self.agent`                   | `Agent`                          | The agent this execution is running against                            |
 | `self.task`                    | `Task`                      | The task record tracking this execution                                |
 | `self.services`                | namespace                        | All framework services                                                 |

@@ -50,6 +50,7 @@ works anywhere a `set[EventType]` is expected.
 | `AGENT_CHECKED_IN`     | A registered agent submits a check-in (heartbeat or status update) |
 | `AGENT_UPDATED`        | An agent's properties are modified                                 |
 | `AGENT_DEREGISTERED`   | An agent is removed from the framework registry                    |
+| `AGENT_DELETED`        | An agent is deleted from the framework registry                    |
 | `AGENT_TASKED`         | A task is dispatched to an agent                                   |
 | `AGENT_TASK_COMPLETED` | An agent submits the result of a completed task                    |
 
@@ -62,9 +63,7 @@ works anywhere a `set[EventType]` is expected.
 
 ## Resource events
 
-Payload, asset, and artifact events follow the same CRUD pattern. Note that `UPDATED`
-events exist for assets and artifacts but not yet for payloads (see the TODO comment in
-`event_type.py`).
+Payload, asset, and artifact events all follow the same CRUD pattern.
 
 | EventType          | Fires when                            |
 |--------------------|---------------------------------------|

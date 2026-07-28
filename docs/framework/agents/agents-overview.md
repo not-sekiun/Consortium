@@ -83,8 +83,9 @@ typically declared in the same file as `AgentType` or in a dedicated
 When an operator tasks an agent with a command, the framework resolves the capability
 by matching the task's `command` field against `AgentType.agent_capabilities` (a
 name-keyed dict after class definition). The matching `BaseAgentCapability` subclass is
-instantiated and its `execute()` method is called. This calls `on_launch()` to send the
-task message and `on_execute()` to await and process the agent's response.
+instantiated and its `execute()` method is called. This calls `on_launch()` to prepare
+the task message, sends that message to the agent, and then calls `on_execute()` to
+await and process the agent's response.
 
 ## The generator pipeline
 
@@ -109,8 +110,7 @@ for later retrieval via the REST API.
 `consortium/components/agents/consortium/http/` is the canonical reference
 implementation. It demonstrates:
 
-- Multiple capabilities using `request_response_capability` with custom `task_handler`
-  and `result_handler` callables
+- Multiple `BaseAgentCapability` subclasses, including custom `on_execute()` handlers
 - Custom `BaseAgentCapability` subclasses with multi-message `on_execute()` for
   streaming (file download/upload)
 - A single-step generator that reads a Python source template, performs string

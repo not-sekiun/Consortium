@@ -9,20 +9,20 @@ of that type connects and receives tasks.
 ```python
 from consortium.framework.agents import BaseAgentType
 
-from .agent_type import (   # in practice, declared in the same file
-    info_capability,
-    shell_capability,
-    ping_capability,
+from .agent_capabilities import (
     DownloadCapability,
+    InfoCapability,
+    PingCapability,
+    ShellCapability,
 )
 
 
 class AgentType(BaseAgentType):
     name = "recon_agent"
     agent_capabilities = {
-        info_capability,
-        shell_capability,
-        ping_capability,
+        InfoCapability,
+        ShellCapability,
+        PingCapability,
         DownloadCapability,
     }
 ```
@@ -32,10 +32,9 @@ self-identifies by type passes `agent_type="recon_agent"` in its registration me
 Agents generated from a payload use their `payload_id` instead, which the framework
 resolves to the correct type automatically.
 
-`agent_capabilities` is declared as a set of capability classes (or instances returned
-by `request_response_capability`). The framework converts it to a name-keyed dict at
-class definition time, keyed by each capability's `name` attribute. Task dispatch looks
-up capabilities by name from this dict.
+`agent_capabilities` is declared as a set of capability classes. The framework converts
+it to a name-keyed dict at class definition time, keyed by each capability's `name`
+attribute. Task dispatch looks up capabilities by name from this dict.
 
 ## Required attributes
 

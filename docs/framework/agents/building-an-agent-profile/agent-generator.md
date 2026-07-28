@@ -21,8 +21,8 @@ class BuildScript(BaseAgentGeneratorBuildStep):
     description = "Configure and write the agent Python script."
 
     async def build(self, parameters: dict) -> None:
-        # self.working_directory is a pathlib.Path to this source file's parent
-        template_path = self.working_directory / "agent_source" / "agent.py"
+        # self.root_directory is a pathlib.Path to this source file's parent
+        template_path = self.root_directory / "agent_source" / "agent.py"
         source = template_path.read_text()
 
         source = source.replace(
@@ -55,18 +55,18 @@ class BuildScript(BaseAgentGeneratorBuildStep):
 failures. Raising it transitions the step to `ERRORED` and propagates the error up to
 the generator.
 
-### self.working_directory
+### self.root_directory
 
-`self.working_directory` is a `pathlib.Path` pointing to the directory that contains
+`self.root_directory` is a `pathlib.Path` pointing to the directory that contains
 the build step's source file. Use it to locate sibling files: source templates, signing
 certificates, embedded scripts:
 
 ```python
-template = self.working_directory / "agent_source" / "agent.py"
-cert = self.working_directory / "signing" / "cert.pem"
+template = self.root_directory / "agent_source" / "agent.py"
+cert = self.root_directory / "signing" / "cert.pem"
 ```
 
-The path is resolved via `inspect.getsourcefile` at instance creation, so it always
+The path is resolved from the source file when the step class is defined, so it always
 points to where the step class was defined, regardless of the working directory at
 runtime.
 
@@ -163,7 +163,7 @@ would cause all steps to fail.
 | `self.name`                            | `str`                           | Step name (class attribute); unique within the generator |
 | `self.parameters`                      | `dict`                          | Generator parameters forwarded from the owning generator |
 | `self.environment`                     | `SimpleNamespace`               | Shared namespace across all steps in one run             |
-| `self.working_directory`               | `pathlib.Path`                  | Directory containing this step's source file             |
+| `self.root_directory`                  | `pathlib.Path`                  | Directory containing this step's source file             |
 | `self.agent_templates_payload_service` | `AgentTemplatesPayloadsService` | Storage for build artifacts                              |
 | `self.logger`                          | `loguru.Logger`                 | Step-scoped logger                                       |
 | `self.datetime_started`                | `datetime \| None`              | Set when the step starts                                 |

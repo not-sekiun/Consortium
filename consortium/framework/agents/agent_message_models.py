@@ -46,6 +46,9 @@ class Payload:
 
         Raises:
             ValueError: If the payload is backed by an async stream; use load() instead.
+
+        Returns:
+            The in-memory payload bytes.
         """
         if self.is_stream:
             raise ValueError("Payload is a stream. cannot retrieve bytes directly.")

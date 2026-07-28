@@ -11,29 +11,27 @@ from consortium.framework.agents import (
     BaseAgentType,
     Failure,
     Success,
-    request_response_capability,
 )
 from consortium.framework.options import SingleValueOption
 
-info_capability = request_response_capability(
-    name="info",
-    description="Return basic system information from the agent.",
-    authors={"Your Name"},
-)
+class InfoCapability(BaseAgentCapability):
+    name = "info"
+    description = "Return basic system information from the agent."
+    authors = {"Your Name"}
 
-shell_capability = request_response_capability(
-    name="shell",
-    description="Execute a shell command on the agent.",
-    authors={"Your Name"},
-    options={
+
+class ShellCapability(BaseAgentCapability):
+    name = "shell"
+    description = "Execute a shell command on the agent."
+    authors = {"Your Name"}
+    options = {
         SingleValueOption(
             name="command",
             description="Shell command to execute.",
             required=True,
             value_type=str,
         ),
-    },
-)
+    }
 
 
 class DownloadCapability(BaseAgentCapability):
@@ -62,15 +60,15 @@ class DownloadCapability(BaseAgentCapability):
                 chunks.append(msg.payload.data)
             elif msg.data.get("type") == "end_of_transfer":
                 break
-        self.log_artifact(message=f"Downloaded '{header.data['path']}'")
+        self.event_logger.artifact(message=f"Downloaded '{header.data['path']}'")
         return Success(message="Download complete.")
 
 
 class AgentType(BaseAgentType):
     name = "recon_agent"
     agent_capabilities = {
-        info_capability,
-        shell_capability,
+        InfoCapability,
+        ShellCapability,
         DownloadCapability,
     }
 ```
@@ -87,7 +85,7 @@ class BuildScript(BaseAgentGeneratorBuildStep):
     description = "Write the configured agent Python script."
 
     async def build(self, parameters: dict) -> None:
-        template = (self.working_directory / "agent_source" / "agent.py").read_text()
+        template = (self.root_directory / "agent_source" / "agent.py").read_text()
         source = template.replace(
             'REMOTE_HOST = "127.0.0.1"',
             f'REMOTE_HOST = {repr(parameters["remote_host"])}',

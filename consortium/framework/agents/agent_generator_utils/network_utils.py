@@ -12,6 +12,12 @@ __all__ = [
 
 
 async def get_remote_ip_async() -> str:
+    """Resolve the host's public IP address asynchronously.
+
+    Returns:
+        The address reported by api.ipify.org, or ``127.0.0.1`` if the request cannot
+        connect or times out.
+    """
     try:
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=5)
@@ -24,4 +30,9 @@ async def get_remote_ip_async() -> str:
 
 @cache
 def get_remote_ip_sync() -> str:
+    """Resolve and cache the host's public IP address synchronously.
+
+    Returns:
+        The address returned by get_remote_ip_async().
+    """
     return asyncio.run(get_remote_ip_async())

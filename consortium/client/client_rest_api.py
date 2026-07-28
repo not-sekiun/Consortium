@@ -387,7 +387,7 @@ class RestAPI:
             url=f"{self._api_base_url}/agent-generators/{agent_generator_id}/cancel",
         )
 
-    # Wrapper methods for the /api/agents API endpoint.
+    # Wrapper methods for the /api/agents and /api/tasks API endpoints.
     @_requires_authentication
     async def get_all_agents(self) -> list[dict[str, JsonValue]]:
         return await self._make_api_request(
@@ -408,7 +408,7 @@ class RestAPI:
         # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/tasks",
+            url=f"{self._api_base_url}/tasks/all",
         )
 
     @_requires_authentication
@@ -421,7 +421,7 @@ class RestAPI:
         params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/tasks/{task_id}",
+            url=f"{self._api_base_url}/tasks/{task_id}",
             params=params if params else None,
         )
 
@@ -434,7 +434,7 @@ class RestAPI:
         # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            url=f"{self._api_base_url}/tasks/agents/{agent_id}",
         )
 
     @_requires_authentication
@@ -446,7 +446,7 @@ class RestAPI:
         # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            url=f"{self._api_base_url}/tasks/agents/{agent_id}",
             params={"status": "QUEUED"},
         )
 
@@ -459,7 +459,7 @@ class RestAPI:
         # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            url=f"{self._api_base_url}/tasks/agents/{agent_id}",
             params={"status": "RUNNING"},
         )
 
@@ -472,7 +472,7 @@ class RestAPI:
         # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks",
+            url=f"{self._api_base_url}/tasks/agents/{agent_id}",
             params={"status": "COMPLETED"},
         )
 
@@ -487,7 +487,7 @@ class RestAPI:
         params = self._build_event_log_params(limit, offset)
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/agents/{agent_id}/tasks/{task_id}",
+            url=f"{self._api_base_url}/tasks/agents/{agent_id}/{task_id}",
             params=params if params else None,
         )
 
@@ -500,7 +500,7 @@ class RestAPI:
         # nothing left to remove from its queue.
         return await self._make_api_request(
             method="DELETE",
-            url=f"{self._api_base_url}/agents/agents/tasks/{task_id}",
+            url=f"{self._api_base_url}/tasks/{task_id}",
         )
 
     @_requires_authentication
