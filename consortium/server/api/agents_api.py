@@ -59,11 +59,6 @@ _agent_not_found_error = api_excs.AgentNotFoundError.from_consortium_exception(
 _agent_task_not_found_error = api_excs.AgentTaskNotFoundError.from_consortium_exception(
     consortium_exception=obj_excs.AgentTaskNotFoundError(task_id="string"),
 )
-_agent_result_not_found_error = (
-    api_excs.AgentResultNotFoundError.from_consortium_exception(
-        consortium_exception=obj_excs.AgentResultIDNotFoundError(result_id="string"),
-    )
-)
 
 
 @router.get(
